@@ -49,12 +49,6 @@ For a full cluster deployment, the following k8s resources are created:
     - `app=arangodb`
     - `arangodb_cluster_name: <cluster-name>`
     - `role: agent`
-- Service for accessing the coordinator, named `<cluster-name>`.
-  The services will provide access to all coordinators from within the k8s cluster.
-  - Labels:
-    - `app=arangodb`
-    - `arangodb_cluster_name: <cluster-name>`
-    - `role: coordinator`
 
 - Pods running ArangoDB dbservers named `<cluster-name>_dbserver_<x>`.
   - Labels:
@@ -86,3 +80,24 @@ For a full cluster deployment, the following k8s resources are created:
     - `app=arangodb`
     - `arangodb_cluster_name: <cluster-name>`
     - `role: coordinator`
+
+## Full cluster with DC2DC
+
+For a full cluster with datacenter replication deployment,
+the same resources are created as for a Full cluster, with the following
+additions:
+
+- Pods running ArangoSync workers named `<cluster-name>_syncworker_<x>`.
+  - Labels:
+    - `app=arangodb`
+    - `arangodb_cluster_name: <cluster-name>`
+    - `role: syncworker`
+
+- Pods running ArangoSync master named `<cluster-name>_coordinator_<x>`.
+  - Labels:
+    - `app=arangodb`
+    - `arangodb_cluster_name: <cluster-name>`
+    - `role: syncmaster`
+
+- Service for accessing the sync masters & workers, named `<cluster-name>-sync`.
+  The service will provide access to all syncmaster & workers from within the k8s cluster.

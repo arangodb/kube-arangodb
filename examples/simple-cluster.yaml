@@ -1,0 +1,6 @@
+apiVersion: "cluster.arangodb.com/v1alpha"
+kind: "Cluster"
+metadata:
+  name: "example-arangodb-cluster"
+spec:
+  mode: cluster
