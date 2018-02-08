@@ -116,6 +116,8 @@ The default value is empty.
 
 This requires the Enterprise version.
 
+The encryption key cannot be changed after the cluster has been created.
+
 ### `spec.auth.jwtSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
@@ -126,6 +128,9 @@ The default value is empty.
 
 If you specify a name of a `Secret` that does not exist, a random token is created
 and stored in a `Secret` with given name.
+
+Changing a JWT token results in stopping the entire cluster
+and restarting it.
 
 ### `spec.ssl.keySecretName: string`
 
