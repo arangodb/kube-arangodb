@@ -92,7 +92,7 @@ additions:
     - `arangodb_cluster_name: <cluster-name>`
     - `role: syncworker`
 
-- `Pods` running ArangoSync master named `<cluster-name>_coordinator_<x>`.
+- `Pods` running ArangoSync master named `<cluster-name>_syncmaster_<x>`.
   - Labels:
     - `app=arangodb`
     - `arangodb_cluster_name: <cluster-name>`

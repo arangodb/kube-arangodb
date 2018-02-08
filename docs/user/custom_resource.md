@@ -202,7 +202,6 @@ This setting sets the type of message queue used by ArangoSync.
 Possible values are:
 
 - `direct` (default) for direct HTTP connections between the 2 data centers.
-- `kafka` for using kafka queues.
 
 ### `spec.sync.ssl.keySecretName: string`
 
@@ -220,7 +219,7 @@ servers.
 When not specified, no monitoring token is used.
 The default value is empty.
 
-### `spec.ipv6.disabled: bool`
+### `spec.ipv6.forbidden: bool`
 
 This setting prevents the use of IPv6 addresses by ArangoDB servers.
 The default is `false`.
