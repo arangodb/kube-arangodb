@@ -239,6 +239,18 @@ as for the `dbservers` group.
 This setting specifies additional commandline arguments passed to all servers of this group.
 The default value is an empty array.
 
+### `spec.<group>.resources.requests.cpu: cpuUnit`
+
+This setting specifies the amount of CPU requested by server of this group.
+
+See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for details.
+
+### `spec.<group>.resources.requests.memory: memoryUnit`
+
+This setting specifies the amount of memory requested by server of this group.
+
+See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for details.
+
 ### `spec.<group>.resources.requests.storage: storageUnit`
 
 This setting specifies the amount of storage required for each server of this group.
