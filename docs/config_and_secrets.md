@@ -11,17 +11,11 @@ arguments configured in the Pod-spec.
 
 ## Other configuration options
 
-### Options 1
+All commandline options of `arangod` (and `arangosync`) are available
+by adding options to the `spec.<group>.args` list of a group
+of servers.
 
-Use a `ConfigMap` per type of ArangoDB server.
-The operator passes the options listed in the configmap
-as commandline options to the ArangoDB servers.
-
-TODO Discuss format of ConfigMap content. Is it `arangod.conf` like?
-
-### Option 2
-
-Add ArangoDB option sections to the custom resource.
+These arguments are added to th commandline created for these servers.
 
 ## Secrets
 
@@ -41,5 +35,6 @@ metadata:
   name: "example-arangodb-cluster"
 spec:
   mode: cluster
-  jwtTokenSecretName: <name-of-JWT-token-secret>
+  auth:
+    jwtSecretName: <name-of-JWT-token-secret>
 ```
