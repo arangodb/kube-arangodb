@@ -1,19 +1,5 @@
 # Scaling
 
-The ArangoDB operator supports up and down scaling of
-the number of dbservers & coordinators.
-
-Q: Agents as well?
-
-The scale up or down, change the number of servers in the custom
-resource and apply the updated resource using:
-
-```bash
-kubectl apply -f yourCustomResourceFile.yaml
-```
-
-## Internal process
-
 The internal process followed by the ArangoDB operator
 when scaling up is as follows:
 

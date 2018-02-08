@@ -1,12 +1,4 @@
-# Upgrading
-
-The ArangoDB operator supports upgrading an ArangoDB from
-one version to the next.
-
-The ArangoDB operator itself should also support upgrades
-of its code and the CustomResourceDefinitions.
-
-TODO: Investigate k8s API change process.
+# Upgrade procedure
 
 ## Upgrading ArangoDB single to another version
 

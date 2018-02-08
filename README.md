@@ -4,4 +4,5 @@
 
 State: Design only
 
-[Docs](./docs/README.md)
+- [User manual](./docs/user/README.md)
+- [Design documents](./docs/design/README.md)
