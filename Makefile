@@ -116,7 +116,7 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 		-e CGO_ENABLED=0 \
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
-		go build -a -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
+		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
 
 docker: $(BIN)
 	docker build -f $(DOCKERFILE) -t arangodb/arangodb-operator .

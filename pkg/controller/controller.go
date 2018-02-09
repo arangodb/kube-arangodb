@@ -23,19 +23,26 @@
 package controller
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/apimachinery/pkg/fields"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/cluster"
 	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	"github.com/arangodb/k8s-operator/pkg/metrics"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+)
+
+const (
+	initRetryWaitTime = 30 * time.Second
 )
 
 var (
@@ -83,7 +90,98 @@ func NewController(config Config, deps Dependencies) (*Controller, error) {
 
 // Start the controller
 func (c *Controller) Start() error {
-	return nil
+	log := c.Dependencies.Log
+
+	for {
+		if err := c.initResourceIfNeeded(); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+
+	//probe.SetReady()
+	c.run()
+	panic("unreachable")
+}
+
+// run the controller.
+// This registers a listener and waits until the process stops.
+func (c *Controller) run() {
+	source := cache.NewListWatchFromClient(
+		c.Dependencies.ClusterCRCli.ClusterV1alpha().RESTClient(),
+		api.ArangoClusterResourcePlural,
+		c.Config.Namespace,
+		fields.Everything())
+
+	_, informer := cache.NewIndexerInformer(source, &api.ArangoCluster{}, 0, cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.onAddArangoCluster,
+		UpdateFunc: c.onUpdateArangoCluster,
+		DeleteFunc: c.onDeleteArangoCluster,
+	}, cache.Indexers{})
+
+	ctx := context.TODO()
+	// TODO: use workqueue to avoid blocking
+	informer.Run(ctx.Done())
+}
+
+// onAddArangoCluster cluster addition callback
+func (c *Controller) onAddArangoCluster(obj interface{}) {
+	c.syncArangoCluster(obj.(*api.ArangoCluster))
+}
+
+// onUpdateArangoCluster cluster update callback
+func (c *Controller) onUpdateArangoCluster(oldObj, newObj interface{}) {
+	c.syncArangoCluster(newObj.(*api.ArangoCluster))
+}
+
+// onDeleteArangoCluster cluster delete callback
+func (c *Controller) onDeleteArangoCluster(obj interface{}) {
+	clus, ok := obj.(*api.ArangoCluster)
+	if !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			panic(fmt.Sprintf("unknown object from EtcdCluster delete event: %#v", obj))
+		}
+		clus, ok = tombstone.Obj.(*api.ArangoCluster)
+		if !ok {
+			panic(fmt.Sprintf("Tombstone contained object that is not an ArangoCluster: %#v", obj))
+		}
+	}
+	ev := &Event{
+		Type:   kwatch.Deleted,
+		Object: clus,
+	}
+
+	//	pt.start()
+	err := c.handleClusterEvent(ev)
+	if err != nil {
+		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+	}
+	//pt.stop()
+}
+
+// syncArangoCluster synchronized the given cluster.
+func (c *Controller) syncArangoCluster(apiCluster *api.ArangoCluster) {
+	ev := &Event{
+		Type:   kwatch.Added,
+		Object: apiCluster,
+	}
+	// re-watch or restart could give ADD event.
+	// If for an ADD event the cluster spec is invalid then it is not added to the local cache
+	// so modifying that cluster will result in another ADD event
+	if _, ok := c.clusters[apiCluster.Name]; ok {
+		ev.Type = kwatch.Modified
+	}
+
+	//pt.start()
+	err := c.handleClusterEvent(ev)
+	if err != nil {
+		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+	}
+	//pt.stop()
 }
 
 // handleClusterEvent processed the given event.
@@ -152,14 +250,4 @@ func (c *Controller) makeClusterConfigAndDeps() (cluster.Config, cluster.Depende
 		ClusterCRCli: c.Dependencies.ClusterCRCli,
 	}
 	return cfg, deps
-}
-
-func (c *Controller) initCRD() error {
-	if err := k8sutil.CreateCRD(c.KubeExtCli, api.ArangoClusterCRDName, api.ArangoClusterResourceKind, api.ArangoClusterResourcePlural, "arangodb"); err != nil {
-		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
-	}
-	if err := k8sutil.WaitCRDReady(c.KubeExtCli, api.ArangoClusterCRDName); err != nil {
-		return maskAny(err)
-	}
-	return nil
 }

@@ -28,9 +28,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // ArangoClusterList is a list of ArangoDB clusters.
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type ArangoClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
@@ -39,10 +38,9 @@ type ArangoClusterList struct {
 	Items           []ArangoCluster `json:"items"`
 }
 
+// ArangoCluster contains the entire Kubernetes info for an ArangoDB cluster
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ArangoCluster contains the entire Kubernetes info for an ArangoDB cluster
 type ArangoCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

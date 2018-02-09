@@ -92,6 +92,9 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
 
+	// Log version
+	cliLog.Info().Msgf("Starting arangodb-operator, version %s build %s", projectVersion, projectBuild)
+
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
@@ -196,6 +199,7 @@ func newControllerConfigAndDeps(namespace, name string) (controller.Config, cont
 		CreateCRD:      createCRD,
 	}
 	deps := controller.Dependencies{
+		Log:          logService.MustGetLogger("controller"),
 		KubeCli:      kubecli,
 		KubeExtCli:   kubeExtCli,
 		ClusterCRCli: clusterCRCli,

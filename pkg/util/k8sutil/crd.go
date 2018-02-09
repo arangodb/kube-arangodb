@@ -29,8 +29,8 @@ import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd/api"
 
+	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
 )
 
