@@ -43,6 +43,10 @@ SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
 all: verify-generated docker
 
+#
+# Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
+#
+
 build: docker
 
 clean:

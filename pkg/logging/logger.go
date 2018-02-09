@@ -58,7 +58,7 @@ type loggingService struct {
 
 // NewRootLogger creates a new zerolog logger with default settings.
 func NewRootLogger() zerolog.Logger {
-	return zerolog.New(os.Stdout).With().Timestamp().Logger()
+	return zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 }
 
 // NewService creates a new Service.

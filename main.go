@@ -121,7 +121,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 	rl, err := resourcelock.New(resourcelock.EndpointsResourceLock,
 		namespace,
-		"arangodb_operator",
+		"arangodb-operator",
 		kubecli.CoreV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      id,
