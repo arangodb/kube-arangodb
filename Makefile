@@ -51,21 +51,33 @@ clean:
 deps:
 	@${MAKE} -B -s $(GOBUILDDIR)
 
-$(PULSAR): 
-	GOPATH=$(GOBUILDDIR) go get github.com/pulcy/pulsar
-
-$(GOBUILDDIR): $(PULSAR)
+$(GOBUILDDIR):
+	# Build pulsar from vendor
+	@mkdir -p $(GOBUILDDIR)
+	@ln -s $(VENDORDIR) $(GOBUILDDIR)/src
+	@GOPATH=$(GOBUILDDIR) go install github.com/pulcy/pulsar
+	@rm -f $(GOBUILDDIR)/src
+	# Prepare .gobuild directory
 	@mkdir -p $(ORGDIR)
 	@rm -f $(REPODIR) && ln -s ../../../.. $(REPODIR)
 	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V vendor
 
-update-vendor: $(PULSAR)
+update-vendor:
+	@mkdir -p $(GOBUILDDIR)
+	@GOPATH=$(GOBUILDDIR) go get github.com/pulcy/pulsar
 	@rm -Rf $(VENDORDIR)
 	@mkdir -p $(VENDORDIR)
 	@git clone https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 	@$(PULSAR) go vendor k8s.io/client-go/...
 	@$(PULSAR) go vendor k8s.io/gengo/args
+	@$(PULSAR) go vendor k8s.io/apiextensions-apiserver
+	@$(PULSAR) go vendor github.com/cenkalti/backoff
+	@$(PULSAR) go vendor github.com/pkg/errors
+	@$(PULSAR) go vendor github.com/prometheus/client_golang/prometheus
+	@$(PULSAR) go vendor github.com/pulcy/pulsar
+	@$(PULSAR) go vendor github.com/rs/zerolog
+	@$(PULSAR) go vendor github.com/spf13/cobra
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
@@ -95,12 +107,12 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 		--rm \
 		-v $(SRCDIR):/usr/code \
 		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=$(GOOS) \
-		-e GOARCH=$(GOARCH) \
-		-e CGO_ENABLED=false \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
-		go build -a -installsuffix netgo -tags "$(GOTAGS)" -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
+		go build -a -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
 
 docker: $(BIN)
 	docker build -f $(DOCKERFILE) -t arangodb/arangodb-operator .

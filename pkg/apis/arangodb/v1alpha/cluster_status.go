@@ -25,24 +25,34 @@ package v1alpha
 type ClusterState string
 
 const (
+	ClusterStateNone      ClusterState = ""
 	ClusterStateCreating  ClusterState = "Creating"
-	ClusterStateReady     ClusterState = "Ready"
+	ClusterStateRunning   ClusterState = "Running"
 	ClusterStateScaling   ClusterState = "Scaling"
 	ClusterStateUpgrading ClusterState = "Upgrading"
+	ClusterStateFailed    ClusterState = "Failed"
 )
+
+// IsFailed returns true if given state is ClusterStateFailed
+func (cs ClusterState) IsFailed() bool {
+	return cs == ClusterStateFailed
+}
 
 // ClusterStatus contains the status part of a Cluster resource.
 type ClusterStatus struct {
-	State ClusterState `json:"state"`
+	State  ClusterState `json:"state"`
+	Reason string       `json:"reason,omitempty"` // Reason for current state
 
-	Members struct {
-		Single       []MemberStatus `json:"single,omitempty"`
-		Agents       []MemberStatus `json:"agents,omitempty"`
-		DBServers    []MemberStatus `json:"dbservers,omitempty"`
-		Coordinators []MemberStatus `json:"coordinators,omitempty"`
-		SyncMasters  []MemberStatus `json:"syncmasters,omitempty"`
-		SyncWorkers  []MemberStatus `json:"syncworkers,omitempty"`
-	} `json:"members"`
+	Members ClusterStatusMembers `json:"members"`
+}
+
+type ClusterStatusMembers struct {
+	Single       []MemberStatus `json:"single,omitempty"`
+	Agents       []MemberStatus `json:"agents,omitempty"`
+	DBServers    []MemberStatus `json:"dbservers,omitempty"`
+	Coordinators []MemberStatus `json:"coordinators,omitempty"`
+	SyncMasters  []MemberStatus `json:"syncmasters,omitempty"`
+	SyncWorkers  []MemberStatus `json:"syncworkers,omitempty"`
 }
 
 type MemberState string
