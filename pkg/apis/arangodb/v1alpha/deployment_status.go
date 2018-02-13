@@ -60,7 +60,7 @@ type MemberState string
 const (
 	MemberStateCreating     MemberState = "Creating"
 	MemberStateReady        MemberState = "Ready"
-	MemberStateDraining     MemberState = "Draining"
+	MemberStateCleanout     MemberState = "Cleanout"
 	MemberStateShuttingDown MemberState = "ShuttingDown"
 )
 
