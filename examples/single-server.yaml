@@ -1,0 +1,6 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "example-single-arangodb-server"
+spec:
+  mode: single

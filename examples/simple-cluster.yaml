@@ -1,5 +1,5 @@
-apiVersion: "cluster.arangodb.com/v1alpha"
-kind: "Cluster"
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
 metadata:
   name: "example-arangodb-cluster"
 spec:

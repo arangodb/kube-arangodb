@@ -11,6 +11,7 @@ spec:
     spec:
       containers:
       - name: arangodb-operator
+        imagePullPolicy: IfNotPresent
         image: arangodb/arangodb-operator:latest
         env:
         - name: MY_POD_NAMESPACE
