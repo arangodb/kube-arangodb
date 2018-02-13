@@ -95,8 +95,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 // Update the deployment.
 // This sends an update event in the deployment event queue.
-func (c *Deployment) Update(apiObject *api.ArangoDeployment) {
-	c.send(&deploymentEvent{
+func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
+	d.send(&deploymentEvent{
 		Type:       eventModifyDeployment,
 		Deployment: apiObject,
 	})
@@ -104,52 +104,52 @@ func (c *Deployment) Update(apiObject *api.ArangoDeployment) {
 
 // Delete the deployment.
 // Called when the deployment was deleted by the user.
-func (c *Deployment) Delete() {
-	c.deps.Log.Info().Msg("deployment is deleted by user")
-	close(c.stopCh)
+func (d *Deployment) Delete() {
+	d.deps.Log.Info().Msg("deployment is deleted by user")
+	close(d.stopCh)
 }
 
 // send given event into the deployment event queue.
-func (c *Deployment) send(ev *deploymentEvent) {
+func (d *Deployment) send(ev *deploymentEvent) {
 	select {
-	case c.eventCh <- ev:
-		l, ecap := len(c.eventCh), cap(c.eventCh)
+	case d.eventCh <- ev:
+		l, ecap := len(d.eventCh), cap(d.eventCh)
 		if l > int(float64(ecap)*0.8) {
-			c.deps.Log.Warn().
+			d.deps.Log.Warn().
 				Int("used", l).
 				Int("capacity", ecap).
 				Msg("event queue buffer is almost full")
 		}
-	case <-c.stopCh:
+	case <-d.stopCh:
 	}
 }
 
 // run is the core the core worker.
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
-func (c *Deployment) run() {
-	log := c.deps.Log
+func (d *Deployment) run() {
+	log := d.deps.Log
 
-	c.status.State = api.DeploymentStateRunning
-	if err := c.updateCRStatus(); err != nil {
+	d.status.State = api.DeploymentStateRunning
+	if err := d.updateCRStatus(); err != nil {
 		log.Warn().Err(err).Msg("update initial CR status failed")
 	}
 	log.Info().Msg("start running...")
 
 	for {
 		select {
-		case <-c.stopCh:
+		case <-d.stopCh:
 			// We're being stopped.
 			return
 
-		case event := <-c.eventCh:
+		case event := <-d.eventCh:
 			// Got event from event queue
 			switch event.Type {
 			case eventModifyDeployment:
-				if err := c.handleUpdateEvent(event); err != nil {
+				if err := d.handleUpdateEvent(event); err != nil {
 					log.Error().Err(err).Msg("handle update event failed")
-					c.status.Reason = err.Error()
-					c.reportFailedStatus()
+					d.status.Reason = err.Error()
+					d.reportFailedStatus()
 					return
 				}
 			default:
@@ -160,41 +160,41 @@ func (c *Deployment) run() {
 }
 
 // handleUpdateEvent processes the given event coming from the deployment event queue.
-func (c *Deployment) handleUpdateEvent(event *deploymentEvent) error {
+func (d *Deployment) handleUpdateEvent(event *deploymentEvent) error {
 	// TODO
 	return nil
 }
 
 // Update the status of the API object from the internal status
-func (c *Deployment) updateCRStatus() error {
-	if reflect.DeepEqual(c.apiObject.Status, c.status) {
+func (d *Deployment) updateCRStatus() error {
+	if reflect.DeepEqual(d.apiObject.Status, d.status) {
 		// Nothing has changed
 		return nil
 	}
 
 	// Send update to API server
-	update := *c.apiObject
-	update.Status = c.status
-	newAPIObject, err := c.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(c.apiObject.Namespace).Update(&update)
+	update := *d.apiObject
+	update.Status = d.status
+	newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Update(&update)
 	if err != nil {
 		return maskAny(fmt.Errorf("failed to update CR status: %v", err))
 	}
 
 	// Update internal object
-	c.apiObject = newAPIObject
+	d.apiObject = newAPIObject
 
 	return nil
 }
 
 // reportFailedStatus sets the status of the deployment to Failed and keeps trying to forward
 // that to the API server.
-func (c *Deployment) reportFailedStatus() {
-	log := c.deps.Log
+func (d *Deployment) reportFailedStatus() {
+	log := d.deps.Log
 	log.Info().Msg("deployment failed. Reporting failed reason...")
 
 	op := func() error {
-		c.status.State = api.DeploymentStateFailed
-		err := c.updateCRStatus()
+		d.status.State = api.DeploymentStateFailed
+		err := d.updateCRStatus()
 		if err == nil || k8sutil.IsNotFound(err) {
 			// Status has been updated
 			return nil
@@ -205,7 +205,7 @@ func (c *Deployment) reportFailedStatus() {
 			return maskAny(err)
 		}
 
-		depl, err := c.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(c.apiObject.Namespace).Get(c.apiObject.Name, metav1.GetOptions{})
+		depl, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
@@ -216,7 +216,7 @@ func (c *Deployment) reportFailedStatus() {
 			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
 			return maskAny(err)
 		}
-		c.apiObject = depl
+		d.apiObject = depl
 		return maskAny(fmt.Errorf("retry needed"))
 	}
 
