@@ -20,7 +20,7 @@
 package versioned
 
 import (
-	clusterv1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
+	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -29,27 +29,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	ClusterV1alpha() clusterv1alpha.ClusterV1alphaInterface
+	DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface
 	// Deprecated: please explicitly pick a version if possible.
-	Cluster() clusterv1alpha.ClusterV1alphaInterface
+	Database() databasev1alpha.DatabaseV1alphaInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	clusterV1alpha *clusterv1alpha.ClusterV1alphaClient
+	databaseV1alpha *databasev1alpha.DatabaseV1alphaClient
 }
 
-// ClusterV1alpha retrieves the ClusterV1alphaClient
-func (c *Clientset) ClusterV1alpha() clusterv1alpha.ClusterV1alphaInterface {
-	return c.clusterV1alpha
+// DatabaseV1alpha retrieves the DatabaseV1alphaClient
+func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
+	return c.databaseV1alpha
 }
 
-// Deprecated: Cluster retrieves the default version of ClusterClient.
+// Deprecated: Database retrieves the default version of DatabaseClient.
 // Please explicitly pick a version.
-func (c *Clientset) Cluster() clusterv1alpha.ClusterV1alphaInterface {
-	return c.clusterV1alpha
+func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
+	return c.databaseV1alpha
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -68,7 +68,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.clusterV1alpha, err = clusterv1alpha.NewForConfig(&configShallowCopy)
+	cs.databaseV1alpha, err = databasev1alpha.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.clusterV1alpha = clusterv1alpha.NewForConfigOrDie(c)
+	cs.databaseV1alpha = databasev1alpha.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -94,7 +94,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.clusterV1alpha = clusterv1alpha.New(c)
+	cs.databaseV1alpha = databasev1alpha.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

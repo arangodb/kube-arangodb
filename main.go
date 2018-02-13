@@ -43,12 +43,18 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/arangodb/k8s-operator/pkg/client"
 	"github.com/arangodb/k8s-operator/pkg/controller"
-	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	"github.com/arangodb/k8s-operator/pkg/logging"
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
+)
+
+const (
+	defaultServerHost = "0.0.0.0"
+	defaultServerPort = 8528
+	defaultLogLevel   = "debug"
 )
 
 var (
@@ -74,9 +80,9 @@ var (
 
 func init() {
 	f := cmdMain.Flags()
-	f.StringVar(&server.host, "server.host", "0.0.0.0", "Host to listen on")
-	f.IntVar(&server.port, "server.port", 8528, "Port to listen on")
-	f.StringVar(&logLevel, "log.level", "info", "Set initial log level")
+	f.StringVar(&server.host, "server.host", defaultServerHost, "Host to listen on")
+	f.IntVar(&server.port, "server.port", defaultServerPort, "Port to listen on")
+	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&createCRD, "operator.create-crd", true, "Disable to avoid create the custom resource definition")
 }
 
@@ -184,11 +190,7 @@ func newControllerConfigAndDeps(namespace, name string) (controller.Config, cont
 	if err != nil {
 		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
 	}
-	inClCfg, err := k8sutil.InClusterConfig()
-	if err != nil {
-		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to collect in-cluster config: %s", err))
-	}
-	clusterCRCli, err := versioned.NewForConfig(inClCfg)
+	databaseCRCli, err := client.NewInCluster()
 	if err != nil {
 		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}
@@ -199,10 +201,10 @@ func newControllerConfigAndDeps(namespace, name string) (controller.Config, cont
 		CreateCRD:      createCRD,
 	}
 	deps := controller.Dependencies{
-		Log:          logService.MustGetLogger("controller"),
-		KubeCli:      kubecli,
-		KubeExtCli:   kubeExtCli,
-		ClusterCRCli: clusterCRCli,
+		Log:           logService.MustGetLogger("controller"),
+		KubeCli:       kubecli,
+		KubeExtCli:    kubeExtCli,
+		DatabaseCRCli: databaseCRCli,
 	}
 
 	return cfg, deps, nil

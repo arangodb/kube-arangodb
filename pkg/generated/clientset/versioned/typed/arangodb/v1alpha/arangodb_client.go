@@ -26,22 +26,22 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-type ClusterV1alphaInterface interface {
+type DatabaseV1alphaInterface interface {
 	RESTClient() rest.Interface
-	ArangoClustersGetter
+	ArangoDeploymentsGetter
 }
 
-// ClusterV1alphaClient is used to interact with features provided by the cluster.arangodb.com group.
-type ClusterV1alphaClient struct {
+// DatabaseV1alphaClient is used to interact with features provided by the database.arangodb.com group.
+type DatabaseV1alphaClient struct {
 	restClient rest.Interface
 }
 
-func (c *ClusterV1alphaClient) ArangoClusters(namespace string) ArangoClusterInterface {
-	return newArangoClusters(c, namespace)
+func (c *DatabaseV1alphaClient) ArangoDeployments(namespace string) ArangoDeploymentInterface {
+	return newArangoDeployments(c, namespace)
 }
 
-// NewForConfig creates a new ClusterV1alphaClient for the given config.
-func NewForConfig(c *rest.Config) (*ClusterV1alphaClient, error) {
+// NewForConfig creates a new DatabaseV1alphaClient for the given config.
+func NewForConfig(c *rest.Config) (*DatabaseV1alphaClient, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -50,12 +50,12 @@ func NewForConfig(c *rest.Config) (*ClusterV1alphaClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ClusterV1alphaClient{client}, nil
+	return &DatabaseV1alphaClient{client}, nil
 }
 
-// NewForConfigOrDie creates a new ClusterV1alphaClient for the given config and
+// NewForConfigOrDie creates a new DatabaseV1alphaClient for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *ClusterV1alphaClient {
+func NewForConfigOrDie(c *rest.Config) *DatabaseV1alphaClient {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -63,9 +63,9 @@ func NewForConfigOrDie(c *rest.Config) *ClusterV1alphaClient {
 	return client
 }
 
-// New creates a new ClusterV1alphaClient for the given RESTClient.
-func New(c rest.Interface) *ClusterV1alphaClient {
-	return &ClusterV1alphaClient{c}
+// New creates a new DatabaseV1alphaClient for the given RESTClient.
+func New(c rest.Interface) *DatabaseV1alphaClient {
+	return &DatabaseV1alphaClient{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -83,7 +83,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *ClusterV1alphaClient) RESTClient() rest.Interface {
+func (c *DatabaseV1alphaClient) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

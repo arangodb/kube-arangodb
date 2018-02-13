@@ -28,57 +28,59 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ArangoClusterList is a list of ArangoDB clusters.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ArangoClusterList struct {
+
+// ArangoDeploymentList is a list of ArangoDB clusters.
+type ArangoDeploymentList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ArangoCluster `json:"items"`
+	Items           []ArangoDeployment `json:"items"`
 }
 
-// ArangoCluster contains the entire Kubernetes info for an ArangoDB cluster
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ArangoCluster struct {
+
+// ArangoDeployment contains the entire Kubernetes info for an ArangoDB database deployment.
+type ArangoDeployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ClusterSpec   `json:"spec"`
-	Status            ClusterStatus `json:"status"`
+	Spec              DeploymentSpec   `json:"spec"`
+	Status            DeploymentStatus `json:"status"`
 }
 
-func (c *ArangoCluster) AsOwner() metav1.OwnerReference {
+func (c *ArangoDeployment) AsOwner() metav1.OwnerReference {
 	controller := true
 	return metav1.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
-		Kind:       ArangoClusterResourceKind,
+		Kind:       ArangoDeploymentResourceKind,
 		Name:       c.Name,
 		UID:        c.UID,
 		Controller: &controller,
 	}
 }
 
-// ClusterMode specifies the type of cluster to create.
-type ClusterMode string
+// DeploymentMode specifies the type of ArangoDB deployment to create.
+type DeploymentMode string
 
 const (
-	// ClusterModeSingle yields a single server
-	ClusterModeSingle ClusterMode = "single"
-	// ClusterModeResilientSingle yields an agency and a resilient-single server pair
-	ClusterModeResilientSingle ClusterMode = "resilientsingle"
-	// ClusterModeCluster yields an full cluster (agency, dbservers & coordinators)
-	ClusterModeCluster ClusterMode = "cluster"
+	// DeploymentModeSingle yields a single server
+	DeploymentModeSingle DeploymentMode = "single"
+	// DeploymentModeResilientSingle yields an agency and a resilient-single server pair
+	DeploymentModeResilientSingle DeploymentMode = "resilientsingle"
+	// DeploymentModeCluster yields an full cluster (agency, dbservers & coordinators)
+	DeploymentModeCluster DeploymentMode = "cluster"
 )
 
 // Validate the mode.
 // Return errors when validation fails, nil on success.
-func (m ClusterMode) Validate() error {
+func (m DeploymentMode) Validate() error {
 	switch m {
-	case ClusterModeSingle, ClusterModeResilientSingle, ClusterModeCluster:
+	case DeploymentModeSingle, DeploymentModeResilientSingle, DeploymentModeCluster:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown cluster mode: '%s'", string(m)))
+		return maskAny(errors.Wrapf(ValidationError, "Unknown deployment mode: '%s'", string(m)))
 	}
 }
 
@@ -135,12 +137,12 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	}
 }
 
-// ClusterSpec contains the spec part of a Cluster resource.
-type ClusterSpec struct {
-	Mode            ClusterMode   `json:"mode,omitempty"`
-	Environment     Environment   `json:"environment,omitempty"`
-	StorageEngine   StorageEngine `json:"storageEngine,omitempty"`
-	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+// DeploymentSpec contains the spec part of a ArangoDeployment resource.
+type DeploymentSpec struct {
+	Mode            DeploymentMode `json:"mode,omitempty"`
+	Environment     Environment    `json:"environment,omitempty"`
+	StorageEngine   StorageEngine  `json:"storageEngine,omitempty"`
+	ImagePullPolicy v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 
 	RocksDB struct {
 		Encryption struct {
@@ -160,9 +162,9 @@ type ClusterSpec struct {
 }
 
 // SetDefaults fills in default values when a field is not specified.
-func (cs *ClusterSpec) SetDefaults() {
+func (cs *DeploymentSpec) SetDefaults() {
 	if cs.Mode == "" {
-		cs.Mode = ClusterModeCluster
+		cs.Mode = DeploymentModeCluster
 	}
 	if cs.Environment == "" {
 		cs.Environment = EnvironmentDevelopment
@@ -174,7 +176,7 @@ func (cs *ClusterSpec) SetDefaults() {
 
 // Validate the specification.
 // Return errors when validation fails, nil on success.
-func (cs *ClusterSpec) Validate() error {
+func (cs *DeploymentSpec) Validate() error {
 	if err := cs.Mode.Validate(); err != nil {
 		return maskAny(err)
 	}

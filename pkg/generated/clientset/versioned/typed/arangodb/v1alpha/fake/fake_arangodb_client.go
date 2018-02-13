@@ -25,17 +25,17 @@ import (
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeClusterV1alpha struct {
+type FakeDatabaseV1alpha struct {
 	*testing.Fake
 }
 
-func (c *FakeClusterV1alpha) ArangoClusters(namespace string) v1alpha.ArangoClusterInterface {
-	return &FakeArangoClusters{c, namespace}
+func (c *FakeDatabaseV1alpha) ArangoDeployments(namespace string) v1alpha.ArangoDeploymentInterface {
+	return &FakeArangoDeployments{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeClusterV1alpha) RESTClient() rest.Interface {
+func (c *FakeDatabaseV1alpha) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

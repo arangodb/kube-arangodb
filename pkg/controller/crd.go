@@ -44,11 +44,16 @@ func (c *Controller) initResourceIfNeeded() error {
 
 // initCRD creates the CustomResourceDefinition and waits for it to be ready.
 func (c *Controller) initCRD() error {
-	if err := k8sutil.CreateCRD(c.KubeExtCli, api.ArangoClusterCRDName, api.ArangoClusterResourceKind, api.ArangoClusterResourcePlural, "arangodb"); err != nil {
+	log := c.Dependencies.Log
+
+	log.Info().Msg("Calling CreateCRD")
+	if err := k8sutil.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, "arangodb"); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
-	if err := k8sutil.WaitCRDReady(c.KubeExtCli, api.ArangoClusterCRDName); err != nil {
+	log.Info().Msg("Waiting for CRD ready")
+	if err := k8sutil.WaitCRDReady(c.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
 		return maskAny(err)
 	}
+	log.Info().Msg("CRD is ready")
 	return nil
 }

@@ -35,59 +35,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// ArangoClusterInformer provides access to a shared informer and lister for
-// ArangoClusters.
-type ArangoClusterInformer interface {
+// ArangoDeploymentInformer provides access to a shared informer and lister for
+// ArangoDeployments.
+type ArangoDeploymentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha.ArangoClusterLister
+	Lister() v1alpha.ArangoDeploymentLister
 }
 
-type arangoClusterInformer struct {
+type arangoDeploymentInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewArangoClusterInformer constructs a new informer for ArangoCluster type.
+// NewArangoDeploymentInformer constructs a new informer for ArangoDeployment type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewArangoClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredArangoClusterInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewArangoDeploymentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredArangoDeploymentInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredArangoClusterInformer constructs a new informer for ArangoCluster type.
+// NewFilteredArangoDeploymentInformer constructs a new informer for ArangoDeployment type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredArangoClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredArangoDeploymentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha().ArangoClusters(namespace).List(options)
+				return client.DatabaseV1alpha().ArangoDeployments(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha().ArangoClusters(namespace).Watch(options)
+				return client.DatabaseV1alpha().ArangoDeployments(namespace).Watch(options)
 			},
 		},
-		&arangodb_v1alpha.ArangoCluster{},
+		&arangodb_v1alpha.ArangoDeployment{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *arangoClusterInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredArangoClusterInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *arangoDeploymentInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredArangoDeploymentInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *arangoClusterInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&arangodb_v1alpha.ArangoCluster{}, f.defaultInformer)
+func (f *arangoDeploymentInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&arangodb_v1alpha.ArangoDeployment{}, f.defaultInformer)
 }
 
-func (f *arangoClusterInformer) Lister() v1alpha.ArangoClusterLister {
-	return v1alpha.NewArangoClusterLister(f.Informer().GetIndexer())
+func (f *arangoDeploymentInformer) Lister() v1alpha.ArangoDeploymentLister {
+	return v1alpha.NewArangoDeploymentLister(f.Informer().GetIndexer())
 }

@@ -152,3 +152,14 @@ release-minor: $(RELEASE)
 release-major: $(RELEASE)
 	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major 
 
+## Kubernetes utilities
+
+minikube-start:
+	minikube start --cpus=4 --memory=6144
+
+delete-operator:
+	kubectl delete -f examples/deployment.yaml || true
+
+redeploy-operator: delete-operator
+	kubectl create -f examples/deployment.yaml
+	kubectl get pods 

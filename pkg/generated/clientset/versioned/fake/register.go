@@ -20,7 +20,7 @@
 package fake
 
 import (
-	clusterv1alpha "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	databasev1alpha "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -51,5 +51,5 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
-	clusterv1alpha.AddToScheme(scheme)
+	databasev1alpha.AddToScheme(scheme)
 }

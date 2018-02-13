@@ -21,8 +21,8 @@ package fake
 
 import (
 	clientset "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	clusterv1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
-	fakeclusterv1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha/fake"
+	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
+	fakedatabasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -71,12 +71,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// ClusterV1alpha retrieves the ClusterV1alphaClient
-func (c *Clientset) ClusterV1alpha() clusterv1alpha.ClusterV1alphaInterface {
-	return &fakeclusterv1alpha.FakeClusterV1alpha{Fake: &c.Fake}
+// DatabaseV1alpha retrieves the DatabaseV1alphaClient
+func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
+	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
 }
 
-// Cluster retrieves the ClusterV1alphaClient
-func (c *Clientset) Cluster() clusterv1alpha.ClusterV1alphaInterface {
-	return &fakeclusterv1alpha.FakeClusterV1alpha{Fake: &c.Fake}
+// Database retrieves the DatabaseV1alphaClient
+func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
+	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
 }

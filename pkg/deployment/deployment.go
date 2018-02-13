@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package cluster
+package deployment
 
 import (
 	"fmt"
@@ -37,78 +37,80 @@ import (
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
 )
 
+// Config holds configuration settings for a Deployment
 type Config struct {
 	ServiceAccount string
 }
 
+// Dependencies holds dependent services for a Deployment
 type Dependencies struct {
-	Log          zerolog.Logger
-	KubeCli      kubernetes.Interface
-	ClusterCRCli versioned.Interface
+	Log           zerolog.Logger
+	KubeCli       kubernetes.Interface
+	DatabaseCRCli versioned.Interface
 }
 
-// clusterEventType strongly typed type of event
-type clusterEventType string
+// deploymentEventType strongly typed type of event
+type deploymentEventType string
 
 const (
-	eventModifyCluster clusterEventType = "Modify"
+	eventModifyDeployment deploymentEventType = "Modify"
 )
 
-// clusterType holds an event passed from the controller to the cluster.
-type clusterEvent struct {
-	Type    clusterEventType
-	Cluster *api.ArangoCluster
+// deploymentEvent holds an event passed from the controller to the deployment.
+type deploymentEvent struct {
+	Type       deploymentEventType
+	Deployment *api.ArangoDeployment
 }
 
 const (
-	clusterEventQueueSize = 100
+	deploymentEventQueueSize = 100
 )
 
-// Cluster is the in process state of an ArangoDB cluster.
-type Cluster struct {
-	cluster *api.ArangoCluster // API object
-	status  api.ClusterStatus  // Internal status of the CR
-	config  Config
-	deps    Dependencies
+// Deployment is the in process state of an ArangoDeployment.
+type Deployment struct {
+	apiObject *api.ArangoDeployment // API object
+	status    api.DeploymentStatus  // Internal status of the CR
+	config    Config
+	deps      Dependencies
 
-	eventCh chan *clusterEvent
+	eventCh chan *deploymentEvent
 	stopCh  chan struct{}
 }
 
-// NewCluster creates a new Cluster from the given API object.
-func NewCluster(config Config, deps Dependencies, cluster *api.ArangoCluster) (*Cluster, error) {
-	if err := cluster.Spec.Validate(); err != nil {
+// New creates a new Deployment from the given API object.
+func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*Deployment, error) {
+	if err := apiObject.Spec.Validate(); err != nil {
 		return nil, maskAny(err)
 	}
-	c := &Cluster{
-		cluster: cluster,
-		status:  *(cluster.Status.DeepCopy()),
-		config:  config,
-		deps:    deps,
-		eventCh: make(chan *clusterEvent, clusterEventQueueSize),
-		stopCh:  make(chan struct{}),
+	c := &Deployment{
+		apiObject: apiObject,
+		status:    *(apiObject.Status.DeepCopy()),
+		config:    config,
+		deps:      deps,
+		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:    make(chan struct{}),
 	}
 	return c, nil
 }
 
-// Update the cluster.
-// This sends an update event in the cluster event queue.
-func (c *Cluster) Update(cluster *api.ArangoCluster) {
-	c.send(&clusterEvent{
-		Type:    eventModifyCluster,
-		Cluster: cluster,
+// Update the deployment.
+// This sends an update event in the deployment event queue.
+func (c *Deployment) Update(apiObject *api.ArangoDeployment) {
+	c.send(&deploymentEvent{
+		Type:       eventModifyDeployment,
+		Deployment: apiObject,
 	})
 }
 
-// Delete the cluster.
-// Called when the cluster was deleted by the user.
-func (c *Cluster) Delete() {
-	c.deps.Log.Info().Msg("cluster is deleted by user")
+// Delete the deployment.
+// Called when the deployment was deleted by the user.
+func (c *Deployment) Delete() {
+	c.deps.Log.Info().Msg("deployment is deleted by user")
 	close(c.stopCh)
 }
 
-// send given event into the cluster event queue.
-func (c *Cluster) send(ev *clusterEvent) {
+// send given event into the deployment event queue.
+func (c *Deployment) send(ev *deploymentEvent) {
 	select {
 	case c.eventCh <- ev:
 		l, ecap := len(c.eventCh), cap(c.eventCh)
@@ -125,10 +127,10 @@ func (c *Cluster) send(ev *clusterEvent) {
 // run is the core the core worker.
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
-func (c *Cluster) run() {
+func (c *Deployment) run() {
 	log := c.deps.Log
 
-	c.status.State = api.ClusterStateRunning
+	c.status.State = api.DeploymentStateRunning
 	if err := c.updateCRStatus(); err != nil {
 		log.Warn().Err(err).Msg("update initial CR status failed")
 	}
@@ -143,7 +145,7 @@ func (c *Cluster) run() {
 		case event := <-c.eventCh:
 			// Got event from event queue
 			switch event.Type {
-			case eventModifyCluster:
+			case eventModifyDeployment:
 				if err := c.handleUpdateEvent(event); err != nil {
 					log.Error().Err(err).Msg("handle update event failed")
 					c.status.Reason = err.Error()
@@ -157,41 +159,41 @@ func (c *Cluster) run() {
 	}
 }
 
-// handleUpdateEvent processes the given event coming from the cluster event queue.
-func (c *Cluster) handleUpdateEvent(event *clusterEvent) error {
+// handleUpdateEvent processes the given event coming from the deployment event queue.
+func (c *Deployment) handleUpdateEvent(event *deploymentEvent) error {
 	// TODO
 	return nil
 }
 
 // Update the status of the API object from the internal status
-func (c *Cluster) updateCRStatus() error {
-	if reflect.DeepEqual(c.cluster.Status, c.status) {
+func (c *Deployment) updateCRStatus() error {
+	if reflect.DeepEqual(c.apiObject.Status, c.status) {
 		// Nothing has changed
 		return nil
 	}
 
 	// Send update to API server
-	newCluster := c.cluster
-	newCluster.Status = c.status
-	newCluster, err := c.deps.ClusterCRCli.ClusterV1alpha().ArangoClusters(c.cluster.Namespace).Update(c.cluster)
+	update := *c.apiObject
+	update.Status = c.status
+	newAPIObject, err := c.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(c.apiObject.Namespace).Update(&update)
 	if err != nil {
 		return maskAny(fmt.Errorf("failed to update CR status: %v", err))
 	}
 
 	// Update internal object
-	c.cluster = newCluster
+	c.apiObject = newAPIObject
 
 	return nil
 }
 
-// reportFailedStatus sets the status of the cluster to Failed and keeps trying to forward
+// reportFailedStatus sets the status of the deployment to Failed and keeps trying to forward
 // that to the API server.
-func (c *Cluster) reportFailedStatus() {
+func (c *Deployment) reportFailedStatus() {
 	log := c.deps.Log
-	log.Info().Msg("cluster failed. Reporting failed reason...")
+	log.Info().Msg("deployment failed. Reporting failed reason...")
 
 	op := func() error {
-		c.status.State = api.ClusterStateFailed
+		c.status.State = api.DeploymentStateFailed
 		err := c.updateCRStatus()
 		if err == nil || k8sutil.IsNotFound(err) {
 			// Status has been updated
@@ -203,7 +205,7 @@ func (c *Cluster) reportFailedStatus() {
 			return maskAny(err)
 		}
 
-		cl, err := c.deps.ClusterCRCli.ClusterV1alpha().ArangoClusters(c.cluster.Namespace).Get(c.cluster.Name, metav1.GetOptions{})
+		depl, err := c.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(c.apiObject.Namespace).Get(c.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
@@ -214,7 +216,7 @@ func (c *Cluster) reportFailedStatus() {
 			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
 			return maskAny(err)
 		}
-		c.cluster = cl
+		c.apiObject = depl
 		return maskAny(fmt.Errorf("retry needed"))
 	}
 

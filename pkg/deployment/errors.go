@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package cluster
+package deployment
 
 import "github.com/pkg/errors"
 

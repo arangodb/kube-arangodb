@@ -1,6 +1,6 @@
 apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoDeployment"
 metadata:
-  name: "example-arangodb-cluster"
+  name: "example-single-arangodb-server"
 spec:
-  mode: cluster
+  mode: single

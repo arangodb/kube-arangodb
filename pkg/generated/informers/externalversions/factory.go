@@ -127,9 +127,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Cluster() arangodb.Interface
+	Database() arangodb.Interface
 }
 
-func (f *sharedInformerFactory) Cluster() arangodb.Interface {
+func (f *sharedInformerFactory) Database() arangodb.Interface {
 	return arangodb.New(f, f.namespace, f.tweakListOptions)
 }

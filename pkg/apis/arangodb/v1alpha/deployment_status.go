@@ -22,31 +22,31 @@
 
 package v1alpha
 
-type ClusterState string
+type DeploymentState string
 
 const (
-	ClusterStateNone      ClusterState = ""
-	ClusterStateCreating  ClusterState = "Creating"
-	ClusterStateRunning   ClusterState = "Running"
-	ClusterStateScaling   ClusterState = "Scaling"
-	ClusterStateUpgrading ClusterState = "Upgrading"
-	ClusterStateFailed    ClusterState = "Failed"
+	DeploymentStateNone      DeploymentState = ""
+	DeploymentStateCreating  DeploymentState = "Creating"
+	DeploymentStateRunning   DeploymentState = "Running"
+	DeploymentStateScaling   DeploymentState = "Scaling"
+	DeploymentStateUpgrading DeploymentState = "Upgrading"
+	DeploymentStateFailed    DeploymentState = "Failed"
 )
 
-// IsFailed returns true if given state is ClusterStateFailed
-func (cs ClusterState) IsFailed() bool {
-	return cs == ClusterStateFailed
+// IsFailed returns true if given state is DeploymentStateFailed
+func (cs DeploymentState) IsFailed() bool {
+	return cs == DeploymentStateFailed
 }
 
-// ClusterStatus contains the status part of a Cluster resource.
-type ClusterStatus struct {
-	State  ClusterState `json:"state"`
-	Reason string       `json:"reason,omitempty"` // Reason for current state
+// DeploymentStatus contains the status part of a Cluster resource.
+type DeploymentStatus struct {
+	State  DeploymentState `json:"state"`
+	Reason string          `json:"reason,omitempty"` // Reason for current state
 
-	Members ClusterStatusMembers `json:"members"`
+	Members DeploymentStatusMembers `json:"members"`
 }
 
-type ClusterStatusMembers struct {
+type DeploymentStatusMembers struct {
 	Single       []MemberStatus `json:"single,omitempty"`
 	Agents       []MemberStatus `json:"agents,omitempty"`
 	DBServers    []MemberStatus `json:"dbservers,omitempty"`

@@ -36,7 +36,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/cluster"
+	"github.com/arangodb/k8s-operator/pkg/deployment"
 	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	"github.com/arangodb/k8s-operator/pkg/metrics"
 )
@@ -46,23 +46,23 @@ const (
 )
 
 var (
-	clustersCreated  = metrics.MustRegisterCounter("controller", "clusters_created", "Number of clusters that have been created")
-	clustersDeleted  = metrics.MustRegisterCounter("controller", "clusters_deleted", "Number of clusters that have been deleted")
-	clustersFailed   = metrics.MustRegisterCounter("controller", "clusters_failed", "Number of clusters that have failed")
-	clustersModified = metrics.MustRegisterCounter("controller", "clusters_modified", "Number of cluster modifications")
-	clustersCurrent  = metrics.MustRegisterGauge("controller", "clusters", "Number of clusters currently being managed")
+	deploymentsCreated  = metrics.MustRegisterCounter("controller", "deployments_created", "Number of deployments that have been created")
+	deploymentsDeleted  = metrics.MustRegisterCounter("controller", "deployments_deleted", "Number of deployments that have been deleted")
+	deploymentsFailed   = metrics.MustRegisterCounter("controller", "deployments_failed", "Number of deployments that have failed")
+	deploymentsModified = metrics.MustRegisterCounter("controller", "deployments_modified", "Number of deployment modifications")
+	deploymentsCurrent  = metrics.MustRegisterGauge("controller", "deployments", "Number of deployments currently being managed")
 )
 
 type Event struct {
 	Type   kwatch.EventType
-	Object *api.ArangoCluster
+	Object *api.ArangoDeployment
 }
 
 type Controller struct {
 	Config
 	Dependencies
 
-	clusters map[string]*cluster.Cluster
+	deployments map[string]*deployment.Deployment
 }
 
 type Config struct {
@@ -72,10 +72,10 @@ type Config struct {
 }
 
 type Dependencies struct {
-	Log          zerolog.Logger
-	KubeCli      kubernetes.Interface
-	KubeExtCli   apiextensionsclient.Interface
-	ClusterCRCli versioned.Interface
+	Log           zerolog.Logger
+	KubeCli       kubernetes.Interface
+	KubeExtCli    apiextensionsclient.Interface
+	DatabaseCRCli versioned.Interface
 }
 
 // NewController instantiates a new controller from given config & dependencies.
@@ -83,7 +83,7 @@ func NewController(config Config, deps Dependencies) (*Controller, error) {
 	c := &Controller{
 		Config:       config,
 		Dependencies: deps,
-		clusters:     make(map[string]*cluster.Cluster),
+		deployments:  make(map[string]*deployment.Deployment),
 	}
 	return c, nil
 }
@@ -110,16 +110,19 @@ func (c *Controller) Start() error {
 // run the controller.
 // This registers a listener and waits until the process stops.
 func (c *Controller) run() {
+	log := c.Dependencies.Log
+
+	log.Info().Msgf("Running controller in namespace '%s'", c.Config.Namespace)
 	source := cache.NewListWatchFromClient(
-		c.Dependencies.ClusterCRCli.ClusterV1alpha().RESTClient(),
-		api.ArangoClusterResourcePlural,
+		c.Dependencies.DatabaseCRCli.DatabaseV1alpha().RESTClient(),
+		api.ArangoDeploymentResourcePlural,
 		c.Config.Namespace,
 		fields.Everything())
 
-	_, informer := cache.NewIndexerInformer(source, &api.ArangoCluster{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.onAddArangoCluster,
-		UpdateFunc: c.onUpdateArangoCluster,
-		DeleteFunc: c.onDeleteArangoCluster,
+	_, informer := cache.NewIndexerInformer(source, &api.ArangoDeployment{}, 0, cache.ResourceEventHandlerFuncs{
+		AddFunc:    c.onAddArangoDeployment,
+		UpdateFunc: c.onUpdateArangoDeployment,
+		DeleteFunc: c.onDeleteArangoDeployment,
 	}, cache.Indexers{})
 
 	ctx := context.TODO()
@@ -127,127 +130,139 @@ func (c *Controller) run() {
 	informer.Run(ctx.Done())
 }
 
-// onAddArangoCluster cluster addition callback
-func (c *Controller) onAddArangoCluster(obj interface{}) {
-	c.syncArangoCluster(obj.(*api.ArangoCluster))
+// onAddArangoDeployment deployment addition callback
+func (c *Controller) onAddArangoDeployment(obj interface{}) {
+	log := c.Dependencies.Log
+	apiObject := obj.(*api.ArangoDeployment)
+	log.Debug().
+		Str("name", apiObject.GetObjectMeta().GetName()).
+		Msg("ArangoDeployment added")
+	c.syncArangoDeployment(apiObject)
 }
 
-// onUpdateArangoCluster cluster update callback
-func (c *Controller) onUpdateArangoCluster(oldObj, newObj interface{}) {
-	c.syncArangoCluster(newObj.(*api.ArangoCluster))
+// onUpdateArangoDeployment deployment update callback
+func (c *Controller) onUpdateArangoDeployment(oldObj, newObj interface{}) {
+	log := c.Dependencies.Log
+	apiObject := newObj.(*api.ArangoDeployment)
+	log.Debug().
+		Str("name", apiObject.GetObjectMeta().GetName()).
+		Msg("ArangoDeployment updated")
+	c.syncArangoDeployment(apiObject)
 }
 
-// onDeleteArangoCluster cluster delete callback
-func (c *Controller) onDeleteArangoCluster(obj interface{}) {
-	clus, ok := obj.(*api.ArangoCluster)
+// onDeleteArangoDeployment deployment delete callback
+func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
+	apiObject, ok := obj.(*api.ArangoDeployment)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			panic(fmt.Sprintf("unknown object from EtcdCluster delete event: %#v", obj))
+			panic(fmt.Sprintf("unknown object from ArangoDeployment delete event: %#v", obj))
 		}
-		clus, ok = tombstone.Obj.(*api.ArangoCluster)
+		apiObject, ok = tombstone.Obj.(*api.ArangoDeployment)
 		if !ok {
-			panic(fmt.Sprintf("Tombstone contained object that is not an ArangoCluster: %#v", obj))
+			panic(fmt.Sprintf("Tombstone contained object that is not an ArangoDeployment: %#v", obj))
 		}
 	}
 	ev := &Event{
 		Type:   kwatch.Deleted,
-		Object: clus,
+		Object: apiObject,
 	}
 
 	//	pt.start()
-	err := c.handleClusterEvent(ev)
+	err := c.handleDeploymentEvent(ev)
 	if err != nil {
 		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
 
-// syncArangoCluster synchronized the given cluster.
-func (c *Controller) syncArangoCluster(apiCluster *api.ArangoCluster) {
+// syncArangoDeployment synchronized the given deployment.
+func (c *Controller) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 	ev := &Event{
 		Type:   kwatch.Added,
-		Object: apiCluster,
+		Object: apiObject,
 	}
 	// re-watch or restart could give ADD event.
 	// If for an ADD event the cluster spec is invalid then it is not added to the local cache
-	// so modifying that cluster will result in another ADD event
-	if _, ok := c.clusters[apiCluster.Name]; ok {
+	// so modifying that deployment will result in another ADD event
+	if _, ok := c.deployments[apiObject.Name]; ok {
 		ev.Type = kwatch.Modified
 	}
 
 	//pt.start()
-	err := c.handleClusterEvent(ev)
+	err := c.handleDeploymentEvent(ev)
 	if err != nil {
 		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
 
-// handleClusterEvent processed the given event.
-func (c *Controller) handleClusterEvent(event *Event) error {
-	apiCluster := event.Object
+// handleDeploymentEvent processed the given event.
+func (c *Controller) handleDeploymentEvent(event *Event) error {
+	apiObject := event.Object
 
-	if apiCluster.Status.State.IsFailed() {
-		clustersFailed.Inc()
+	if apiObject.Status.State.IsFailed() {
+		deploymentsFailed.Inc()
 		if event.Type == kwatch.Deleted {
-			delete(c.clusters, apiCluster.Name)
+			delete(c.deployments, apiObject.Name)
 			return nil
 		}
-		return maskAny(fmt.Errorf("ignore failed cluster (%s). Please delete its CR", apiCluster.Name))
+		return maskAny(fmt.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
 	// Fill in defaults
-	apiCluster.Spec.SetDefaults()
-	// Validate cluster spec
-	if err := apiCluster.Spec.Validate(); err != nil {
-		return maskAny(errors.Wrapf(err, "invalid cluster spec. please fix the following problem with the cluster spec: %v", err))
+	apiObject.Spec.SetDefaults()
+	// Validate deployment spec
+	if err := apiObject.Spec.Validate(); err != nil {
+		return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
 	}
 
 	switch event.Type {
 	case kwatch.Added:
-		if _, ok := c.clusters[apiCluster.Name]; ok {
-			return maskAny(fmt.Errorf("unsafe state. cluster (%s) was created before but we received event (%s)", apiCluster.Name, event.Type))
+		if _, ok := c.deployments[apiObject.Name]; ok {
+			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
-		cfg, deps := c.makeClusterConfigAndDeps()
-		nc, err := cluster.NewCluster(cfg, deps, apiCluster)
+		cfg, deps := c.makeDeploymentConfigAndDeps()
+		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
-			return maskAny(fmt.Errorf("failed to create cluster: %s", err))
+			return maskAny(fmt.Errorf("failed to create deployment: %s", err))
 		}
-		c.clusters[apiCluster.Name] = nc
+		c.deployments[apiObject.Name] = nc
 
-		clustersCreated.Inc()
-		clustersCurrent.Set(float64(len(c.clusters)))
+		deploymentsCreated.Inc()
+		deploymentsCurrent.Set(float64(len(c.deployments)))
 
 	case kwatch.Modified:
-		if _, ok := c.clusters[apiCluster.Name]; !ok {
-			return maskAny(fmt.Errorf("unsafe state. cluster (%s) was never created but we received event (%s)", apiCluster.Name, event.Type))
+		depl, ok := c.deployments[apiObject.Name]
+		if !ok {
+			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
-		c.clusters[apiCluster.Name].Update(apiCluster)
-		clustersModified.Inc()
+		depl.Update(apiObject)
+		deploymentsModified.Inc()
 
 	case kwatch.Deleted:
-		if _, ok := c.clusters[apiCluster.Name]; !ok {
-			return maskAny(fmt.Errorf("unsafe state. cluster (%s) was never created but we received event (%s)", apiCluster.Name, event.Type))
+		depl, ok := c.deployments[apiObject.Name]
+		if !ok {
+			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
-		c.clusters[apiCluster.Name].Delete()
-		delete(c.clusters, apiCluster.Name)
-		clustersDeleted.Inc()
-		clustersCurrent.Set(float64(len(c.clusters)))
+		depl.Delete()
+		delete(c.deployments, apiObject.Name)
+		deploymentsDeleted.Inc()
+		deploymentsCurrent.Set(float64(len(c.deployments)))
 	}
 	return nil
 }
 
-// makeClusterConfigAndDeps creates a Config & Dependencies object for a new cluster.
-func (c *Controller) makeClusterConfigAndDeps() (cluster.Config, cluster.Dependencies) {
-	cfg := cluster.Config{
+// makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new cluster.
+func (c *Controller) makeDeploymentConfigAndDeps() (deployment.Config, deployment.Dependencies) {
+	cfg := deployment.Config{
 		ServiceAccount: c.Config.ServiceAccount,
 	}
-	deps := cluster.Dependencies{
-		Log:          c.Dependencies.Log,
-		KubeCli:      c.Dependencies.KubeCli,
-		ClusterCRCli: c.Dependencies.ClusterCRCli,
+	deps := deployment.Dependencies{
+		Log:           c.Dependencies.Log,
+		KubeCli:       c.Dependencies.KubeCli,
+		DatabaseCRCli: c.Dependencies.DatabaseCRCli,
 	}
 	return cfg, deps
 }

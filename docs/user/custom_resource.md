@@ -1,6 +1,6 @@
 # Custom Resource
 
-The ArangoDB operator creates and maintains ArangoDB clusters
+The ArangoDB operator creates and maintains ArangoDB deployments
 in a Kubernetes cluster, given a cluster specification.
 This cluster specification is a CustomResource following
 a CustomResourceDefinition created by the operator.
@@ -8,8 +8,8 @@ a CustomResourceDefinition created by the operator.
 Example minimal cluster definition:
 
 ```yaml
-apiVersion: "cluster.arangodb.com/v1alpha"
-kind: "Cluster"
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
 metadata:
   name: "example-arangodb-cluster"
 spec:
@@ -19,8 +19,8 @@ spec:
 Example more elaborate cluster definition:
 
 ```yaml
-apiVersion: "cluster.arangodb.com/v1alpha"
-kind: "Cluster"
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
 metadata:
   name: "example-arangodb-cluster"
 spec:
@@ -46,7 +46,7 @@ spec:
 
 ## Specification reference
 
-Below you'll find all settings of the `Cluster` custom resource.
+Below you'll find all settings of the `ArangoDeployment` custom resource.
 Several settings are for various groups of servers. These are indicated
 with `<group>` where `<group>` can be any of:
 
@@ -59,23 +59,23 @@ with `<group>` where `<group>` can be any of:
 
 ### `spec.mode: string`
 
-This setting specifies the type of cluster you want to create.
+This setting specifies the type of deployment you want to create.
 Possible values are:
 
 - `cluster` (default) Full cluster. Defaults to 3 agents, 3 dbservers & 3 coordinators.
 - `resilientsingle` Resilient single pair. Defaults to 3 agents and 2 single servers.
 - `single` Single server only (note this does not provide high availability or reliability).
 
-This setting cannot be changed after the cluster has been created.
+This setting cannot be changed after the deployment has been created.
 
 ### `spec.environment: string`
 
-This setting specifies the type of environment in which the cluster is created.
+This setting specifies the type of environment in which the deployment is created.
 Possible values are:
 
-- `development` (default) This value optimizes the cluster for development
-  use. It is possible to run a cluster on a small number of nodes (e.g. minikube).
-- `production` This value optimizes the cluster for production use.
+- `development` (default) This value optimizes the deployment for development
+  use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
+- `production` This value optimizes the deployment for production use.
   It puts required affinity constraints on all pods to avoid agents & dbservers
   from running on the same machine.
 

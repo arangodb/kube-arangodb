@@ -19,4 +19,4 @@
 //
 package v1alpha
 
-type ArangoClusterExpansion interface{}
+type ArangoDeploymentExpansion interface{}

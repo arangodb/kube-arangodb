@@ -28,8 +28,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// ArangoClusters returns a ArangoClusterInformer.
-	ArangoClusters() ArangoClusterInformer
+	// ArangoDeployments returns a ArangoDeploymentInformer.
+	ArangoDeployments() ArangoDeploymentInformer
 }
 
 type version struct {
@@ -43,7 +43,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// ArangoClusters returns a ArangoClusterInformer.
-func (v *version) ArangoClusters() ArangoClusterInformer {
-	return &arangoClusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// ArangoDeployments returns a ArangoDeploymentInformer.
+func (v *version) ArangoDeployments() ArangoDeploymentInformer {
+	return &arangoDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

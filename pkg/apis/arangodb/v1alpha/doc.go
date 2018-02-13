@@ -21,5 +21,5 @@
 //
 
 // +k8s:deepcopy-gen=package
-// +groupName=cluster.arangodb.com
+// +groupName=database.arangodb.com
 package v1alpha

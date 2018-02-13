@@ -56,9 +56,9 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=cluster.arangodb.com, Version=v1alpha
-	case v1alpha.SchemeGroupVersion.WithResource("arangoclusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha().ArangoClusters().Informer()}, nil
+	// Group=database.arangodb.com, Version=v1alpha
+	case v1alpha.SchemeGroupVersion.WithResource("arangodeployments"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1alpha().ArangoDeployments().Informer()}, nil
 
 	}
 

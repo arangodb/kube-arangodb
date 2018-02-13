@@ -29,20 +29,20 @@ import (
 )
 
 const (
-	ArangoClusterResourceKind   = "Cluster"
-	ArangoClusterResourcePlural = "clusters"
-	groupName                   = "cluster.arangodb.com"
+	ArangoDeploymentResourceKind   = "ArangoDeployment"
+	ArangoDeploymentResourcePlural = "deployments"
+	groupName                      = "database.arangodb.com"
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion   = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoClusterCRDName = ArangoClusterResourcePlural + "." + groupName
+	SchemeGroupVersion      = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
+	ArangoDeploymentCRDName = ArangoDeploymentResourcePlural + "." + groupName
 )
 
-// Resource gets an EtcdCluster GroupResource for a specified resource
+// Resource gets an ArangoCluster GroupResource for a specified resource
 func Resource(resource string) schema.GroupResource {
 	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }
@@ -50,8 +50,8 @@ func Resource(resource string) schema.GroupResource {
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
-		&ArangoCluster{},
-		&ArangoClusterList{},
+		&ArangoDeployment{},
+		&ArangoDeploymentList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

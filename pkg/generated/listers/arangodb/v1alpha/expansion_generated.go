@@ -22,10 +22,10 @@
 
 package v1alpha
 
-// ArangoClusterListerExpansion allows custom methods to be added to
-// ArangoClusterLister.
-type ArangoClusterListerExpansion interface{}
+// ArangoDeploymentListerExpansion allows custom methods to be added to
+// ArangoDeploymentLister.
+type ArangoDeploymentListerExpansion interface{}
 
-// ArangoClusterNamespaceListerExpansion allows custom methods to be added to
-// ArangoClusterNamespaceLister.
-type ArangoClusterNamespaceListerExpansion interface{}
+// ArangoDeploymentNamespaceListerExpansion allows custom methods to be added to
+// ArangoDeploymentNamespaceLister.
+type ArangoDeploymentNamespaceListerExpansion interface{}
