@@ -23,6 +23,7 @@
 package main
 
 import (
+	goflag "flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -87,6 +89,7 @@ func init() {
 }
 
 func main() {
+	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 	cmdMain.Execute()
 }
 
