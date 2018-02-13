@@ -11,7 +11,7 @@ DOCKERCLI := $(shell which docker)
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
 SRCDIR := $(SCRIPTDIR)
 BINDIR := $(ROOTDIR)/bin
-VENDORDIR := $(ROOTDIR)/vendor
+VENDORDIR := $(ROOTDIR)/deps
 
 ORGPATH := github.com/arangodb
 ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
@@ -58,13 +58,13 @@ deps:
 $(GOBUILDDIR):
 	# Build pulsar from vendor
 	@mkdir -p $(GOBUILDDIR)
-	@ln -s $(VENDORDIR) $(GOBUILDDIR)/src
+	@ln -sf $(VENDORDIR) $(GOBUILDDIR)/src
 	@GOPATH=$(GOBUILDDIR) go install github.com/pulcy/pulsar
-	@rm -f $(GOBUILDDIR)/src
+	@rm -Rf $(GOBUILDDIR)/src
 	# Prepare .gobuild directory
 	@mkdir -p $(ORGDIR)
-	@rm -f $(REPODIR) && ln -s ../../../.. $(REPODIR)
-	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V vendor
+	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
+	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
 
 update-vendor:
 	@mkdir -p $(GOBUILDDIR)
@@ -94,7 +94,7 @@ update-generated: $(GOBUILDDIR)
 		-e GOBIN=/usr/code/.gobuild/bin \
 		-w /usr/code/ \
 		k8s-codegen \
-		"./vendor/k8s.io/code-generator/generate-groups.sh"  \
+		"./deps/k8s.io/code-generator/generate-groups.sh"  \
 		"all" \
 		"github.com/arangodb/k8s-operator/pkg/generated" \
 		"github.com/arangodb/k8s-operator/pkg/apis" \

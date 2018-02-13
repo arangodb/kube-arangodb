@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package k8sutil
+package crd
 
 import (
 	"fmt"
@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
 )
 
@@ -54,7 +55,7 @@ func CreateCRD(clientset apiextensionsclient.Interface, crdName, rkind, rplural,
 		crd.Spec.Names.ShortNames = []string{shortName}
 	}
 	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
-	if err != nil && !IsAlreadyExists(err) {
+	if err != nil && !k8sutil.IsAlreadyExists(err) {
 		return err
 	}
 	return nil

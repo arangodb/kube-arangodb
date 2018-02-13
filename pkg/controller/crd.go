@@ -28,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/k8s-operator/pkg/util/crd"
 )
 
 // initResourceIfNeeded initializes the custom resource definition when
@@ -46,14 +46,14 @@ func (c *Controller) initResourceIfNeeded() error {
 func (c *Controller) initCRD() error {
 	log := c.Dependencies.Log
 
-	log.Info().Msg("Calling CreateCRD")
-	if err := k8sutil.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, "arangodb"); err != nil {
+	log.Debug().Msg("Calling CreateCRD")
+	if err := crd.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, "arangodb"); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
-	log.Info().Msg("Waiting for CRD ready")
-	if err := k8sutil.WaitCRDReady(c.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
+	log.Debug().Msg("Waiting for CRD ready")
+	if err := crd.WaitCRDReady(c.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
 		return maskAny(err)
 	}
-	log.Info().Msg("CRD is ready")
+	log.Debug().Msg("CRD is ready")
 	return nil
 }
