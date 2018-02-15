@@ -47,7 +47,7 @@ func (c *Controller) initCRD() error {
 	log := c.Dependencies.Log
 
 	log.Debug().Msg("Calling CreateCRD")
-	if err := crd.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, "arangodb"); err != nil {
+	if err := crd.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, api.ArangoDeploymentShortNames...); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
 	log.Debug().Msg("Waiting for CRD ready")

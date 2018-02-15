@@ -30,7 +30,7 @@ import (
 
 const (
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
-	ArangoDeploymentResourcePlural = "deployments"
+	ArangoDeploymentResourcePlural = "arangodeployments"
 	groupName                      = "database.arangodb.com"
 )
 
@@ -38,8 +38,9 @@ var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion      = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoDeploymentCRDName = ArangoDeploymentResourcePlural + "." + groupName
+	SchemeGroupVersion         = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
+	ArangoDeploymentCRDName    = ArangoDeploymentResourcePlural + "." + groupName
+	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource

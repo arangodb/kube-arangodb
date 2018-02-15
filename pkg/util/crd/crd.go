@@ -36,7 +36,7 @@ import (
 )
 
 // CreateCRD creates a custom resouce definition.
-func CreateCRD(clientset apiextensionsclient.Interface, crdName, rkind, rplural, shortName string) error {
+func CreateCRD(clientset apiextensionsclient.Interface, crdName, rkind, rplural string, shortName ...string) error {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
@@ -52,7 +52,7 @@ func CreateCRD(clientset apiextensionsclient.Interface, crdName, rkind, rplural,
 		},
 	}
 	if len(shortName) != 0 {
-		crd.Spec.Names.ShortNames = []string{shortName}
+		crd.Spec.Names.ShortNames = shortName
 	}
 	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err != nil && !k8sutil.IsAlreadyExists(err) {

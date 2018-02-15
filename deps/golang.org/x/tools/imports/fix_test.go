@@ -5,7 +5,6 @@
 package imports
 
 import (
-	"bufio"
 	"bytes"
 	"flag"
 	"go/build"
@@ -867,6 +866,29 @@ func main() {
 }
 `,
 	},
+
+	{
+		name: "issue #12097",
+		in: `// a
+// b
+// c
+
+func main() {
+    _ = fmt.Println
+}`,
+		out: `package main
+
+import "fmt"
+
+// a
+// b
+// c
+
+func main() {
+	_ = fmt.Println
+}
+`,
+	},
 }
 
 func TestFixImports(t *testing.T) {
@@ -1274,12 +1296,12 @@ func TestFindImportStdlib(t *testing.T) {
 		{"ioutil", []string{"Discard"}, "io/ioutil"},
 	}
 	for _, tt := range tests {
-		got, rename, ok := findImportStdlib(tt.pkg, strSet(tt.symbols))
+		got, ok := findImportStdlib(tt.pkg, strSet(tt.symbols))
 		if (got != "") != ok {
 			t.Error("findImportStdlib return value inconsistent")
 		}
-		if got != tt.want || rename {
-			t.Errorf("findImportStdlib(%q, %q) = %q, %t; want %q, false", tt.pkg, tt.symbols, got, rename, tt.want)
+		if got != tt.want {
+			t.Errorf("findImportStdlib(%q, %q) = %q, want %q", tt.pkg, tt.symbols, got, tt.want)
 		}
 	}
 }
@@ -2031,31 +2053,5 @@ const x = mypkg.Sprintf("%s", "my package")
 
 	if got := string(out); got != want {
 		t.Errorf("Process returned unexpected result.\ngot:\n%v\nwant:\n%v", got, want)
-	}
-}
-
-// Ensures a token that is larger that
-// https://golang.org/issues/18201
-func TestProcessTokenTooLarge(t *testing.T) {
-	const largeSize = maxScanTokenSize + 1
-	largeString := strings.Repeat("x", largeSize)
-
-	in := `package testimports
-
-import (
-	"fmt"
-	"mydomain.mystuff/mypkg"
-)
-
-const s = fmt.Sprintf("%s", "` + largeString + `")
-const x = mypkg.Sprintf("%s", "my package")
-
-// end
-`
-
-	_, err := Process("foo", []byte(in), nil)
-
-	if err != bufio.ErrTooLong {
-		t.Errorf("Process did not returned expected error.\n got:\n%v\nwant:\n%v", err, bufio.ErrTooLong)
 	}
 }

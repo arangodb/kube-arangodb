@@ -20,7 +20,7 @@ REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
 GOPATH := $(GOBUILDDIR)
-GOVERSION := 1.9.3-alpine
+GOVERSION := 1.9.4-alpine
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 
@@ -73,15 +73,17 @@ update-vendor:
 	@mkdir -p $(VENDORDIR)
 	@git clone https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
-	@$(PULSAR) go vendor k8s.io/client-go/...
-	@$(PULSAR) go vendor k8s.io/gengo/args
-	@$(PULSAR) go vendor k8s.io/apiextensions-apiserver
-	@$(PULSAR) go vendor github.com/cenkalti/backoff
-	@$(PULSAR) go vendor github.com/pkg/errors
-	@$(PULSAR) go vendor github.com/prometheus/client_golang/prometheus
-	@$(PULSAR) go vendor github.com/pulcy/pulsar
-	@$(PULSAR) go vendor github.com/rs/zerolog
-	@$(PULSAR) go vendor github.com/spf13/cobra
+	@$(PULSAR) go vendor -V $(VENDORDIR) \
+		k8s.io/client-go/... \
+		k8s.io/gengo/args \
+		k8s.io/apiextensions-apiserver \
+		github.com/cenkalti/backoff \
+		github.com/dchest/uniuri \
+		github.com/pkg/errors \
+		github.com/prometheus/client_golang/prometheus \
+		github.com/pulcy/pulsar \
+		github.com/rs/zerolog \
+		github.com/spf13/cobra
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
