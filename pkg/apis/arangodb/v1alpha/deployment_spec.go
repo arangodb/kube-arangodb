@@ -197,7 +197,9 @@ func (s *SSLSpec) SetDefaults() {
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled         bool          `json:"enabled,omitempty"`
+	Image           string        `json:"image,omitempty"`
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 }
 
 // Validate the given spec
@@ -205,22 +207,31 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.Enabled && !mode.SupportsSync() {
 		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
 	}
+	if s.Image == "" {
+		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
+	}
 	return nil
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults() {
+func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy) {
+	if s.Image == "" {
+		s.Image = defaultImage
+	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = defaulPullPolicy
+	}
 }
 
 type ServerGroup int
 
 const (
-	ServerGroupSingle       = 1
-	ServerGroupAgents       = 2
-	ServerGroupDBServers    = 3
-	ServerGroupCoordinators = 4
-	ServerGroupSyncMasters  = 5
-	ServerGroupSyncWorkers  = 6
+	ServerGroupSingle       ServerGroup = 1
+	ServerGroupAgents       ServerGroup = 2
+	ServerGroupDBServers    ServerGroup = 3
+	ServerGroupCoordinators ServerGroup = 4
+	ServerGroupSyncMasters  ServerGroup = 5
+	ServerGroupSyncWorkers  ServerGroup = 6
 )
 
 // AsRole returns the "role" value for the given group.
@@ -240,6 +251,26 @@ func (g ServerGroup) AsRole() string {
 		return "syncworker"
 	default:
 		return "?"
+	}
+}
+
+// IsArangod returns true when the groups runs servers of type `arangod`.
+func (g ServerGroup) IsArangod() bool {
+	switch g {
+	case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsArangosync returns true when the groups runs servers of type `arangosync`.
+func (g ServerGroup) IsArangosync() bool {
+	switch g {
+	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -323,10 +354,13 @@ func (s *DeploymentSpec) SetDefaults() {
 	if s.Image == "" && s.IsDevelopment() {
 		s.Image = defaultImage
 	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = v1.PullIfNotPresent
+	}
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults()
 	s.SSL.SetDefaults()
-	s.Sync.SetDefaults()
+	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy)
 	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers())
 	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents())
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers())

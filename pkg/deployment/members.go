@@ -142,27 +142,3 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 
 	return nil
 }
-
-// ensurePVCs creates a PVC's listed in member status
-func (d *Deployment) ensurePVCs(apiObject *api.ArangoDeployment) error {
-	kubecli := d.deps.KubeCli
-	deploymentName := apiObject.GetName()
-	ns := apiObject.GetNamespace()
-	owner := apiObject.AsOwner()
-	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-		for _, m := range *status {
-			if m.PersistentVolumeClaimName != "" {
-				storageClassName := spec.StorageClassName
-				role := group.AsRole()
-				resources := spec.Resources
-				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, resources, owner); err != nil {
-					return maskAny(err)
-				}
-			}
-		}
-		return nil
-	}, &d.status); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}

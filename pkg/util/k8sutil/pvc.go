@@ -49,10 +49,12 @@ func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deployme
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
 			},
-			VolumeMode:       &volumeMode,
-			StorageClassName: &storageClassName,
-			Resources:        resources,
+			VolumeMode: &volumeMode,
+			Resources:  resources,
 		},
+	}
+	if storageClassName != "" {
+		pvc.Spec.StorageClassName = &storageClassName
 	}
 	addOwnerRefToObject(pvc.GetObjectMeta(), owner)
 	if _, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Create(pvc); err != nil && !IsAlreadyExists(err) {

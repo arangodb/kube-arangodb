@@ -152,6 +152,12 @@ func (d *Deployment) run() {
 		return
 	}
 
+	// Create pods
+	if err := d.ensurePods(d.apiObject); err != nil {
+		d.failOnError(err, "Failed to create pods")
+		return
+	}
+
 	d.status.State = api.DeploymentStateRunning
 	if err := d.updateCRStatus(); err != nil {
 		log.Warn().Err(err).Msg("update initial CR status failed")
@@ -182,42 +188,6 @@ func (d *Deployment) run() {
 // handleUpdateEvent processes the given event coming from the deployment event queue.
 func (d *Deployment) handleUpdateEvent(event *deploymentEvent) error {
 	// TODO
-	return nil
-}
-
-// createServices creates all services needed to service the given deployment
-func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
-	log := d.deps.Log
-	kubecli := d.deps.KubeCli
-	owner := apiObject.AsOwner()
-
-	log.Debug().Msg("creating services...")
-
-	if _, err := k8sutil.CreateHeadlessService(kubecli, apiObject, owner); err != nil {
-		log.Debug().Err(err).Msg("Failed to create headless service")
-		return maskAny(err)
-	}
-	single := apiObject.Spec.Mode.HasSingleServers()
-	if svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner); err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client service")
-		return maskAny(err)
-	} else {
-		d.status.ServiceName = svcName
-		if err := d.updateCRStatus(); err != nil {
-			return maskAny(err)
-		}
-	}
-	if apiObject.Spec.Sync.Enabled {
-		if svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner); err != nil {
-			log.Debug().Err(err).Msg("Failed to create syncmaster client service")
-			return maskAny(err)
-		} else {
-			d.status.ServiceName = svcName
-			if err := d.updateCRStatus(); err != nil {
-				return maskAny(err)
-			}
-		}
-	}
 	return nil
 }
 

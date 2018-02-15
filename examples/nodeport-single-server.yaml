@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: arangodb-exposed
+spec:
+  selector:
+    app: arangodb
+    role: single
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8529
+    targetPort: 8529
+    nodePort: 30529
