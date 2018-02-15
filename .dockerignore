@@ -4,5 +4,5 @@
 docs
 pkg
 tools
-vendor
+deps
 

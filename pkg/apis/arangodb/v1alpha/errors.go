@@ -28,10 +28,26 @@ var (
 	// ValidationError indicates a validation failure
 	ValidationError = errors.New("validation failed")
 
+	// AlreadyExistsError indicates an object that already exists
+	AlreadyExistsError = errors.New("already exists")
+
+	// NotFoundError indicates an object that cannot be found
+	NotFoundError = errors.New("not found")
+
 	maskAny = errors.WithStack
 )
 
 // IsValidation return true when the given error is or is caused by a ValidationError.
 func IsValidation(err error) bool {
 	return errors.Cause(err) == ValidationError
+}
+
+// IsAlreadyExists return true when the given error is or is caused by a AlreadyExistsError.
+func IsAlreadyExists(err error) bool {
+	return errors.Cause(err) == AlreadyExistsError
+}
+
+// IsNotFound return true when the given error is or is caused by a NotFoundError.
+func IsNotFound(err error) bool {
+	return errors.Cause(err) == NotFoundError
 }

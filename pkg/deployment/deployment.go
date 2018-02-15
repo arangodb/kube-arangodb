@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -82,7 +83,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	if err := apiObject.Spec.Validate(); err != nil {
 		return nil, maskAny(err)
 	}
-	c := &Deployment{
+	d := &Deployment{
 		apiObject: apiObject,
 		status:    *(apiObject.Status.DeepCopy()),
 		config:    config,
@@ -90,7 +91,10 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
 	}
-	return c, nil
+
+	go d.run()
+
+	return d, nil
 }
 
 // Update the deployment.
@@ -130,6 +134,24 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
+	// Create services
+	if err := d.createServices(d.apiObject); err != nil {
+		d.failOnError(err, "Failed to create services")
+		return
+	}
+
+	// Create members
+	if err := d.createInitialMembers(d.apiObject); err != nil {
+		d.failOnError(err, "Failed to create initial members")
+		return
+	}
+
+	// Create PVCs
+	if err := d.ensurePVCs(d.apiObject); err != nil {
+		d.failOnError(err, "Failed to create persistent volume claims")
+		return
+	}
+
 	d.status.State = api.DeploymentStateRunning
 	if err := d.updateCRStatus(); err != nil {
 		log.Warn().Err(err).Msg("update initial CR status failed")
@@ -147,9 +169,7 @@ func (d *Deployment) run() {
 			switch event.Type {
 			case eventModifyDeployment:
 				if err := d.handleUpdateEvent(event); err != nil {
-					log.Error().Err(err).Msg("handle update event failed")
-					d.status.Reason = err.Error()
-					d.reportFailedStatus()
+					d.failOnError(err, "Failed to handle deployment update")
 					return
 				}
 			default:
@@ -165,6 +185,42 @@ func (d *Deployment) handleUpdateEvent(event *deploymentEvent) error {
 	return nil
 }
 
+// createServices creates all services needed to service the given deployment
+func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
+	log := d.deps.Log
+	kubecli := d.deps.KubeCli
+	owner := apiObject.AsOwner()
+
+	log.Debug().Msg("creating services...")
+
+	if _, err := k8sutil.CreateHeadlessService(kubecli, apiObject, owner); err != nil {
+		log.Debug().Err(err).Msg("Failed to create headless service")
+		return maskAny(err)
+	}
+	single := apiObject.Spec.Mode.HasSingleServers()
+	if svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner); err != nil {
+		log.Debug().Err(err).Msg("Failed to create database client service")
+		return maskAny(err)
+	} else {
+		d.status.ServiceName = svcName
+		if err := d.updateCRStatus(); err != nil {
+			return maskAny(err)
+		}
+	}
+	if apiObject.Spec.Sync.Enabled {
+		if svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner); err != nil {
+			log.Debug().Err(err).Msg("Failed to create syncmaster client service")
+			return maskAny(err)
+		} else {
+			d.status.ServiceName = svcName
+			if err := d.updateCRStatus(); err != nil {
+				return maskAny(err)
+			}
+		}
+	}
+	return nil
+}
+
 // Update the status of the API object from the internal status
 func (d *Deployment) updateCRStatus() error {
 	if reflect.DeepEqual(d.apiObject.Status, d.status) {
@@ -173,17 +229,24 @@ func (d *Deployment) updateCRStatus() error {
 	}
 
 	// Send update to API server
-	update := *d.apiObject
+	update := d.apiObject.DeepCopy()
 	update.Status = d.status
-	newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Update(&update)
+	newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Update(update)
 	if err != nil {
-		return maskAny(fmt.Errorf("failed to update CR status: %v", err))
+		return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
 	}
 
 	// Update internal object
 	d.apiObject = newAPIObject
 
 	return nil
+}
+
+// failOnError reports the given error and sets the deployment status to failed.
+func (d *Deployment) failOnError(err error, msg string) {
+	log.Error().Err(err).Msg(msg)
+	d.status.Reason = err.Error()
+	d.reportFailedStatus()
 }
 
 // reportFailedStatus sets the status of the deployment to Failed and keeps trying to forward

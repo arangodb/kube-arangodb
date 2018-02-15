@@ -29,6 +29,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/fields"
 	kwatch "k8s.io/apimachinery/pkg/watch"
@@ -136,6 +137,7 @@ func (c *Controller) onAddArangoDeployment(obj interface{}) {
 	apiObject := obj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
+		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
 		Msg("ArangoDeployment added")
 	c.syncArangoDeployment(apiObject)
 }
@@ -146,6 +148,7 @@ func (c *Controller) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 	apiObject := newObj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
+		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
 		Msg("ArangoDeployment updated")
 	c.syncArangoDeployment(apiObject)
 }
@@ -163,6 +166,10 @@ func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
 			panic(fmt.Sprintf("Tombstone contained object that is not an ArangoDeployment: %#v", obj))
 		}
 	}
+	log.Debug().
+		Str("name", apiObject.GetObjectMeta().GetName()).
+		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
+		Msg("ArangoDeployment deleted")
 	ev := &Event{
 		Type:   kwatch.Deleted,
 		Object: apiObject,
