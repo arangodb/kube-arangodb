@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: arangodb-exposed-cluster
+spec:
+  selector:
+    app: arangodb
+    role: coordinator
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8529
+    targetPort: 8529
+    nodePort: 31529

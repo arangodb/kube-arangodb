@@ -25,11 +25,12 @@ package k8sutil
 import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
 	arangodVolumeName     = "arangod-data"
-	arangodVolumeMountDir = "/data"
+	ArangodVolumeMountDir = "/data"
 )
 
 // CreatePodName returns the name of the pod for a member with
@@ -41,16 +42,17 @@ func CreatePodName(deploymentName, role, id string) string {
 // arangodVolumeMounts creates a volume mount structure for arangod.
 func arangodVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
-		{Name: arangodVolumeName, MountPath: arangodVolumeMountDir},
+		{Name: arangodVolumeName, MountPath: ArangodVolumeMountDir},
 	}
 }
 
 // arangodContainer creates a container configured to run `arangod`.
-func arangodContainer(name string, args []string, image string) v1.Container {
+func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string) v1.Container {
 	c := v1.Container{
-		Command: append([]string{"/usr/sbin/arangod"}, args...),
-		Name:    name,
-		Image:   image,
+		Command:         append([]string{"/usr/sbin/arangod"}, args...),
+		Name:            name,
+		Image:           image,
+		ImagePullPolicy: imagePullPolicy,
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "server",
@@ -60,24 +62,121 @@ func arangodContainer(name string, args []string, image string) v1.Container {
 		},
 		VolumeMounts: arangodVolumeMounts(),
 	}
+	for k, v := range env {
+		c.Env = append(c.Env, v1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
 
 	return c
 }
 
-// arangodPod creates a container configured to run `arangod`.
-func arangodPod(clusterName, name string, args []string, image string) v1.Pod {
-	p := v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				arangodContainer(name, args, image),
+// arangosyncContainer creates a container configured to run `arangosync`.
+func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string) v1.Container {
+	c := v1.Container{
+		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
+		Name:            name,
+		Image:           image,
+		ImagePullPolicy: imagePullPolicy,
+		Ports: []v1.ContainerPort{
+			{
+				Name:          "server",
+				ContainerPort: int32(ArangoPort),
+				Protocol:      v1.ProtocolTCP,
 			},
-			Hostname:  name,
-			Subdomain: clusterName,
 		},
 	}
+	for k, v := range env {
+		c.Env = append(c.Env, v1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
 
+	return c
+}
+
+// newPod creates a basic Pod for given settings.
+func newPod(deploymentName, ns, role, id string) v1.Pod {
+	name := CreatePodName(deploymentName, role, id)
+	p := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   name,
+			Labels: LabelsForDeployment(deploymentName, role),
+		},
+		Spec: v1.PodSpec{
+			Hostname:  name,
+			Subdomain: CreateHeadlessServiceName(deploymentName),
+		},
+	}
 	return p
+}
+
+// CreateArangodPod creates a Pod that runs `arangod`.
+// If the pod already exists, nil is returned.
+// If another error occurs, that error is returned.
+func CreateArangodPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, pvcName, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, owner metav1.OwnerReference) error {
+	// Prepare basic pod
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
+
+	// Add arangod container
+	c := arangodContainer(p.GetName(), image, imagePullPolicy, args, env)
+	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add volume
+	if pvcName != "" {
+		// Create PVC
+		vol := v1.Volume{
+			Name: arangodVolumeName,
+			VolumeSource: v1.VolumeSource{
+				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+					ClaimName: pvcName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	} else {
+		// Create emptydir volume
+		vol := v1.Volume{
+			Name: arangodVolumeName,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	if err := createPod(kubecli, &p, deployment.GetNamespace(), owner); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// CreateArangoSyncPod creates a Pod that runs `arangosync`.
+// If the pod already exists, nil is returned.
+// If another error occurs, that error is returned.
+func CreateArangoSyncPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, owner metav1.OwnerReference) error {
+	// Prepare basic pod
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
+
+	// Add arangosync container
+	c := arangosyncContainer(p.GetName(), image, imagePullPolicy, args, env)
+	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	if err := createPod(kubecli, &p, deployment.GetNamespace(), owner); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// createPod adds an owner to the given pod and calls the k8s api-server to created it.
+// If the pod already exists, nil is returned.
+// If another error occurs, that error is returned.
+func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
+	addOwnerRefToObject(pod.GetObjectMeta(), owner)
+	if _, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
+		return maskAny(err)
+	}
+	return nil
 }

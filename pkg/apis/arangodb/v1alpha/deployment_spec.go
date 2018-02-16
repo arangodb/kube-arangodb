@@ -197,7 +197,9 @@ func (s *SSLSpec) SetDefaults() {
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
-	Enabled bool `json:"enabled,omitempty"`
+	Enabled         bool          `json:"enabled,omitempty"`
+	Image           string        `json:"image,omitempty"`
+	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 }
 
 // Validate the given spec
@@ -205,22 +207,31 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.Enabled && !mode.SupportsSync() {
 		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
 	}
+	if s.Image == "" {
+		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
+	}
 	return nil
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults() {
+func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy) {
+	if s.Image == "" {
+		s.Image = defaultImage
+	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = defaulPullPolicy
+	}
 }
 
 type ServerGroup int
 
 const (
-	ServerGroupSingle       = 1
-	ServerGroupAgents       = 2
-	ServerGroupDBServers    = 3
-	ServerGroupCoordinators = 4
-	ServerGroupSyncMasters  = 5
-	ServerGroupSyncWorkers  = 6
+	ServerGroupSingle       ServerGroup = 1
+	ServerGroupAgents       ServerGroup = 2
+	ServerGroupDBServers    ServerGroup = 3
+	ServerGroupCoordinators ServerGroup = 4
+	ServerGroupSyncMasters  ServerGroup = 5
+	ServerGroupSyncWorkers  ServerGroup = 6
 )
 
 // AsRole returns the "role" value for the given group.
@@ -243,6 +254,26 @@ func (g ServerGroup) AsRole() string {
 	}
 }
 
+// IsArangod returns true when the groups runs servers of type `arangod`.
+func (g ServerGroup) IsArangod() bool {
+	switch g {
+	case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsArangosync returns true when the groups runs servers of type `arangosync`.
+func (g ServerGroup) IsArangosync() bool {
+	switch g {
+	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+	default:
+		return false
+	}
+}
+
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
 type ServerGroupSpec struct {
 	// Count holds the requested number of servers
@@ -256,10 +287,13 @@ type ServerGroupSpec struct {
 }
 
 // Validate the given group spec
-func (s ServerGroupSpec) Validate(group ServerGroup, used bool) error {
+func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode) error {
 	if used {
 		if s.Count < 1 {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= 1", s.Count))
+		}
+		if s.Count > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.Count))
 		}
 	} else if s.Count != 0 {
 		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.Count))
@@ -268,11 +302,15 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool) {
+func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode DeploymentMode) {
 	if s.Count == 0 && used {
 		switch group {
 		case ServerGroupSingle:
-			s.Count = 1
+			if mode == DeploymentModeSingle {
+				s.Count = 1 // Single server
+			} else {
+				s.Count = 2 // Resilient single
+			}
 		default:
 			s.Count = 3
 		}
@@ -323,16 +361,19 @@ func (s *DeploymentSpec) SetDefaults() {
 	if s.Image == "" && s.IsDevelopment() {
 		s.Image = defaultImage
 	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = v1.PullIfNotPresent
+	}
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults()
 	s.SSL.SetDefaults()
-	s.Sync.SetDefaults()
-	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers())
-	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents())
-	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers())
-	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.Mode.HasCoordinators())
-	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.Enabled)
-	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.Enabled)
+	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy)
+	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode)
+	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents(), s.Mode)
+	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode)
+	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode)
+	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode)
+	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode)
 }
 
 // Validate the specification.
@@ -365,22 +406,22 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Sync.Validate(s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers()); err != nil {
+	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents()); err != nil {
+	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers()); err != nil {
+	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators()); err != nil {
+	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled); err != nil {
+	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled); err != nil {
+	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode); err != nil {
 		return maskAny(err)
 	}
 	return nil
