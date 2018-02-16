@@ -287,10 +287,13 @@ type ServerGroupSpec struct {
 }
 
 // Validate the given group spec
-func (s ServerGroupSpec) Validate(group ServerGroup, used bool) error {
+func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode) error {
 	if used {
 		if s.Count < 1 {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= 1", s.Count))
+		}
+		if s.Count > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.Count))
 		}
 	} else if s.Count != 0 {
 		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.Count))
@@ -299,11 +302,15 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool) {
+func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode DeploymentMode) {
 	if s.Count == 0 && used {
 		switch group {
 		case ServerGroupSingle:
-			s.Count = 1
+			if mode == DeploymentModeSingle {
+				s.Count = 1 // Single server
+			} else {
+				s.Count = 2 // Resilient single
+			}
 		default:
 			s.Count = 3
 		}
@@ -361,12 +368,12 @@ func (s *DeploymentSpec) SetDefaults() {
 	s.Authentication.SetDefaults()
 	s.SSL.SetDefaults()
 	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy)
-	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers())
-	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents())
-	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers())
-	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.Mode.HasCoordinators())
-	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.Enabled)
-	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.Enabled)
+	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode)
+	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents(), s.Mode)
+	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode)
+	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode)
+	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode)
+	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode)
 }
 
 // Validate the specification.
@@ -399,22 +406,22 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Sync.Validate(s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers()); err != nil {
+	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents()); err != nil {
+	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers()); err != nil {
+	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators()); err != nil {
+	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled); err != nil {
+	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled); err != nil {
+	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode); err != nil {
 		return maskAny(err)
 	}
 	return nil
