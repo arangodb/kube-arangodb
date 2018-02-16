@@ -56,13 +56,17 @@ type Dependencies struct {
 type deploymentEventType string
 
 const (
-	eventModifyDeployment deploymentEventType = "Modify"
+	eventArangoDeploymentUpdated deploymentEventType = "ArangoDeploymentUpdated"
+	eventPodAdded                deploymentEventType = "PodAdded"
+	eventPodUpdated              deploymentEventType = "PodUpdated"
+	eventPodDeleted              deploymentEventType = "PodDeleted"
 )
 
 // deploymentEvent holds an event passed from the controller to the deployment.
 type deploymentEvent struct {
 	Type       deploymentEventType
 	Deployment *api.ArangoDeployment
+	Pod        *v1.Pod
 }
 
 const (
@@ -98,6 +102,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	go d.run()
+	go d.listenForPodEvents()
 
 	return d, nil
 }
@@ -106,7 +111,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 // This sends an update event in the deployment event queue.
 func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
 	d.send(&deploymentEvent{
-		Type:       eventModifyDeployment,
+		Type:       eventArangoDeploymentUpdated,
 		Deployment: apiObject,
 	})
 }
@@ -178,10 +183,14 @@ func (d *Deployment) run() {
 		case event := <-d.eventCh:
 			// Got event from event queue
 			switch event.Type {
-			case eventModifyDeployment:
-				if err := d.handleUpdateEvent(event); err != nil {
+			case eventArangoDeploymentUpdated:
+				if err := d.handleArangoDeploymentUpdatedEvent(event); err != nil {
 					d.failOnError(err, "Failed to handle deployment update")
 					return
+				}
+			case eventPodAdded, eventPodUpdated, eventPodDeleted:
+				if err := d.inspectPods(); err != nil {
+					d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 				}
 			default:
 				panic("unknown event type" + event.Type)
@@ -190,8 +199,8 @@ func (d *Deployment) run() {
 	}
 }
 
-// handleUpdateEvent processes the given event coming from the deployment event queue.
-func (d *Deployment) handleUpdateEvent(event *deploymentEvent) error {
+// handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
+func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) error {
 	// TODO
 	return nil
 }
@@ -268,4 +277,13 @@ func (d *Deployment) reportFailedStatus() {
 	}
 
 	retry.Retry(op, time.Hour*24*365)
+}
+
+// isOwnerOf returns true if the given object belong to this deployment.
+func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
+	ownerRefs := obj.GetOwnerReferences()
+	if len(ownerRefs) < 1 {
+		return false
+	}
+	return ownerRefs[0].UID != d.apiObject.UID
 }

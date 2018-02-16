@@ -33,6 +33,24 @@ const (
 	ArangodVolumeMountDir = "/data"
 )
 
+// IsPodReady returns true if the PodReady condition on
+// the given pod is set to true.
+func IsPodReady(pod *v1.Pod) bool {
+	condition := getPodReadyCondition(&pod.Status)
+	return condition != nil && condition.Status == v1.ConditionTrue
+}
+
+// getPodReadyCondition returns the PodReady condition in the given status.
+// If not found, nil is returned.
+func getPodReadyCondition(status *v1.PodStatus) *v1.PodCondition {
+	for i := range status.Conditions {
+		if status.Conditions[i].Type == v1.PodReady {
+			return &status.Conditions[i]
+		}
+	}
+	return nil
+}
+
 // CreatePodName returns the name of the pod for a member with
 // a given id in a deployment with a given name.
 func CreatePodName(deploymentName, role, id string) string {

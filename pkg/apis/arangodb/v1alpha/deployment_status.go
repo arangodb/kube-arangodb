@@ -86,6 +86,55 @@ func (ds DeploymentStatusMembers) ContainsID(id string) bool {
 		ds.SyncWorkers.ContainsID(id)
 }
 
+// MemberStatusByPodName returns a reference to the element in the given set of lists that has the given pod name.
+// If no such element exists, nil is returned.
+func (ds DeploymentStatusMembers) MemberStatusByPodName(podName string) (MemberStatus, ServerGroup, bool) {
+	if result, found := ds.Single.ElementByPodName(podName); found {
+		return result, ServerGroupSingle, true
+	}
+	if result, found := ds.Agents.ElementByPodName(podName); found {
+		return result, ServerGroupAgents, true
+	}
+	if result, found := ds.DBServers.ElementByPodName(podName); found {
+		return result, ServerGroupDBServers, true
+	}
+	if result, found := ds.Coordinators.ElementByPodName(podName); found {
+		return result, ServerGroupCoordinators, true
+	}
+	if result, found := ds.SyncMasters.ElementByPodName(podName); found {
+		return result, ServerGroupSyncMasters, true
+	}
+	if result, found := ds.SyncWorkers.ElementByPodName(podName); found {
+		return result, ServerGroupSyncWorkers, true
+	}
+	return MemberStatus{}, 0, false
+}
+
+// UpdateMemberStatus updates the given status in the given group.
+func (ds *DeploymentStatusMembers) UpdateMemberStatus(status MemberStatus, group ServerGroup) error {
+	var err error
+	switch group {
+	case ServerGroupSingle:
+		err = ds.Single.Update(status)
+	case ServerGroupAgents:
+		err = ds.Agents.Update(status)
+	case ServerGroupDBServers:
+		err = ds.DBServers.Update(status)
+	case ServerGroupCoordinators:
+		err = ds.Coordinators.Update(status)
+	case ServerGroupSyncMasters:
+		err = ds.SyncMasters.Update(status)
+	case ServerGroupSyncWorkers:
+		err = ds.SyncWorkers.Update(status)
+	default:
+		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+	}
+	if err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // MemberStatusList is a list of MemberStatus entries
 type MemberStatusList []MemberStatus
 
@@ -97,6 +146,17 @@ func (l MemberStatusList) ContainsID(id string) bool {
 		}
 	}
 	return false
+}
+
+// ElementByPodName returns the element in the given list that has the given pod name and true.
+// If no such element exists, false is returned.
+func (l MemberStatusList) ElementByPodName(podName string) (MemberStatus, bool) {
+	for i, x := range l {
+		if x.PodName == podName {
+			return l[i], true
+		}
+	}
+	return MemberStatus{}, false
 }
 
 // Add a member to the list.

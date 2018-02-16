@@ -24,6 +24,7 @@ package k8sutil
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 // addOwnerRefToObject adds given owner reference to given object
@@ -41,4 +42,11 @@ func LabelsForDeployment(deploymentName, role string) map[string]string {
 		l["role"] = role
 	}
 	return l
+}
+
+// DeploymentListOpt creates a ListOptions matching all labels for the given deployment name.
+func DeploymentListOpt(deploymentName string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(LabelsForDeployment(deploymentName, "")).String(),
+	}
 }

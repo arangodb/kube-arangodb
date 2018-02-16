@@ -50,12 +50,21 @@ func NewMemberAddEvent(memberName, role string, apiObject APIObject) *v1.Event {
 	return event
 }
 
-// MemberRemoveEvent creates an event indicating that an existing member was removed.
-func MemberRemoveEvent(memberName, role string, apiObject APIObject) *v1.Event {
+// NewMemberRemoveEvent creates an event indicating that an existing member was removed.
+func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Removed", strings.Title(role))
 	event.Message = fmt.Sprintf("Existing %s %s removed from the deployment", role, memberName)
+	return event
+}
+
+// NewErrorEvent creates an even of type error.
+func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeWarning
+	event.Reason = strings.Title(reason)
+	event.Message = err.Error()
 	return event
 }
 

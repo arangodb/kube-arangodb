@@ -28,7 +28,6 @@ import (
 	"strconv"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
-
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
