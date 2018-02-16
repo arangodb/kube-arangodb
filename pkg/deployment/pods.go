@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 
+	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
@@ -200,6 +201,87 @@ func (d *Deployment) createArangoSyncArgs(apiObject *api.ArangoDeployment, group
 	return nil
 }
 
+// createLivenessProbe creates configuration for a liveness probe of a server in the given group.
+func (d *Deployment) createLivenessProbe(apiObject *api.ArangoDeployment, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
+	switch group {
+	case api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupDBServers:
+		authorization := ""
+		if apiObject.Spec.IsAuthenticated() {
+			secretData, err := d.getJWTSecret(apiObject)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+		}
+		return &k8sutil.HTTPProbeConfig{
+			LocalPath:     "/_api/version",
+			Secure:        apiObject.Spec.IsSecure(),
+			Authorization: authorization,
+		}, nil
+	case api.ServerGroupCoordinators:
+		return nil, nil
+	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
+		authorization := ""
+		if apiObject.Spec.Sync.Monitoring.TokenSecretName != "" {
+			// Use monitoring token
+			token, err := d.getSyncMonitoringToken(apiObject)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			authorization = "bearer: " + token
+			if err != nil {
+				return nil, maskAny(err)
+			}
+		} else if group == api.ServerGroupSyncMasters {
+			// Fall back to JWT secret
+			secretData, err := d.getSyncJWTSecret(apiObject)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+		} else {
+			// Don't have a probe
+			return nil, nil
+		}
+		return &k8sutil.HTTPProbeConfig{
+			LocalPath:     "/_api/version",
+			Secure:        apiObject.Spec.IsSecure(),
+			Authorization: authorization,
+		}, nil
+	default:
+		return nil, nil
+	}
+}
+
+// createReadinessProbe creates configuration for a readiness probe of a server in the given group.
+func (d *Deployment) createReadinessProbe(apiObject *api.ArangoDeployment, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
+	if group != api.ServerGroupCoordinators {
+		return nil, nil
+	}
+	authorization := ""
+	if apiObject.Spec.IsAuthenticated() {
+		secretData, err := d.getJWTSecret(apiObject)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+	}
+	return &k8sutil.HTTPProbeConfig{
+		LocalPath:     "/_api/version",
+		Secure:        apiObject.Spec.IsSecure(),
+		Authorization: authorization,
+	}, nil
+}
+
 // ensurePods creates all Pods listed in member status
 func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 	kubecli := d.deps.KubeCli
@@ -207,19 +289,41 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
+			if m.State != api.MemberStateNone {
+				continue
+			}
 			role := group.AsRole()
 			if group.IsArangod() {
 				args := d.createArangodArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]string)
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, owner); err != nil {
+				livenessProbe, err := d.createLivenessProbe(apiObject, group)
+				if err != nil {
+					return maskAny(err)
+				}
+				readinessProbe, err := d.createReadinessProbe(apiObject, group)
+				if err != nil {
+					return maskAny(err)
+				}
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, owner); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
 				args := d.createArangoSyncArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]string)
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject, role, m.ID, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, owner); err != nil {
+				livenessProbe, err := d.createLivenessProbe(apiObject, group)
+				if err != nil {
 					return maskAny(err)
 				}
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject, role, m.ID, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, owner); err != nil {
+					return maskAny(err)
+				}
+			}
+			m.State = api.MemberStateCreating
+			if err := status.Update(m); err != nil {
+				return maskAny(err)
+			}
+			if err := d.updateCRStatus(); err != nil {
+				return maskAny(err)
 			}
 		}
 		return nil

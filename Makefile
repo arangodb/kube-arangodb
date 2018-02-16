@@ -79,6 +79,7 @@ update-vendor:
 		k8s.io/apiextensions-apiserver \
 		github.com/cenkalti/backoff \
 		github.com/dchest/uniuri \
+		github.com/dgrijalva/jwt-go \
 		github.com/pkg/errors \
 		github.com/prometheus/client_golang/prometheus \
 		github.com/pulcy/pulsar \

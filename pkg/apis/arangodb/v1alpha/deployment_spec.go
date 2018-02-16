@@ -161,7 +161,13 @@ type AuthenticationSpec struct {
 }
 
 // Validate the given spec
-func (s AuthenticationSpec) Validate() error {
+func (s AuthenticationSpec) Validate(required, allowed bool) error {
+	if required && s.JWTSecretName == "" {
+		return maskAny(errors.Wrap(ValidationError, "Missing JWT secret"))
+	}
+	if !allowed && s.JWTSecretName != "" {
+		return maskAny(errors.Wrap(ValidationError, "Non-empty JWT secret name is not allowed"))
+	}
 	if err := k8sutil.ValidateOptionalResourceName(s.JWTSecretName); err != nil {
 		return maskAny(err)
 	}
@@ -195,11 +201,32 @@ func (s *SSLSpec) SetDefaults() {
 	}
 }
 
+// MonitoringSpec holds monitoring specific configuration settings
+type MonitoringSpec struct {
+	TokenSecretName string `json:"tokenSecretName,omitempty"`
+}
+
+// Validate the given spec
+func (s MonitoringSpec) Validate() error {
+	if err := k8sutil.ValidateOptionalResourceName(s.TokenSecretName); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// SetDefaults fills in missing defaults
+func (s *MonitoringSpec) SetDefaults() {
+	// Nothing needed
+}
+
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
 	Enabled         bool          `json:"enabled,omitempty"`
 	Image           string        `json:"image,omitempty"`
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+
+	Authentication AuthenticationSpec `json:"auth"`
+	Monitoring     MonitoringSpec     `json:"monitoring"`
 }
 
 // Validate the given spec
@@ -209,6 +236,12 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	}
 	if s.Image == "" {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
+	}
+	if err := s.Authentication.Validate(s.Enabled, s.Enabled); err != nil {
+		return maskAny(err)
+	}
+	if err := s.Monitoring.Validate(); err != nil {
+		return maskAny(err)
 	}
 	return nil
 }
@@ -221,6 +254,8 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 	if s.ImagePullPolicy == "" {
 		s.ImagePullPolicy = defaulPullPolicy
 	}
+	s.Authentication.SetDefaults()
+	s.Monitoring.SetDefaults()
 }
 
 type ServerGroup int
@@ -347,6 +382,16 @@ type DeploymentSpec struct {
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 }
 
+// IsAuthenticated returns true when authentication is enabled
+func (s DeploymentSpec) IsAuthenticated() bool {
+	return s.Authentication.JWTSecretName != ""
+}
+
+// IsSecure returns true when SSL is enabled
+func (s DeploymentSpec) IsSecure() bool {
+	return s.SSL.KeySecretName != ""
+}
+
 // SetDefaults fills in default values when a field is not specified.
 func (s *DeploymentSpec) SetDefaults() {
 	if s.Mode == "" {
@@ -397,7 +442,7 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.RocksDB.Validate(); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Authentication.Validate(); err != nil {
+	if err := s.Authentication.Validate(false, true); err != nil {
 		return maskAny(err)
 	}
 	if err := s.SSL.Validate(); err != nil {
