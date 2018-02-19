@@ -322,7 +322,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 			}
 			// Record new member state
-			m.State = api.MemberStateCreating
+			m.State = api.MemberStateCreated
 			if err := status.Update(m); err != nil {
 				return maskAny(err)
 			}

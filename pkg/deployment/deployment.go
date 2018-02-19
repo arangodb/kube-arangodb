@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
+	"github.com/arangodb/k8s-operator/pkg/util/trigger"
 )
 
 // Config holds configuration settings for a Deployment
@@ -71,6 +72,7 @@ type deploymentEvent struct {
 
 const (
 	deploymentEventQueueSize = 100
+	inspectionInterval       = time.Minute // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.
@@ -84,6 +86,8 @@ type Deployment struct {
 	stopCh  chan struct{}
 
 	eventsCli corev1.EventInterface
+
+	inspectTrigger trigger.Trigger
 }
 
 // New creates a new Deployment from the given API object.
@@ -189,12 +193,21 @@ func (d *Deployment) run() {
 					return
 				}
 			case eventPodAdded, eventPodUpdated, eventPodDeleted:
-				if err := d.inspectPods(); err != nil {
-					d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
-				}
+				// Pod event received, let's inspect soon
+				d.inspectTrigger.Trigger()
 			default:
 				panic("unknown event type" + event.Type)
 			}
+
+		case <-d.inspectTrigger.Done():
+			// Inspection of generated resources needed
+			if err := d.inspectPods(); err != nil {
+				d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+			}
+
+		case <-time.After(inspectionInterval):
+			// Trigger inspection
+			d.inspectTrigger.Trigger()
 		}
 	}
 }
@@ -285,5 +298,5 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 	if len(ownerRefs) < 1 {
 		return false
 	}
-	return ownerRefs[0].UID != d.apiObject.UID
+	return ownerRefs[0].UID == d.apiObject.UID
 }

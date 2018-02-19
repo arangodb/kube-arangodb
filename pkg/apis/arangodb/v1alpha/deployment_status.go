@@ -22,7 +22,11 @@
 
 package v1alpha
 
-import "github.com/pkg/errors"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+)
 
 // DeploymentState is a strongly typed state of a deployment
 type DeploymentState string
@@ -64,6 +68,9 @@ type DeploymentStatus struct {
 
 	// Members holds the status for all members in all server groups
 	Members DeploymentStatusMembers `json:"members"`
+
+	// Conditions specific to the entire deployment
+	Conditions ConditionList `json:"conditions,omitempty"`
 }
 
 // DeploymentStatusMembers holds the member status of all server groups
@@ -84,6 +91,31 @@ func (ds DeploymentStatusMembers) ContainsID(id string) bool {
 		ds.Coordinators.ContainsID(id) ||
 		ds.SyncMasters.ContainsID(id) ||
 		ds.SyncWorkers.ContainsID(id)
+}
+
+// ForeachServerGroup calls the given callback for all server groups.
+// If the callback returns an error, this error is returned and the callback is
+// not called for the remaining groups.
+func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list *MemberStatusList) error) error {
+	if err := cb(ServerGroupSingle, &ds.Single); err != nil {
+		return maskAny(err)
+	}
+	if err := cb(ServerGroupAgents, &ds.Agents); err != nil {
+		return maskAny(err)
+	}
+	if err := cb(ServerGroupDBServers, &ds.DBServers); err != nil {
+		return maskAny(err)
+	}
+	if err := cb(ServerGroupCoordinators, &ds.Coordinators); err != nil {
+		return maskAny(err)
+	}
+	if err := cb(ServerGroupSyncMasters, &ds.SyncMasters); err != nil {
+		return maskAny(err)
+	}
+	if err := cb(ServerGroupSyncWorkers, &ds.SyncWorkers); err != nil {
+		return maskAny(err)
+	}
+	return nil
 }
 
 // MemberStatusByPodName returns a reference to the element in the given set of lists that has the given pod name.
@@ -133,6 +165,21 @@ func (ds *DeploymentStatusMembers) UpdateMemberStatus(status MemberStatus, group
 		return maskAny(err)
 	}
 	return nil
+}
+
+// AllMembersReady returns true when all members are in the Ready state.
+func (ds DeploymentStatusMembers) AllMembersReady() bool {
+	if err := ds.ForeachServerGroup(func(group ServerGroup, list *MemberStatusList) error {
+		for _, x := range *list {
+			if !x.Conditions.IsTrue(ConditionTypeReady) {
+				return fmt.Errorf("not ready")
+			}
+		}
+		return nil
+	}); err != nil {
+		return false
+	}
+	return true
 }
 
 // MemberStatusList is a list of MemberStatus entries
@@ -203,10 +250,8 @@ type MemberState string
 const (
 	// MemberStateNone indicates that the state is not set yet
 	MemberStateNone MemberState = ""
-	// MemberStateCreating indicates that the member is in the process of being created
-	MemberStateCreating MemberState = "Creating"
-	// MemberStateReady indicates that the member is running and reachable
-	MemberStateReady MemberState = "Ready"
+	// MemberStateCreated indicates that all resources needed for the member have been created
+	MemberStateCreated MemberState = "Created"
 	// MemberStateCleanOut indicates that a dbserver is in the process of being cleaned out
 	MemberStateCleanOut MemberState = "CleanOut"
 	// MemberStateShuttingDown indicates that a member is shutting down
@@ -224,4 +269,6 @@ type MemberStatus struct {
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member
 	PodName string `json:"podName,omitempty"`
+	// Conditions specific to this member
+	Conditions ConditionList `json:"conditions,omitempty"`
 }

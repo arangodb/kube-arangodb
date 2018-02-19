@@ -26,6 +26,11 @@ import (
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/metrics"
+)
+
+var (
+	inspectedPodCounter = metrics.MustRegisterCounter("deployment", "inspected_pods", "Number of pod inspections")
 )
 
 // inspectPods lists all pods that belong to the given deployment and updates
@@ -34,6 +39,7 @@ func (d *Deployment) inspectPods() error {
 	log := d.deps.Log
 
 	log.Debug().Msg("inspecting pods")
+	defer log.Debug().Msg("inspected pods")
 	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list pods")
@@ -41,29 +47,70 @@ func (d *Deployment) inspectPods() error {
 	}
 
 	// Update member status from all pods found
+	log.Debug().Int("pods", len(pods.Items)).Msg("iterating over pods")
 	for _, p := range pods.Items {
 		// Check ownership
 		if !d.isOwnerOf(&p) {
+			log.Debug().Str("pod", p.GetName()).Msg("pod not owned by this deployment")
 			continue
 		}
+
+		// Pod belongs to this deployment, update metric
+		inspectedPodCounter.Inc()
 
 		// Find member status
 		memberStatus, group, found := d.status.Members.MemberStatusByPodName(p.GetName())
 		if !found {
+			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod")
 			continue
 		}
 
 		// Update state
 		log.Debug().Str("pod-name", p.GetName()).Msg("found member status for pod")
-		if memberStatus.State == api.MemberStateCreating {
-			if k8sutil.IsPodReady(&p) {
-				memberStatus.State = api.MemberStateReady
-				if err := d.status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
-					return maskAny(err)
-				}
-				log.Debug().Str("pod-name", p.GetName()).Msg("updated member status for pod to ready")
+		var readyStatus bool
+		reason := "Pod Not Ready"
+		if readyStatus = k8sutil.IsPodReady(&p); readyStatus {
+			reason = "Pod Ready"
+		}
+		if memberStatus.Conditions.Update(api.ConditionTypeReady, readyStatus, reason, "") {
+			if err := d.status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
+				return maskAny(err)
 			}
 		}
+	}
+
+	podExists := func(podName string) bool {
+		for _, p := range pods.Items {
+			if p.GetName() == podName && d.isOwnerOf(&p) {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Go over all members, check for missing pods
+	d.status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+		for _, m := range *members {
+			if podName := m.PodName; podName != "" {
+				if !podExists(podName) {
+					if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
+						if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
+							return maskAny(err)
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+
+	// Check overall status update
+	switch d.status.State {
+	case api.DeploymentStateCreating:
+		if d.status.Members.AllMembersReady() {
+			d.status.State = api.DeploymentStateRunning
+		}
+		// TODO handle other State values
 	}
 
 	// Save status
