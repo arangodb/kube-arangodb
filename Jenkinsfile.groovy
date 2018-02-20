@@ -42,9 +42,9 @@ pipeline {
         stage('Test') {
             steps {
                 timestamps {
-                    lock("kubernetes-operator-tests") {
+                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
                         withEnv([
-                        "TESTNAMESPACE=${params.TESTNAMESPACE}",
+                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                         "IMAGETAG=${env.GIT_COMMIT}",
                         "PUSHIMAGES=1",
                         ]) {
