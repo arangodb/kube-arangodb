@@ -27,13 +27,13 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 ifndef DOCKERNAMESPACE
 	DOCKERNAMESPACE := arangodb
 endif
-ifndef DOCKERFILE
-	DOCKERFILE := Dockerfile 
-	#DOCKERFILE := Dockerfile.debug
-endif
+DOCKERFILE := Dockerfile 
+DOCKERTESTFILE := Dockerfile.test
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
+TESTBINNAME := $(PROJECT)_test
+TESTBIN := $(BINDIR)/$(TESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
@@ -123,6 +123,29 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 
 docker: $(BIN)
 	docker build -f $(DOCKERFILE) -t arangodb/arangodb-operator .
+
+# Testing
+
+$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
+	@mkdir -p $(BINDIR)
+	@docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
+
+docker-test: $(TESTBIN)
+	docker build --quiet -f $(DOCKERTESTFILE) -t arangodb/arangodb-operator-test .
+
+run-tests: docker-test
+	kubectl run arangodb-operator-test -i --rm --quiet --restart=Never --image=arangodb/arangodb-operator-test
+
+# Release building
 
 docker-push: docker
 ifneq ($(DOCKERNAMESPACE), arangodb)
