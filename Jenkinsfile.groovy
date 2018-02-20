@@ -36,15 +36,13 @@ pipeline {
             }
         }
         stage('Test') {
-            stage('Test with Direct') {
-                steps {
-                    timestamps {
-                        lock("kubernetes-operator-tests") {
-                            withEnv([
-                            'TESTNAMESPACE=${params.TESTNAMESPACE}',
-                            ]) {
-                                sh "make run-tests"
-                            }
+            steps {
+                timestamps {
+                    lock("kubernetes-operator-tests") {
+                        withEnv([
+                        'TESTNAMESPACE=${params.TESTNAMESPACE}',
+                        ]) {
+                            sh "make run-tests"
                         }
                     }
                 }
