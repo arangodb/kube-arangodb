@@ -37,7 +37,9 @@ TESTBIN := $(BINDIR)/$(TESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
-TESTNAMESPACE := arangodb-operator-tests
+ifndef TESTNAMESPACE
+	TESTNAMESPACE := arangodb-operator-tests
+endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
