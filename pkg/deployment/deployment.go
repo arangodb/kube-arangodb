@@ -218,7 +218,36 @@ func (d *Deployment) run() {
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
 func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) error {
-	// TODO
+	log := d.deps.Log.With().Str("deployment", event.Deployment.GetName()).Logger()
+
+	newAPIObject := event.Deployment.DeepCopy()
+	newAPIObject.Spec.SetDefaults()
+	newAPIObject.Status = d.status
+	resetFields := d.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
+	if len(resetFields) > 0 {
+		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
+	}
+	if err := newAPIObject.Spec.Validate(); err != nil {
+		d.createEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
+		// Try to reset object
+		if err := d.updateCRSpec(d.apiObject.Spec); err != nil {
+			log.Error().Err(err).Msg("Restore original spec failed")
+			d.createEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
+		}
+		return nil
+	}
+	if len(resetFields) > 0 {
+		for _, fieldName := range resetFields {
+			log.Debug().Str("field", fieldName).Msg("Reset immutable field")
+			d.createEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
+		}
+	}
+
+	// Save updated spec
+	if err := d.updateCRSpec(newAPIObject.Spec); err != nil {
+		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+	}
+
 	return nil
 }
 
@@ -240,16 +269,67 @@ func (d *Deployment) updateCRStatus() error {
 
 	// Send update to API server
 	update := d.apiObject.DeepCopy()
-	update.Status = d.status
-	newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Update(update)
-	if err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
+	attempt := 0
+	for {
+		attempt++
+		update.Status = d.status
+		ns := d.apiObject.GetNamespace()
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		if err == nil {
+			// Update internal object
+			d.apiObject = newAPIObject
+			return nil
+		}
+		if attempt < 10 && k8sutil.IsConflict(err) {
+			// API object may have been changed already,
+			// Reload api object and try again
+			var current *api.ArangoDeployment
+			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			if err == nil {
+				update = current.DeepCopy()
+				continue
+			}
+		}
+		if err != nil {
+			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment status")
+			return maskAny(fmt.Errorf("failed to patch ArangoDeployment status: %v", err))
+		}
 	}
+}
 
-	// Update internal object
-	d.apiObject = newAPIObject
-
-	return nil
+// Update the spec part of the API object (d.apiObject)
+// to the given object, while preserving the status.
+// On success, d.apiObject is updated.
+func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
+	// Send update to API server
+	update := d.apiObject.DeepCopy()
+	attempt := 0
+	for {
+		attempt++
+		update.Spec = newSpec
+		update.Status = d.status
+		ns := d.apiObject.GetNamespace()
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		if err == nil {
+			// Update internal object
+			d.apiObject = newAPIObject
+			return nil
+		}
+		if attempt < 10 && k8sutil.IsConflict(err) {
+			// API object may have been changed already,
+			// Reload api object and try again
+			var current *api.ArangoDeployment
+			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			if err == nil {
+				update = current.DeepCopy()
+				continue
+			}
+		}
+		if err != nil {
+			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment spec")
+			return maskAny(fmt.Errorf("failed to patch ArangoDeployment spec: %v", err))
+		}
+	}
 }
 
 // failOnError reports the given error and sets the deployment status to failed.

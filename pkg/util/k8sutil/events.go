@@ -68,6 +68,16 @@ func NewPodGoneEvent(podName, role string, apiObject APIObject) *v1.Event {
 	return event
 }
 
+// NewImmutableFieldEvent creates an event indicating that an attempt was made to change a field
+// that is immutable.
+func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Immutable Field Change"
+	event.Message = fmt.Sprintf("Changing field %s is not possible. It has been reset to its original value.", fieldName)
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)
