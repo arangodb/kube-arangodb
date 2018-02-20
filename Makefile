@@ -30,6 +30,17 @@ endif
 DOCKERFILE := Dockerfile 
 DOCKERTESTFILE := Dockerfile.test
 
+ifdef IMAGETAG 
+	IMAGESUFFIX := ":$(IMAGETAG)"
+endif
+
+ifndef OPERATORIMAGE
+	OPERATORIMAGE := $(DOCKERNAMESPACE)/arangodb-operator$(IMAGESUFFIX)
+endif
+ifndef TESTIMAGE
+	TESTIMAGE := $(DOCKERNAMESPACE)/arangodb-operator-test$(IMAGESUFFIX)
+endif
+
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
 TESTBINNAME := $(PROJECT)_test
@@ -126,7 +137,7 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
 
 docker: $(BIN)
-	docker build -f $(DOCKERFILE) -t arangodb/arangodb-operator .
+	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
 
 # Testing
 
@@ -144,20 +155,24 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
 
 docker-test: $(TESTBIN)
-	docker build --quiet -f $(DOCKERTESTFILE) -t arangodb/arangodb-operator-test .
+	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
 run-tests: docker-test
+ifdef PUSHIMAGES
+	docker push $(OPERATORIMAGE)
+	docker push $(TESTIMAGE)
+endif
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
 	kubectl create namespace $(TESTNAMESPACE)
-	kubectl --namespace=$(TESTNAMESPACE) create -f examples/deployment.yaml
-	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=arangodb/arangodb-operator-test --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
+	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
+	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=$(TESTIMAGE) --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 # Release building
 
 docker-push: docker
 ifneq ($(DOCKERNAMESPACE), arangodb)
-	docker tag arangodb/arangodb-operator $(DOCKERNAMESPACE)/arangodb-operator
+	docker tag $(OPERATORIMAGE) $(DOCKERNAMESPACE)/arangodb-operator
 endif
 	docker push $(DOCKERNAMESPACE)/arangodb-operator
 

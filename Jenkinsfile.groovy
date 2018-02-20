@@ -31,7 +31,11 @@ pipeline {
         stage('Build') {
             steps {
                 timestamps {
-                    sh "make"
+                    withEnv([
+                    "IMAGETAG=${env.GIT_COMMIT}",
+                    ]) {
+                        sh "make"
+                    }
                 }
             }
         }
@@ -41,8 +45,9 @@ pipeline {
                     lock("kubernetes-operator-tests") {
                         withEnv([
                         "TESTNAMESPACE=${params.TESTNAMESPACE}",
+                        "IMAGETAG=${env.GIT_COMMIT}",
+                        "PUSHIMAGES=1",
                         ]) {
-                            sh "make"
                             sh "make run-tests"
                         }
                     }
