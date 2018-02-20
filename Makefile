@@ -37,6 +37,8 @@ TESTBIN := $(BINDIR)/$(TESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
+TESTNAMESPACE := arangodb-operator-tests
+
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
 .PHONY: all clean deps docker update-vendor update-generated verify-generated
@@ -128,7 +130,7 @@ docker: $(BIN)
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	@docker run \
+	docker run \
 		--rm \
 		-v $(SRCDIR):/usr/code \
 		-e GOPATH=/usr/code/.gobuild \
@@ -143,7 +145,11 @@ docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t arangodb/arangodb-operator-test .
 
 run-tests: docker-test
-	kubectl run arangodb-operator-test -i --rm --quiet --restart=Never --image=arangodb/arangodb-operator-test
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
+	kubectl create namespace $(TESTNAMESPACE)
+	kubectl --namespace=$(TESTNAMESPACE) create -f examples/deployment.yaml
+	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=arangodb/arangodb-operator-test --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
+	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 # Release building
 
@@ -184,7 +190,7 @@ minikube-start:
 	minikube start --cpus=4 --memory=6144
 
 delete-operator:
-	kubectl delete -f examples/deployment.yaml || true
+	kubectl delete -f examples/deployment.yaml --ignore-not-found
 
 redeploy-operator: delete-operator
 	kubectl create -f examples/deployment.yaml
