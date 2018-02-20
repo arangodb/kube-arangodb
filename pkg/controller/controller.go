@@ -230,7 +230,7 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
-		cfg, deps := c.makeDeploymentConfigAndDeps()
+		cfg, deps := c.makeDeploymentConfigAndDeps(apiObject)
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
 			return maskAny(fmt.Errorf("failed to create deployment: %s", err))
@@ -262,12 +262,15 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 }
 
 // makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new cluster.
-func (c *Controller) makeDeploymentConfigAndDeps() (deployment.Config, deployment.Dependencies) {
+func (c *Controller) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount: c.Config.ServiceAccount,
 	}
 	deps := deployment.Dependencies{
-		Log:           c.Dependencies.Log,
+		Log: c.Dependencies.Log.With().
+			Str("component", "deployment").
+			Str("deployment", apiObject.GetName()).
+			Logger(),
 		KubeCli:       c.Dependencies.KubeCli,
 		DatabaseCRCli: c.Dependencies.DatabaseCRCli,
 	}

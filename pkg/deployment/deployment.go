@@ -204,6 +204,10 @@ func (d *Deployment) run() {
 			if err := d.inspectPods(); err != nil {
 				d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 			}
+			// Ensure all resources are created
+			if err := d.ensurePods(d.apiObject); err != nil {
+				d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+			}
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection
