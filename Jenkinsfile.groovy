@@ -40,8 +40,9 @@ pipeline {
                 timestamps {
                     lock("kubernetes-operator-tests") {
                         withEnv([
-                        'TESTNAMESPACE=${params.TESTNAMESPACE}',
+                        "TESTNAMESPACE=${params.TESTNAMESPACE}",
                         ]) {
+                            sh "make"
                             sh "make run-tests"
                         }
                     }
