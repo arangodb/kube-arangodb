@@ -87,8 +87,9 @@ update-vendor:
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
-update-generated: $(GOBUILDDIR) 
-	@docker build $(SRCDIR)/tools/codegen --build-arg GOVERSION=$(GOVERSION) -t k8s-codegen
+update-generated: $(GOBUILDDIR)
+	@sed 's/GOVERSION/$(GOVERSION)/' $(SRCDIR)/tools/codegen/Dockerfile.in > $(SRCDIR)/tools/codegen/Dockerfile
+	@docker build $(SRCDIR)/tools/codegen -t k8s-codegen
 	docker run \
 		--rm \
 		-v $(SRCDIR):/usr/code \

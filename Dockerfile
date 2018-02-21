@@ -1,4 +1,4 @@
-FROM scratch 
+FROM scratch
 
 ADD bin/arangodb_operator /usr/bin/
 
