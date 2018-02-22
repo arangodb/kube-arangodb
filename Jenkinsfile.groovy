@@ -25,22 +25,28 @@ pipeline {
     }
     agent any
     parameters {
-      string(name: 'TESTNAMESPACE', defaultValue: 'arangodb-operator-tests', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in', )
+      string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
     }
     stages {
         stage('Build') {
             steps {
                 timestamps {
-                    sh "make"
+                    withEnv([
+                    "IMAGETAG=${env.GIT_COMMIT}",
+                    ]) {
+                        sh "make"
+                    }
                 }
             }
         }
         stage('Test') {
             steps {
                 timestamps {
-                    lock("kubernetes-operator-tests") {
+                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
                         withEnv([
-                        'TESTNAMESPACE=${params.TESTNAMESPACE}',
+                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                        "IMAGETAG=${env.GIT_COMMIT}",
+                        "PUSHIMAGES=1",
                         ]) {
                             sh "make run-tests"
                         }
