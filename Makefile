@@ -164,6 +164,7 @@ ifdef PUSHIMAGES
 endif
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
 	kubectl create namespace $(TESTNAMESPACE)
+	$(ROOTDIR)/examples/setup-rbac.sh --namespace=$(TESTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
 	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=$(TESTIMAGE) --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
