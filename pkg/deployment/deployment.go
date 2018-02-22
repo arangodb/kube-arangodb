@@ -72,7 +72,8 @@ type deploymentEvent struct {
 
 const (
 	deploymentEventQueueSize = 100
-	inspectionInterval       = time.Minute // Ensure we inspect the generated resources no less than with this interval
+	minInspectionInterval    = time.Second // Ensure we inspect the generated resources no less than with this interval
+	maxInspectionInterval    = time.Minute // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.
@@ -178,6 +179,8 @@ func (d *Deployment) run() {
 	}
 	log.Info().Msg("start running...")
 
+	inspectionInterval := maxInspectionInterval
+	recentInspectionErrors := 0
 	for {
 		select {
 		case <-d.stopCh:
@@ -200,18 +203,44 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
+			hasError := false
 			// Inspection of generated resources needed
 			if err := d.inspectPods(); err != nil {
+				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+			}
+			// Create scale/update plan
+			if err := d.createPlan(); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+			}
+			// Execute current step of scale/update plan
+			if err := d.executePlan(); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
 			}
 			// Ensure all resources are created
 			if err := d.ensurePods(d.apiObject); err != nil {
+				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+			}
+			if hasError {
+				if recentInspectionErrors == 0 {
+					inspectionInterval = minInspectionInterval
+					recentInspectionErrors++
+				}
+			} else {
+				recentInspectionErrors = 0
 			}
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection
 			d.inspectTrigger.Trigger()
+			// Backoff with next interval
+			inspectionInterval = time.Duration(float64(inspectionInterval) * 1.5)
+			if inspectionInterval > maxInspectionInterval {
+				inspectionInterval = maxInspectionInterval
+			}
 		}
 	}
 }

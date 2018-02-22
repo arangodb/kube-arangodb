@@ -24,6 +24,7 @@ package v1alpha
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/pkg/errors"
 )
@@ -71,6 +72,9 @@ type DeploymentStatus struct {
 
 	// Conditions specific to the entire deployment
 	Conditions ConditionList `json:"conditions,omitempty"`
+
+	// Plan to update this deployment
+	Plan Plan `json:"plan,omitempty"`
 }
 
 // DeploymentStatusMembers holds the member status of all server groups
@@ -167,6 +171,32 @@ func (ds *DeploymentStatusMembers) UpdateMemberStatus(status MemberStatus, group
 	return nil
 }
 
+// RemoveByID a member with given ID from the given group.
+// Returns a NotFoundError if the ID of the given member or group cannot be found.
+func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) error {
+	var err error
+	switch group {
+	case ServerGroupSingle:
+		err = ds.Single.RemoveByID(id)
+	case ServerGroupAgents:
+		err = ds.Agents.RemoveByID(id)
+	case ServerGroupDBServers:
+		err = ds.DBServers.RemoveByID(id)
+	case ServerGroupCoordinators:
+		err = ds.Coordinators.RemoveByID(id)
+	case ServerGroupSyncMasters:
+		err = ds.SyncMasters.RemoveByID(id)
+	case ServerGroupSyncWorkers:
+		err = ds.SyncWorkers.RemoveByID(id)
+	default:
+		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+	}
+	if err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // AllMembersReady returns true when all members are in the Ready state.
 func (ds DeploymentStatusMembers) AllMembersReady() bool {
 	if err := ds.ForeachServerGroup(func(group ServerGroup, list *MemberStatusList) error {
@@ -242,6 +272,29 @@ func (l *MemberStatusList) RemoveByID(id string) error {
 		}
 	}
 	return maskAny(errors.Wrapf(NotFoundError, "Member '%s' is not a member", id))
+}
+
+// SelectMemberToRemove selects a member from the given list that should
+// be removed in a scale down action.
+// Returns an error if the list is empty.
+func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
+	if len(l) > 0 {
+		// Try to find a not ready member
+		for _, m := range l {
+			if m.State == MemberStateNone {
+				return m, nil
+			}
+		}
+		// Pick a random member that is in created state
+		perm := rand.Perm(len(l))
+		for _, idx := range perm {
+			m := l[idx]
+			if m.State == MemberStateCreated {
+				return m, nil
+			}
+		}
+	}
+	return MemberStatus{}, maskAny(errors.Wrap(NotFoundError, "No member available for removal"))
 }
 
 // MemberState is a strongly typed state of a deployment member

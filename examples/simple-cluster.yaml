@@ -4,3 +4,7 @@ metadata:
   name: "example-simple-cluster"
 spec:
   mode: cluster
+  agents:
+    storageClassName: local-storage
+  dbservers:
+    storageClassName: local-storage

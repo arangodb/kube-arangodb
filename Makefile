@@ -138,6 +138,9 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 
 docker: $(BIN)
 	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
+ifdef PUSHIMAGES
+	docker push $(OPERATORIMAGE)
+endif
 
 # Testing
 
@@ -208,8 +211,8 @@ minikube-start:
 	minikube start --cpus=4 --memory=6144
 
 delete-operator:
-	kubectl delete -f examples/deployment.yaml --ignore-not-found
+	kubectl delete deployment arangodb-operator --ignore-not-found
 
 redeploy-operator: delete-operator
-	kubectl create -f examples/deployment.yaml
+	$(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
 	kubectl get pods 
