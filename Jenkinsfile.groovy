@@ -32,7 +32,7 @@ pipeline {
             steps {
                 timestamps {
                     withEnv([
-                    "IMAGETAG=${env.GIT_COMMIT:0:6}",
+                    "IMAGETAG=${env.GIT_COMMIT}",
                     ]) {
                         sh "make"
                     }
@@ -42,10 +42,10 @@ pipeline {
         stage('Test') {
             steps {
                 timestamps {
-                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT:0:6}") {
+                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
                         withEnv([
-                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT:0:6}",
-                        "IMAGETAG=${env.GIT_COMMIT:0:6}",
+                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                        "IMAGETAG=${env.GIT_COMMIT}",
                         "PUSHIMAGES=1",
                         ]) {
                             sh "make run-tests"
