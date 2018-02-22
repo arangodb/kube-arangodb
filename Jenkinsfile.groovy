@@ -25,7 +25,7 @@ pipeline {
     }
     agent any
     parameters {
-      string(name: 'TESTNAMESPACE', defaultValue: 'arangodb-operator-tests', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in', )
+      string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
     }
     stages {
         stage('Build') {
