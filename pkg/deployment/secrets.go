@@ -25,8 +25,10 @@ package deployment
 import (
 	"fmt"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
 // getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
@@ -36,30 +38,24 @@ func (d *Deployment) getJWTSecret(apiObject *api.ArangoDeployment) (string, erro
 	}
 	kubecli := d.deps.KubeCli
 	secretName := apiObject.Spec.Authentication.JWTSecretName
-	s, err := kubecli.CoreV1().Secrets(apiObject.GetNamespace()).Get(secretName, metav1.GetOptions{})
+	s, err := k8sutil.GetJWTSecret(kubecli, secretName, apiObject.GetNamespace())
 	if err != nil {
 		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
+		return "", maskAny(err)
 	}
-	// Take the first data
-	for _, v := range s.Data {
-		return string(v), nil
-	}
-	return "", maskAny(fmt.Errorf("No data found in secret '%s'", secretName))
+	return s, nil
 }
 
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
 func (d *Deployment) getSyncJWTSecret(apiObject *api.ArangoDeployment) (string, error) {
 	kubecli := d.deps.KubeCli
 	secretName := apiObject.Spec.Sync.Authentication.JWTSecretName
-	s, err := kubecli.CoreV1().Secrets(apiObject.GetNamespace()).Get(secretName, metav1.GetOptions{})
+	s, err := k8sutil.GetJWTSecret(kubecli, secretName, apiObject.GetNamespace())
 	if err != nil {
 		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
+		return "", maskAny(err)
 	}
-	// Take the first data
-	for _, v := range s.Data {
-		return string(v), nil
-	}
-	return "", maskAny(fmt.Errorf("No data found in secret '%s'", secretName))
+	return s, nil
 }
 
 // getSyncMonitoringToken loads the token secret used for monitoring sync masters & workers.
