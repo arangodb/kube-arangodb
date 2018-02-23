@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -89,6 +90,7 @@ type Deployment struct {
 	eventsCli corev1.EventInterface
 
 	inspectTrigger trigger.Trigger
+	clientCache    *clientCache
 }
 
 // New creates a new Deployment from the given API object.
@@ -97,13 +99,14 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		return nil, maskAny(err)
 	}
 	d := &Deployment{
-		apiObject: apiObject,
-		status:    *(apiObject.Status.DeepCopy()),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
-		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
+		apiObject:   apiObject,
+		status:      *(apiObject.Status.DeepCopy()),
+		config:      config,
+		deps:        deps,
+		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:      make(chan struct{}),
+		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
+		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 
 	go d.run()
@@ -149,35 +152,37 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
-	// Create services
-	if err := d.createServices(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create services")
-		return
-	}
+	if d.status.State == api.DeploymentStateNone {
+		// Create services
+		if err := d.createServices(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create services")
+			return
+		}
 
-	// Create members
-	if err := d.createInitialMembers(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create initial members")
-		return
-	}
+		// Create members
+		if err := d.createInitialMembers(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create initial members")
+			return
+		}
 
-	// Create PVCs
-	if err := d.ensurePVCs(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create persistent volume claims")
-		return
-	}
+		// Create PVCs
+		if err := d.ensurePVCs(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create persistent volume claims")
+			return
+		}
 
-	// Create pods
-	if err := d.ensurePods(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create pods")
-		return
-	}
+		// Create pods
+		if err := d.ensurePods(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create pods")
+			return
+		}
 
-	d.status.State = api.DeploymentStateRunning
-	if err := d.updateCRStatus(); err != nil {
-		log.Warn().Err(err).Msg("update initial CR status failed")
+		d.status.State = api.DeploymentStateRunning
+		if err := d.updateCRStatus(); err != nil {
+			log.Warn().Err(err).Msg("update initial CR status failed")
+		}
+		log.Info().Msg("start running...")
 	}
-	log.Info().Msg("start running...")
 
 	inspectionInterval := maxInspectionInterval
 	recentInspectionErrors := 0
@@ -204,6 +209,7 @@ func (d *Deployment) run() {
 
 		case <-d.inspectTrigger.Done():
 			hasError := false
+			ctx := context.Background()
 			// Inspection of generated resources needed
 			if err := d.inspectPods(); err != nil {
 				hasError = true
@@ -215,11 +221,17 @@ func (d *Deployment) run() {
 				d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
 			}
 			// Execute current step of scale/update plan
-			if err := d.executePlan(); err != nil {
+			if retrySoon, err := d.executePlan(ctx); err != nil {
 				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+			} else if retrySoon {
+				inspectionInterval = minInspectionInterval
 			}
 			// Ensure all resources are created
+			if err := d.ensurePVCs(d.apiObject); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+			}
 			if err := d.ensurePods(d.apiObject); err != nil {
 				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))

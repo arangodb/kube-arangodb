@@ -79,7 +79,7 @@ func createScalePlan(members api.MemberStatusList, group api.ServerGroup, count 
 		if m, err := members.SelectMemberToRemove(); err == nil {
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
-					api.Action{Type: api.ActionTypeDrainMember, Group: group, MemberID: m.ID},
+					api.Action{Type: api.ActionTypeCleanOutMember, Group: group, MemberID: m.ID},
 				)
 			}
 			plan = append(plan,

@@ -133,8 +133,9 @@ func newPod(deploymentName, ns, role, id string) v1.Pod {
 			Labels: LabelsForDeployment(deploymentName, role),
 		},
 		Spec: v1.PodSpec{
-			Hostname:  name,
-			Subdomain: CreateHeadlessServiceName(deploymentName),
+			Hostname:      name,
+			Subdomain:     CreateHeadlessServiceName(deploymentName),
+			RestartPolicy: v1.RestartPolicyOnFailure,
 		},
 	}
 	return p

@@ -32,9 +32,9 @@ const (
 	ActionTypeAddMember ActionType = "AddMember"
 	// ActionTypeRemoveMember causes a member to be removed.
 	ActionTypeRemoveMember ActionType = "RemoveMember"
-	// ActionTypeDrainMember causes a member to be drained (dbserver only).
-	ActionTypeDrainMember ActionType = "DrainMember"
-	// ActionTypeShutdownMember causes a member to be shutdown.
+	// ActionTypeCleanOutMember causes a member to be cleaned out (dbserver only).
+	ActionTypeCleanOutMember ActionType = "CleanOutMember"
+	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 )
 

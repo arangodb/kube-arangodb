@@ -225,6 +225,17 @@ func (l MemberStatusList) ContainsID(id string) bool {
 	return false
 }
 
+// ElementByID returns the element in the given list that has the given ID and true.
+// If no such element exists, false is returned.
+func (l MemberStatusList) ElementByID(id string) (MemberStatus, bool) {
+	for i, x := range l {
+		if x.ID == id {
+			return l[i], true
+		}
+	}
+	return MemberStatus{}, false
+}
+
 // ElementByPodName returns the element in the given list that has the given pod name and true.
 // If no such element exists, false is returned.
 func (l MemberStatusList) ElementByPodName(podName string) (MemberStatus, bool) {
