@@ -114,7 +114,13 @@ func (d *Deployment) inspectPods() error {
 					case api.MemberStateNone:
 						// Do nothing
 					case api.MemberStateShuttingDown:
-						// Shutdown was intended, so not need to do anything here
+						// Shutdown was intended, so not need to do anything here.
+						// Just mark terminated
+						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
+							if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
+								return maskAny(err)
+							}
+						}
 					default:
 						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
 						// Create event

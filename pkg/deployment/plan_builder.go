@@ -24,6 +24,7 @@ package deployment
 
 import (
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/rs/zerolog"
 )
 
 // createPlan considers the current specification & status of the deployment creates a plan to
@@ -38,6 +39,7 @@ func (d *Deployment) createPlan() error {
 	// Check for various scenario's
 	spec := d.apiObject.Spec
 	var plan api.Plan
+	log := d.deps.Log
 
 	// Check for scale up/down
 	switch spec.Mode {
@@ -45,13 +47,13 @@ func (d *Deployment) createPlan() error {
 		// Never scale down
 	case api.DeploymentModeResilientSingle:
 		// Only scale singles
-		plan = append(plan, createScalePlan(d.status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
+		plan = append(plan, createScalePlan(log, d.status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
 	case api.DeploymentModeCluster:
-		// Scale dbservers
-		plan = append(plan, createScalePlan(d.status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
-		plan = append(plan, createScalePlan(d.status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
-		plan = append(plan, createScalePlan(d.status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
-		plan = append(plan, createScalePlan(d.status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
+		// Scale dbservers, coordinators, syncmasters & syncworkers
+		plan = append(plan, createScalePlan(log, d.status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
+		plan = append(plan, createScalePlan(log, d.status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
+		plan = append(plan, createScalePlan(log, d.status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
+		plan = append(plan, createScalePlan(log, d.status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
 	}
 
 	// Save plan
@@ -67,13 +69,18 @@ func (d *Deployment) createPlan() error {
 }
 
 // createScalePlan creates a scaling plan for a single server group
-func createScalePlan(members api.MemberStatusList, group api.ServerGroup, count int) api.Plan {
+func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api.ServerGroup, count int) api.Plan {
 	var plan api.Plan
 	if len(members) < count {
 		// Scale up
-		for i := 0; i < count-len(members); i++ {
+		toAdd := count - len(members)
+		for i := 0; i < toAdd; i++ {
 			plan = append(plan, api.Action{Type: api.ActionTypeAddMember, Group: group})
 		}
+		log.Debug().
+			Int("delta", toAdd).
+			Str("role", group.AsRole()).
+			Msg("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member as a time
 		if m, err := members.SelectMemberToRemove(); err == nil {
@@ -86,6 +93,9 @@ func createScalePlan(members api.MemberStatusList, group api.ServerGroup, count 
 				api.Action{Type: api.ActionTypeShutdownMember, Group: group, MemberID: m.ID},
 				api.Action{Type: api.ActionTypeRemoveMember, Group: group, MemberID: m.ID},
 			)
+			log.Debug().
+				Str("role", group.AsRole()).
+				Msg("Creating scale-down plan")
 		}
 	}
 	return plan

@@ -174,14 +174,23 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 			log.Error().Str("group", action.Group.AsRole()).Str("id", action.MemberID).Msg("No such member")
 			return true, nil
 		}
-		c, err := d.clientCache.Get(action.Group, action.MemberID)
-		if err != nil {
-			log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to create member client")
-			return false, maskAny(err)
-		}
-		if err := c.Shutdown(ctx, true); err != nil {
-			log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to shutdown member")
-			return false, maskAny(err)
+		if action.Group.IsArangod() {
+			// Invoke shutdown endpoint
+			c, err := d.clientCache.Get(action.Group, action.MemberID)
+			if err != nil {
+				log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to create member client")
+				return false, maskAny(err)
+			}
+			if err := c.Shutdown(ctx, true); err != nil {
+				log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to shutdown member")
+				return false, maskAny(err)
+			}
+		} else if action.Group.IsArangosync() {
+			// Terminate pod
+			if err := d.deps.KubeCli.Core().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+				log.Debug().Err(err).Str("pod", m.PodName).Msg("Failed to remove pod")
+				return false, maskAny(err)
+			}
 		}
 		// Update status
 		m.State = api.MemberStateShuttingDown
