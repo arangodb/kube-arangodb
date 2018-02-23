@@ -28,4 +28,7 @@ func TestSimpleSingle(t *testing.T) {
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
 		t.Errorf("Deployment not running in time: %v", err)
 	}
+
+	// Cleanup
+	removeDeployment(c, depl.GetName(), ns)
 }
