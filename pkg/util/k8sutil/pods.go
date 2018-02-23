@@ -47,7 +47,7 @@ func arangodVolumeMounts() []v1.VolumeMount {
 }
 
 // arangodContainer creates a container configured to run `arangod`.
-func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string) v1.Container {
+func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
 		Name:            name,
@@ -68,12 +68,18 @@ func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, 
 			Value: v,
 		})
 	}
+	if livenessProbe != nil {
+		c.LivenessProbe = livenessProbe.Create()
+	}
+	if readinessProbe != nil {
+		c.ReadinessProbe = readinessProbe.Create()
+	}
 
 	return c
 }
 
 // arangosyncContainer creates a container configured to run `arangosync`.
-func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string) v1.Container {
+func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, livenessProbe *HTTPProbeConfig) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
 		Name:            name,
@@ -92,6 +98,9 @@ func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolic
 			Name:  k,
 			Value: v,
 		})
+	}
+	if livenessProbe != nil {
+		c.LivenessProbe = livenessProbe.Create()
 	}
 
 	return c
@@ -116,12 +125,13 @@ func newPod(deploymentName, ns, role, id string) v1.Pod {
 // CreateArangodPod creates a Pod that runs `arangod`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangodPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, pvcName, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, owner metav1.OwnerReference) error {
+func CreateArangodPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
+	args []string, env map[string]string, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, owner metav1.OwnerReference) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
 
 	// Add arangod container
-	c := arangodContainer(p.GetName(), image, imagePullPolicy, args, env)
+	c := arangodContainer(p.GetName(), image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add volume
@@ -156,12 +166,13 @@ func CreateArangodPod(kubecli kubernetes.Interface, deployment metav1.Object, ro
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, owner metav1.OwnerReference) error {
+func CreateArangoSyncPod(kubecli kubernetes.Interface, deployment metav1.Object, role, id, image string, imagePullPolicy v1.PullPolicy,
+	args []string, env map[string]string, livenessProbe *HTTPProbeConfig, owner metav1.OwnerReference) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
 
 	// Add arangosync container
-	c := arangosyncContainer(p.GetName(), image, imagePullPolicy, args, env)
+	c := arangosyncContainer(p.GetName(), image, imagePullPolicy, args, env, livenessProbe)
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	if err := createPod(kubecli, &p, deployment.GetNamespace(), owner); err != nil {
