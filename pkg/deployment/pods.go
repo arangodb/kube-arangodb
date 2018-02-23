@@ -292,6 +292,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			if m.State != api.MemberStateNone {
 				continue
 			}
+			// Create pod
 			role := group.AsRole()
 			if group.IsArangod() {
 				args := d.createArangodArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
@@ -318,6 +319,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 					return maskAny(err)
 				}
 			}
+			// Record new member state
 			m.State = api.MemberStateCreating
 			if err := status.Update(m); err != nil {
 				return maskAny(err)
@@ -325,6 +327,8 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			if err := d.updateCRStatus(); err != nil {
 				return maskAny(err)
 			}
+			// Create event
+			d.createEvent(k8sutil.NewMemberAddEvent(m.PodName, role, apiObject))
 		}
 		return nil
 	}, &d.status); err != nil {

@@ -29,8 +29,10 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
@@ -76,6 +78,8 @@ type Deployment struct {
 
 	eventCh chan *deploymentEvent
 	stopCh  chan struct{}
+
+	eventsCli corev1.EventInterface
 }
 
 // New creates a new Deployment from the given API object.
@@ -90,6 +94,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		deps:      deps,
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
+		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 	}
 
 	go d.run()
@@ -189,6 +194,15 @@ func (d *Deployment) run() {
 func (d *Deployment) handleUpdateEvent(event *deploymentEvent) error {
 	// TODO
 	return nil
+}
+
+// createEvent creates a given event.
+// On error, the error is logged.
+func (d *Deployment) createEvent(evt *v1.Event) {
+	_, err := d.eventsCli.Create(evt)
+	if err != nil {
+		d.deps.Log.Error().Err(err).Interface("event", *evt).Msg("Failed to record event")
+	}
 }
 
 // Update the status of the API object from the internal status
