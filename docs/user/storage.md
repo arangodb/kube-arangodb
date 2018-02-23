@@ -22,11 +22,11 @@ server.
 For optimal performance, ArangoDB should be configured with locally attached
 SSD storage.
 
-To accomplish this, you must create `PersistentVolumes` for all servers that
+To accomplish this, one must create `PersistentVolumes` for all servers that
 need persistent storage (single, agents & dbservers).
 E.g. for a `cluster` with 3 agents and 5 dbservers, you must create 8 volumes.
 
-Note that each volume must have a capacity that is equal to of higher than the
+Note that each volume must have a capacity that is equal to or higher than the
 capacity needed for each server.
 
 To select the correct node, add a required node-affinity annotation as shown
