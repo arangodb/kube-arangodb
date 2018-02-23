@@ -20,7 +20,7 @@ REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
 GOPATH := $(GOBUILDDIR)
-GOVERSION := 1.9.4-alpine
+GOVERSION := 1.10.0-alpine
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 
