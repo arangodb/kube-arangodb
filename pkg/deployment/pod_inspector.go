@@ -65,12 +65,30 @@ func (d *Deployment) inspectPods() error {
 		}
 
 		// Update state
-		var readyStatus bool
-		reason := "Pod Not Ready"
-		if readyStatus = k8sutil.IsPodReady(&p); readyStatus {
-			reason = "Pod Ready"
+		updateMemberStatusNeeded := false
+		if k8sutil.IsPodSucceeded(&p) {
+			// Pod has terminated with exit code 0.
+			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
+				updateMemberStatusNeeded = true
+			}
+		} else if k8sutil.IsPodFailed(&p) {
+			// Pod has terminated with at least 1 container with a non-zero exit code.
+			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
+				updateMemberStatusNeeded = true
+			}
 		}
-		if memberStatus.Conditions.Update(api.ConditionTypeReady, readyStatus, reason, "") {
+		if k8sutil.IsPodReady(&p) {
+			// Pod is now ready
+			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
+				updateMemberStatusNeeded = true
+			}
+		} else {
+			// Pod is not ready
+			if memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", "") {
+				updateMemberStatusNeeded = true
+			}
+		}
+		if updateMemberStatusNeeded {
 			log.Debug().Str("pod-name", p.GetName()).Msg("Updated member status member for pod")
 			if err := d.status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
 				return maskAny(err)
@@ -96,13 +114,7 @@ func (d *Deployment) inspectPods() error {
 					case api.MemberStateNone:
 						// Do nothing
 					case api.MemberStateShuttingDown:
-						// Remove member
-						if m, found := members.ElementByPodName(podName); found {
-							if err := members.RemoveByID(m.ID); err != nil {
-								return maskAny(err)
-							}
-							events = append(events, k8sutil.NewMemberRemoveEvent(podName, group.AsRole(), d.apiObject))
-						}
+						// Shutdown was intended, so not need to do anything here
 					default:
 						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
 						// Create event

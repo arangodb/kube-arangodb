@@ -4,7 +4,3 @@ metadata:
   name: "example-simple-cluster"
 spec:
   mode: cluster
-  dbservers:
-    count: 3
-  coordinators:
-    count: 2

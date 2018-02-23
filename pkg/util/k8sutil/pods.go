@@ -36,15 +36,27 @@ const (
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *v1.Pod) bool {
-	condition := getPodReadyCondition(&pod.Status)
+	condition := getPodCondition(&pod.Status, v1.PodReady)
 	return condition != nil && condition.Status == v1.ConditionTrue
 }
 
-// getPodReadyCondition returns the PodReady condition in the given status.
+// IsPodSucceeded returns true if all containers of the pod
+// have terminated with exit code 0.
+func IsPodSucceeded(pod *v1.Pod) bool {
+	return pod.Status.Phase == v1.PodSucceeded
+}
+
+// IsPodFailed returns true if all containers of the pod
+// have terminated and at least one of them wih a non-zero exit code.
+func IsPodFailed(pod *v1.Pod) bool {
+	return pod.Status.Phase == v1.PodFailed
+}
+
+// getPodCondition returns the condition of given type in the given status.
 // If not found, nil is returned.
-func getPodReadyCondition(status *v1.PodStatus) *v1.PodCondition {
+func getPodCondition(status *v1.PodStatus, condType v1.PodConditionType) *v1.PodCondition {
 	for i := range status.Conditions {
-		if status.Conditions[i].Type == v1.PodReady {
+		if status.Conditions[i].Type == condType {
 			return &status.Conditions[i]
 		}
 	}

@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
 // executePlan tries to execute the plan as far as possible.
@@ -100,6 +101,7 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, error) {
 	log := d.deps.Log
+	ns := d.apiObject.GetNamespace()
 
 	switch action.Type {
 	case api.ActionTypeAddMember:
@@ -113,10 +115,25 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 		}
 		return true, nil
 	case api.ActionTypeRemoveMember:
-		if err := d.status.Members.RemoveByID(action.MemberID, action.Group); api.IsNotFound(err) {
+		m, _, ok := d.status.Members.ElementByID(action.MemberID)
+		if !ok {
 			// We wanted to remove and it is already gone. All ok
 			return true, nil
-		} else if err != nil {
+		}
+		// Remove the pod (if any)
+		if err := d.deps.KubeCli.Core().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+			log.Debug().Err(err).Str("pod", m.PodName).Msg("Failed to remove pod")
+			return false, maskAny(err)
+		}
+		// Remove the pvc (if any)
+		if m.PersistentVolumeClaimName != "" {
+			if err := d.deps.KubeCli.Core().PersistentVolumeClaims(ns).Delete(m.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+				log.Debug().Err(err).Str("pod", m.PodName).Msg("Failed to remove pvc")
+				return false, maskAny(err)
+			}
+		}
+		// Remove member
+		if err := d.status.Members.RemoveByID(action.MemberID, action.Group); err != nil {
 			log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to remove member")
 			return false, maskAny(err)
 		}
@@ -207,12 +224,17 @@ func (d *Deployment) checkActionProgress(ctx context.Context, action api.Action)
 		// Cleanout completed
 		return true, nil
 	case api.ActionTypeShutdownMember:
-		if d.status.Members.ContainsID(action.MemberID) {
-			// Member still exists, retry soon
-			return false, nil
+		m, _, ok := d.status.Members.ElementByID(action.MemberID)
+		if !ok {
+			// Member not long exists
+			return true, nil
 		}
-		// Member is gone, shutdown is done
-		return true, nil
+		if m.Conditions.IsTrue(api.ConditionTypeTerminated) {
+			// Shutdown completed
+			return true, nil
+		}
+		// Member still not shutdown, retry soon
+		return false, nil
 	default:
 		return false, maskAny(fmt.Errorf("Unknown action type"))
 	}
