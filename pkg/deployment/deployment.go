@@ -261,7 +261,17 @@ func (d *Deployment) run() {
 func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) error {
 	log := d.deps.Log.With().Str("deployment", event.Deployment.GetName()).Logger()
 
-	newAPIObject := event.Deployment.DeepCopy()
+	// Get the most recent version of the deployment from the API server
+	current, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
+		if k8sutil.IsNotFound(err) {
+			return nil
+		}
+		return maskAny(err)
+	}
+
+	newAPIObject := current.DeepCopy()
 	newAPIObject.Spec.SetDefaults()
 	newAPIObject.Status = d.status
 	resetFields := d.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
