@@ -25,6 +25,7 @@ package arangod
 import (
 	"net"
 	nhttp "net/http"
+	"strconv"
 	"time"
 
 	driver "github.com/arangodb/go-driver"
@@ -54,8 +55,9 @@ var (
 func CreateArangodClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
+	scheme := "http"
 	connConfig := http.ConnectionConfig{
-		Endpoints: []string{dnsName},
+		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
 		Transport: sharedHTTPTransport,
 	}
 	// TODO deal with TLS
