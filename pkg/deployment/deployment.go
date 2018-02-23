@@ -289,6 +289,9 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
 	}
 
+	// Trigger inspect
+	d.inspectTrigger.Trigger()
+
 	return nil
 }
 

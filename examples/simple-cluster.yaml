@@ -5,4 +5,6 @@ metadata:
 spec:
   mode: cluster
   dbservers:
-    count: 5
+    count: 3
+  coordinators:
+    count: 2

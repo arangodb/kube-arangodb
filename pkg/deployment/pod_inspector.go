@@ -91,13 +91,26 @@ func (d *Deployment) inspectPods() error {
 	d.status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
 		for _, m := range *members {
 			if podName := m.PodName; podName != "" {
-				if !podExists(podName) && m.State != api.MemberStateNone {
-					m.State = api.MemberStateNone // This is trigger a recreate of the pod.
-					// Create event
-					events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), d.apiObject))
-					if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
-						if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
-							return maskAny(err)
+				if !podExists(podName) {
+					switch m.State {
+					case api.MemberStateNone:
+						// Do nothing
+					case api.MemberStateShuttingDown:
+						// Remove member
+						if m, found := members.ElementByPodName(podName); found {
+							if err := members.RemoveByID(m.ID); err != nil {
+								return maskAny(err)
+							}
+							events = append(events, k8sutil.NewMemberRemoveEvent(podName, group.AsRole(), d.apiObject))
+						}
+					default:
+						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
+						// Create event
+						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), d.apiObject))
+						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
+							if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
+								return maskAny(err)
+							}
 						}
 					}
 				}

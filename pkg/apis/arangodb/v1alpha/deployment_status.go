@@ -97,6 +97,30 @@ func (ds DeploymentStatusMembers) ContainsID(id string) bool {
 		ds.SyncWorkers.ContainsID(id)
 }
 
+// ElementByID returns the element in the given list that has the given ID and true.
+// If no such element exists, false is returned.
+func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGroup, bool) {
+	if result, found := ds.Single.ElementByID(id); found {
+		return result, ServerGroupSingle, true
+	}
+	if result, found := ds.Agents.ElementByID(id); found {
+		return result, ServerGroupAgents, true
+	}
+	if result, found := ds.DBServers.ElementByID(id); found {
+		return result, ServerGroupDBServers, true
+	}
+	if result, found := ds.Coordinators.ElementByID(id); found {
+		return result, ServerGroupCoordinators, true
+	}
+	if result, found := ds.SyncMasters.ElementByID(id); found {
+		return result, ServerGroupSyncMasters, true
+	}
+	if result, found := ds.SyncWorkers.ElementByID(id); found {
+		return result, ServerGroupSyncWorkers, true
+	}
+	return MemberStatus{}, 0, false
+}
+
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.

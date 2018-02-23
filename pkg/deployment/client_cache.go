@@ -34,10 +34,11 @@ import (
 )
 
 type clientCache struct {
-	mutex     sync.Mutex
-	clients   map[string]driver.Client
-	kubecli   kubernetes.Interface
-	apiObject *api.ArangoDeployment
+	mutex          sync.Mutex
+	clients        map[string]driver.Client
+	kubecli        kubernetes.Interface
+	apiObject      *api.ArangoDeployment
+	databaseClient driver.Client
 }
 
 // newClientCache creates a new client cache
@@ -67,5 +68,24 @@ func (cc *clientCache) Get(group api.ServerGroup, id string) (driver.Client, err
 		return nil, maskAny(err)
 	}
 	cc.clients[key] = c
+	return c, nil
+}
+
+// GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
+// creating one if needed.
+func (cc *clientCache) GetDatabase() (driver.Client, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+
+	if c := cc.databaseClient; c != nil {
+		return c, nil
+	}
+
+	// Not found, create a new client
+	c, err := arangod.CreateArangodDatabaseClient(cc.kubecli, cc.apiObject)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	cc.databaseClient = c
 	return c, nil
 }

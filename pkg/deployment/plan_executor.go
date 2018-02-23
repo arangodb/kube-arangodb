@@ -131,7 +131,7 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 			log.Error().Str("group", action.Group.AsRole()).Str("id", action.MemberID).Msg("No such member")
 			return true, nil
 		}
-		c, err := d.clientCache.Get(action.Group, action.MemberID)
+		c, err := d.clientCache.GetDatabase()
 		if err != nil {
 			log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to create member client")
 			return false, maskAny(err)
@@ -152,7 +152,7 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 		}
 		return true, nil
 	case api.ActionTypeShutdownMember:
-		m, ok := d.status.Members.DBServers.ElementByID(action.MemberID)
+		m, _, ok := d.status.Members.ElementByID(action.MemberID)
 		if !ok {
 			log.Error().Str("group", action.Group.AsRole()).Str("id", action.MemberID).Msg("No such member")
 			return true, nil
@@ -188,7 +188,7 @@ func (d *Deployment) checkActionProgress(ctx context.Context, action api.Action)
 		// Nothing todo
 		return true, nil
 	case api.ActionTypeCleanOutMember:
-		c, err := d.clientCache.Get(action.Group, action.MemberID)
+		c, err := d.clientCache.GetDatabase()
 		if err != nil {
 			return false, maskAny(err)
 		}
@@ -207,7 +207,11 @@ func (d *Deployment) checkActionProgress(ctx context.Context, action api.Action)
 		// Cleanout completed
 		return true, nil
 	case api.ActionTypeShutdownMember:
-		// TODO
+		if d.status.Members.ContainsID(action.MemberID) {
+			// Member still exists, retry soon
+			return false, nil
+		}
+		// Member is gone, shutdown is done
 		return true, nil
 	default:
 		return false, maskAny(fmt.Errorf("Unknown action type"))
