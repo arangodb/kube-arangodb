@@ -27,11 +27,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
@@ -59,17 +57,8 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 		token := hex.EncodeToString(tokenData)
 
 		// Create secret
-		secret := &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: secretName,
-			},
-			Data: map[string][]byte{
-				constants.SecretKeyJWT: []byte(token),
-			},
-		}
-		// Attach secret to deployment
-		secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
-		if _, err := kubecli.CoreV1().Secrets(ns).Create(secret); k8sutil.IsAlreadyExists(err) {
+		owner := d.apiObject.AsOwner()
+		if err := k8sutil.CreateJWTSecret(kubecli, secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {

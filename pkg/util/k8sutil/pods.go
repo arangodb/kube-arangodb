@@ -243,7 +243,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
-	addOwnerRefToObject(pod.GetObjectMeta(), owner)
+	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
 	if _, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}

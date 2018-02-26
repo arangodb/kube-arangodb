@@ -257,3 +257,11 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 	}
 	return nil
 }
+
+// removeSecret removes a secret
+func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
+	if err := cli.CoreV1().Secrets(ns).Delete(secretName, nil); err != nil && k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}
