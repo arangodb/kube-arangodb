@@ -23,12 +23,17 @@
 package tests
 
 import (
+	"fmt"
+
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 )
 
-// deploymentHasState creates a predicate that returns true when the deployment has the given state.
-func deploymentHasState(state api.DeploymentState) func(*api.ArangoDeployment) bool {
-	return func(obj *api.ArangoDeployment) bool {
-		return obj.Status.State == state
+// deploymentHasState creates a predicate that returns nil when the deployment has the given state.
+func deploymentHasState(state api.DeploymentState) func(*api.ArangoDeployment) error {
+	return func(obj *api.ArangoDeployment) error {
+		if obj.Status.State == state {
+			return nil
+		}
+		return fmt.Errorf("Expected state %s, got %s", state, obj.Status.State)
 	}
 }

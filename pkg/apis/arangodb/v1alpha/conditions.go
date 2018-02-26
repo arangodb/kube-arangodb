@@ -33,6 +33,8 @@ type ConditionType string
 const (
 	// ConditionTypeReady indicates that the member or entire deployment is ready and running normally.
 	ConditionTypeReady ConditionType = "Ready"
+	// ConditionTypeTerminated indicates that the member has terminated and will not restart.
+	ConditionTypeTerminated ConditionType = "Terminated"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

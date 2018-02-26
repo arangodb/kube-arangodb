@@ -33,3 +33,9 @@ func CreatePodDNSName(deployment metav1.Object, role, id string) string {
 		CreateHeadlessServiceName(deployment.GetName()) + "." +
 		deployment.GetNamespace() + ".svc"
 }
+
+// CreateDatabaseClientServiceDNSName returns the DNS of the database client service.
+func CreateDatabaseClientServiceDNSName(deployment metav1.Object) string {
+	return CreateDatabaseClientServiceName(deployment.GetName()) + "." +
+		deployment.GetNamespace() + ".svc"
+}
