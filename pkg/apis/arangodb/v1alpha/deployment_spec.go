@@ -172,12 +172,9 @@ func (s AuthenticationSpec) IsAuthenticated() bool {
 }
 
 // Validate the given spec
-func (s AuthenticationSpec) Validate(required, allowed bool) error {
+func (s AuthenticationSpec) Validate(required bool) error {
 	if required && !s.IsAuthenticated() {
 		return maskAny(errors.Wrap(ValidationError, "JWT secret is required"))
-	}
-	if !allowed && s.IsAuthenticated() {
-		return maskAny(errors.Wrap(ValidationError, "Non-empty JWT secret name is not allowed"))
 	}
 	if s.IsAuthenticated() {
 		if err := k8sutil.ValidateResourceName(s.JWTSecretName); err != nil {
@@ -252,7 +249,7 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.Image == "" {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
-	if err := s.Authentication.Validate(s.Enabled, s.Enabled); err != nil {
+	if err := s.Authentication.Validate(s.Enabled); err != nil {
 		return maskAny(err)
 	}
 	if err := s.Monitoring.Validate(); err != nil {
@@ -440,31 +437,31 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 // Return errors when validation fails, nil on success.
 func (s *DeploymentSpec) Validate() error {
 	if err := s.Mode.Validate(); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.mode"))
 	}
 	if err := s.Environment.Validate(); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.environment"))
 	}
 	if err := s.StorageEngine.Validate(); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.storageEngine"))
 	}
 	if err := validatePullPolicy(s.ImagePullPolicy); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.imagePullPolicy"))
 	}
 	if s.Image == "" {
-		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
+		return maskAny(errors.Wrapf(ValidationError, "spec.image must be set"))
 	}
 	if err := s.RocksDB.Validate(); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.rocksdb"))
 	}
-	if err := s.Authentication.Validate(false, true); err != nil {
-		return maskAny(err)
+	if err := s.Authentication.Validate(false); err != nil {
+		return maskAny(errors.Wrap(err, "spec.auth"))
 	}
 	if err := s.SSL.Validate(); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.ssl"))
 	}
 	if err := s.Sync.Validate(s.Mode); err != nil {
-		return maskAny(err)
+		return maskAny(errors.Wrap(err, "spec.sync"))
 	}
 	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode); err != nil {
 		return maskAny(err)

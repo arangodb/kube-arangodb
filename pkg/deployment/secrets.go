@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
@@ -63,7 +64,7 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 				Name: secretName,
 			},
 			Data: map[string][]byte{
-				"token": []byte(token),
+				constants.SecretKeyJWT: []byte(token),
 			},
 		}
 		// Attach secret to deployment
