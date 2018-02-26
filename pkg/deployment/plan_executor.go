@@ -148,7 +148,7 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 			log.Error().Str("group", action.Group.AsRole()).Str("id", action.MemberID).Msg("No such member")
 			return true, nil
 		}
-		c, err := d.clientCache.GetDatabase()
+		c, err := d.clientCache.GetDatabase(ctx)
 		if err != nil {
 			log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to create member client")
 			return false, maskAny(err)
@@ -176,7 +176,7 @@ func (d *Deployment) startAction(ctx context.Context, action api.Action) (bool, 
 		}
 		if action.Group.IsArangod() {
 			// Invoke shutdown endpoint
-			c, err := d.clientCache.Get(action.Group, action.MemberID)
+			c, err := d.clientCache.Get(ctx, action.Group, action.MemberID)
 			if err != nil {
 				log.Debug().Err(err).Str("group", action.Group.AsRole()).Msg("Failed to create member client")
 				return false, maskAny(err)
@@ -214,7 +214,7 @@ func (d *Deployment) checkActionProgress(ctx context.Context, action api.Action)
 		// Nothing todo
 		return true, nil
 	case api.ActionTypeCleanOutMember:
-		c, err := d.clientCache.GetDatabase()
+		c, err := d.clientCache.GetDatabase(ctx)
 		if err != nil {
 			return false, maskAny(err)
 		}
