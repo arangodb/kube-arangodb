@@ -58,7 +58,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 		// With authentication
 		options = append(options,
 			optionPair{"--server.authentication", "true"},
-			optionPair{"--server.jwt-secret", "$" + constants.EnvArangodJWTSecret},
+			optionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
 		)
 	} else {
 		// Without authentication

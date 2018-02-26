@@ -27,6 +27,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/k8s-operator/pkg/util/constants"
 )
 
 // GetJWTSecret loads the JWT secret from a Secret with given name.
@@ -35,9 +37,10 @@ func GetJWTSecret(kubecli kubernetes.Interface, secretName, namespace string) (s
 	if err != nil {
 		return "", maskAny(err)
 	}
-	// Take the first data
-	for _, v := range s.Data {
-		return string(v), nil
+	// Take the first data from the token key
+	data, found := s.Data[constants.SecretKeyJWT]
+	if !found {
+		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyJWT, secretName))
 	}
-	return "", maskAny(fmt.Errorf("No data found in secret '%s'", secretName))
+	return string(data), nil
 }
