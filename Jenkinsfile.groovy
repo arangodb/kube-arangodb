@@ -25,7 +25,7 @@ pipeline {
     }
     agent any
     parameters {
-      string(name: 'KUBECONFIG', defaultValue: '/home/jenkins/.kube/scw-183a3b', description: 'KUBECONFIG controls which k8s cluster is used', ),
+      string(name: 'KUBECONFIG', defaultValue: '/home/jenkins/.kube/scw-183a3b', description: 'KUBECONFIG controls which k8s cluster is used', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
     }
     stages {
