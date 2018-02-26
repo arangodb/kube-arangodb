@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -72,7 +73,8 @@ type deploymentEvent struct {
 
 const (
 	deploymentEventQueueSize = 100
-	inspectionInterval       = time.Minute // Ensure we inspect the generated resources no less than with this interval
+	minInspectionInterval    = time.Second // Ensure we inspect the generated resources no less than with this interval
+	maxInspectionInterval    = time.Minute // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.
@@ -88,6 +90,7 @@ type Deployment struct {
 	eventsCli corev1.EventInterface
 
 	inspectTrigger trigger.Trigger
+	clientCache    *clientCache
 }
 
 // New creates a new Deployment from the given API object.
@@ -96,13 +99,14 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		return nil, maskAny(err)
 	}
 	d := &Deployment{
-		apiObject: apiObject,
-		status:    *(apiObject.Status.DeepCopy()),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
-		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
+		apiObject:   apiObject,
+		status:      *(apiObject.Status.DeepCopy()),
+		config:      config,
+		deps:        deps,
+		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:      make(chan struct{}),
+		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
+		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 
 	go d.run()
@@ -148,42 +152,46 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
-	// Create secrets
-	if err := d.createSecrets(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create secrets")
-		return
+	if d.status.State == api.DeploymentStateNone {
+		// Create secrets
+		if err := d.createSecrets(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create secrets")
+			return
+		}
+
+		// Create services
+		if err := d.createServices(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create services")
+			return
+		}
+
+		// Create members
+		if err := d.createInitialMembers(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create initial members")
+			return
+		}
+
+		// Create PVCs
+		if err := d.ensurePVCs(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create persistent volume claims")
+			return
+		}
+
+		// Create pods
+		if err := d.ensurePods(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create pods")
+			return
+		}
+
+		d.status.State = api.DeploymentStateRunning
+		if err := d.updateCRStatus(); err != nil {
+			log.Warn().Err(err).Msg("update initial CR status failed")
+		}
+		log.Info().Msg("start running...")
 	}
 
-	// Create services
-	if err := d.createServices(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create services")
-		return
-	}
-
-	// Create members
-	if err := d.createInitialMembers(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create initial members")
-		return
-	}
-
-	// Create PVCs
-	if err := d.ensurePVCs(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create persistent volume claims")
-		return
-	}
-
-	// Create pods
-	if err := d.ensurePods(d.apiObject); err != nil {
-		d.failOnError(err, "Failed to create pods")
-		return
-	}
-
-	d.status.State = api.DeploymentStateRunning
-	if err := d.updateCRStatus(); err != nil {
-		log.Warn().Err(err).Msg("update initial CR status failed")
-	}
-	log.Info().Msg("start running...")
-
+	inspectionInterval := maxInspectionInterval
+	recentInspectionErrors := 0
 	for {
 		select {
 		case <-d.stopCh:
@@ -206,25 +214,100 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
+			hasError := false
+			ctx := context.Background()
 			// Inspection of generated resources needed
 			if err := d.inspectPods(); err != nil {
+				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 			}
+			// Create scale/update plan
+			if err := d.createPlan(); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+			}
+			// Execute current step of scale/update plan
+			if retrySoon, err := d.executePlan(ctx); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+			} else if retrySoon {
+				inspectionInterval = minInspectionInterval
+			}
 			// Ensure all resources are created
+			if err := d.ensurePVCs(d.apiObject); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+			}
 			if err := d.ensurePods(d.apiObject); err != nil {
+				hasError = true
 				d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+			}
+			if hasError {
+				if recentInspectionErrors == 0 {
+					inspectionInterval = minInspectionInterval
+					recentInspectionErrors++
+				}
+			} else {
+				recentInspectionErrors = 0
 			}
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection
 			d.inspectTrigger.Trigger()
+			// Backoff with next interval
+			inspectionInterval = time.Duration(float64(inspectionInterval) * 1.5)
+			if inspectionInterval > maxInspectionInterval {
+				inspectionInterval = maxInspectionInterval
+			}
 		}
 	}
 }
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
 func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) error {
-	// TODO
+	log := d.deps.Log.With().Str("deployment", event.Deployment.GetName()).Logger()
+
+	// Get the most recent version of the deployment from the API server
+	current, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
+		if k8sutil.IsNotFound(err) {
+			return nil
+		}
+		return maskAny(err)
+	}
+
+	newAPIObject := current.DeepCopy()
+	newAPIObject.Spec.SetDefaults(newAPIObject.GetName())
+	newAPIObject.Status = d.status
+	resetFields := d.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
+	if len(resetFields) > 0 {
+		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
+	}
+	if err := newAPIObject.Spec.Validate(); err != nil {
+		d.createEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
+		// Try to reset object
+		if err := d.updateCRSpec(d.apiObject.Spec); err != nil {
+			log.Error().Err(err).Msg("Restore original spec failed")
+			d.createEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
+		}
+		return nil
+	}
+	if len(resetFields) > 0 {
+		for _, fieldName := range resetFields {
+			log.Debug().Str("field", fieldName).Msg("Reset immutable field")
+			d.createEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
+		}
+	}
+
+	// Save updated spec
+	if err := d.updateCRSpec(newAPIObject.Spec); err != nil {
+		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+	}
+
+	// Trigger inspect
+	d.inspectTrigger.Trigger()
+
 	return nil
 }
 
@@ -246,16 +329,67 @@ func (d *Deployment) updateCRStatus() error {
 
 	// Send update to API server
 	update := d.apiObject.DeepCopy()
-	update.Status = d.status
-	newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Update(update)
-	if err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
+	attempt := 0
+	for {
+		attempt++
+		update.Status = d.status
+		ns := d.apiObject.GetNamespace()
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		if err == nil {
+			// Update internal object
+			d.apiObject = newAPIObject
+			return nil
+		}
+		if attempt < 10 && k8sutil.IsConflict(err) {
+			// API object may have been changed already,
+			// Reload api object and try again
+			var current *api.ArangoDeployment
+			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			if err == nil {
+				update = current.DeepCopy()
+				continue
+			}
+		}
+		if err != nil {
+			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment status")
+			return maskAny(fmt.Errorf("failed to patch ArangoDeployment status: %v", err))
+		}
 	}
+}
 
-	// Update internal object
-	d.apiObject = newAPIObject
-
-	return nil
+// Update the spec part of the API object (d.apiObject)
+// to the given object, while preserving the status.
+// On success, d.apiObject is updated.
+func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
+	// Send update to API server
+	update := d.apiObject.DeepCopy()
+	attempt := 0
+	for {
+		attempt++
+		update.Spec = newSpec
+		update.Status = d.status
+		ns := d.apiObject.GetNamespace()
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		if err == nil {
+			// Update internal object
+			d.apiObject = newAPIObject
+			return nil
+		}
+		if attempt < 10 && k8sutil.IsConflict(err) {
+			// API object may have been changed already,
+			// Reload api object and try again
+			var current *api.ArangoDeployment
+			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			if err == nil {
+				update = current.DeepCopy()
+				continue
+			}
+		}
+		if err != nil {
+			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment spec")
+			return maskAny(fmt.Errorf("failed to patch ArangoDeployment spec: %v", err))
+		}
+	}
 }
 
 // failOnError reports the given error and sets the deployment status to failed.

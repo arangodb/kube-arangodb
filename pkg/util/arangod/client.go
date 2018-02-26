@@ -55,6 +55,26 @@ var (
 func CreateArangodClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
+	c, err := createArangodClientForDNSName(kubecli, apiObject, dnsName)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
+// CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
+func CreateArangodDatabaseClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
+	// Create connection
+	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
+	c, err := createArangodClientForDNSName(kubecli, apiObject, dnsName)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
+// CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
+func createArangodClientForDNSName(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
 	connConfig := http.ConnectionConfig{
 		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},

@@ -373,6 +373,23 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 	}
 }
 
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix string, target *ServerGroupSpec) []string {
+	var resetFields []string
+	if group == ServerGroupAgents {
+		if s.Count != target.Count {
+			target.Count = s.Count
+			resetFields = append(resetFields, fieldPrefix+".count")
+		}
+	}
+	if s.StorageClassName != target.StorageClassName {
+		target.StorageClassName = s.StorageClassName
+		resetFields = append(resetFields, fieldPrefix+".storageClassName")
+	}
+	return resetFields
+}
+
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
 	Mode            DeploymentMode `json:"mode,omitempty"`
@@ -487,4 +504,38 @@ func (s *DeploymentSpec) Validate() error {
 // IsDevelopment returns true when the spec contains a Development environment.
 func (s DeploymentSpec) IsDevelopment() bool {
 	return s.Environment == EnvironmentDevelopment
+}
+
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+// Field names are relative to `spec.`.
+func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
+	var resetFields []string
+	if s.Mode != target.Mode {
+		target.Mode = s.Mode
+		resetFields = append(resetFields, "mode")
+	}
+	if s.StorageEngine != target.StorageEngine {
+		target.StorageEngine = s.StorageEngine
+		resetFields = append(resetFields, "storageEngine")
+	}
+	if l := s.Single.ResetImmutableFields(ServerGroupSingle, "single", &target.Single); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.Agents.ResetImmutableFields(ServerGroupAgents, "agents", &target.Agents); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.DBServers.ResetImmutableFields(ServerGroupDBServers, "dbservers", &target.DBServers); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.Coordinators.ResetImmutableFields(ServerGroupCoordinators, "coordinators", &target.Coordinators); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.SyncMasters.ResetImmutableFields(ServerGroupSyncMasters, "syncmasters", &target.SyncMasters); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.SyncWorkers.ResetImmutableFields(ServerGroupSyncWorkers, "syncworkers", &target.SyncWorkers); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	return resetFields
 }
