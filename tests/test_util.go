@@ -30,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/pkg/errors"
@@ -63,8 +64,8 @@ func mustNewKubeClient(t *testing.T) kubernetes.Interface {
 
 // mustNewArangodDatabaseClient creates a new database client,
 // failing the test on errors.
-func mustNewArangodDatabaseClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) driver.Client {
-	c, err := arangod.CreateArangodDatabaseClient(kubecli, apiObject)
+func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) driver.Client {
+	c, err := arangod.CreateArangodDatabaseClient(ctx, kubecli, apiObject)
 	if err != nil {
 		t.Fatalf("Failed to create arango database client: %v", err)
 	}
@@ -105,8 +106,10 @@ func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, pre
 			return maskAny(err)
 		}
 		result = obj
-		if err := predicate(obj); err != nil {
-			return maskAny(err)
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
 		}
 		return nil
 	}
@@ -114,6 +117,47 @@ func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, pre
 		return nil, maskAny(err)
 	}
 	return result, nil
+}
+
+// waitUntilSecret waits until a secret with given name in given namespace
+// reached a state where the given predicate returns true.
+func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate func(*v1.Secret) error, timeout time.Duration) (*v1.Secret, error) {
+	var result *v1.Secret
+	op := func() error {
+		obj, err := cli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+		if err != nil {
+			result = nil
+			return maskAny(err)
+		}
+		result = obj
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
+// waitUntilSecretNotFound waits until a secret with given name in given namespace
+// is no longer found.
+func waitUntilSecretNotFound(cli kubernetes.Interface, secretName, ns string, timeout time.Duration) error {
+	op := func() error {
+		if _, err := cli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+			return nil
+		} else if err != nil {
+			return maskAny(err)
+		}
+		return maskAny(fmt.Errorf("Secret %s still there", secretName))
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return maskAny(err)
+	}
+	return nil
 }
 
 // waitUntilClusterHealth waits until an arango cluster
@@ -129,7 +173,25 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 		if err != nil {
 			return maskAny(err)
 		}
-		if err := predicate(h); err != nil {
+		if predicate != nil {
+			if err := predicate(h); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// waitUntilVersionUp waits until the arango database responds to
+// an `/_api/version` request without an error.
+func waitUntilVersionUp(cli driver.Client) error {
+	ctx := context.Background()
+	op := func() error {
+		if _, err := cli.Version(ctx); err != nil {
 			return maskAny(err)
 		}
 		return nil

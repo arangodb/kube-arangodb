@@ -23,6 +23,8 @@
 package arangod
 
 import (
+	"context"
+	"fmt"
 	"net"
 	nhttp "net/http"
 	"strconv"
@@ -35,6 +37,25 @@ import (
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
+
+type (
+	// skipAuthenticationKey is the context key used to indicate NOT setting any authentication
+	skipAuthenticationKey struct{}
+	// requireAuthenticationKey is the context key used to indicate that authentication is required
+	requireAuthenticationKey struct{}
+)
+
+// WithSkipAuthentication prepares a context that when given to functions in
+// this file will avoid creating any authentication for arango clients.
+func WithSkipAuthentication(ctx context.Context) context.Context {
+	return context.WithValue(ctx, skipAuthenticationKey{}, true)
+}
+
+// WithRequireAuthentication prepares a context that when given to functions in
+// this file will fail when authentication is not available.
+func WithRequireAuthentication(ctx context.Context) context.Context {
+	return context.WithValue(ctx, requireAuthenticationKey{}, true)
+}
 
 var (
 	sharedHTTPTransport = &nhttp.Transport{
@@ -52,10 +73,10 @@ var (
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
-func CreateArangodClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
+func CreateArangodClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
-	c, err := createArangodClientForDNSName(kubecli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, kubecli, apiObject, dnsName)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -63,10 +84,10 @@ func CreateArangodClient(kubecli kubernetes.Interface, apiObject *api.ArangoDepl
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodClientForDNSName(kubecli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, kubecli, apiObject, dnsName)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -74,7 +95,7 @@ func CreateArangodDatabaseClient(kubecli kubernetes.Interface, apiObject *api.Ar
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
 	connConfig := http.ConnectionConfig{
 		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
@@ -91,15 +112,25 @@ func createArangodClientForDNSName(kubecli kubernetes.Interface, apiObject *api.
 		Connection: conn,
 	}
 	if apiObject.Spec.IsAuthenticated() {
-		s, err := k8sutil.GetJWTSecret(kubecli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
-		if err != nil {
-			return nil, maskAny(err)
+		// Authentication is enabled.
+		// Should we skip using it?
+		if ctx.Value(skipAuthenticationKey{}) == nil {
+			s, err := k8sutil.GetJWTSecret(kubecli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			jwt, err := CreateArangodJwtAuthorizationHeader(s)
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			config.Authentication = driver.RawAuthentication(jwt)
 		}
-		jwt, err := CreateArangodJwtAuthorizationHeader(s)
-		if err != nil {
-			return nil, maskAny(err)
+	} else {
+		// Authentication is not enabled.
+		if ctx.Value(requireAuthenticationKey{}) != nil {
+			// Context requires authentication
+			return nil, maskAny(fmt.Errorf("Authentication is required by context, but not provided in API object"))
 		}
-		config.Authentication = driver.RawAuthentication(jwt)
 	}
 	c, err := driver.NewClient(config)
 	if err != nil {

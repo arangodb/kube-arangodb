@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -34,7 +35,8 @@ func TestScaleCluster(t *testing.T) {
 	}
 
 	// Create a database client
-	client := mustNewArangodDatabaseClient(kubecli, apiObject, t)
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
