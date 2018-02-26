@@ -123,7 +123,7 @@ The encryption key cannot be changed after the cluster has been created.
 This setting specifies the name of a kubernetes `Secret` that contains
 the JWT token used for accessing all ArangoDB servers.
 When no name is specified, it defaults to `<deployment-name>-jwt`.
-To disable authentication, set this value to `-`.
+To disable authentication, set this value to `None`.
 
 If you specify a name of a `Secret` that does not exist, a random token is created
 and stored in a `Secret` with given name.

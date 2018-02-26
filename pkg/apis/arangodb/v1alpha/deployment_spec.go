@@ -160,23 +160,38 @@ type AuthenticationSpec struct {
 	JWTSecretName string `json:"jwtSecretName,omitempty"`
 }
 
+const (
+	// JWTSecretNameDisabled is the value of JWTSecretName to use for disabling authentication.
+	JWTSecretNameDisabled = "None"
+)
+
+// IsAuthenticated returns true if authentication is enabled.
+// Returns false other (when JWTSecretName == "None").
+func (s AuthenticationSpec) IsAuthenticated() bool {
+	return s.JWTSecretName != JWTSecretNameDisabled
+}
+
 // Validate the given spec
 func (s AuthenticationSpec) Validate(required, allowed bool) error {
-	if required && s.JWTSecretName == "" {
-		return maskAny(errors.Wrap(ValidationError, "Missing JWT secret"))
+	if required && !s.IsAuthenticated() {
+		return maskAny(errors.Wrap(ValidationError, "JWT secret is required"))
 	}
-	if !allowed && s.JWTSecretName != "" {
+	if !allowed && s.IsAuthenticated() {
 		return maskAny(errors.Wrap(ValidationError, "Non-empty JWT secret name is not allowed"))
 	}
-	if err := k8sutil.ValidateOptionalResourceName(s.JWTSecretName); err != nil {
-		return maskAny(err)
+	if s.IsAuthenticated() {
+		if err := k8sutil.ValidateResourceName(s.JWTSecretName); err != nil {
+			return maskAny(err)
+		}
 	}
 	return nil
 }
 
 // SetDefaults fills in missing defaults
-func (s *AuthenticationSpec) SetDefaults() {
-	// Nothing needed
+func (s *AuthenticationSpec) SetDefaults(defaultJWTSecretName string) {
+	if s.JWTSecretName == "" {
+		s.JWTSecretName = defaultJWTSecretName
+	}
 }
 
 // SSLSpec holds SSL specific configuration settings
@@ -247,14 +262,14 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy) {
+func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName string) {
 	if s.Image == "" {
 		s.Image = defaultImage
 	}
 	if s.ImagePullPolicy == "" {
 		s.ImagePullPolicy = defaulPullPolicy
 	}
-	s.Authentication.SetDefaults()
+	s.Authentication.SetDefaults(defaultJWTSecretName)
 	s.Monitoring.SetDefaults()
 }
 
@@ -384,7 +399,7 @@ type DeploymentSpec struct {
 
 // IsAuthenticated returns true when authentication is enabled
 func (s DeploymentSpec) IsAuthenticated() bool {
-	return s.Authentication.JWTSecretName != ""
+	return s.Authentication.IsAuthenticated()
 }
 
 // IsSecure returns true when SSL is enabled
@@ -393,7 +408,7 @@ func (s DeploymentSpec) IsSecure() bool {
 }
 
 // SetDefaults fills in default values when a field is not specified.
-func (s *DeploymentSpec) SetDefaults() {
+func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.Mode == "" {
 		s.Mode = DeploymentModeCluster
 	}
@@ -410,9 +425,9 @@ func (s *DeploymentSpec) SetDefaults() {
 		s.ImagePullPolicy = v1.PullIfNotPresent
 	}
 	s.RocksDB.SetDefaults()
-	s.Authentication.SetDefaults()
+	s.Authentication.SetDefaults(deploymentName + "-jwt")
 	s.SSL.SetDefaults()
-	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy)
+	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy, deploymentName+"-sync-jwt")
 	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode)
 	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents(), s.Mode)
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode)
