@@ -27,15 +27,30 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 ifndef DOCKERNAMESPACE
 	DOCKERNAMESPACE := arangodb
 endif
-ifndef DOCKERFILE
-	DOCKERFILE := Dockerfile 
-	#DOCKERFILE := Dockerfile.debug
+DOCKERFILE := Dockerfile 
+DOCKERTESTFILE := Dockerfile.test
+
+ifdef IMAGETAG 
+	IMAGESUFFIX := ":$(IMAGETAG)"
+endif
+
+ifndef OPERATORIMAGE
+	OPERATORIMAGE := $(DOCKERNAMESPACE)/arangodb-operator$(IMAGESUFFIX)
+endif
+ifndef TESTIMAGE
+	TESTIMAGE := $(DOCKERNAMESPACE)/arangodb-operator-test$(IMAGESUFFIX)
 endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
+TESTBINNAME := $(PROJECT)_test
+TESTBIN := $(BINDIR)/$(TESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
+
+ifndef TESTNAMESPACE
+	TESTNAMESPACE := arangodb-operator-tests
+endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
@@ -77,6 +92,7 @@ update-vendor:
 		k8s.io/client-go/... \
 		k8s.io/gengo/args \
 		k8s.io/apiextensions-apiserver \
+		github.com/arangodb/go-driver \
 		github.com/cenkalti/backoff \
 		github.com/dchest/uniuri \
 		github.com/dgrijalva/jwt-go \
@@ -122,11 +138,43 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
 
 docker: $(BIN)
-	docker build -f $(DOCKERFILE) -t arangodb/arangodb-operator .
+	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
+
+# Testing
+
+$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
+	@mkdir -p $(BINDIR)
+	docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
+
+docker-test: $(TESTBIN)
+	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
+
+run-tests: docker-test
+ifdef PUSHIMAGES
+	docker push $(OPERATORIMAGE)
+	docker push $(TESTIMAGE)
+endif
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
+	kubectl create namespace $(TESTNAMESPACE)
+	$(ROOTDIR)/examples/setup-rbac.sh --namespace=$(TESTNAMESPACE)
+	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
+	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=$(TESTIMAGE) --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
+	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
+
+# Release building
 
 docker-push: docker
 ifneq ($(DOCKERNAMESPACE), arangodb)
-	docker tag arangodb/arangodb-operator $(DOCKERNAMESPACE)/arangodb-operator
+	docker tag $(OPERATORIMAGE) $(DOCKERNAMESPACE)/arangodb-operator
 endif
 	docker push $(DOCKERNAMESPACE)/arangodb-operator
 
@@ -161,7 +209,7 @@ minikube-start:
 	minikube start --cpus=4 --memory=6144
 
 delete-operator:
-	kubectl delete -f examples/deployment.yaml || true
+	kubectl delete -f examples/deployment.yaml --ignore-not-found
 
 redeploy-operator: delete-operator
 	kubectl create -f examples/deployment.yaml
