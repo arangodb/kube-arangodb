@@ -148,6 +148,12 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
+	// Create secrets
+	if err := d.createSecrets(d.apiObject); err != nil {
+		d.failOnError(err, "Failed to create secrets")
+		return
+	}
+
 	// Create services
 	if err := d.createServices(d.apiObject); err != nil {
 		d.failOnError(err, "Failed to create services")
