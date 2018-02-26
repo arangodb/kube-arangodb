@@ -95,6 +95,7 @@ func main() {
 
 // Run the operator
 func cmdMainRun(cmd *cobra.Command, args []string) {
+	goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
 	logService, err = logging.NewService(logLevel)
 	if err != nil {

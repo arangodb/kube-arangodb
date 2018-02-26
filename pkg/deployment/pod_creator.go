@@ -28,7 +28,6 @@ import (
 	"strconv"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
-
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
@@ -323,7 +322,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 			}
 			// Record new member state
-			m.State = api.MemberStateCreating
+			m.State = api.MemberStateCreated
 			if err := status.Update(m); err != nil {
 				return maskAny(err)
 			}

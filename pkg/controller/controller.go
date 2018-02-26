@@ -29,7 +29,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/fields"
 	kwatch "k8s.io/apimachinery/pkg/watch"
@@ -137,7 +136,6 @@ func (c *Controller) onAddArangoDeployment(obj interface{}) {
 	apiObject := obj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
 		Msg("ArangoDeployment added")
 	c.syncArangoDeployment(apiObject)
 }
@@ -148,27 +146,28 @@ func (c *Controller) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 	apiObject := newObj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
 		Msg("ArangoDeployment updated")
 	c.syncArangoDeployment(apiObject)
 }
 
 // onDeleteArangoDeployment deployment delete callback
 func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
+	log := c.Dependencies.Log
 	apiObject, ok := obj.(*api.ArangoDeployment)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
-			panic(fmt.Sprintf("unknown object from ArangoDeployment delete event: %#v", obj))
+			log.Error().Interface("event-object", obj).Msg("unknown object from ArangoDeployment delete event")
+			return
 		}
 		apiObject, ok = tombstone.Obj.(*api.ArangoDeployment)
 		if !ok {
-			panic(fmt.Sprintf("Tombstone contained object that is not an ArangoDeployment: %#v", obj))
+			log.Error().Interface("event-object", obj).Msg("Tombstone contained object that is not an ArangoDeployment")
+			return
 		}
 	}
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
-		Str("ns", apiObject.GetObjectMeta().GetNamespace()).
 		Msg("ArangoDeployment deleted")
 	ev := &Event{
 		Type:   kwatch.Deleted,
@@ -178,7 +177,7 @@ func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
 	//	pt.start()
 	err := c.handleDeploymentEvent(ev)
 	if err != nil {
-		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+		log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -230,7 +229,7 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
-		cfg, deps := c.makeDeploymentConfigAndDeps()
+		cfg, deps := c.makeDeploymentConfigAndDeps(apiObject)
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
 			return maskAny(fmt.Errorf("failed to create deployment: %s", err))
@@ -262,12 +261,15 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 }
 
 // makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new cluster.
-func (c *Controller) makeDeploymentConfigAndDeps() (deployment.Config, deployment.Dependencies) {
+func (c *Controller) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount: c.Config.ServiceAccount,
 	}
 	deps := deployment.Dependencies{
-		Log:           c.Dependencies.Log,
+		Log: c.Dependencies.Log.With().
+			Str("component", "deployment").
+			Str("deployment", apiObject.GetName()).
+			Logger(),
 		KubeCli:       c.Dependencies.KubeCli,
 		DatabaseCRCli: c.Dependencies.DatabaseCRCli,
 	}
