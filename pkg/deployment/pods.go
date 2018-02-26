@@ -285,7 +285,6 @@ func (d *Deployment) createReadinessProbe(apiObject *api.ArangoDeployment, group
 // ensurePods creates all Pods listed in member status
 func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 	kubecli := d.deps.KubeCli
-	owner := apiObject.AsOwner()
 
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -305,7 +304,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if err != nil {
 					return maskAny(err)
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, owner); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
@@ -315,7 +314,11 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if err != nil {
 					return maskAny(err)
 				}
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject, role, m.ID, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, owner); err != nil {
+				affinityWithRole := ""
+				if group == api.ServerGroupSyncWorkers {
+					affinityWithRole = api.ServerGroupDBServers.AsRole()
+				}
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
 					return maskAny(err)
 				}
 			}

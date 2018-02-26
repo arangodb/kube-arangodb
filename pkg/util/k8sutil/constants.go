@@ -29,4 +29,5 @@ const (
 	// K8s constants
 	ClusterIPNone                      = "None"
 	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
+	TopologyKeyHostname                = "kubernetes.io/hostname"
 )
