@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package controller
+package operator
 
 import (
 	"context"
@@ -58,7 +58,7 @@ type Event struct {
 	Object *api.ArangoDeployment
 }
 
-type Controller struct {
+type Operator struct {
 	Config
 	Dependencies
 
@@ -78,22 +78,22 @@ type Dependencies struct {
 	DatabaseCRCli versioned.Interface
 }
 
-// NewController instantiates a new controller from given config & dependencies.
-func NewController(config Config, deps Dependencies) (*Controller, error) {
-	c := &Controller{
+// NewOperator instantiates a new operator from given config & dependencies.
+func NewOperator(config Config, deps Dependencies) (*Operator, error) {
+	o := &Operator{
 		Config:       config,
 		Dependencies: deps,
 		deployments:  make(map[string]*deployment.Deployment),
 	}
-	return c, nil
+	return o, nil
 }
 
-// Start the controller
-func (c *Controller) Start() error {
-	log := c.Dependencies.Log
+// Start the operator
+func (o *Operator) Start() error {
+	log := o.Dependencies.Log
 
 	for {
-		if err := c.initResourceIfNeeded(); err == nil {
+		if err := o.initResourceIfNeeded(); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -103,26 +103,26 @@ func (c *Controller) Start() error {
 	}
 
 	//probe.SetReady()
-	c.run()
+	o.run()
 	panic("unreachable")
 }
 
 // run the controller.
 // This registers a listener and waits until the process stops.
-func (c *Controller) run() {
-	log := c.Dependencies.Log
+func (o *Operator) run() {
+	log := o.Dependencies.Log
 
-	log.Info().Msgf("Running controller in namespace '%s'", c.Config.Namespace)
+	log.Info().Msgf("Running controller in namespace '%s'", o.Config.Namespace)
 	source := cache.NewListWatchFromClient(
-		c.Dependencies.DatabaseCRCli.DatabaseV1alpha().RESTClient(),
+		o.Dependencies.DatabaseCRCli.DatabaseV1alpha().RESTClient(),
 		api.ArangoDeploymentResourcePlural,
-		c.Config.Namespace,
+		o.Config.Namespace,
 		fields.Everything())
 
 	_, informer := cache.NewIndexerInformer(source, &api.ArangoDeployment{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.onAddArangoDeployment,
-		UpdateFunc: c.onUpdateArangoDeployment,
-		DeleteFunc: c.onDeleteArangoDeployment,
+		AddFunc:    o.onAddArangoDeployment,
+		UpdateFunc: o.onUpdateArangoDeployment,
+		DeleteFunc: o.onDeleteArangoDeployment,
 	}, cache.Indexers{})
 
 	ctx := context.TODO()
@@ -131,28 +131,28 @@ func (c *Controller) run() {
 }
 
 // onAddArangoDeployment deployment addition callback
-func (c *Controller) onAddArangoDeployment(obj interface{}) {
-	log := c.Dependencies.Log
+func (o *Operator) onAddArangoDeployment(obj interface{}) {
+	log := o.Dependencies.Log
 	apiObject := obj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoDeployment added")
-	c.syncArangoDeployment(apiObject)
+	o.syncArangoDeployment(apiObject)
 }
 
 // onUpdateArangoDeployment deployment update callback
-func (c *Controller) onUpdateArangoDeployment(oldObj, newObj interface{}) {
-	log := c.Dependencies.Log
+func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
+	log := o.Dependencies.Log
 	apiObject := newObj.(*api.ArangoDeployment)
 	log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoDeployment updated")
-	c.syncArangoDeployment(apiObject)
+	o.syncArangoDeployment(apiObject)
 }
 
 // onDeleteArangoDeployment deployment delete callback
-func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
-	log := c.Dependencies.Log
+func (o *Operator) onDeleteArangoDeployment(obj interface{}) {
+	log := o.Dependencies.Log
 	apiObject, ok := obj.(*api.ArangoDeployment)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -175,7 +175,7 @@ func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
 	}
 
 	//	pt.start()
-	err := c.handleDeploymentEvent(ev)
+	err := o.handleDeploymentEvent(ev)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to handle event")
 	}
@@ -183,7 +183,7 @@ func (c *Controller) onDeleteArangoDeployment(obj interface{}) {
 }
 
 // syncArangoDeployment synchronized the given deployment.
-func (c *Controller) syncArangoDeployment(apiObject *api.ArangoDeployment) {
+func (o *Operator) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 	ev := &Event{
 		Type:   kwatch.Added,
 		Object: apiObject,
@@ -191,26 +191,26 @@ func (c *Controller) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 	// re-watch or restart could give ADD event.
 	// If for an ADD event the cluster spec is invalid then it is not added to the local cache
 	// so modifying that deployment will result in another ADD event
-	if _, ok := c.deployments[apiObject.Name]; ok {
+	if _, ok := o.deployments[apiObject.Name]; ok {
 		ev.Type = kwatch.Modified
 	}
 
 	//pt.start()
-	err := c.handleDeploymentEvent(ev)
+	err := o.handleDeploymentEvent(ev)
 	if err != nil {
-		c.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+		o.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
 
 // handleDeploymentEvent processed the given event.
-func (c *Controller) handleDeploymentEvent(event *Event) error {
+func (o *Operator) handleDeploymentEvent(event *Event) error {
 	apiObject := event.Object
 
 	if apiObject.Status.State.IsFailed() {
 		deploymentsFailed.Inc()
 		if event.Type == kwatch.Deleted {
-			delete(c.deployments, apiObject.Name)
+			delete(o.deployments, apiObject.Name)
 			return nil
 		}
 		return maskAny(fmt.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
@@ -225,22 +225,22 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 
 	switch event.Type {
 	case kwatch.Added:
-		if _, ok := c.deployments[apiObject.Name]; ok {
+		if _, ok := o.deployments[apiObject.Name]; ok {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
-		cfg, deps := c.makeDeploymentConfigAndDeps(apiObject)
+		cfg, deps := o.makeDeploymentConfigAndDeps(apiObject)
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
 			return maskAny(fmt.Errorf("failed to create deployment: %s", err))
 		}
-		c.deployments[apiObject.Name] = nc
+		o.deployments[apiObject.Name] = nc
 
 		deploymentsCreated.Inc()
-		deploymentsCurrent.Set(float64(len(c.deployments)))
+		deploymentsCurrent.Set(float64(len(o.deployments)))
 
 	case kwatch.Modified:
-		depl, ok := c.deployments[apiObject.Name]
+		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
@@ -248,30 +248,30 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 		deploymentsModified.Inc()
 
 	case kwatch.Deleted:
-		depl, ok := c.deployments[apiObject.Name]
+		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		depl.Delete()
-		delete(c.deployments, apiObject.Name)
+		delete(o.deployments, apiObject.Name)
 		deploymentsDeleted.Inc()
-		deploymentsCurrent.Set(float64(len(c.deployments)))
+		deploymentsCurrent.Set(float64(len(o.deployments)))
 	}
 	return nil
 }
 
 // makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new cluster.
-func (c *Controller) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
+func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
-		ServiceAccount: c.Config.ServiceAccount,
+		ServiceAccount: o.Config.ServiceAccount,
 	}
 	deps := deployment.Dependencies{
-		Log: c.Dependencies.Log.With().
+		Log: o.Dependencies.Log.With().
 			Str("component", "deployment").
 			Str("deployment", apiObject.GetName()).
 			Logger(),
-		KubeCli:       c.Dependencies.KubeCli,
-		DatabaseCRCli: c.Dependencies.DatabaseCRCli,
+		KubeCli:       o.Dependencies.KubeCli,
+		DatabaseCRCli: o.Dependencies.DatabaseCRCli,
 	}
 	return cfg, deps
 }

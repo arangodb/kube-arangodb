@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package controller
+package operator
 
 import (
 	"fmt"
@@ -33,9 +33,9 @@ import (
 
 // initResourceIfNeeded initializes the custom resource definition when
 // instructed to do so by the config.
-func (c *Controller) initResourceIfNeeded() error {
-	if c.Config.CreateCRD {
-		if err := c.initCRD(); err != nil {
+func (o *Operator) initResourceIfNeeded() error {
+	if o.Config.CreateCRD {
+		if err := o.initCRD(); err != nil {
 			return maskAny(fmt.Errorf("Failed to initialize Custom Resource Definition: %v", err))
 		}
 	}
@@ -43,15 +43,15 @@ func (c *Controller) initResourceIfNeeded() error {
 }
 
 // initCRD creates the CustomResourceDefinition and waits for it to be ready.
-func (c *Controller) initCRD() error {
-	log := c.Dependencies.Log
+func (o *Operator) initCRD() error {
+	log := o.Dependencies.Log
 
 	log.Debug().Msg("Calling CreateCRD")
-	if err := crd.CreateCRD(c.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, api.ArangoDeploymentShortNames...); err != nil {
+	if err := crd.CreateCRD(o.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, api.ArangoDeploymentShortNames...); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
 	log.Debug().Msg("Waiting for CRD ready")
-	if err := crd.WaitCRDReady(c.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
+	if err := crd.WaitCRDReady(o.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
 		return maskAny(err)
 	}
 	log.Debug().Msg("CRD is ready")
