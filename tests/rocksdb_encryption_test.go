@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"crypto/rand"
 	"strings"
 	"testing"
@@ -46,7 +47,8 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 	}
 
 	// Create database client
-	client := mustNewArangodDatabaseClient(kubecli, apiObject, t)
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client); err != nil {

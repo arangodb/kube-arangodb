@@ -28,8 +28,10 @@ import (
 )
 
 // addOwnerRefToObject adds given owner reference to given object
-func addOwnerRefToObject(obj metav1.Object, ownerRef metav1.OwnerReference) {
-	obj.SetOwnerReferences(append(obj.GetOwnerReferences(), ownerRef))
+func addOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
+	if ownerRef != nil {
+		obj.SetOwnerReferences(append(obj.GetOwnerReferences(), *ownerRef))
+	}
 }
 
 // LabelsForDeployment returns a map of labels, given to all resources for given deployment name

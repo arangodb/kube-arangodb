@@ -129,7 +129,7 @@ func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, cl
 			ClusterIP: clusterIP,
 		},
 	}
-	addOwnerRefToObject(svc.GetObjectMeta(), owner)
+	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
 	if _, err := kubecli.CoreV1().Services(ns).Create(svc); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}

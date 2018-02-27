@@ -74,9 +74,31 @@ func GetJWTSecret(kubecli kubernetes.Interface, secretName, namespace string) (s
 	if err != nil {
 		return "", maskAny(err)
 	}
-	// Take the first data
-	for _, v := range s.Data {
-		return string(v), nil
+	// Take the first data from the token key
+	data, found := s.Data[constants.SecretKeyJWT]
+	if !found {
+		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyJWT, secretName))
 	}
-	return "", maskAny(fmt.Errorf("No data found in secret '%s'", secretName))
+	return string(data), nil
+}
+
+// CreateJWTSecret creates a secret with given name in given namespace
+// with a given token as value.
+func CreateJWTSecret(kubecli kubernetes.Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
+	// Create secret
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			constants.SecretKeyJWT: []byte(token),
+		},
+	}
+	// Attach secret to owner
+	addOwnerRefToObject(secret, ownerRef)
+	if _, err := kubecli.CoreV1().Secrets(namespace).Create(secret); err != nil {
+		// Failed to create secret
+		return maskAny(err)
+	}
+	return nil
 }

@@ -35,6 +35,33 @@ const (
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 )
 
+// EnvValue is a helper structure for environment variable sources.
+type EnvValue struct {
+	Value      string // If set, the environment value gets this value
+	SecretName string // If set, the environment value gets its value from a secret with this name
+	SecretKey  string // Key inside secret to fill into the envvar. Only relevant is SecretName is set.
+}
+
+// CreateEnvVar creates an EnvVar structure for given key from given EnvValue.
+func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
+	ev := v1.EnvVar{
+		Name: key,
+	}
+	if ev.Value != "" {
+		ev.Value = v.Value
+	} else if v.SecretName != "" {
+		ev.ValueFrom = &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: v.SecretName,
+				},
+				Key: v.SecretKey,
+			},
+		}
+	}
+	return ev
+}
+
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *v1.Pod) bool {
@@ -89,7 +116,7 @@ func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 }
 
 // arangodContainer creates a container configured to run `arangod`.
-func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig) v1.Container {
+func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
 		Name:            name,
@@ -105,10 +132,7 @@ func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, 
 		VolumeMounts: arangodVolumeMounts(),
 	}
 	for k, v := range env {
-		c.Env = append(c.Env, v1.EnvVar{
-			Name:  k,
-			Value: v,
-		})
+		c.Env = append(c.Env, v.CreateEnvVar(k))
 	}
 	if livenessProbe != nil {
 		c.LivenessProbe = livenessProbe.Create()
@@ -121,7 +145,7 @@ func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, 
 }
 
 // arangosyncContainer creates a container configured to run `arangosync`.
-func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]string, livenessProbe *HTTPProbeConfig) v1.Container {
+func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
 		Name:            name,
@@ -136,10 +160,7 @@ func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolic
 		},
 	}
 	for k, v := range env {
-		c.Env = append(c.Env, v1.EnvVar{
-			Name:  k,
-			Value: v,
-		})
+		c.Env = append(c.Env, v.CreateEnvVar(k))
 	}
 	if livenessProbe != nil {
 		c.LivenessProbe = livenessProbe.Create()
@@ -170,7 +191,7 @@ func newPod(deploymentName, ns, role, id string) v1.Pod {
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
 	role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
-	args []string, env map[string]string,
+	args []string, env map[string]EnvValue,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
 	rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
@@ -232,7 +253,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, image string, imagePullPolicy v1.PullPolicy,
-	args []string, env map[string]string, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
+	args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
 
@@ -253,7 +274,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
-	addOwnerRefToObject(pod.GetObjectMeta(), owner)
+	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
 	if _, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}

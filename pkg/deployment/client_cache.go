@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -52,7 +53,7 @@ func newClientCache(kubecli kubernetes.Interface, apiObject *api.ArangoDeploymen
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *clientCache) Get(group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *clientCache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
@@ -63,7 +64,7 @@ func (cc *clientCache) Get(group api.ServerGroup, id string) (driver.Client, err
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodClient(cc.kubecli, cc.apiObject, group, id)
+	c, err := arangod.CreateArangodClient(ctx, cc.kubecli, cc.apiObject, group, id)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -73,7 +74,7 @@ func (cc *clientCache) Get(group api.ServerGroup, id string) (driver.Client, err
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
-func (cc *clientCache) GetDatabase() (driver.Client, error) {
+func (cc *clientCache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
@@ -82,7 +83,7 @@ func (cc *clientCache) GetDatabase() (driver.Client, error) {
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodDatabaseClient(cc.kubecli, cc.apiObject)
+	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli, cc.apiObject)
 	if err != nil {
 		return nil, maskAny(err)
 	}

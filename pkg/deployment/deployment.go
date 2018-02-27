@@ -153,6 +153,12 @@ func (d *Deployment) run() {
 	log := d.deps.Log
 
 	if d.status.State == api.DeploymentStateNone {
+		// Create secrets
+		if err := d.createSecrets(d.apiObject); err != nil {
+			d.failOnError(err, "Failed to create secrets")
+			return
+		}
+
 		// Create services
 		if err := d.createServices(d.apiObject); err != nil {
 			d.failOnError(err, "Failed to create services")
@@ -272,7 +278,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 	}
 
 	newAPIObject := current.DeepCopy()
-	newAPIObject.Spec.SetDefaults()
+	newAPIObject.Spec.SetDefaults(newAPIObject.GetName())
 	newAPIObject.Status = d.status
 	resetFields := d.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {

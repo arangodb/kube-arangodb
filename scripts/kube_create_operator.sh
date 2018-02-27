@@ -14,7 +14,7 @@ if [ -z $IMAGE ]; then
     exit 1
 fi
 
-yaml=$(cat << EOYAML
+kubectl --namespace=$NS create -f - << EOYAML
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -41,5 +41,5 @@ spec:
               fieldPath: metadata.name
 
 EOYAML
-)
-echo "$yaml" | kubectl --namespace=$NS create -f -
+
+exit $?

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -20,7 +21,7 @@ func TestScaleCluster(t *testing.T) {
 	// Prepare deployment config
 	depl := newDeployment("test-scale-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.DeploymentModeCluster
-	depl.Spec.SetDefaults()
+	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
 	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -34,7 +35,8 @@ func TestScaleCluster(t *testing.T) {
 	}
 
 	// Create a database client
-	client := mustNewArangodDatabaseClient(kubecli, apiObject, t)
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
