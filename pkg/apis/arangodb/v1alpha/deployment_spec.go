@@ -44,42 +44,6 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	}
 }
 
-// AuthenticationSpec holds authentication specific configuration settings
-type AuthenticationSpec struct {
-	JWTSecretName string `json:"jwtSecretName,omitempty"`
-}
-
-const (
-	// JWTSecretNameDisabled is the value of JWTSecretName to use for disabling authentication.
-	JWTSecretNameDisabled = "None"
-)
-
-// IsAuthenticated returns true if authentication is enabled.
-// Returns false other (when JWTSecretName == "None").
-func (s AuthenticationSpec) IsAuthenticated() bool {
-	return s.JWTSecretName != JWTSecretNameDisabled
-}
-
-// Validate the given spec
-func (s AuthenticationSpec) Validate(required bool) error {
-	if required && !s.IsAuthenticated() {
-		return maskAny(errors.Wrap(ValidationError, "JWT secret is required"))
-	}
-	if s.IsAuthenticated() {
-		if err := k8sutil.ValidateResourceName(s.JWTSecretName); err != nil {
-			return maskAny(err)
-		}
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *AuthenticationSpec) SetDefaults(defaultJWTSecretName string) {
-	if s.JWTSecretName == "" {
-		s.JWTSecretName = defaultJWTSecretName
-	}
-}
-
 // SSLSpec holds SSL specific configuration settings
 type SSLSpec struct {
 	KeySecretName    string `json:"keySecretName,omitempty"`
@@ -289,6 +253,9 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 		resetFields = append(resetFields, "storageEngine")
 	}
 	if l := s.RocksDB.ResetImmutableFields("rocksdb", &target.RocksDB); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.Authentication.ResetImmutableFields("auth", &target.Authentication); l != nil {
 		resetFields = append(resetFields, l...)
 	}
 	if l := s.Single.ResetImmutableFields(ServerGroupSingle, "single", &target.Single); l != nil {
