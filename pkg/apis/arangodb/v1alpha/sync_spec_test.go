@@ -61,3 +61,76 @@ func TestSyncSpecSetDefaults(t *testing.T) {
 	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.JWTSecretName)
 	assert.Equal(t, "foo", def(SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}}).Authentication.JWTSecretName)
 }
+
+func TestSyncSpecResetImmutableFields(t *testing.T) {
+	tests := []struct {
+		Original SyncSpec
+		Target   SyncSpec
+		Expected SyncSpec
+		Result   []string
+	}{
+		// Valid "changes"
+		{
+			SyncSpec{Enabled: false},
+			SyncSpec{Enabled: true},
+			SyncSpec{Enabled: true},
+			nil,
+		},
+		{
+			SyncSpec{Enabled: true},
+			SyncSpec{Enabled: false},
+			SyncSpec{Enabled: false},
+			nil,
+		},
+		{
+			SyncSpec{Image: "foo"},
+			SyncSpec{Image: "foo2"},
+			SyncSpec{Image: "foo2"},
+			nil,
+		},
+		{
+			SyncSpec{ImagePullPolicy: v1.PullAlways},
+			SyncSpec{ImagePullPolicy: v1.PullNever},
+			SyncSpec{ImagePullPolicy: v1.PullNever},
+			nil,
+		},
+		{
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			nil,
+		},
+		{
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			nil,
+		},
+		{
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo2"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo2"}},
+			nil,
+		},
+
+		// Invalid changes
+		{
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			[]string{"test.auth.jwtSecretName"},
+		},
+		{
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			[]string{"test.auth.jwtSecretName"},
+		},
+	}
+
+	for _, test := range tests {
+		result := test.Original.ResetImmutableFields("test", &test.Target)
+		assert.Equal(t, test.Result, result)
+		assert.Equal(t, test.Expected, test.Target)
+	}
+}

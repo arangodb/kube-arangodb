@@ -65,3 +65,14 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 	s.Authentication.SetDefaults(defaultJWTSecretName)
 	s.Monitoring.SetDefaults()
 }
+
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+// Field names are relative to given field prefix.
+func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []string {
+	var resetFields []string
+	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
+		resetFields = append(resetFields, list...)
+	}
+	return resetFields
+}

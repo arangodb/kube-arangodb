@@ -177,6 +177,9 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if l := s.Authentication.ResetImmutableFields("auth", &target.Authentication); l != nil {
 		resetFields = append(resetFields, l...)
 	}
+	if l := s.Sync.ResetImmutableFields("sync", &target.Sync); l != nil {
+		resetFields = append(resetFields, l...)
+	}
 	if l := s.Single.ResetImmutableFields(ServerGroupSingle, "single", &target.Single); l != nil {
 		resetFields = append(resetFields, l...)
 	}
