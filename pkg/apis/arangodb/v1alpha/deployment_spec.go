@@ -70,7 +70,7 @@ func (s DeploymentSpec) IsAuthenticated() bool {
 
 // IsSecure returns true when SSL is enabled
 func (s DeploymentSpec) IsSecure() bool {
-	return s.SSL.KeySecretName != ""
+	return s.SSL.IsSecure()
 }
 
 // SetDefaults fills in default values when a field is not specified.
