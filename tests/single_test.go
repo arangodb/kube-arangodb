@@ -17,6 +17,7 @@ func TestSimpleSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-single-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.DeploymentModeSingle
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
