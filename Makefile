@@ -182,6 +182,9 @@ endif
 		-test.v
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
+cleanup-tests:
+	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
+
 # Release building
 
 docker-push: docker
