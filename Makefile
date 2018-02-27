@@ -149,6 +149,19 @@ endif
 
 # Testing
 
+run-unit-tests: $(GOBUILDDIR) $(SOURCES)
+	docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go test -v \
+			$(REPOPATH)/pkg/apis/arangodb/v1alpha 
+
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
 	docker run \
@@ -160,9 +173,7 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 		-e CGO_ENABLED=0 \
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
-		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) \
-		$(REPOPATH)/pkg/apis/arangodb/v1alpha \
-		$(REPOPATH)/tests
+		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
 
 docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
