@@ -63,6 +63,16 @@ pipeline {
     }
 
     post {
+        always {
+            timestamps {
+                withEnv([
+                    "KUBECONFIG=${params.KUBECONFIG}",
+                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                ]) {
+                    sh "make cleanup-tests"
+                }
+            }
+        }
         failure {
             notifySlack('FAILURE')
         }
