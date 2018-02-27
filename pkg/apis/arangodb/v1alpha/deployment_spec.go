@@ -42,45 +42,6 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	}
 }
 
-// SyncSpec holds dc2dc replication specific configuration settings
-type SyncSpec struct {
-	Enabled         bool          `json:"enabled,omitempty"`
-	Image           string        `json:"image,omitempty"`
-	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
-
-	Authentication AuthenticationSpec `json:"auth"`
-	Monitoring     MonitoringSpec     `json:"monitoring"`
-}
-
-// Validate the given spec
-func (s SyncSpec) Validate(mode DeploymentMode) error {
-	if s.Enabled && !mode.SupportsSync() {
-		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
-	}
-	if s.Image == "" {
-		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
-	}
-	if err := s.Authentication.Validate(s.Enabled); err != nil {
-		return maskAny(err)
-	}
-	if err := s.Monitoring.Validate(); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName string) {
-	if s.Image == "" {
-		s.Image = defaultImage
-	}
-	if s.ImagePullPolicy == "" {
-		s.ImagePullPolicy = defaulPullPolicy
-	}
-	s.Authentication.SetDefaults(defaultJWTSecretName)
-	s.Monitoring.SetDefaults()
-}
-
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
 	Mode            DeploymentMode `json:"mode,omitempty"`
