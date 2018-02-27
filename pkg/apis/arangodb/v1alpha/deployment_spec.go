@@ -44,45 +44,6 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	}
 }
 
-// RocksDBSpec holds rocksdb specific configuration settings
-type RocksDBSpec struct {
-	Encryption struct {
-		KeySecretName string `json:"keySecretName,omitempty"`
-	} `json:"encryption"`
-}
-
-// IsEncrypted returns true when an encryption key secret name is provided,
-// false otherwise.
-func (s RocksDBSpec) IsEncrypted() bool {
-	return s.Encryption.KeySecretName != ""
-}
-
-// Validate the given spec
-func (s RocksDBSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.Encryption.KeySecretName); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *RocksDBSpec) SetDefaults() {
-	// Nothing needed
-}
-
-// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
-// It returns a list of fields that have been reset.
-// Field names are relative to given field prefix.
-func (s RocksDBSpec) ResetImmutableFields(fieldPrefix string, target *RocksDBSpec) []string {
-	var resetFields []string
-	if s.IsEncrypted() != target.IsEncrypted() {
-		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.Encryption.KeySecretName = s.Encryption.KeySecretName
-		resetFields = append(resetFields, fieldPrefix+".encryption.keySecretName")
-	}
-	return resetFields
-}
-
 // AuthenticationSpec holds authentication specific configuration settings
 type AuthenticationSpec struct {
 	JWTSecretName string `json:"jwtSecretName,omitempty"`
