@@ -45,14 +45,16 @@ pipeline {
             steps {
                 timestamps {
                     lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
-                        withEnv([
-                        "KUBECONFIG=${params.KUBECONFIG}",
-                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                        "IMAGETAG=${env.GIT_COMMIT}",
-                        "PUSHIMAGES=1",
-                        "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
-                        ]) {
-                            sh "make run-tests"
+                        withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                            withEnv([
+                            "KUBECONFIG=${params.KUBECONFIG}",
+                            "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                            "IMAGETAG=${env.GIT_COMMIT}",
+                            "PUSHIMAGES=1",
+                            "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                            ]) {
+                                sh "make run-tests"
+                            }
                         }
                     }
                 }
