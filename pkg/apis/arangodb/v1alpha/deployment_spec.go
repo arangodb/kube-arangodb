@@ -25,8 +25,6 @@ package v1alpha
 import (
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
 const (
@@ -42,24 +40,6 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	default:
 		return maskAny(errors.Wrapf(ValidationError, "Unknown pull policy: '%s'", string(v)))
 	}
-}
-
-// MonitoringSpec holds monitoring specific configuration settings
-type MonitoringSpec struct {
-	TokenSecretName string `json:"tokenSecretName,omitempty"`
-}
-
-// Validate the given spec
-func (s MonitoringSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.TokenSecretName); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *MonitoringSpec) SetDefaults() {
-	// Nothing needed
 }
 
 // SyncSpec holds dc2dc replication specific configuration settings
