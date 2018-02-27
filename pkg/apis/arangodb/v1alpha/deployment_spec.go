@@ -33,27 +33,6 @@ const (
 	defaultImage = "arangodb/arangodb:latest"
 )
 
-// Environment in which to run the cluster
-type Environment string
-
-const (
-	// EnvironmentDevelopment yields a cluster optimized for development
-	EnvironmentDevelopment Environment = "development"
-	// EnvironmentProduction yields a cluster optimized for production
-	EnvironmentProduction Environment = "production"
-)
-
-// Validate the environment.
-// Return errors when validation fails, nil on success.
-func (e Environment) Validate() error {
-	switch e {
-	case EnvironmentDevelopment, EnvironmentProduction:
-		return nil
-	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown environment: '%s'", string(e)))
-	}
-}
-
 // StorageEngine specifies the type of storage engine used by the cluster
 type StorageEngine string
 
