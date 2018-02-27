@@ -46,8 +46,8 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/k8s-operator/pkg/client"
-	"github.com/arangodb/k8s-operator/pkg/controller"
 	"github.com/arangodb/k8s-operator/pkg/logging"
+	"github.com/arangodb/k8s-operator/pkg/operator"
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
@@ -162,49 +162,49 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 // run the operator
 func run(stop <-chan struct{}, namespace, name string) {
-	cfg, deps, err := newControllerConfigAndDeps(namespace, name)
+	cfg, deps, err := newOperatorConfigAndDeps(namespace, name)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create controller config & deps")
+		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
 	}
 
 	//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
 
-	c, err := controller.NewController(cfg, deps)
+	o, err := operator.NewOperator(cfg, deps)
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create controller")
+		cliLog.Fatal().Err(err).Msg("Failed to create operator")
 	}
-	if err := c.Start(); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to start controller")
+	if err := o.Start(); err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to start operator")
 	}
 }
 
-// newControllerConfigAndDeps creates controller config & dependencies.
-func newControllerConfigAndDeps(namespace, name string) (controller.Config, controller.Dependencies, error) {
+// newOperatorConfigAndDeps creates operator config & dependencies.
+func newOperatorConfigAndDeps(namespace, name string) (operator.Config, operator.Dependencies, error) {
 	kubecli, err := k8sutil.NewKubeClient()
 	if err != nil {
-		return controller.Config{}, controller.Dependencies{}, maskAny(err)
+		return operator.Config{}, operator.Dependencies{}, maskAny(err)
 	}
 
 	serviceAccount, err := getMyPodServiceAccount(kubecli, namespace, name)
 	if err != nil {
-		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
+		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
 
 	kubeExtCli, err := k8sutil.NewKubeExtClient()
 	if err != nil {
-		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
+		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
 	}
 	databaseCRCli, err := client.NewInCluster()
 	if err != nil {
-		return controller.Config{}, controller.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
+		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}
 
-	cfg := controller.Config{
+	cfg := operator.Config{
 		Namespace:      namespace,
 		ServiceAccount: serviceAccount,
 		CreateCRD:      createCRD,
 	}
-	deps := controller.Dependencies{
+	deps := operator.Dependencies{
 		Log:           logService.MustGetLogger("controller"),
 		KubeCli:       kubecli,
 		KubeExtCli:    kubeExtCli,
