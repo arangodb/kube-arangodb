@@ -197,7 +197,7 @@ endif
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 cleanup-tests:
-	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
 
 # Release building
 
