@@ -31,15 +31,37 @@ import (
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
 func (d *Deployment) createPlan() error {
-	if len(d.status.Plan) > 0 {
-		// Plan already exists, complete that first
+	// Create plan
+	newPlan, changed := createPlan(d.deps.Log, d.status.Plan, d.apiObject.Spec, d.status)
+
+	// If not change, we're done
+	if !changed {
 		return nil
 	}
 
+	// Save plan
+	if len(newPlan) == 0 {
+		// Nothing to do
+		return nil
+	}
+	d.status.Plan = newPlan
+	if err := d.updateCRStatus(); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
+// If a plan already exists, the given plan is returned with false.
+// Otherwise the new plan is returned with a boolean true.
+func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus) (api.Plan, bool) {
+	if len(currentPlan) > 0 {
+		// Plan already exists, complete that first
+		return currentPlan, false
+	}
+
 	// Check for various scenario's
-	spec := d.apiObject.Spec
 	var plan api.Plan
-	log := d.deps.Log
 
 	// Check for scale up/down
 	switch spec.Mode {
@@ -47,25 +69,17 @@ func (d *Deployment) createPlan() error {
 		// Never scale down
 	case api.DeploymentModeResilientSingle:
 		// Only scale singles
-		plan = append(plan, createScalePlan(log, d.status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
 	case api.DeploymentModeCluster:
 		// Scale dbservers, coordinators, syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, d.status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
-		plan = append(plan, createScalePlan(log, d.status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
-		plan = append(plan, createScalePlan(log, d.status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
-		plan = append(plan, createScalePlan(log, d.status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
 	}
 
-	// Save plan
-	if len(plan) == 0 {
-		// Nothing to do
-		return nil
-	}
-	d.status.Plan = plan
-	if err := d.updateCRStatus(); err != nil {
-		return maskAny(err)
-	}
-	return nil
+	// Return plan
+	return plan, true
 }
 
 // createScalePlan creates a scaling plan for a single server group
