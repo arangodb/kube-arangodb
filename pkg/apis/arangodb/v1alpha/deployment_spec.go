@@ -33,54 +33,6 @@ const (
 	defaultImage = "arangodb/arangodb:latest"
 )
 
-// DeploymentMode specifies the type of ArangoDB deployment to create.
-type DeploymentMode string
-
-const (
-	// DeploymentModeSingle yields a single server
-	DeploymentModeSingle DeploymentMode = "single"
-	// DeploymentModeResilientSingle yields an agency and a resilient-single server pair
-	DeploymentModeResilientSingle DeploymentMode = "resilientsingle"
-	// DeploymentModeCluster yields an full cluster (agency, dbservers & coordinators)
-	DeploymentModeCluster DeploymentMode = "cluster"
-)
-
-// Validate the mode.
-// Return errors when validation fails, nil on success.
-func (m DeploymentMode) Validate() error {
-	switch m {
-	case DeploymentModeSingle, DeploymentModeResilientSingle, DeploymentModeCluster:
-		return nil
-	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown deployment mode: '%s'", string(m)))
-	}
-}
-
-// HasSingleServers returns true when the given mode is "single" or "resilientsingle".
-func (m DeploymentMode) HasSingleServers() bool {
-	return m == DeploymentModeSingle || m == DeploymentModeResilientSingle
-}
-
-// HasAgents returns true when the given mode is "resilientsingle" or "cluster".
-func (m DeploymentMode) HasAgents() bool {
-	return m == DeploymentModeResilientSingle || m == DeploymentModeCluster
-}
-
-// HasDBServers returns true when the given mode is "cluster".
-func (m DeploymentMode) HasDBServers() bool {
-	return m == DeploymentModeCluster
-}
-
-// HasCoordinators returns true when the given mode is "cluster".
-func (m DeploymentMode) HasCoordinators() bool {
-	return m == DeploymentModeCluster
-}
-
-// SupportsSync returns true when the given mode supports dc2dc replication.
-func (m DeploymentMode) SupportsSync() bool {
-	return m == DeploymentModeCluster
-}
-
 // Environment in which to run the cluster
 type Environment string
 
