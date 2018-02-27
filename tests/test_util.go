@@ -52,6 +52,16 @@ var (
 	maskAny = errors.WithStack
 )
 
+// getEnterpriseImageOrSkip returns the docker image used for enterprise
+// tests. If empty, enterprise tests are skipped.
+func getEnterpriseImageOrSkip(t *testing.T) string {
+	image := os.Getenv("ENTERPRISEIMAGE")
+	if image == "" {
+		t.Skip("Skipping test because ENTERPRISEIMAGE is not set")
+	}
+	return image
+}
+
 // mustNewKubeClient creates a kubernetes client
 // failing the test on errors.
 func mustNewKubeClient(t *testing.T) kubernetes.Interface {

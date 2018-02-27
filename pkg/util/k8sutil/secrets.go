@@ -32,6 +32,42 @@ import (
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 )
 
+// ValidateEncryptionKeySecret checks that a secret with given name in given namespace
+// exists and it contains a 'key' data field of exactly 32 bytes.
+func ValidateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespace string) error {
+	s, err := kubecli.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return maskAny(err)
+	}
+	// Check `key` field
+	keyData, found := s.Data[constants.SecretEncryptionKey]
+	if !found {
+		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, secretName))
+	}
+	if len(keyData) != 32 {
+		return maskAny(fmt.Errorf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, secretName, len(keyData)))
+	}
+	return nil
+}
+
+// CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
+func CreateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespace string, key []byte) error {
+	// Create secret
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			constants.SecretEncryptionKey: key,
+		},
+	}
+	if _, err := kubecli.CoreV1().Secrets(namespace).Create(secret); err != nil {
+		// Failed to create secret
+		return maskAny(err)
+	}
+	return nil
+}
+
 // GetJWTSecret loads the JWT secret from a Secret with given name.
 func GetJWTSecret(kubecli kubernetes.Interface, secretName, namespace string) (string, error) {
 	s, err := kubecli.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})

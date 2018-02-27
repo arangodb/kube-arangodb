@@ -27,6 +27,7 @@ pipeline {
     parameters {
       string(name: 'KUBECONFIG', defaultValue: '/home/jenkins/.kube/scw-183a3b', description: 'KUBECONFIG controls which k8s cluster is used', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
+      string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
     stages {
         stage('Build') {
@@ -44,13 +45,16 @@ pipeline {
             steps {
                 timestamps {
                     lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
-                        withEnv([
-                        "KUBECONFIG=${params.KUBECONFIG}",
-                        "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                        "IMAGETAG=${env.GIT_COMMIT}",
-                        "PUSHIMAGES=1",
-                        ]) {
-                            sh "make run-tests"
+                        withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                            withEnv([
+                            "KUBECONFIG=${params.KUBECONFIG}",
+                            "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                            "IMAGETAG=${env.GIT_COMMIT}",
+                            "PUSHIMAGES=1",
+                            "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                            ]) {
+                                sh "make run-tests"
+                            }
                         }
                     }
                 }

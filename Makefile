@@ -40,6 +40,9 @@ endif
 ifndef TESTIMAGE
 	TESTIMAGE := $(DOCKERNAMESPACE)/arangodb-operator-test$(IMAGESUFFIX)
 endif
+ifndef ENTERPRISEIMAGE
+	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
+endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
@@ -170,7 +173,13 @@ endif
 	kubectl create namespace $(TESTNAMESPACE)
 	$(ROOTDIR)/examples/setup-rbac.sh --namespace=$(TESTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
-	kubectl --namespace $(TESTNAMESPACE) run arangodb-operator-test -i --rm --quiet --restart=Never --image=$(TESTIMAGE) --env="TEST_NAMESPACE=$(TESTNAMESPACE)" -- -test.v
+	kubectl --namespace $(TESTNAMESPACE) \
+		run arangodb-operator-test -i --rm --quiet --restart=Never \
+		--image=$(TESTIMAGE) \
+		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
+		--env="TEST_NAMESPACE=$(TESTNAMESPACE)" \
+		-- \
+		-test.v
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 # Release building
