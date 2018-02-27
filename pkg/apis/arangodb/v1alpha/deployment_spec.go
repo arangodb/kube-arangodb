@@ -44,28 +44,6 @@ func validatePullPolicy(v v1.PullPolicy) error {
 	}
 }
 
-// SSLSpec holds SSL specific configuration settings
-type SSLSpec struct {
-	KeySecretName    string `json:"keySecretName,omitempty"`
-	OrganizationName string `json:"organizationName,omitempty"`
-	ServerName       string `json:"serverName,omitempty"`
-}
-
-// Validate the given spec
-func (s SSLSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.KeySecretName); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *SSLSpec) SetDefaults() {
-	if s.OrganizationName == "" {
-		s.OrganizationName = "ArangoDB"
-	}
-}
-
 // MonitoringSpec holds monitoring specific configuration settings
 type MonitoringSpec struct {
 	TokenSecretName string `json:"tokenSecretName,omitempty"`
