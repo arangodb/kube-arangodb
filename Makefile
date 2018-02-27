@@ -161,7 +161,7 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
 		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) \
-		$(REPOPATH)/pkg/api/arangodb/v1alpha \
+		$(REPOPATH)/pkg/apis/arangodb/v1alpha \
 		$(REPOPATH)/tests
 
 docker-test: $(TESTBIN)
