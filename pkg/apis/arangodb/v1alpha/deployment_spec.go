@@ -33,27 +33,6 @@ const (
 	defaultImage = "arangodb/arangodb:latest"
 )
 
-// StorageEngine specifies the type of storage engine used by the cluster
-type StorageEngine string
-
-const (
-	// StorageEngineMMFiles yields a cluster using the mmfiles storage engine
-	StorageEngineMMFiles StorageEngine = "mmfiles"
-	// StorageEngineRocksDB yields a cluster using the rocksdb storage engine
-	StorageEngineRocksDB StorageEngine = "rocksdb"
-)
-
-// Validate the storage engine.
-// Return errors when validation fails, nil on success.
-func (se StorageEngine) Validate() error {
-	switch se {
-	case StorageEngineMMFiles, StorageEngineRocksDB:
-		return nil
-	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown storage engine: '%s'", string(se)))
-	}
-}
-
 // validatePullPolicy the image pull policy.
 // Return errors when validation fails, nil on success.
 func validatePullPolicy(v v1.PullPolicy) error {
