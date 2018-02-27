@@ -103,7 +103,8 @@ update-vendor:
 		github.com/prometheus/client_golang/prometheus \
 		github.com/pulcy/pulsar \
 		github.com/rs/zerolog \
-		github.com/spf13/cobra
+		github.com/spf13/cobra \
+		github.com/stretchr/testify
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
@@ -159,7 +160,9 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 		-e CGO_ENABLED=0 \
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
-		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
+		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) \
+		$(REPOPATH)/pkg/api/arangodb/v1alpha \
+		$(REPOPATH)/tests
 
 docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .

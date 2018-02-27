@@ -25,7 +25,6 @@ package v1alpha
 import (
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
@@ -289,126 +288,6 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 	s.Monitoring.SetDefaults()
 }
 
-type ServerGroup int
-
-const (
-	ServerGroupSingle       ServerGroup = 1
-	ServerGroupAgents       ServerGroup = 2
-	ServerGroupDBServers    ServerGroup = 3
-	ServerGroupCoordinators ServerGroup = 4
-	ServerGroupSyncMasters  ServerGroup = 5
-	ServerGroupSyncWorkers  ServerGroup = 6
-)
-
-// AsRole returns the "role" value for the given group.
-func (g ServerGroup) AsRole() string {
-	switch g {
-	case ServerGroupSingle:
-		return "single"
-	case ServerGroupAgents:
-		return "agent"
-	case ServerGroupDBServers:
-		return "dbserver"
-	case ServerGroupCoordinators:
-		return "coordinator"
-	case ServerGroupSyncMasters:
-		return "syncmaster"
-	case ServerGroupSyncWorkers:
-		return "syncworker"
-	default:
-		return "?"
-	}
-}
-
-// IsArangod returns true when the groups runs servers of type `arangod`.
-func (g ServerGroup) IsArangod() bool {
-	switch g {
-	case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsArangosync returns true when the groups runs servers of type `arangosync`.
-func (g ServerGroup) IsArangosync() bool {
-	switch g {
-	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
-		return true
-	default:
-		return false
-	}
-}
-
-// ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
-type ServerGroupSpec struct {
-	// Count holds the requested number of servers
-	Count int `json:"count,omitempty"`
-	// Args holds additional commandline arguments
-	Args []string `json:"args,omitempty"`
-	// StorageClassName specifies the classname for storage of the servers.
-	StorageClassName string `json:"storageClassName,omitempty"`
-	// Resources holds resource requests & limits
-	Resources v1.ResourceRequirements `json:"resource,omitempty"`
-}
-
-// Validate the given group spec
-func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentMode) error {
-	if used {
-		if s.Count < 1 {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= 1", s.Count))
-		}
-		if s.Count > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.Count))
-		}
-	} else if s.Count != 0 {
-		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.Count))
-	}
-	return nil
-}
-
-// SetDefaults fills in missing defaults
-func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode DeploymentMode) {
-	if s.Count == 0 && used {
-		switch group {
-		case ServerGroupSingle:
-			if mode == DeploymentModeSingle {
-				s.Count = 1 // Single server
-			} else {
-				s.Count = 2 // Resilient single
-			}
-		default:
-			s.Count = 3
-		}
-	}
-	if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
-		switch group {
-		case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers:
-			if s.Resources.Requests == nil {
-				s.Resources.Requests = make(map[v1.ResourceName]resource.Quantity)
-			}
-			s.Resources.Requests[v1.ResourceStorage] = resource.MustParse("8Gi")
-		}
-	}
-}
-
-// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
-// It returns a list of fields that have been reset.
-func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix string, target *ServerGroupSpec) []string {
-	var resetFields []string
-	if group == ServerGroupAgents {
-		if s.Count != target.Count {
-			target.Count = s.Count
-			resetFields = append(resetFields, fieldPrefix+".count")
-		}
-	}
-	if s.StorageClassName != target.StorageClassName {
-		target.StorageClassName = s.StorageClassName
-		resetFields = append(resetFields, fieldPrefix+".storageClassName")
-	}
-	return resetFields
-}
-
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
 	Mode            DeploymentMode `json:"mode,omitempty"`
@@ -499,22 +378,22 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Sync.Validate(s.Mode); err != nil {
 		return maskAny(errors.Wrap(err, "spec.sync"))
 	}
-	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode); err != nil {
+	if err := s.Single.Validate(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents(), s.Mode); err != nil {
+	if err := s.Agents.Validate(ServerGroupAgents, s.Mode.HasAgents(), s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
-	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode); err != nil {
+	if err := s.DBServers.Validate(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode); err != nil {
+	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.Mode.HasCoordinators(), s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode); err != nil {
+	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.Enabled, s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
-	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode); err != nil {
+	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode, s.Environment); err != nil {
 		return maskAny(err)
 	}
 	return nil
