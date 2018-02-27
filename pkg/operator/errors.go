@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package controller
+package operator
 
 import "github.com/pkg/errors"
 
