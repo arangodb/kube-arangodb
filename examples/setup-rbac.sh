@@ -56,7 +56,7 @@ rules:
 EOYAML
 
 local code=$?
-if (code != 0); then
+if [ ! -z $code ]; then
     exit $code
 fi
 }
@@ -78,7 +78,7 @@ subjects:
 EOYAML
 
 local code=$?
-if (code != 0); then
+if [ ! -z $code ]; then
     exit $code
 fi
 }
