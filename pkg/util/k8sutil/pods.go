@@ -29,8 +29,10 @@ import (
 )
 
 const (
-	arangodVolumeName     = "arangod-data"
-	ArangodVolumeMountDir = "/data"
+	arangodVolumeName               = "arangod-data"
+	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
+	ArangodVolumeMountDir           = "/data"
+	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 )
 
 // IsPodReady returns true if the PodReady condition on
@@ -73,6 +75,16 @@ func CreatePodName(deploymentName, role, id string) string {
 func arangodVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
 		{Name: arangodVolumeName, MountPath: ArangodVolumeMountDir},
+	}
+}
+
+// arangodVolumeMounts creates a volume mount structure for arangod.
+func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      rocksdbEncryptionVolumeName,
+			MountPath: RocksDBEncryptionVolumeMountDir,
+		},
 	}
 }
 
@@ -156,13 +168,19 @@ func newPod(deploymentName, ns, role, id string) v1.Pod {
 // CreateArangodPod creates a Pod that runs `arangod`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
-	args []string, env map[string]string, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig) error {
+func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
+	role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
+	args []string, env map[string]string,
+	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
+	rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
 
 	// Add arangod container
 	c := arangodContainer(p.GetName(), image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
+	if rocksdbEncryptionSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
+	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add volume
@@ -183,6 +201,19 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 			Name: arangodVolumeName,
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// RocksDB encryption secret mount (if any)
+	if rocksdbEncryptionSecretName != "" {
+		vol := v1.Volume{
+			Name: rocksdbEncryptionVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: rocksdbEncryptionSecretName,
+				},
 			},
 		}
 		p.Spec.Volumes = append(p.Spec.Volumes, vol)

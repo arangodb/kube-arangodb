@@ -51,6 +51,16 @@ var (
 	maskAny = errors.WithStack
 )
 
+// getEnterpriseImageOrSkip returns the docker image used for enterprise
+// tests. If empty, enterprise tests are skipped.
+func getEnterpriseImageOrSkip(t *testing.T) string {
+	image := os.Getenv("ENTERPRISEIMAGE")
+	if image == "" {
+		t.Skip("Skipping test because ENTERPRISEIMAGE is not set")
+	}
+	return image
+}
+
 // mustNewKubeClient creates a kubernetes client
 // failing the test on errors.
 func mustNewKubeClient(t *testing.T) kubernetes.Interface {
@@ -140,6 +150,22 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 	return nil
 }
 
+// waitUntilVersionUp waits until the arango database responds to
+// an `/_api/version` request without an error.
+func waitUntilVersionUp(cli driver.Client) error {
+	ctx := context.Background()
+	op := func() error {
+		if _, err := cli.Version(ctx); err != nil {
+			return maskAny(err)
+		}
+		return nil
+	}
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // clusterHealthEqualsSpec returns nil when the given health matches
 // with the given deployment spec.
 func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) error {
@@ -191,6 +217,14 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
 	if err := cli.Database().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// removeSecret removes a secret
+func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
+	if err := cli.CoreV1().Secrets(ns).Delete(secretName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil

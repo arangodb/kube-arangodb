@@ -25,11 +25,13 @@ package deployment
 import (
 	"fmt"
 	"net"
+	"path/filepath"
 	"strconv"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/pkg/errors"
 )
 
 type optionPair struct {
@@ -91,17 +93,11 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 	}*/
 
 	// RocksDB
-	if apiObject.Spec.RocksDB.Encryption.KeySecretName != "" {
-		/*args = append(args,
-			fmt.Sprintf("--rocksdb.encryption-keyfile=%s", apiObject.Spec.StorageEngine),
+	if apiObject.Spec.RocksDB.IsEncrypted() {
+		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, "key")
+		options = append(options,
+			optionPair{"--rocksdb.encryption-keyfile", keyPath},
 		)
-		rocksdbSection := &configSection{
-			Name: "rocksdb",
-			Settings: map[string]string{
-				"encryption-keyfile": bsCfg.RocksDBEncryptionKeyFile,
-			},
-		}
-		config = append(config, rocksdbSection)*/
 	}
 
 	options = append(options,
@@ -284,6 +280,7 @@ func (d *Deployment) createReadinessProbe(apiObject *api.ArangoDeployment, group
 // ensurePods creates all Pods listed in member status
 func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 	kubecli := d.deps.KubeCli
+	ns := apiObject.GetNamespace()
 
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -303,7 +300,14 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if err != nil {
 					return maskAny(err)
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe); err != nil {
+				rocksdbEncryptionSecretName := ""
+				if apiObject.Spec.RocksDB.IsEncrypted() {
+					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.KeySecretName
+					if err := k8sutil.ValidateEncryptionKeySecret(kubecli, rocksdbEncryptionSecretName, ns); err != nil {
+						return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
+					}
+				}
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {

@@ -25,4 +25,6 @@ package constants
 const (
 	EnvOperatorPodName      = "MY_POD_NAME"
 	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
+
+	SecretEncryptionKey = "key" // Key in a Secret.Data used to store an 32-byte encryption key
 )
