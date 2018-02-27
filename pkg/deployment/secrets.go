@@ -23,6 +23,8 @@
 package deployment
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +32,45 @@ import (
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
+
+// createSecrets creates all secrets needed to run the given deployment
+func (d *Deployment) createSecrets(apiObject *api.ArangoDeployment) error {
+	if apiObject.Spec.IsAuthenticated() {
+		if err := d.ensureJWTSecret(apiObject.Spec.Authentication.JWTSecretName); err != nil {
+			return maskAny(err)
+		}
+	}
+	return nil
+}
+
+// ensureJWTSecret checks if a secret with given name exists in the namespace
+// of the deployment. If not, it will add such a secret with a random
+// JWT token.
+func (d *Deployment) ensureJWTSecret(secretName string) error {
+	kubecli := d.deps.KubeCli
+	ns := d.apiObject.GetNamespace()
+	if _, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		// Secret not found, create it
+		// Create token
+		tokenData := make([]byte, 32)
+		rand.Read(tokenData)
+		token := hex.EncodeToString(tokenData)
+
+		// Create secret
+		owner := d.apiObject.AsOwner()
+		if err := k8sutil.CreateJWTSecret(kubecli, secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
+			// Secret added while we tried it also
+			return nil
+		} else if err != nil {
+			// Failed to create secret
+			return maskAny(err)
+		}
+	} else if err != nil {
+		// Failed to get secret for other reasons
+		return maskAny(err)
+	}
+	return nil
+}
 
 // getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
 func (d *Deployment) getJWTSecret(apiObject *api.ArangoDeployment) (string, error) {

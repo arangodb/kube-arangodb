@@ -217,7 +217,7 @@ func (c *Controller) handleDeploymentEvent(event *Event) error {
 	}
 
 	// Fill in defaults
-	apiObject.Spec.SetDefaults()
+	apiObject.Spec.SetDefaults(apiObject.GetName())
 	// Validate deployment spec
 	if err := apiObject.Spec.Validate(); err != nil {
 		return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))

@@ -29,6 +29,7 @@ import (
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
+	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
@@ -53,11 +54,11 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 	)
 
 	// Authentication
-	if apiObject.Spec.Authentication.JWTSecretName != "" {
+	if apiObject.Spec.IsAuthenticated() {
 		// With authentication
 		options = append(options,
 			optionPair{"--server.authentication", "true"},
-			// TODO jwt-secret file
+			optionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
 		)
 	} else {
 		// Without authentication
@@ -294,7 +295,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			role := group.AsRole()
 			if group.IsArangod() {
 				args := d.createArangodArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
-				env := make(map[string]string)
+				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
 					return maskAny(err)
@@ -303,12 +304,18 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if err != nil {
 					return maskAny(err)
 				}
+				if apiObject.Spec.IsAuthenticated() {
+					env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
+						SecretName: apiObject.Spec.Authentication.JWTSecretName,
+						SecretKey:  constants.SecretKeyJWT,
+					}
+				}
 				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
 				args := d.createArangoSyncArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
-				env := make(map[string]string)
+				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
 					return maskAny(err)
