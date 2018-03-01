@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -13,6 +14,7 @@ import (
 // with default settings.
 func TestSimpleSingle(t *testing.T) {
 	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Prepare deployment config
@@ -24,12 +26,21 @@ func TestSimpleSingle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	// Prepare cleanup
+	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
 		t.Errorf("Deployment not running in time: %v", err)
 	}
 
-	// Cleanup
-	removeDeployment(c, depl.GetName(), ns)
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for single server available
+	if err := waitUntilVersionUp(client); err != nil {
+		t.Fatalf("Single server not running returning version in time: %v", err)
+	}
 }
