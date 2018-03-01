@@ -64,7 +64,7 @@ func (cc *clientCache) Get(ctx context.Context, group api.ServerGroup, id string
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodClient(ctx, cc.kubecli, cc.apiObject, group, id)
+	c, err := arangod.CreateArangodClient(ctx, cc.kubecli.CoreV1(), cc.apiObject, group, id)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -83,7 +83,7 @@ func (cc *clientCache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli, cc.apiObject)
+	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli.CoreV1(), cc.apiObject)
 	if err != nil {
 		return nil, maskAny(err)
 	}
