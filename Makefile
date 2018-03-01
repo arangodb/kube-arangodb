@@ -167,6 +167,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		golang:$(GOVERSION) \
 		go test -v \
 			$(REPOPATH)/pkg/apis/arangodb/v1alpha \
+			$(REPOPATH)/pkg/deployment \
 			$(REPOPATH)/pkg/util/k8sutil
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
