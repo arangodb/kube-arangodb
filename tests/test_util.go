@@ -84,7 +84,7 @@ func mustNewKubeClient(t *testing.T) kubernetes.Interface {
 // mustNewArangodDatabaseClient creates a new database client,
 // failing the test on errors.
 func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) driver.Client {
-	c, err := arangod.CreateArangodDatabaseClient(ctx, kubecli, apiObject)
+	c, err := arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject)
 	if err != nil {
 		t.Fatalf("Failed to create arango database client: %v", err)
 	}
