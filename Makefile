@@ -60,6 +60,9 @@ ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 40m
 endif
+ifdef VERBOSE
+	TESTVERBOSEOPTIONS := -v 
+endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
@@ -165,7 +168,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		-e CGO_ENABLED=0 \
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
-		go test -v \
+		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/arangodb/v1alpha \
 			$(REPOPATH)/pkg/deployment \
 			$(REPOPATH)/pkg/util/k8sutil
