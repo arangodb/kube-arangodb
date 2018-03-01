@@ -17,6 +17,7 @@ import (
 // TestAuthenticationSingleDefaultSecret creating a single server
 // with default authentication (on) using a generated JWT secret.
 func TestAuthenticationSingleDefaultSecret(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -63,6 +64,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 // TestAuthenticationSingleCustomSecret creating a single server
 // with default authentication (on) using a user created JWT secret.
 func TestAuthenticationSingleCustomSecret(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -113,6 +115,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 // TestAuthenticationNoneSingle creating a single server
 // with authentication set to `None`.
 func TestAuthenticationNoneSingle(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -150,6 +153,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 // TestAuthenticationClusterDefaultSecret creating a cluster
 // with default authentication (on) using a generated JWT secret.
 func TestAuthenticationClusterDefaultSecret(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -196,6 +200,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 // TestAuthenticationClusterCustomSecret creating a cluster
 // with default authentication (on) using a user created JWT secret.
 func TestAuthenticationClusterCustomSecret(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -246,7 +251,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 // TestAuthenticationNoneCluster creating a cluster
 // with authentication set to `None`.
 func TestAuthenticationNoneCluster(t *testing.T) {
-	// Do not allow to run this test in parallel, because it is already claiming a lot of resources.
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
