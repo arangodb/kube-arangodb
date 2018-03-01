@@ -23,6 +23,7 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-rocksdb-enc-sng-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.DeploymentModeSingle
 	depl.Spec.Image = image
 	depl.Spec.StorageEngine = api.StorageEngineRocksDB
 	depl.Spec.RocksDB.Encryption.KeySecretName = strings.ToLower(uniuri.New())

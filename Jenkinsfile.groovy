@@ -37,6 +37,7 @@ pipeline {
                     "IMAGETAG=${env.GIT_COMMIT}",
                     ]) {
                         sh "make"
+                        sh "make run-unit-tests"
                     }
                 }
             }
