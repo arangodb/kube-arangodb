@@ -68,13 +68,13 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=false",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
 	}
 
-	// No authentication
+	// No authentication, mmfiles
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -87,6 +87,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		}
 		apiObject.Spec.SetDefaults("test")
 		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
@@ -151,7 +152,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=false",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 				"--foo1",
 				"--foo2",
 			},

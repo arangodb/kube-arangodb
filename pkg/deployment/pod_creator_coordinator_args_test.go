@@ -67,7 +67,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
@@ -107,13 +107,13 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--server.authentication=false",
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
 	}
 
-	// Custom args
+	// Custom args, RocksDB
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -126,6 +126,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		}
 		apiObject.Spec.SetDefaults("test")
 		apiObject.Spec.Coordinators.Args = []string{"--foo1", "--foo2"}
+		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},

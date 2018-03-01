@@ -52,7 +52,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
@@ -84,32 +84,6 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		)
 	}
 
-	// Default deployment with rocksdb
-	{
-		apiObject := &api.ArangoDeployment{
-			Spec: api.DeploymentSpec{
-				Mode:          api.DeploymentModeSingle,
-				StorageEngine: api.StorageEngineRocksDB,
-			},
-		}
-		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
-		assert.Equal(t,
-			[]string{
-				"--database.directory=/data",
-				"--foxx.queues=true",
-				"--log.level=INFO",
-				"--log.output=+",
-				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
-				"--server.statistics=true",
-				"--server.storage-engine=rocksdb",
-			},
-			cmdline,
-		)
-	}
-
 	// No authentication
 	{
 		apiObject := &api.ArangoDeployment{
@@ -129,7 +103,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--server.authentication=false",
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
@@ -155,7 +129,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 				"--foo1",
 				"--foo2",
 			},
@@ -198,7 +172,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
