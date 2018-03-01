@@ -16,6 +16,7 @@ import (
 // TestRocksDBEncryptionSingle tests the creating of a single server deployment
 // with RocksDB & Encryption.
 func TestRocksDBEncryptionSingle(t *testing.T) {
+	longOrSkip(t)
 	image := getEnterpriseImageOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
