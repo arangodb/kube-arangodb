@@ -84,7 +84,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client); err != nil {
-		t.Fatalf("Single server not running returning version in time: %v", err)
+		t.Fatalf("ResilientSingle servers not running returning version in time: %v", err)
 	}
 
 	// Check server role
@@ -125,7 +125,7 @@ func TestSimpleCluster(t *testing.T) {
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client); err != nil {
-		t.Fatalf("Single server not running returning version in time: %v", err)
+		t.Fatalf("Cluster not running returning version in time: %v", err)
 	}
 
 	// Check server role
