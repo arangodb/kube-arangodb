@@ -58,7 +58,7 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 
 		// Create secret
 		owner := d.apiObject.AsOwner()
-		if err := k8sutil.CreateJWTSecret(kubecli, secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -79,7 +79,7 @@ func (d *Deployment) getJWTSecret(apiObject *api.ArangoDeployment) (string, erro
 	}
 	kubecli := d.deps.KubeCli
 	secretName := apiObject.Spec.Authentication.JWTSecretName
-	s, err := k8sutil.GetJWTSecret(kubecli, secretName, apiObject.GetNamespace())
+	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, apiObject.GetNamespace())
 	if err != nil {
 		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", maskAny(err)
@@ -91,7 +91,7 @@ func (d *Deployment) getJWTSecret(apiObject *api.ArangoDeployment) (string, erro
 func (d *Deployment) getSyncJWTSecret(apiObject *api.ArangoDeployment) (string, error) {
 	kubecli := d.deps.KubeCli
 	secretName := apiObject.Spec.Sync.Authentication.JWTSecretName
-	s, err := k8sutil.GetJWTSecret(kubecli, secretName, apiObject.GetNamespace())
+	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, apiObject.GetNamespace())
 	if err != nil {
 		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", maskAny(err)

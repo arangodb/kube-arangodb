@@ -321,7 +321,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				rocksdbEncryptionSecretName := ""
 				if apiObject.Spec.RocksDB.IsEncrypted() {
 					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.KeySecretName
-					if err := k8sutil.ValidateEncryptionKeySecret(kubecli, rocksdbEncryptionSecretName, ns); err != nil {
+					if err := k8sutil.ValidateEncryptionKeySecret(kubecli.CoreV1(), rocksdbEncryptionSecretName, ns); err != nil {
 						return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
 					}
 				}

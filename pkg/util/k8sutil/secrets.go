@@ -27,15 +27,15 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 )
 
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace
 // exists and it contains a 'key' data field of exactly 32 bytes.
-func ValidateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespace string) error {
-	s, err := kubecli.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func ValidateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
@@ -51,7 +51,10 @@ func ValidateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, names
 }
 
 // CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
-func CreateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespace string, key []byte) error {
+func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace string, key []byte) error {
+	if len(key) != 32 {
+		return maskAny(fmt.Errorf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
+	}
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -61,7 +64,7 @@ func CreateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespa
 			constants.SecretEncryptionKey: key,
 		},
 	}
-	if _, err := kubecli.CoreV1().Secrets(namespace).Create(secret); err != nil {
+	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
@@ -69,8 +72,8 @@ func CreateEncryptionKeySecret(kubecli kubernetes.Interface, secretName, namespa
 }
 
 // GetJWTSecret loads the JWT secret from a Secret with given name.
-func GetJWTSecret(kubecli kubernetes.Interface, secretName, namespace string) (string, error) {
-	s, err := kubecli.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
@@ -84,7 +87,7 @@ func GetJWTSecret(kubecli kubernetes.Interface, secretName, namespace string) (s
 
 // CreateJWTSecret creates a secret with given name in given namespace
 // with a given token as value.
-func CreateJWTSecret(kubecli kubernetes.Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
+func CreateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -96,7 +99,7 @@ func CreateJWTSecret(kubecli kubernetes.Interface, secretName, namespace, token 
 	}
 	// Attach secret to owner
 	addOwnerRefToObject(secret, ownerRef)
-	if _, err := kubecli.CoreV1().Secrets(namespace).Create(secret); err != nil {
+	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}

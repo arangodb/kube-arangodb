@@ -32,7 +32,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
@@ -73,10 +73,10 @@ var (
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
-func CreateArangodClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
+func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
-	c, err := createArangodClientForDNSName(ctx, kubecli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -84,10 +84,10 @@ func CreateArangodClient(ctx context.Context, kubecli kubernetes.Interface, apiO
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodClientForDNSName(ctx, kubecli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -95,7 +95,7 @@ func CreateArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interfa
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
 	connConfig := http.ConnectionConfig{
 		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
@@ -115,7 +115,7 @@ func createArangodClientForDNSName(ctx context.Context, kubecli kubernetes.Inter
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
-			s, err := k8sutil.GetJWTSecret(kubecli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
+			s, err := k8sutil.GetJWTSecret(cli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
 			if err != nil {
 				return nil, maskAny(err)
 			}
