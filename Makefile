@@ -103,7 +103,8 @@ update-vendor:
 		github.com/prometheus/client_golang/prometheus \
 		github.com/pulcy/pulsar \
 		github.com/rs/zerolog \
-		github.com/spf13/cobra
+		github.com/spf13/cobra \
+		github.com/stretchr/testify
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
@@ -148,6 +149,19 @@ endif
 
 # Testing
 
+run-unit-tests: $(GOBUILDDIR) $(SOURCES)
+	docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go test -v \
+			$(REPOPATH)/pkg/apis/arangodb/v1alpha 
+
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
 	docker run \
@@ -183,7 +197,7 @@ endif
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 cleanup-tests:
-	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
 
 # Release building
 
