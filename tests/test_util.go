@@ -52,6 +52,15 @@ var (
 	maskAny = errors.WithStack
 )
 
+// longOrSkip checks the short test flag.
+// If short is set, the current test is skipped.
+// If not, this function returns as normal.
+func longOrSkip(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Test skipped in short test")
+	}
+}
+
 // getEnterpriseImageOrSkip returns the docker image used for enterprise
 // tests. If empty, enterprise tests are skipped.
 func getEnterpriseImageOrSkip(t *testing.T) string {

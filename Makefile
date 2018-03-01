@@ -54,6 +54,12 @@ GHRELEASE := $(GOBUILDDIR)/bin/github-release
 ifndef TESTNAMESPACE
 	TESTNAMESPACE := arangodb-operator-tests
 endif
+TESTLENGTHOPTIONS := -test.short
+TESTTIMEOUT := 20m
+ifeq ($(LONG), 1)
+	TESTLENGTHOPTIONS :=
+	TESTTIMEOUT := 40m
+endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
@@ -193,7 +199,7 @@ endif
 		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
 		--env="TEST_NAMESPACE=$(TESTNAMESPACE)" \
 		-- \
-		-test.v
+		-test.v -test.timeout $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
 
 cleanup-tests:

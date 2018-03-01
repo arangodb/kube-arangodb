@@ -14,6 +14,7 @@ import (
 // TestScaleCluster tests scaling up/down the number of DBServers & coordinators
 // of a cluster.
 func TestScaleCluster(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
