@@ -26,13 +26,16 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type optionPair struct {
@@ -40,8 +43,19 @@ type optionPair struct {
 	Value string
 }
 
+// CompareTo returns -1 if o < other, 0 if o == other, 1 otherwise
+func (o optionPair) CompareTo(other optionPair) int {
+	rc := strings.Compare(o.Key, other.Key)
+	if rc < 0 {
+		return -1
+	} else if rc > 0 {
+		return 1
+	}
+	return strings.Compare(o.Value, other.Value)
+}
+
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group api.ServerGroup, spec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
+func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup, svrSpec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
 	options := make([]optionPair, 0, 64)
 
 	// Endpoint
@@ -56,7 +70,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 	)
 
 	// Authentication
-	if apiObject.Spec.IsAuthenticated() {
+	if deplSpec.IsAuthenticated() {
 		// With authentication
 		options = append(options,
 			optionPair{"--server.authentication", "true"},
@@ -71,7 +85,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 
 	// Storage engine
 	options = append(options,
-		optionPair{"--server.storage-engine", string(apiObject.Spec.StorageEngine)},
+		optionPair{"--server.storage-engine", string(deplSpec.StorageEngine)},
 	)
 
 	// Logging
@@ -94,7 +108,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 	}*/
 
 	// RocksDB
-	if apiObject.Spec.RocksDB.IsEncrypted() {
+	if deplSpec.RocksDB.IsEncrypted() {
 		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, "key")
 		options = append(options,
 			optionPair{"--rocksdb.encryption-keyfile", keyPath},
@@ -121,7 +135,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 			optionPair{"--cluster.my-id", id},
 			optionPair{"--agency.activate", "true"},
 			optionPair{"--agency.my-address", myTCPURL},
-			optionPair{"--agency.size", strconv.Itoa(apiObject.Spec.Agents.Count)},
+			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.Count)},
 			optionPair{"--agency.supervision", "true"},
 			optionPair{"--foxx.queues", "false"},
 			optionPair{"--server.statistics", "false"},
@@ -162,7 +176,7 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if apiObject.Spec.Mode == api.DeploymentModeResilientSingle {
+		if deplSpec.Mode == api.DeploymentModeResilientSingle {
 			addAgentEndpoints = true
 			options = append(options,
 				optionPair{"--replication.automatic-failover", "true"},
@@ -182,17 +196,20 @@ func (d *Deployment) createArangodArgs(apiObject *api.ArangoDeployment, group ap
 		}
 	}
 
-	args := make([]string, 0, len(options)+len(spec.Args))
+	args := make([]string, 0, len(options)+len(svrSpec.Args))
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].CompareTo(options[j]) < 0
+	})
 	for _, o := range options {
 		args = append(args, o.Key+"="+o.Value)
 	}
-	args = append(args, spec.Args...)
+	args = append(args, svrSpec.Args...)
 
 	return args
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func (d *Deployment) createArangoSyncArgs(apiObject *api.ArangoDeployment, group api.ServerGroup, spec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
+func createArangoSyncArgs(apiObject *api.ArangoDeployment, group api.ServerGroup, spec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
 	// TODO
 	return nil
 }
@@ -291,7 +308,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			// Create pod
 			role := group.AsRole()
 			if group.IsArangod() {
-				args := d.createArangodArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
+				args := createArangodArgs(apiObject, apiObject.Spec, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
@@ -318,7 +335,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
-				args := d.createArangoSyncArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
+				args := createArangoSyncArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
