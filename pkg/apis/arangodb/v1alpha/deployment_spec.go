@@ -82,7 +82,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 		s.Environment = EnvironmentDevelopment
 	}
 	if s.StorageEngine == "" {
-		s.StorageEngine = StorageEngineMMFiles
+		s.StorageEngine = StorageEngineRocksDB
 	}
 	if s.Image == "" && s.IsDevelopment() {
 		s.Image = defaultImage
