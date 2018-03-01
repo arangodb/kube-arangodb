@@ -160,7 +160,8 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
 		go test -v \
-			$(REPOPATH)/pkg/apis/arangodb/v1alpha 
+			$(REPOPATH)/pkg/apis/arangodb/v1alpha \
+			$(REPOPATH)/pkg/deployment
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
