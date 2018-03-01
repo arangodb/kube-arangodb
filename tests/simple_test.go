@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
+	"github.com/stretchr/testify/assert"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/client"
 )
@@ -18,7 +20,7 @@ func TestSimpleSingle(t *testing.T) {
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-single-" + uniuri.NewLen(4))
+	depl := newDeployment("test-sng-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.DeploymentModeSingle
 
 	// Create deployment
@@ -43,4 +45,92 @@ func TestSimpleSingle(t *testing.T) {
 	if err := waitUntilVersionUp(client); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
+
+	// Check server role
+	assert.NoError(t, client.SynchronizeEndpoints(ctx))
+	role, err := client.ServerRole(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, driver.ServerRoleSingle, role)
+}
+
+// TestSimpleResilientSingle tests the creating of a resilientsingle server deployment
+// with default settings.
+func TestSimpleResilientSingle(t *testing.T) {
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	// Prepare deployment config
+	depl := newDeployment("test-rs-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.DeploymentModeResilientSingle
+
+	// Create deployment
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	if err != nil {
+		t.Fatalf("Create deployment failed: %v", err)
+	}
+	// Prepare cleanup
+	defer removeDeployment(c, depl.GetName(), ns)
+
+	// Wait for deployment to be ready
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
+		t.Errorf("Deployment not running in time: %v", err)
+	}
+
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for single server available
+	if err := waitUntilVersionUp(client); err != nil {
+		t.Fatalf("Single server not running returning version in time: %v", err)
+	}
+
+	// Check server role
+	assert.NoError(t, client.SynchronizeEndpoints(ctx))
+	role, err := client.ServerRole(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, driver.ServerRoleSingleActive, role)
+}
+
+// TestSimpleCluster tests the creating of a cluster deployment
+// with default settings.
+func TestSimpleCluster(t *testing.T) {
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	// Prepare deployment config
+	depl := newDeployment("test-cls-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.DeploymentModeCluster
+
+	// Create deployment
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	if err != nil {
+		t.Fatalf("Create deployment failed: %v", err)
+	}
+	// Prepare cleanup
+	defer removeDeployment(c, depl.GetName(), ns)
+
+	// Wait for deployment to be ready
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
+		t.Errorf("Deployment not running in time: %v", err)
+	}
+
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for single server available
+	if err := waitUntilVersionUp(client); err != nil {
+		t.Fatalf("Single server not running returning version in time: %v", err)
+	}
+
+	// Check server role
+	assert.NoError(t, client.SynchronizeEndpoints(ctx))
+	role, err := client.ServerRole(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, driver.ServerRoleCoordinator, role)
 }
