@@ -101,8 +101,8 @@ This setting specifies the type of storage engine used for all servers
 in the cluster.
 Possible values are:
 
-- `mmfiles` (default) To use the MMfiles storage engine.
-- `rocksdb` To use the RocksDB storage engine.
+- `mmfiles` To use the MMfiles storage engine.
+- `rocksdb` (default) To use the RocksDB storage engine.
 
 This setting cannot be changed after the cluster has been created.
 
