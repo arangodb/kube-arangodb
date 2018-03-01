@@ -52,6 +52,9 @@ func ValidateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespa
 
 // CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
 func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace string, key []byte) error {
+	if len(key) != 32 {
+		return maskAny(fmt.Errorf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
+	}
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

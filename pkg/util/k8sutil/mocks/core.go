@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -13,6 +14,13 @@ func NewCore() v1.CoreV1Interface {
 	return &coreV1{
 		secrets: make(map[string]v1.SecretInterface),
 	}
+}
+
+func nilOrWatch(x interface{}) watch.Interface {
+	if s, ok := x.(watch.Interface); ok {
+		return s
+	}
+	return nil
 }
 
 func (c *coreV1) ComponentStatuses() v1.ComponentStatusInterface {
