@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 ROLE_NAME="${ROLE_NAME:-arangodb-operator}"
 ROLE_BINDING_NAME="${ROLE_BINDING_NAME:-arangodb-operator}"
 NAMESPACE="${NAMESPACE:-default}"
@@ -54,11 +56,6 @@ rules:
   verbs:
   - "*"
 EOYAML
-
-local code=$?
-if [ ! -z $code ]; then
-    exit $code
-fi
 }
 
 function setupRoleBinding {
@@ -76,11 +73,6 @@ subjects:
   name: default
   namespace: ${NAMESPACE}
 EOYAML
-
-local code=$?
-if [ ! -z $code ]; then
-    exit $code
-fi
 }
 
 for i in "$@"; do
