@@ -13,7 +13,8 @@ kind: "ArangoLocalStorage"
 metadata:
   name: "example-arangodb-storage"
 spec:
-  storageClassName: my-local-ssd
+  storageClass:
+    name: my-local-ssd
   localPath:
   - /mnt/big-ssd-disk
 ```
@@ -26,3 +27,33 @@ This definition results in:
   in a sub-directory of `/mnt/big-ssd-disk`.
 - the dynamic cleanup of PersistentVolume's (created by
   the operator) after one is released.
+
+## Specification reference
+
+Below you'll find all settings of the `ArangoLocalStorage` custom resource.
+
+### `spec.storageClass.name: string`
+
+This setting specifies the name of the storage class that
+creates `PersistentVolume` will use.
+
+If empty, this field defaults to the name of the `ArangoLocalStorage`
+object.
+
+If a `StorageClass` with given name does not yet exist, it
+will be created.
+
+### `spec.storageClass.isDefault: bool`
+
+This setting specifies if the created `StorageClass` will
+be marked as default storage class. (default is `false`)
+
+### `spec.localPath: stringList`
+
+This setting specifies one of more local directories
+(on the nodes) used to create persistent volumes in.
+
+### `spec.nodeSelector: nodeSelector`
+
+This setting specifies which nodes the operator will
+provision persistent volumes on.
