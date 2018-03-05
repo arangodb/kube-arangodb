@@ -17,19 +17,5 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
-
-package constants
-
-const (
-	EnvOperatorNodeName     = "MY_NODE_NAME"
-	EnvOperatorPodName      = "MY_POD_NAME"
-	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
-
-	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
-	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
-
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
-)
+// Package fake has the automatically generated clients.
+package fake

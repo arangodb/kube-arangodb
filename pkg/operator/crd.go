@@ -27,7 +27,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	deplapi "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	lsapi "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/crd"
 )
 
@@ -46,14 +47,22 @@ func (o *Operator) initResourceIfNeeded() error {
 func (o *Operator) initCRD() error {
 	log := o.Dependencies.Log
 
-	log.Debug().Msg("Calling CreateCRD")
-	if err := crd.CreateCRD(o.KubeExtCli, api.ArangoDeploymentCRDName, api.ArangoDeploymentResourceKind, api.ArangoDeploymentResourcePlural, api.ArangoDeploymentShortNames...); err != nil {
+	log.Debug().Msg("Creating ArangoDeployment CRD")
+	if err := crd.CreateCRD(o.KubeExtCli, deplapi.ArangoDeploymentCRDName, deplapi.ArangoDeploymentResourceKind, deplapi.ArangoDeploymentResourcePlural, deplapi.ArangoDeploymentShortNames...); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
-	log.Debug().Msg("Waiting for CRD ready")
-	if err := crd.WaitCRDReady(o.KubeExtCli, api.ArangoDeploymentCRDName); err != nil {
+	log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
+	if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
 		return maskAny(err)
 	}
-	log.Debug().Msg("CRD is ready")
+
+	log.Debug().Msg("Creating ArangoLocalStorage CRD")
+	if err := crd.CreateCRD(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName, lsapi.ArangoLocalStorageResourceKind, lsapi.ArangoLocalStorageResourcePlural, lsapi.ArangoLocalStorageShortNames...); err != nil {
+		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
+	}
+	log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
+	if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
+		return maskAny(err)
+	}
 	return nil
 }

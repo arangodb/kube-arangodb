@@ -20,16 +20,20 @@
 // Author Ewout Prangsma
 //
 
-package constants
+package storage
 
-const (
-	EnvOperatorNodeName     = "MY_NODE_NAME"
-	EnvOperatorPodName      = "MY_POD_NAME"
-	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
-	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
+// getMyImage fetched the docker image from my own pod
+func (l *LocalStorage) getMyImage() (string, error) {
+	log := l.deps.Log
+	ns := l.apiObject.GetNamespace()
 
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
-)
+	p, err := l.deps.KubeCli.CoreV1().Pods(ns).Get(l.config.PodName, metav1.GetOptions{})
+	if err != nil {
+		log.Debug().Err(err).Str("pod-name", l.config.PodName).Msg("Failed to get my own pod")
+		return "", maskAny(err)
+	}
+
+	return p.Spec.Containers[0].Image, nil
+}

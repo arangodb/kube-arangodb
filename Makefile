@@ -130,7 +130,7 @@ update-generated: $(GOBUILDDIR)
 		"all" \
 		"github.com/arangodb/k8s-operator/pkg/generated" \
 		"github.com/arangodb/k8s-operator/pkg/apis" \
-		"arangodb:v1alpha" \
+		"arangodb:v1alpha storage:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 

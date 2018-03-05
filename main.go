@@ -93,6 +93,11 @@ func main() {
 	cmdMain.Execute()
 }
 
+// Show usage
+func cmdUsage(cmd *cobra.Command, args []string) {
+	cmd.Usage()
+}
+
 // Run the operator
 func cmdMainRun(cmd *cobra.Command, args []string) {
 	goflag.CommandLine.Parse([]string{"-logtostderr"})
@@ -194,21 +199,22 @@ func newOperatorConfigAndDeps(namespace, name string) (operator.Config, operator
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
 	}
-	databaseCRCli, err := client.NewInCluster()
+	crCli, err := client.NewInCluster()
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}
 
 	cfg := operator.Config{
 		Namespace:      namespace,
+		PodName:        name,
 		ServiceAccount: serviceAccount,
 		CreateCRD:      createCRD,
 	}
 	deps := operator.Dependencies{
-		Log:           logService.MustGetLogger("controller"),
-		KubeCli:       kubecli,
-		KubeExtCli:    kubeExtCli,
-		DatabaseCRCli: databaseCRCli,
+		Log:        logService.MustGetLogger("operator"),
+		KubeCli:    kubecli,
+		KubeExtCli: kubeExtCli,
+		CRCli:      crCli,
 	}
 
 	return cfg, deps, nil

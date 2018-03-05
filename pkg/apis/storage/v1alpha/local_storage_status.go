@@ -20,16 +20,13 @@
 // Author Ewout Prangsma
 //
 
-package constants
+package v1alpha
 
-const (
-	EnvOperatorNodeName     = "MY_NODE_NAME"
-	EnvOperatorPodName      = "MY_POD_NAME"
-	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
-
-	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
-	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
-
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
-)
+// LocalStorageStatus contains the status part of
+// an ArangoLocalStorage.
+type LocalStorageStatus struct {
+	// State holds the current high level state of the local storage
+	State LocalStorageState `json:"state,omitempty"`
+	// Reason for the state this object is in.
+	Reason string `json:"reason,omitempty"`
+}

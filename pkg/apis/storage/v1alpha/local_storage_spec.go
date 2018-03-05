@@ -1,0 +1,70 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Ewout Prangsma
+//
+
+package v1alpha
+
+import (
+	"strings"
+
+	"github.com/pkg/errors"
+)
+
+// LocalStorageSpec contains the specification part of
+// an ArangoLocalStorage.
+type LocalStorageSpec struct {
+	StorageClass StorageClassSpec  `json:"storageClass"`
+	LocalPath    []string          `json:"localPath,omitempty"`
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+}
+
+// Validate the given spec, returning an error on validation
+// problems or nil if all ok.
+func (s LocalStorageSpec) Validate() error {
+	if err := s.StorageClass.Validate(); err != nil {
+		return maskAny(err)
+	}
+	if len(s.LocalPath) == 0 {
+		return maskAny(errors.Wrapf(ValidationError, "localPath cannot be empty"))
+	}
+	return nil
+}
+
+// SetDefaults fills empty field with default values.
+func (s *LocalStorageSpec) SetDefaults(localStorageName string) {
+	s.StorageClass.SetDefaults(localStorageName)
+}
+
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+// Field names are relative to `spec.`.
+func (s LocalStorageSpec) ResetImmutableFields(target *LocalStorageSpec) []string {
+	var result []string
+	if list := s.StorageClass.ResetImmutableFields("storageClass.", &target.StorageClass); len(list) > 0 {
+		result = append(result, list...)
+	}
+	if strings.Join(s.LocalPath, ",") != strings.Join(target.LocalPath, ",") {
+		target.LocalPath = s.LocalPath
+		result = append(result, "localPath")
+	}
+	// TODO NodeSelector
+	return result
+}

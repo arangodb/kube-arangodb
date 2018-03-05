@@ -17,19 +17,25 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
+package fake
 
-package constants
-
-const (
-	EnvOperatorNodeName     = "MY_NODE_NAME"
-	EnvOperatorPodName      = "MY_POD_NAME"
-	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
-
-	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
-	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
-
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
+import (
+	v1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha"
+	rest "k8s.io/client-go/rest"
+	testing "k8s.io/client-go/testing"
 )
+
+type FakeStorageV1alpha struct {
+	*testing.Fake
+}
+
+func (c *FakeStorageV1alpha) ArangoLocalStorages(namespace string) v1alpha.ArangoLocalStorageInterface {
+	return &FakeArangoLocalStorages{c, namespace}
+}
+
+// RESTClient returns a RESTClient that is used to communicate
+// with API server by this client implementation.
+func (c *FakeStorageV1alpha) RESTClient() rest.Interface {
+	var ret *rest.RESTClient
+	return ret
+}

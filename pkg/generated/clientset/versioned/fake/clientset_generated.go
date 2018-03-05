@@ -23,6 +23,8 @@ import (
 	clientset "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
 	fakedatabasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha/fake"
+	storagev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha"
+	fakestoragev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -79,4 +81,14 @@ func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
 // Database retrieves the DatabaseV1alphaClient
 func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
 	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
+}
+
+// StorageV1alpha retrieves the StorageV1alphaClient
+func (c *Clientset) StorageV1alpha() storagev1alpha.StorageV1alphaInterface {
+	return &fakestoragev1alpha.FakeStorageV1alpha{Fake: &c.Fake}
+}
+
+// Storage retrieves the StorageV1alphaClient
+func (c *Clientset) Storage() storagev1alpha.StorageV1alphaInterface {
+	return &fakestoragev1alpha.FakeStorageV1alpha{Fake: &c.Fake}
 }

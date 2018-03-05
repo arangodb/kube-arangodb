@@ -1,0 +1,9 @@
+apiVersion: "storage.arangodb.com/v1alpha"
+kind: "ArangoLocalStorage"
+metadata:
+  name: "arangodb-local-storage"
+spec:
+  storageClass:
+    name: my-local-ssd
+  localPath:
+  - /var/lib/arango-storage
