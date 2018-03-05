@@ -22,38 +22,26 @@
 
 package provisioner
 
-import (
-	"context"
+import "context"
 
-	"github.com/rs/zerolog"
-	"k8s.io/client-go/kubernetes"
-)
-
-// Config for the storage provisioner
-type Config struct {
-	NodeName       string
-	Namespace      string
-	ServiceAccount string
-	LocalPath      []string
+// API of the provisioner
+type API interface {
+	// GetFSInfo fetches information from the filesystem containing
+	// the given local path.
+	GetFSInfo(ctx context.Context, localPath string) (FSInfo, error)
+	// Prepare a volume at the given local path
+	Prepare(ctx context.Context, localPath string) error
+	// Remove a volume with the given local path
+	Remove(ctx context.Context, localPath string) error
 }
 
-// Dependencies for the storage provisioner
-type Dependencies struct {
-	Log     zerolog.Logger
-	KubeCli kubernetes.Interface
+// FSInfo holds information of a filesystem.
+type FSInfo struct {
+	Available int64 `json:"available"`
+	Capacity  int64 `json:"capacity"`
 }
 
-// Provisioner implements a Local storage provisioner
-type Provisioner struct {
-}
-
-// New creates a new local storage provisioner
-func New(config Config, deps Dependencies) (*Provisioner, error) {
-	return &Provisioner{}, nil
-}
-
-// Run the provisioner until the given context is canceled.
-func (p *Provisioner) Run(ctx context.Context) {
-	// TODO
-	<-ctx.Done()
+// Request body for API HTTP requests.
+type Request struct {
+	LocalPath string `json:"localPath"`
 }

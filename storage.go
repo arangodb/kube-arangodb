@@ -31,9 +31,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/k8s-operator/pkg/logging"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
+	"github.com/arangodb/k8s-operator/pkg/storage/provisioner/service"
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+)
+
+const (
+	defaultProvisionerPort = 8929
 )
 
 var (
@@ -48,6 +52,7 @@ var (
 	}
 
 	storageProvisioner struct {
+		port             int
 		localPath        []string
 		storageClassName string
 	}
@@ -60,6 +65,7 @@ func init() {
 	f := cmdStorageProvisioner.Flags()
 	f.StringSliceVar(&storageProvisioner.localPath, "local-path", nil, "Local directory to provision volumes into")
 	f.StringVar(&storageProvisioner.storageClassName, "storage-class-name", "", "StorageClassName set in provisioned volumes")
+	f.IntVar(&storageProvisioner.port, "port", defaultProvisionerPort, "Port to listen on")
 }
 
 // Run the provisioner
@@ -92,7 +98,7 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create provisioner config & dependencies")
 	}
-	p, err := provisioner.New(config, deps)
+	p, err := service.New(config, deps)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create provisioner")
 	}
@@ -102,24 +108,24 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 }
 
 // newProvisionerConfigAndDeps creates storage provisioner config & dependencies.
-func newProvisionerConfigAndDeps(nodeName, namespace, name string) (provisioner.Config, provisioner.Dependencies, error) {
+func newProvisionerConfigAndDeps(nodeName, namespace, name string) (service.Config, service.Dependencies, error) {
 	kubecli, err := k8sutil.NewKubeClient()
 	if err != nil {
-		return provisioner.Config{}, provisioner.Dependencies{}, maskAny(err)
+		return service.Config{}, service.Dependencies{}, maskAny(err)
 	}
 
 	serviceAccount, err := getMyPodServiceAccount(kubecli, namespace, name)
 	if err != nil {
-		return provisioner.Config{}, provisioner.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
+		return service.Config{}, service.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
 
-	cfg := provisioner.Config{
+	cfg := service.Config{
 		LocalPath:      storageProvisioner.localPath,
 		NodeName:       nodeName,
 		Namespace:      namespace,
 		ServiceAccount: serviceAccount,
 	}
-	deps := provisioner.Dependencies{
+	deps := service.Dependencies{
 		Log:     logService.MustGetLogger("provisioner"),
 		KubeCli: kubecli,
 	}

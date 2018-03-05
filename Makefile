@@ -108,6 +108,7 @@ update-vendor:
 		github.com/cenkalti/backoff \
 		github.com/dchest/uniuri \
 		github.com/dgrijalva/jwt-go \
+		github.com/julienschmidt/httprouter \
 		github.com/pkg/errors \
 		github.com/prometheus/client_golang/prometheus \
 		github.com/pulcy/pulsar \
