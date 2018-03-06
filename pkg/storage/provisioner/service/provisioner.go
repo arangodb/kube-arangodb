@@ -28,24 +28,19 @@ import (
 
 	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
 )
 
 // Config for the storage provisioner
 type Config struct {
-	Address        string // Server address to listen on
-	NodeName       string
-	Namespace      string
-	ServiceAccount string
-	LocalPath      []string
+	Address  string // Server address to listen on
+	NodeName string // Name of the run I'm running now
 }
 
 // Dependencies for the storage provisioner
 type Dependencies struct {
-	Log     zerolog.Logger
-	KubeCli kubernetes.Interface
+	Log zerolog.Logger
 }
 
 // Provisioner implements a Local storage provisioner
@@ -67,12 +62,12 @@ func (p *Provisioner) Run(ctx context.Context) {
 	runServer(ctx, p.Log, p.Address, p)
 }
 
-// GetFSInfo fetches information from the filesystem containing
+// GetInfo fetches information from the filesystem containing
 // the given local path.
-func (p *Provisioner) GetFSInfo(ctx context.Context, localPath string) (provisioner.FSInfo, error) {
+func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {
 	statfs := &unix.Statfs_t{}
 	if err := unix.Statfs(localPath, statfs); err != nil {
-		return provisioner.FSInfo{}, maskAny(err)
+		return provisioner.Info{}, maskAny(err)
 	}
 
 	// Available is blocks available * fragment size
@@ -81,7 +76,7 @@ func (p *Provisioner) GetFSInfo(ctx context.Context, localPath string) (provisio
 	// Capacity is total block count * fragment size
 	capacity := int64(statfs.Blocks) * int64(statfs.Bsize)
 
-	return provisioner.FSInfo{
+	return provisioner.Info{
 		Available: available,
 		Capacity:  capacity,
 	}, nil

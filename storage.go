@@ -24,20 +24,16 @@ package main
 
 import (
 	"context"
-	goflag "flag"
-	"fmt"
+	"net"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/k8s-operator/pkg/logging"
+	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
 	"github.com/arangodb/k8s-operator/pkg/storage/provisioner/service"
 	"github.com/arangodb/k8s-operator/pkg/util/constants"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
-)
-
-const (
-	defaultProvisionerPort = 8929
 )
 
 var (
@@ -52,9 +48,7 @@ var (
 	}
 
 	storageProvisioner struct {
-		port             int
-		localPath        []string
-		storageClassName string
+		port int
 	}
 )
 
@@ -63,14 +57,12 @@ func init() {
 	cmdStorage.AddCommand(cmdStorageProvisioner)
 
 	f := cmdStorageProvisioner.Flags()
-	f.StringSliceVar(&storageProvisioner.localPath, "local-path", nil, "Local directory to provision volumes into")
-	f.StringVar(&storageProvisioner.storageClassName, "storage-class-name", "", "StorageClassName set in provisioned volumes")
-	f.IntVar(&storageProvisioner.port, "port", defaultProvisionerPort, "Port to listen on")
+	f.IntVar(&storageProvisioner.port, "port", provisioner.DefaultPort, "Port to listen on")
 }
 
 // Run the provisioner
 func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
-	goflag.CommandLine.Parse([]string{"-logtostderr"})
+	//goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
 	logService, err = logging.NewService(logLevel)
 	if err != nil {
@@ -81,20 +73,12 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	cliLog.Info().Msgf("Starting arangodb local storage provisioner, version %s build %s", projectVersion, projectBuild)
 
 	// Get environment
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
-	if len(namespace) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
-	}
-	name := os.Getenv(constants.EnvOperatorPodName)
-	if len(name) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
-	}
 	nodeName := os.Getenv(constants.EnvOperatorNodeName)
-	if len(name) == 0 {
+	if len(nodeName) == 0 {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorNodeName)
 	}
 
-	config, deps, err := newProvisionerConfigAndDeps(nodeName, namespace, name)
+	config, deps, err := newProvisionerConfigAndDeps(nodeName)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create provisioner config & dependencies")
 	}
@@ -108,26 +92,13 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 }
 
 // newProvisionerConfigAndDeps creates storage provisioner config & dependencies.
-func newProvisionerConfigAndDeps(nodeName, namespace, name string) (service.Config, service.Dependencies, error) {
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		return service.Config{}, service.Dependencies{}, maskAny(err)
-	}
-
-	serviceAccount, err := getMyPodServiceAccount(kubecli, namespace, name)
-	if err != nil {
-		return service.Config{}, service.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
-	}
-
+func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Dependencies, error) {
 	cfg := service.Config{
-		LocalPath:      storageProvisioner.localPath,
-		NodeName:       nodeName,
-		Namespace:      namespace,
-		ServiceAccount: serviceAccount,
+		Address:  net.JoinHostPort("0.0.0.0", strconv.Itoa(storageProvisioner.port)),
+		NodeName: nodeName,
 	}
 	deps := service.Dependencies{
-		Log:     logService.MustGetLogger("provisioner"),
-		KubeCli: kubecli,
+		Log: logService.MustGetLogger("provisioner"),
 	}
 
 	return cfg, deps, nil

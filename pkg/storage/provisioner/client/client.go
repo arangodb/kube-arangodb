@@ -81,19 +81,19 @@ var (
 	}
 )
 
-// GetFSInfo fetches information from the filesystem containing
+// GetInfo fetches information from the filesystem containing
 // the given local path.
-func (c *client) GetFSInfo(ctx context.Context, localPath string) (provisioner.FSInfo, error) {
+func (c *client) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {
 	input := provisioner.Request{
 		LocalPath: localPath,
 	}
-	req, err := c.newRequest("POST", "/fsinfo", input)
+	req, err := c.newRequest("POST", "/info", input)
 	if err != nil {
-		return provisioner.FSInfo{}, maskAny(err)
+		return provisioner.Info{}, maskAny(err)
 	}
-	var result provisioner.FSInfo
+	var result provisioner.Info
 	if err := c.do(ctx, req, &result); err != nil {
-		return provisioner.FSInfo{}, maskAny(err)
+		return provisioner.Info{}, maskAny(err)
 	}
 	return result, nil
 }

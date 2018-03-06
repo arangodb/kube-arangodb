@@ -48,7 +48,7 @@ var (
 // This registers a listener and waits until the process stops.
 func (o *Operator) runLocalStorages() {
 	source := cache.NewListWatchFromClient(
-		o.Dependencies.CRCli.DatabaseV1alpha().RESTClient(),
+		o.Dependencies.CRCli.StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
 		o.Config.Namespace,
 		fields.Everything())

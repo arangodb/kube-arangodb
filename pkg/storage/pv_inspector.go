@@ -27,17 +27,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// getMyImage fetched the docker image from my own pod
-func (l *LocalStorage) getMyImage() (string, v1.PullPolicy, error) {
-	log := l.deps.Log
-	ns := l.apiObject.GetNamespace()
-
-	p, err := l.deps.KubeCli.CoreV1().Pods(ns).Get(l.config.PodName, metav1.GetOptions{})
+// inspectPVs queries all PersistentVolume's and triggers a cleanup for
+// released volumes.
+// Returns the number of available PV's.
+func (ls *LocalStorage) inspectPVs() (int, error) {
+	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
 	if err != nil {
-		log.Debug().Err(err).Str("pod-name", l.config.PodName).Msg("Failed to get my own pod")
-		return "", "", maskAny(err)
+		return 0, maskAny(err)
 	}
-
-	c := p.Spec.Containers[0]
-	return c.Image, c.ImagePullPolicy, nil
+	spec := ls.apiObject.Spec
+	availableVolumes := 0
+	for _, pv := range list.Items {
+		if pv.Spec.StorageClassName != spec.StorageClass.Name {
+			// Not our storage class
+			continue
+		}
+		switch pv.Status.Phase {
+		case v1.VolumeAvailable:
+			availableVolumes++
+		case v1.VolumeReleased:
+			if ls.isOwnerOf(&pv) {
+				// Cleanup this volume
+				ls.pvCleaner.Add(pv)
+			}
+		}
+	}
+	return availableVolumes, nil
 }

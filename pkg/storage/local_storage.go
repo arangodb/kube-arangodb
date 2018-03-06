@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -59,12 +60,15 @@ type localStorageEventType string
 
 const (
 	eventArangoLocalStorageUpdated localStorageEventType = "ArangoLocalStorageUpdated"
+	eventPVCAdded                  localStorageEventType = "pvcAdded"
+	eventPVCUpdated                localStorageEventType = "pvcUpdated"
 )
 
 // localStorageEvent holds an event passed from the controller to the local storage.
 type localStorageEvent struct {
-	Type         localStorageEventType
-	LocalStorage *api.ArangoLocalStorage
+	Type                  localStorageEventType
+	LocalStorage          *api.ArangoLocalStorage
+	PersistentVolumeClaim *v1.PersistentVolumeClaim
 }
 
 const (
@@ -85,8 +89,10 @@ type LocalStorage struct {
 
 	eventsCli corev1.EventInterface
 
-	image          string
-	inspectTrigger trigger.Trigger
+	image           string
+	imagePullPolicy v1.PullPolicy
+	inspectTrigger  trigger.Trigger
+	pvCleaner       *pvCleaner
 }
 
 // New creates a new LocalStorage from the given API object.
@@ -102,9 +108,12 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*
 		eventCh:   make(chan *localStorageEvent, localStorageEventQueueSize),
 		stopCh:    make(chan struct{}),
 		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
+		pvCleaner: newPVCleaner(deps.Log, deps.KubeCli),
 	}
 
 	go ls.run()
+	go ls.listenForPvcEvents()
+	go ls.pvCleaner.Run(ls.stopCh)
 
 	return ls, nil
 }
@@ -147,12 +156,13 @@ func (ls *LocalStorage) run() {
 	//log := ls.deps.Log
 
 	// Find out my image
-	image, err := ls.getMyImage()
+	image, pullPolicy, err := ls.getMyImage()
 	if err != nil {
 		ls.failOnError(err, "Failed to get my own image")
 		return
 	}
 	ls.image = image
+	ls.imagePullPolicy = pullPolicy
 
 	// Create StorageClass
 	if err := ls.ensureStorageClass(ls.apiObject); err != nil {
@@ -166,8 +176,15 @@ func (ls *LocalStorage) run() {
 		return
 	}
 
+	// Create Service to access provisioners
+	if err := ls.ensureProvisionerService(ls.apiObject); err != nil {
+		ls.failOnError(err, "Failed to create service")
+		return
+	}
+
 	inspectionInterval := maxInspectionInterval
-	//recentInspectionErrors := 0
+	recentInspectionErrors := 0
+	var pvsNeededSince *time.Time
 	for {
 		select {
 		case <-ls.stopCh:
@@ -182,12 +199,59 @@ func (ls *LocalStorage) run() {
 					ls.failOnError(err, "Failed to handle local storage update")
 					return
 				}
+			case eventPVCAdded, eventPVCUpdated:
+				// Do an inspection of PVC's
+				ls.inspectTrigger.Trigger()
 			default:
 				panic("unknown event type" + event.Type)
 			}
 
 		case <-ls.inspectTrigger.Done():
-			// TODO
+			hasError := false
+			unboundPVCs, err := ls.inspectPVCs()
+			if err != nil {
+				hasError = true
+				ls.createEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, ls.apiObject))
+			}
+			pvsAvailable, err := ls.inspectPVs()
+			if err != nil {
+				hasError = true
+				ls.createEvent(k8sutil.NewErrorEvent("PV inspection failed", err, ls.apiObject))
+			}
+			if len(unboundPVCs) == 0 {
+				pvsNeededSince = nil
+			} else if len(unboundPVCs) > 0 {
+				createNow := false
+				if pvsNeededSince != nil && time.Since(*pvsNeededSince) > time.Second*30 {
+					// Create now
+					createNow = true
+				} else if pvsAvailable < len(unboundPVCs) {
+					// Create now
+					createNow = true
+				} else {
+					// Volumes are there, just may no be a match.
+					// Wait for that
+					if pvsNeededSince == nil {
+						now := time.Now()
+						pvsNeededSince = &now
+					}
+				}
+				if createNow {
+					ctx := context.Background()
+					if err := ls.createPVs(ctx, ls.apiObject, unboundPVCs); err != nil {
+						hasError = true
+						ls.createEvent(k8sutil.NewErrorEvent("PV creation failed", err, ls.apiObject))
+					}
+				}
+			}
+			if hasError {
+				if recentInspectionErrors == 0 {
+					inspectionInterval = minInspectionInterval
+					recentInspectionErrors++
+				}
+			} else {
+				recentInspectionErrors = 0
+			}
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection
@@ -201,7 +265,7 @@ func (ls *LocalStorage) run() {
 	}
 }
 
-// handleArangoLocalStorageUpdatedEvent is called when the deployment is updated by the user.
+// handleArangoLocalStorageUpdatedEvent is called when the local storage is updated by the user.
 func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorageEvent) error {
 	log := ls.deps.Log.With().Str("localStorage", event.LocalStorage.GetName()).Logger()
 
@@ -240,7 +304,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 
 	// Save updated spec
 	if err := ls.updateCRSpec(newAPIObject.Spec); err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+		return maskAny(fmt.Errorf("failed to update ArangoLocalStorage spec: %v", err))
 	}
 
 	// Trigger inspect
@@ -341,7 +405,7 @@ func (ls *LocalStorage) failOnError(err error, msg string) {
 // that to the API server.
 func (ls *LocalStorage) reportFailedStatus() {
 	log := ls.deps.Log
-	log.Info().Msg("deployment failed. Reporting failed reason...")
+	log.Info().Msg("local storage failed. Reporting failed reason...")
 
 	op := func() error {
 		ls.status.State = api.LocalStorageStateFailed

@@ -26,24 +26,25 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 	"github.com/arangodb/k8s-operator/pkg/util/retry"
 )
 
 // CreateCRD creates a custom resouce definition.
-func CreateCRD(clientset apiextensionsclient.Interface, crdName, rkind, rplural string, shortName ...string) error {
+func CreateCRD(clientset apiextensionsclient.Interface, groupVersion schema.GroupVersion, crdName, rkind, rplural string, shortName ...string) error {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
 		},
 		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   api.SchemeGroupVersion.Group,
-			Version: api.SchemeGroupVersion.Version,
+			Group:   groupVersion.Group,
+			Version: groupVersion.Version,
 			Scope:   apiextensionsv1beta1.NamespaceScoped,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural: rplural,

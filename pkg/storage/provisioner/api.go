@@ -24,21 +24,26 @@ package provisioner
 
 import "context"
 
+const (
+	DefaultPort = 8929
+)
+
 // API of the provisioner
 type API interface {
-	// GetFSInfo fetches information from the filesystem containing
-	// the given local path.
-	GetFSInfo(ctx context.Context, localPath string) (FSInfo, error)
+	// GetInfo fetches information from the filesystem containing
+	// the given local path on the current node.
+	GetInfo(ctx context.Context, localPath string) (Info, error)
 	// Prepare a volume at the given local path
 	Prepare(ctx context.Context, localPath string) error
 	// Remove a volume with the given local path
 	Remove(ctx context.Context, localPath string) error
 }
 
-// FSInfo holds information of a filesystem.
-type FSInfo struct {
-	Available int64 `json:"available"`
-	Capacity  int64 `json:"capacity"`
+// Info holds information of a filesystem on a node.
+type Info struct {
+	NodeName  string `json:"nodeName"`
+	Available int64  `json:"available"`
+	Capacity  int64  `json:"capacity"`
 }
 
 // Request body for API HTTP requests.

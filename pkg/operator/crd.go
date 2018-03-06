@@ -48,7 +48,7 @@ func (o *Operator) initCRD() error {
 	log := o.Dependencies.Log
 
 	log.Debug().Msg("Creating ArangoDeployment CRD")
-	if err := crd.CreateCRD(o.KubeExtCli, deplapi.ArangoDeploymentCRDName, deplapi.ArangoDeploymentResourceKind, deplapi.ArangoDeploymentResourcePlural, deplapi.ArangoDeploymentShortNames...); err != nil {
+	if err := crd.CreateCRD(o.KubeExtCli, deplapi.SchemeGroupVersion, deplapi.ArangoDeploymentCRDName, deplapi.ArangoDeploymentResourceKind, deplapi.ArangoDeploymentResourcePlural, deplapi.ArangoDeploymentShortNames...); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
 	log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
@@ -57,7 +57,7 @@ func (o *Operator) initCRD() error {
 	}
 
 	log.Debug().Msg("Creating ArangoLocalStorage CRD")
-	if err := crd.CreateCRD(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName, lsapi.ArangoLocalStorageResourceKind, lsapi.ArangoLocalStorageResourcePlural, lsapi.ArangoLocalStorageShortNames...); err != nil {
+	if err := crd.CreateCRD(o.KubeExtCli, lsapi.SchemeGroupVersion, lsapi.ArangoLocalStorageCRDName, lsapi.ArangoLocalStorageResourceKind, lsapi.ArangoLocalStorageResourcePlural, lsapi.ArangoLocalStorageShortNames...); err != nil {
 		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
 	}
 	log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")

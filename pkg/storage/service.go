@@ -23,36 +23,38 @@
 package storage
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/storage/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
-var (
-	storageClassProvisioner = api.SchemeGroupVersion.Group + "/localstorage"
-)
-
-// ensureStorageClass creates a storage class for the given local storage.
-// If such a class already exists, the create is ignored.
-func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
-	spec := apiObject.Spec.StorageClass
-	bindingMode := v1.VolumeBindingWaitForFirstConsumer
-	reclaimPolicy := corev1.PersistentVolumeReclaimRetain
-	sc := &v1.StorageClass{
+// ensureProvisionerService ensures that a service is created for accessing the
+// provisioners.
+func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStorage) error {
+	labels := k8sutil.LabelsForLocalStorage(apiObject.GetName(), roleProvisioner)
+	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: spec.Name,
+			Name:   apiObject.GetName(),
+			Labels: labels,
 		},
-		ReclaimPolicy:     &reclaimPolicy,
-		VolumeBindingMode: &bindingMode,
-		Provisioner:       storageClassProvisioner,
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:     "provisioner",
+					Protocol: v1.ProtocolTCP,
+					Port:     provisioner.DefaultPort,
+				},
+			},
+			Selector: labels,
+		},
 	}
-	if _, err := l.deps.KubeCli.StorageV1().StorageClasses().Create(sc); !k8sutil.IsAlreadyExists(err) && err != nil {
+	svc.SetOwnerReferences(append(svc.GetOwnerReferences(), apiObject.AsOwner()))
+	ns := apiObject.GetNamespace()
+	if _, err := ls.deps.KubeCli.CoreV1().Services(ns).Create(svc); err != nil && !k8sutil.IsAlreadyExists(err) {
 		return maskAny(err)
 	}
-	// TODO make default (if needed)
-
 	return nil
 }

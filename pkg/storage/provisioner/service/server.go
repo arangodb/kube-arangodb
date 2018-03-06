@@ -42,7 +42,7 @@ const (
 // runServer runs a HTTP server serving the given API
 func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisioner.API) error {
 	mux := httprouter.New()
-	mux.POST("/fsinfo", getFSInfoHandler(api))
+	mux.POST("/info", getInfoHandler(api))
 	mux.POST("/prepare", getPrepareHandler(api))
 	mux.POST("/remove", getRemoveHandler(api))
 
@@ -71,14 +71,14 @@ func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisi
 	}
 }
 
-func getFSInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		var input provisioner.Request
 		if err := parseBody(r, &input); err != nil {
 			handleError(w, err)
 		} else {
-			result, err := api.GetFSInfo(ctx, input.LocalPath)
+			result, err := api.GetInfo(ctx, input.LocalPath)
 			if err != nil {
 				handleError(w, err)
 			} else {

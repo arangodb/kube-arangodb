@@ -4,3 +4,5 @@ metadata:
   name: "example-simple-single"
 spec:
   mode: single
+  single:
+    storageClassName: my-local-ssd
