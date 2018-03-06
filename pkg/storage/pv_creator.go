@@ -158,6 +158,10 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				log.Error().Err(err).Msg("Failed to create PersistentVolume")
 				continue
 			}
+			log.Debug().
+				Str("name", pvName).
+				Str("node-name", info.NodeName).
+				Msg("Created PersistentVolume")
 			return nil
 		}
 	}

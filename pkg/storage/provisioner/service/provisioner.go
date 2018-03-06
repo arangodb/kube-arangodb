@@ -65,8 +65,12 @@ func (p *Provisioner) Run(ctx context.Context) {
 // GetInfo fetches information from the filesystem containing
 // the given local path.
 func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {
+	log := p.Log.With().Str("local-path", localPath).Logger()
+
+	log.Debug().Msg("gettting info for local path")
 	statfs := &unix.Statfs_t{}
 	if err := unix.Statfs(localPath, statfs); err != nil {
+		log.Error().Err(err).Msg("Statfs failed")
 		return provisioner.Info{}, maskAny(err)
 	}
 
@@ -76,6 +80,11 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	// Capacity is total block count * fragment size
 	capacity := int64(statfs.Blocks) * int64(statfs.Bsize)
 
+	log.Debug().
+		Str("node-name", p.NodeName).
+		Int64("capacity", capacity).
+		Int64("available", available).
+		Msg("Returning info for local path")
 	return provisioner.Info{
 		NodeName:  p.NodeName,
 		Available: available,
@@ -85,16 +94,22 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 
 // Prepare a volume at the given local path
 func (p *Provisioner) Prepare(ctx context.Context, localPath string) error {
+	log := p.Log.With().Str("local-path", localPath).Logger()
+	log.Debug().Msg("preparing local path")
+
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
+		log.Error().Err(err).Msg("Failed to clean existing directory")
 		return maskAny(err)
 	}
 	// Make sure directory exists
 	if err := os.MkdirAll(localPath, 0755); err != nil {
+		log.Error().Err(err).Msg("Failed to make directory")
 		return maskAny(err)
 	}
 	// Set access rights
 	if err := os.Chmod(localPath, 0777); err != nil {
+		log.Error().Err(err).Msg("Failed to set directory access")
 		return maskAny(err)
 	}
 	return nil
@@ -102,8 +117,12 @@ func (p *Provisioner) Prepare(ctx context.Context, localPath string) error {
 
 // Remove a volume with the given local path
 func (p *Provisioner) Remove(ctx context.Context, localPath string) error {
+	log := p.Log.With().Str("local-path", localPath).Logger()
+	log.Debug().Msg("cleanup local path")
+
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
+		log.Error().Err(err).Msg("Failed to clean directory")
 		return maskAny(err)
 	}
 	return nil
