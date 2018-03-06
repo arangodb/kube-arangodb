@@ -23,29 +23,35 @@
 package storage
 
 import (
+	"context"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
 	"github.com/arangodb/k8s-operator/pkg/util/trigger"
-	"github.com/rs/zerolog"
 )
 
 type pvCleaner struct {
-	mutex   sync.Mutex
-	log     zerolog.Logger
-	cli     kubernetes.Interface
-	items   []v1.PersistentVolume
-	trigger trigger.Trigger
+	mutex        sync.Mutex
+	log          zerolog.Logger
+	cli          kubernetes.Interface
+	items        []v1.PersistentVolume
+	trigger      trigger.Trigger
+	clientGetter func(nodeName string) (provisioner.API, error)
 }
 
 // newPVCleaner creates a new cleaner of persistent volumes.
-func newPVCleaner(log zerolog.Logger, cli kubernetes.Interface) *pvCleaner {
+func newPVCleaner(log zerolog.Logger, cli kubernetes.Interface, clientGetter func(nodeName string) (provisioner.API, error)) *pvCleaner {
 	return &pvCleaner{
-		log: log,
-		cli: cli,
+		log:          log,
+		cli:          cli,
+		clientGetter: clientGetter,
 	}
 }
 
@@ -121,5 +127,44 @@ func (c *pvCleaner) cleanFirst() (bool, error) {
 
 // clean tries to clean the given PV.
 func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
+	log := c.log.With().Str("name", pv.GetName()).Logger()
+	log.Debug().Msg("Cleaning PersistentVolume")
+
+	// Find local path
+	localSource := pv.Spec.PersistentVolumeSource.Local
+	if localSource == nil {
+		return maskAny(fmt.Errorf("PersistentVolume has no local source"))
+	}
+	localPath := localSource.Path
+
+	// Find client that serves the node
+	nodeName := pv.GetAnnotations()[nodeNameAnnotation]
+	if nodeName == "" {
+		return maskAny(fmt.Errorf("PersistentVolume has no node-name annotation"))
+	}
+	client, err := c.clientGetter(nodeName)
+	if err != nil {
+		log.Debug().Err(err).Str("node", nodeName).Msg("Failed to get client for node")
+		return maskAny(err)
+	}
+
+	// Clean volume through client
+	ctx := context.Background()
+	if err := client.Remove(ctx, localPath); err != nil {
+		log.Debug().Err(err).
+			Str("node", nodeName).
+			Str("local-path", localPath).
+			Msg("Failed to remove local path")
+		return maskAny(err)
+	}
+
+	// Remove persistent volume
+	if err := c.cli.CoreV1().PersistentVolumes().Delete(pv.GetName(), &metav1.DeleteOptions{}); err != nil {
+		log.Debug().Err(err).
+			Str("name", pv.GetName()).
+			Msg("Failed to remove PersistentVolume")
+		return maskAny(err)
+	}
+
 	return nil
 }

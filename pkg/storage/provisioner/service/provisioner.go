@@ -62,6 +62,13 @@ func (p *Provisioner) Run(ctx context.Context) {
 	runServer(ctx, p.Log, p.Address, p)
 }
 
+// GetNodeInfo fetches information from the current node.
+func (p *Provisioner) GetNodeInfo(ctx context.Context) (provisioner.NodeInfo, error) {
+	return provisioner.NodeInfo{
+		NodeName: p.NodeName,
+	}, nil
+}
+
 // GetInfo fetches information from the filesystem containing
 // the given local path.
 func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {
@@ -86,7 +93,9 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 		Int64("available", available).
 		Msg("Returning info for local path")
 	return provisioner.Info{
-		NodeName:  p.NodeName,
+		NodeInfo: provisioner.NodeInfo{
+			NodeName: p.NodeName,
+		},
 		Available: available,
 		Capacity:  capacity,
 	}, nil

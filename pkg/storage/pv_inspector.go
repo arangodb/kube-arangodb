@@ -31,6 +31,7 @@ import (
 // released volumes.
 // Returns the number of available PV's.
 func (ls *LocalStorage) inspectPVs() (int, error) {
+	log := ls.deps.Log
 	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
 	if err != nil {
 		return 0, maskAny(err)
@@ -48,7 +49,10 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 		case v1.VolumeReleased:
 			if ls.isOwnerOf(&pv) {
 				// Cleanup this volume
+				log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
 				ls.pvCleaner.Add(pv)
+			} else {
+				log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
 			}
 		}
 	}

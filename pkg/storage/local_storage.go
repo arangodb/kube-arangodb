@@ -110,8 +110,9 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*
 		eventCh:   make(chan *localStorageEvent, localStorageEventQueueSize),
 		stopCh:    make(chan struct{}),
 		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
-		pvCleaner: newPVCleaner(deps.Log, deps.KubeCli),
 	}
+
+	ls.pvCleaner = newPVCleaner(deps.Log, deps.KubeCli, ls.GetClientByNodeName)
 
 	go ls.run()
 	go ls.listenForPvcEvents()

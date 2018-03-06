@@ -30,6 +30,8 @@ const (
 
 // API of the provisioner
 type API interface {
+	// GetNodeInfo fetches information from the current node.
+	GetNodeInfo(ctx context.Context) (NodeInfo, error)
 	// GetInfo fetches information from the filesystem containing
 	// the given local path on the current node.
 	GetInfo(ctx context.Context, localPath string) (Info, error)
@@ -39,11 +41,16 @@ type API interface {
 	Remove(ctx context.Context, localPath string) error
 }
 
+// NodeInfo holds information of a node.
+type NodeInfo struct {
+	NodeName string `json:"nodeName"`
+}
+
 // Info holds information of a filesystem on a node.
 type Info struct {
-	NodeName  string `json:"nodeName"`
-	Available int64  `json:"available"`
-	Capacity  int64  `json:"capacity"`
+	NodeInfo
+	Available int64 `json:"available"`
+	Capacity  int64 `json:"capacity"`
 }
 
 // Request body for API HTTP requests.

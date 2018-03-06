@@ -81,6 +81,19 @@ var (
 	}
 )
 
+// GetNodeInfo fetches information from the current node.
+func (c *client) GetNodeInfo(ctx context.Context) (provisioner.NodeInfo, error) {
+	req, err := c.newRequest("GET", "/nodeinfo", nil)
+	if err != nil {
+		return provisioner.NodeInfo{}, maskAny(err)
+	}
+	var result provisioner.NodeInfo
+	if err := c.do(ctx, req, &result); err != nil {
+		return provisioner.NodeInfo{}, maskAny(err)
+	}
+	return result, nil
+}
+
 // GetInfo fetches information from the filesystem containing
 // the given local path.
 func (c *client) GetInfo(ctx context.Context, localPath string) (provisioner.Info, error) {

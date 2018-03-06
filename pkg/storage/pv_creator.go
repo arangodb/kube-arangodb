@@ -41,37 +41,31 @@ import (
 
 	api "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner/client"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )
 
 const (
 	defaultVolumeSize = int64(8 * 1024 * 1024 * 1024) // 8GB
+
+	// AnnProvisionedBy is the external provisioner annotation in PV object
+	AnnProvisionedBy = "pv.kubernetes.io/provisioned-by"
+)
+
+var (
+	// name of the annotation containing the node name
+	nodeNameAnnotation = api.SchemeGroupVersion.Group + "/node-name"
 )
 
 // createPVs creates a given number of PersistentVolume's.
 func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLocalStorage, unboundClaims []v1.PersistentVolumeClaim) error {
 	log := ls.deps.Log
-	// Find provisioner endpoints
-	ns := apiObject.GetNamespace()
-	listOptions := k8sutil.LocalStorageListOpt(apiObject.GetName(), roleProvisioner)
-	items, err := ls.deps.KubeCli.CoreV1().Endpoints(ns).List(listOptions)
+	// Find provisioner clients
+	clients, err := ls.createProvisionerClients()
 	if err != nil {
 		return maskAny(err)
 	}
-	addrs := createValidEndpointList(items)
-	if len(addrs) == 0 {
+	if len(clients) == 0 {
 		// No provisioners available
 		return maskAny(fmt.Errorf("No ready provisioner endpoints found"))
-	}
-	// Create clients for endpoints
-	clients := make([]provisioner.API, len(addrs))
-	for i, addr := range addrs {
-		var err error
-		clients[i], err = client.New(fmt.Sprintf("http://%s", addr))
-		if err != nil {
-			return maskAny(err)
-		}
 	}
 	// Randomize list
 	rand.Shuffle(len(clients), func(i, j int) {
@@ -133,8 +127,9 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				ObjectMeta: metav1.ObjectMeta{
 					Name: pvName,
 					Annotations: map[string]string{
-						//						AnnProvisionedBy:                      config.ProvisionerName,
+						AnnProvisionedBy:                      storageClassProvisioner,
 						v1.AlphaStorageNodeAffinityAnnotation: nodeAff,
+						nodeNameAnnotation:                    info.NodeName,
 					},
 				},
 				Spec: v1.PersistentVolumeSpec{

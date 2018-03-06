@@ -42,6 +42,7 @@ const (
 // runServer runs a HTTP server serving the given API
 func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisioner.API) error {
 	mux := httprouter.New()
+	mux.GET("/nodeinfo", getNodeInfoHandler(api))
 	mux.POST("/info", getInfoHandler(api))
 	mux.POST("/prepare", getPrepareHandler(api))
 	mux.POST("/remove", getRemoveHandler(api))
@@ -68,6 +69,18 @@ func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisi
 		log.Debug().Msg("Closing server...")
 		httpServer.Close()
 		return nil
+	}
+}
+
+func getNodeInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		ctx := r.Context()
+		result, err := api.GetNodeInfo(ctx)
+		if err != nil {
+			handleError(w, err)
+		} else {
+			sendJSON(w, http.StatusOK, result)
+		}
 	}
 }
 
