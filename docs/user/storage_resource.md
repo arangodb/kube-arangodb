@@ -28,6 +28,9 @@ This definition results in:
 - the dynamic cleanup of PersistentVolume's (created by
   the operator) after one is released.
 
+The provisioned volumes will have a capacity that matches
+the requested capacity of volume claims.
+
 ## Specification reference
 
 Below you'll find all settings of the `ArangoLocalStorage` custom resource.
