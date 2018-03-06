@@ -171,7 +171,8 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/arangodb/v1alpha \
 			$(REPOPATH)/pkg/deployment \
-			$(REPOPATH)/pkg/util/k8sutil
+			$(REPOPATH)/pkg/util/k8sutil \
+			$(REPOPATH)/pkg/util/k8sutil/test
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
