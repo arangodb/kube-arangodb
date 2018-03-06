@@ -77,6 +77,7 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	capacity := int64(statfs.Blocks) * int64(statfs.Bsize)
 
 	return provisioner.Info{
+		NodeName:  p.NodeName,
 		Available: available,
 		Capacity:  capacity,
 	}, nil
