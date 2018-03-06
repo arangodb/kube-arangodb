@@ -41,12 +41,14 @@ const (
 )
 
 // ensureDaemonSet ensures that a daemonset is created for the given local storage.
-func (l *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
+// If it already exists, it is updated.
+func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
+	log := ls.deps.Log
 	ns := apiObject.GetNamespace()
 	c := corev1.Container{
 		Name:            "provisioner",
-		Image:           l.image,
-		ImagePullPolicy: l.imagePullPolicy,
+		Image:           ls.image,
+		ImagePullPolicy: ls.imagePullPolicy,
 		Args: []string{
 			"storage",
 			"provisioner",
@@ -69,38 +71,32 @@ func (l *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error 
 		},
 	}
 	dsLabels := k8sutil.LabelsForLocalStorage(apiObject.GetName(), roleProvisioner)
-	ds := &v1.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   apiObject.GetName(),
-			Labels: dsLabels,
+	dsSpec := v1.DaemonSetSpec{
+		Selector: &metav1.LabelSelector{
+			MatchLabels: dsLabels,
 		},
-		Spec: v1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: dsLabels,
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: dsLabels,
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: dsLabels,
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					c,
 				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						c,
-					},
-					NodeSelector: apiObject.Spec.NodeSelector,
-				},
+				NodeSelector: apiObject.Spec.NodeSelector,
 			},
 		},
 	}
 	for i, lp := range apiObject.Spec.LocalPath {
 		volName := fmt.Sprintf("local-path-%d", i)
-		c := &ds.Spec.Template.Spec.Containers[0]
+		c := &dsSpec.Template.Spec.Containers[0]
 		c.VolumeMounts = append(c.VolumeMounts,
 			corev1.VolumeMount{
 				Name:      volName,
 				MountPath: lp,
 			})
 		hostPathType := corev1.HostPathDirectoryOrCreate
-		ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, corev1.Volume{
+		dsSpec.Template.Spec.Volumes = append(dsSpec.Template.Spec.Volumes, corev1.Volume{
 			Name: volName,
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
@@ -111,11 +107,50 @@ func (l *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error 
 		})
 	}
 	// Attach DS to ArangoLocalStorage
+	ds := &v1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   apiObject.GetName(),
+			Labels: dsLabels,
+		},
+		Spec: dsSpec,
+	}
 	ds.SetOwnerReferences(append(ds.GetOwnerReferences(), apiObject.AsOwner()))
 	// Create DS
-	if _, err := l.deps.KubeCli.AppsV1().DaemonSets(ns).Create(ds); !k8sutil.IsAlreadyExists(err) && err != nil {
-		return maskAny(err)
+	if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Create(ds); err != nil {
+		if k8sutil.IsAlreadyExists(err) {
+			// Already exists, update it
+		} else {
+			return maskAny(err)
+		}
+	} else {
+		// We're done
+		log.Debug().Msg("Created DaemonSet")
+		return nil
 	}
-	// TODO
-	return nil
+
+	// Update existing DS
+	attempt := 0
+	for {
+		attempt++
+
+		// Load current DS
+		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(ds.GetName(), metav1.GetOptions{})
+		if err != nil {
+			return maskAny(err)
+		}
+
+		// Update it
+		current.Spec = dsSpec
+		if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Update(current); k8sutil.IsConflict(err) && attempt < 10 {
+			// Failed to update, try again
+			continue
+		} else if err != nil {
+			ls.deps.Log.Debug().Err(err).Msg("failed to patch DaemonSet spec")
+			return maskAny(fmt.Errorf("failed to patch DaemonSet spec: %v", err))
+		} else {
+			// Update was a success
+			log.Debug().Msg("Updated DaemonSet")
+			return nil
+		}
+	}
 }
