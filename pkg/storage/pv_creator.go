@@ -154,6 +154,8 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 					VolumeMode:       &volumeMode,
 				},
 			}
+			// Attach PV to ArangoLocalStorage
+			pv.SetOwnerReferences(append(pv.GetOwnerReferences(), apiObject.AsOwner()))
 			if _, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Create(pv); err != nil {
 				log.Error().Err(err).Msg("Failed to create PersistentVolume")
 				continue

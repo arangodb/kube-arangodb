@@ -106,7 +106,6 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 			},
 		})
 	}
-	// Attach DS to ArangoLocalStorage
 	ds := &v1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   apiObject.GetName(),
@@ -114,6 +113,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		},
 		Spec: dsSpec,
 	}
+	// Attach DS to ArangoLocalStorage
 	ds.SetOwnerReferences(append(ds.GetOwnerReferences(), apiObject.AsOwner()))
 	// Create DS
 	if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Create(ds); err != nil {

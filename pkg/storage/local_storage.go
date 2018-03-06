@@ -62,12 +62,14 @@ const (
 	eventArangoLocalStorageUpdated localStorageEventType = "ArangoLocalStorageUpdated"
 	eventPVCAdded                  localStorageEventType = "pvcAdded"
 	eventPVCUpdated                localStorageEventType = "pvcUpdated"
+	eventPVUpdated                 localStorageEventType = "pvUpdated"
 )
 
 // localStorageEvent holds an event passed from the controller to the local storage.
 type localStorageEvent struct {
 	Type                  localStorageEventType
 	LocalStorage          *api.ArangoLocalStorage
+	PersistentVolume      *v1.PersistentVolume
 	PersistentVolumeClaim *v1.PersistentVolumeClaim
 }
 
@@ -113,6 +115,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*
 
 	go ls.run()
 	go ls.listenForPvcEvents()
+	go ls.listenForPvEvents()
 	go ls.pvCleaner.Run(ls.stopCh)
 
 	return ls, nil
@@ -199,7 +202,7 @@ func (ls *LocalStorage) run() {
 					ls.failOnError(err, "Failed to handle local storage update")
 					return
 				}
-			case eventPVCAdded, eventPVCUpdated:
+			case eventPVCAdded, eventPVCUpdated, eventPVUpdated:
 				// Do an inspection of PVC's
 				ls.inspectTrigger.Trigger()
 			default:
