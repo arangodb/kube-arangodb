@@ -93,6 +93,7 @@ func (l *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error 
 	}
 	for i, lp := range apiObject.Spec.LocalPath {
 		volName := fmt.Sprintf("local-path-%d", i)
+		c := &ds.Spec.Template.Spec.Containers[0]
 		c.VolumeMounts = append(c.VolumeMounts,
 			corev1.VolumeMount{
 				Name:      volName,
