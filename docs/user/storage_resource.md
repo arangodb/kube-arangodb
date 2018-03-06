@@ -35,7 +35,7 @@ Below you'll find all settings of the `ArangoLocalStorage` custom resource.
 ### `spec.storageClass.name: string`
 
 This setting specifies the name of the storage class that
-creates `PersistentVolume` will use.
+created `PersistentVolume` will use.
 
 If empty, this field defaults to the name of the `ArangoLocalStorage`
 object.
