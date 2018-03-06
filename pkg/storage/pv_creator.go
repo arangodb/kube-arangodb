@@ -82,7 +82,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 		// Find size of PVC
 		volSize := defaultVolumeSize
 		if reqStorage := claim.Spec.Resources.Requests.StorageEphemeral(); reqStorage != nil {
-			if v, ok := reqStorage.AsInt64(); ok {
+			if v, ok := reqStorage.AsInt64(); ok && v > 0 {
 				volSize = v
 			}
 		}
