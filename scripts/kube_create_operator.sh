@@ -4,6 +4,7 @@
 
 NS=$1
 IMAGE=$2
+PULLPOLICY="${PULLPOLICY:-IfNotPresent}"
 
 if [ -z $NS ]; then
     echo "Specify a namespace argument"
@@ -12,6 +13,10 @@ fi
 if [ -z $IMAGE ]; then
     echo "Specify an image argument"
     exit 1
+fi
+
+if [ ! -z $USESHA256 ]; then
+  IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE})
 fi
 
 kubectl --namespace=$NS create -f - << EOYAML
@@ -28,7 +33,7 @@ spec:
     spec:
       containers:
       - name: arangodb-operator
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: ${PULLPOLICY}
         image: ${IMAGE}
         env:
         - name: MY_POD_NAMESPACE

@@ -253,5 +253,5 @@ delete-operator:
 	kubectl delete deployment arangodb-operator --ignore-not-found
 
 redeploy-operator: delete-operator
-	$(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
+	USESHA256=1 $(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
 	kubectl get pods 
