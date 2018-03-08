@@ -82,7 +82,7 @@ pipeline {
         stage('Test') {
             steps {
                 def configs = "{params.KUBECONFIGS}".split(",")
-                def testTasks[:]
+                def testTasks = [:]
                 for (kubeconfig in configs) {
                     testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
                 }
@@ -94,7 +94,7 @@ pipeline {
     post {
         always {
             def configs = "{params.KUBECONFIGS}".split(",")
-            def cleanupTasks[:]
+            def cleanupTasks = [:]
             for (kubeconfig in configs) {
                 cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeconfig)
             }
