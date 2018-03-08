@@ -19,9 +19,9 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
-def kubeConfigRoot = "/home/jenkins/.kube/"
+def kubeConfigRoot = "/home/jenkins/.kube"
 
-def buildTestSteps(String kubeconfig) {
+def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             lock("${kubeconfig}-${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
@@ -42,7 +42,7 @@ def buildTestSteps(String kubeconfig) {
     }
 }
 
-def buildCleanupSteps(String kubeconfig) {
+def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
@@ -85,7 +85,7 @@ pipeline {
                     def configs = "${params.KUBECONFIGS}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
-                        testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
+                        testTasks["${kubeconfig}"] = buildTestSteps(kubeConfigRoot, kubeconfig)
                     }
                     parallel testTasks
                 }
@@ -99,7 +99,7 @@ pipeline {
                 def configs = "${params.KUBECONFIGS}".split(",")
                 def cleanupTasks = [:]
                 for (kubeconfig in configs) {
-                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeconfig)
+                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeConfigRoot, kubeconfig)
                 }
                 parallel cleanupTasks
             }
