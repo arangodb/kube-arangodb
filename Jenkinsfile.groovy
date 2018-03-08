@@ -72,9 +72,12 @@ pipeline {
                 timestamps {
                     withEnv([
                     "IMAGETAG=${env.GIT_COMMIT}",
+                    "LONG=${params.LONG ? 1 : 0}",
+                    "PUSHIMAGES=1",
                     ]) {
                         sh "make"
                         sh "make run-unit-tests"
+                        sh "make docker-test"
                     }
                 }
             }
