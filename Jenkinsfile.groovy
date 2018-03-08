@@ -80,14 +80,14 @@ pipeline {
             }
         }
         stage('Test') {
-            steps {
+            //steps {
                 def configs = "{params.KUBECONFIGS}".split(",")
                 def testTasks = [:]
                 for (kubeconfig in configs) {
                     testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
                 }
                 parallel testTasks
-            }
+            //}
         }
     }
 
