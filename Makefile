@@ -199,6 +199,7 @@ endif
 	kubectl create namespace $(TESTNAMESPACE)
 	$(ROOTDIR)/examples/setup-rbac.sh --namespace=$(TESTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
+	$(ROOTDIR)/scripts/kube_create_storage.sh $(TESTNAMESPACE)
 	kubectl --namespace $(TESTNAMESPACE) \
 		run arangodb-operator-test -i --rm --quiet --restart=Never \
 		--image=$(TESTIMAGE) \

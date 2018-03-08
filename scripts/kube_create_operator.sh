@@ -2,6 +2,8 @@
 
 # Create the operator deployment with custom image option
 
+set -e
+
 NS=$1
 IMAGE=$2
 PULLPOLICY="${PULLPOLICY:-IfNotPresent}"
@@ -47,4 +49,18 @@ spec:
 
 EOYAML
 
-exit $?
+# Wait until custom resources are available
+
+response=$(kubectl get crd arangodeployments.database.arangodb.com --template="non-empty" --ignore-not-found)
+while [ -z $response ]; do
+  sleep 1
+  response=$(kubectl get crd arangodeployments.database.arangodb.com --template="non-empty" --ignore-not-found)
+  echo -n .
+done
+response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
+while [ -z $response ]; do
+  sleep 1
+  response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
+  echo -n .
+done
+echo "Arango Operator deployed"
