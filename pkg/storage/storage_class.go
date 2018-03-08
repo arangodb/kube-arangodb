@@ -38,6 +38,7 @@ var (
 // ensureStorageClass creates a storage class for the given local storage.
 // If such a class already exists, the create is ignored.
 func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) error {
+	log := l.deps.Log
 	spec := apiObject.Spec.StorageClass
 	bindingMode := v1.VolumeBindingWaitForFirstConsumer
 	reclaimPolicy := corev1.PersistentVolumeReclaimRetain
@@ -49,10 +50,60 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 		VolumeBindingMode: &bindingMode,
 		Provisioner:       storageClassProvisioner,
 	}
-	if _, err := l.deps.KubeCli.StorageV1().StorageClasses().Create(sc); !k8sutil.IsAlreadyExists(err) && err != nil {
+	// Note: We do not attach the StorageClass to the apiObject (OwnerRef) because many
+	// ArangoLocalStorage resource may use the same StorageClass.
+	cli := l.deps.KubeCli.StorageV1()
+	if _, err := cli.StorageClasses().Create(sc); k8sutil.IsAlreadyExists(err) {
+		log.Debug().
+			Str("storageclass", sc.GetName()).
+			Msg("StorageClass already exists")
+	} else if err != nil {
+		log.Debug().Err(err).
+			Str("storageclass", sc.GetName()).
+			Msg("Failed to create StorageClass")
 		return maskAny(err)
+	} else {
+		log.Debug().
+			Str("storageclass", sc.GetName()).
+			Msg("StorageClass created")
 	}
-	// TODO make default (if needed)
+
+	if apiObject.Spec.StorageClass.IsDefault {
+		// UnMark current default (if any)
+		list, err := cli.StorageClasses().List(metav1.ListOptions{})
+		if err != nil {
+			log.Debug().Err(err).Msg("Listing StorageClasses failed")
+			return maskAny(err)
+		}
+		for _, scX := range list.Items {
+			if !k8sutil.StorageClassIsDefault(&scX) || scX.GetName() == sc.GetName() {
+				continue
+			}
+			// Mark storage class as non-default
+			if err := k8sutil.PatchStorageClassIsDefault(cli, scX.GetName(), false); err != nil {
+				log.Debug().
+					Err(err).
+					Str("storageclass", scX.GetName()).
+					Msg("Failed to mark StorageClass as not-default")
+				return maskAny(err)
+			}
+			log.Debug().
+				Str("storageclass", scX.GetName()).
+				Msg("Marked StorageClass as not-default")
+		}
+
+		// Mark StorageClass default
+		if err := k8sutil.PatchStorageClassIsDefault(cli, sc.GetName(), true); err != nil {
+			log.Debug().
+				Err(err).
+				Str("storageclass", sc.GetName()).
+				Msg("Failed to mark StorageClass as default")
+			return maskAny(err)
+		}
+		log.Debug().
+			Str("storageclass", sc.GetName()).
+			Msg("Marked StorageClass as default")
+	}
 
 	return nil
 }
