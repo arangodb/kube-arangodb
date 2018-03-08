@@ -45,12 +45,11 @@ def buildTestSteps(String kubeconfig) {
 def buildCleanupSteps(String kubeconfig) {
     return {
         timestamps {
-                withEnv([
-                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                ]) {
-                    sh "make cleanup-tests"
-                }
+            withEnv([
+                "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+            ]) {
+                sh "make cleanup-tests"
             }
         }
     }
