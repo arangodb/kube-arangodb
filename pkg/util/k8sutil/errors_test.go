@@ -20,15 +20,21 @@ var (
 
 func TestIsAlreadyExists(t *testing.T) {
 	assert.False(t, IsAlreadyExists(conflictError))
+	assert.False(t, IsConflict(maskAny(invalidError)))
 	assert.True(t, IsAlreadyExists(existsError))
+	assert.True(t, IsAlreadyExists(maskAny(existsError)))
 }
 
 func TestIsConflict(t *testing.T) {
 	assert.False(t, IsConflict(existsError))
+	assert.False(t, IsConflict(maskAny(invalidError)))
 	assert.True(t, IsConflict(conflictError))
+	assert.True(t, IsConflict(maskAny(conflictError)))
 }
 
 func TestIsNotFound(t *testing.T) {
 	assert.False(t, IsNotFound(invalidError))
+	assert.False(t, IsConflict(maskAny(invalidError)))
 	assert.True(t, IsNotFound(notFoundError))
+	assert.True(t, IsNotFound(maskAny(notFoundError)))
 }
