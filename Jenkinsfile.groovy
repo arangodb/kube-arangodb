@@ -19,6 +19,43 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
+def kubeConfigRoot = "/home/jenkins/.kube/"
+
+def buildTestSteps(String kubeconfig) {
+    return {
+        timestamps {
+            lock("${kubeconfig}-${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
+                withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                    withEnv([
+                    "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                    "IMAGETAG=${env.GIT_COMMIT}",
+                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                    "LONG=${params.LONG ? 1 : 0}",
+                    "PUSHIMAGES=1",
+                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    ]) {
+                        sh "make run-tests"
+                    }
+                }
+            }
+        }
+    }
+}
+
+def buildCleanupSteps(String kubeconfig) {
+    return {
+        timestamps {
+                withEnv([
+                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                ]) {
+                    sh "make cleanup-tests"
+                }
+            }
+        }
+    }
+}
+
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
@@ -26,7 +63,7 @@ pipeline {
     agent any
     parameters {
       booleanParam(name: 'LONG', defaultValue: false, description: 'Execute long running tests')
-      string(name: 'KUBECONFIG', defaultValue: '/home/jenkins/.kube/scw-183a3b', description: 'KUBECONFIG controls which k8s cluster is used', )
+      string(name: 'KUBECONFIGS', defaultValue: 'scw-183a3b,c11', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
@@ -45,36 +82,24 @@ pipeline {
         }
         stage('Test') {
             steps {
-                timestamps {
-                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
-                        withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
-                            withEnv([
-                            "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
-                            "IMAGETAG=${env.GIT_COMMIT}",
-                            "KUBECONFIG=${params.KUBECONFIG}",
-                            "LONG=${params.LONG ? 1 : 0}",
-                            "PUSHIMAGES=1",
-                            "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                            ]) {
-                                sh "make run-tests"
-                            }
-                        }
-                    }
+                def configs = "{params.KUBECONFIGS}".split(",")
+                def testTasks[:]
+                for (kubeconfig in configs) {
+                    testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
                 }
+                parallel testTasks
             }
         }
     }
 
     post {
         always {
-            timestamps {
-                withEnv([
-                    "KUBECONFIG=${params.KUBECONFIG}",
-                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                ]) {
-                    sh "make cleanup-tests"
-                }
+            def configs = "{params.KUBECONFIGS}".split(",")
+            def cleanupTasks[:]
+            for (kubeconfig in configs) {
+                cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeconfig)
             }
+            parallel cleanupTasks
         }
         failure {
             notifySlack('FAILURE')
