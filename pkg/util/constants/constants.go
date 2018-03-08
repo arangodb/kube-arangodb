@@ -23,6 +23,7 @@
 package constants
 
 const (
+	EnvOperatorNodeName     = "MY_NODE_NAME"
 	EnvOperatorPodName      = "MY_POD_NAME"
 	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
 

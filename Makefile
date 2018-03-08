@@ -108,6 +108,7 @@ update-vendor:
 		github.com/cenkalti/backoff \
 		github.com/dchest/uniuri \
 		github.com/dgrijalva/jwt-go \
+		github.com/julienschmidt/httprouter \
 		github.com/pkg/errors \
 		github.com/prometheus/client_golang/prometheus \
 		github.com/pulcy/pulsar \
@@ -130,7 +131,7 @@ update-generated: $(GOBUILDDIR)
 		"all" \
 		"github.com/arangodb/k8s-operator/pkg/generated" \
 		"github.com/arangodb/k8s-operator/pkg/apis" \
-		"arangodb:v1alpha" \
+		"arangodb:v1alpha storage:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -252,5 +253,5 @@ delete-operator:
 	kubectl delete deployment arangodb-operator --ignore-not-found
 
 redeploy-operator: delete-operator
-	$(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
+	USESHA256=1 $(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
 	kubectl get pods 

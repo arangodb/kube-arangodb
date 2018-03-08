@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	storage_v1alpha "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -59,6 +60,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=database.arangodb.com, Version=v1alpha
 	case v1alpha.SchemeGroupVersion.WithResource("arangodeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1alpha().ArangoDeployments().Informer()}, nil
+
+		// Group=storage.arangodb.com, Version=v1alpha
+	case storage_v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha().ArangoLocalStorages().Informer()}, nil
 
 	}
 

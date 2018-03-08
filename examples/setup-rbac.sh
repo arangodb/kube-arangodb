@@ -33,6 +33,12 @@ rules:
   verbs:
   - "*"
 - apiGroups:
+  - storage.arangodb.com
+  resources:
+  - arangolocalstorages
+  verbs:
+  - "*"
+- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
@@ -44,6 +50,7 @@ rules:
   - pods
   - services
   - endpoints
+  - persistentvolumes
   - persistentvolumeclaims
   - events
   - secrets
@@ -53,6 +60,13 @@ rules:
   - apps
   resources:
   - deployments
+  - daemonsets
+  verbs:
+  - "*"
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
   verbs:
   - "*"
 EOYAML

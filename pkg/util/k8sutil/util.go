@@ -46,9 +46,28 @@ func LabelsForDeployment(deploymentName, role string) map[string]string {
 	return l
 }
 
+// LabelsForLocalStorage returns a map of labels, given to all resources for given local storage name
+func LabelsForLocalStorage(localStorageName, role string) map[string]string {
+	l := map[string]string{
+		"arango_local_storage": localStorageName,
+		"app": "arangodb",
+	}
+	if role != "" {
+		l["role"] = role
+	}
+	return l
+}
+
 // DeploymentListOpt creates a ListOptions matching all labels for the given deployment name.
 func DeploymentListOpt(deploymentName string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(LabelsForDeployment(deploymentName, "")).String(),
+	}
+}
+
+// LocalStorageListOpt creates a ListOptions matching all labels for the given local storage name.
+func LocalStorageListOpt(localStorageName, role string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(LabelsForLocalStorage(localStorageName, role)).String(),
 	}
 }
