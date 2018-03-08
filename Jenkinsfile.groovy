@@ -80,25 +80,29 @@ pipeline {
             }
         }
         stage('Test') {
-            //steps {
-                def configs = "{params.KUBECONFIGS}".split(",")
-                def testTasks = [:]
-                for (kubeconfig in configs) {
-                    testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
+            steps {
+                script {
+                    def configs = "{params.KUBECONFIGS}".split(",")
+                    def testTasks = [:]
+                    for (kubeconfig in configs) {
+                        testTasks["${kubeconfig}"] = buildTestSteps(kubeconfig)
+                    }
+                    parallel testTasks
                 }
-                parallel testTasks
-            //}
+            }
         }
     }
 
     post {
         always {
-            def configs = "{params.KUBECONFIGS}".split(",")
-            def cleanupTasks = [:]
-            for (kubeconfig in configs) {
-                cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeconfig)
+            script {
+                def configs = "{params.KUBECONFIGS}".split(",")
+                def cleanupTasks = [:]
+                for (kubeconfig in configs) {
+                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeconfig)
+                }
+                parallel cleanupTasks
             }
-            parallel cleanupTasks
         }
         failure {
             notifySlack('FAILURE')
