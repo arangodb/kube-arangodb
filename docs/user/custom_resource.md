@@ -144,7 +144,7 @@ a standard CA certificate + private key used to sign certificates for individual
 ArangoDB servers.
 The default value is empty. TBD
 
-If you specify a name of a `Secret` that does not exist, a CA certificate + key is created
+If you specify a name of a `Secret` that does not exist, a self-signed CA certificate + key is created
 and stored in a `Secret` with given name.
 
 The specified `Secret`, must contain the following data fields:
@@ -220,7 +220,7 @@ ArangoSync master servers.
 
 When no name is specified, it defaults to `<deployment-name>-sync-ca`.
 
-If you specify a name of a `Secret` that does not exist, a CA certificate + key is created
+If you specify a name of a `Secret` that does not exist, a self-signed CA certificate + key is created
 and stored in a `Secret` with given name.
 
 The specified `Secret`, must contain the following data fields:
