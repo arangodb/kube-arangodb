@@ -2,8 +2,6 @@
 
 # Create the local storage in the cluster if the cluster needs it.
 
-set -e
-
 NS=$1
 
 if [ -z $NS ]; then
@@ -18,7 +16,7 @@ eval $(kubectl get configmap $mapname -n kube-system --ignore-not-found --templa
 
 if [ "${REQUIRE_LOCAL_STORAGE}" = "1" ]; then
   echo "Preparing local storage"
-  kubectl apply -n $NS -f examples/arango-local-storage.yaml
+  kubectl apply -n $NS -f examples/arango-local-storage.yaml || exit 1
 else
   echo "No local storage needed for this cluster"
 fi

@@ -2,8 +2,6 @@
 
 # Create the operator deployment with custom image option
 
-set -e
-
 NS=$1
 IMAGE=$2
 PULLPOLICY="${PULLPOLICY:-IfNotPresent}"
@@ -21,7 +19,7 @@ if [ ! -z $USESHA256 ]; then
   IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE})
 fi
 
-kubectl --namespace=$NS create -f - << EOYAML
+config=$(cat << EOYAML
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -48,6 +46,8 @@ spec:
               fieldPath: metadata.name
 
 EOYAML
+)
+echo "$config" | kubectl --namespace=$NS create -f - || exit 1
 
 # Wait until custom resources are available
 
