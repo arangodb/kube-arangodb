@@ -7,4 +7,5 @@
 - [Scaling](./scaling.md)
 - [Services & Load balancer](./services_and_loadbalancer.md)
 - [Storage](./storage.md)
+- [Storage Resource](./storage_resource.md)
 - [Upgrading](./upgrading.md)
