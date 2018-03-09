@@ -65,6 +65,9 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	}*/
 	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
 	scheme := "tcp"
+	if deplSpec.IsSecure() {
+		scheme = "ssl"
+	}
 	options = append(options,
 		optionPair{"--server.endpoint", fmt.Sprintf("%s://%s:%d", scheme, listenAddr, k8sutil.ArangoPort)},
 	)
@@ -93,23 +96,23 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		optionPair{"--log.level", "INFO"},
 	)
 
-	// SSL
-	/*if bsCfg.SslKeyFile != "" {
-		sslSection := &configSection{
-			Name: "ssl",
-			Settings: map[string]string{
-				"keyfile": bsCfg.SslKeyFile,
-			},
-		}
-		if bsCfg.SslCAFile != "" {
-			sslSection.Settings["cafile"] = bsCfg.SslCAFile
-		}
-		config = append(config, sslSection)
-	}*/
+	// TLS
+	if deplSpec.IsSecure() {
+		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+		options = append(options,
+			optionPair{"--ssl.keyfile", keyPath},
+		)
+		/*if bsCfg.SslKeyFile != "" {
+			if bsCfg.SslCAFile != "" {
+				sslSection.Settings["cafile"] = bsCfg.SslCAFile
+			}
+			config = append(config, sslSection)
+		}*/
+	}
 
 	// RocksDB
 	if deplSpec.RocksDB.IsEncrypted() {
-		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, "key")
+		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
 		options = append(options,
 			optionPair{"--rocksdb.encryption-keyfile", keyPath},
 		)
@@ -298,6 +301,7 @@ func (d *Deployment) createReadinessProbe(apiObject *api.ArangoDeployment, group
 // ensurePods creates all Pods listed in member status
 func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 	kubecli := d.deps.KubeCli
+	log := d.deps.Log
 	ns := apiObject.GetNamespace()
 
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
@@ -318,6 +322,18 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if err != nil {
 					return maskAny(err)
 				}
+				tlsKeyfileSecretName := ""
+				if apiObject.Spec.IsSecure() {
+					tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
+					serverNames := []string{
+						k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
+						k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+					}
+					owner := apiObject.AsOwner()
+					if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, apiObject.Spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+						return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+					}
+				}
 				rocksdbEncryptionSecretName := ""
 				if apiObject.Spec.RocksDB.IsEncrypted() {
 					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.KeySecretName
@@ -331,7 +347,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, rocksdbEncryptionSecretName); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {

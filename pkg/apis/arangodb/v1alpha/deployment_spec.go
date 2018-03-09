@@ -92,8 +92,8 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	}
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
-	s.TLS.SetDefaults()
-	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy, deploymentName+"-sync-jwt")
+	s.TLS.SetDefaults("")
+	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy, deploymentName+"-sync-jwt", deploymentName+"-sync-ca")
 	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode)
 	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents(), s.Mode)
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode)

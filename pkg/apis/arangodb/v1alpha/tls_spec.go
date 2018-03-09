@@ -76,7 +76,10 @@ func (s TLSSpec) Validate() error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *TLSSpec) SetDefaults() {
+func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
+	if s.CASecretName == "" {
+		s.CASecretName = defaultCASecretName
+	}
 	if s.TTL == 0 {
 		s.TTL = defaultTLSTTL
 	}

@@ -32,4 +32,9 @@ const (
 
 	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
 	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
+
+	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
+	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key
+
+	SecretTLSKeyfile = "tls.keyfile" // Key in Secret.data used to store a PEM encoded TLS certificate in the format used by ArangoDB (`--ssl.keyfile`)
 )
