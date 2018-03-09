@@ -25,3 +25,4 @@ kubectl create configmap $mapname -n kube-system --from-env-file=$configfile || 
 
 echo Stored configuration:
 cat $configfile
+rm $configfile
