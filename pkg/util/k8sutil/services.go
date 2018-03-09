@@ -61,7 +61,8 @@ func CreateHeadlessService(kubecli kubernetes.Interface, deployment metav1.Objec
 		},
 	}
 	publishNotReadyAddresses := false
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", ports, publishNotReadyAddresses, owner); err != nil {
+	sessionAffinity := v1.ServiceAffinityNone
+	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
 		return "", maskAny(err)
 	}
 	return svcName, nil
@@ -87,7 +88,8 @@ func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1
 		role = "coordinator"
 	}
 	publishNotReadyAddresses := true
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, ports, publishNotReadyAddresses, owner); err != nil {
+	sessionAffinity := v1.ServiceAffinityClientIP
+	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
 		return "", maskAny(err)
 	}
 	return svcName, nil
@@ -107,7 +109,8 @@ func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment meta
 		},
 	}
 	publishNotReadyAddresses := true
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", "syncmaster", ports, publishNotReadyAddresses, owner); err != nil {
+	sessionAffinity := v1.ServiceAffinityNone
+	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", "syncmaster", ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
 		return "", maskAny(err)
 	}
 	return svcName, nil
@@ -116,7 +119,8 @@ func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment meta
 // createService prepares and creates a service in k8s.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
-func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, clusterIP, role string, ports []v1.ServicePort, publishNotReadyAddresses bool, owner metav1.OwnerReference) error {
+func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, clusterIP, role string,
+	ports []v1.ServicePort, publishNotReadyAddresses bool, sessionAffinity v1.ServiceAffinity, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -134,6 +138,7 @@ func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, cl
 			Selector:                 labels,
 			ClusterIP:                clusterIP,
 			PublishNotReadyAddresses: publishNotReadyAddresses,
+			SessionAffinity:          sessionAffinity,
 		},
 	}
 	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
