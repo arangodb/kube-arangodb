@@ -2,8 +2,6 @@
 
 # Sets the configuration of the cluster in a ConfigMap in kube-system.
 
-set -e
-
 cluster=$(kubectl config current-context)
 echo "Configuring cluster $cluster"
 
@@ -23,7 +21,7 @@ cat <<EOF > $configfile
 REQUIRE_LOCAL_STORAGE=${REQUIRE_LOCAL_STORAGE}
 EOF
 kubectl delete configmap $mapname -n kube-system --ignore-not-found 
-kubectl create configmap $mapname -n kube-system --from-env-file=$configfile
+kubectl create configmap $mapname -n kube-system --from-env-file=$configfile || exit 1
 
 echo Stored configuration:
 cat $configfile
