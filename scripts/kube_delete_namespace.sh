@@ -10,8 +10,12 @@ if [ -z $NS ]; then
 fi
 
 kubectl delete namespace $NS --now --ignore-not-found
-response=$(kubectl get namespace $NS --template="non-empty" --ignore-not-found)
-while [ ! -z $response ]; do
-    sleep 1
-    response=$(kubectl get namespace $NS --template="non-empty" --ignore-not-found)
+
+# Wait until its really gone
+while :; do
+  response=$(kubectl get namespace $NS --template="non-empty" --ignore-not-found)
+  if [ -z $response ]; then
+    break
+  fi
+  sleep 0.5
 done
