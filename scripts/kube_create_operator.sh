@@ -51,16 +51,22 @@ echo "$config" | kubectl --namespace=$NS create -f - || exit 1
 
 # Wait until custom resources are available
 
-response=$(kubectl get crd arangodeployments.database.arangodb.com --template="non-empty" --ignore-not-found)
-while [ -z $response ]; do
-  sleep 1
+while :; do
   response=$(kubectl get crd arangodeployments.database.arangodb.com --template="non-empty" --ignore-not-found)
-  echo -n .
-done
-response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
-while [ -z $response ]; do
+  if [ ! -z $response ]; then
+    break
+  fi
   sleep 1
-  response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
   echo -n .
 done
+
+while :; do
+  response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
+  if [ ! -z $response ]; then
+    break
+  fi
+  sleep 1
+  echo -n .
+done
+
 echo "Arango Operator deployed"
