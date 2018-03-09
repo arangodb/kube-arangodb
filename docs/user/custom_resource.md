@@ -137,34 +137,38 @@ and stored in a `Secret` with given name.
 Changing a JWT token results in stopping the entire cluster
 and restarting it.
 
-### `spec.ssl.keySecretName: string`
+### `spec.tls.caSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
-a PEM encoded server certificate + private key used for all TLS connections
-of the ArangoDB servers.
-The default value is empty.
+a standard CA certificate + private key used to sign certificates for individual
+ArangoDB servers.
+The default value is empty. TBD
 
-If you specify a name of a `Secret` that does not exist, a certificate + key is created
-using the values of `spec.ssl.serverName` & `spec.ssl.organizationName`
+If you specify a name of a `Secret` that does not exist, a CA certificate + key is created
 and stored in a `Secret` with given name.
 
-### `spec.ssl.organizationName: string`
+The specified `Secret`, must contain the following data fields:
 
-This setting specifies the name of an organization that is put in an automatically
-generated SSL certificate (see `spec.ssl.keySecretName`).
+- `ca.crt` PEM encoded public key of the CA certificate
+- `ca.key` PEM encoded private key of the CA certificate
+
+### `spec.tls.altNames: []string`
+
+This setting specifies a list of alternate names that will be added to all generated
+certificates. These names can be DNS names or email addresses.
 The default value is empty.
 
-### `spec.ssl.serverName: string`
+### `spec.tls.ttl: duration`
 
-This setting specifies the name of a server that is put in an automatically
-generated SSL certificate (see `spec.ssl.keySecretName`).
-Besides this name, the internal DNS names of all ArangoDB servers are added
-to the list of valid hostnames of the certificate. It is therefore not possible
-to use this feature when scaling the cluster to more servers, since the newly
-added servers will not be listed in the certificate.
-The default value is empty.
+This setting specifies the time to live of all generated
+server certificates.
+The default value is `2160h` (about 3 month).
 
-**TODO Really think this through. Restriction does not sound right.**
+When the server certificate is about to expire, it will be automatically replaced
+by a new one and the affected server will be restarted.
+
+Note: The time to live of the CA certificate (when created automatically)
+will be set to 10 years.
 
 ### `spec.sync.enabled: bool`
 
@@ -208,12 +212,26 @@ Possible values are:
 
 - `direct` (default) for direct HTTP connections between the 2 data centers.
 
-### `spec.sync.ssl.keySecretName: string`
+### `spec.sync.tls.caSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
-a PEM encoded server certificate + private key used for the TLS connections
-of all ArangoSync master servers.
-This is a required setting when `spec.sync.enabled` is `true`.
+a standard CA certificate + private key used to sign certificates for individual
+ArangoSync master servers.
+
+When no name is specified, it defaults to `<deployment-name>-sync-ca`.
+
+If you specify a name of a `Secret` that does not exist, a CA certificate + key is created
+and stored in a `Secret` with given name.
+
+The specified `Secret`, must contain the following data fields:
+
+- `ca.crt` PEM encoded public key of the CA certificate
+- `ca.key` PEM encoded private key of the CA certificate
+
+### `spec.sync.tls.altNames: []string`
+
+This setting specifies a list of alternate names that will be added to all generated
+certificates. These names can be DNS names or email addresses.
 The default value is empty.
 
 ### `spec.sync.monitoring.tokenSecretName: string`
