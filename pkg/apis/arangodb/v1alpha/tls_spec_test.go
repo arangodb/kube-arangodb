@@ -49,7 +49,7 @@ func TestTLSSpecIsSecure(t *testing.T) {
 
 func TestTLSSpecSetDefaults(t *testing.T) {
 	def := func(spec TLSSpec) TLSSpec {
-		spec.SetDefaults()
+		spec.SetDefaults("")
 		return spec
 	}
 

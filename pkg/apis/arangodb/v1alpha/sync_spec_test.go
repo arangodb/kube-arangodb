@@ -47,7 +47,7 @@ func TestSyncSpecValidate(t *testing.T) {
 
 func TestSyncSpecSetDefaults(t *testing.T) {
 	def := func(spec SyncSpec) SyncSpec {
-		spec.SetDefaults("test-image", v1.PullAlways, "test-jwt")
+		spec.SetDefaults("test-image", v1.PullAlways, "test-jwt", "test-ca")
 		return spec
 	}
 
