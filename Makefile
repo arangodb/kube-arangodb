@@ -28,7 +28,7 @@ DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 
 ifndef LOCALONLY 
-	PUSHIMAGE := 1
+	PUSHIMAGES := 1
 	IMAGESHA256 := true
 else
 	IMAGESHA256 := false
