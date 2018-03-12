@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -42,7 +43,7 @@ const (
 
 // createCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, namespace string, ownerRef *metav1.OwnerReference) error {
+func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
 	dnsNames, ipAddresses, emailAddress, err := spec.GetAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
@@ -50,6 +51,7 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 	}
 
 	options := certificates.CreateCertificateOptions{
+		CommonName:     fmt.Sprintf("%s Root Certificate", deploymentName),
 		Hosts:          append(dnsNames, ipAddresses...),
 		EmailAddresses: emailAddress,
 		ValidFrom:      time.Now(),
@@ -93,6 +95,7 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 	}
 
 	options := certificates.CreateCertificateOptions{
+		CommonName:     serverNames[0],
 		Hosts:          append(append(serverNames, dnsNames...), ipAddresses...),
 		EmailAddresses: emailAddress,
 		ValidFrom:      time.Now(),

@@ -91,7 +91,8 @@ func (d *Deployment) ensureCACertificateSecret(spec api.TLSSpec) error {
 	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.CASecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		owner := d.apiObject.AsOwner()
-		if err := createCACertificate(d.deps.Log, kubecli.CoreV1(), spec, ns, &owner); k8sutil.IsAlreadyExists(err) {
+		deploymentName := d.apiObject.GetName()
+		if err := createCACertificate(d.deps.Log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
