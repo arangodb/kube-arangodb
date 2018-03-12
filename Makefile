@@ -184,8 +184,8 @@ endif
 # Manifests 
 
 .PHONY: manifests
-manifests:
-	go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
+manifests: $(GOBUILDDIR)
+	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
 		--output=$(MANIFESTPATH) \
 		--image=$(OPERATORIMAGE) \
 		--image-sha256=$(IMAGESHA256) \
