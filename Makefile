@@ -233,8 +233,10 @@ ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 	docker push $(TESTIMAGE)
 endif
+ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
+endif
 	kubectl apply -f $(MANIFESTPATH)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	kubectl --namespace $(DEPLOYMENTNAMESPACE) \
