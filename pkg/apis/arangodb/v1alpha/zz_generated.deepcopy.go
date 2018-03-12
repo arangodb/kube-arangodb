@@ -155,7 +155,7 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	out.RocksDB = in.RocksDB
 	out.Authentication = in.Authentication
 	in.TLS.DeepCopyInto(&out.TLS)
-	out.Sync = in.Sync
+	in.Sync.DeepCopyInto(&out.Sync)
 	in.Single.DeepCopyInto(&out.Single)
 	in.Agents.DeepCopyInto(&out.Agents)
 	in.DBServers.DeepCopyInto(&out.DBServers)
@@ -362,6 +362,7 @@ func (in *ServerGroupSpec) DeepCopy() *ServerGroupSpec {
 func (in *SyncSpec) DeepCopyInto(out *SyncSpec) {
 	*out = *in
 	out.Authentication = in.Authentication
+	in.TLS.DeepCopyInto(&out.TLS)
 	out.Monitoring = in.Monitoring
 	return
 }
