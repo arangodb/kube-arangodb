@@ -34,7 +34,7 @@ func TestSimpleSingle(t *testing.T) {
 	// Wait for deployment to be ready
 	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
 	if err != nil {
-		t.Errorf("Deployment not running in time: %v", err)
+		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Create a database client
@@ -75,7 +75,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 	// Wait for deployment to be ready
 	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
 	if err != nil {
-		t.Errorf("Deployment not running in time: %v", err)
+		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Create a database client
@@ -116,7 +116,7 @@ func TestSimpleCluster(t *testing.T) {
 	// Wait for deployment to be ready
 	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
 	if err != nil {
-		t.Errorf("Deployment not running in time: %v", err)
+		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Create a database client
