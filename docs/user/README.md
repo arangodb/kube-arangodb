@@ -7,5 +7,6 @@
 - [Scaling](./scaling.md)
 - [Services & Load balancer](./services_and_loadbalancer.md)
 - [Storage](./storage.md)
+- [Storage Resource](./storage_resource.md)
 - [TLS](./tls.md)
 - [Upgrading](./upgrading.md)

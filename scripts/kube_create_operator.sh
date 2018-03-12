@@ -19,7 +19,7 @@ if [ ! -z $USESHA256 ]; then
   IMAGE=$(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE})
 fi
 
-kubectl --namespace=$NS create -f - << EOYAML
+config=$(cat << EOYAML
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -46,5 +46,27 @@ spec:
               fieldPath: metadata.name
 
 EOYAML
+)
+echo "$config" | kubectl --namespace=$NS create -f - || exit 1
 
-exit $?
+# Wait until custom resources are available
+
+while :; do
+  response=$(kubectl get crd arangodeployments.database.arangodb.com --template="non-empty" --ignore-not-found)
+  if [ ! -z $response ]; then
+    break
+  fi
+  sleep 1
+  echo -n .
+done
+
+while :; do
+  response=$(kubectl get crd arangolocalstorages.storage.arangodb.com --template="non-empty" --ignore-not-found)
+  if [ ! -z $response ]; then
+    break
+  fi
+  sleep 1
+  echo -n .
+done
+
+echo "Arango Operator deployed"
