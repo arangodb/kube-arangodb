@@ -38,7 +38,7 @@ import (
 
 const (
 	caTTL         = time.Hour * 24 * 365 * 10 // 10 year
-	tlsECDSACurve = P256                      // This curve is the default that ArangoDB accepts and plenty strong
+	tlsECDSACurve = "P256"                    // This curve is the default that ArangoDB accepts and plenty strong
 )
 
 // createCACertificate creates a CA certificate and stores it in a secret with name
