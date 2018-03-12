@@ -44,6 +44,7 @@ const (
 )
 
 type CreateCertificateOptions struct {
+	CommonName     string        // Common name set in the certificate. If not specified, defaults to first email address, then first host and if all not set 'ArangoDB'.
 	Hosts          []string      // Comma-separated hostnames and IPs to generate a certificate for
 	EmailAddresses []string      // List of email address to include in the certificate as alternative name
 	ValidFrom      time.Time     // Creation data of the certificate
@@ -92,8 +93,10 @@ func CreateCertificate(options CreateCertificateOptions, ca *CA) (string, string
 		return "", "", maskAny(fmt.Errorf("failed to generate serial number: %v", err))
 	}
 
-	commonName := "arangosync"
-	if len(options.EmailAddresses) > 0 {
+	commonName := "ArangoDB"
+	if options.CommonName != "" {
+		commonName = options.CommonName
+	} else if len(options.EmailAddresses) > 0 {
 		commonName = options.EmailAddresses[0]
 	} else if len(options.Hosts) > 0 {
 		commonName = options.Hosts[0]

@@ -36,8 +36,8 @@ import (
 )
 
 const (
-	caTTL             = time.Hour * 24 * 365 * 10 // 10 year
-	defaultECDSACurve = "P256"
+	caTTL         = time.Hour * 24 * 365 * 10 // 10 year
+	tlsECDSACurve = "P256"                    // This curve is the default that ArangoDB accepts and plenty strong
 )
 
 // createCACertificate creates a CA certificate and stores it in a secret with name
@@ -55,7 +55,7 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 		ValidFrom:      time.Now(),
 		ValidFor:       caTTL,
 		IsCA:           true,
-		ECDSACurve:     defaultECDSACurve,
+		ECDSACurve:     tlsECDSACurve,
 	}
 	cert, priv, err := certificates.CreateCertificate(options, nil)
 	if err != nil {
@@ -98,7 +98,7 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 		ValidFrom:      time.Now(),
 		ValidFor:       spec.TTL,
 		IsCA:           false,
-		ECDSACurve:     defaultECDSACurve,
+		ECDSACurve:     tlsECDSACurve,
 	}
 	cert, priv, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
