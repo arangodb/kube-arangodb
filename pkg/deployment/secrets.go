@@ -40,6 +40,16 @@ func (d *Deployment) createSecrets(apiObject *api.ArangoDeployment) error {
 			return maskAny(err)
 		}
 	}
+	if apiObject.Spec.IsSecure() {
+		if err := d.ensureCACertificateSecret(apiObject.Spec.TLS); err != nil {
+			return maskAny(err)
+		}
+	}
+	if apiObject.Spec.Sync.Enabled {
+		if err := d.ensureCACertificateSecret(apiObject.Spec.Sync.TLS); err != nil {
+			return maskAny(err)
+		}
+	}
 	return nil
 }
 
@@ -59,6 +69,30 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 		// Create secret
 		owner := d.apiObject.AsOwner()
 		if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
+			// Secret added while we tried it also
+			return nil
+		} else if err != nil {
+			// Failed to create secret
+			return maskAny(err)
+		}
+	} else if err != nil {
+		// Failed to get secret for other reasons
+		return maskAny(err)
+	}
+	return nil
+}
+
+// ensureCACertificateSecret checks if a secret with given name exists in the namespace
+// of the deployment. If not, it will add such a secret with a generated CA certificate.
+// JWT token.
+func (d *Deployment) ensureCACertificateSecret(spec api.TLSSpec) error {
+	kubecli := d.deps.KubeCli
+	ns := d.apiObject.GetNamespace()
+	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.CASecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		// Secret not found, create it
+		owner := d.apiObject.AsOwner()
+		deploymentName := d.apiObject.GetName()
+		if err := createCACertificate(d.deps.Log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {

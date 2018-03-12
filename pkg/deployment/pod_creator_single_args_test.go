@@ -58,6 +58,36 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		)
 	}
 
+	// Default+TLS deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			Spec: api.DeploymentSpec{
+				Mode: api.DeploymentModeSingle,
+				TLS: api.TLSSpec{
+					CASecretName: "test-ca",
+				},
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		assert.Equal(t,
+			[]string{
+				"--database.directory=/data",
+				"--foxx.queues=true",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=true",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
 	// Default deployment with mmfiles
 	{
 		apiObject := &api.ArangoDeployment{
