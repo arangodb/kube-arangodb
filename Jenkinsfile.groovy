@@ -37,6 +37,7 @@ pipeline {
                 timestamps {
                     withEnv([
                     "IMAGETAG=${env.GIT_COMMIT}",
+                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                     ]) {
                         sh "make"
@@ -51,12 +52,12 @@ pipeline {
                     lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
                         withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                             withEnv([
+                            "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                             "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                             "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
                             "IMAGETAG=${env.GIT_COMMIT}",
                             "KUBECONFIG=${params.KUBECONFIG}",
                             "LONG=${params.LONG ? 1 : 0}",
-                            "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                             ]) {
                                 sh "make run-tests"
                             }
