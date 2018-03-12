@@ -1,0 +1,6 @@
+#!/bin/sh
+PROJDIR=$(cd `dirname $0`/.. && pwd)
+
+echo "Installing gometalinter and linters..."
+go get github.com/alecthomas/gometalinter
+gometalinter --install
