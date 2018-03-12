@@ -1,0 +1,9 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "example-simple-cluster-tls"
+spec:
+  mode: cluster
+  tls:
+    caSecretName: example-simple-cluster-tls
+    altNames: ["kube-01", "kube-02", "kube-03"]

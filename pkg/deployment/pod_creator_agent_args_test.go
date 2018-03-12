@@ -74,6 +74,52 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		)
 	}
 
+	// Default+TLS deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "name",
+				Namespace: "ns",
+			},
+			Spec: api.DeploymentSpec{
+				Mode: api.DeploymentModeCluster,
+				TLS: api.TLSSpec{
+					CASecretName: "test-ca",
+				},
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		agents := api.MemberStatusList{
+			api.MemberStatus{ID: "a1"},
+			api.MemberStatus{ID: "a2"},
+			api.MemberStatus{ID: "a3"},
+		}
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, apiObject.Spec.Agents, agents, "a1")
+		assert.Equal(t,
+			[]string{
+				"--agency.activate=true",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
+				"--cluster.my-id=a1",
+				"--database.directory=/data",
+				"--foxx.queues=false",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=false",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
 	// No authentication, mmfiles
 	{
 		apiObject := &api.ArangoDeployment{
