@@ -30,9 +30,11 @@ import (
 
 const (
 	arangodVolumeName               = "arangod-data"
+	tlsKeyfileVolumeName            = "tls-keyfile"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
+	TLSKeyfileVolumeMountDir        = "/secrets/tls"
 )
 
 // EnvValue is a helper structure for environment variable sources.
@@ -98,6 +100,12 @@ func CreatePodName(deploymentName, role, id string) string {
 	return deploymentName + "-" + role + "-" + id
 }
 
+// CreateTLSKeyfileSecretName returns the name of the Secret that holds the TLS keyfile for a member with
+// a given id in a deployment with a given name.
+func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
+	return CreatePodName(deploymentName, role, id) + "-tls-keyfile"
+}
+
 // arangodVolumeMounts creates a volume mount structure for arangod.
 func arangodVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
@@ -105,7 +113,17 @@ func arangodVolumeMounts() []v1.VolumeMount {
 	}
 }
 
-// arangodVolumeMounts creates a volume mount structure for arangod.
+// tlsKeyfileVolumeMounts creates a volume mount structure for a TLS keyfile.
+func tlsKeyfileVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      tlsKeyfileVolumeName,
+			MountPath: TLSKeyfileVolumeMountDir,
+		},
+	}
+}
+
+// rocksdbEncryptionVolumeMounts creates a volume mount structure for a RocksDB encryption key.
 func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
 		{
@@ -193,12 +211,15 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
 	args []string, env map[string]EnvValue,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
-	rocksdbEncryptionSecretName string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
 
 	// Add arangod container
 	c := arangodContainer(p.GetName(), image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
+	if tlsKeyfileSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
+	}
 	if rocksdbEncryptionSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
 	}
@@ -222,6 +243,19 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 			Name: arangodVolumeName,
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// TLS keyfile secret mount (if any)
+	if tlsKeyfileSecretName != "" {
+		vol := v1.Volume{
+			Name: tlsKeyfileVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: tlsKeyfileSecretName,
+				},
 			},
 		}
 		p.Spec.Volumes = append(p.Spec.Volumes, vol)

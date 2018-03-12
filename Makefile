@@ -104,6 +104,7 @@ update-vendor:
 		k8s.io/client-go/... \
 		k8s.io/gengo/args \
 		k8s.io/apiextensions-apiserver \
+		github.com/arangodb-helper/go-certificates \
 		github.com/arangodb/go-driver \
 		github.com/cenkalti/backoff \
 		github.com/dchest/uniuri \

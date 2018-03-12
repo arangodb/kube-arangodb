@@ -52,7 +52,7 @@ type DeploymentSpec struct {
 
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
 	Authentication AuthenticationSpec `json:"auth"`
-	SSL            SSLSpec            `json:"ssl"`
+	TLS            TLSSpec            `json:"tls"`
 	Sync           SyncSpec           `json:"sync"`
 
 	Single       ServerGroupSpec `json:"single"`
@@ -70,7 +70,7 @@ func (s DeploymentSpec) IsAuthenticated() bool {
 
 // IsSecure returns true when SSL is enabled
 func (s DeploymentSpec) IsSecure() bool {
-	return s.SSL.IsSecure()
+	return s.TLS.IsSecure()
 }
 
 // SetDefaults fills in default values when a field is not specified.
@@ -92,8 +92,8 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	}
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
-	s.SSL.SetDefaults()
-	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy, deploymentName+"-sync-jwt")
+	s.TLS.SetDefaults("")
+	s.Sync.SetDefaults(s.Image, s.ImagePullPolicy, deploymentName+"-sync-jwt", deploymentName+"-sync-ca")
 	s.Single.SetDefaults(ServerGroupSingle, s.Mode.HasSingleServers(), s.Mode)
 	s.Agents.SetDefaults(ServerGroupAgents, s.Mode.HasAgents(), s.Mode)
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.Mode.HasDBServers(), s.Mode)
@@ -126,8 +126,8 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Authentication.Validate(false); err != nil {
 		return maskAny(errors.Wrap(err, "spec.auth"))
 	}
-	if err := s.SSL.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.ssl"))
+	if err := s.TLS.Validate(); err != nil {
+		return maskAny(errors.Wrap(err, "spec.tls"))
 	}
 	if err := s.Sync.Validate(s.Mode); err != nil {
 		return maskAny(errors.Wrap(err, "spec.sync"))
