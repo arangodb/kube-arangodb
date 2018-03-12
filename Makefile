@@ -77,7 +77,7 @@ endif
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
 .PHONY: all
-all: verify-generated docker
+all: verify-generated build
 
 #
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
