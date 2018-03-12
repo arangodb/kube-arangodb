@@ -38,7 +38,7 @@ const (
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
 	CASecretName string        `json:"caSecretName,omitempty"`
-	AltNames     []string      `json:"serverName,omitempty"`
+	AltNames     []string      `json:"altNames,omitempty"`
 	TTL          time.Duration `json:"ttl,omitempty"`
 }
 

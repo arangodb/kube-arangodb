@@ -6,4 +6,4 @@ spec:
   mode: cluster
   tls:
     caSecretName: example-simple-cluster-tls
-    altNames: ["localhost"]
+    altNames: ["kube-01", "kube-02", "kube-03"]

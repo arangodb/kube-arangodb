@@ -44,6 +44,7 @@ const (
 // createCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
 func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
+	log = log.With().Str("secret", spec.CASecretName).Logger()
 	dnsNames, ipAddresses, emailAddress, err := spec.GetAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
@@ -65,16 +66,21 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 		return maskAny(err)
 	}
 	if err := k8sutil.CreateCASecret(cli, spec.CASecretName, namespace, cert, priv, ownerRef); err != nil {
-		log.Debug().Err(err).Msg("Failed to create CA Secret")
+		if k8sutil.IsAlreadyExists(err) {
+			log.Debug().Msg("CA Secret already exists")
+		} else {
+			log.Debug().Err(err).Msg("Failed to create CA Secret")
+		}
 		return maskAny(err)
 	}
-	log.Debug().Str("secret", spec.CASecretName).Msg("Created CA Secret")
+	log.Debug().Msg("Created CA Secret")
 	return nil
 }
 
 // createServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
 func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverNames []string, spec api.TLSSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
+	log = log.With().Str("secret", secretName).Logger()
 	// Load alt names
 	dnsNames, ipAddresses, emailAddress, err := spec.GetAltNames()
 	if err != nil {
@@ -111,9 +117,13 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
 	if err := k8sutil.CreateTLSKeyfileSecret(cli, secretName, namespace, keyfile, ownerRef); err != nil {
-		log.Debug().Err(err).Msg("Failed to create server Secret")
+		if k8sutil.IsAlreadyExists(err) {
+			log.Debug().Msg("Server Secret already exists")
+		} else {
+			log.Debug().Err(err).Msg("Failed to create server Secret")
+		}
 		return maskAny(err)
 	}
-	log.Debug().Str("secret", secretName).Msg("Created server Secret")
+	log.Debug().Msg("Created server Secret")
 	return nil
 }
