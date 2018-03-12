@@ -81,6 +81,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
 				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,

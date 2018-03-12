@@ -101,6 +101,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		options = append(options,
 			optionPair{"--ssl.keyfile", keyPath},
+			optionPair{"--ssl.ecdh-curve", ""}, // This way arangod accepts curves other than P256 as well.
 		)
 		/*if bsCfg.SslKeyFile != "" {
 			if bsCfg.SslCAFile != "" {
