@@ -62,6 +62,7 @@ func main() {
 		"IMAGETAG":        version,
 		"MANIFESTPATH":    "manifests/arango-operator.yaml",
 	})
+	make("build-ghrelease", nil)
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest
 	gitTag(version)
 	githubCreateRelease(version)

@@ -282,6 +282,9 @@ docker-push-version: docker
 $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 	GOPATH=$(GOBUILDDIR) go build -o $(RELEASE) $(REPOPATH)/tools/release
 
+.PHONY: build-ghrelease
+build-ghrelease: $(GHRELEASE)
+
 $(GHRELEASE): $(GOBUILDDIR) 
 	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
 
