@@ -23,7 +23,7 @@
 package v1alpha
 
 import (
-	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

@@ -8,10 +8,10 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/client"
-	"github.com/arangodb/k8s-operator/pkg/util/arangod"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // TestAuthenticationSingleDefaultSecret creating a single server

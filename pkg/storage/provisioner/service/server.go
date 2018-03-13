@@ -32,7 +32,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 )
 
 const (

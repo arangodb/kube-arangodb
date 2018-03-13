@@ -23,7 +23,7 @@
 package v1alpha
 
 import (
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // MonitoringSpec holds monitoring specific configuration settings

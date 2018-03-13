@@ -31,11 +31,11 @@ import (
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 
-	deplapi "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	lsapi "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/deployment"
-	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	"github.com/arangodb/k8s-operator/pkg/storage"
+	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/storage"
 )
 
 const (

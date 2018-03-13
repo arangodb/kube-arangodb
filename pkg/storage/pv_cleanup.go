@@ -33,8 +33,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
-	"github.com/arangodb/k8s-operator/pkg/util/trigger"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
 type pvCleaner struct {

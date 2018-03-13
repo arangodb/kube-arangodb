@@ -23,8 +23,8 @@
 package deployment
 
 import (
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // createServices creates all services needed to service the given deployment

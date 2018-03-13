@@ -26,9 +26,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner/client"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // createProvisionerClients creates a list of clients for all known

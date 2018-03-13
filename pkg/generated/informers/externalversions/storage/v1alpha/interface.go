@@ -23,7 +23,7 @@
 package v1alpha
 
 import (
-	internalinterfaces "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

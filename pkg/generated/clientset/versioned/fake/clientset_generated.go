@@ -20,11 +20,11 @@
 package fake
 
 import (
-	clientset "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
-	fakedatabasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
-	storagev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha"
-	fakestoragev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
+	clientset "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
+	fakedatabasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
+	fakestoragev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

@@ -29,7 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.

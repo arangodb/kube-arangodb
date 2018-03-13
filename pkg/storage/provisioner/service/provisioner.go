@@ -29,7 +29,7 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
 
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 )
 
 // Config for the storage provisioner

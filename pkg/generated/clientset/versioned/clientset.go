@@ -20,8 +20,8 @@
 package versioned
 
 import (
-	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
-	storagev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha"
+	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"

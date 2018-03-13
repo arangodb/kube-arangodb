@@ -30,10 +30,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/k8s-operator/pkg/logging"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner/service"
-	"github.com/arangodb/k8s-operator/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 var (

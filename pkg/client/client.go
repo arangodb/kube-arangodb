@@ -26,8 +26,8 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 
-	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
