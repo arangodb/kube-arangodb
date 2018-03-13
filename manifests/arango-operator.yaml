@@ -63,7 +63,6 @@ subjects:
   name: default
   namespace: default
 
-
 ---
 
 ## deployment.yaml
@@ -72,6 +71,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: arango-operator
+  namespace: default
 spec:
   replicas: 1
   template:
@@ -82,7 +82,7 @@ spec:
       containers:
       - name: arangodb-operator
         imagePullPolicy: IfNotPresent
-        image: ewoutp/arangodb-operator@sha256:ed82144ebe0d768c99fe44594fff9da7f70aad750254988e9e4247be3575c0fa
+        image: arangodb/arangodb-operator@sha256:a11715a6445c34b96e492bcdfe37c4f7b9063bb8634a3e4cbf7abaeffd06c146
         env:
         - name: MY_POD_NAMESPACE
           valueFrom:
