@@ -125,9 +125,11 @@ update-vendor:
 		k8s.io/client-go/... \
 		k8s.io/gengo/args \
 		k8s.io/apiextensions-apiserver \
+		github.com/aktau/github-release \
 		github.com/arangodb-helper/go-certificates \
 		github.com/arangodb/go-driver \
 		github.com/cenkalti/backoff \
+		github.com/coreos/go-semver/semver \
 		github.com/dchest/uniuri \
 		github.com/dgrijalva/jwt-go \
 		github.com/julienschmidt/httprouter \
