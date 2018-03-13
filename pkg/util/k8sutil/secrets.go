@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/arangodb/k8s-operator/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace

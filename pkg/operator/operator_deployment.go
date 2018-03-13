@@ -31,9 +31,9 @@ import (
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/deployment"
-	"github.com/arangodb/k8s-operator/pkg/metrics"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 )
 
 var (

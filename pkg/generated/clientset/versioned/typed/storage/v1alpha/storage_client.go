@@ -20,8 +20,8 @@
 package v1alpha
 
 import (
-	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/scheme"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )

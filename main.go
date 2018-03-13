@@ -45,12 +45,12 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/k8s-operator/pkg/client"
-	"github.com/arangodb/k8s-operator/pkg/logging"
-	"github.com/arangodb/k8s-operator/pkg/operator"
-	"github.com/arangodb/k8s-operator/pkg/util/constants"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
-	"github.com/arangodb/k8s-operator/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operator"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 const (

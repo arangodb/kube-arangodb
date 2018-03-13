@@ -33,7 +33,7 @@ import (
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil/mocks"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/mocks"
 )
 
 // TestValidateEncryptionKeySecret tests ValidateEncryptionKeySecret.

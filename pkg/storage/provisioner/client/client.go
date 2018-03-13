@@ -35,7 +35,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/pkg/errors"
 )
 

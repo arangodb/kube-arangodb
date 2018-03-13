@@ -32,8 +32,8 @@ import (
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
-	"github.com/arangodb/k8s-operator/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 // CreateCRD creates a custom resouce definition.

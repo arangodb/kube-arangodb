@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
 // TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.

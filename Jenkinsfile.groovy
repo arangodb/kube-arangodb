@@ -57,7 +57,7 @@ def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
-        lock resource: 'k8s-operator'
+        lock resource: 'kube-arangodb'
     }
     agent any
     parameters {

@@ -32,8 +32,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/typed/core/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (

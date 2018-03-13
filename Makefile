@@ -15,7 +15,7 @@ VENDORDIR := $(ROOTDIR)/deps
 
 ORGPATH := github.com/arangodb
 ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
-REPONAME := k8s-operator
+REPONAME := kube-arangodb
 REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
@@ -154,8 +154,8 @@ update-generated: $(GOBUILDDIR)
 		k8s-codegen \
 		"./deps/k8s.io/code-generator/generate-groups.sh"  \
 		"all" \
-		"github.com/arangodb/k8s-operator/pkg/generated" \
-		"github.com/arangodb/k8s-operator/pkg/apis" \
+		"github.com/arangodb/kube-arangodb/pkg/generated" \
+		"github.com/arangodb/kube-arangodb/pkg/apis" \
 		"deployment:v1alpha storage:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)

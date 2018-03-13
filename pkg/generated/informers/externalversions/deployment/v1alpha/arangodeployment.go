@@ -25,10 +25,10 @@ package v1alpha
 import (
 	time "time"
 
-	deployment_v1alpha "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	versioned "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha "github.com/arangodb/k8s-operator/pkg/generated/listers/deployment/v1alpha"
+	deployment_v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

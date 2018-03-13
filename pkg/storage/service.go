@@ -26,9 +26,9 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/storage/provisioner"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // ensureProvisionerService ensures that a service is created for accessing the

@@ -23,8 +23,8 @@
 package storage
 
 import (
-	internalinterfaces "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/storage/v1alpha"
+	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/storage/v1alpha"
 )
 
 // Interface provides access to each of this group's versions.

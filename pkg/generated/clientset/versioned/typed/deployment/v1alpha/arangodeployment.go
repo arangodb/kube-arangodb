@@ -20,8 +20,8 @@
 package v1alpha
 
 import (
-	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	scheme "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/scheme"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

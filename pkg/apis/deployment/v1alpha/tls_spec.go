@@ -27,8 +27,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
-	"github.com/arangodb/k8s-operator/pkg/util/validation"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/validation"
 )
 
 const (

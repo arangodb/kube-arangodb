@@ -26,10 +26,10 @@ import (
 	"fmt"
 	"strings"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/dchest/uniuri"
 
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // createInitialMembers creates all members needed for the initial state of the deployment.

@@ -25,7 +25,7 @@ package v1alpha
 import (
 	"github.com/pkg/errors"
 
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // AuthenticationSpec holds authentication specific configuration settings

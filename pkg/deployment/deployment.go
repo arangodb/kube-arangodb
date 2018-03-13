@@ -35,11 +35,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
-	"github.com/arangodb/k8s-operator/pkg/util/retry"
-	"github.com/arangodb/k8s-operator/pkg/util/trigger"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
 // Config holds configuration settings for a Deployment

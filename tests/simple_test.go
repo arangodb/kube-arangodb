@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/k8s-operator/pkg/client"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/client"
 )
 
 // TestSimpleSingle tests the creating of a single server deployment
