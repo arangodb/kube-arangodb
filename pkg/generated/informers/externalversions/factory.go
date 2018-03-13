@@ -28,7 +28,7 @@ import (
 	time "time"
 
 	versioned "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	arangodb "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/arangodb"
+	deployment "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/internalinterfaces"
 	storage "github.com/arangodb/k8s-operator/pkg/generated/informers/externalversions/storage"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,12 +128,12 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Database() arangodb.Interface
+	Database() deployment.Interface
 	Storage() storage.Interface
 }
 
-func (f *sharedInformerFactory) Database() arangodb.Interface {
-	return arangodb.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Database() deployment.Interface {
+	return deployment.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Storage() storage.Interface {

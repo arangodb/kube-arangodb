@@ -23,7 +23,7 @@
 package deployment
 
 import (
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"
 )

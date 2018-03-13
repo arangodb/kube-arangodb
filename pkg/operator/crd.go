@@ -27,7 +27,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	deplapi "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	deplapi "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	lsapi "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/util/crd"
 )

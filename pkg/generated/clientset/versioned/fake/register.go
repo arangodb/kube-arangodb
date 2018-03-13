@@ -20,7 +20,7 @@
 package fake
 
 import (
-	databasev1alpha "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	databasev1alpha "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	storagev1alpha "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
