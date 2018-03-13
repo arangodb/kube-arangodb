@@ -24,18 +24,16 @@ def kubeConfigRoot = "/home/jenkins/.kube"
 def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
-            lock("${kubeconfig}-${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
-                withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
-                    withEnv([
-                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                    "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
-                    "IMAGETAG=${env.GIT_COMMIT}",
-                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                    "LONG=${params.LONG ? 1 : 0}",
-                    ]) {
-                        sh "make run-tests"
-                    }
+            withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                withEnv([
+                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                "IMAGETAG=jenkins-test",
+                "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                "LONG=${params.LONG ? 1 : 0}",
+                ]) {
+                    sh "make run-tests"
                 }
             }
         }
@@ -59,6 +57,7 @@ def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
+        lock resource: 'k8s-operator'
     }
     agent any
     parameters {
@@ -75,7 +74,7 @@ pipeline {
                     withEnv([
                     "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                    "IMAGETAG=${env.GIT_COMMIT}",
+                    "IMAGETAG=jenkins-test",
                     "LONG=${params.LONG ? 1 : 0}",
                     ]) {
                         sh "make"
