@@ -25,7 +25,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	v1alpha "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	storage_v1alpha "github.com/arangodb/k8s-operator/pkg/apis/storage/v1alpha"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"

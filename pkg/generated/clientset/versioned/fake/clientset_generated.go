@@ -21,8 +21,8 @@ package fake
 
 import (
 	clientset "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
-	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha"
-	fakedatabasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/arangodb/v1alpha/fake"
+	databasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
+	fakedatabasev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
 	storagev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	fakestoragev1alpha "github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
