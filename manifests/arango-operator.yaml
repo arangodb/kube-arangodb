@@ -82,7 +82,7 @@ spec:
       containers:
       - name: arangodb-operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/arangodb-operator@sha256:a11715a6445c34b96e492bcdfe37c4f7b9063bb8634a3e4cbf7abaeffd06c146
+        image: arangodb/arangodb-operator@sha256:5587bee5050f35861c795f84e049682e4dc7468952032e5707fd9eece2b2a4c3
         env:
         - name: MY_POD_NAMESPACE
           valueFrom:
