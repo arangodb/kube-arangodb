@@ -7,7 +7,7 @@ import (
 	"github.com/dchest/uniuri"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/client"
 )
 
