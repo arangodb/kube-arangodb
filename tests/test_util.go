@@ -37,7 +37,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/k8s-operator/pkg/generated/clientset/versioned"
 	"github.com/arangodb/k8s-operator/pkg/util/arangod"
 	"github.com/arangodb/k8s-operator/pkg/util/k8sutil"

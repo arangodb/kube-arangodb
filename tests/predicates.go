@@ -25,7 +25,7 @@ package tests
 import (
 	"fmt"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 )
 
 // deploymentHasState creates a predicate that returns nil when the deployment has the given state.

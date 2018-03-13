@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/k8s-operator/pkg/apis/arangodb/v1alpha"
+	api "github.com/arangodb/k8s-operator/pkg/apis/deployment/v1alpha"
 	"github.com/stretchr/testify/assert"
 )
 
