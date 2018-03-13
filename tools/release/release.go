@@ -177,6 +177,7 @@ func githubCreateRelease(version string) {
 func run(cmd string, args []string, envVars map[string]string) error {
 	c := exec.Command(cmd, args...)
 	if envVars != nil {
+		c.Env = append(c.Env, os.Environ()...)
 		for k, v := range envVars {
 			c.Env = append(c.Env, fmt.Sprintf("%s=%s", k, v))
 		}
