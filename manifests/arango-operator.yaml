@@ -1,0 +1,95 @@
+## rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-operator
+rules:
+- apiGroups:
+  - database.arangodb.com
+  resources:
+  - arangodeployments
+  verbs:
+  - "*"
+- apiGroups:
+  - storage.arangodb.com
+  resources:
+  - arangolocalstorages
+  verbs:
+  - "*"
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumes
+  - persistentvolumeclaims
+  - events
+  - secrets
+  verbs:
+  - "*"
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  verbs:
+  - "*"
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - "*"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-operator
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+
+---
+
+## deployment.yaml
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: arango-operator
+    spec:
+      containers:
+      - name: arangodb-operator
+        imagePullPolicy: IfNotPresent
+        image: ewoutp/arangodb-operator@sha256:ed82144ebe0d768c99fe44594fff9da7f70aad750254988e9e4247be3575c0fa
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+

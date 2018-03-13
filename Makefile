@@ -24,14 +24,27 @@ GOVERSION := 1.10.0-alpine
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 
-ifndef DOCKERNAMESPACE
-	DOCKERNAMESPACE := arangodb
-endif
 DOCKERFILE := Dockerfile 
 DOCKERTESTFILE := Dockerfile.test
 
+ifndef LOCALONLY 
+	PUSHIMAGES := 1
+	IMAGESHA256 := true
+else
+	IMAGESHA256 := false
+endif
+
 ifdef IMAGETAG 
-	IMAGESUFFIX := ":$(IMAGETAG)"
+	IMAGESUFFIX := :$(IMAGETAG)
+else 
+	IMAGESUFFIX := :dev
+endif
+
+ifndef MANIFESTPATH 
+	MANIFESTPATH := manifests/arango-operator-dev.yaml
+endif
+ifndef DEPLOYMENTNAMESPACE
+	DEPLOYMENTNAMESPACE := default
 endif
 
 ifndef OPERATORIMAGE
@@ -51,9 +64,6 @@ TESTBIN := $(BINDIR)/$(TESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
-ifndef TESTNAMESPACE
-	TESTNAMESPACE := arangodb-operator-tests
-endif
 TESTLENGTHOPTIONS := -test.short
 TESTTIMEOUT := 20m
 ifeq ($(LONG), 1)
@@ -66,19 +76,29 @@ endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 
-.PHONY: all clean deps docker update-vendor update-generated verify-generated
-
-all: verify-generated docker
+.PHONY: all
+all: verify-generated build
 
 #
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
-build: docker
+.PHONY: build
+build: check-vars docker manifests
 
+.PHONY: clean
 clean:
 	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR)
 
+.PHONY: check-vars
+check-vars:
+ifndef DOCKERNAMESPACE
+	@echo "DOCKERNAMESPACE must be set"
+	@exit 1
+endif
+	@echo "Using docker namespace: $(DOCKERNAMESPACE)"
+
+.PHONY: deps
 deps:
 	@${MAKE} -B -s $(GOBUILDDIR)
 
@@ -93,6 +113,7 @@ $(GOBUILDDIR):
 	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
 	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
 
+.PHONY: update-vendor
 update-vendor:
 	@mkdir -p $(GOBUILDDIR)
 	@GOPATH=$(GOBUILDDIR) go get github.com/pulcy/pulsar
@@ -119,6 +140,7 @@ update-vendor:
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 
+.PHONY: update-generated
 update-generated: $(GOBUILDDIR) 
 	@docker build $(SRCDIR)/tools/codegen --build-arg GOVERSION=$(GOVERSION) -t k8s-codegen
 	docker run \
@@ -136,6 +158,7 @@ update-generated: $(GOBUILDDIR)
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
+.PHONY: verify-generated
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
@@ -152,14 +175,26 @@ $(BIN): $(GOBUILDDIR) $(SOURCES)
 		golang:$(GOVERSION) \
 		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
 
-docker: $(BIN)
+.PHONY: docker
+docker: check-vars $(BIN)
 	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
 
+# Manifests 
+
+.PHONY: manifests
+manifests: $(GOBUILDDIR)
+	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
+		--output=$(MANIFESTPATH) \
+		--image=$(OPERATORIMAGE) \
+		--image-sha256=$(IMAGESHA256) \
+		--namespace=$(DEPLOYMENTNAMESPACE)
+
 # Testing
 
+.PHONY: run-unit-tests
 run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 	docker run \
 		--rm \
@@ -189,39 +224,49 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 		golang:$(GOVERSION) \
 		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
 
+.PHONY: docker-test
 docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
+.PHONY: run-tests
 run-tests: docker-test
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 	docker push $(TESTIMAGE)
 endif
-	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
-	kubectl create namespace $(TESTNAMESPACE)
-	$(ROOTDIR)/examples/setup-rbac.sh --namespace=$(TESTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_create_operator.sh $(TESTNAMESPACE) $(OPERATORIMAGE)
-	$(ROOTDIR)/scripts/kube_create_storage.sh $(TESTNAMESPACE)
-	kubectl --namespace $(TESTNAMESPACE) \
+ifneq ($(DEPLOYMENTNAMESPACE), default)
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
+	kubectl create namespace $(DEPLOYMENTNAMESPACE)
+endif
+	kubectl apply -f $(MANIFESTPATH)
+	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
+	kubectl --namespace $(DEPLOYMENTNAMESPACE) \
 		run arangodb-operator-test -i --rm --quiet --restart=Never \
 		--image=$(TESTIMAGE) \
 		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
-		--env="TEST_NAMESPACE=$(TESTNAMESPACE)" \
+		--env="TEST_NAMESPACE=$(DEPLOYMENTNAMESPACE)" \
 		-- \
 		-test.v -test.timeout $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
-	kubectl delete namespace $(TESTNAMESPACE) --ignore-not-found --now
+ifneq ($(DEPLOYMENTNAMESPACE), default)
+	kubectl delete namespace $(DEPLOYMENTNAMESPACE) --ignore-not-found --now
+endif
 
+.PHONY: cleanup-tests
 cleanup-tests:
-	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(TESTNAMESPACE)
+ifneq ($(DEPLOYMENTNAMESPACE), default)
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
+endif
 
 # Release building
 
+.PHONY: docker-push
 docker-push: docker
 ifneq ($(DOCKERNAMESPACE), arangodb)
 	docker tag $(OPERATORIMAGE) $(DOCKERNAMESPACE)/arangodb-operator
 endif
 	docker push $(DOCKERNAMESPACE)/arangodb-operator
 
+.PHONY: docker-push-version
 docker-push-version: docker
 	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:$(VERSION)
 	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:$(VERSION_MAJOR_MINOR)
@@ -238,23 +283,29 @@ $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 $(GHRELEASE): $(GOBUILDDIR) 
 	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
 
+.PHONY: release-patch
 release-patch: $(RELEASE)
 	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch 
 
+.PHONY: release-minor
 release-minor: $(RELEASE)
 	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=minor
 
+.PHONY: release-major
 release-major: $(RELEASE)
 	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major 
 
 ## Kubernetes utilities
 
+.PHONY: minikube-start
 minikube-start:
 	minikube start --cpus=4 --memory=6144
 
+.PHONY: delete-operator
 delete-operator:
-	kubectl delete deployment arangodb-operator --ignore-not-found
+	kubectl delete -f $(MANIFESTPATH) --ignore-not-found
 
-redeploy-operator: delete-operator
-	USESHA256=1 $(ROOTDIR)/scripts/kube_create_operator.sh default $(OPERATORIMAGE)
+.PHONY: redeploy-operator
+redeploy-operator: delete-operator manifests
+	kubectl apply -f $(MANIFESTPATH)
 	kubectl get pods 

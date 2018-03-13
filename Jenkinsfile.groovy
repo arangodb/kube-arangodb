@@ -27,12 +27,12 @@ def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
             lock("${kubeconfig}-${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
                 withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                     withEnv([
+                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                     "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
                     "IMAGETAG=${env.GIT_COMMIT}",
                     "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
                     "LONG=${params.LONG ? 1 : 0}",
-                    "PUSHIMAGES=1",
-                    "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     ]) {
                         sh "make run-tests"
                     }
@@ -46,8 +46,9 @@ def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
+                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                "TESTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
             ]) {
                 sh "make cleanup-tests"
             }
@@ -62,6 +63,7 @@ pipeline {
     agent any
     parameters {
       booleanParam(name: 'LONG', defaultValue: false, description: 'Execute long running tests')
+      string(name: 'DOCKERNAMESPACE', defaultValue: 'arangodb', description: 'DOCKERNAMESPACE sets the docker registry namespace in which the operator docker image will be pushed', )
       string(name: 'KUBECONFIGS', defaultValue: 'scw-183a3b,c11', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
@@ -71,9 +73,10 @@ pipeline {
             steps {
                 timestamps {
                     withEnv([
+                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                     "IMAGETAG=${env.GIT_COMMIT}",
                     "LONG=${params.LONG ? 1 : 0}",
-                    "PUSHIMAGES=1",
                     ]) {
                         sh "make"
                         sh "make run-unit-tests"
