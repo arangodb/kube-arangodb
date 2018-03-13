@@ -19,6 +19,43 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
+def kubeConfigRoot = "/home/jenkins/.kube"
+
+def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
+    return {
+        timestamps {
+            lock("${kubeconfig}-${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
+                withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                    withEnv([
+                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                    "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                    "IMAGETAG=${env.GIT_COMMIT}",
+                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                    "LONG=${params.LONG ? 1 : 0}",
+                    ]) {
+                        sh "make run-tests"
+                    }
+                }
+            }
+        }
+    }
+}
+
+def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
+    return {
+        timestamps {
+            withEnv([
+                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+            ]) {
+                sh "make cleanup-tests"
+            }
+        }
+    }
+}
+
 pipeline {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
@@ -26,8 +63,8 @@ pipeline {
     agent any
     parameters {
       booleanParam(name: 'LONG', defaultValue: false, description: 'Execute long running tests')
-      string(name: 'KUBECONFIG', defaultValue: '/home/jenkins/.kube/scw-183a3b', description: 'KUBECONFIG controls which k8s cluster is used', )
       string(name: 'DOCKERNAMESPACE', defaultValue: 'arangodb', description: 'DOCKERNAMESPACE sets the docker registry namespace in which the operator docker image will be pushed', )
+      string(name: 'KUBECONFIGS', defaultValue: 'scw-183a3b,c11', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
@@ -36,33 +73,27 @@ pipeline {
             steps {
                 timestamps {
                     withEnv([
-                    "IMAGETAG=${env.GIT_COMMIT}",
                     "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                    "IMAGETAG=${env.GIT_COMMIT}",
+                    "LONG=${params.LONG ? 1 : 0}",
                     ]) {
                         sh "make"
                         sh "make run-unit-tests"
+                        sh "make docker-test"
                     }
                 }
             }
         }
         stage('Test') {
             steps {
-                timestamps {
-                    lock("${params.TESTNAMESPACE}-${env.GIT_COMMIT}") {
-                        withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
-                            withEnv([
-                            "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                            "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                            "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
-                            "IMAGETAG=${env.GIT_COMMIT}",
-                            "KUBECONFIG=${params.KUBECONFIG}",
-                            "LONG=${params.LONG ? 1 : 0}",
-                            ]) {
-                                sh "make run-tests"
-                            }
-                        }
+                script {
+                    def configs = "${params.KUBECONFIGS}".split(",")
+                    def testTasks = [:]
+                    for (kubeconfig in configs) {
+                        testTasks["${kubeconfig}"] = buildTestSteps(kubeConfigRoot, kubeconfig)
                     }
+                    parallel testTasks
                 }
             }
         }
@@ -70,14 +101,13 @@ pipeline {
 
     post {
         always {
-            timestamps {
-                withEnv([
-                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                    "KUBECONFIG=${params.KUBECONFIG}",
-                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                ]) {
-                    sh "make cleanup-tests"
+            script {
+                def configs = "${params.KUBECONFIGS}".split(",")
+                def cleanupTasks = [:]
+                for (kubeconfig in configs) {
+                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeConfigRoot, kubeconfig)
                 }
+                parallel cleanupTasks
             }
         }
         failure {
