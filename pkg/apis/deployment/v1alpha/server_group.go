@@ -49,17 +49,17 @@ var (
 func (g ServerGroup) AsRole() string {
 	switch g {
 	case ServerGroupSingle:
-		return "single"
+		return "sngl"
 	case ServerGroupAgents:
-		return "agent"
+		return "agnt"
 	case ServerGroupDBServers:
-		return "dbserver"
+		return "prmr"
 	case ServerGroupCoordinators:
-		return "coordinator"
+		return "crdn"
 	case ServerGroupSyncMasters:
-		return "syncmaster"
+		return "syma"
 	case ServerGroupSyncWorkers:
-		return "syncworker"
+		return "sywo"
 	default:
 		return "?"
 	}

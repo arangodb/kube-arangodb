@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: arangodb
-    role: coordinator
+    role: crdn
   type: NodePort
   publishNotReadyAddresses: true
   ports:

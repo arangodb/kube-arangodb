@@ -29,12 +29,12 @@ import (
 )
 
 func TestServerGroupAsRole(t *testing.T) {
-	assert.Equal(t, "single", ServerGroupSingle.AsRole())
-	assert.Equal(t, "agent", ServerGroupAgents.AsRole())
-	assert.Equal(t, "dbserver", ServerGroupDBServers.AsRole())
-	assert.Equal(t, "coordinator", ServerGroupCoordinators.AsRole())
-	assert.Equal(t, "syncmaster", ServerGroupSyncMasters.AsRole())
-	assert.Equal(t, "syncworker", ServerGroupSyncWorkers.AsRole())
+	assert.Equal(t, "sngl", ServerGroupSingle.AsRole())
+	assert.Equal(t, "agnt", ServerGroupAgents.AsRole())
+	assert.Equal(t, "prmr", ServerGroupDBServers.AsRole())
+	assert.Equal(t, "crdn", ServerGroupCoordinators.AsRole())
+	assert.Equal(t, "syma", ServerGroupSyncMasters.AsRole())
+	assert.Equal(t, "sywo", ServerGroupSyncWorkers.AsRole())
 }
 
 func TestServerGroupIsArangod(t *testing.T) {

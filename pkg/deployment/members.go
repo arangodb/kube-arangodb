@@ -83,7 +83,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -93,7 +93,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -103,7 +103,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -113,7 +113,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -123,7 +123,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -133,7 +133,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}

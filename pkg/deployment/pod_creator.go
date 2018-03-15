@@ -23,6 +23,8 @@
 package deployment
 
 import (
+	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -310,8 +312,11 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			if m.State != api.MemberStateNone {
 				continue
 			}
-			// Create pod
+			// Update pod name
 			role := group.AsRole()
+			podSuffix := createPodSuffix(apiObject.Spec)
+			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), role, m.ID, podSuffix)
+			// Create pod
 			if group.IsArangod() {
 				args := createArangodArgs(apiObject, apiObject.Spec, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
@@ -348,7 +353,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
@@ -362,7 +367,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if group == api.ServerGroupSyncWorkers {
 					affinityWithRole = api.ServerGroupDBServers.AsRole()
 				}
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
 					return maskAny(err)
 				}
 			}
@@ -384,4 +389,10 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 		return maskAny(err)
 	}
 	return nil
+}
+
+func createPodSuffix(spec api.DeploymentSpec) string {
+	raw, _ := json.Marshal(spec)
+	hash := sha1.Sum(raw)
+	return fmt.Sprintf("%0x", hash)[:6]
 }
