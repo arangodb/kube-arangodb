@@ -68,6 +68,9 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, error)
 	case api.DeploymentModeSingle:
 		return a.checkProgressSingle(ctx)
 	default:
+		if a.action.Group == api.ServerGroupAgents {
+			return a.checkProgressAgent(ctx)
+		}
 		return a.checkProgressCluster(ctx)
 	}
 }
@@ -88,8 +91,24 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	return true, nil
 }
 
+// checkProgressAgent checks the progress of the action in the case
+// of an agent.
+func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, error) {
+	log := a.log
+	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create database client")
+		return false, maskAny(err)
+	}
+	if _, err := c.Version(ctx); err != nil {
+		log.Debug().Err(err).Msg("Failed to get version")
+		return false, maskAny(err)
+	}
+	return true, nil
+}
+
 // checkProgressCluster checks the progress of the action in the case
-// of a cluster deployment.
+// of a cluster deployment (coordinator/dbserver).
 func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, error) {
 	log := a.log
 	c, err := a.actionCtx.GetDatabaseClient(ctx)

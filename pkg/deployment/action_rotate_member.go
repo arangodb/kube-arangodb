@@ -86,7 +86,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
-	return true, nil
+	return false, nil
 }
 
 // CheckProgress checks the progress of the action.
