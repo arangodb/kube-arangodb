@@ -36,6 +36,8 @@ const (
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
+	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
+	ActionTypeRotateMember ActionType = "RotateMember"
 )
 
 // Action represents a single action to be taken to update a deployment.
@@ -46,8 +48,20 @@ type Action struct {
 	MemberID string `json:"memberID,omitempty"`
 	// Group involved in this action
 	Group ServerGroup `json:"group,omitempty"`
+	// CreationTime is set the when the action is created.
+	CreationTime metav1.Time `json:"creationTime"`
 	// StartTime is set the when the action has been started, but needs to wait to be finished.
-	StartTime *metav1.Time `json:"startTime,omitempty"`
+	StartTime metav1.Time `json:"startTime,omitempty"`
+}
+
+// NewAction instantiates a new Action.
+func NewAction(actionType ActionType, group ServerGroup, memberID string) Action {
+	return Action{
+		Type:         actionType,
+		MemberID:     memberID,
+		Group:        group,
+		CreationTime: metav1.Now(),
+	}
 }
 
 // Plan is a list of actions that will be taken to update a deployment.

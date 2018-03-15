@@ -113,7 +113,7 @@ func (d *Deployment) inspectPods() error {
 					switch m.State {
 					case api.MemberStateNone:
 						// Do nothing
-					case api.MemberStateShuttingDown:
+					case api.MemberStateShuttingDown, api.MemberStateRotating:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {

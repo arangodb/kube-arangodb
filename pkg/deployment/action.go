@@ -20,20 +20,19 @@
 // Author Ewout Prangsma
 //
 
-package v1alpha
+package deployment
 
-// MemberState is a strongly typed state of a deployment member
-type MemberState string
-
-const (
-	// MemberStateNone indicates that the state is not set yet
-	MemberStateNone MemberState = ""
-	// MemberStateCreated indicates that all resources needed for the member have been created
-	MemberStateCreated MemberState = "Created"
-	// MemberStateCleanOut indicates that a dbserver is in the process of being cleaned out
-	MemberStateCleanOut MemberState = "CleanOut"
-	// MemberStateShuttingDown indicates that a member is shutting down
-	MemberStateShuttingDown MemberState = "ShuttingDown"
-	// MemberStateRotating indicates that a member is being rotated
-	MemberStateRotating MemberState = "Rotating"
+import (
+	"context"
 )
+
+// Action executes a single Plan item.
+type Action interface {
+	// Start performs the start of the action.
+	// Returns true if the action is completely finished, false in case
+	// the start time needs to be recorded and a ready condition needs to be checked.
+	Start(ctx context.Context) (bool, error)
+	// CheckProgress checks the progress of the action.
+	// Returns true if the action is completely finished, false otherwise.
+	CheckProgress(ctx context.Context) (bool, error)
+}

@@ -24,15 +24,31 @@ package deployment
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"k8s.io/api/core/v1"
 )
 
 // createPlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
 func (d *Deployment) createPlan() error {
+	// Get all current pods
+	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to list pods")
+		return maskAny(err)
+	}
+	myPods := make([]v1.Pod, 0, len(pods.Items))
+	for _, p := range pods.Items {
+		if d.isOwnerOf(&p) {
+			myPods = append(myPods, p)
+		}
+	}
+
 	// Create plan
-	newPlan, changed := createPlan(d.deps.Log, d.status.Plan, d.apiObject.Spec, d.status)
+	newPlan, changed := createPlan(d.deps.Log, d.status.Plan, d.apiObject.Spec, d.status, myPods)
 
 	// If not change, we're done
 	if !changed {
@@ -54,7 +70,7 @@ func (d *Deployment) createPlan() error {
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus) (api.Plan, bool) {
+func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -78,8 +94,54 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
 	}
 
+	// Check for the need to rotate one or more members
+	getPod := func(podName string) *v1.Pod {
+		for _, p := range pods {
+			if p.GetName() == podName {
+				return &p
+			}
+		}
+		return nil
+	}
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+		for _, m := range *members {
+			if len(plan) > 0 {
+				// Only 1 change at a time
+				continue
+			}
+			if podName := m.PodName; podName != "" {
+				if p := getPod(podName); p != nil {
+					// Got pod, compare it with what it should be
+					if podNeedsRotation(*p, spec) {
+						plan = append(plan, createRotateMemberPlan(log, m, group)...)
+					}
+				}
+			}
+		}
+		return nil
+	})
+
 	// Return plan
 	return plan, true
+}
+
+// podNeedsRotation returns true when the specification of the
+// given pod differs from what it should be according to the
+// given deployment spec.
+func podNeedsRotation(p v1.Pod, spec api.DeploymentSpec) bool {
+	// Check number of containers
+	if len(p.Spec.Containers) != 1 {
+		return true
+	}
+	// Check image
+	c := p.Spec.Containers[0]
+	if c.Image != spec.Image || c.ImagePullPolicy != spec.ImagePullPolicy {
+		return true
+	}
+	// Check arguments
+	// TODO
+
+	return false
 }
 
 // createScalePlan creates a scaling plan for a single server group
@@ -89,7 +151,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 		// Scale up
 		toAdd := count - len(members)
 		for i := 0; i < toAdd; i++ {
-			plan = append(plan, api.Action{Type: api.ActionTypeAddMember, Group: group})
+			plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, ""))
 		}
 		log.Debug().
 			Int("delta", toAdd).
@@ -100,17 +162,26 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 		if m, err := members.SelectMemberToRemove(); err == nil {
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
-					api.Action{Type: api.ActionTypeCleanOutMember, Group: group, MemberID: m.ID},
+					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
 				)
 			}
 			plan = append(plan,
-				api.Action{Type: api.ActionTypeShutdownMember, Group: group, MemberID: m.ID},
-				api.Action{Type: api.ActionTypeRemoveMember, Group: group, MemberID: m.ID},
+				api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
+				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 			)
 			log.Debug().
 				Str("role", group.AsRole()).
 				Msg("Creating scale-down plan")
 		}
+	}
+	return plan
+}
+
+// createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
+// member.
+func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus, group api.ServerGroup) api.Plan {
+	plan := api.Plan{
+		api.NewAction(api.ActionTypeRotateMember, group, member.ID),
 	}
 	return plan
 }
