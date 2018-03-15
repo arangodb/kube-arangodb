@@ -25,6 +25,7 @@
 package v1alpha
 
 import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -32,7 +33,15 @@ import (
 func (in *Action) DeepCopyInto(out *Action) {
 	*out = *in
 	in.CreationTime.DeepCopyInto(&out.CreationTime)
-	in.StartTime.DeepCopyInto(&out.StartTime)
+	if in.StartTime != nil {
+		in, out := &in.StartTime, &out.StartTime
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(v1.Time)
+			(*in).DeepCopyInto(*out)
+		}
+	}
 	return
 }
 

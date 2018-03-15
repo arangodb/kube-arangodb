@@ -23,7 +23,6 @@
 package deployment
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -89,8 +88,9 @@ type Deployment struct {
 
 	eventsCli corev1.EventInterface
 
-	inspectTrigger trigger.Trigger
-	clientCache    *clientCache
+	inspectTrigger         trigger.Trigger
+	recentInspectionErrors int
+	clientCache            *clientCache
 }
 
 // New creates a new Deployment from the given API object.
@@ -191,7 +191,6 @@ func (d *Deployment) run() {
 	}
 
 	inspectionInterval := maxInspectionInterval
-	recentInspectionErrors := 0
 	for {
 		select {
 		case <-d.stopCh:
@@ -214,42 +213,7 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
-			hasError := false
-			ctx := context.Background()
-			// Inspection of generated resources needed
-			if err := d.inspectPods(); err != nil {
-				hasError = true
-				d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
-			}
-			// Create scale/update plan
-			if err := d.createPlan(); err != nil {
-				hasError = true
-				d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
-			}
-			// Execute current step of scale/update plan
-			if retrySoon, err := d.executePlan(ctx); err != nil {
-				hasError = true
-				d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
-			} else if retrySoon {
-				inspectionInterval = minInspectionInterval
-			}
-			// Ensure all resources are created
-			if err := d.ensurePVCs(d.apiObject); err != nil {
-				hasError = true
-				d.createEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
-			}
-			if err := d.ensurePods(d.apiObject); err != nil {
-				hasError = true
-				d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
-			}
-			if hasError {
-				if recentInspectionErrors == 0 {
-					inspectionInterval = minInspectionInterval
-					recentInspectionErrors++
-				}
-			} else {
-				recentInspectionErrors = 0
-			}
+			inspectionInterval = d.inspectDeployment(inspectionInterval)
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection

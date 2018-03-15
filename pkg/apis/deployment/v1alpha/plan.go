@@ -22,7 +22,10 @@
 
 package v1alpha
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"github.com/dchest/uniuri"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // ActionType is a strongly typed name for a plan action item
 type ActionType string
@@ -44,6 +47,8 @@ const (
 
 // Action represents a single action to be taken to update a deployment.
 type Action struct {
+	// ID of this action (unique for every action)
+	ID string `json:"id"`
 	// Type of action.
 	Type ActionType `json:"type"`
 	// ID reference of the member involved in this action (if any)
@@ -53,12 +58,13 @@ type Action struct {
 	// CreationTime is set the when the action is created.
 	CreationTime metav1.Time `json:"creationTime"`
 	// StartTime is set the when the action has been started, but needs to wait to be finished.
-	StartTime metav1.Time `json:"startTime,omitempty"`
+	StartTime *metav1.Time `json:"startTime,omitempty"`
 }
 
 // NewAction instantiates a new Action.
 func NewAction(actionType ActionType, group ServerGroup, memberID string) Action {
 	return Action{
+		ID:           uniuri.New(),
 		Type:         actionType,
 		MemberID:     memberID,
 		Group:        group,

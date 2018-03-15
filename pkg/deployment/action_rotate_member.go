@@ -66,6 +66,8 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 		}
 		removeFromCluster := false
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
+		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+		defer cancel()
 		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, err := a.CheckProgress(ctx); err == nil && ready {

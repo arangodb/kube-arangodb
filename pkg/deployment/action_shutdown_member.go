@@ -24,9 +24,14 @@ package deployment
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
+)
+
+const (
+	shutdownTimeout = time.Second * 15
 )
 
 // NewShutdownMemberAction creates a new Action that implements the given
@@ -66,6 +71,8 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 		}
 		removeFromCluster := true
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
+		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+		defer cancel()
 		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, err := a.CheckProgress(ctx); err == nil && ready {

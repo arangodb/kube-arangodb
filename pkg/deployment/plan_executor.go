@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/rs/zerolog"
 )
 
 // executePlan tries to execute the plan as far as possible.
@@ -45,8 +46,14 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 
 		// Take first action
 		planAction := d.status.Plan[0]
-		log := log.With().Str("action-type", string(planAction.Type)).Logger()
-		action := d.createAction(ctx, planAction)
+		log := log.With().
+			Int("plan-len", len(d.status.Plan)).
+			Str("action-id", planAction.ID).
+			Str("action-type", string(planAction.Type)).
+			Str("group", planAction.Group.AsRole()).
+			Str("member-id", planAction.MemberID).
+			Logger()
+		action := d.createAction(ctx, log, planAction)
 		if planAction.StartTime.IsZero() {
 			// Not started yet
 			ready, err := action.Start(ctx)
@@ -60,14 +67,15 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 				d.status.Plan = d.status.Plan[1:]
 			} else {
 				// Mark start time
-				d.status.Plan[0].StartTime = metav1.Now()
+				now := metav1.Now()
+				d.status.Plan[0].StartTime = &now
 			}
 			// Save plan update
 			if err := d.updateCRStatus(true); err != nil {
 				log.Debug().Err(err).Msg("Failed to update CR status")
 				return false, maskAny(err)
 			}
-			log.Debug().Bool("ready", ready).Msg("Start completed")
+			log.Debug().Bool("ready", ready).Msg("Action Start completed")
 			if !ready {
 				// We need to check back soon
 				return true, nil
@@ -77,19 +85,22 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 			// First action of plan has been started, check its progress
 			ready, err := action.CheckProgress(ctx)
 			if err != nil {
-				log.Debug().Err(err).
-					Msg("Failed to check action progress")
+				log.Debug().Err(err).Msg("Failed to check action progress")
 				return false, maskAny(err)
 			}
+			if ready {
+				// Remove action from list
+				d.status.Plan = d.status.Plan[1:]
+				// Save plan update
+				if err := d.updateCRStatus(); err != nil {
+					log.Debug().Err(err).Msg("Failed to update CR status")
+					return false, maskAny(err)
+				}
+			}
+			log.Debug().Bool("ready", ready).Msg("Action CheckProgress completed")
 			if !ready {
 				// Not ready check, come back soon
 				return true, nil
-			}
-			// Remove action from list
-			d.status.Plan = d.status.Plan[1:]
-			// Save plan update
-			if err := d.updateCRStatus(); err != nil {
-				return false, maskAny(err)
 			}
 			// Continue with next action
 		}
@@ -99,11 +110,7 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 // startAction performs the start of the given action
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (d *Deployment) createAction(ctx context.Context, action api.Action) Action {
-	log := d.deps.Log.With().
-		Str("group", action.Group.AsRole()).
-		Str("id", action.MemberID).
-		Logger()
+func (d *Deployment) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
 	actionCtx := NewActionContext(log, d)
 	switch action.Type {
 	case api.ActionTypeAddMember:
