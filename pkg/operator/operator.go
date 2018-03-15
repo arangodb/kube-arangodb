@@ -26,7 +26,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/rs/zerolog"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -35,7 +34,9 @@ import (
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -52,6 +53,7 @@ type Operator struct {
 	Config
 	Dependencies
 
+	log           zerolog.Logger
 	deployments   map[string]*deployment.Deployment
 	localStorages map[string]*storage.LocalStorage
 }
@@ -64,7 +66,7 @@ type Config struct {
 }
 
 type Dependencies struct {
-	Log        zerolog.Logger
+	LogService logging.Service
 	KubeCli    kubernetes.Interface
 	KubeExtCli apiextensionsclient.Interface
 	CRCli      versioned.Interface
@@ -75,6 +77,7 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
 		Config:        config,
 		Dependencies:  deps,
+		log:           deps.LogService.MustGetLogger("operator"),
 		deployments:   make(map[string]*deployment.Deployment),
 		localStorages: make(map[string]*storage.LocalStorage),
 	}
@@ -83,7 +86,7 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 
 // Start the operator
 func (o *Operator) Start() error {
-	log := o.Dependencies.Log
+	log := o.log
 
 	for {
 		if err := o.initResourceIfNeeded(); err == nil {
@@ -103,7 +106,7 @@ func (o *Operator) Start() error {
 // run the operator.
 // This registers a listener and waits until the process stops.
 func (o *Operator) run() {
-	log := o.Dependencies.Log
+	log := o.log
 
 	log.Info().Msgf("Running controller in namespace '%s'", o.Config.Namespace)
 

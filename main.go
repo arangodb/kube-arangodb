@@ -211,7 +211,7 @@ func newOperatorConfigAndDeps(namespace, name string) (operator.Config, operator
 		CreateCRD:      createCRD,
 	}
 	deps := operator.Dependencies{
-		Log:        logService.MustGetLogger("operator"),
+		LogService: logService,
 		KubeCli:    kubecli,
 		KubeExtCli: kubeExtCli,
 		CRCli:      crCli,

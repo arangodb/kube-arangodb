@@ -45,7 +45,7 @@ func (o *Operator) initResourceIfNeeded() error {
 
 // initCRD creates the CustomResourceDefinition and waits for it to be ready.
 func (o *Operator) initCRD() error {
-	log := o.Dependencies.Log
+	log := o.log
 
 	log.Debug().Msg("Creating ArangoDeployment CRD")
 	if err := crd.CreateCRD(o.KubeExtCli, deplapi.SchemeGroupVersion, deplapi.ArangoDeploymentCRDName, deplapi.ArangoDeploymentResourceKind, deplapi.ArangoDeploymentResourcePlural, deplapi.ArangoDeploymentShortNames...); err != nil {

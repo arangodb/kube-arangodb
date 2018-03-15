@@ -35,7 +35,8 @@ var (
 	// The defaultLevels list is used during development to increase the
 	// default level for components that we care a little less about.
 	defaultLevels = map[string]string{
-	//"something.status": "info",
+		"operator": "info",
+		//"something.status": "info",
 	}
 )
 
