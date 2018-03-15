@@ -83,9 +83,9 @@ func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1
 	}
 	var role string
 	if single {
-		role = "single"
+		role = "sngl"
 	} else {
-		role = "coordinator"
+		role = "crdn"
 	}
 	publishNotReadyAddresses := true
 	sessionAffinity := v1.ServiceAffinityClientIP
