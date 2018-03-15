@@ -321,10 +321,13 @@ func (d *Deployment) createEvent(evt *v1.Event) {
 }
 
 // Update the status of the API object from the internal status
-func (d *Deployment) updateCRStatus() error {
-	if reflect.DeepEqual(d.apiObject.Status, d.status) {
-		// Nothing has changed
-		return nil
+func (d *Deployment) updateCRStatus(force ...bool) error {
+	// TODO Remove force....
+	if len(force) == 0 || !force[0] {
+		if reflect.DeepEqual(d.apiObject.Status, d.status) {
+			// Nothing has changed
+			return nil
+		}
 	}
 
 	// Send update to API server

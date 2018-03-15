@@ -63,7 +63,7 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 				d.status.Plan[0].StartTime = metav1.Now()
 			}
 			// Save plan update
-			if err := d.updateCRStatus(); err != nil {
+			if err := d.updateCRStatus(true); err != nil {
 				log.Debug().Err(err).Msg("Failed to update CR status")
 				return false, maskAny(err)
 			}
@@ -116,6 +116,8 @@ func (d *Deployment) createAction(ctx context.Context, action api.Action) Action
 		return NewShutdownMemberAction(log, action, actionCtx)
 	case api.ActionTypeRotateMember:
 		return NewRotateMemberAction(log, action, actionCtx)
+	case api.ActionTypeWaitForMemberUp:
+		return NewWaitForMemberUpAction(log, action, actionCtx)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}

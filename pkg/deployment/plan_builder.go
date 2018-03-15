@@ -109,6 +109,10 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 				// Only 1 change at a time
 				continue
 			}
+			if m.State != api.MemberStateCreated {
+				// Only rotate when state is created
+				continue
+			}
 			if podName := m.PodName; podName != "" {
 				if p := getPod(podName); p != nil {
 					// Got pod, compare it with what it should be
@@ -180,8 +184,13 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
 func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus, group api.ServerGroup) api.Plan {
+	log.Debug().
+		Str("id", member.ID).
+		Str("role", group.AsRole()).
+		Msg("Creating rotation plan")
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeRotateMember, group, member.ID),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan
 }

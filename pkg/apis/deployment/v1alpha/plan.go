@@ -38,6 +38,8 @@ const (
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
+	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
+	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 )
 
 // Action represents a single action to be taken to update a deployment.

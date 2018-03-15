@@ -37,6 +37,8 @@ import (
 // ActionContext provides methods to the Action implementations
 // to control their context.
 type ActionContext interface {
+	// Gets the specified mode of deployment
+	GetMode() api.DeploymentMode
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
@@ -73,6 +75,11 @@ func NewActionContext(log zerolog.Logger, deployment *Deployment) ActionContext 
 type actionContext struct {
 	log        zerolog.Logger
 	deployment *Deployment
+}
+
+// Gets the specified mode of deployment
+func (ac *actionContext) GetMode() api.DeploymentMode {
+	return ac.deployment.apiObject.Spec.Mode
 }
 
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
