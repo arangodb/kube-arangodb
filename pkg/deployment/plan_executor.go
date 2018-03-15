@@ -37,11 +37,12 @@ import (
 // False otherwise.
 func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 	log := d.deps.Log
+	initialPlanLen := len(d.status.Plan)
 
 	for {
 		if len(d.status.Plan) == 0 {
 			// No plan exists, nothing to be done
-			return false, nil
+			return initialPlanLen > 0, nil
 		}
 
 		// Take first action
