@@ -191,7 +191,6 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--cluster.agency-endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
 				"--cluster.agency-endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
 				"--cluster.my-address=tcp://name-sngl-id1.name-int.ns.svc:8529",
-				"--cluster.my-id=id1",
 				"--cluster.my-role=SINGLE",
 				"--database.directory=/data",
 				"--foxx.queues=true",

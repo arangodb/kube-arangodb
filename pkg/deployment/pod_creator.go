@@ -138,7 +138,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	switch group {
 	case api.ServerGroupAgents:
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
+			optionPair{"--agency.disaster-recovery-id", id},
 			optionPair{"--agency.activate", "true"},
 			optionPair{"--agency.my-address", myTCPURL},
 			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.Count)},
@@ -154,15 +154,9 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				)
 			}
 		}
-		/*if agentRecoveryID != "" {
-			options = append(options,
-				optionPair{"--agency.disaster-recovery-id", agentRecoveryID},
-			)
-		}*/
 	case api.ServerGroupDBServers:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
 			optionPair{"--cluster.my-address", myTCPURL},
 			optionPair{"--cluster.my-role", "PRIMARY"},
 			optionPair{"--foxx.queues", "false"},
@@ -171,7 +165,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	case api.ServerGroupCoordinators:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
 			optionPair{"--cluster.my-address", myTCPURL},
 			optionPair{"--cluster.my-role", "COORDINATOR"},
 			optionPair{"--foxx.queues", "true"},
@@ -186,7 +179,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			addAgentEndpoints = true
 			options = append(options,
 				optionPair{"--replication.automatic-failover", "true"},
-				optionPair{"--cluster.my-id", id},
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
