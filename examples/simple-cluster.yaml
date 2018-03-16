@@ -5,3 +5,6 @@ metadata:
 spec:
   mode: cluster
   image: arangodb/arangodb:3.3.3
+  coordinators:
+    args:
+      - --log.level=true

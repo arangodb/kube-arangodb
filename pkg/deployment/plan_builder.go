@@ -28,6 +28,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // createPlan considers the current specification & status of the deployment creates a plan to
@@ -48,7 +49,7 @@ func (d *Deployment) createPlan() error {
 	}
 
 	// Create plan
-	newPlan, changed := createPlan(d.deps.Log, d.status.Plan, d.apiObject.Spec, d.status, myPods)
+	newPlan, changed := createPlan(d.deps.Log, d.apiObject, d.status.Plan, d.apiObject.Spec, d.status, myPods)
 
 	// If not change, we're done
 	if !changed {
@@ -70,7 +71,7 @@ func (d *Deployment) createPlan() error {
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
+func createPlan(log zerolog.Logger, apiObject metav1.Object, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -116,8 +117,9 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 			if podName := m.PodName; podName != "" {
 				if p := getPod(podName); p != nil {
 					// Got pod, compare it with what it should be
-					if podNeedsRotation(*p, spec) {
-						plan = append(plan, createRotateMemberPlan(log, m, group)...)
+					rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
+					if rotNeeded {
+						plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
 					}
 				}
 			}
@@ -132,20 +134,33 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 // podNeedsRotation returns true when the specification of the
 // given pod differs from what it should be according to the
 // given deployment spec.
-func podNeedsRotation(p v1.Pod, spec api.DeploymentSpec) bool {
+// When true is returned, a reason for the rotation is already returned.
+func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+	group api.ServerGroup, agents api.MemberStatusList, id string) (bool, string) {
 	// Check number of containers
 	if len(p.Spec.Containers) != 1 {
-		return true
+		return true, "Number of containers changed"
 	}
 	// Check image
 	c := p.Spec.Containers[0]
-	if c.Image != spec.Image || c.ImagePullPolicy != spec.ImagePullPolicy {
-		return true
+	if c.Image != spec.Image {
+		return true, "Image changed"
+	}
+	if c.ImagePullPolicy != spec.ImagePullPolicy {
+		return true, "Image pull policy changed"
 	}
 	// Check arguments
-	// TODO
+	/*expectedArgs := createArangodArgs(apiObject, spec, group, agents, id)
+	if len(expectedArgs) != len(c.Args) {
+		return true, "Arguments changed"
+	}
+	for i, a := range expectedArgs {
+		if c.Args[i] != a {
+			return true, "Arguments changed"
+		}
+	}*/
 
-	return false
+	return false, ""
 }
 
 // createScalePlan creates a scaling plan for a single server group
@@ -183,13 +198,13 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
-func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus, group api.ServerGroup) api.Plan {
+func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus, group api.ServerGroup, reason string) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Msg("Creating rotation plan")
 	plan := api.Plan{
-		api.NewAction(api.ActionTypeRotateMember, group, member.ID),
+		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan

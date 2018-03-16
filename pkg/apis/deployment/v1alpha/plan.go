@@ -59,17 +59,23 @@ type Action struct {
 	CreationTime metav1.Time `json:"creationTime"`
 	// StartTime is set the when the action has been started, but needs to wait to be finished.
 	StartTime *metav1.Time `json:"startTime,omitempty"`
+	// Reason for this action
+	Reason string `json:"reason,omitempty"`
 }
 
 // NewAction instantiates a new Action.
-func NewAction(actionType ActionType, group ServerGroup, memberID string) Action {
-	return Action{
+func NewAction(actionType ActionType, group ServerGroup, memberID string, reason ...string) Action {
+	a := Action{
 		ID:           uniuri.New(),
 		Type:         actionType,
 		MemberID:     memberID,
 		Group:        group,
 		CreationTime: metav1.Now(),
 	}
+	if len(reason) != 0 {
+		a.Reason = reason[0]
+	}
+	return a
 }
 
 // Plan is a list of actions that will be taken to update a deployment.
