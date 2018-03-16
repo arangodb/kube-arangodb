@@ -53,10 +53,10 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-dbserver-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=tcp://name-prmr-id1.name-int.ns.svc:8529",
 				"--cluster.my-id=id1",
 				"--cluster.my-role=PRIMARY",
 				"--database.directory=/data",
@@ -96,10 +96,10 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-dbserver-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agnt-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agnt-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agnt-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=ssl://name-prmr-id1.name-int.ns.svc:8529",
 				"--cluster.my-id=id1",
 				"--cluster.my-role=PRIMARY",
 				"--database.directory=/data",
@@ -139,10 +139,10 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-dbserver-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=tcp://name-prmr-id1.name-int.ns.svc:8529",
 				"--cluster.my-id=id1",
 				"--cluster.my-role=PRIMARY",
 				"--database.directory=/data",
@@ -180,10 +180,10 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-dbserver-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=tcp://name-prmr-id1.name-int.ns.svc:8529",
 				"--cluster.my-id=id1",
 				"--cluster.my-role=PRIMARY",
 				"--database.directory=/data",
