@@ -41,7 +41,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -69,7 +69,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -97,7 +97,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -123,7 +123,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Authentication.JWTSecretName = "None"
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -148,7 +148,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -184,7 +184,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, agents, "id1")
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",

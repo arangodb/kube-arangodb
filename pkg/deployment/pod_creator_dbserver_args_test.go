@@ -50,7 +50,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",
@@ -92,7 +92,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agnt-a1.name-int.ns.svc:8529",
@@ -134,7 +134,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",
@@ -174,7 +174,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, apiObject.Spec.DBServers, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1")
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=tcp://name-agnt-a1.name-int.ns.svc:8529",

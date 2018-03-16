@@ -57,8 +57,9 @@ func (o optionPair) CompareTo(other optionPair) int {
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup, svrSpec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
+func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup, agents api.MemberStatusList, id string) []string {
 	options := make([]optionPair, 0, 64)
+	svrSpec := deplSpec.GetServerGroupSpec(group)
 
 	// Endpoint
 	listenAddr := "[::]"
@@ -310,7 +311,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), role, m.ID, podSuffix)
 			// Create pod
 			if group.IsArangod() {
-				args := createArangodArgs(apiObject, apiObject.Spec, group, spec, d.status.Members.Agents, m.ID)
+				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
