@@ -2,7 +2,7 @@
 
 "Starter for Kubernetes"
 
-State: In development
+State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS WILL CHANGE.
 
 - [User manual](./docs/user/README.md)
 - [Design documents](./docs/design/README.md)
