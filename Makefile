@@ -242,13 +242,7 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 endif
 	kubectl apply -f $(MANIFESTPATH)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	kubectl --namespace $(DEPLOYMENTNAMESPACE) \
-		run arangodb-operator-test -i --rm --quiet --restart=Never \
-		--image=$(shell docker inspect $(TESTIMAGE) '--format={{index .RepoDigests 0}}') \
-		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
-		--env="TEST_NAMESPACE=$(DEPLOYMENTNAMESPACE)" \
-		-- \
-		-test.v -test.timeout $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 ifneq ($(DEPLOYMENTNAMESPACE), default)
 	kubectl delete namespace $(DEPLOYMENTNAMESPACE) --ignore-not-found --now
 endif
