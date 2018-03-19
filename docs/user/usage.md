@@ -6,6 +6,7 @@ The ArangoDB operator needs to be installed in your Kubernetes
 cluster first. To do so, clone this repository and run:
 
 ```bash
+kubectl apply -f manifests/crd.yaml
 kubectl apply -f manifests/arango-deployment.yaml
 ```
 

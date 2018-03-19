@@ -11,6 +11,7 @@ State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS 
 
 ```bash
 DOCKERNAMESPACE=<your dockerhub account> make
+kubectl apply -f manifests/crd.yaml
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml
