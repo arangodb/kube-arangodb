@@ -102,7 +102,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.initResourceIfNeeded(true, false); err == nil {
+		if err := o.waitForCRD(true, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -116,7 +116,7 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	for {
-		if err := o.initResourceIfNeeded(false, true); err == nil {
+		if err := o.waitForCRD(false, true); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")

@@ -16,7 +16,7 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - "*"
+  - get
 - apiGroups:
   - ""
   resources:
