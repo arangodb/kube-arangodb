@@ -38,6 +38,7 @@ type ArangoLocalStorageList struct {
 }
 
 // +genclient
+// +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoLocalStorage contains the entire Kubernetes info for an ArangoDB

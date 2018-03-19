@@ -30,7 +30,7 @@ import (
 // getMyImage fetched the docker image from my own pod
 func (l *LocalStorage) getMyImage() (string, v1.PullPolicy, error) {
 	log := l.deps.Log
-	ns := l.apiObject.GetNamespace()
+	ns := l.config.Namespace
 
 	p, err := l.deps.KubeCli.CoreV1().Pods(ns).Get(l.config.PodName, metav1.GetOptions{})
 	if err != nil {

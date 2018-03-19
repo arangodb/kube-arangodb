@@ -49,7 +49,7 @@ func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 	source := cache.NewListWatchFromClient(
 		o.Dependencies.CRCli.StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
-		o.Config.Namespace,
+		"", //o.Config.Namespace,
 		fields.Everything())
 
 	_, informer := cache.NewIndexerInformer(source, &api.ArangoLocalStorage{}, 0, cache.ResourceEventHandlerFuncs{
@@ -194,6 +194,7 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 // makeLocalStorageConfigAndDeps creates a Config & Dependencies object for a new LocalStorage.
 func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStorage) (storage.Config, storage.Dependencies) {
 	cfg := storage.Config{
+		Namespace:      o.Config.Namespace,
 		PodName:        o.Config.PodName,
 		ServiceAccount: o.Config.ServiceAccount,
 	}

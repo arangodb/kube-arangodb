@@ -77,15 +77,21 @@ type TemplateOptions struct {
 	Image           string
 	ImagePullPolicy string
 	RBAC            bool
-	Deployment      OperatorOptions
-	Storage         OperatorOptions
+	Deployment      ResourceOptions
+	Storage         ResourceOptions
 }
 
-type OperatorOptions struct {
-	Namespace              string
-	OperatorName           string
-	ClusterRoleName        string
-	ClusterRoleBindingName string
+type CommonOptions struct {
+	Namespace          string
+	RoleName           string
+	RoleBindingName    string
+	ServiceAccountName string
+}
+
+type ResourceOptions struct {
+	User                   CommonOptions
+	Operator               CommonOptions
+	OperatorDeploymentName string
 }
 
 func main() {
@@ -124,17 +130,35 @@ func main() {
 		Image:           options.Image,
 		ImagePullPolicy: options.ImagePullPolicy,
 		RBAC:            options.RBAC,
-		Deployment: OperatorOptions{
-			Namespace:              options.Namespace,
-			OperatorName:           options.DeploymentOperatorName,
-			ClusterRoleName:        "arango-deployment-operator",
-			ClusterRoleBindingName: "arango-deployment-operator",
+		Deployment: ResourceOptions{
+			User: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-deployments",
+				RoleBindingName:    "arango-deployments",
+				ServiceAccountName: "default",
+			},
+			Operator: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-deployment-operator",
+				RoleBindingName:    "arango-deployment-operator",
+				ServiceAccountName: "default",
+			},
+			OperatorDeploymentName: "arango-deployment-operator",
 		},
-		Storage: OperatorOptions{
-			Namespace:              options.Namespace,
-			OperatorName:           options.StorageOperatorName,
-			ClusterRoleName:        "arango-storage-operator",
-			ClusterRoleBindingName: "arango-storage-operator",
+		Storage: ResourceOptions{
+			User: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-storages",
+				RoleBindingName:    "arango-storages",
+				ServiceAccountName: "default",
+			},
+			Operator: CommonOptions{
+				Namespace:          "kube-system",
+				RoleName:           "arango-storage-operator",
+				RoleBindingName:    "arango-storage-operator",
+				ServiceAccountName: "arango-storage-operator",
+			},
+			OperatorDeploymentName: "arango-storage-operator",
 		},
 	}
 	for group, templateNames := range templateNameSet {

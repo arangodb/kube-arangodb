@@ -31,7 +31,7 @@ import (
 // ArangoLocalStoragesGetter has a method to return a ArangoLocalStorageInterface.
 // A group's client should implement this interface.
 type ArangoLocalStoragesGetter interface {
-	ArangoLocalStorages(namespace string) ArangoLocalStorageInterface
+	ArangoLocalStorages() ArangoLocalStorageInterface
 }
 
 // ArangoLocalStorageInterface has methods to work with ArangoLocalStorage resources.
@@ -51,14 +51,12 @@ type ArangoLocalStorageInterface interface {
 // arangoLocalStorages implements ArangoLocalStorageInterface
 type arangoLocalStorages struct {
 	client rest.Interface
-	ns     string
 }
 
 // newArangoLocalStorages returns a ArangoLocalStorages
-func newArangoLocalStorages(c *StorageV1alphaClient, namespace string) *arangoLocalStorages {
+func newArangoLocalStorages(c *StorageV1alphaClient) *arangoLocalStorages {
 	return &arangoLocalStorages{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -66,7 +64,6 @@ func newArangoLocalStorages(c *StorageV1alphaClient, namespace string) *arangoLo
 func (c *arangoLocalStorages) Get(name string, options v1.GetOptions) (result *v1alpha.ArangoLocalStorage, err error) {
 	result = &v1alpha.ArangoLocalStorage{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -79,7 +76,6 @@ func (c *arangoLocalStorages) Get(name string, options v1.GetOptions) (result *v
 func (c *arangoLocalStorages) List(opts v1.ListOptions) (result *v1alpha.ArangoLocalStorageList, err error) {
 	result = &v1alpha.ArangoLocalStorageList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Do().
@@ -91,7 +87,6 @@ func (c *arangoLocalStorages) List(opts v1.ListOptions) (result *v1alpha.ArangoL
 func (c *arangoLocalStorages) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch()
@@ -101,7 +96,6 @@ func (c *arangoLocalStorages) Watch(opts v1.ListOptions) (watch.Interface, error
 func (c *arangoLocalStorages) Create(arangoLocalStorage *v1alpha.ArangoLocalStorage) (result *v1alpha.ArangoLocalStorage, err error) {
 	result = &v1alpha.ArangoLocalStorage{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		Body(arangoLocalStorage).
 		Do().
@@ -113,7 +107,6 @@ func (c *arangoLocalStorages) Create(arangoLocalStorage *v1alpha.ArangoLocalStor
 func (c *arangoLocalStorages) Update(arangoLocalStorage *v1alpha.ArangoLocalStorage) (result *v1alpha.ArangoLocalStorage, err error) {
 	result = &v1alpha.ArangoLocalStorage{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		Name(arangoLocalStorage.Name).
 		Body(arangoLocalStorage).
@@ -128,7 +121,6 @@ func (c *arangoLocalStorages) Update(arangoLocalStorage *v1alpha.ArangoLocalStor
 func (c *arangoLocalStorages) UpdateStatus(arangoLocalStorage *v1alpha.ArangoLocalStorage) (result *v1alpha.ArangoLocalStorage, err error) {
 	result = &v1alpha.ArangoLocalStorage{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		Name(arangoLocalStorage.Name).
 		SubResource("status").
@@ -141,7 +133,6 @@ func (c *arangoLocalStorages) UpdateStatus(arangoLocalStorage *v1alpha.ArangoLoc
 // Delete takes name of the arangoLocalStorage and deletes it. Returns an error if one occurs.
 func (c *arangoLocalStorages) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		Name(name).
 		Body(options).
@@ -152,7 +143,6 @@ func (c *arangoLocalStorages) Delete(name string, options *v1.DeleteOptions) err
 // DeleteCollection deletes a collection of objects.
 func (c *arangoLocalStorages) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Body(options).
@@ -164,7 +154,6 @@ func (c *arangoLocalStorages) DeleteCollection(options *v1.DeleteOptions, listOp
 func (c *arangoLocalStorages) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha.ArangoLocalStorage, err error) {
 	result = &v1alpha.ArangoLocalStorage{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("arangolocalstorages").
 		SubResource(subresources...).
 		Name(name).

@@ -30,5 +30,5 @@ spec:
     shortNames:
     - arangostorage
     singular: arangolocalstorage
-  scope: Namespaced
+  scope: Cluster
   version: v1alpha

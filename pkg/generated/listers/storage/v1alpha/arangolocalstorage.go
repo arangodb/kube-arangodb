@@ -33,8 +33,8 @@ import (
 type ArangoLocalStorageLister interface {
 	// List lists all ArangoLocalStorages in the indexer.
 	List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error)
-	// ArangoLocalStorages returns an object that can list and get ArangoLocalStorages.
-	ArangoLocalStorages(namespace string) ArangoLocalStorageNamespaceLister
+	// Get retrieves the ArangoLocalStorage from the index for a given name.
+	Get(name string) (*v1alpha.ArangoLocalStorage, error)
 	ArangoLocalStorageListerExpansion
 }
 
@@ -56,38 +56,9 @@ func (s *arangoLocalStorageLister) List(selector labels.Selector) (ret []*v1alph
 	return ret, err
 }
 
-// ArangoLocalStorages returns an object that can list and get ArangoLocalStorages.
-func (s *arangoLocalStorageLister) ArangoLocalStorages(namespace string) ArangoLocalStorageNamespaceLister {
-	return arangoLocalStorageNamespaceLister{indexer: s.indexer, namespace: namespace}
-}
-
-// ArangoLocalStorageNamespaceLister helps list and get ArangoLocalStorages.
-type ArangoLocalStorageNamespaceLister interface {
-	// List lists all ArangoLocalStorages in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error)
-	// Get retrieves the ArangoLocalStorage from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha.ArangoLocalStorage, error)
-	ArangoLocalStorageNamespaceListerExpansion
-}
-
-// arangoLocalStorageNamespaceLister implements the ArangoLocalStorageNamespaceLister
-// interface.
-type arangoLocalStorageNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoLocalStorages in the indexer for a given namespace.
-func (s arangoLocalStorageNamespaceLister) List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha.ArangoLocalStorage))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoLocalStorage from the indexer for a given namespace and name.
-func (s arangoLocalStorageNamespaceLister) Get(name string) (*v1alpha.ArangoLocalStorage, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
+// Get retrieves the ArangoLocalStorage from the index for a given name.
+func (s *arangoLocalStorageLister) Get(name string) (*v1alpha.ArangoLocalStorage, error) {
+	obj, exists, err := s.indexer.GetByKey(name)
 	if err != nil {
 		return nil, err
 	}
