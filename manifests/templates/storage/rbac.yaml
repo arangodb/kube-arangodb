@@ -3,14 +3,8 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: {{ .ClusterRoleName }}
+  name: {{ .Storage.ClusterRoleName }}
 rules:
-- apiGroups:
-  - database.arangodb.com
-  resources:
-  - arangodeployments
-  verbs:
-  - "*"
 - apiGroups:
   - storage.arangodb.com
   resources:
@@ -26,19 +20,14 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - pods
-  - services
-  - endpoints
   - persistentvolumes
   - persistentvolumeclaims
   - events
-  - secrets
   verbs:
   - "*"
 - apiGroups:
   - apps
   resources:
-  - deployments
   - daemonsets
   verbs:
   - "*"
@@ -54,14 +43,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .ClusterRoleBindingName }}
+  name: {{ .Storage.ClusterRoleBindingName }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .ClusterRoleName }}
+  name: {{ .Storage.ClusterRoleName }}
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: {{ .Namespace }}
+  namespace: {{ .Storage.Namespace }}
 
 {{- end -}}

@@ -23,7 +23,6 @@
 package operator
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -46,7 +45,7 @@ var (
 
 // run the local storages part of the operator.
 // This registers a listener and waits until the process stops.
-func (o *Operator) runLocalStorages() {
+func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 	source := cache.NewListWatchFromClient(
 		o.Dependencies.CRCli.StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
@@ -59,9 +58,7 @@ func (o *Operator) runLocalStorages() {
 		DeleteFunc: o.onDeleteArangoLocalStorage,
 	}, cache.Indexers{})
 
-	ctx := context.TODO()
-	// TODO: use workqueue to avoid blocking
-	informer.Run(ctx.Done())
+	informer.Run(stop)
 }
 
 // onAddArangoLocalStorage local storage addition callback

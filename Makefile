@@ -40,9 +40,11 @@ else
 	IMAGESUFFIX := :dev
 endif
 
-ifndef MANIFESTPATH 
-	MANIFESTPATH := manifests/arango-operator-dev.yaml
+ifndef MANIFESTSUFFIX
+	MANIFESTSUFFIX := -dev
 endif
+MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
+MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
@@ -189,7 +191,7 @@ endif
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
-		--output=$(MANIFESTPATH) \
+		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
 		--image-sha256=$(IMAGESHA256) \
 		--namespace=$(DEPLOYMENTNAMESPACE)
@@ -240,7 +242,8 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f $(MANIFESTPATH)
+	kubectl apply -f $(MANIFESTPATHSTORAGE)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 ifneq ($(DEPLOYMENTNAMESPACE), default)
@@ -302,9 +305,11 @@ minikube-start:
 
 .PHONY: delete-operator
 delete-operator:
-	kubectl delete -f $(MANIFESTPATH) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
-	kubectl apply -f $(MANIFESTPATH)
+	kubectl apply -f $(MANIFESTPATHSTORAGE)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl get pods 
