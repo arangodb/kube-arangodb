@@ -247,7 +247,7 @@ endif
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	kubectl --namespace $(DEPLOYMENTNAMESPACE) \
 		run arangodb-operator-test -i --rm --quiet --restart=Never \
-		--image=$(TESTIMAGE) \
+		--image=$(shell docker inspect $(TESTIMAGE) '--format={{index .RepoDigests 0}}') \
 		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
 		--env="TEST_NAMESPACE=$(DEPLOYMENTNAMESPACE)" \
 		-- \
