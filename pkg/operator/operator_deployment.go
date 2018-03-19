@@ -23,7 +23,6 @@
 package operator
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -46,7 +45,7 @@ var (
 
 // run the deployments part of the operator.
 // This registers a listener and waits until the process stops.
-func (o *Operator) runDeployments() {
+func (o *Operator) runDeployments(stop <-chan struct{}) {
 	source := cache.NewListWatchFromClient(
 		o.Dependencies.CRCli.DatabaseV1alpha().RESTClient(),
 		api.ArangoDeploymentResourcePlural,
@@ -59,9 +58,7 @@ func (o *Operator) runDeployments() {
 		DeleteFunc: o.onDeleteArangoDeployment,
 	}, cache.Indexers{})
 
-	ctx := context.TODO()
-	// TODO: use workqueue to avoid blocking
-	informer.Run(ctx.Done())
+	informer.Run(stop)
 }
 
 // onAddArangoDeployment deployment addition callback

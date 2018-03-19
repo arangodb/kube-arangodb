@@ -38,40 +38,58 @@ import (
 
 var (
 	options struct {
-		OutputFile   string
+		OutputSuffix string
 		TemplatesDir string
 
-		Namespace       string
-		Image           string
-		ImagePullPolicy string
-		ImageSHA256     bool
-		OperatorName    string
-		RBAC            bool
+		Namespace              string
+		Image                  string
+		ImagePullPolicy        string
+		ImageSHA256            bool
+		DeploymentOperatorName string
+		StorageOperatorName    string
+		RBAC                   bool
 	}
-	templateNames = []string{
+	deploymentTemplateNames = []string{
+		"rbac.yaml",
+		"deployment.yaml",
+	}
+	storageTemplateNames = []string{
 		"rbac.yaml",
 		"deployment.yaml",
 	}
 )
 
 func init() {
-	pflag.StringVar(&options.OutputFile, "output", "manifests/arango-operator.yaml", "Path of the generated manifest file")
+	pflag.StringVar(&options.OutputSuffix, "output-suffix", "", "Suffix of the generated manifest files")
 	pflag.StringVar(&options.TemplatesDir, "templates-dir", "manifests/templates", "Directory containing manifest templates")
 	pflag.StringVar(&options.Namespace, "namespace", "default", "Namespace in which the operator will be deployed")
 	pflag.StringVar(&options.Image, "image", "arangodb/arangodb-operator:latest", "Fully qualified image name of the ArangoDB operator")
 	pflag.StringVar(&options.ImagePullPolicy, "image-pull-policy", "IfNotPresent", "Pull policy of the ArangoDB operator image")
 	pflag.BoolVar(&options.ImageSHA256, "image-sha256", true, "Use SHA256 syntax for image")
-	pflag.StringVar(&options.OperatorName, "operator-name", "arango-operator", "Name of the ArangoDB operator deployment")
+	pflag.StringVar(&options.DeploymentOperatorName, "deployment-operator-name", "arango-deployment-operator", "Name of the ArangoDeployment operator deployment")
+	pflag.StringVar(&options.StorageOperatorName, "storage-operator-name", "arango-storage-operator", "Name of the ArangoLocalStorage operator deployment")
 	pflag.BoolVar(&options.RBAC, "rbac", true, "Use role based access control")
 
 	pflag.Parse()
 }
 
+type TemplateOptions struct {
+	Image           string
+	ImagePullPolicy string
+	RBAC            bool
+	Deployment      OperatorOptions
+	Storage         OperatorOptions
+}
+
+type OperatorOptions struct {
+	Namespace              string
+	OperatorName           string
+	ClusterRoleName        string
+	ClusterRoleBindingName string
+}
+
 func main() {
 	// Check options
-	if options.OutputFile == "" {
-		log.Fatal("--output not specified.")
-	}
 	if options.Namespace == "" {
 		log.Fatal("--namespace not specified.")
 	}
@@ -95,47 +113,55 @@ func main() {
 		options.Image = strings.TrimSpace(string(result))
 	}
 
-	// Process templates
-	templateOptions := struct {
-		Namespace              string
-		OperatorName           string
-		OperatorImage          string
-		ImagePullPolicy        string
-		ClusterRoleName        string
-		ClusterRoleBindingName string
-		RBAC                   bool
-	}{
-		Namespace:              options.Namespace,
-		OperatorName:           options.OperatorName,
-		OperatorImage:          options.Image,
-		ImagePullPolicy:        options.ImagePullPolicy,
-		ClusterRoleName:        "arango-operator",
-		ClusterRoleBindingName: "arango-operator",
-		RBAC: options.RBAC,
-	}
-	output := &bytes.Buffer{}
-	for i, name := range templateNames {
-		t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, name))
-		if err != nil {
-			log.Fatalf("Failed to parse template %s: %v", name, err)
-		}
-		if i > 0 {
-			output.WriteString("\n---\n\n")
-		}
-		output.WriteString(fmt.Sprintf("## %s\n", name))
-		t.Execute(output, templateOptions)
-		output.WriteString("\n")
+	// Prepare templates to include
+	templateNameSet := map[string][]string{
+		"deployment": deploymentTemplateNames,
+		"storage":    storageTemplateNames,
 	}
 
-	// Save output
-	outputPath, err := filepath.Abs(options.OutputFile)
-	if err != nil {
-		log.Fatalf("Failed to get absolute output path: %v\n", err)
+	// Process templates
+	templateOptions := TemplateOptions{
+		Image:           options.Image,
+		ImagePullPolicy: options.ImagePullPolicy,
+		RBAC:            options.RBAC,
+		Deployment: OperatorOptions{
+			Namespace:              options.Namespace,
+			OperatorName:           options.DeploymentOperatorName,
+			ClusterRoleName:        "arango-deployment-operator",
+			ClusterRoleBindingName: "arango-deployment-operator",
+		},
+		Storage: OperatorOptions{
+			Namespace:              options.Namespace,
+			OperatorName:           options.StorageOperatorName,
+			ClusterRoleName:        "arango-storage-operator",
+			ClusterRoleBindingName: "arango-storage-operator",
+		},
 	}
-	if err := os.MkdirAll(filepath.Base(outputPath), 0755); err != nil {
-		log.Fatalf("Failed to create output directory: %v\n", err)
-	}
-	if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
-		log.Fatalf("Failed to write output file: %v\n", err)
+	for group, templateNames := range templateNameSet {
+		output := &bytes.Buffer{}
+		for i, name := range templateNames {
+			t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
+			if err != nil {
+				log.Fatalf("Failed to parse template %s: %v", name, err)
+			}
+			if i > 0 {
+				output.WriteString("\n---\n\n")
+			}
+			output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
+			t.Execute(output, templateOptions)
+			output.WriteString("\n")
+		}
+
+		// Save output
+		outputPath, err := filepath.Abs(filepath.Join("manifests", "arango-"+group+options.OutputSuffix+".yaml"))
+		if err != nil {
+			log.Fatalf("Failed to get absolute output path: %v\n", err)
+		}
+		if err := os.MkdirAll(filepath.Base(outputPath), 0755); err != nil {
+			log.Fatalf("Failed to create output directory: %v\n", err)
+		}
+		if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
+			log.Fatalf("Failed to write output file: %v\n", err)
+		}
 	}
 }
