@@ -49,22 +49,24 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
 	}
 
-	// Default+TLS deployment
+	// Default+TLS disabled deployment
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
 				Mode: api.DeploymentModeSingle,
 				TLS: api.TLSSpec{
-					CASecretName: "test-ca",
+					CASecretName: "None",
 				},
 			},
 		}
@@ -77,12 +79,10 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=ssl://[::]:8529",
+				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
-				"--ssl.ecdh-curve=",
-				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
@@ -105,10 +105,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=mmfiles",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
@@ -131,9 +133,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=false",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
@@ -156,10 +160,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 				"--foo1",
 				"--foo2",
 			},
@@ -187,10 +193,10 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, agents, "id1")
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-single-id1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=ssl://name-single-id1.name-int.ns.svc:8529",
 				"--cluster.my-id=id1",
 				"--cluster.my-role=SINGLE",
 				"--database.directory=/data",
@@ -199,10 +205,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				"--log.output=+",
 				"--replication.automatic-failover=true",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)

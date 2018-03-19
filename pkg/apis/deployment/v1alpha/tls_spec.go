@@ -42,9 +42,14 @@ type TLSSpec struct {
 	TTL          time.Duration `json:"ttl,omitempty"`
 }
 
+const (
+	// CASecretNameDisabled is the value of CASecretName to use for disabling authentication.
+	CASecretNameDisabled = "None"
+)
+
 // IsSecure returns true when a CA secret has been set, false otherwise.
 func (s TLSSpec) IsSecure() bool {
-	return s.CASecretName != ""
+	return s.CASecretName != CASecretNameDisabled
 }
 
 // GetAltNames splits the list of AltNames into DNS names, IP addresses & email addresses.

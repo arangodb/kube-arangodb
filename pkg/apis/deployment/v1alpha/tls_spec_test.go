@@ -43,8 +43,9 @@ func TestTLSSpecValidate(t *testing.T) {
 }
 
 func TestTLSSpecIsSecure(t *testing.T) {
-	assert.False(t, TLSSpec{CASecretName: ""}.IsSecure())
+	assert.True(t, TLSSpec{CASecretName: ""}.IsSecure())
 	assert.True(t, TLSSpec{CASecretName: "foo"}.IsSecure())
+	assert.False(t, TLSSpec{CASecretName: "None"}.IsSecure())
 }
 
 func TestTLSSpecSetDefaults(t *testing.T) {
