@@ -24,6 +24,7 @@ package arangod
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	nhttp "net/http"
@@ -70,6 +71,19 @@ var (
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+	sharedHTTPSTransport = &nhttp.Transport{
+		Proxy: nhttp.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
@@ -97,11 +111,16 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
+	transport := sharedHTTPTransport
+	if apiObject.Spec.IsSecure() {
+		scheme = "https"
+		transport = sharedHTTPSTransport
+	}
 	connConfig := http.ConnectionConfig{
 		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
-		Transport: sharedHTTPTransport,
+		Transport: transport,
 	}
-	// TODO deal with TLS
+	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
 	if err != nil {
 		return nil, maskAny(err)
