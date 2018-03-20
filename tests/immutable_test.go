@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-//	"github.com/stretchr/testify/assert"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
