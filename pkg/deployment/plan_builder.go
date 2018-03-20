@@ -31,6 +31,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// upgradeDecision is the result of an upgrade check.
+type upgradeDecision struct {
+	UpgradeNeeded     bool // If set, the image version has changed
+	UpgradeAllowed    bool // If set, it is an allowed version change
+	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
+}
+
 // createPlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
@@ -71,7 +78,9 @@ func (d *Deployment) createPlan() error {
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createPlan(log zerolog.Logger, apiObject metav1.Object, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
+func createPlan(log zerolog.Logger, apiObject metav1.Object,
+	currentPlan api.Plan, spec api.DeploymentSpec,
+	status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -117,9 +126,14 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object, currentPlan api.Pla
 			if podName := m.PodName; podName != "" {
 				if p := getPod(podName); p != nil {
 					// Got pod, compare it with what it should be
-					rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
-					if rotNeeded {
-						plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
+					decision := podNeedsUpgrading(*p, spec, status.Images)
+					if decision.UpgradeNeeded && decision.UpgradeAllowed {
+						plan = append(plan, createRotateMemberPlan(log, m, group, "Version upgrade", decision.AutoUpgradeNeeded)...)
+					} else {
+						rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
+						if rotNeeded {
+							plan = append(plan, createRotateMemberPlan(log, m, group, reason, false)...)
+						}
 					}
 				}
 			}
@@ -129,6 +143,48 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object, currentPlan api.Pla
 
 	// Return plan
 	return plan, true
+}
+
+// podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
+// the given spec) and if that is allowed.
+func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+	if len(p.Spec.Containers) == 1 {
+		c := p.Spec.Containers[0]
+		specImageInfo, found := images.GetByImage(spec.Image)
+		if !found {
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		podImageInfo, found := images.GetByImageID(c.Image)
+		if !found {
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		if specImageInfo.ImageID == podImageInfo.ImageID {
+			// No change
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		// Image changed, check if change is allowed
+		specVersion := specImageInfo.ArangoDBVersion
+		podVersion := podImageInfo.ArangoDBVersion
+		if specVersion.Major() != podVersion.Major() {
+			// E.g. 3.x -> 4.x, we cannot allow automatically
+			return upgradeDecision{UpgradeNeeded: true, UpgradeAllowed: false}
+		}
+		if specVersion.Minor() != podVersion.Minor() {
+			// Is allowed, with `--database.auto-upgrade`
+			return upgradeDecision{
+				UpgradeNeeded:     true,
+				UpgradeAllowed:    true,
+				AutoUpgradeNeeded: true,
+			}
+		}
+		// Patch version change, rotate only
+		return upgradeDecision{
+			UpgradeNeeded:     true,
+			UpgradeAllowed:    true,
+			AutoUpgradeNeeded: false,
+		}
+	}
+	return upgradeDecision{UpgradeNeeded: false}
 }
 
 // podNeedsRotation returns true when the specification of the
@@ -141,11 +197,8 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	if len(p.Spec.Containers) != 1 {
 		return true, "Number of containers changed"
 	}
-	// Check image
+	// Check image pull policy
 	c := p.Spec.Containers[0]
-	if c.Image != spec.Image {
-		return true, "Image changed"
-	}
 	if c.ImagePullPolicy != spec.ImagePullPolicy {
 		return true, "Image pull policy changed"
 	}
@@ -198,13 +251,16 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
-func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus, group api.ServerGroup, reason string) api.Plan {
+func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
+	group api.ServerGroup, reason string, autoUpgrade bool) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Msg("Creating rotation plan")
+	rotateAction := api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason)
+	rotateAction.AutoUpgrade = autoUpgrade
 	plan := api.Plan{
-		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
+		rotateAction,
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan

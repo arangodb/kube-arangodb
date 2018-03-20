@@ -55,7 +55,13 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
-		return true, nil
+	}
+	if a.action.AutoUpgrade {
+		// Set AutoUpgrade condition
+		m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Rotate with AutoUpgrade", "AutoUpgrade on first restart")
+		if err := a.actionCtx.UpdateMember(m); err != nil {
+			return false, maskAny(err)
+		}
 	}
 	if group.IsArangod() {
 		// Invoke shutdown endpoint

@@ -61,6 +61,8 @@ type Action struct {
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
+	// AutoUpgrade indicates the need for an `--database.auto-upgrade` of the member.
+	AutoUpgrade bool `json:"auto-upgrade,omitempty"`
 }
 
 // NewAction instantiates a new Action.

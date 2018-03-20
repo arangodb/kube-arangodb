@@ -57,7 +57,8 @@ func (o optionPair) CompareTo(other optionPair) int {
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup, agents api.MemberStatusList, id string) []string {
+func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+	agents api.MemberStatusList, id string, autoUpgrade bool) []string {
 	options := make([]optionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
 
@@ -126,6 +127,14 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		optionPair{"--database.directory", k8sutil.ArangodVolumeMountDir},
 		optionPair{"--log.output", "+"},
 	)
+
+	// Auto upgrade?
+	if autoUpgrade {
+		options = append(options,
+			optionPair{"--database.auto-upgrade", "true"},
+		)
+	}
+
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
 			optionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
@@ -319,7 +328,8 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 					return nil
 				}
 				// Prepare arguments
-				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID)
+				autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
+				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID, autoUpgrade)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
@@ -383,6 +393,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			m.State = api.MemberStateCreated
 			m.Conditions.Remove(api.ConditionTypeReady)
 			m.Conditions.Remove(api.ConditionTypeTerminated)
+			m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
 			if err := status.Update(m); err != nil {
 				return maskAny(err)
 			}
