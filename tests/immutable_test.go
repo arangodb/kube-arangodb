@@ -71,14 +71,3 @@ func TestImmutableStorageEngine(t *testing.T) {
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
 }
-
-
-
-			/*if current, err: = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions); err != nil {
-				t.Fatalf("Cluster not running in expected health in time: %v", err)
-			}
-			if current.Spec.StorageEngine == api.StorageEngineRocksDB {
-				return nil
-			} 
-			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)*/
-		
