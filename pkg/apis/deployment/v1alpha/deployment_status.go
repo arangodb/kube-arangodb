@@ -36,6 +36,9 @@ type DeploymentStatus struct {
 	// to access syncmasters (only set when dc2dc synchronization is enabled).
 	SyncServiceName string `json:"syncServiceName,omitempty"`
 
+	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
+	Images ImageInfoList `json:"arangodb-images,omitempty"`
+
 	// Members holds the status for all members in all server groups
 	Members DeploymentStatusMembers `json:"members"`
 
