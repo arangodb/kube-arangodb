@@ -27,11 +27,13 @@ import (
 	"fmt"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // ActionContext provides methods to the Action implementations
@@ -44,6 +46,8 @@ type ActionContext interface {
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	// GetAgencyClients returns a client connection for every agency member.
+	GetAgencyClients(ctx context.Context) ([]arangod.Agency, error)
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
 	// Returns member status, true when found, or false
@@ -99,6 +103,24 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 		return nil, maskAny(err)
 	}
 	return c, nil
+}
+
+// GetAgencyClients returns a client connection for every agency member.
+func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
+	agencyMembers := ac.deployment.status.Members.Agents
+	result := make([]arangod.Agency, 0, len(agencyMembers))
+	for _, m := range agencyMembers {
+		client, err := ac.GetServerClient(ctx, api.ServerGroupAgents, m.ID)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		aClient, err := arangod.NewAgencyClient(client)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		result = append(result, aClient)
+	}
+	return result, nil
 }
 
 // GetMemberStatusByID returns the current member status
