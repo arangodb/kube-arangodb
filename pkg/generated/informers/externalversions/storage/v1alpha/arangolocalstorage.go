@@ -45,33 +45,32 @@ type ArangoLocalStorageInformer interface {
 type arangoLocalStorageInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
-	namespace        string
 }
 
 // NewArangoLocalStorageInformer constructs a new informer for ArangoLocalStorage type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewArangoLocalStorageInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredArangoLocalStorageInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewArangoLocalStorageInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredArangoLocalStorageInformer(client, resyncPeriod, indexers, nil)
 }
 
 // NewFilteredArangoLocalStorageInformer constructs a new informer for ArangoLocalStorage type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredArangoLocalStorageInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredArangoLocalStorageInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages(namespace).List(options)
+				return client.StorageV1alpha().ArangoLocalStorages().List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages(namespace).Watch(options)
+				return client.StorageV1alpha().ArangoLocalStorages().Watch(options)
 			},
 		},
 		&storage_v1alpha.ArangoLocalStorage{},
@@ -81,7 +80,7 @@ func NewFilteredArangoLocalStorageInformer(client versioned.Interface, namespace
 }
 
 func (f *arangoLocalStorageInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredArangoLocalStorageInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewFilteredArangoLocalStorageInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
 func (f *arangoLocalStorageInformer) Informer() cache.SharedIndexInformer {

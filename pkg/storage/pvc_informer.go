@@ -33,7 +33,7 @@ func (ls *LocalStorage) listenForPvcEvents() {
 	source := cache.NewListWatchFromClient(
 		ls.deps.KubeCli.CoreV1().RESTClient(),
 		"persistentvolumeclaims",
-		ls.apiObject.GetNamespace(),
+		"", //ls.apiObject.GetNamespace(),
 		fields.Everything())
 
 	getPvc := func(obj interface{}) (*v1.PersistentVolumeClaim, bool) {

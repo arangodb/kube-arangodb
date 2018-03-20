@@ -52,7 +52,7 @@ func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStora
 		},
 	}
 	svc.SetOwnerReferences(append(svc.GetOwnerReferences(), apiObject.AsOwner()))
-	ns := apiObject.GetNamespace()
+	ns := ls.config.Namespace
 	if _, err := ls.deps.KubeCli.CoreV1().Services(ns).Create(svc); err != nil && !k8sutil.IsAlreadyExists(err) {
 		return maskAny(err)
 	}

@@ -25,7 +25,3 @@ package v1alpha
 // ArangoLocalStorageListerExpansion allows custom methods to be added to
 // ArangoLocalStorageLister.
 type ArangoLocalStorageListerExpansion interface{}
-
-// ArangoLocalStorageNamespaceListerExpansion allows custom methods to be added to
-// ArangoLocalStorageNamespaceLister.
-type ArangoLocalStorageNamespaceListerExpansion interface{}

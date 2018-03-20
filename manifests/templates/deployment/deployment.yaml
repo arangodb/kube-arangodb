@@ -2,14 +2,14 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Deployment.OperatorName }}
-  namespace: {{ .Deployment.Namespace }}
+  name: {{ .Deployment.OperatorDeploymentName }}
+  namespace: {{ .Deployment.Operator.Namespace }}
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: {{ .Deployment.OperatorName }}
+        name: {{ .Deployment.OperatorDeploymentName }}
     spec:
       containers:
       - name: operator

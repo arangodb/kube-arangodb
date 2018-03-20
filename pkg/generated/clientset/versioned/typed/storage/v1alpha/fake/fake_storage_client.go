@@ -29,8 +29,8 @@ type FakeStorageV1alpha struct {
 	*testing.Fake
 }
 
-func (c *FakeStorageV1alpha) ArangoLocalStorages(namespace string) v1alpha.ArangoLocalStorageInterface {
-	return &FakeArangoLocalStorages{c, namespace}
+func (c *FakeStorageV1alpha) ArangoLocalStorages() v1alpha.ArangoLocalStorageInterface {
+	return &FakeArangoLocalStorages{c}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
