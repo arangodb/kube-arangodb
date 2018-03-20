@@ -2,9 +2,11 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/dchest/uniuri"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 //	"github.com/stretchr/testify/assert"
 
 	driver "github.com/arangodb/go-driver"
@@ -48,13 +50,40 @@ func TestImmutableStorageEngine(t *testing.T) {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
-	// Add 2 DBServers, 1 coordinator
-	if _, err := updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.StorageEngine = api.StorageEngineMMFiles
-	}); err == nil {
-		t.Fatalf("Successfully changed storage engine to : %v", err)
-	}
+	// Try to reset storageEngine
+	if _, err := updateDeployment(c, depl.GetName(), ns,
+		func(spec *api.DeploymentSpec) {
+			spec.StorageEngine = api.StorageEngineMMFiles
+		}); err != nil {
+			t.Fatalf("Failed to update the StorageEngine setting: %v", err)
+		} 
+	
+	if _, err = waitUntilDeployment(c, depl.GetName(), ns,
+		func(depl *api.ArangoDeployment) error {
+			current, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Cluster not running in expected health in time: %v", err)
+			}
+			if current.Spec.StorageEngine == api.StorageEngineRocksDB {
+				return nil
+			} 
+			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)
+		}); err != nil {
+			t.Fatalf("StorageEngine parameter not immutable: %v", err)
+		}
 
+	
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
 }
+
+
+
+			/*if current, err: = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions); err != nil {
+				t.Fatalf("Cluster not running in expected health in time: %v", err)
+			}
+			if current.Spec.StorageEngine == api.StorageEngineRocksDB {
+				return nil
+			} 
+			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)*/
+		
