@@ -6,7 +6,14 @@ The ArangoDB operator needs to be installed in your Kubernetes
 cluster first. To do so, clone this repository and run:
 
 ```bash
-kubectl apply -f manifests/arango-operator.yaml
+kubectl apply -f manifests/crd.yaml
+kubectl apply -f manifests/arango-deployment.yaml
+```
+
+To use `ArangoLocalStorage`, also run:
+
+```bash
+kubectl apply -f manifests/arango-storage.yaml
 ```
 
 ## Cluster creation
@@ -37,5 +44,7 @@ To remove the entire ArangoDB operator, remove all
 clusters first and then remove the operator by running:
 
 ```bash
-kubectl delete -f manifests/arango-operator.yaml
+kubectl delete -f manifests/arango-deployment.yaml
+# If `ArangoLocalStorage` is installed
+kubectl delete -f manifests/arango-storage.yaml
 ```

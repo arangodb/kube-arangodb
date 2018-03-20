@@ -55,9 +55,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
-				"--agency.my-address=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -65,16 +65,18 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
 	}
 
-	// Default+TLS deployment
+	// Default+TLS disabled deployment
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -84,7 +86,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Spec: api.DeploymentSpec{
 				Mode: api.DeploymentModeCluster,
 				TLS: api.TLSSpec{
-					CASecretName: "test-ca",
+					CASecretName: "None",
 				},
 			},
 		}
@@ -99,9 +101,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=ssl://name-agnt-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=ssl://name-agnt-a3.name-int.ns.svc:8529",
-				"--agency.my-address=ssl://name-agnt-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=tcp://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -109,12 +111,10 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=ssl://[::]:8529",
+				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
-				"--ssl.ecdh-curve=",
-				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
@@ -144,9 +144,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
-				"--agency.my-address=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -154,9 +154,11 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=false",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.statistics=false",
 				"--server.storage-engine=mmfiles",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
 			cmdline,
 		)
@@ -185,9 +187,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			[]string{
 				"--agency.activate=true",
 				"--agency.disaster-recovery-id=a1",
-				"--agency.endpoint=tcp://name-agnt-a2.name-int.ns.svc:8529",
-				"--agency.endpoint=tcp://name-agnt-a3.name-int.ns.svc:8529",
-				"--agency.my-address=tcp://name-agnt-a1.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
 				"--database.directory=/data",
@@ -195,10 +197,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
-				"--server.endpoint=tcp://[::]:8529",
+				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 				"--foo1",
 				"--foo2",
 			},

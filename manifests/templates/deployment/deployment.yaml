@@ -2,19 +2,21 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .OperatorName }}
-  namespace: {{ .Namespace }}
+  name: {{ .Deployment.OperatorName }}
+  namespace: {{ .Deployment.Namespace }}
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: {{ .OperatorName }}
+        name: {{ .Deployment.OperatorName }}
     spec:
       containers:
-      - name: arangodb-operator
+      - name: operator
         imagePullPolicy: {{ .ImagePullPolicy }}
-        image: {{ .OperatorImage }}
+        image: {{ .Image }}
+        args:
+          - --operator.deployment
         env:
         - name: MY_POD_NAMESPACE
           valueFrom:
