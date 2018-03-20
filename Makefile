@@ -40,8 +40,13 @@ else
 	IMAGESUFFIX := :dev
 endif
 
+ifeq ($(MANIFESTSUFFIX),-)
+	# Release setting
+	MANIFESTSUFFIX :=
+else
 ifndef MANIFESTSUFFIX
 	MANIFESTSUFFIX := -dev
+endif
 endif
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml

@@ -1,0 +1,115 @@
+## storage/rbac.yaml
+## Cluster role granting access to ArangoLocalStorage resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-storages
+rules:
+- apiGroups: ["storage.arangodb.com"]
+  resources: ["arangolocalstorages"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoLocalStorage operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-storage-operator
+rules:
+- apiGroups: ["storage.arangodb.com"]
+  resources: ["arangolocalstorages"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["*"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["*"]
+
+---
+
+## Bind the cluster role granting access to ArangoLocalStorage resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: arango-storages
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-storages
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoLocalStorage operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-storage-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-storage-operator
+subjects:
+- kind: ServiceAccount
+  name: arango-storage-operator
+  namespace: kube-system
+
+---
+
+## storage/deployment.yaml
+## Service accounts
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: arango-storage-operator
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-storage-operator
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: arango-storage-operator
+    spec:
+      serviceAccountName: arango-storage-operator
+      containers:
+      - name: operator
+        imagePullPolicy: IfNotPresent
+        image: arangodb/kube-arangodb@sha256:748421ba01fd52d9589cc1830c79b62c3a7af3f4366b9cba0247e09d0a7d6e19
+        args:
+        - --operator.storage
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+
