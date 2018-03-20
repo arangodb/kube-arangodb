@@ -49,6 +49,26 @@ var (
 func (g ServerGroup) AsRole() string {
 	switch g {
 	case ServerGroupSingle:
+		return "single"
+	case ServerGroupAgents:
+		return "agent"
+	case ServerGroupDBServers:
+		return "dbserver"
+	case ServerGroupCoordinators:
+		return "coordinator"
+	case ServerGroupSyncMasters:
+		return "syncmaster"
+	case ServerGroupSyncWorkers:
+		return "syncworker"
+	default:
+		return "?"
+	}
+}
+
+// AsRoleAbbreviated returns the abbreviation of the "role" value for the given group.
+func (g ServerGroup) AsRoleAbbreviated() string {
+	switch g {
+	case ServerGroupSingle:
 		return "sngl"
 	case ServerGroupAgents:
 		return "agnt"

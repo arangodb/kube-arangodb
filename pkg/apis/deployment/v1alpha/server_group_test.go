@@ -29,12 +29,21 @@ import (
 )
 
 func TestServerGroupAsRole(t *testing.T) {
-	assert.Equal(t, "sngl", ServerGroupSingle.AsRole())
-	assert.Equal(t, "agnt", ServerGroupAgents.AsRole())
-	assert.Equal(t, "prmr", ServerGroupDBServers.AsRole())
-	assert.Equal(t, "crdn", ServerGroupCoordinators.AsRole())
-	assert.Equal(t, "syma", ServerGroupSyncMasters.AsRole())
-	assert.Equal(t, "sywo", ServerGroupSyncWorkers.AsRole())
+	assert.Equal(t, "single", ServerGroupSingle.AsRole())
+	assert.Equal(t, "agent", ServerGroupAgents.AsRole())
+	assert.Equal(t, "dbserver", ServerGroupDBServers.AsRole())
+	assert.Equal(t, "coordinator", ServerGroupCoordinators.AsRole())
+	assert.Equal(t, "syncmaster", ServerGroupSyncMasters.AsRole())
+	assert.Equal(t, "syncworker", ServerGroupSyncWorkers.AsRole())
+}
+
+func TestServerGroupAsRoleAbbreviated(t *testing.T) {
+	assert.Equal(t, "sngl", ServerGroupSingle.AsRoleAbbreviated())
+	assert.Equal(t, "agnt", ServerGroupAgents.AsRoleAbbreviated())
+	assert.Equal(t, "prmr", ServerGroupDBServers.AsRoleAbbreviated())
+	assert.Equal(t, "crdn", ServerGroupCoordinators.AsRoleAbbreviated())
+	assert.Equal(t, "syma", ServerGroupSyncMasters.AsRoleAbbreviated())
+	assert.Equal(t, "sywo", ServerGroupSyncWorkers.AsRoleAbbreviated())
 }
 
 func TestServerGroupIsArangod(t *testing.T) {

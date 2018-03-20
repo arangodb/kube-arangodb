@@ -307,8 +307,9 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			}
 			// Update pod name
 			role := group.AsRole()
+			roleAbbr := group.AsRoleAbbreviated()
 			podSuffix := createPodSuffix(apiObject.Spec)
-			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), role, m.ID, podSuffix)
+			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
 			// Create pod
 			if group.IsArangod() {
 				// Find image ID

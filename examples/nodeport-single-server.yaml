@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: arangodb
-    role: sngl
+    role: single
   type: NodePort
   ports:
   - protocol: TCP
