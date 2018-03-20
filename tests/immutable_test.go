@@ -57,14 +57,11 @@ func TestImmutableStorageEngine(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("Failed to update the StorageEngine setting: %v", err)
 		} 
-	
-	if _, err = waitUntilDeployment(c, depl.GetName(), ns,
+
+	// Wait for StorageEngine parameter to be back to RocksDB
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
 		func(depl *api.ArangoDeployment) error {
-			current, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
-			if err != nil {
-				t.Fatalf("Cluster not running in expected health in time: %v", err)
-			}
-			if current.Spec.StorageEngine == api.StorageEngineRocksDB {
+			if depl.Spec.StorageEngine == api.StorageEngineRocksDB {
 				return nil
 			} 
 			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)
