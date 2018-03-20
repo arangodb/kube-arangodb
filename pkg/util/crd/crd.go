@@ -54,7 +54,7 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 		}
 		return maskAny(fmt.Errorf("Retry needed"))
 	}
-	if err := retry.Retry(op, time.Minute*5); err != nil {
+	if err := retry.Retry(op, time.Second*30); err != nil {
 		return maskAny(err)
 	}
 	return nil

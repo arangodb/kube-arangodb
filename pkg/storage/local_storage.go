@@ -44,6 +44,7 @@ import (
 
 // Config holds configuration settings for a LocalStorage
 type Config struct {
+	Namespace      string
 	PodName        string
 	ServiceAccount string
 }
@@ -274,7 +275,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 	log := ls.deps.Log.With().Str("localStorage", event.LocalStorage.GetName()).Logger()
 
 	// Get the most recent version of the local storage from the API server
-	current, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ls.apiObject.GetNamespace()).Get(ls.apiObject.GetName(), metav1.GetOptions{})
+	current, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Get(ls.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of local storage from API server")
 		if k8sutil.IsNotFound(err) {
@@ -339,8 +340,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 	for {
 		attempt++
 		update.Status = ls.status
-		ns := ls.apiObject.GetNamespace()
-		newAPIObject, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ns).Update(update)
+		newAPIObject, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Update(update)
 		if err == nil {
 			// Update internal object
 			ls.apiObject = newAPIObject
@@ -350,7 +350,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
-			current, err = ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Get(update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -374,8 +374,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 		attempt++
 		update.Spec = newSpec
 		update.Status = ls.status
-		ns := ls.apiObject.GetNamespace()
-		newAPIObject, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ns).Update(update)
+		newAPIObject, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Update(update)
 		if err == nil {
 			// Update internal object
 			ls.apiObject = newAPIObject
@@ -385,7 +384,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoLocalStorage
-			current, err = ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Get(update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -424,7 +423,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 			return maskAny(err)
 		}
 
-		depl, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages(ls.apiObject.Namespace).Get(ls.apiObject.Name, metav1.GetOptions{})
+		depl, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Get(ls.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:

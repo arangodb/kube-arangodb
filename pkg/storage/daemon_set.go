@@ -44,7 +44,7 @@ const (
 // If it already exists, it is updated.
 func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
 	log := ls.deps.Log
-	ns := apiObject.GetNamespace()
+	ns := ls.config.Namespace
 	c := corev1.Container{
 		Name:            "provisioner",
 		Image:           ls.image,

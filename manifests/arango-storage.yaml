@@ -1,10 +1,9 @@
-
-{{- if .RBAC -}}
+## storage/rbac.yaml
 ## Cluster role granting access to ArangoLocalStorage resources.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: {{ .Storage.User.RoleName }}
+  name: arango-storages
 rules:
 - apiGroups: ["storage.arangodb.com"]
   resources: ["arangolocalstorages"]
@@ -16,7 +15,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: {{ .Storage.Operator.RoleName }}
+  name: arango-storage-operator
 rules:
 - apiGroups: ["storage.arangodb.com"]
   resources: ["arangolocalstorages"]
@@ -44,16 +43,16 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
-  name: {{ .Storage.User.RoleBindingName }}
-  namespace: {{ .Storage.User.Namespace }}
+  name: arango-storages
+  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Storage.User.RoleName }}
+  name: arango-storages
 subjects:
 - kind: ServiceAccount
-  name: {{ .Storage.User.ServiceAccountName }}
-  namespace: {{ .Storage.User.Namespace }}
+  name: default
+  namespace: default
 
 ---
 
@@ -63,13 +62,54 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Storage.Operator.RoleBindingName }}
+  name: arango-storage-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Storage.Operator.RoleName }}
+  name: arango-storage-operator
 subjects:
 - kind: ServiceAccount
-  name: {{ .Storage.Operator.ServiceAccountName }}
-  namespace: {{ .Storage.Operator.Namespace }}
-{{- end -}}
+  name: arango-storage-operator
+  namespace: kube-system
+
+---
+
+## storage/deployment.yaml
+## Service accounts
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: arango-storage-operator
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-storage-operator
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: arango-storage-operator
+    spec:
+      serviceAccountName: arango-storage-operator
+      containers:
+      - name: operator
+        imagePullPolicy: IfNotPresent
+        image: arangodb/kube-arangodb@sha256:748421ba01fd52d9589cc1830c79b62c3a7af3f4366b9cba0247e09d0a7d6e19
+        args:
+        - --operator.storage
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+

@@ -1,9 +1,9 @@
-{{- if .RBAC -}}
+## deployment/rbac.yaml
 ## Cluster role granting access to ArangoDeployment resources.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: {{ .Deployment.User.RoleName }}
+  name: arango-deployments
 rules:
 - apiGroups: ["database.arangodb.com"]
   resources: ["arangodeployments"]
@@ -15,7 +15,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: {{ .Deployment.Operator.RoleName }}
+  name: arango-deployment-operator
 rules:
 - apiGroups: ["database.arangodb.com"]
   resources: ["arangodeployments"]
@@ -40,16 +40,16 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
-  name: {{ .Deployment.User.RoleBindingName }}
-  namespace: {{ .Deployment.User.Namespace }}
+  name: arango-deployments
+  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Deployment.User.RoleName }}
+  name: arango-deployments
 subjects:
 - kind: ServiceAccount
-  name: {{ .Deployment.User.ServiceAccountName }}
-  namespace: {{ .Deployment.User.Namespace }}
+  name: default
+  namespace: default
 
 ---
 
@@ -59,14 +59,45 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Deployment.Operator.RoleBindingName }}-{{ .Deployment.Operator.Namespace }}
+  name: arango-deployment-operator-default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Deployment.Operator.RoleName }}
+  name: arango-deployment-operator
 subjects:
 - kind: ServiceAccount
-  name: {{ .Deployment.Operator.ServiceAccountName }}
-  namespace: {{ .Deployment.Operator.Namespace }}
+  name: default
+  namespace: default
 
-{{- end -}}
+---
+
+## deployment/deployment.yaml
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-deployment-operator
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: arango-deployment-operator
+    spec:
+      containers:
+      - name: operator
+        imagePullPolicy: IfNotPresent
+        image: arangodb/kube-arangodb@sha256:748421ba01fd52d9589cc1830c79b62c3a7af3f4366b9cba0247e09d0a7d6e19
+        args:
+          - --operator.deployment
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+
