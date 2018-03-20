@@ -246,7 +246,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
 
 	// Add arangod container
-	c := arangodContainer("server", image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
+	c := arangodContainer("arangod", image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -325,7 +325,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
 
 	// Add arangosync container
-	c := arangosyncContainer(p.GetName(), image, imagePullPolicy, args, env, livenessProbe)
+	c := arangosyncContainer("arangosync", image, imagePullPolicy, args, env, livenessProbe)
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add (anti-)affinity

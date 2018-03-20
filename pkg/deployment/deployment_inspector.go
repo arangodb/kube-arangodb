@@ -43,6 +43,14 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	hasError := false
 	ctx := context.Background()
 
+	// Ensure we have image info
+	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
+		hasError = true
+		d.createEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
+	} else if retrySoon {
+		nextInterval = minInspectionInterval
+	}
+
 	// Inspection of generated resources needed
 	if err := d.inspectPods(); err != nil {
 		hasError = true

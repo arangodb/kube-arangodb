@@ -311,6 +311,13 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), role, m.ID, podSuffix)
 			// Create pod
 			if group.IsArangod() {
+				// Find image ID
+				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.Image)
+				if !found {
+					log.Debug().Str("image", apiObject.Spec.Image).Msg("Image ID is not known yet for image")
+					return nil
+				}
+				// Prepare arguments
 				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
@@ -346,10 +353,17 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, apiObject.Spec.Image, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
+				// Find image ID
+				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.Sync.Image)
+				if !found {
+					log.Debug().Str("image", apiObject.Spec.Sync.Image).Msg("Image ID is not known yet for image")
+					return nil
+				}
+				// Prepare arguments
 				args := createArangoSyncArgs(apiObject, group, spec, d.status.Members.Agents, m.ID)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
@@ -360,7 +374,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if group == api.ServerGroupSyncWorkers {
 					affinityWithRole = api.ServerGroupDBServers.AsRole()
 				}
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, apiObject.Spec.Sync.Image, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
 					return maskAny(err)
 				}
 			}
