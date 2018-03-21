@@ -1,0 +1,70 @@
+package tests
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/dchest/uniuri"	
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	
+	driver "github.com/arangodb/go-driver"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/client"
+
+)
+
+// TestResiliencePod 
+// Tests handling of individual pod deletions
+func TestResiliencePod(t *testing.T) {
+	longOrSkip(t)
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	//fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+
+	// Prepare deployment config
+	depl := newDeployment("test-pod-resilience" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.SetDefaults(depl.GetName()) // this must be last
+
+	// Create deployment
+	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	if err != nil {
+		t.Fatalf("Create deployment failed: %v", err)
+	}
+
+	// Wait for deployment to be ready
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+		t.Fatalf("Deployment not running in time: %v", err)
+	}
+
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for cluster to be completely ready
+	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, apiObject.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	}
+
+	// Delete one pod after the other			
+	pods, _ := kubecli.CoreV1().Pods("test-pod-resilience").List(metav1.ListOptions{})
+	fmt.Fprintf(os.Stderr, "There are %d pods in the cluster\n", len(pods.Items))
+	for _, pod := range pods.Items {
+		kubecli.CoreV1().Pods("test-pod-resilience").Delete(pod.GetName(),&metav1.DeleteOptions{})
+			// Wait for cluster to be completely ready
+		if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+			return clusterHealthEqualsSpec(h, apiObject.Spec)
+		}); err != nil {
+			t.Fatalf("Cluster not running in expected health in time: %v", err)
+		}
+	}
+
+	// Cleanup
+	removeDeployment(c, depl.GetName(), ns)
+}
