@@ -216,6 +216,13 @@ func (d *Deployment) run() {
 		case <-d.inspectTrigger.Done():
 			hasError := false
 			ctx := context.Background()
+			// Ensure we have image info
+			if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
+				hasError = true
+				d.createEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
+			} else if retrySoon {
+				inspectionInterval = minInspectionInterval
+			}
 			// Inspection of generated resources needed
 			if err := d.inspectPods(); err != nil {
 				hasError = true

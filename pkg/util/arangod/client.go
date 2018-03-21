@@ -108,11 +108,23 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 	return c, nil
 }
 
+// CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
+// running in an Image-ID pod.
+func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
+	// Create connection
+	dnsName := k8sutil.CreatePodDNSName(deployment, role, id)
+	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
 	transport := sharedHTTPTransport
-	if apiObject.Spec.IsSecure() {
+	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
 	}
@@ -130,7 +142,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 	config := driver.ClientConfig{
 		Connection: conn,
 	}
-	if apiObject.Spec.IsAuthenticated() {
+	if apiObject != nil && apiObject.Spec.IsAuthenticated() {
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
