@@ -48,7 +48,7 @@ func TestImmutableStorageEngine(t *testing.T) {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
-	// Try to reset storageEngine
+	// Try to reset storageEngine ===============================================
 	if _, err := updateDeployment(c, depl.GetName(), ns,
 		func(spec *api.DeploymentSpec) {
 			spec.StorageEngine = api.StorageEngineMMFiles
@@ -64,10 +64,48 @@ func TestImmutableStorageEngine(t *testing.T) {
 			} 
 			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)
 		}); err != nil {
-			t.Fatalf("StorageEngine parameter not immutable: %v", err)
+			t.Fatalf("StorageEngine parameter should not be immutable: %v", err)
+		}
+
+	// Try to reset the RocksDB encryption key ==================================
+	if _, err := updateDeployment(c, depl.GetName(), ns,
+		func(spec *api.DeploymentSpec) {
+			spec.RocksDB.Encryption.KeySecretName = "foobarbaz"
+		}); err != nil {
+			t.Fatalf("Failed to update the RocksDB encryption key: %v", err)
+		} 
+
+	// Wait for deployment mode to be set back to cluster
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
+		func(depl *api.ArangoDeployment) error {
+			if depl.Spec.RocksDB.Encryption.KeySecretName == "test.encryption.keySecretName" {
+				return nil
+			} 
+			return fmt.Errorf("RocksDB encryption key not back to %s", "test.encryption.keySecretName")
+		}); err != nil {
+			t.Fatalf("RocksDB encryption key not be mutable: %v", err)
 		}
 
 	
+	// Try to reset the deployment type ==========================================
+	if _, err := updateDeployment(c, depl.GetName(), ns,
+		func(spec *api.DeploymentSpec) {
+			spec.Mode = api.DeploymentModeSingle
+		}); err != nil {
+			t.Fatalf("Failed to update the deployment mode: %v", err)
+		} 
+
+	// Wait for deployment mode to be set back to cluster
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
+		func(depl *api.ArangoDeployment) error {
+			if depl.Spec.Mode == api.DeploymentModeCluster {
+				return nil
+			} 
+			return fmt.Errorf("Deployment mode not back to %s", api.DeploymentModeCluster)
+		}); err != nil {
+			t.Fatalf("Deployment mode should not be mutable: %v", err)
+		}
+
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
 }
