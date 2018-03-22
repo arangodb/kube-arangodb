@@ -23,17 +23,26 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // MonitoringSpec holds monitoring specific configuration settings
 type MonitoringSpec struct {
-	TokenSecretName string `json:"tokenSecretName,omitempty"`
+	TokenSecretName *string `json:"tokenSecretName,omitempty"`
+}
+
+// GetTokenSecretName returns the value of tokenSecretName.
+func (s MonitoringSpec) GetTokenSecretName() string {
+	if s.TokenSecretName == nil {
+		return ""
+	}
+	return *s.TokenSecretName
 }
 
 // Validate the given spec
 func (s MonitoringSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.TokenSecretName); err != nil {
+	if err := k8sutil.ValidateOptionalResourceName(s.GetTokenSecretName()); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -42,4 +51,11 @@ func (s MonitoringSpec) Validate() error {
 // SetDefaults fills in missing defaults
 func (s *MonitoringSpec) SetDefaults() {
 	// Nothing needed
+}
+
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *MonitoringSpec) SetDefaultsFrom(source MonitoringSpec) {
+	if s.TokenSecretName == nil {
+		s.TokenSecretName = util.StringOrNil(source.TokenSecretName)
+	}
 }

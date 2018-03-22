@@ -139,7 +139,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--cluster.my-id", id},
 			optionPair{"--agency.activate", "true"},
 			optionPair{"--agency.my-address", myTCPURL},
-			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.Count)},
+			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.GetCount())},
 			optionPair{"--agency.supervision", "true"},
 			optionPair{"--foxx.queues", "false"},
 			optionPair{"--server.statistics", "false"},
@@ -242,7 +242,7 @@ func (d *Deployment) createLivenessProbe(apiObject *api.ArangoDeployment, group 
 		return nil, nil
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		authorization := ""
-		if apiObject.Spec.Sync.Monitoring.TokenSecretName != "" {
+		if apiObject.Spec.Sync.Monitoring.GetTokenSecretName() != "" {
 			// Use monitoring token
 			token, err := d.getSyncMonitoringToken(apiObject)
 			if err != nil {
@@ -344,14 +344,14 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 				rocksdbEncryptionSecretName := ""
 				if apiObject.Spec.RocksDB.IsEncrypted() {
-					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.KeySecretName
+					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.GetKeySecretName()
 					if err := k8sutil.ValidateEncryptionKeySecret(kubecli.CoreV1(), rocksdbEncryptionSecretName, ns); err != nil {
 						return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
 					}
 				}
 				if apiObject.Spec.IsAuthenticated() {
 					env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
-						SecretName: apiObject.Spec.Authentication.JWTSecretName,
+						SecretName: apiObject.Spec.Authentication.GetJWTSecretName(),
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}

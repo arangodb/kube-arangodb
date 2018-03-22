@@ -25,17 +25,19 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMonitoringSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, MonitoringSpec{TokenSecretName: ""}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: "foo"}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: "foo"}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: nil}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("")}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("foo")}.Validate())
+	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("foo")}.Validate())
 
 	// Not valid
-	assert.Error(t, MonitoringSpec{TokenSecretName: "Foo"}.Validate())
+	assert.Error(t, MonitoringSpec{TokenSecretName: util.String("Foo")}.Validate())
 }
 
 func TestMonitoringSpecSetDefaults(t *testing.T) {
@@ -44,6 +46,6 @@ func TestMonitoringSpecSetDefaults(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, "", def(MonitoringSpec{}).TokenSecretName)
-	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: "foo"}).TokenSecretName)
+	assert.Equal(t, "", def(MonitoringSpec{}).GetTokenSecretName())
+	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: util.String("foo")}).GetTokenSecretName())
 }

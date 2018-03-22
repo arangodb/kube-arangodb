@@ -102,6 +102,35 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.Enabled, s.Mode)
 }
 
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
+	if s.Mode == "" {
+		s.Mode = source.Mode
+	}
+	if s.Environment == "" {
+		s.Environment = source.Environment
+	}
+	if s.StorageEngine == "" {
+		s.StorageEngine = source.StorageEngine
+	}
+	if s.Image == "" {
+		s.Image = source.Image
+	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = source.ImagePullPolicy
+	}
+	s.RocksDB.SetDefaultsFrom(source.RocksDB)
+	s.Authentication.SetDefaultsFrom(source.Authentication)
+	s.TLS.SetDefaultsFrom(source.TLS)
+	s.Sync.SetDefaultsFrom(source.Sync)
+	s.Single.SetDefaultsFrom(source.Single)
+	s.Agents.SetDefaultsFrom(source.Agents)
+	s.DBServers.SetDefaultsFrom(source.DBServers)
+	s.Coordinators.SetDefaultsFrom(source.Coordinators)
+	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
+	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
+}
+
 // Validate the specification.
 // Return errors when validation fails, nil on success.
 func (s *DeploymentSpec) Validate() error {

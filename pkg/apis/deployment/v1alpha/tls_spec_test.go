@@ -26,27 +26,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTLSSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, TLSSpec{CASecretName: ""}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: "foo"}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: "None"}.Validate())
-	assert.Nil(t, TLSSpec{AltNames: []string{}}.Validate())
-	assert.Nil(t, TLSSpec{AltNames: []string{"foo"}}.Validate())
-	assert.Nil(t, TLSSpec{AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.String("foo")}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.String("None")}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{"foo"}}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
 
 	// Not valid
-	assert.Error(t, TLSSpec{CASecretName: "Foo"}.Validate())
-	assert.Error(t, TLSSpec{AltNames: []string{"@@"}}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: nil}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.String("")}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.String("Foo")}.Validate())
+	assert.Error(t, TLSSpec{CASecretName: util.String("foo"), AltNames: []string{"@@"}}.Validate())
 }
 
 func TestTLSSpecIsSecure(t *testing.T) {
-	assert.True(t, TLSSpec{CASecretName: ""}.IsSecure())
-	assert.True(t, TLSSpec{CASecretName: "foo"}.IsSecure())
-	assert.False(t, TLSSpec{CASecretName: "None"}.IsSecure())
+	assert.True(t, TLSSpec{CASecretName: util.String("")}.IsSecure())
+	assert.True(t, TLSSpec{CASecretName: util.String("foo")}.IsSecure())
+	assert.False(t, TLSSpec{CASecretName: util.String("None")}.IsSecure())
 }
 
 func TestTLSSpecSetDefaults(t *testing.T) {
@@ -55,10 +57,10 @@ func TestTLSSpecSetDefaults(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, "", def(TLSSpec{}).CASecretName)
-	assert.Equal(t, "foo", def(TLSSpec{CASecretName: "foo"}).CASecretName)
+	assert.Equal(t, "", def(TLSSpec{}).GetCASecretName())
+	assert.Equal(t, "foo", def(TLSSpec{CASecretName: util.String("foo")}).GetCASecretName())
 	assert.Len(t, def(TLSSpec{}).AltNames, 0)
 	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).AltNames, 1)
-	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).TTL)
-	assert.Equal(t, time.Hour, def(TLSSpec{TTL: time.Hour}).TTL)
+	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).GetTTL())
+	assert.Equal(t, time.Hour, def(TLSSpec{TTL: util.Duration(time.Hour)}).GetTTL())
 }

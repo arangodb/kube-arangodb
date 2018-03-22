@@ -72,7 +72,7 @@ type deploymentEvent struct {
 }
 
 const (
-	deploymentEventQueueSize = 100
+	deploymentEventQueueSize = 256
 	minInspectionInterval    = time.Second // Ensure we inspect the generated resources no less than with this interval
 	maxInspectionInterval    = time.Minute // Ensure we inspect the generated resources no less than with this interval
 )
@@ -107,6 +107,10 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:      make(chan struct{}),
 		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 		clientCache: newClientCache(deps.KubeCli, apiObject),
+	}
+	if d.status.AcceptedSpec == nil {
+		// We've validated the spec, so let's use it from now.
+		d.status.AcceptedSpec = apiObject.Spec.DeepCopy()
 	}
 
 	go d.run()
@@ -284,10 +288,14 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 		return maskAny(err)
 	}
 
+	specBefore := d.apiObject.Spec
+	if d.status.AcceptedSpec != nil {
+		specBefore = *d.status.AcceptedSpec
+	}
 	newAPIObject := current.DeepCopy()
-	newAPIObject.Spec.SetDefaults(newAPIObject.GetName())
+	newAPIObject.Spec.SetDefaultsFrom(specBefore)
 	newAPIObject.Status = d.status
-	resetFields := d.apiObject.Spec.ResetImmutableFields(&newAPIObject.Spec)
+	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
 	}
@@ -310,6 +318,11 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 	// Save updated spec
 	if err := d.updateCRSpec(newAPIObject.Spec); err != nil {
 		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+	}
+	// Save updated accepted spec
+	d.status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
+	if err := d.updateCRStatus(); err != nil {
+		return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
 	}
 
 	// Trigger inspect

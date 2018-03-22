@@ -69,13 +69,13 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 		// Never scale down
 	case api.DeploymentModeResilientSingle:
 		// Only scale singles
-		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 	case api.DeploymentModeCluster:
 		// Scale dbservers, coordinators, syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
 	}
 
 	// Return plan

@@ -25,24 +25,26 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 )
 
 func TestSyncSpecValidate(t *testing.T) {
 	// Valid
-	auth := AuthenticationSpec{JWTSecretName: "foo"}
+	auth := AuthenticationSpec{JWTSecretName: util.String("foo")}
+	tls := TLSSpec{CASecretName: util.String("None")}
 	assert.Nil(t, SyncSpec{Image: "foo", Authentication: auth}.Validate(DeploymentModeSingle))
 	assert.Nil(t, SyncSpec{Image: "foo", Authentication: auth}.Validate(DeploymentModeResilientSingle))
 	assert.Nil(t, SyncSpec{Image: "foo", Authentication: auth}.Validate(DeploymentModeCluster))
-	assert.Nil(t, SyncSpec{Image: "foo", Authentication: auth, Enabled: true}.Validate(DeploymentModeCluster))
+	assert.Nil(t, SyncSpec{Image: "foo", Authentication: auth, TLS: tls, Enabled: true}.Validate(DeploymentModeCluster))
 
 	// Not valid
 	assert.Error(t, SyncSpec{Image: "", Authentication: auth}.Validate(DeploymentModeSingle))
 	assert.Error(t, SyncSpec{Image: "", Authentication: auth}.Validate(DeploymentModeResilientSingle))
 	assert.Error(t, SyncSpec{Image: "", Authentication: auth}.Validate(DeploymentModeCluster))
-	assert.Error(t, SyncSpec{Image: "foo", Authentication: auth, Enabled: true}.Validate(DeploymentModeSingle))
-	assert.Error(t, SyncSpec{Image: "foo", Authentication: auth, Enabled: true}.Validate(DeploymentModeResilientSingle))
+	assert.Error(t, SyncSpec{Image: "foo", Authentication: auth, TLS: tls, Enabled: true}.Validate(DeploymentModeSingle))
+	assert.Error(t, SyncSpec{Image: "foo", Authentication: auth, TLS: tls, Enabled: true}.Validate(DeploymentModeResilientSingle))
 }
 
 func TestSyncSpecSetDefaults(t *testing.T) {
@@ -58,8 +60,8 @@ func TestSyncSpecSetDefaults(t *testing.T) {
 	assert.Equal(t, "foo", def(SyncSpec{Image: "foo"}).Image)
 	assert.Equal(t, v1.PullAlways, def(SyncSpec{}).ImagePullPolicy)
 	assert.Equal(t, v1.PullNever, def(SyncSpec{ImagePullPolicy: v1.PullNever}).ImagePullPolicy)
-	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.JWTSecretName)
-	assert.Equal(t, "foo", def(SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}}).Authentication.JWTSecretName)
+	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.GetJWTSecretName())
+	assert.Equal(t, "foo", def(SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}}).Authentication.GetJWTSecretName())
 }
 
 func TestSyncSpecResetImmutableFields(t *testing.T) {
@@ -95,35 +97,35 @@ func TestSyncSpecResetImmutableFields(t *testing.T) {
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo2"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo2"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo2")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo2")}},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
 			[]string{"test.auth.jwtSecretName"},
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "foo"}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: "None"}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("foo")}},
+			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.String("None")}},
 			[]string{"test.auth.jwtSecretName"},
 		},
 	}

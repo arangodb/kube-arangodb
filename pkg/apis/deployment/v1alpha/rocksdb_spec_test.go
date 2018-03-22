@@ -25,22 +25,23 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRocksDBSpecValidate(t *testing.T) {
 	// Valid
 	assert.Nil(t, RocksDBSpec{}.Validate())
-	assert.Nil(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}}.Validate())
+	assert.Nil(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}}.Validate())
 
 	// Not valid
-	assert.Error(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "Foo"}}.Validate())
+	assert.Error(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("Foo")}}.Validate())
 }
 
 func TestRocksDBSpecIsEncrypted(t *testing.T) {
 	assert.False(t, RocksDBSpec{}.IsEncrypted())
-	assert.False(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: ""}}.IsEncrypted())
-	assert.True(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}}.IsEncrypted())
+	assert.False(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("")}}.IsEncrypted())
+	assert.True(t, RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}}.IsEncrypted())
 }
 
 func TestRocksDBSpecSetDefaults(t *testing.T) {
@@ -49,7 +50,7 @@ func TestRocksDBSpecSetDefaults(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, "", def(RocksDBSpec{}).Encryption.KeySecretName)
+	assert.Equal(t, "", def(RocksDBSpec{}).Encryption.GetKeySecretName())
 }
 
 func TestRocksDBSpecResetImmutableFields(t *testing.T) {
@@ -67,23 +68,23 @@ func TestRocksDBSpecResetImmutableFields(t *testing.T) {
 			nil,
 		},
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
 			nil,
 		},
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo2"}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo2"}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo2")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo2")}},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: ""}},
-			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: "foo"}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("")}},
+			RocksDBSpec{Encryption: RocksDBEncryptionSpec{KeySecretName: util.String("foo")}},
 			[]string{"test.encryption.keySecretName"},
 		},
 	}

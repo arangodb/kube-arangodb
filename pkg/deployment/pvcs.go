@@ -38,7 +38,7 @@ func (d *Deployment) ensurePVCs(apiObject *api.ArangoDeployment) error {
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName != "" {
-				storageClassName := spec.StorageClassName
+				storageClassName := spec.GetStorageClassName()
 				role := group.AsRole()
 				resources := spec.Resources
 				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, resources, owner); err != nil {

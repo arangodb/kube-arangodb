@@ -73,6 +73,19 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 	s.Monitoring.SetDefaults()
 }
 
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
+	if s.Image == "" {
+		s.Image = source.Image
+	}
+	if s.ImagePullPolicy == "" {
+		s.ImagePullPolicy = source.ImagePullPolicy
+	}
+	s.Authentication.SetDefaultsFrom(source.Authentication)
+	s.TLS.SetDefaultsFrom(source.TLS)
+	s.Monitoring.SetDefaultsFrom(source.Monitoring)
+}
+
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to given field prefix.
