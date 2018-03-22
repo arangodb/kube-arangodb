@@ -34,6 +34,22 @@ type NumberOfServers struct {
 	DBServers    *int `json:"numberOfDBServers,omitempty"`
 }
 
+// GetCoordinators returns Coordinators if not nil, otherwise 0.
+func (n NumberOfServers) GetCoordinators() int {
+	if n.Coordinators != nil {
+		return *n.Coordinators
+	}
+	return 0
+}
+
+// GetDBServers returns DBServers if not nil, otherwise 0.
+func (n NumberOfServers) GetDBServers() int {
+	if n.DBServers != nil {
+		return *n.DBServers
+	}
+	return 0
+}
+
 // GetNumberOfServers fetches the number of servers the cluster wants to have.
 func GetNumberOfServers(ctx context.Context, conn driver.Connection) (NumberOfServers, error) {
 	req, err := conn.NewRequest("GET", "_admin/cluster/numberOfServers")
