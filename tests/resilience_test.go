@@ -53,7 +53,10 @@ func TestResiliencePod(t *testing.T) {
 	}
 
 	// Delete one pod after the other			
-	pods, _ := kubecli.CoreV1().Pods("test-pod-resilience").List(metav1.ListOptions{})
+	pods, err := kubecli.CoreV1().Pods(ns).List(metav1.ListOptions{})
+	if err != nil {
+		t.Fatalf("Could not find any pods in the %s, namespace: %v\n", ns, err)
+	}
 	fmt.Fprintf(os.Stderr, "There are %d pods in the cluster\n", len(pods.Items))
 	for _, pod := range pods.Items {
 		kubecli.CoreV1().Pods("test-pod-resilience").Delete(pod.GetName(),&metav1.DeleteOptions{})
