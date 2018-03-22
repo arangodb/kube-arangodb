@@ -50,7 +50,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -60,6 +60,50 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
+				"--database.directory=/data",
+				"--foxx.queues=false",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=false",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
+	// Default+AutoUpgrade deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "name",
+				Namespace: "ns",
+			},
+			Spec: api.DeploymentSpec{
+				Mode: api.DeploymentModeCluster,
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		agents := api.MemberStatusList{
+			api.MemberStatus{ID: "a1"},
+			api.MemberStatus{ID: "a2"},
+			api.MemberStatus{ID: "a3"},
+		}
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", true)
+		assert.Equal(t,
+			[]string{
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
+				"--database.auto-upgrade=true",
 				"--database.directory=/data",
 				"--foxx.queues=false",
 				"--log.level=INFO",
@@ -96,7 +140,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -139,7 +183,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -182,7 +226,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",

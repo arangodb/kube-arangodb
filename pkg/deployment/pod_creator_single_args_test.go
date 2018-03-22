@@ -41,9 +41,37 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
+				"--database.directory=/data",
+				"--foxx.queues=true",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=true",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
+	// Default+AutoUpgrade deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			Spec: api.DeploymentSpec{
+				Mode: api.DeploymentModeSingle,
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", true)
+		assert.Equal(t,
+			[]string{
+				"--database.auto-upgrade=true",
 				"--database.directory=/data",
 				"--foxx.queues=true",
 				"--log.level=INFO",
@@ -71,7 +99,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -97,7 +125,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -125,7 +153,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Authentication.JWTSecretName = "None"
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -152,7 +180,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -190,7 +218,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, agents, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
