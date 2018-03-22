@@ -319,6 +319,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			roleAbbr := group.AsRoleAbbreviated()
 			podSuffix := createPodSuffix(apiObject.Spec)
 			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
+			newState := api.MemberStateCreated
 			// Create pod
 			if group.IsArangod() {
 				// Find image ID
@@ -329,6 +330,9 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 				// Prepare arguments
 				autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
+				if autoUpgrade {
+					newState = api.MemberStateUpgrading
+				}
 				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID, autoUpgrade)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
@@ -390,7 +394,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 			}
 			// Record new member state
-			m.State = api.MemberStateCreated
+			m.State = newState
 			m.Conditions.Remove(api.ConditionTypeReady)
 			m.Conditions.Remove(api.ConditionTypeTerminated)
 			m.Conditions.Remove(api.ConditionTypeAutoUpgrade)

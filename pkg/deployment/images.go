@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -39,6 +40,7 @@ import (
 
 const (
 	dockerPullableImageIDPrefix = "docker-pullable://"
+	imageIDAndVersionRole       = "id" // Role use by identification pods
 )
 
 type imagesBuilder struct {
@@ -97,7 +99,7 @@ func (ib *imagesBuilder) Run(ctx context.Context) (bool, error) {
 // When no pod exists, it is created, otherwise the ID is fetched & version detected.
 // Returns: retrySoon, error
 func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, image string) (bool, error) {
-	role := "id"
+	role := imageIDAndVersionRole
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
 	ns := ib.APIObject.GetNamespace()
@@ -172,4 +174,10 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	}
 	// Come back soon to inspect the pod
 	return true, nil
+}
+
+// isArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
+func isArangoDBImageIDAndVersionPod(p v1.Pod) bool {
+	role, found := p.GetLabels()[k8sutil.LabelKeyRole]
+	return found && role == imageIDAndVersionRole
 }

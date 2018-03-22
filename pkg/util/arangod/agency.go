@@ -73,6 +73,7 @@ func (a *agency) ReadKey(ctx context.Context, key []string, value interface{}) e
 	//ctx = driver.WithRawResponse(ctx, &raw)
 	resp, err := conn.Do(ctx, req)
 	if err != nil {
+		fmt.Printf("conn.Do failed, err=%v, resp=%#v\n", err, resp)
 		return maskAny(err)
 	}
 	if resp.StatusCode() == 307 {

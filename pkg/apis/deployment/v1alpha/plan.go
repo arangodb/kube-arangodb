@@ -41,6 +41,8 @@ const (
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
+	// ActionTypeUpgradeMember causes a member to be shutdown and have it's pod removed, restarted with AutoUpgrade option, waited until termination and the restarted again.
+	ActionTypeUpgradeMember ActionType = "UpgradeMember"
 	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 )
@@ -61,8 +63,6 @@ type Action struct {
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
-	// AutoUpgrade indicates the need for an `--database.auto-upgrade` of the member.
-	AutoUpgrade bool `json:"auto-upgrade,omitempty"`
 }
 
 // NewAction instantiates a new Action.

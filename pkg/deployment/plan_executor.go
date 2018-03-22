@@ -124,6 +124,8 @@ func (d *Deployment) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewShutdownMemberAction(log, action, actionCtx)
 	case api.ActionTypeRotateMember:
 		return NewRotateMemberAction(log, action, actionCtx)
+	case api.ActionTypeUpgradeMember:
+		return NewUpgradeMemberAction(log, action, actionCtx)
 	case api.ActionTypeWaitForMemberUp:
 		return NewWaitForMemberUpAction(log, action, actionCtx)
 	default:

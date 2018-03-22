@@ -36,4 +36,6 @@ const (
 	MemberStateShuttingDown MemberState = "ShuttingDown"
 	// MemberStateRotating indicates that a member is being rotated
 	MemberStateRotating MemberState = "Rotating"
+	// MemberStateUpgrading indicates that a member is in the process of upgrading its database data format
+	MemberStateUpgrading MemberState = "Upgrading"
 )

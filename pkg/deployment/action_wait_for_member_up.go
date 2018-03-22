@@ -138,6 +138,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, e
 					statuses[i].IsResponding = true
 				} else {
 					// Unexpected / invalid response
+					log.Debug().Err(err).Str("endpoint", c.Endpoint()).Msg("Agent is not responding")
 					statuses[i].IsResponding = false
 				}
 			}
@@ -168,6 +169,11 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, e
 		log.Debug().Int("leaders", noLeaders).Msg("Unexpected number of agency leaders")
 		return false, nil
 	}
+
+	log.Debug().
+		Int("leaders", noLeaders).
+		Int("followers", len(statuses)-noLeaders).
+		Msg("Agency is happy")
 
 	return true, nil
 }

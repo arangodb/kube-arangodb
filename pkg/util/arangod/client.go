@@ -129,8 +129,9 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 		transport = sharedHTTPSTransport
 	}
 	connConfig := http.ConnectionConfig{
-		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
-		Transport: transport,
+		Endpoints:          []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
+		Transport:          transport,
+		DontFollowRedirect: true,
 	}
 	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)

@@ -128,11 +128,11 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 					// Got pod, compare it with what it should be
 					decision := podNeedsUpgrading(*p, spec, status.Images)
 					if decision.UpgradeNeeded && decision.UpgradeAllowed {
-						plan = append(plan, createRotateMemberPlan(log, m, group, "Version upgrade", decision.AutoUpgradeNeeded)...)
+						plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
 					} else {
 						rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
 						if rotNeeded {
-							plan = append(plan, createRotateMemberPlan(log, m, group, reason, false)...)
+							plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
 						}
 					}
 				}
@@ -252,15 +252,28 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
 func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string, autoUpgrade bool) api.Plan {
+	group api.ServerGroup, reason string) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Msg("Creating rotation plan")
-	rotateAction := api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason)
-	rotateAction.AutoUpgrade = autoUpgrade
 	plan := api.Plan{
-		rotateAction,
+		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
+	}
+	return plan
+}
+
+// createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
+// member.
+func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
+	group api.ServerGroup, reason string) api.Plan {
+	log.Debug().
+		Str("id", member.ID).
+		Str("role", group.AsRole()).
+		Msg("Creating upgrade plan")
+	plan := api.Plan{
+		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan

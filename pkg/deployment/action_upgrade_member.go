@@ -29,18 +29,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// NewRotateMemberAction creates a new Action that implements the given
-// planned RotateMember action.
-func NewRotateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionRotateMember{
+// NewUpgradeMemberAction creates a new Action that implements the given
+// planned UpgradeMember action.
+func NewUpgradeMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	return &actionUpgradeMember{
 		log:       log,
 		action:    action,
 		actionCtx: actionCtx,
 	}
 }
 
-// actionRotateMember implements an RotateMember.
-type actionRotateMember struct {
+// actionUpgradeMember implements an UpgradeMember.
+type actionUpgradeMember struct {
 	log       zerolog.Logger
 	action    api.Action
 	actionCtx ActionContext
@@ -49,12 +49,17 @@ type actionRotateMember struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
+func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	log := a.log
 	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
+	}
+	// Set AutoUpgrade condition
+	m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Upgrading", "AutoUpgrade on first restart")
+	if err := a.actionCtx.UpdateMember(m); err != nil {
+		return false, maskAny(err)
 	}
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
@@ -83,7 +88,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Update status
-	m.State = api.MemberStateRotating
+	m.State = api.MemberStateRotating // We keep the rotation state here, since only when a new pod is created, it will get the Upgrading state.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
@@ -92,7 +97,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
+func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
 	// Check that pod is removed
 	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
@@ -100,11 +105,16 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
 		log.Error().Msg("No such member")
 		return true, nil
 	}
+	isUpgrading := m.State == api.MemberStateUpgrading
+	log = log.With().
+		Str("pod-name", m.PodName).
+		Bool("is-upgrading", isUpgrading).Logger()
 	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
 		// Pod is not yet terminated
 		return false, nil
 	}
 	// Pod is terminated, we can now remove it
+	log.Debug().Msg("Deleting pod")
 	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
 		return false, maskAny(err)
 	}
@@ -113,5 +123,5 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
-	return true, nil
+	return isUpgrading, nil
 }
