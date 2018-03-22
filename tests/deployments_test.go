@@ -44,6 +44,16 @@ func TestDeploymentSingleRocksDB(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB)
 }
 
+// test deployment resilient single server mmfiles
+func TestDeploymentResilientSingleMMFiles(t *testing.T) {
+	deploymentSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineMMFiles)
+}
+
+// test deployment resilient single server rocksdb
+func TestDeploymentResilientSingleRocksDB(t *testing.T) {
+	deploymentSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB)
+}
+
 // test deployment cluster mmfiles
 func TestDeploymentClusterMMFiles(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeCluster, api.StorageEngineMMFiles)
@@ -98,8 +108,41 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 		if err := waitUntilVersionUp(DBClient); err != nil {
 			t.Fatalf("Single Server not running in time: %v", err)
 		}
+	case api.DeploymentModeResilientSingle:
+		if err := waitUntilVersionUp(DBClient); err != nil {
+			t.Fatalf("Single Server not running in time: %v", err)
+		}
+
+		//  FIXME - waitUntilResilientHealth
+		members := deployment.Status.Members
+
+		singles := members.Single
+		agents := members.Agents
+		servers := append(append(api.MemberStatusList{}, singles...), agents...)
+
+		if len(singles) != 2 || len(agents) != 3 {
+			t.Fatal("Wrong number of servers: single %v - agents %v", len(singles), len(agents))
+		}
+
+		// FIXMcase s
+		// - create dbconnection to each of the servers
+		// - run api version on connection
+
+		//t.Fatal("This test is not fully implemented!")
+
+		// TEST CODE BELOW
+		t.Log("##################################")
+		if len(agents) == 0 {
+			t.Fatal("This setup requires agents to work!")
+		}
+
+		t.Logf("agents len: %v", len(agents))
+		for _, server := range servers {
+			t.Logf("Server: %v ", server)
+		}
+		t.Log("##################################")
 	default:
-		t.Fatalf("DeploymentMode %v is not supported!", deployment.Spec.GetMode())
+		t.Fatalf("DeploymentMode %v is not supported!", mode)
 	}
 
 	// Cleanup
