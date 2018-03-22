@@ -33,6 +33,7 @@ func TestTLSSpecValidate(t *testing.T) {
 	// Valid
 	assert.Nil(t, TLSSpec{CASecretName: ""}.Validate())
 	assert.Nil(t, TLSSpec{CASecretName: "foo"}.Validate())
+	assert.Nil(t, TLSSpec{CASecretName: "None"}.Validate())
 	assert.Nil(t, TLSSpec{AltNames: []string{}}.Validate())
 	assert.Nil(t, TLSSpec{AltNames: []string{"foo"}}.Validate())
 	assert.Nil(t, TLSSpec{AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
