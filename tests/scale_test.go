@@ -83,14 +83,14 @@ func TestScaleClusterNonTLS(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 }
 
-func TestScaleClusterTLS(t *testing.T) {
+func TestScaleCluster(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-scale-tls" + uniuri.NewLen(4))
+	depl := newDeployment("test-scale" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.DeploymentModeCluster
 	depl.Spec.TLS = api.TLSSpec{}         // should auto-generate cert
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
