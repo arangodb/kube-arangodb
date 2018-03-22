@@ -116,14 +116,14 @@ func TestResiliencePVC(t *testing.T) {
 	// Delete one pod after the other			
 	pvcs, err := kubecli.CoreV1().PersistentVolumeClaims(ns).List(metav1.ListOptions{})
 	if err != nil {
-		t.Fatalf("Could not find any pods in the %s, namespace: %v\n", ns, err)
+		t.Fatalf("Could not find any persisted volume claims in the %s, namespace: %v\n", ns, err)
 	}
 	fmt.Fprintf(os.Stderr, 
 		"There are %d peristent volume claims in the %s namespace\n", len(pvcs.Items), ns)
 	for _, pvc := range pvcs.Items {
 		if pvc.GetName() == "arangodb-operator-test" { continue }
 		fmt.Fprintf(os.Stderr, 
-			"Deleting pod %s in the %s namespace\n", pvc.GetName(), ns)
+			"Deleting persistent volume claim %s in the %s namespace\n", pvc.GetName(), ns)
 		kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(pvc.GetName(),&metav1.DeleteOptions{})
 		time.Sleep(30 * time.Second) // wait for problem to arise
 		// Wait for cluster to be completely ready
