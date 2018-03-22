@@ -71,11 +71,13 @@ func (s TLSSpec) GetAltNames() (dnsNames, ipAddresses, emailAddresses []string, 
 
 // Validate the given spec
 func (s TLSSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.CASecretName); err != nil {
-		return maskAny(err)
-	}
-	if _, _, _, err := s.GetAltNames(); err != nil {
-		return maskAny(err)
+	if s.IsSecure() {
+		if err := k8sutil.ValidateOptionalResourceName(s.CASecretName); err != nil {
+			return maskAny(err)
+		}
+		if _, _, _, err := s.GetAltNames(); err != nil {
+			return maskAny(err)
+		}
 	}
 	return nil
 }
