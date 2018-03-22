@@ -18,7 +18,7 @@ To do so, you first have to fetch the CA certificate from its Kubernetes
 secret.
 
 ```bash
-kubectl get secret <deploy-name> --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
+kubectl get secret <deploy-name>-ca --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
 ```
 
 ### Windows
