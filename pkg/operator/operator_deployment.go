@@ -147,17 +147,17 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 		return maskAny(fmt.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
-	// Fill in defaults
-	apiObject.Spec.SetDefaults(apiObject.GetName())
-	// Validate deployment spec
-	if err := apiObject.Spec.Validate(); err != nil {
-		return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
-	}
-
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deployments[apiObject.Name]; ok {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+		}
+
+		// Fill in defaults
+		apiObject.Spec.SetDefaults(apiObject.GetName())
+		// Validate deployment spec
+		if err := apiObject.Spec.Validate(); err != nil {
+			return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
 		}
 
 		cfg, deps := o.makeDeploymentConfigAndDeps(apiObject)
