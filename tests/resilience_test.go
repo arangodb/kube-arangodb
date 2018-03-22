@@ -57,8 +57,12 @@ func TestResiliencePod(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not find any pods in the %s, namespace: %v\n", ns, err)
 	}
-	fmt.Fprintf(os.Stderr, "There are %d pods in the cluster\n", len(pods.Items))
+	fmt.Fprintf(os.Stderr, 
+		"There are %d pods in the %s namespace\n", len(pods.Items), ns)
 	for _, pod := range pods.Items {
+		if pod.GetName() == "arangodb-operator-test" { continue }
+		fmt.Fprintf(os.Stderr, 
+			"Deleting pod %s in the %s namespace\n", pod.GetName(), ns)
 		kubecli.CoreV1().Pods(ns).Delete(pod.GetName(),&metav1.DeleteOptions{})
 			// Wait for cluster to be completely ready
 		if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
