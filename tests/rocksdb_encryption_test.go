@@ -10,6 +10,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -24,15 +25,15 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-rocksdb-enc-sng-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeSingle
-	depl.Spec.Image = image
-	depl.Spec.StorageEngine = api.StorageEngineRocksDB
-	depl.Spec.RocksDB.Encryption.KeySecretName = strings.ToLower(uniuri.New())
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+	depl.Spec.Image = util.NewString(image)
+	depl.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineRocksDB)
+	depl.Spec.RocksDB.Encryption.KeySecretName = util.NewString(strings.ToLower(uniuri.New()))
 
 	// Create encryption key secret
 	key := make([]byte, 32)
 	rand.Read(key)
-	if err := k8sutil.CreateEncryptionKeySecret(kubecli.CoreV1(), depl.Spec.RocksDB.Encryption.KeySecretName, ns, key); err != nil {
+	if err := k8sutil.CreateEncryptionKeySecret(kubecli.CoreV1(), depl.Spec.RocksDB.Encryption.GetKeySecretName(), ns, key); err != nil {
 		t.Fatalf("Create encryption key secret failed: %v", err)
 	}
 
@@ -59,5 +60,5 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
-	removeSecret(kubecli, depl.Spec.RocksDB.Encryption.KeySecretName, ns)
+	removeSecret(kubecli, depl.Spec.RocksDB.Encryption.GetKeySecretName(), ns)
 }

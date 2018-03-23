@@ -3,12 +3,14 @@ package tests
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/dchest/uniuri"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestScaleCluster tests scaling up/down the number of DBServers & coordinators
@@ -21,8 +23,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-scale-non-tls" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
-	depl.Spec.TLS = api.TLSSpec{"None", nil, 50}
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.TLS = api.TLSSpec{util.NewString("None"), nil, util.NewDuration(time.Second * 50)}
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment

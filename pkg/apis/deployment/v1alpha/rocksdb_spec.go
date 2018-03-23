@@ -29,12 +29,12 @@ import (
 
 // RocksDBEncryptionSpec holds rocksdb encryption at rest specific configuration settings
 type RocksDBEncryptionSpec struct {
-	XKeySecretName *string `json:"keySecretName,omitempty"`
+	KeySecretName *string `json:"keySecretName,omitempty"`
 }
 
 // GetKeySecretName returns the value of keySecretName.
 func (s RocksDBEncryptionSpec) GetKeySecretName() string {
-	return util.StringOrDefault(s.XKeySecretName)
+	return util.StringOrDefault(s.KeySecretName)
 }
 
 // IsEncrypted returns true when an encryption key secret name is provided,
@@ -69,8 +69,8 @@ func (s *RocksDBSpec) SetDefaults() {
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *RocksDBSpec) SetDefaultsFrom(source RocksDBSpec) {
-	if s.Encryption.XKeySecretName == nil {
-		s.Encryption.XKeySecretName = util.NewStringOrNil(source.Encryption.XKeySecretName)
+	if s.Encryption.KeySecretName == nil {
+		s.Encryption.KeySecretName = util.NewStringOrNil(source.Encryption.KeySecretName)
 	}
 }
 
@@ -81,7 +81,7 @@ func (s RocksDBSpec) ResetImmutableFields(fieldPrefix string, target *RocksDBSpe
 	var resetFields []string
 	if s.IsEncrypted() != target.IsEncrypted() {
 		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.Encryption.XKeySecretName = util.NewStringOrNil(s.Encryption.XKeySecretName)
+		target.Encryption.KeySecretName = util.NewStringOrNil(s.Encryption.KeySecretName)
 		resetFields = append(resetFields, fieldPrefix+".encryption.keySecretName")
 	}
 	return resetFields
