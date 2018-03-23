@@ -23,12 +23,16 @@
 package k8sutil
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const (
+	alpineImage                     = "alpine"
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
@@ -96,14 +100,23 @@ func getPodCondition(status *v1.PodStatus, condType v1.PodConditionType) *v1.Pod
 
 // CreatePodName returns the name of the pod for a member with
 // a given id in a deployment with a given name.
-func CreatePodName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + id
+func CreatePodName(deploymentName, role, id, suffix string) string {
+	if len(suffix) > 0 && suffix[0] != '-' {
+		suffix = "-" + suffix
+	}
+	return CreatePodHostName(deploymentName, role, id) + suffix
+}
+
+// CreatePodHostName returns the hostname of the pod for a member with
+// a given id in a deployment with a given name.
+func CreatePodHostName(deploymentName, role, id string) string {
+	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
 }
 
 // CreateTLSKeyfileSecretName returns the name of the Secret that holds the TLS keyfile for a member with
 // a given id in a deployment with a given name.
 func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
-	return CreatePodName(deploymentName, role, id) + "-tls-keyfile"
+	return CreatePodName(deploymentName, role, id, "-tls-keyfile")
 }
 
 // arangodVolumeMounts creates a volume mount structure for arangod.
@@ -131,6 +144,23 @@ func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 			MountPath: RocksDBEncryptionVolumeMountDir,
 		},
 	}
+}
+
+// arangodInitContainer creates a container configured to
+// initalize a UUID file.
+func arangodInitContainer(name, id string) v1.Container {
+	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
+	c := v1.Container{
+		Command: []string{
+			"/bin/sh",
+			"-c",
+			fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile),
+		},
+		Name:         name,
+		Image:        alpineImage,
+		VolumeMounts: arangodVolumeMounts(),
+	}
+	return c
 }
 
 // arangodContainer creates a container configured to run `arangod`.
@@ -188,17 +218,17 @@ func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolic
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id string) v1.Pod {
-	name := CreatePodName(deploymentName, role, id)
+func newPod(deploymentName, ns, role, id, podName string) v1.Pod {
+	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   name,
+			Name:   podName,
 			Labels: LabelsForDeployment(deploymentName, role),
 		},
 		Spec: v1.PodSpec{
-			Hostname:      name,
+			Hostname:      hostname,
 			Subdomain:     CreateHeadlessServiceName(deploymentName),
-			RestartPolicy: v1.RestartPolicyOnFailure,
+			RestartPolicy: v1.RestartPolicyNever,
 		},
 	}
 	return p
@@ -208,12 +238,12 @@ func newPod(deploymentName, ns, role, id string) v1.Pod {
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, pvcName, image string, imagePullPolicy v1.PullPolicy,
+	role, id, podName, pvcName, image string, imagePullPolicy v1.PullPolicy,
 	args []string, env map[string]EnvValue,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
 
 	// Add arangod container
 	c := arangodContainer("arangod", image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
@@ -224,6 +254,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add UUID init container
+	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id))
 
 	// Add volume
 	if pvcName != "" {
@@ -286,10 +319,10 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, image string, imagePullPolicy v1.PullPolicy,
+func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image string, imagePullPolicy v1.PullPolicy,
 	args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
 
 	// Add arangosync container
 	c := arangosyncContainer("arangosync", image, imagePullPolicy, args, env, livenessProbe)

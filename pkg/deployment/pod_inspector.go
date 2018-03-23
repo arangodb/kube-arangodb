@@ -53,6 +53,10 @@ func (d *Deployment) inspectPods() error {
 			log.Debug().Str("pod", p.GetName()).Msg("pod not owned by this deployment")
 			continue
 		}
+		if isArangoDBImageIDAndVersionPod(p) {
+			// Image ID pods are not relevant to inspect here
+			continue
+		}
 
 		// Pod belongs to this deployment, update metric
 		inspectedPodCounter.Inc()
@@ -113,7 +117,7 @@ func (d *Deployment) inspectPods() error {
 					switch m.State {
 					case api.MemberStateNone:
 						// Do nothing
-					case api.MemberStateShuttingDown:
+					case api.MemberStateShuttingDown, api.MemberStateRotating, api.MemberStateUpgrading:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {

@@ -177,11 +177,12 @@ func main() {
 		}
 
 		// Save output
-		outputPath, err := filepath.Abs(filepath.Join("manifests", "arango-"+group+options.OutputSuffix+".yaml"))
+		outputDir, err := filepath.Abs("manifests")
 		if err != nil {
-			log.Fatalf("Failed to get absolute output path: %v\n", err)
+			log.Fatalf("Failed to get absolute output dir: %v\n", err)
 		}
-		if err := os.MkdirAll(filepath.Base(outputPath), 0755); err != nil {
+		outputPath := filepath.Join(outputDir, "arango-"+group+options.OutputSuffix+".yaml")
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
 			log.Fatalf("Failed to create output directory: %v\n", err)
 		}
 		if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
