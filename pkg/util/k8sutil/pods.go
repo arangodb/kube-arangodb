@@ -87,6 +87,12 @@ func IsPodFailed(pod *v1.Pod) bool {
 	return pod.Status.Phase == v1.PodFailed
 }
 
+// IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
+func IsArangoDBImageIDAndVersionPod(p v1.Pod) bool {
+	role, found := p.GetLabels()[LabelKeyRole]
+	return found && role == ImageIDAndVersionRole
+}
+
 // getPodCondition returns the condition of given type in the given status.
 // If not found, nil is returned.
 func getPodCondition(status *v1.PodStatus, condType v1.PodConditionType) *v1.PodCondition {

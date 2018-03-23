@@ -20,21 +20,10 @@
 // Author Ewout Prangsma
 //
 
-package reconcile
+package resources
 
-import "github.com/rs/zerolog"
+import "github.com/pkg/errors"
 
-// Reconciler is the service that takes care of bring the a deployment
-// in line with its (changed) specification.
-type Reconciler struct {
-	log     zerolog.Logger
-	context Context
-}
-
-// NewReconciler creates a new reconciler with given context.
-func NewReconciler(log zerolog.Logger, context Context) *Reconciler {
-	return &Reconciler{
-		log:     log,
-		context: context,
-	}
-}
+var (
+	maskAny = errors.WithStack
+)

@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -34,26 +34,23 @@ var (
 	inspectedPodCounter = metrics.MustRegisterCounter("deployment", "inspected_pods", "Number of pod inspections")
 )
 
-// inspectPods lists all pods that belong to the given deployment and updates
+// InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (d *Deployment) inspectPods() error {
-	log := d.deps.Log
+func (r *Resources) InspectPods() error {
+	log := r.log
 	var events []*v1.Event
 
-	pods, err := d.GetOwnedPods()
+	pods, err := r.context.GetOwnedPods()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned pods")
 		return maskAny(err)
 	}
 
 	// Update member status from all pods found
+	status := r.context.GetStatus()
+	apiObject := r.context.GetAPIObject()
 	for _, p := range pods {
-		// Check ownership
-		if !d.isOwnerOf(&p) {
-			log.Debug().Str("pod", p.GetName()).Msg("pod not owned by this deployment")
-			continue
-		}
-		if isArangoDBImageIDAndVersionPod(p) {
+		if k8sutil.IsArangoDBImageIDAndVersionPod(p) {
 			// Image ID pods are not relevant to inspect here
 			continue
 		}
@@ -62,7 +59,7 @@ func (d *Deployment) inspectPods() error {
 		inspectedPodCounter.Inc()
 
 		// Find member status
-		memberStatus, group, found := d.status.Members.MemberStatusByPodName(p.GetName())
+		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())
 		if !found {
 			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod")
 			continue
@@ -94,7 +91,7 @@ func (d *Deployment) inspectPods() error {
 		}
 		if updateMemberStatusNeeded {
 			log.Debug().Str("pod-name", p.GetName()).Msg("Updated member status member for pod")
-			if err := d.status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
+			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
 				return maskAny(err)
 			}
 		}
@@ -102,7 +99,7 @@ func (d *Deployment) inspectPods() error {
 
 	podExists := func(podName string) bool {
 		for _, p := range pods {
-			if p.GetName() == podName && d.isOwnerOf(&p) {
+			if p.GetName() == podName {
 				return true
 			}
 		}
@@ -110,7 +107,7 @@ func (d *Deployment) inspectPods() error {
 	}
 
 	// Go over all members, check for missing pods
-	d.status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
 		for _, m := range *members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
@@ -121,16 +118,16 @@ func (d *Deployment) inspectPods() error {
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
-							if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
 							}
 						}
 					default:
 						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
 						// Create event
-						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), d.apiObject))
+						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
-							if err := d.status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
 							}
 						}
@@ -142,22 +139,22 @@ func (d *Deployment) inspectPods() error {
 	})
 
 	// Check overall status update
-	switch d.status.State {
+	switch status.State {
 	case api.DeploymentStateCreating:
-		if d.status.Members.AllMembersReady() {
-			d.status.State = api.DeploymentStateRunning
+		if status.Members.AllMembersReady() {
+			status.State = api.DeploymentStateRunning
 		}
 		// TODO handle other State values
 	}
 
 	// Save status
-	if err := d.updateCRStatus(); err != nil {
+	if err := r.context.UpdateStatus(status); err != nil {
 		return maskAny(err)
 	}
 
 	// Create events
 	for _, evt := range events {
-		d.createEvent(evt)
+		r.context.CreateEvent(evt)
 	}
 	return nil
 }

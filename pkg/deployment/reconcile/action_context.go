@@ -65,8 +65,8 @@ type ActionContext interface {
 	DeletePvc(pvcName string) error
 }
 
-// NewActionContext creates a new ActionContext implementation.
-func NewActionContext(log zerolog.Logger, context ReconcileContext) ActionContext {
+// newActionContext creates a new ActionContext implementation.
+func newActionContext(log zerolog.Logger, context Context) ActionContext {
 	return &actionContext{
 		log:     log,
 		context: context,
@@ -76,7 +76,7 @@ func NewActionContext(log zerolog.Logger, context ReconcileContext) ActionContex
 // actionContext implements ActionContext
 type actionContext struct {
 	log     zerolog.Logger
-	context ReconcileContext
+	context Context
 }
 
 // Gets the specified mode of deployment

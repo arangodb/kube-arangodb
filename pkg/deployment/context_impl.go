@@ -28,15 +28,33 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // GetAPIObject returns the deployment as k8s object.
-func (d *Deployment) GetAPIObject() metav1.Object {
+func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 	return d.apiObject
+}
+
+// GetServerGroupIterator returns the deployment as ServerGroupIterator.
+func (d *Deployment) GetServerGroupIterator() resources.ServerGroupIterator {
+	return d.apiObject
+}
+
+// GetKubeCli returns the kubernetes client
+func (d *Deployment) GetKubeCli() kubernetes.Interface {
+	return d.deps.KubeCli
+}
+
+// GetNamespace returns the kubernetes namespace that contains
+// this deployment.
+func (d *Deployment) GetNamespace() string {
+	return d.apiObject.GetNamespace()
 }
 
 // GetSpec returns the current specification
