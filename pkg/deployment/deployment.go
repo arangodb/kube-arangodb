@@ -122,7 +122,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	go d.run()
 	go d.listenForPodEvents()
-	if apiObject.Spec.Mode == api.DeploymentModeCluster {
+	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		go d.listenForClusterEvents(d.stopCh)
 	}
 
@@ -293,7 +293,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 	}
 
 	// Notify cluster of desired server count
-	if d.apiObject.Spec.Mode == api.DeploymentModeCluster {
+	if d.apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		ctx := context.Background()
 		if err := d.updateClusterServerCount(ctx); err != nil {
 			log.Error().Err(err).Msg("Failed to update desired server count in cluster")

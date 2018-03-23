@@ -26,8 +26,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // listenForClusterEvents keep listening for changes entered in the UI of the cluster.
@@ -91,10 +93,10 @@ func (d *Deployment) inspectCluster(ctx context.Context) error {
 		return maskAny(err)
 	}
 	if coordinatorsChanged {
-		current.Spec.Coordinators.Count = req.GetCoordinators()
+		current.Spec.Coordinators.Count = util.NewInt(req.GetCoordinators())
 	}
 	if dbserversChanged {
-		current.Spec.DBServers.Count = req.GetDBServers()
+		current.Spec.DBServers.Count = util.NewInt(req.GetDBServers())
 	}
 	if err := d.updateCRSpec(current.Spec); err != nil {
 		log.Warn().Err(err).Msg("Failed to update current deployment")

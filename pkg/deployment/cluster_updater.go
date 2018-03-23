@@ -36,8 +36,8 @@ func (d *Deployment) updateClusterServerCount(ctx context.Context) error {
 		return maskAny(err)
 	}
 	spec := d.apiObject.Spec
-	coordinatorCount := spec.Coordinators.Count
-	dbserverCount := spec.DBServers.Count
+	coordinatorCount := spec.Coordinators.GetCount()
+	dbserverCount := spec.DBServers.GetCount()
 	if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
 		log.Debug().Err(err).Msg("Failed to set number of servers")
 		return maskAny(err)
