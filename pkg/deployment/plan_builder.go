@@ -24,15 +24,39 @@ package deployment
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// upgradeDecision is the result of an upgrade check.
+type upgradeDecision struct {
+	UpgradeNeeded     bool // If set, the image version has changed
+	UpgradeAllowed    bool // If set, it is an allowed version change
+	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
+}
 
 // createPlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
 func (d *Deployment) createPlan() error {
+	// Get all current pods
+	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to list pods")
+		return maskAny(err)
+	}
+	myPods := make([]v1.Pod, 0, len(pods.Items))
+	for _, p := range pods.Items {
+		if d.isOwnerOf(&p) {
+			myPods = append(myPods, p)
+		}
+	}
+
 	// Create plan
-	newPlan, changed := createPlan(d.deps.Log, d.status.Plan, d.apiObject.Spec, d.status)
+	newPlan, changed := createPlan(d.deps.Log, d.apiObject, d.status.Plan, d.apiObject.Spec, d.status, myPods)
 
 	// If not change, we're done
 	if !changed {
@@ -54,7 +78,9 @@ func (d *Deployment) createPlan() error {
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpec, status api.DeploymentStatus) (api.Plan, bool) {
+func createPlan(log zerolog.Logger, apiObject metav1.Object,
+	currentPlan api.Plan, spec api.DeploymentSpec,
+	status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -78,8 +104,116 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
 	}
 
+	// Check for the need to rotate one or more members
+	getPod := func(podName string) *v1.Pod {
+		for _, p := range pods {
+			if p.GetName() == podName {
+				return &p
+			}
+		}
+		return nil
+	}
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+		for _, m := range *members {
+			if len(plan) > 0 {
+				// Only 1 change at a time
+				continue
+			}
+			if m.State != api.MemberStateCreated {
+				// Only rotate when state is created
+				continue
+			}
+			if podName := m.PodName; podName != "" {
+				if p := getPod(podName); p != nil {
+					// Got pod, compare it with what it should be
+					decision := podNeedsUpgrading(*p, spec, status.Images)
+					if decision.UpgradeNeeded && decision.UpgradeAllowed {
+						plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
+					} else {
+						rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
+						if rotNeeded {
+							plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+
 	// Return plan
 	return plan, true
+}
+
+// podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
+// the given spec) and if that is allowed.
+func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+	if len(p.Spec.Containers) == 1 {
+		c := p.Spec.Containers[0]
+		specImageInfo, found := images.GetByImage(spec.Image)
+		if !found {
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		podImageInfo, found := images.GetByImageID(c.Image)
+		if !found {
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		if specImageInfo.ImageID == podImageInfo.ImageID {
+			// No change
+			return upgradeDecision{UpgradeNeeded: false}
+		}
+		// Image changed, check if change is allowed
+		specVersion := specImageInfo.ArangoDBVersion
+		podVersion := podImageInfo.ArangoDBVersion
+		if specVersion.Major() != podVersion.Major() {
+			// E.g. 3.x -> 4.x, we cannot allow automatically
+			return upgradeDecision{UpgradeNeeded: true, UpgradeAllowed: false}
+		}
+		if specVersion.Minor() != podVersion.Minor() {
+			// Is allowed, with `--database.auto-upgrade`
+			return upgradeDecision{
+				UpgradeNeeded:     true,
+				UpgradeAllowed:    true,
+				AutoUpgradeNeeded: true,
+			}
+		}
+		// Patch version change, rotate only
+		return upgradeDecision{
+			UpgradeNeeded:     true,
+			UpgradeAllowed:    true,
+			AutoUpgradeNeeded: false,
+		}
+	}
+	return upgradeDecision{UpgradeNeeded: false}
+}
+
+// podNeedsRotation returns true when the specification of the
+// given pod differs from what it should be according to the
+// given deployment spec.
+// When true is returned, a reason for the rotation is already returned.
+func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+	group api.ServerGroup, agents api.MemberStatusList, id string) (bool, string) {
+	// Check number of containers
+	if len(p.Spec.Containers) != 1 {
+		return true, "Number of containers changed"
+	}
+	// Check image pull policy
+	c := p.Spec.Containers[0]
+	if c.ImagePullPolicy != spec.ImagePullPolicy {
+		return true, "Image pull policy changed"
+	}
+	// Check arguments
+	/*expectedArgs := createArangodArgs(apiObject, spec, group, agents, id)
+	if len(expectedArgs) != len(c.Args) {
+		return true, "Arguments changed"
+	}
+	for i, a := range expectedArgs {
+		if c.Args[i] != a {
+			return true, "Arguments changed"
+		}
+	}*/
+
+	return false, ""
 }
 
 // createScalePlan creates a scaling plan for a single server group
@@ -89,7 +223,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 		// Scale up
 		toAdd := count - len(members)
 		for i := 0; i < toAdd; i++ {
-			plan = append(plan, api.Action{Type: api.ActionTypeAddMember, Group: group})
+			plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, ""))
 		}
 		log.Debug().
 			Int("delta", toAdd).
@@ -100,17 +234,47 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 		if m, err := members.SelectMemberToRemove(); err == nil {
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
-					api.Action{Type: api.ActionTypeCleanOutMember, Group: group, MemberID: m.ID},
+					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
 				)
 			}
 			plan = append(plan,
-				api.Action{Type: api.ActionTypeShutdownMember, Group: group, MemberID: m.ID},
-				api.Action{Type: api.ActionTypeRemoveMember, Group: group, MemberID: m.ID},
+				api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
+				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 			)
 			log.Debug().
 				Str("role", group.AsRole()).
 				Msg("Creating scale-down plan")
 		}
+	}
+	return plan
+}
+
+// createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
+// member.
+func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
+	group api.ServerGroup, reason string) api.Plan {
+	log.Debug().
+		Str("id", member.ID).
+		Str("role", group.AsRole()).
+		Msg("Creating rotation plan")
+	plan := api.Plan{
+		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
+	}
+	return plan
+}
+
+// createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
+// member.
+func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
+	group api.ServerGroup, reason string) api.Plan {
+	log.Debug().
+		Str("id", member.ID).
+		Str("role", group.AsRole()).
+		Msg("Creating upgrade plan")
+	plan := api.Plan{
+		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan
 }

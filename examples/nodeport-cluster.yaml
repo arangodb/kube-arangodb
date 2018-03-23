@@ -7,6 +7,7 @@ spec:
     app: arangodb
     role: coordinator
   type: NodePort
+  publishNotReadyAddresses: true
   ports:
   - protocol: TCP
     port: 8529

@@ -73,6 +73,27 @@ func (s DeploymentSpec) IsSecure() bool {
 	return s.TLS.IsSecure()
 }
 
+// GetServerGroupSpec returns the server group spec (from this
+// deployment spec) for the given group.
+func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
+	switch group {
+	case ServerGroupSingle:
+		return s.Single
+	case ServerGroupAgents:
+		return s.Agents
+	case ServerGroupDBServers:
+		return s.DBServers
+	case ServerGroupCoordinators:
+		return s.Coordinators
+	case ServerGroupSyncMasters:
+		return s.SyncMasters
+	case ServerGroupSyncWorkers:
+		return s.SyncWorkers
+	default:
+		return ServerGroupSpec{}
+	}
+}
+
 // SetDefaults fills in default values when a field is not specified.
 func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.Mode == "" {
