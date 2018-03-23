@@ -20,18 +20,19 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// createServices creates all services needed to service the given deployment
-func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
-	log := d.deps.Log
-	kubecli := d.deps.KubeCli
+// EnsureServices creates all services needed to service the deployment
+func (r *Resources) EnsureServices() error {
+	log := r.log
+	kubecli := r.context.GetKubeCli()
+	apiObject := r.context.GetAPIObject()
 	owner := apiObject.AsOwner()
+	spec := r.context.GetSpec()
 
 	log.Debug().Msg("creating services...")
 
@@ -39,23 +40,30 @@ func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
 		log.Debug().Err(err).Msg("Failed to create headless service")
 		return maskAny(err)
 	}
-	single := apiObject.Spec.GetMode().HasSingleServers()
-	if svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner); err != nil {
+	single := spec.GetMode().HasSingleServers()
+	svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner)
+	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client service")
 		return maskAny(err)
-	} else {
-		d.status.ServiceName = svcName
-		if err := d.updateCRStatus(); err != nil {
+	}
+	status := r.context.GetStatus()
+	if status.ServiceName != svcName {
+		status.ServiceName = svcName
+		if err := r.context.UpdateStatus(status); err != nil {
 			return maskAny(err)
 		}
 	}
-	if apiObject.Spec.Sync.IsEnabled() {
-		if svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner); err != nil {
+
+	if spec.Sync.IsEnabled() {
+		svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner)
+		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create syncmaster client service")
 			return maskAny(err)
-		} else {
-			d.status.ServiceName = svcName
-			if err := d.updateCRStatus(); err != nil {
+		}
+		status := r.context.GetStatus()
+		if status.SyncServiceName != svcName {
+			status.SyncServiceName = svcName
+			if err := r.context.UpdateStatus(status); err != nil {
 				return maskAny(err)
 			}
 		}

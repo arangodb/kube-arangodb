@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -28,14 +28,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// ensurePVCs creates all PVC's listed in member status
-func (d *Deployment) ensurePVCs(apiObject *api.ArangoDeployment) error {
-	kubecli := d.deps.KubeCli
+// EnsurePVCs creates all PVC's listed in member status
+func (r *Resources) EnsurePVCs() error {
+	kubecli := r.context.GetKubeCli()
+	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
+	iterator := r.context.GetServerGroupIterator()
+	status := r.context.GetStatus()
 
-	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName != "" {
 				storageClassName := spec.GetStorageClassName()
@@ -47,7 +50,7 @@ func (d *Deployment) ensurePVCs(apiObject *api.ArangoDeployment) error {
 			}
 		}
 		return nil
-	}, &d.status); err != nil {
+	}, &status); err != nil {
 		return maskAny(err)
 	}
 	return nil

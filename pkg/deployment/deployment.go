@@ -176,7 +176,7 @@ func (d *Deployment) run() {
 		}
 
 		// Create services
-		if err := d.createServices(d.apiObject); err != nil {
+		if err := d.resources.EnsureServices(); err != nil {
 			d.failOnError(err, "Failed to create services")
 			return
 		}
@@ -188,7 +188,7 @@ func (d *Deployment) run() {
 		}
 
 		// Create PVCs
-		if err := d.ensurePVCs(d.apiObject); err != nil {
+		if err := d.resources.EnsurePVCs(); err != nil {
 			d.failOnError(err, "Failed to create persistent volume claims")
 			return
 		}

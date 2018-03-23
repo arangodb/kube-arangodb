@@ -74,7 +74,11 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Ensure all resources are created
-	if err := d.ensurePVCs(d.apiObject); err != nil {
+	if err := d.resources.EnsureServices(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
+	}
+	if err := d.resources.EnsurePVCs(); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
 	}
