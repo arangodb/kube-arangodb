@@ -40,14 +40,14 @@ func (d *Deployment) inspectPods() error {
 	log := d.deps.Log
 	var events []*v1.Event
 
-	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	pods, err := d.GetOwnedPods()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list pods")
+		log.Debug().Err(err).Msg("Failed to get owned pods")
 		return maskAny(err)
 	}
 
 	// Update member status from all pods found
-	for _, p := range pods.Items {
+	for _, p := range pods {
 		// Check ownership
 		if !d.isOwnerOf(&p) {
 			log.Debug().Str("pod", p.GetName()).Msg("pod not owned by this deployment")
@@ -101,7 +101,7 @@ func (d *Deployment) inspectPods() error {
 	}
 
 	podExists := func(podName string) bool {
-		for _, p := range pods.Items {
+		for _, p := range pods {
 			if p.GetName() == podName && d.isOwnerOf(&p) {
 				return true
 			}
