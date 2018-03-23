@@ -23,8 +23,10 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -36,6 +38,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
@@ -89,8 +92,12 @@ type Deployment struct {
 	eventsCli corev1.EventInterface
 
 	inspectTrigger         trigger.Trigger
-	recentInspectionErrors int
 	clientCache            *clientCache
+	recentInspectionErrors int
+	lastNumberOfServers    struct {
+		arangod.NumberOfServers
+		mutex sync.Mutex
+	}
 }
 
 // New creates a new Deployment from the given API object.
@@ -111,6 +118,9 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	go d.run()
 	go d.listenForPodEvents()
+	if apiObject.Spec.Mode == api.DeploymentModeCluster {
+		go d.listenForClusterEvents(d.stopCh)
+	}
 
 	return d, nil
 }
@@ -267,6 +277,14 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 	// Save updated spec
 	if err := d.updateCRSpec(newAPIObject.Spec); err != nil {
 		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+	}
+
+	// Notify cluster of desired server count
+	if d.apiObject.Spec.Mode == api.DeploymentModeCluster {
+		ctx := context.Background()
+		if err := d.updateClusterServerCount(ctx); err != nil {
+			log.Error().Err(err).Msg("Failed to update desired server count in cluster")
+		}
 	}
 
 	// Trigger inspect
