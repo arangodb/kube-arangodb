@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 )
@@ -39,7 +40,7 @@ func TestDeploymentSpecSetDefaults(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, "arangodb/arangodb:latest", def(DeploymentSpec{}).Image)
+	assert.Equal(t, "arangodb/arangodb:latest", def(DeploymentSpec{}).GetImage())
 }
 
 func TestDeploymentSpecResetImmutableFields(t *testing.T) {
@@ -51,23 +52,23 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			DeploymentSpec{Image: "foo"},
-			DeploymentSpec{Image: "foo2"},
-			DeploymentSpec{Image: "foo2"},
+			DeploymentSpec{Image: util.NewString("foo")},
+			DeploymentSpec{Image: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewString("foo2")},
 			nil,
 		},
 		{
-			DeploymentSpec{ImagePullPolicy: v1.PullAlways},
-			DeploymentSpec{ImagePullPolicy: v1.PullNever},
-			DeploymentSpec{ImagePullPolicy: v1.PullNever},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			DeploymentSpec{Mode: DeploymentModeSingle},
-			DeploymentSpec{Mode: DeploymentModeCluster},
-			DeploymentSpec{Mode: DeploymentModeSingle},
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeCluster)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
 			[]string{"mode"},
 		},
 	}

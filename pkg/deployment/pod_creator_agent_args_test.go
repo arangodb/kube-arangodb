@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
@@ -41,7 +42,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -84,7 +85,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -128,9 +129,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -172,12 +173,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = "None"
-		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
@@ -216,7 +217,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")

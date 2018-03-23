@@ -27,10 +27,12 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // clusterScalingIntegration is a helper to communicate with the clusters
@@ -134,10 +136,10 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context) error {
 		return maskAny(err)
 	}
 	if coordinatorsChanged {
-		current.Spec.Coordinators.Count = req.GetCoordinators()
+		current.Spec.Coordinators.Count = util.NewInt(req.GetCoordinators())
 	}
 	if dbserversChanged {
-		current.Spec.DBServers.Count = req.GetDBServers()
+		current.Spec.DBServers.Count = util.NewInt(req.GetDBServers())
 	}
 	if err := ci.depl.updateCRSpec(current.Spec); err != nil {
 		log.Warn().Err(err).Msg("Failed to update current deployment")
@@ -163,8 +165,8 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	if err != nil {
 		return false, maskAny(err)
 	}
-	coordinatorCount := spec.Coordinators.Count
-	dbserverCount := spec.DBServers.Count
+	coordinatorCount := spec.Coordinators.GetCount()
+	dbserverCount := spec.DBServers.GetCount()
 	if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
 		log.Debug().Err(err).Msg("Failed to set number of servers")
 		return false, maskAny(err)

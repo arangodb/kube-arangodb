@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.
@@ -41,7 +42,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -82,7 +83,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -124,9 +125,9 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -166,11 +167,11 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
@@ -207,12 +208,12 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
 		apiObject.Spec.Coordinators.Args = []string{"--foo1", "--foo2"}
-		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
+		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},

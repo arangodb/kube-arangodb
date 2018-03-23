@@ -40,7 +40,7 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 
 	// Go over all groups and create members
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-		for len(*status) < spec.Count {
+		for len(*status) < spec.GetCount() {
 			if err := d.createMember(group, apiObject); err != nil {
 				return maskAny(err)
 			}

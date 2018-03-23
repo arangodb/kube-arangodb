@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +38,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -64,7 +65,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -92,9 +93,9 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -120,8 +121,8 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode:          api.DeploymentModeSingle,
-				StorageEngine: api.StorageEngineMMFiles,
+				Mode:          api.NewMode(api.DeploymentModeSingle),
+				StorageEngine: api.NewStorageEngine(api.StorageEngineMMFiles),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -148,10 +149,10 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
-		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
 		apiObject.Spec.SetDefaults("test")
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
@@ -175,7 +176,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
@@ -209,7 +210,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeResilientSingle,
+				Mode: api.NewMode(api.DeploymentModeResilientSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")

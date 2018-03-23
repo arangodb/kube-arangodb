@@ -90,18 +90,18 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	var plan api.Plan
 
 	// Check for scale up/down
-	switch spec.Mode {
+	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
 	case api.DeploymentModeResilientSingle:
 		// Only scale singles
-		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 	case api.DeploymentModeCluster:
 		// Scale dbservers, coordinators, syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.Count)...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.Count)...)
+		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
+		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
 	}
 
 	// Check for the need to rotate one or more members
@@ -150,7 +150,7 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
 	if len(p.Spec.Containers) == 1 {
 		c := p.Spec.Containers[0]
-		specImageInfo, found := images.GetByImage(spec.Image)
+		specImageInfo, found := images.GetByImage(spec.GetImage())
 		if !found {
 			return upgradeDecision{UpgradeNeeded: false}
 		}
@@ -199,7 +199,7 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	}
 	// Check image pull policy
 	c := p.Spec.Containers[0]
-	if c.ImagePullPolicy != spec.ImagePullPolicy {
+	if c.ImagePullPolicy != spec.GetImagePullPolicy() {
 		return true, "Image pull policy changed"
 	}
 	// Check arguments

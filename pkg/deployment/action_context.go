@@ -83,7 +83,7 @@ type actionContext struct {
 
 // Gets the specified mode of deployment
 func (ac *actionContext) GetMode() api.DeploymentMode {
-	return ac.deployment.apiObject.Spec.Mode
+	return ac.deployment.apiObject.Spec.GetMode()
 }
 
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),

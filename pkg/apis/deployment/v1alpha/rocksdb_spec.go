@@ -23,12 +23,24 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // RocksDBEncryptionSpec holds rocksdb encryption at rest specific configuration settings
 type RocksDBEncryptionSpec struct {
-	KeySecretName string `json:"keySecretName,omitempty"`
+	KeySecretName *string `json:"keySecretName,omitempty"`
+}
+
+// GetKeySecretName returns the value of keySecretName.
+func (s RocksDBEncryptionSpec) GetKeySecretName() string {
+	return util.StringOrDefault(s.KeySecretName)
+}
+
+// IsEncrypted returns true when an encryption key secret name is provided,
+// false otherwise.
+func (s RocksDBEncryptionSpec) IsEncrypted() bool {
+	return s.GetKeySecretName() != ""
 }
 
 // RocksDBSpec holds rocksdb specific configuration settings
@@ -39,12 +51,12 @@ type RocksDBSpec struct {
 // IsEncrypted returns true when an encryption key secret name is provided,
 // false otherwise.
 func (s RocksDBSpec) IsEncrypted() bool {
-	return s.Encryption.KeySecretName != ""
+	return s.Encryption.IsEncrypted()
 }
 
 // Validate the given spec
 func (s RocksDBSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.Encryption.KeySecretName); err != nil {
+	if err := k8sutil.ValidateOptionalResourceName(s.Encryption.GetKeySecretName()); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -55,6 +67,13 @@ func (s *RocksDBSpec) SetDefaults() {
 	// Nothing needed
 }
 
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *RocksDBSpec) SetDefaultsFrom(source RocksDBSpec) {
+	if s.Encryption.KeySecretName == nil {
+		s.Encryption.KeySecretName = util.NewStringOrNil(source.Encryption.KeySecretName)
+	}
+}
+
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to given field prefix.
@@ -62,7 +81,7 @@ func (s RocksDBSpec) ResetImmutableFields(fieldPrefix string, target *RocksDBSpe
 	var resetFields []string
 	if s.IsEncrypted() != target.IsEncrypted() {
 		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.Encryption.KeySecretName = s.Encryption.KeySecretName
+		target.Encryption.KeySecretName = util.NewStringOrNil(s.Encryption.KeySecretName)
 		resetFields = append(resetFields, fieldPrefix+".encryption.keySecretName")
 	}
 	return resetFields

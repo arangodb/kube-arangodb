@@ -31,13 +31,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeSingle,
+		Mode: api.NewMode(api.DeploymentModeSingle),
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
@@ -85,10 +86,10 @@ func TestCreatePlanSingleScale(t *testing.T) {
 func TestCreatePlanResilientSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeResilientSingle,
+		Mode: api.NewMode(api.DeploymentModeResilientSingle),
 	}
 	spec.SetDefaults("test")
-	spec.Single.Count = 2
+	spec.Single.Count = util.NewInt(2)
 	depl := &api.ArangoDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test_depl",
@@ -150,7 +151,7 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 func TestCreatePlanClusterScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeCluster,
+		Mode: api.NewMode(api.DeploymentModeCluster),
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
@@ -231,8 +232,8 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator2",
 		},
 	}
-	spec.DBServers.Count = 1
-	spec.Coordinators.Count = 1
+	spec.DBServers.Count = util.NewInt(1)
+	spec.Coordinators.Count = util.NewInt(1)
 	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time

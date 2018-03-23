@@ -41,7 +41,7 @@ var apiObjectForTest = api.ArangoDeployment{
 		Namespace: "Wonka",
 	},
 	Spec: api.DeploymentSpec{
-		Mode: api.DeploymentModeCluster,
+		Mode: api.NewMode(api.DeploymentModeCluster),
 	},
 }
 

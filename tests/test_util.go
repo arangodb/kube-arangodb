@@ -239,13 +239,13 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 			}
 		}
 	}
-	if spec.Agents.Count == agents &&
-		spec.DBServers.Count == goodDBServers &&
-		spec.Coordinators.Count == goodCoordinators {
+	if spec.Agents.GetCount() == agents &&
+		spec.DBServers.GetCount() == goodDBServers &&
+		spec.Coordinators.GetCount() == goodCoordinators {
 		return nil
 	}
 	return fmt.Errorf("Expected %d,%d,%d got %d,%d,%d",
-		spec.Agents.Count, spec.DBServers.Count, spec.Coordinators.Count,
+		spec.Agents.GetCount(), spec.DBServers.GetCount(), spec.Coordinators.GetCount(),
 		agents, goodDBServers, goodCoordinators,
 	)
 }

@@ -92,7 +92,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 
 	// Storage engine
 	options = append(options,
-		optionPair{"--server.storage-engine", string(deplSpec.StorageEngine)},
+		optionPair{"--server.storage-engine", string(deplSpec.GetStorageEngine())},
 	)
 
 	// Logging
@@ -151,7 +151,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--agency.disaster-recovery-id", id},
 			optionPair{"--agency.activate", "true"},
 			optionPair{"--agency.my-address", myTCPURL},
-			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.Count)},
+			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.GetCount())},
 			optionPair{"--agency.supervision", "true"},
 			optionPair{"--foxx.queues", "false"},
 			optionPair{"--server.statistics", "false"},
@@ -185,7 +185,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.Mode == api.DeploymentModeResilientSingle {
+		if deplSpec.GetMode() == api.DeploymentModeResilientSingle {
 			addAgentEndpoints = true
 			options = append(options,
 				optionPair{"--replication.automatic-failover", "true"},
@@ -246,7 +246,7 @@ func (d *Deployment) createLivenessProbe(apiObject *api.ArangoDeployment, group 
 		return nil, nil
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		authorization := ""
-		if apiObject.Spec.Sync.Monitoring.TokenSecretName != "" {
+		if apiObject.Spec.Sync.Monitoring.GetTokenSecretName() != "" {
 			// Use monitoring token
 			token, err := d.getSyncMonitoringToken(apiObject)
 			if err != nil {
@@ -323,9 +323,9 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			// Create pod
 			if group.IsArangod() {
 				// Find image ID
-				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.Image)
+				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.GetImage())
 				if !found {
-					log.Debug().Str("image", apiObject.Spec.Image).Msg("Image ID is not known yet for image")
+					log.Debug().Str("image", apiObject.Spec.GetImage()).Msg("Image ID is not known yet for image")
 					return nil
 				}
 				// Prepare arguments
@@ -357,25 +357,25 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				}
 				rocksdbEncryptionSecretName := ""
 				if apiObject.Spec.RocksDB.IsEncrypted() {
-					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.KeySecretName
+					rocksdbEncryptionSecretName = apiObject.Spec.RocksDB.Encryption.GetKeySecretName()
 					if err := k8sutil.ValidateEncryptionKeySecret(kubecli.CoreV1(), rocksdbEncryptionSecretName, ns); err != nil {
 						return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
 					}
 				}
 				if apiObject.Spec.IsAuthenticated() {
 					env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
-						SecretName: apiObject.Spec.Authentication.JWTSecretName,
+						SecretName: apiObject.Spec.Authentication.GetJWTSecretName(),
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, apiObject.Spec.ImagePullPolicy, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, apiObject.Spec.GetImagePullPolicy(), args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
 				// Find image ID
-				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.Sync.Image)
+				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.Sync.GetImage())
 				if !found {
-					log.Debug().Str("image", apiObject.Spec.Sync.Image).Msg("Image ID is not known yet for image")
+					log.Debug().Str("image", apiObject.Spec.Sync.GetImage()).Msg("Image ID is not known yet for image")
 					return nil
 				}
 				// Prepare arguments
@@ -389,7 +389,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if group == api.ServerGroupSyncWorkers {
 					affinityWithRole = api.ServerGroupDBServers.AsRole()
 				}
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, apiObject.Spec.Sync.ImagePullPolicy, args, env, livenessProbe, affinityWithRole); err != nil {
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, apiObject.Spec.Sync.GetImagePullPolicy(), args, env, livenessProbe, affinityWithRole); err != nil {
 					return maskAny(err)
 				}
 			}

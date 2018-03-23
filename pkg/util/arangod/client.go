@@ -147,7 +147,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
-			s, err := k8sutil.GetJWTSecret(cli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
+			s, err := k8sutil.GetJWTSecret(cli, apiObject.Spec.Authentication.GetJWTSecretName(), apiObject.GetNamespace())
 			if err != nil {
 				return nil, maskAny(err)
 			}
