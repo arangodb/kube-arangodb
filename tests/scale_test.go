@@ -51,8 +51,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Add 2 DBServers, 1 coordinator
 	updated, err := updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 5
-		spec.Coordinators.Count = 4
+		spec.DBServers.Count = util.NewInt(5)
+		spec.Coordinators.Count = util.NewInt(4)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -67,8 +67,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Remove 3 DBServers, 2 coordinator
 	updated, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 3
-		spec.Coordinators.Count = 2
+		spec.DBServers.Count = util.NewInt(3)
+		spec.Coordinators.Count = util.NewInt(2)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -93,7 +93,7 @@ func TestScaleCluster(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-scale" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.TLS = api.TLSSpec{}         // should auto-generate cert
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
@@ -121,8 +121,8 @@ func TestScaleCluster(t *testing.T) {
 
 	// Add 2 DBServers, 1 coordinator
 	updated, err := updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 5
-		spec.Coordinators.Count = 4
+		spec.DBServers.Count = util.NewInt(5)
+		spec.Coordinators.Count = util.NewInt(4)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -137,8 +137,8 @@ func TestScaleCluster(t *testing.T) {
 
 	// Remove 3 DBServers, 2 coordinator
 	updated, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 3
-		spec.Coordinators.Count = 2
+		spec.DBServers.Count = util.NewInt(3)
+		spec.Coordinators.Count = util.NewInt(2)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
