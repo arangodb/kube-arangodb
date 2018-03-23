@@ -64,7 +64,7 @@ func createPlan(log zerolog.Logger, currentPlan api.Plan, spec api.DeploymentSpe
 	var plan api.Plan
 
 	// Check for scale up/down
-	switch spec.Mode {
+	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
 	case api.DeploymentModeResilientSingle:

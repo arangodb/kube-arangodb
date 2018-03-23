@@ -29,15 +29,12 @@ import (
 
 // MonitoringSpec holds monitoring specific configuration settings
 type MonitoringSpec struct {
-	TokenSecretName *string `json:"tokenSecretName,omitempty"`
+	XTokenSecretName *string `json:"tokenSecretName,omitempty"`
 }
 
 // GetTokenSecretName returns the value of tokenSecretName.
 func (s MonitoringSpec) GetTokenSecretName() string {
-	if s.TokenSecretName == nil {
-		return ""
-	}
-	return *s.TokenSecretName
+	return util.StringOrDefault(s.XTokenSecretName)
 }
 
 // Validate the given spec
@@ -55,7 +52,7 @@ func (s *MonitoringSpec) SetDefaults() {
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *MonitoringSpec) SetDefaultsFrom(source MonitoringSpec) {
-	if s.TokenSecretName == nil {
-		s.TokenSecretName = util.StringOrNil(source.TokenSecretName)
+	if s.XTokenSecretName == nil {
+		s.XTokenSecretName = util.NewStringOrNil(source.XTokenSecretName)
 	}
 }

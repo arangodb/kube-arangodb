@@ -31,13 +31,13 @@ import (
 
 func TestMonitoringSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, MonitoringSpec{TokenSecretName: nil}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("")}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("foo")}.Validate())
-	assert.Nil(t, MonitoringSpec{TokenSecretName: util.String("foo")}.Validate())
+	assert.Nil(t, MonitoringSpec{XTokenSecretName: nil}.Validate())
+	assert.Nil(t, MonitoringSpec{XTokenSecretName: util.NewString("")}.Validate())
+	assert.Nil(t, MonitoringSpec{XTokenSecretName: util.NewString("foo")}.Validate())
+	assert.Nil(t, MonitoringSpec{XTokenSecretName: util.NewString("foo")}.Validate())
 
 	// Not valid
-	assert.Error(t, MonitoringSpec{TokenSecretName: util.String("Foo")}.Validate())
+	assert.Error(t, MonitoringSpec{XTokenSecretName: util.NewString("Foo")}.Validate())
 }
 
 func TestMonitoringSpecSetDefaults(t *testing.T) {
@@ -47,5 +47,5 @@ func TestMonitoringSpecSetDefaults(t *testing.T) {
 	}
 
 	assert.Equal(t, "", def(MonitoringSpec{}).GetTokenSecretName())
-	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: util.String("foo")}).GetTokenSecretName())
+	assert.Equal(t, "foo", def(MonitoringSpec{XTokenSecretName: util.NewString("foo")}).GetTokenSecretName())
 }

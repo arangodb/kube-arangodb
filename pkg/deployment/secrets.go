@@ -45,7 +45,7 @@ func (d *Deployment) createSecrets(apiObject *api.ArangoDeployment) error {
 			return maskAny(err)
 		}
 	}
-	if apiObject.Spec.Sync.Enabled {
+	if apiObject.Spec.Sync.IsEnabled() {
 		if err := d.ensureCACertificateSecret(apiObject.Spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}

@@ -39,7 +39,7 @@ func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
 		log.Debug().Err(err).Msg("Failed to create headless service")
 		return maskAny(err)
 	}
-	single := apiObject.Spec.Mode.HasSingleServers()
+	single := apiObject.Spec.GetMode().HasSingleServers()
 	if svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner); err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client service")
 		return maskAny(err)
@@ -49,7 +49,7 @@ func (d *Deployment) createServices(apiObject *api.ArangoDeployment) error {
 			return maskAny(err)
 		}
 	}
-	if apiObject.Spec.Sync.Enabled {
+	if apiObject.Spec.Sync.IsEnabled() {
 		if svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner); err != nil {
 			log.Debug().Err(err).Msg("Failed to create syncmaster client service")
 			return maskAny(err)

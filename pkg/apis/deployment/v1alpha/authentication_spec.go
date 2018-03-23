@@ -31,7 +31,7 @@ import (
 
 // AuthenticationSpec holds authentication specific configuration settings
 type AuthenticationSpec struct {
-	JWTSecretName *string `json:"jwtSecretName,omitempty"`
+	XJWTSecretName *string `json:"jwtSecretName,omitempty"`
 }
 
 const (
@@ -41,10 +41,7 @@ const (
 
 // GetJWTSecretName returns the value of jwtSecretName.
 func (s AuthenticationSpec) GetJWTSecretName() string {
-	if s.JWTSecretName == nil {
-		return ""
-	}
-	return *s.JWTSecretName
+	return util.StringOrDefault(s.XJWTSecretName)
 }
 
 // IsAuthenticated returns true if authentication is enabled.
@@ -71,14 +68,14 @@ func (s *AuthenticationSpec) SetDefaults(defaultJWTSecretName string) {
 	if s.GetJWTSecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.JWTSecretName = util.String(defaultJWTSecretName)
+		s.XJWTSecretName = util.NewString(defaultJWTSecretName)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *AuthenticationSpec) SetDefaultsFrom(source AuthenticationSpec) {
-	if s.JWTSecretName == nil {
-		s.JWTSecretName = util.String(source.GetJWTSecretName())
+	if s.XJWTSecretName == nil {
+		s.XJWTSecretName = util.NewString(source.GetJWTSecretName())
 	}
 }
 
@@ -89,7 +86,7 @@ func (s AuthenticationSpec) ResetImmutableFields(fieldPrefix string, target *Aut
 	var resetFields []string
 	if s.IsAuthenticated() != target.IsAuthenticated() {
 		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.JWTSecretName = util.StringOrNil(s.JWTSecretName)
+		target.XJWTSecretName = util.NewStringOrNil(s.XJWTSecretName)
 		resetFields = append(resetFields, fieldPrefix+".jwtSecretName")
 	}
 	return resetFields

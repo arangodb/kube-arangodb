@@ -30,13 +30,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeSingle,
+		XMode: api.NewMode(api.DeploymentModeSingle),
 	}
 	spec.SetDefaults("test")
 
@@ -77,10 +78,10 @@ func TestCreatePlanSingleScale(t *testing.T) {
 func TestCreatePlanResilientSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeResilientSingle,
+		XMode: api.NewMode(api.DeploymentModeResilientSingle),
 	}
 	spec.SetDefaults("test")
-	spec.Single.Count = 2
+	spec.Single.XCount = util.NewInt(2)
 
 	// Test with empty status
 	var status api.DeploymentStatus
@@ -135,7 +136,7 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 func TestCreatePlanClusterScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeCluster,
+		XMode: api.NewMode(api.DeploymentModeCluster),
 	}
 	spec.SetDefaults("test")
 
@@ -209,8 +210,8 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator2",
 		},
 	}
-	spec.DBServers.Count = 1
-	spec.Coordinators.Count = 1
+	spec.DBServers.XCount = util.NewInt(1)
+	spec.Coordinators.XCount = util.NewInt(1)
 	newPlan, changed = createPlan(log, nil, spec, status)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time

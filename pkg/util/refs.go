@@ -22,56 +22,128 @@
 
 package util
 
-import "time"
+import (
+	"time"
 
-// String returns a reference to a string with given value.
-func String(input string) *string {
+	"k8s.io/api/core/v1"
+)
+
+// NewString returns a reference to a string with given value.
+func NewString(input string) *string {
 	return &input
 }
 
-// StringOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func StringOrNil(input *string) *string {
+// NewStringOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewStringOrNil(input *string) *string {
 	if input == nil {
 		return nil
 	}
-	return String(*input)
+	return NewString(*input)
 }
 
-// Int returns a reference to an int with given value.
-func Int(input int) *int {
+// StringOrDefault returns the default value (or empty string) if input is nil, otherwise returns the referenced value.
+func StringOrDefault(input *string, defaultValue ...string) string {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return *input
+}
+
+// NewInt returns a reference to an int with given value.
+func NewInt(input int) *int {
 	return &input
 }
 
-// IntOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func IntOrNil(input *int) *int {
+// NewIntOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewIntOrNil(input *int) *int {
 	if input == nil {
 		return nil
 	}
-	return Int(*input)
+	return NewInt(*input)
 }
 
-// Bool returns a reference to a bool with given value.
-func Bool(input bool) *bool {
+// IntOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func IntOrDefault(input *int, defaultValue ...int) int {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return 0
+	}
+	return *input
+}
+
+// NewBool returns a reference to a bool with given value.
+func NewBool(input bool) *bool {
 	return &input
 }
 
-// BoolOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func BoolOrNil(input *bool) *bool {
+// NewBoolOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewBoolOrNil(input *bool) *bool {
 	if input == nil {
 		return nil
 	}
-	return Bool(*input)
+	return NewBool(*input)
 }
 
-// Duration returns a reference to a duration with given value.
-func Duration(input time.Duration) *time.Duration {
+// BoolOrDefault returns the default value (or false) if input is nil, otherwise returns the referenced value.
+func BoolOrDefault(input *bool, defaultValue ...bool) bool {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return false
+	}
+	return *input
+}
+
+// NewDuration returns a reference to a duration with given value.
+func NewDuration(input time.Duration) *time.Duration {
 	return &input
 }
 
-// DurationOrNil returns nil if input is nil, otherwise returns a clone of the given value.
-func DurationOrNil(input *time.Duration) *time.Duration {
+// NewDurationOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewDurationOrNil(input *time.Duration) *time.Duration {
 	if input == nil {
 		return nil
 	}
-	return Duration(*input)
+	return NewDuration(*input)
+}
+
+// DurationOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func DurationOrDefault(input *time.Duration, defaultValue ...time.Duration) time.Duration {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return 0
+	}
+	return *input
+}
+
+// NewPullPolicy returns a reference to a pull policy with given value.
+func NewPullPolicy(input v1.PullPolicy) *v1.PullPolicy {
+	return &input
+}
+
+// NewPullPolicyOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewPullPolicyOrNil(input *v1.PullPolicy) *v1.PullPolicy {
+	if input == nil {
+		return nil
+	}
+	return NewPullPolicy(*input)
+}
+
+// PullPolicyOrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func PullPolicyOrDefault(input *v1.PullPolicy, defaultValue ...v1.PullPolicy) v1.PullPolicy {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return *input
 }

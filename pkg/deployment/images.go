@@ -81,9 +81,9 @@ func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, error)
 func (ib *imagesBuilder) Run(ctx context.Context) (bool, error) {
 	result := false
 	// Check ArangoDB image
-	if _, found := ib.Status.Images.GetByImage(ib.Spec.Image); !found {
+	if _, found := ib.Status.Images.GetByImage(ib.Spec.GetImage()); !found {
 		// We need to find the image ID for the ArangoDB image
-		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, ib.Spec.Image)
+		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, ib.Spec.GetImage())
 		if err != nil {
 			return retrySoon, maskAny(err)
 		}
@@ -166,7 +166,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		"--server.authentication=false",
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
 	}
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, "", image, ib.Spec.ImagePullPolicy, args, nil, nil, nil, "", ""); err != nil {
+	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, "", image, ib.Spec.GetImagePullPolicy(), args, nil, nil, nil, "", ""); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

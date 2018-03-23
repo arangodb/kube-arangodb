@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreateArangodArgsDBServer tests createArangodArgs for dbserver.
@@ -41,7 +42,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				XMode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -83,9 +84,9 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				XMode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					XCASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -126,11 +127,11 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				XMode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.Authentication.XJWTSecretName = util.NewString("None")
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
@@ -168,11 +169,11 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				XMode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
+		apiObject.Spec.XStorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		apiObject.Spec.DBServers.Args = []string{"--foo1", "--foo2"}
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},

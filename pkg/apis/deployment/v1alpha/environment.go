@@ -46,3 +46,27 @@ func (e Environment) Validate() error {
 		return maskAny(errors.Wrapf(ValidationError, "Unknown environment: '%s'", string(e)))
 	}
 }
+
+// NewEnvironment returns a reference to a string with given value.
+func NewEnvironment(input Environment) *Environment {
+	return &input
+}
+
+// NewEnvironmentOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewEnvironmentOrNil(input *Environment) *Environment {
+	if input == nil {
+		return nil
+	}
+	return NewEnvironment(*input)
+}
+
+// EnvironmentOrDefault returns the default value (or empty string) if input is nil, otherwise returns the referenced value.
+func EnvironmentOrDefault(input *Environment, defaultValue ...Environment) Environment {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return *input
+}

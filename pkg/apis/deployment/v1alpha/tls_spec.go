@@ -38,9 +38,9 @@ const (
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName *string        `json:"caSecretName,omitempty"`
-	AltNames     []string       `json:"altNames,omitempty"`
-	TTL          *time.Duration `json:"ttl,omitempty"`
+	XCASecretName *string        `json:"caSecretName,omitempty"`
+	AltNames      []string       `json:"altNames,omitempty"`
+	XTTL          *time.Duration `json:"ttl,omitempty"`
 }
 
 const (
@@ -50,10 +50,7 @@ const (
 
 // GetCASecretName returns the value of caSecretName.
 func (s TLSSpec) GetCASecretName() string {
-	if s.CASecretName == nil {
-		return ""
-	}
-	return *s.CASecretName
+	return util.StringOrDefault(s.XCASecretName)
 }
 
 // GetAltNames returns the value of altNames.
@@ -63,10 +60,7 @@ func (s TLSSpec) GetAltNames() []string {
 
 // GetTTL returns the value of ttl.
 func (s TLSSpec) GetTTL() time.Duration {
-	if s.TTL == nil {
-		return time.Duration(0)
-	}
-	return *s.TTL
+	return util.DurationOrDefault(s.XTTL)
 }
 
 // IsSecure returns true when a CA secret has been set, false otherwise.
@@ -77,7 +71,7 @@ func (s TLSSpec) IsSecure() bool {
 // GetParsedAltNames splits the list of AltNames into DNS names, IP addresses & email addresses.
 // When an entry is not valid for any of those categories, an error is returned.
 func (s TLSSpec) GetParsedAltNames() (dnsNames, ipAddresses, emailAddresses []string, err error) {
-	for _, name := range s.AltNames {
+	for _, name := range s.GetAltNames() {
 		if net.ParseIP(name) != nil {
 			ipAddresses = append(ipAddresses, name)
 		} else if validation.IsValidDNSName(name) {
@@ -109,24 +103,24 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 	if s.GetCASecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.CASecretName = util.String(defaultCASecretName)
+		s.XCASecretName = util.NewString(defaultCASecretName)
 	}
 	if s.GetTTL() == 0 {
 		// Note that we don't check for nil here, since even a specified, but zero
 		// should result in the default value.
-		s.TTL = util.Duration(defaultTLSTTL)
+		s.XTTL = util.NewDuration(defaultTLSTTL)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
-	if s.CASecretName == nil {
-		s.CASecretName = util.String(source.GetCASecretName())
+	if s.XCASecretName == nil {
+		s.XCASecretName = util.NewString(source.GetCASecretName())
 	}
 	if s.AltNames == nil {
-		s.AltNames = source.AltNames
+		s.AltNames = source.GetAltNames()
 	}
-	if s.TTL == nil {
-		s.TTL = util.Duration(source.GetTTL())
+	if s.XTTL == nil {
+		s.XTTL = util.NewDuration(source.GetTTL())
 	}
 }

@@ -32,23 +32,23 @@ import (
 
 func TestTLSSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, TLSSpec{CASecretName: util.String("foo")}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.String("None")}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{}}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{"foo"}}.Validate())
-	assert.Nil(t, TLSSpec{CASecretName: util.String("None"), AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
+	assert.Nil(t, TLSSpec{XCASecretName: util.NewString("foo")}.Validate())
+	assert.Nil(t, TLSSpec{XCASecretName: util.NewString("None")}.Validate())
+	assert.Nil(t, TLSSpec{XCASecretName: util.NewString("None"), AltNames: []string{}}.Validate())
+	assert.Nil(t, TLSSpec{XCASecretName: util.NewString("None"), AltNames: []string{"foo"}}.Validate())
+	assert.Nil(t, TLSSpec{XCASecretName: util.NewString("None"), AltNames: []string{"email@example.com", "127.0.0.1"}}.Validate())
 
 	// Not valid
-	assert.Error(t, TLSSpec{CASecretName: nil}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.String("")}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.String("Foo")}.Validate())
-	assert.Error(t, TLSSpec{CASecretName: util.String("foo"), AltNames: []string{"@@"}}.Validate())
+	assert.Error(t, TLSSpec{XCASecretName: nil}.Validate())
+	assert.Error(t, TLSSpec{XCASecretName: util.NewString("")}.Validate())
+	assert.Error(t, TLSSpec{XCASecretName: util.NewString("Foo")}.Validate())
+	assert.Error(t, TLSSpec{XCASecretName: util.NewString("foo"), AltNames: []string{"@@"}}.Validate())
 }
 
 func TestTLSSpecIsSecure(t *testing.T) {
-	assert.True(t, TLSSpec{CASecretName: util.String("")}.IsSecure())
-	assert.True(t, TLSSpec{CASecretName: util.String("foo")}.IsSecure())
-	assert.False(t, TLSSpec{CASecretName: util.String("None")}.IsSecure())
+	assert.True(t, TLSSpec{XCASecretName: util.NewString("")}.IsSecure())
+	assert.True(t, TLSSpec{XCASecretName: util.NewString("foo")}.IsSecure())
+	assert.False(t, TLSSpec{XCASecretName: util.NewString("None")}.IsSecure())
 }
 
 func TestTLSSpecSetDefaults(t *testing.T) {
@@ -58,9 +58,9 @@ func TestTLSSpecSetDefaults(t *testing.T) {
 	}
 
 	assert.Equal(t, "", def(TLSSpec{}).GetCASecretName())
-	assert.Equal(t, "foo", def(TLSSpec{CASecretName: util.String("foo")}).GetCASecretName())
-	assert.Len(t, def(TLSSpec{}).AltNames, 0)
-	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).AltNames, 1)
+	assert.Equal(t, "foo", def(TLSSpec{XCASecretName: util.NewString("foo")}).GetCASecretName())
+	assert.Len(t, def(TLSSpec{}).GetAltNames(), 0)
+	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).GetAltNames(), 1)
 	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).GetTTL())
-	assert.Equal(t, time.Hour, def(TLSSpec{TTL: util.Duration(time.Hour)}).GetTTL())
+	assert.Equal(t, time.Hour, def(TLSSpec{XTTL: util.NewDuration(time.Hour)}).GetTTL())
 }

@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +38,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				XMode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -64,9 +65,9 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				XMode: api.NewMode(api.DeploymentModeSingle),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					XCASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -92,8 +93,8 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode:          api.DeploymentModeSingle,
-				StorageEngine: api.StorageEngineMMFiles,
+				XMode:          api.NewMode(api.DeploymentModeSingle),
+				XStorageEngine: api.NewStorageEngine(api.StorageEngineMMFiles),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -120,10 +121,10 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				XMode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
-		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.Authentication.XJWTSecretName = util.NewString("None")
 		apiObject.Spec.SetDefaults("test")
 		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
 		assert.Equal(t,
@@ -147,7 +148,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				XMode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
@@ -181,7 +182,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeResilientSingle,
+				XMode: api.NewMode(api.DeploymentModeResilientSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")

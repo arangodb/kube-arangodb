@@ -73,3 +73,27 @@ func (m DeploymentMode) HasCoordinators() bool {
 func (m DeploymentMode) SupportsSync() bool {
 	return m == DeploymentModeCluster
 }
+
+// NewMode returns a reference to a string with given value.
+func NewMode(input DeploymentMode) *DeploymentMode {
+	return &input
+}
+
+// NewModeOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewModeOrNil(input *DeploymentMode) *DeploymentMode {
+	if input == nil {
+		return nil
+	}
+	return NewMode(*input)
+}
+
+// ModeOrDefault returns the default value (or empty string) if input is nil, otherwise returns the referenced value.
+func ModeOrDefault(input *DeploymentMode, defaultValue ...DeploymentMode) DeploymentMode {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return *input
+}

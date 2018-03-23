@@ -33,29 +33,28 @@ import (
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
 type ServerGroupSpec struct {
 	// Count holds the requested number of servers
-	Count *int `json:"count,omitempty"`
+	XCount *int `json:"count,omitempty"`
 	// Args holds additional commandline arguments
 	Args []string `json:"args,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
-	StorageClassName *string `json:"storageClassName,omitempty"`
+	XStorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
-	Resources v1.ResourceRequirements `json:"resource,omitempty"`
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // GetCount returns the value of count.
 func (s ServerGroupSpec) GetCount() int {
-	if s.Count == nil {
-		return 0
-	}
-	return *s.Count
+	return util.IntOrDefault(s.XCount)
 }
 
-// GetStorageClassName returns the value of count.
+// GetArgs returns the value of args.
+func (s ServerGroupSpec) GetArgs() []string {
+	return s.Args
+}
+
+// GetStorageClassName returns the value of storageClassName.
 func (s ServerGroupSpec) GetStorageClassName() string {
-	if s.StorageClassName == nil {
-		return ""
-	}
-	return *s.StorageClassName
+	return util.StringOrDefault(s.XStorageClassName)
 }
 
 // Validate the given group spec
@@ -75,13 +74,13 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			}
 		}
 		if s.GetCount() < minCount {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.Count, minCount))
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), minCount))
 		}
 		if s.GetCount() > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.Count))
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
 		}
 	} else if s.GetCount() != 0 {
-		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.Count))
+		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
 	return nil
 }
@@ -92,12 +91,12 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		switch group {
 		case ServerGroupSingle:
 			if mode == DeploymentModeSingle {
-				s.Count = util.Int(1) // Single server
+				s.XCount = util.NewInt(1) // Single server
 			} else {
-				s.Count = util.Int(2) // Resilient single
+				s.XCount = util.NewInt(2) // Resilient single
 			}
 		default:
-			s.Count = util.Int(3)
+			s.XCount = util.NewInt(3)
 		}
 	}
 	if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
@@ -111,18 +110,31 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 	}
 }
 
+// setDefaultsFromResourceList fills unspecified fields with a value from given source spec.
+func setDefaultsFromResourceList(s *v1.ResourceList, source v1.ResourceList) {
+	for k, v := range source {
+		if *s == nil {
+			*s = make(v1.ResourceList)
+		}
+		if _, found := (*s)[k]; !found {
+			(*s)[k] = v
+		}
+	}
+}
+
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
-	if s.Count == nil {
-		s.Count = util.IntOrNil(source.Count)
+	if s.XCount == nil {
+		s.XCount = util.NewIntOrNil(source.XCount)
 	}
 	if s.Args == nil {
 		s.Args = source.Args
 	}
-	if s.StorageClassName == nil {
-		s.StorageClassName = util.StringOrNil(source.StorageClassName)
+	if s.XStorageClassName == nil {
+		s.XStorageClassName = util.NewStringOrNil(source.XStorageClassName)
 	}
-	// TODO Resources
+	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
@@ -131,12 +143,12 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 	var resetFields []string
 	if group == ServerGroupAgents {
 		if s.GetCount() != target.GetCount() {
-			target.Count = util.IntOrNil(s.Count)
+			target.XCount = util.NewIntOrNil(s.XCount)
 			resetFields = append(resetFields, fieldPrefix+".count")
 		}
 	}
 	if s.GetStorageClassName() != target.GetStorageClassName() {
-		target.StorageClassName = util.StringOrNil(s.StorageClassName)
+		target.XStorageClassName = util.NewStringOrNil(s.XStorageClassName)
 		resetFields = append(resetFields, fieldPrefix+".storageClassName")
 	}
 	return resetFields
