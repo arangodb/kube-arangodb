@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package reconcile
 
 import (
 	"context"
@@ -32,23 +32,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// executePlan tries to execute the plan as far as possible.
+// ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
-func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
-	log := d.deps.Log
-	initialPlanLen := len(d.status.Plan)
+func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
+	log := d.log
+	initialPlanLen := len(d.context.GetStatus().Plan)
 
 	for {
-		if len(d.status.Plan) == 0 {
+		status := d.context.GetStatus()
+		if len(status.Plan) == 0 {
 			// No plan exists, nothing to be done
 			return initialPlanLen > 0, nil
 		}
 
 		// Take first action
-		planAction := d.status.Plan[0]
+		planAction := status.Plan[0]
 		log := log.With().
-			Int("plan-len", len(d.status.Plan)).
+			Int("plan-len", len(status.Plan)).
 			Str("action-id", planAction.ID).
 			Str("action-type", string(planAction.Type)).
 			Str("group", planAction.Group.AsRole()).
@@ -65,14 +66,14 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 			}
 			if ready {
 				// Remove action from list
-				d.status.Plan = d.status.Plan[1:]
+				status.Plan = status.Plan[1:]
 			} else {
 				// Mark start time
 				now := metav1.Now()
-				d.status.Plan[0].StartTime = &now
+				status.Plan[0].StartTime = &now
 			}
 			// Save plan update
-			if err := d.updateCRStatus(true); err != nil {
+			if err := d.context.UpdateStatus(status, true); err != nil {
 				log.Debug().Err(err).Msg("Failed to update CR status")
 				return false, maskAny(err)
 			}
@@ -91,9 +92,9 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 			}
 			if ready {
 				// Remove action from list
-				d.status.Plan = d.status.Plan[1:]
+				status.Plan = status.Plan[1:]
 				// Save plan update
-				if err := d.updateCRStatus(); err != nil {
+				if err := d.context.UpdateStatus(status); err != nil {
 					log.Debug().Err(err).Msg("Failed to update CR status")
 					return false, maskAny(err)
 				}
@@ -111,8 +112,8 @@ func (d *Deployment) executePlan(ctx context.Context) (bool, error) {
 // startAction performs the start of the given action
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (d *Deployment) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
-	actionCtx := NewActionContext(log, d)
+func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
+	actionCtx := NewActionContext(log, d.context)
 	switch action.Type {
 	case api.ActionTypeAddMember:
 		return NewAddMemberAction(log, action, actionCtx)

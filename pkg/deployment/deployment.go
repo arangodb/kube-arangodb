@@ -35,6 +35,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -92,6 +93,7 @@ type Deployment struct {
 	clientCache               *clientCache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
+	reconciler                *reconcile.Reconciler
 }
 
 // New creates a new Deployment from the given API object.
@@ -109,6 +111,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
+	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	if d.status.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.AcceptedSpec = apiObject.Spec.DeepCopy()

@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package reconcile
 
 import (
 	"testing"
