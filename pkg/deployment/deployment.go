@@ -60,16 +60,12 @@ type deploymentEventType string
 
 const (
 	eventArangoDeploymentUpdated deploymentEventType = "ArangoDeploymentUpdated"
-	eventPodAdded                deploymentEventType = "PodAdded"
-	eventPodUpdated              deploymentEventType = "PodUpdated"
-	eventPodDeleted              deploymentEventType = "PodDeleted"
 )
 
 // deploymentEvent holds an event passed from the controller to the deployment.
 type deploymentEvent struct {
 	Type       deploymentEventType
 	Deployment *api.ArangoDeployment
-	Pod        *v1.Pod
 }
 
 const (
@@ -91,6 +87,7 @@ type Deployment struct {
 	eventsCli corev1.EventInterface
 
 	inspectTrigger            trigger.Trigger
+	updateDeploymentTrigger   trigger.Trigger
 	clientCache               *clientCache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
@@ -121,7 +118,9 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	go d.run()
-	go d.listenForPodEvents()
+	go d.listenForPodEvents(d.stopCh)
+	go d.listenForPVCEvents(d.stopCh)
+	go d.listenForServiceEvents(d.stopCh)
 	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
@@ -217,19 +216,19 @@ func (d *Deployment) run() {
 			// Got event from event queue
 			switch event.Type {
 			case eventArangoDeploymentUpdated:
-				if err := d.handleArangoDeploymentUpdatedEvent(event); err != nil {
-					d.failOnError(err, "Failed to handle deployment update")
-					return
-				}
-			case eventPodAdded, eventPodUpdated, eventPodDeleted:
-				// Pod event received, let's inspect soon
-				d.inspectTrigger.Trigger()
+				d.updateDeploymentTrigger.Trigger()
 			default:
 				panic("unknown event type" + event.Type)
 			}
 
 		case <-d.inspectTrigger.Done():
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
+
+		case <-d.updateDeploymentTrigger.Done():
+			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
+				d.failOnError(err, "Failed to handle deployment update")
+				return
+			}
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection
@@ -244,8 +243,8 @@ func (d *Deployment) run() {
 }
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
-func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) error {
-	log := d.deps.Log.With().Str("deployment", event.Deployment.GetName()).Logger()
+func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
+	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
 	current, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
