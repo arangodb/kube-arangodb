@@ -42,7 +42,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				XMode: api.NewMode(api.DeploymentModeCluster),
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -83,7 +83,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -125,9 +125,9 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				XMode: api.NewMode(api.DeploymentModeCluster),
+				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					XCASecretName: util.NewString("None"),
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -167,11 +167,11 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				XMode: api.NewMode(api.DeploymentModeCluster),
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.XJWTSecretName = util.NewString("None")
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
@@ -208,11 +208,11 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				XMode: api.NewMode(api.DeploymentModeCluster),
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.XStorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
+		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		apiObject.Spec.DBServers.Args = []string{"--foo1", "--foo2"}
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},

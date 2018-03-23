@@ -31,9 +31,9 @@ import (
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
-	XEnabled         *bool          `json:"enabled,omitempty"`
-	XImage           *string        `json:"image,omitempty"`
-	XImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	Enabled         *bool          `json:"enabled,omitempty"`
+	Image           *string        `json:"image,omitempty"`
+	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
 	Authentication AuthenticationSpec `json:"auth"`
 	TLS            TLSSpec            `json:"tls"`
@@ -42,20 +42,17 @@ type SyncSpec struct {
 
 // IsEnabled returns the value of enabled.
 func (s SyncSpec) IsEnabled() bool {
-	return util.BoolOrDefault(s.XEnabled)
+	return util.BoolOrDefault(s.Enabled)
 }
 
 // GetImage returns the value of image.
 func (s SyncSpec) GetImage() string {
-	return util.StringOrDefault(s.XImage)
+	return util.StringOrDefault(s.Image)
 }
 
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s SyncSpec) GetImagePullPolicy() v1.PullPolicy {
-	if s.XImagePullPolicy == nil {
-		return ""
-	}
-	return *s.XImagePullPolicy
+	return util.PullPolicyOrDefault(s.ImagePullPolicy)
 }
 
 // Validate the given spec
@@ -83,11 +80,10 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 // SetDefaults fills in missing defaults
 func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultCASecretName string) {
 	if s.GetImage() == "" {
-		s.XImage = util.NewString(defaultImage)
+		s.Image = util.NewString(defaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
-		x := v1.PullPolicy(defaulPullPolicy)
-		s.XImagePullPolicy = &x
+		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
 	}
 	s.Authentication.SetDefaults(defaultJWTSecretName)
 	s.TLS.SetDefaults(defaultCASecretName)
@@ -96,14 +92,14 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
-	if s.XEnabled == nil {
-		s.XEnabled = util.NewBoolOrNil(source.XEnabled)
+	if s.Enabled == nil {
+		s.Enabled = util.NewBoolOrNil(source.Enabled)
 	}
-	if s.XImage == nil {
-		s.XImage = util.NewStringOrNil(source.XImage)
+	if s.Image == nil {
+		s.Image = util.NewStringOrNil(source.Image)
 	}
-	if s.GetImagePullPolicy() == "" {
-		s.XImagePullPolicy = util.NewPullPolicyOrNil(source.XImagePullPolicy)
+	if s.ImagePullPolicy == nil {
+		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)

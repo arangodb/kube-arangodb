@@ -52,23 +52,23 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			DeploymentSpec{XImage: util.NewString("foo")},
-			DeploymentSpec{XImage: util.NewString("foo2")},
-			DeploymentSpec{XImage: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewString("foo")},
+			DeploymentSpec{Image: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewString("foo2")},
 			nil,
 		},
 		{
-			DeploymentSpec{XImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
-			DeploymentSpec{XImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
-			DeploymentSpec{XImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			DeploymentSpec{XMode: NewMode(DeploymentModeSingle)},
-			DeploymentSpec{XMode: NewMode(DeploymentModeCluster)},
-			DeploymentSpec{XMode: NewMode(DeploymentModeSingle)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeCluster)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
 			[]string{"mode"},
 		},
 	}

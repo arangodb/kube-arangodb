@@ -45,11 +45,11 @@ func validatePullPolicy(v v1.PullPolicy) error {
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	XMode            *DeploymentMode `json:"mode,omitempty"`
-	XEnvironment     *Environment    `json:"environment,omitempty"`
-	XStorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
-	XImage           *string         `json:"image,omitempty"`
-	XImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
+	Mode            *DeploymentMode `json:"mode,omitempty"`
+	Environment     *Environment    `json:"environment,omitempty"`
+	StorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
+	Image           *string         `json:"image,omitempty"`
+	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
 	Authentication AuthenticationSpec `json:"auth"`
@@ -66,27 +66,27 @@ type DeploymentSpec struct {
 
 // GetMode returns the value of mode.
 func (s DeploymentSpec) GetMode() DeploymentMode {
-	return ModeOrDefault(s.XMode)
+	return ModeOrDefault(s.Mode)
 }
 
 // GetEnvironment returns the value of environment.
 func (s DeploymentSpec) GetEnvironment() Environment {
-	return EnvironmentOrDefault(s.XEnvironment)
+	return EnvironmentOrDefault(s.Environment)
 }
 
 // GetStorageEngine returns the value of storageEngine.
 func (s DeploymentSpec) GetStorageEngine() StorageEngine {
-	return StorageEngineOrDefault(s.XStorageEngine)
+	return StorageEngineOrDefault(s.StorageEngine)
 }
 
 // GetImage returns the value of image.
 func (s DeploymentSpec) GetImage() string {
-	return util.StringOrDefault(s.XImage)
+	return util.StringOrDefault(s.Image)
 }
 
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
-	return util.PullPolicyOrDefault(s.XImagePullPolicy)
+	return util.PullPolicyOrDefault(s.ImagePullPolicy)
 }
 
 // IsAuthenticated returns true when authentication is enabled
@@ -123,19 +123,19 @@ func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 // SetDefaults fills in default values when a field is not specified.
 func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetMode() == "" {
-		s.XMode = NewMode(DeploymentModeCluster)
+		s.Mode = NewMode(DeploymentModeCluster)
 	}
 	if s.GetEnvironment() == "" {
-		s.XEnvironment = NewEnvironment(EnvironmentDevelopment)
+		s.Environment = NewEnvironment(EnvironmentDevelopment)
 	}
 	if s.GetStorageEngine() == "" {
-		s.XStorageEngine = NewStorageEngine(StorageEngineRocksDB)
+		s.StorageEngine = NewStorageEngine(StorageEngineRocksDB)
 	}
 	if s.GetImage() == "" && s.IsDevelopment() {
-		s.XImage = util.NewString(defaultImage)
+		s.Image = util.NewString(defaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
-		s.XImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)
+		s.ImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)
 	}
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
@@ -151,20 +151,20 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
-	if s.XMode == nil {
-		s.XMode = NewModeOrNil(source.XMode)
+	if s.Mode == nil {
+		s.Mode = NewModeOrNil(source.Mode)
 	}
-	if s.XEnvironment == nil {
-		s.XEnvironment = NewEnvironmentOrNil(source.XEnvironment)
+	if s.Environment == nil {
+		s.Environment = NewEnvironmentOrNil(source.Environment)
 	}
-	if s.XStorageEngine == nil {
-		s.XStorageEngine = NewStorageEngineOrNil(source.XStorageEngine)
+	if s.StorageEngine == nil {
+		s.StorageEngine = NewStorageEngineOrNil(source.StorageEngine)
 	}
-	if s.XImage == nil {
-		s.XImage = util.NewStringOrNil(source.XImage)
+	if s.Image == nil {
+		s.Image = util.NewStringOrNil(source.Image)
 	}
-	if s.XImagePullPolicy == nil {
-		s.XImagePullPolicy = util.NewPullPolicyOrNil(source.XImagePullPolicy)
+	if s.ImagePullPolicy == nil {
+		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
@@ -240,11 +240,11 @@ func (s DeploymentSpec) IsDevelopment() bool {
 func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	var resetFields []string
 	if s.GetMode() != target.GetMode() {
-		target.XMode = NewModeOrNil(s.XMode)
+		target.Mode = NewModeOrNil(s.Mode)
 		resetFields = append(resetFields, "mode")
 	}
 	if s.GetStorageEngine() != target.GetStorageEngine() {
-		target.XStorageEngine = NewStorageEngineOrNil(s.XStorageEngine)
+		target.StorageEngine = NewStorageEngineOrNil(s.StorageEngine)
 		resetFields = append(resetFields, "storageEngine")
 	}
 	if l := s.RocksDB.ResetImmutableFields("rocksdb", &target.RocksDB); l != nil {

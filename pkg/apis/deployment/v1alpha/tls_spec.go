@@ -38,9 +38,9 @@ const (
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	XCASecretName *string        `json:"caSecretName,omitempty"`
-	AltNames      []string       `json:"altNames,omitempty"`
-	XTTL          *time.Duration `json:"ttl,omitempty"`
+	CASecretName *string        `json:"caSecretName,omitempty"`
+	AltNames     []string       `json:"altNames,omitempty"`
+	TTL          *time.Duration `json:"ttl,omitempty"`
 }
 
 const (
@@ -50,7 +50,7 @@ const (
 
 // GetCASecretName returns the value of caSecretName.
 func (s TLSSpec) GetCASecretName() string {
-	return util.StringOrDefault(s.XCASecretName)
+	return util.StringOrDefault(s.CASecretName)
 }
 
 // GetAltNames returns the value of altNames.
@@ -60,7 +60,7 @@ func (s TLSSpec) GetAltNames() []string {
 
 // GetTTL returns the value of ttl.
 func (s TLSSpec) GetTTL() time.Duration {
-	return util.DurationOrDefault(s.XTTL)
+	return util.DurationOrDefault(s.TTL)
 }
 
 // IsSecure returns true when a CA secret has been set, false otherwise.
@@ -103,24 +103,24 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 	if s.GetCASecretName() == "" {
 		// Note that we don't check for nil here, since even a specified, but empty
 		// string should result in the default value.
-		s.XCASecretName = util.NewString(defaultCASecretName)
+		s.CASecretName = util.NewString(defaultCASecretName)
 	}
 	if s.GetTTL() == 0 {
 		// Note that we don't check for nil here, since even a specified, but zero
 		// should result in the default value.
-		s.XTTL = util.NewDuration(defaultTLSTTL)
+		s.TTL = util.NewDuration(defaultTLSTTL)
 	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
 func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
-	if s.XCASecretName == nil {
-		s.XCASecretName = util.NewString(source.GetCASecretName())
+	if s.CASecretName == nil {
+		s.CASecretName = util.NewStringOrNil(source.CASecretName)
 	}
 	if s.AltNames == nil {
-		s.AltNames = source.GetAltNames()
+		s.AltNames = source.AltNames
 	}
-	if s.XTTL == nil {
-		s.XTTL = util.NewDuration(source.GetTTL())
+	if s.TTL == nil {
+		s.TTL = util.NewDurationOrNil(source.TTL)
 	}
 }

@@ -38,7 +38,7 @@ import (
 func TestCreatePlanSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		XMode: api.NewMode(api.DeploymentModeSingle),
+		Mode: api.NewMode(api.DeploymentModeSingle),
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
@@ -86,10 +86,10 @@ func TestCreatePlanSingleScale(t *testing.T) {
 func TestCreatePlanResilientSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		XMode: api.NewMode(api.DeploymentModeResilientSingle),
+		Mode: api.NewMode(api.DeploymentModeResilientSingle),
 	}
 	spec.SetDefaults("test")
-	spec.Single.XCount = util.NewInt(2)
+	spec.Single.Count = util.NewInt(2)
 	depl := &api.ArangoDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test_depl",
@@ -151,7 +151,7 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 func TestCreatePlanClusterScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		XMode: api.NewMode(api.DeploymentModeCluster),
+		Mode: api.NewMode(api.DeploymentModeCluster),
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
@@ -232,9 +232,9 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator2",
 		},
 	}
-	spec.DBServers.XCount = util.NewInt(1)
-	spec.Coordinators.XCount = util.NewInt(1)
-	newPlan, changed = createPlan(log, nil, spec, status, nil)
+	spec.DBServers.Count = util.NewInt(1)
+	spec.Coordinators.Count = util.NewInt(1)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
