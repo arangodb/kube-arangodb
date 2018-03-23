@@ -30,6 +30,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
+	arangod "github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // TODO - environements (provided from outside)
@@ -113,34 +114,28 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 			t.Fatalf("Single Server not running in time: %v", err)
 		}
 
-		//  FIXME - waitUntilResilientHealth
 		members := deployment.Status.Members
-
 		singles := members.Single
 		agents := members.Agents
-		servers := append(append(api.MemberStatusList{}, singles...), agents...)
 
 		if len(singles) != 2 || len(agents) != 3 {
 			t.Fatal("Wrong number of servers: single %v - agents %v", len(singles), len(agents))
 		}
 
-		// FIXMcase s
-		// - create dbconnection to each of the servers
-		// - run api version on connection
-
-		//t.Fatal("This test is not fully implemented!")
-
-		// TEST CODE BELOW
-		t.Log("##################################")
-		if len(agents) == 0 {
-			t.Fatal("This setup requires agents to work!")
+		for _, agent := range agents {
+			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, agent.ID)
+			if err != nil {
+				t.Fatal("Unable to create connection to: %v", agent.ID)
+			}
+			waitUntilVersionUp(dbclient)
 		}
-
-		t.Logf("agents len: %v", len(agents))
-		for _, server := range servers {
-			t.Logf("Server: %v ", server)
+		for _, single := range singles {
+			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, single.ID)
+			if err != nil {
+				t.Fatal("Unable to create connection to: %v", single.ID)
+			}
+			waitUntilVersionUp(dbclient)
 		}
-		t.Log("##################################")
 	default:
 		t.Fatalf("DeploymentMode %v is not supported!", mode)
 	}
