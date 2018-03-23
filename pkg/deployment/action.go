@@ -20,22 +20,19 @@
 // Author Ewout Prangsma
 //
 
-package k8sutil
+package deployment
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"context"
 )
 
-// CreatePodDNSName returns the DNS of a pod with a given role & id in
-// a given deployment.
-func CreatePodDNSName(deployment metav1.Object, role, id string) string {
-	return CreatePodHostName(deployment.GetName(), role, id) + "." +
-		CreateHeadlessServiceName(deployment.GetName()) + "." +
-		deployment.GetNamespace() + ".svc"
-}
-
-// CreateDatabaseClientServiceDNSName returns the DNS of the database client service.
-func CreateDatabaseClientServiceDNSName(deployment metav1.Object) string {
-	return CreateDatabaseClientServiceName(deployment.GetName()) + "." +
-		deployment.GetNamespace() + ".svc"
+// Action executes a single Plan item.
+type Action interface {
+	// Start performs the start of the action.
+	// Returns true if the action is completely finished, false in case
+	// the start time needs to be recorded and a ready condition needs to be checked.
+	Start(ctx context.Context) (bool, error)
+	// CheckProgress checks the progress of the action.
+	// Returns true if the action is completely finished, false otherwise.
+	CheckProgress(ctx context.Context) (bool, error)
 }

@@ -37,6 +37,15 @@ func TestServerGroupAsRole(t *testing.T) {
 	assert.Equal(t, "syncworker", ServerGroupSyncWorkers.AsRole())
 }
 
+func TestServerGroupAsRoleAbbreviated(t *testing.T) {
+	assert.Equal(t, "sngl", ServerGroupSingle.AsRoleAbbreviated())
+	assert.Equal(t, "agnt", ServerGroupAgents.AsRoleAbbreviated())
+	assert.Equal(t, "prmr", ServerGroupDBServers.AsRoleAbbreviated())
+	assert.Equal(t, "crdn", ServerGroupCoordinators.AsRoleAbbreviated())
+	assert.Equal(t, "syma", ServerGroupSyncMasters.AsRoleAbbreviated())
+	assert.Equal(t, "sywo", ServerGroupSyncWorkers.AsRoleAbbreviated())
+}
+
 func TestServerGroupIsArangod(t *testing.T) {
 	assert.True(t, ServerGroupSingle.IsArangod())
 	assert.True(t, ServerGroupAgents.IsArangod())

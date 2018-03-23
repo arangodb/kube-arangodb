@@ -23,6 +23,8 @@
 package deployment
 
 import (
+	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -55,8 +57,10 @@ func (o optionPair) CompareTo(other optionPair) int {
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup, svrSpec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
+func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+	agents api.MemberStatusList, id string, autoUpgrade bool) []string {
 	options := make([]optionPair, 0, 64)
+	svrSpec := deplSpec.GetServerGroupSpec(group)
 
 	// Endpoint
 	listenAddr := "[::]"
@@ -123,6 +127,14 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		optionPair{"--database.directory", k8sutil.ArangodVolumeMountDir},
 		optionPair{"--log.output", "+"},
 	)
+
+	// Auto upgrade?
+	if autoUpgrade {
+		options = append(options,
+			optionPair{"--database.auto-upgrade", "true"},
+		)
+	}
+
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
 			optionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
@@ -136,7 +148,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	switch group {
 	case api.ServerGroupAgents:
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
+			optionPair{"--agency.disaster-recovery-id", id},
 			optionPair{"--agency.activate", "true"},
 			optionPair{"--agency.my-address", myTCPURL},
 			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.GetCount())},
@@ -152,15 +164,9 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				)
 			}
 		}
-		/*if agentRecoveryID != "" {
-			options = append(options,
-				optionPair{"--agency.disaster-recovery-id", agentRecoveryID},
-			)
-		}*/
 	case api.ServerGroupDBServers:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
 			optionPair{"--cluster.my-address", myTCPURL},
 			optionPair{"--cluster.my-role", "PRIMARY"},
 			optionPair{"--foxx.queues", "false"},
@@ -169,7 +175,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	case api.ServerGroupCoordinators:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-id", id},
 			optionPair{"--cluster.my-address", myTCPURL},
 			optionPair{"--cluster.my-role", "COORDINATOR"},
 			optionPair{"--foxx.queues", "true"},
@@ -184,7 +189,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			addAgentEndpoints = true
 			options = append(options,
 				optionPair{"--replication.automatic-failover", "true"},
-				optionPair{"--cluster.my-id", id},
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
@@ -310,8 +314,13 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 			if m.State != api.MemberStateNone {
 				continue
 			}
-			// Create pod
+			// Update pod name
 			role := group.AsRole()
+			roleAbbr := group.AsRoleAbbreviated()
+			podSuffix := createPodSuffix(apiObject.Spec)
+			m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
+			newState := api.MemberStateCreated
+			// Create pod
 			if group.IsArangod() {
 				// Find image ID
 				info, found := apiObject.Status.Images.GetByImage(apiObject.Spec.GetImage())
@@ -320,7 +329,11 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 					return nil
 				}
 				// Prepare arguments
-				args := createArangodArgs(apiObject, apiObject.Spec, group, spec, d.status.Members.Agents, m.ID)
+				autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
+				if autoUpgrade {
+					newState = api.MemberStateUpgrading
+				}
+				args := createArangodArgs(apiObject, apiObject.Spec, group, d.status.Members.Agents, m.ID, autoUpgrade)
 				env := make(map[string]k8sutil.EnvValue)
 				livenessProbe, err := d.createLivenessProbe(apiObject, group)
 				if err != nil {
@@ -355,7 +368,7 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 						SecretKey:  constants.SecretKeyJWT,
 					}
 				}
-				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PersistentVolumeClaimName, info.ImageID, apiObject.Spec.GetImagePullPolicy(), args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+				if err := k8sutil.CreateArangodPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, apiObject.Spec.GetImagePullPolicy(), args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 					return maskAny(err)
 				}
 			} else if group.IsArangosync() {
@@ -376,12 +389,15 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 				if group == api.ServerGroupSyncWorkers {
 					affinityWithRole = api.ServerGroupDBServers.AsRole()
 				}
-				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, info.ImageID, apiObject.Spec.Sync.GetImagePullPolicy(), args, env, livenessProbe, affinityWithRole); err != nil {
+				if err := k8sutil.CreateArangoSyncPod(kubecli, apiObject.Spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, apiObject.Spec.Sync.GetImagePullPolicy(), args, env, livenessProbe, affinityWithRole); err != nil {
 					return maskAny(err)
 				}
 			}
 			// Record new member state
-			m.State = api.MemberStateCreated
+			m.State = newState
+			m.Conditions.Remove(api.ConditionTypeReady)
+			m.Conditions.Remove(api.ConditionTypeTerminated)
+			m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
 			if err := status.Update(m); err != nil {
 				return maskAny(err)
 			}
@@ -396,4 +412,10 @@ func (d *Deployment) ensurePods(apiObject *api.ArangoDeployment) error {
 		return maskAny(err)
 	}
 	return nil
+}
+
+func createPodSuffix(spec api.DeploymentSpec) string {
+	raw, _ := json.Marshal(spec)
+	hash := sha1.Sum(raw)
+	return fmt.Sprintf("%0x", hash)[:6]
 }

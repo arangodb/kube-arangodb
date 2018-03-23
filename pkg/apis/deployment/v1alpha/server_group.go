@@ -65,6 +65,26 @@ func (g ServerGroup) AsRole() string {
 	}
 }
 
+// AsRoleAbbreviated returns the abbreviation of the "role" value for the given group.
+func (g ServerGroup) AsRoleAbbreviated() string {
+	switch g {
+	case ServerGroupSingle:
+		return "sngl"
+	case ServerGroupAgents:
+		return "agnt"
+	case ServerGroupDBServers:
+		return "prmr"
+	case ServerGroupCoordinators:
+		return "crdn"
+	case ServerGroupSyncMasters:
+		return "syma"
+	case ServerGroupSyncWorkers:
+		return "sywo"
+	default:
+		return "?"
+	}
+}
+
 // IsArangod returns true when the groups runs servers of type `arangod`.
 func (g ServerGroup) IsArangod() bool {
 	switch g {

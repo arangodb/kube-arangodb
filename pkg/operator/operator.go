@@ -37,6 +37,7 @@ import (
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 )
 
@@ -54,6 +55,7 @@ type Operator struct {
 	Config
 	Dependencies
 
+	log           zerolog.Logger
 	deployments   map[string]*deployment.Deployment
 	localStorages map[string]*storage.LocalStorage
 }
@@ -69,7 +71,7 @@ type Config struct {
 }
 
 type Dependencies struct {
-	Log           zerolog.Logger
+	LogService    logging.Service
 	KubeCli       kubernetes.Interface
 	KubeExtCli    apiextensionsclient.Interface
 	CRCli         versioned.Interface
@@ -81,6 +83,7 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
 		Config:        config,
 		Dependencies:  deps,
+		log:           deps.LogService.MustGetLogger("operator"),
 		deployments:   make(map[string]*deployment.Deployment),
 		localStorages: make(map[string]*storage.LocalStorage),
 	}

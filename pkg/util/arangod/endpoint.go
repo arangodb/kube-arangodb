@@ -20,22 +20,23 @@
 // Author Ewout Prangsma
 //
 
-package k8sutil
+package arangod
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
+import "net/url"
 
-// CreatePodDNSName returns the DNS of a pod with a given role & id in
-// a given deployment.
-func CreatePodDNSName(deployment metav1.Object, role, id string) string {
-	return CreatePodHostName(deployment.GetName(), role, id) + "." +
-		CreateHeadlessServiceName(deployment.GetName()) + "." +
-		deployment.GetNamespace() + ".svc"
-}
-
-// CreateDatabaseClientServiceDNSName returns the DNS of the database client service.
-func CreateDatabaseClientServiceDNSName(deployment metav1.Object) string {
-	return CreateDatabaseClientServiceName(deployment.GetName()) + "." +
-		deployment.GetNamespace() + ".svc"
+// IsSameEndpoint returns true when the 2 given endpoints
+// refer to the same server.
+func IsSameEndpoint(a, b string) bool {
+	if a == b {
+		return true
+	}
+	ua, err := url.Parse(a)
+	if err != nil {
+		return false
+	}
+	ub, err := url.Parse(b)
+	if err != nil {
+		return false
+	}
+	return ua.Hostname() == ub.Hostname()
 }

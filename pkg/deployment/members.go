@@ -65,8 +65,9 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDeployment) error {
 	log := d.deps.Log
 	var id string
+	idPrefix := getArangodIDPrefix(group)
 	for {
-		id = strings.ToLower(uniuri.NewLen(8)) // K8s accepts only lowercase, so we use it here as well
+		id = idPrefix + strings.ToLower(uniuri.NewLen(8)) // K8s accepts only lowercase, so we use it here as well
 		if !d.status.Members.ContainsID(id) {
 			break
 		}
@@ -82,7 +83,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -92,7 +93,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -102,7 +103,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -112,7 +113,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -122,7 +123,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -132,7 +133,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 			ID:    id,
 			State: api.MemberStateNone,
 			PersistentVolumeClaimName: "",
-			PodName:                   k8sutil.CreatePodName(deploymentName, role, id),
+			PodName:                   "",
 		}); err != nil {
 			return maskAny(err)
 		}
@@ -141,4 +142,19 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 	}
 
 	return nil
+}
+
+// getArangodIDPrefix returns the prefix required ID's of arangod servers
+// in the given group.
+func getArangodIDPrefix(group api.ServerGroup) string {
+	switch group {
+	case api.ServerGroupCoordinators:
+		return "CRDN-"
+	case api.ServerGroupDBServers:
+		return "PRMR-"
+	case api.ServerGroupAgents:
+		return "AGNT-"
+	default:
+		return ""
+	}
 }

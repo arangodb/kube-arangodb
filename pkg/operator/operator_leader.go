@@ -32,7 +32,7 @@ import (
 func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{})) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.KubeCli
-	log := o.Dependencies.Log.With().Str("lock-name", lockName).Logger()
+	log := o.log.With().Str("lock-name", lockName).Logger()
 	rl, err := resourcelock.New(resourcelock.EndpointsResourceLock,
 		namespace,
 		lockName,

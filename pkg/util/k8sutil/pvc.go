@@ -31,7 +31,7 @@ import (
 // CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
 // a given id in a deployment with a given name.
 func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
-	return deploymentName + "-" + role + "-" + id
+	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
 }
 
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
