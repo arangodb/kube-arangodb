@@ -32,20 +32,24 @@ import (
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 )
 
-// environements: provided from outside
+// TODO - environements (provided from outside)
 
+// test deployment single server mmfiles
 func TestDeploymentSingleMMFiles(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles)
 }
 
+// test deployment single server rocksdb
 func TestDeploymentSingleRocksDB(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB)
 }
 
+// test deployment cluster mmfiles
 func TestDeploymentClusterMMFiles(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeCluster, api.StorageEngineMMFiles)
 }
 
+// test deployment cluster rocksdb
 func TestDeploymentClusterRocksDB(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB)
 }
@@ -56,12 +60,12 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 
 	k8sNameSpace := getNamespace(t)
 	k8sClient := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster() //
+	deploymentClient := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
 	deploymentTemplate := newDeployment("test-1-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
-	deploymentTemplate.Spec.Mode = mode
-	deploymentTemplate.Spec.StorageEngine = engine
+	deploymentTemplate.Spec.Mode = api.NewMode(mode)
+	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{}                       // should auto-generate cert
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
 
@@ -72,7 +76,8 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -81,19 +86,20 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
 
 	// deployment checks
-	if deployment.Spec.Mode == api.DeploymentModeCluster {
+	switch mode := deployment.Spec.GetMode(); mode {
+	case api.DeploymentModeCluster:
 		// Wait for cluster to be completely ready
 		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
 			return clusterHealthEqualsSpec(h, deployment.Spec)
 		}); err != nil {
 			t.Fatalf("Cluster not running in expected health in time: %v", err)
 		}
-	} else if deployment.Spec.Mode == api.DeploymentModeSingle {
+	case api.DeploymentModeSingle:
 		if err := waitUntilVersionUp(DBClient); err != nil {
 			t.Fatalf("Single Server not running in time: %v", err)
 		}
-	} else {
-		t.Fatalf("DeploymentMode %v is not supported!", deployment.Spec.Mode)
+	default:
+		t.Fatalf("DeploymentMode %v is not supported!", deployment.Spec.GetMode())
 	}
 
 	// Cleanup
