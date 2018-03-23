@@ -58,13 +58,13 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Create scale/update plan
-	if err := d.createPlan(); err != nil {
+	if err := d.reconciler.CreatePlan(); err != nil {
 		hasError = true
 		d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
 	}
 
 	// Execute current step of scale/update plan
-	retrySoon, err := d.executePlan(ctx)
+	retrySoon, err := d.reconciler.ExecutePlan(ctx)
 	if err != nil {
 		hasError = true
 		d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))

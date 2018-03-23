@@ -20,11 +20,10 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package reconcile
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
@@ -38,25 +37,22 @@ type upgradeDecision struct {
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
 }
 
-// createPlan considers the current specification & status of the deployment creates a plan to
+// CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Deployment) createPlan() error {
+func (d *Reconciler) CreatePlan() error {
 	// Get all current pods
-	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	pods, err := d.context.GetOwnedPods()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list pods")
+		log.Debug().Err(err).Msg("Failed to get owned pods")
 		return maskAny(err)
-	}
-	myPods := make([]v1.Pod, 0, len(pods.Items))
-	for _, p := range pods.Items {
-		if d.isOwnerOf(&p) {
-			myPods = append(myPods, p)
-		}
 	}
 
 	// Create plan
-	newPlan, changed := createPlan(d.deps.Log, d.apiObject, d.status.Plan, d.apiObject.Spec, d.status, myPods)
+	apiObject := d.context.GetAPIObject()
+	spec := d.context.GetSpec()
+	status := d.context.GetStatus()
+	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods)
 
 	// If not change, we're done
 	if !changed {
@@ -68,8 +64,8 @@ func (d *Deployment) createPlan() error {
 		// Nothing to do
 		return nil
 	}
-	d.status.Plan = newPlan
-	if err := d.updateCRStatus(); err != nil {
+	status.Plan = newPlan
+	if err := d.context.UpdateStatus(status); err != nil {
 		return maskAny(err)
 	}
 	return nil

@@ -20,19 +20,10 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package reconcile
 
-import (
-	"context"
+import "github.com/pkg/errors"
+
+var (
+	maskAny = errors.WithStack
 )
-
-// Action executes a single Plan item.
-type Action interface {
-	// Start performs the start of the action.
-	// Returns true if the action is completely finished, false in case
-	// the start time needs to be recorded and a ready condition needs to be checked.
-	Start(ctx context.Context) (bool, error)
-	// CheckProgress checks the progress of the action.
-	// Returns true if the action is completely finished, false otherwise.
-	CheckProgress(ctx context.Context) (bool, error)
-}
