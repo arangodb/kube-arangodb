@@ -127,18 +127,30 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 			if err != nil {
 				t.Fatal("Unable to create connection to: %v", agent.ID)
 			}
-			if waitUntilVersionUp(dbclient) != nil {
-				t.Fatal("Version check failed for: %v", single.ID)
+
+			if err := waitUntilVersionUp(dbclient); err != nil {
+				t.Fatal("Version check failed for: %v", agent.ID)
 			}
 		}
+
+		var goodResults, noLeaderResults int
 		for _, single := range singles {
 			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, single.ID)
 			if err != nil {
 				t.Fatal("Unable to create connection to: %v", single.ID)
 			}
-			if waitUntilVersionUp(dbclient) != nil {
+
+			if err := waitUntilVersionUp(dbclient, true); err == nil {
+				goodResults++
+			} else if driver.IsNoLeader(err) {
+				noLeaderResults++
+			} else {
 				t.Fatal("Version check failed for: %v", single.ID)
 			}
+		}
+
+		if goodResults < 1 || noLeaderResults > 1 {
+			t.Fatal("Wrong number of results: good %v - noleader %v", goodResults, noLeaderResults)
 		}
 	default:
 		t.Fatalf("DeploymentMode %v is not supported!", mode)
