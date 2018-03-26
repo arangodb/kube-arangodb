@@ -22,10 +22,12 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -72,7 +74,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	deploymentTemplate := newDeployment("test-upgrade-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
+	deploymentTemplate := newDeployment("test-upgrade-" + string(mode) + "-" + string(engine) + "-" + fromVersion + "to" + toVersion + "-" + uniuri.NewLen(4))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
@@ -103,6 +105,15 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	}
 
 	arangoDeploymentHealthy(t, deployment, k8sClient)
+
+	ctx := context.Background()
+	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
+	DBClient.Version(ctx)
+	if vInfo, err := DBClient.Version(ctx); err != nil {
+		t.Fatalf("Failed to receive version: %v", err)
+	} else if vInfo.Version.CompareTo(driver.Version(toVersion)) != 0 {
+		t.Fatalf("version %v returned by _api/version does not match specified version %v", vInfo.Version, toVersion)
+	}
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
