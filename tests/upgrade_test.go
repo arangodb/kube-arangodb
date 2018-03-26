@@ -22,19 +22,16 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	arangod "github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-// TODO - environements (provided from outside)
+// TODO - environments (provided from outside)
 
 // test upgrade single server mmfiles 3.2 -> 3.3
 func TestUpgradeSingleMMFiles32to33(t *testing.T) {
@@ -75,7 +72,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	deploymentTemplate := newDeployment("test-1-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
+	deploymentTemplate := newDeployment("test-upgrade-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
@@ -94,6 +91,8 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
+	arangoDeploymentHealthy(t, deployment, k8sClient)
+
 	// Try to change image version
 	deployment, err = updateDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace,
 		func(spec *api.DeploymentSpec) {
@@ -103,69 +102,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
 	}
 
-	// Create a database client
-	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-
-	// deployment checks
-	switch mode := deployment.Spec.GetMode(); mode {
-	case api.DeploymentModeCluster:
-		// Wait for cluster to be completely ready
-		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
-			return clusterHealthEqualsSpec(h, deployment.Spec)
-		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
-		}
-	case api.DeploymentModeSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
-		}
-	case api.DeploymentModeResilientSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
-		}
-
-		members := deployment.Status.Members
-		singles := members.Single
-		agents := members.Agents
-
-		if len(singles) != 2 || len(agents) != 3 {
-			t.Fatal("Wrong number of servers: single %v - agents %v", len(singles), len(agents))
-		}
-
-		for _, agent := range agents {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, agent.ID)
-			if err != nil {
-				t.Fatal("Unable to create connection to: %v", agent.ID)
-			}
-			if waitUntilVersionUp(dbclient) != nil {
-				t.Fatal("Version check failed for: %v", agent.ID)
-			}
-		}
-
-		var goodResults, noLeaderResults int
-		for _, single := range singles {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, single.ID)
-			if err != nil {
-				t.Fatal("Unable to create connection to: %v", single.ID)
-			}
-
-			if err := waitUntilVersionUp(dbclient, true); err == nil {
-				goodResults++
-			} else if driver.IsNoLeader(err) {
-				noLeaderResults++
-			} else {
-				t.Fatal("Version check failed for: %v", single.ID)
-			}
-		}
-
-		if goodResults < 1 || noLeaderResults > 1 {
-			t.Fatal("Wrong number of results: good %v - noleader %v", goodResults, noLeaderResults)
-		}
-
-	default:
-		t.Fatalf("DeploymentMode %v is not supported!", mode)
-	}
+	arangoDeploymentHealthy(t, deployment, k8sClient)
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
