@@ -64,6 +64,9 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 					Msg("Failed to start action")
 				return false, maskAny(err)
 			}
+			// action.Start may have changed status, so reload it.
+			status = d.context.GetStatus()
+			// Update status according to result on action.Start.
 			if ready {
 				// Remove action from list
 				status.Plan = status.Plan[1:]
@@ -91,6 +94,8 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 				return false, maskAny(err)
 			}
 			if ready {
+				// action.CheckProgress may have changed status, so reload it.
+				status = d.context.GetStatus()
 				// Remove action from list
 				status.Plan = status.Plan[1:]
 				// Save plan update

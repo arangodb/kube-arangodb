@@ -70,27 +70,30 @@ func (r *Resources) InspectPods() error {
 		if k8sutil.IsPodSucceeded(&p) {
 			// Pod has terminated with exit code 0.
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
+				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
 			}
 		} else if k8sutil.IsPodFailed(&p) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
+				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 			}
 		}
 		if k8sutil.IsPodReady(&p) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
+				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to true")
 				updateMemberStatusNeeded = true
 			}
 		} else {
 			// Pod is not ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", "") {
+				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to false")
 				updateMemberStatusNeeded = true
 			}
 		}
 		if updateMemberStatusNeeded {
-			log.Debug().Str("pod-name", p.GetName()).Msg("Updated member status member for pod")
 			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
 				return maskAny(err)
 			}
@@ -123,6 +126,7 @@ func (r *Resources) InspectPods() error {
 							}
 						}
 					default:
+						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
 						// Create event
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
