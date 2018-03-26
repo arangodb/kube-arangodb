@@ -37,8 +37,7 @@ func TestResiliencePod(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
-	if err != nil {
+	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -51,6 +50,12 @@ func TestResiliencePod(t *testing.T) {
 		return clusterHealthEqualsSpec(h, apiObject.Spec)
 	}); err != nil {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	}
+
+	// Fetch latest status so we know all member details
+	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
 	// Delete one pod after the other
@@ -112,8 +117,7 @@ func TestResiliencePVC(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
-	if err != nil {
+	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -126,6 +130,12 @@ func TestResiliencePVC(t *testing.T) {
 		return clusterHealthEqualsSpec(h, apiObject.Spec)
 	}); err != nil {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	}
+
+	// Fetch latest status so we know all member details
+	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
 	// Delete one pvc after the other
@@ -187,8 +197,7 @@ func TestResilienceService(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
-	if err != nil {
+	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -201,6 +210,12 @@ func TestResilienceService(t *testing.T) {
 		return clusterHealthEqualsSpec(h, apiObject.Spec)
 	}); err != nil {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	}
+
+	// Fetch latest status so we know all member details
+	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
 	// Delete database service
