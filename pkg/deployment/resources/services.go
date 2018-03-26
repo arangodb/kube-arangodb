@@ -34,17 +34,22 @@ func (r *Resources) EnsureServices() error {
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
 
-	log.Debug().Msg("creating services...")
-
-	if _, err := k8sutil.CreateHeadlessService(kubecli, apiObject, owner); err != nil {
+	svcName, newlyCreated, err := k8sutil.CreateHeadlessService(kubecli, apiObject, owner)
+	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create headless service")
 		return maskAny(err)
 	}
+	if newlyCreated {
+		log.Debug().Str("service", svcName).Msg("Created headless service")
+	}
 	single := spec.GetMode().HasSingleServers()
-	svcName, err := k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner)
+	svcName, newlyCreated, err = k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client service")
 		return maskAny(err)
+	}
+	if newlyCreated {
+		log.Debug().Str("service", svcName).Msg("Created database client service")
 	}
 	status := r.context.GetStatus()
 	if status.ServiceName != svcName {
@@ -55,10 +60,13 @@ func (r *Resources) EnsureServices() error {
 	}
 
 	if spec.Sync.IsEnabled() {
-		svcName, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner)
+		svcName, newlyCreated, err := k8sutil.CreateSyncMasterClientService(kubecli, apiObject, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create syncmaster client service")
 			return maskAny(err)
+		}
+		if newlyCreated {
+			log.Debug().Str("service", svcName).Msg("Created syncmasters service")
 		}
 		status := r.context.GetStatus()
 		if status.SyncServiceName != svcName {

@@ -101,3 +101,8 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 	return nextInterval
 }
+
+// triggerInspection ensures that an inspection is run soon.
+func (d *Deployment) triggerInspection() {
+	d.inspectTrigger.Trigger()
+}
