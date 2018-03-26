@@ -20,20 +20,21 @@
 // Author Ewout Prangsma
 //
 
-package reconcile
+package resources
 
 import "github.com/rs/zerolog"
 
-// Reconciler is the service that takes care of bring the a deployment
-// in line with its (changed) specification.
-type Reconciler struct {
+// Resources is a service that creates low level resources for members
+// and inspects low level resources, put the inspection result in members.
+type Resources struct {
 	log     zerolog.Logger
 	context Context
 }
 
-// NewReconciler creates a new reconciler with given context.
-func NewReconciler(log zerolog.Logger, context Context) *Reconciler {
-	return &Reconciler{
+// NewResources creates a new Resources service, used to
+// create and inspect low level resources such as pods and services.
+func NewResources(log zerolog.Logger, context Context) *Resources {
+	return &Resources{
 		log:     log,
 		context: context,
 	}

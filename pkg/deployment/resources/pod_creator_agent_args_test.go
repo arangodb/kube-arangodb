@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"testing"
@@ -32,8 +32,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.
-func TestCreateArangodArgsCoordinator(t *testing.T) {
+// TestCreateArangodArgsAgent tests createArangodArgs for agent.
+func TestCreateArangodArgsAgent(t *testing.T) {
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{
@@ -51,22 +51,24 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
-				"--cluster.my-role=COORDINATOR",
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
 				"--database.directory=/data",
-				"--foxx.queues=true",
+				"--foxx.queues=false",
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
-				"--server.statistics=true",
+				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
 				"--ssl.keyfile=/secrets/tls/tls.keyfile",
@@ -92,23 +94,25 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", true)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", true)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
-				"--cluster.my-role=COORDINATOR",
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
 				"--database.auto-upgrade=true",
 				"--database.directory=/data",
-				"--foxx.queues=true",
+				"--foxx.queues=false",
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
-				"--server.statistics=true",
+				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
 				"--ssl.keyfile=/secrets/tls/tls.keyfile",
@@ -137,29 +141,31 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=tcp://name-coordinator-id1.name-int.ns.svc:8529",
-				"--cluster.my-role=COORDINATOR",
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=tcp://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
 				"--database.directory=/data",
-				"--foxx.queues=true",
+				"--foxx.queues=false",
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=tcp://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
-				"--server.statistics=true",
+				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 			},
 			cmdline,
 		)
 	}
 
-	// No authentication
+	// No authentication, mmfiles
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -172,27 +178,30 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		}
 		apiObject.Spec.SetDefaults("test")
 		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
-				"--cluster.my-role=COORDINATOR",
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
 				"--database.directory=/data",
-				"--foxx.queues=true",
+				"--foxx.queues=false",
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=false",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.statistics=true",
-				"--server.storage-engine=rocksdb",
+				"--server.statistics=false",
+				"--server.storage-engine=mmfiles",
 				"--ssl.ecdh-curve=",
 				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 			},
@@ -200,7 +209,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		)
 	}
 
-	// Custom args, RocksDB
+	// Custom args
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -212,30 +221,31 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Coordinators.Args = []string{"--foo1", "--foo2"}
-		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
+		apiObject.Spec.Agents.Args = []string{"--foo1", "--foo2"}
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
-				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
-				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
-				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
-				"--cluster.my-role=COORDINATOR",
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
 				"--database.directory=/data",
-				"--foxx.queues=true",
+				"--foxx.queues=false",
 				"--log.level=INFO",
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
 				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
-				"--server.statistics=true",
-				"--server.storage-engine=mmfiles",
+				"--server.statistics=false",
+				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
 				"--ssl.keyfile=/secrets/tls/tls.keyfile",
 				"--foo1",

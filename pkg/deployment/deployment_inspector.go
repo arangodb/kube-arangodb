@@ -46,41 +46,45 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	// Ensure we have image info
 	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
 	} else if retrySoon {
 		nextInterval = minInspectionInterval
 	}
 
 	// Inspection of generated resources needed
-	if err := d.inspectPods(); err != nil {
+	if err := d.resources.InspectPods(); err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 	}
 
 	// Create scale/update plan
 	if err := d.reconciler.CreatePlan(); err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
 	}
 
 	// Execute current step of scale/update plan
 	retrySoon, err := d.reconciler.ExecutePlan(ctx)
 	if err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
 	}
 	if retrySoon {
 		nextInterval = minInspectionInterval
 	}
 
 	// Ensure all resources are created
-	if err := d.ensurePVCs(d.apiObject); err != nil {
+	if err := d.resources.EnsureServices(); err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
 	}
-	if err := d.ensurePods(d.apiObject); err != nil {
+	if err := d.resources.EnsurePVCs(); err != nil {
 		hasError = true
-		d.createEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+	}
+	if err := d.resources.EnsurePods(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
 	}
 
 	// Update next interval (on errors)

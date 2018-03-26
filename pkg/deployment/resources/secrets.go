@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"crypto/rand"
@@ -33,20 +33,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// createSecrets creates all secrets needed to run the given deployment
-func (d *Deployment) createSecrets(apiObject *api.ArangoDeployment) error {
-	if apiObject.Spec.IsAuthenticated() {
-		if err := d.ensureJWTSecret(apiObject.Spec.Authentication.GetJWTSecretName()); err != nil {
+// EnsureSecrets creates all secrets needed to run the given deployment
+func (r *Resources) EnsureSecrets() error {
+	spec := r.context.GetSpec()
+	if spec.IsAuthenticated() {
+		if err := r.ensureJWTSecret(spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 	}
-	if apiObject.Spec.IsSecure() {
-		if err := d.ensureCACertificateSecret(apiObject.Spec.TLS); err != nil {
+	if spec.IsSecure() {
+		if err := r.ensureCACertificateSecret(spec.TLS); err != nil {
 			return maskAny(err)
 		}
 	}
-	if apiObject.Spec.Sync.IsEnabled() {
-		if err := d.ensureCACertificateSecret(apiObject.Spec.Sync.TLS); err != nil {
+	if spec.Sync.IsEnabled() {
+		if err := r.ensureCACertificateSecret(spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -56,9 +57,9 @@ func (d *Deployment) createSecrets(apiObject *api.ArangoDeployment) error {
 // ensureJWTSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a random
 // JWT token.
-func (d *Deployment) ensureJWTSecret(secretName string) error {
-	kubecli := d.deps.KubeCli
-	ns := d.apiObject.GetNamespace()
+func (r *Resources) ensureJWTSecret(secretName string) error {
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
 	if _, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		// Create token
@@ -67,7 +68,7 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 		token := hex.EncodeToString(tokenData)
 
 		// Create secret
-		owner := d.apiObject.AsOwner()
+		owner := r.context.GetAPIObject().AsOwner()
 		if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
@@ -85,14 +86,15 @@ func (d *Deployment) ensureJWTSecret(secretName string) error {
 // ensureCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
 // JWT token.
-func (d *Deployment) ensureCACertificateSecret(spec api.TLSSpec) error {
-	kubecli := d.deps.KubeCli
-	ns := d.apiObject.GetNamespace()
+func (r *Resources) ensureCACertificateSecret(spec api.TLSSpec) error {
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
 	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
-		owner := d.apiObject.AsOwner()
-		deploymentName := d.apiObject.GetName()
-		if err := createCACertificate(d.deps.Log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
+		apiObject := r.context.GetAPIObject()
+		owner := apiObject.AsOwner()
+		deploymentName := apiObject.GetName()
+		if err := createCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -107,39 +109,42 @@ func (d *Deployment) ensureCACertificateSecret(spec api.TLSSpec) error {
 }
 
 // getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
-func (d *Deployment) getJWTSecret(apiObject *api.ArangoDeployment) (string, error) {
-	if !apiObject.Spec.IsAuthenticated() {
+func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
+	if !spec.IsAuthenticated() {
 		return "", nil
 	}
-	kubecli := d.deps.KubeCli
-	secretName := apiObject.Spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, apiObject.GetNamespace())
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	secretName := spec.Authentication.GetJWTSecretName()
+	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, ns)
 	if err != nil {
-		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", maskAny(err)
 	}
 	return s, nil
 }
 
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
-func (d *Deployment) getSyncJWTSecret(apiObject *api.ArangoDeployment) (string, error) {
-	kubecli := d.deps.KubeCli
-	secretName := apiObject.Spec.Sync.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, apiObject.GetNamespace())
+func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	secretName := spec.Sync.Authentication.GetJWTSecretName()
+	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, ns)
 	if err != nil {
-		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", maskAny(err)
 	}
 	return s, nil
 }
 
 // getSyncMonitoringToken loads the token secret used for monitoring sync masters & workers.
-func (d *Deployment) getSyncMonitoringToken(apiObject *api.ArangoDeployment) (string, error) {
-	kubecli := d.deps.KubeCli
-	secretName := apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := kubecli.CoreV1().Secrets(apiObject.GetNamespace()).Get(secretName, metav1.GetOptions{})
+func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, error) {
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	secretName := spec.Sync.Monitoring.GetTokenSecretName()
+	s, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		d.deps.Log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get monitoring token secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get monitoring token secret")
 	}
 	// Take the first data
 	for _, v := range s.Data {

@@ -30,4 +30,7 @@ const (
 	ClusterIPNone                      = "None"
 	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
 	TopologyKeyHostname                = "kubernetes.io/hostname"
+
+	// Internal constants
+	ImageIDAndVersionRole = "id" // Role use by identification pods
 )

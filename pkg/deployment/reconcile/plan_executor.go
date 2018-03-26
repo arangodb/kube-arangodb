@@ -113,7 +113,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
-	actionCtx := NewActionContext(log, d.context)
+	actionCtx := newActionContext(log, d.context)
 	switch action.Type {
 	case api.ActionTypeAddMember:
 		return NewAddMemberAction(log, action, actionCtx)

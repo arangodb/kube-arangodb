@@ -36,6 +36,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -94,6 +95,7 @@ type Deployment struct {
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
+	resources                 *resources.Resources
 }
 
 // New creates a new Deployment from the given API object.
@@ -112,6 +114,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
+	d.resources = resources.NewResources(deps.Log, d)
 	if d.status.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.AcceptedSpec = apiObject.Spec.DeepCopy()
@@ -167,13 +170,13 @@ func (d *Deployment) run() {
 
 	if d.status.State == api.DeploymentStateNone {
 		// Create secrets
-		if err := d.createSecrets(d.apiObject); err != nil {
+		if err := d.resources.EnsureSecrets(); err != nil {
 			d.failOnError(err, "Failed to create secrets")
 			return
 		}
 
 		// Create services
-		if err := d.createServices(d.apiObject); err != nil {
+		if err := d.resources.EnsureServices(); err != nil {
 			d.failOnError(err, "Failed to create services")
 			return
 		}
@@ -185,13 +188,13 @@ func (d *Deployment) run() {
 		}
 
 		// Create PVCs
-		if err := d.ensurePVCs(d.apiObject); err != nil {
+		if err := d.resources.EnsurePVCs(); err != nil {
 			d.failOnError(err, "Failed to create persistent volume claims")
 			return
 		}
 
 		// Create pods
-		if err := d.ensurePods(d.apiObject); err != nil {
+		if err := d.resources.EnsurePods(); err != nil {
 			d.failOnError(err, "Failed to create pods")
 			return
 		}
@@ -266,18 +269,18 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
 	}
 	if err := newAPIObject.Spec.Validate(); err != nil {
-		d.createEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
+		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
 		if err := d.updateCRSpec(d.apiObject.Spec); err != nil {
 			log.Error().Err(err).Msg("Restore original spec failed")
-			d.createEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
+			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
 		return nil
 	}
 	if len(resetFields) > 0 {
 		for _, fieldName := range resetFields {
 			log.Debug().Str("field", fieldName).Msg("Reset immutable field")
-			d.createEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
+			d.CreateEvent(k8sutil.NewImmutableFieldEvent(fieldName, d.apiObject))
 		}
 	}
 
@@ -302,9 +305,9 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(event *deploymentEvent) 
 	return nil
 }
 
-// createEvent creates a given event.
+// CreateEvent creates a given event.
 // On error, the error is logged.
-func (d *Deployment) createEvent(evt *v1.Event) {
+func (d *Deployment) CreateEvent(evt *v1.Event) {
 	_, err := d.eventsCli.Create(evt)
 	if err != nil {
 		d.deps.Log.Error().Err(err).Interface("event", *evt).Msg("Failed to record event")

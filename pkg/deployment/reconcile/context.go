@@ -27,16 +27,16 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// ReconcileContext provides methods to the reconcile package.
-type ReconcileContext interface {
+// Context provides methods to the reconcile package.
+type Context interface {
 	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() metav1.Object
+	GetAPIObject() k8sutil.APIObject
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
