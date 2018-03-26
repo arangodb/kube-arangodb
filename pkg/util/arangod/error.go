@@ -25,5 +25,32 @@ package arangod
 import "github.com/pkg/errors"
 
 var (
+	KeyNotFoundError = errors.New("Key not found")
+
 	maskAny = errors.WithStack
 )
+
+// IsKeyNotFound returns true if the given error is (or is caused by) a KeyNotFoundError.
+func IsKeyNotFound(err error) bool {
+	return errors.Cause(err) == KeyNotFoundError
+}
+
+// NotLeaderError indicates the response of an agent when it is
+// not the leader of the agency.
+type NotLeaderError struct {
+	Leader string // Endpoint of the current leader
+}
+
+// Error implements error.
+func (e NotLeaderError) Error() string {
+	return "not the leader"
+}
+
+// IsNotLeader returns true if the given error is (or is caused by) a NotLeaderError.
+func IsNotLeader(err error) (string, bool) {
+	nlErr, ok := err.(NotLeaderError)
+	if ok {
+		return nlErr.Leader, true
+	}
+	return "", false
+}

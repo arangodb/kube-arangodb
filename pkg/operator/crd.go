@@ -31,7 +31,7 @@ import (
 // waitForCRD waits for the CustomResourceDefinition (created externally)
 // to be ready.
 func (o *Operator) waitForCRD(enableDeployment, enableStorage bool) error {
-	log := o.Dependencies.Log
+	log := o.log
 
 	if enableDeployment {
 		log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")

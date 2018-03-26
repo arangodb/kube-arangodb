@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"testing"
@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,13 +38,41 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
+				"--database.directory=/data",
+				"--foxx.queues=true",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=true",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
+	// Default+AutoUpgrade deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			Spec: api.DeploymentSpec{
+				Mode: api.NewMode(api.DeploymentModeSingle),
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", true)
+		assert.Equal(t,
+			[]string{
+				"--database.auto-upgrade=true",
 				"--database.directory=/data",
 				"--foxx.queues=true",
 				"--log.level=INFO",
@@ -64,14 +93,14 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -92,12 +121,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode:          api.DeploymentModeSingle,
-				StorageEngine: api.StorageEngineMMFiles,
+				Mode:          api.NewMode(api.DeploymentModeSingle),
+				StorageEngine: api.NewStorageEngine(api.StorageEngineMMFiles),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -120,12 +149,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
-		apiObject.Spec.Authentication.JWTSecretName = "None"
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -147,12 +176,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 	{
 		apiObject := &api.ArangoDeployment{
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeSingle,
+				Mode: api.NewMode(api.DeploymentModeSingle),
 			},
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, nil, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -181,7 +210,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeResilientSingle,
+				Mode: api.NewMode(api.DeploymentModeResilientSingle),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -190,14 +219,13 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, apiObject.Spec.Single, agents, "id1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, agents, "id1", false)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
 				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
 				"--cluster.my-address=ssl://name-single-id1.name-int.ns.svc:8529",
-				"--cluster.my-id=id1",
 				"--cluster.my-role=SINGLE",
 				"--database.directory=/data",
 				"--foxx.queues=true",

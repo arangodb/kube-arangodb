@@ -63,9 +63,8 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 
 // onAddArangoDeployment deployment addition callback
 func (o *Operator) onAddArangoDeployment(obj interface{}) {
-	log := o.Dependencies.Log
 	apiObject := obj.(*api.ArangoDeployment)
-	log.Debug().
+	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoDeployment added")
 	o.syncArangoDeployment(apiObject)
@@ -73,9 +72,8 @@ func (o *Operator) onAddArangoDeployment(obj interface{}) {
 
 // onUpdateArangoDeployment deployment update callback
 func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
-	log := o.Dependencies.Log
 	apiObject := newObj.(*api.ArangoDeployment)
-	log.Debug().
+	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoDeployment updated")
 	o.syncArangoDeployment(apiObject)
@@ -83,7 +81,7 @@ func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 
 // onDeleteArangoDeployment deployment delete callback
 func (o *Operator) onDeleteArangoDeployment(obj interface{}) {
-	log := o.Dependencies.Log
+	log := o.log
 	apiObject, ok := obj.(*api.ArangoDeployment)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -129,7 +127,7 @@ func (o *Operator) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 	//pt.start()
 	err := o.handleDeploymentEvent(ev)
 	if err != nil {
-		o.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+		o.log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -147,17 +145,17 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 		return maskAny(fmt.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
-	// Fill in defaults
-	apiObject.Spec.SetDefaults(apiObject.GetName())
-	// Validate deployment spec
-	if err := apiObject.Spec.Validate(); err != nil {
-		return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
-	}
-
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deployments[apiObject.Name]; ok {
 			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+		}
+
+		// Fill in defaults
+		apiObject.Spec.SetDefaults(apiObject.GetName())
+		// Validate deployment spec
+		if err := apiObject.Spec.Validate(); err != nil {
+			return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
 		}
 
 		cfg, deps := o.makeDeploymentConfigAndDeps(apiObject)
@@ -197,8 +195,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 		ServiceAccount: o.Config.ServiceAccount,
 	}
 	deps := deployment.Dependencies{
-		Log: o.Dependencies.Log.With().
-			Str("component", "deployment").
+		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().
 			Str("deployment", apiObject.GetName()).
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,

@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"fmt"
@@ -44,8 +44,8 @@ const (
 // createCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
 func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
-	log = log.With().Str("secret", spec.CASecretName).Logger()
-	dnsNames, ipAddresses, emailAddress, err := spec.GetAltNames()
+	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
+	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
 		return maskAny(err)
@@ -65,7 +65,7 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
 		return maskAny(err)
 	}
-	if err := k8sutil.CreateCASecret(cli, spec.CASecretName, namespace, cert, priv, ownerRef); err != nil {
+	if err := k8sutil.CreateCASecret(cli, spec.GetCASecretName(), namespace, cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("CA Secret already exists")
 		} else {
@@ -82,14 +82,14 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverNames []string, spec api.TLSSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", secretName).Logger()
 	// Load alt names
-	dnsNames, ipAddresses, emailAddress, err := spec.GetAltNames()
+	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
 		return maskAny(err)
 	}
 
 	// Load CA certificate
-	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.CASecretName, namespace)
+	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.GetCASecretName(), namespace)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return maskAny(err)
@@ -105,7 +105,7 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 		Hosts:          append(append(serverNames, dnsNames...), ipAddresses...),
 		EmailAddresses: emailAddress,
 		ValidFrom:      time.Now(),
-		ValidFor:       spec.TTL,
+		ValidFor:       spec.GetTTL(),
 		IsCA:           false,
 		ECDSACurve:     tlsECDSACurve,
 	}

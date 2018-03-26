@@ -22,7 +22,10 @@
 
 package v1alpha
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"github.com/dchest/uniuri"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // ActionType is a strongly typed name for a plan action item
 type ActionType string
@@ -36,18 +39,45 @@ const (
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
+	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
+	ActionTypeRotateMember ActionType = "RotateMember"
+	// ActionTypeUpgradeMember causes a member to be shutdown and have it's pod removed, restarted with AutoUpgrade option, waited until termination and the restarted again.
+	ActionTypeUpgradeMember ActionType = "UpgradeMember"
+	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
+	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 )
 
 // Action represents a single action to be taken to update a deployment.
 type Action struct {
+	// ID of this action (unique for every action)
+	ID string `json:"id"`
 	// Type of action.
 	Type ActionType `json:"type"`
 	// ID reference of the member involved in this action (if any)
 	MemberID string `json:"memberID,omitempty"`
 	// Group involved in this action
 	Group ServerGroup `json:"group,omitempty"`
+	// CreationTime is set the when the action is created.
+	CreationTime metav1.Time `json:"creationTime"`
 	// StartTime is set the when the action has been started, but needs to wait to be finished.
 	StartTime *metav1.Time `json:"startTime,omitempty"`
+	// Reason for this action
+	Reason string `json:"reason,omitempty"`
+}
+
+// NewAction instantiates a new Action.
+func NewAction(actionType ActionType, group ServerGroup, memberID string, reason ...string) Action {
+	a := Action{
+		ID:           uniuri.New(),
+		Type:         actionType,
+		MemberID:     memberID,
+		Group:        group,
+		CreationTime: metav1.Now(),
+	}
+	if len(reason) != 0 {
+		a.Reason = reason[0]
+	}
+	return a
 }
 
 // Plan is a list of actions that will be taken to update a deployment.

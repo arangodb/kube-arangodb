@@ -3,12 +3,14 @@ package tests
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/dchest/uniuri"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestScaleCluster tests scaling up/down the number of DBServers & coordinators
@@ -21,8 +23,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-scale-non-tls" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
-	depl.Spec.TLS = api.TLSSpec{"None", nil, 50}
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.TLS = api.TLSSpec{util.NewString("None"), nil, util.NewDuration(time.Second * 50)}
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -49,8 +51,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Add 2 DBServers, 1 coordinator
 	updated, err := updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 5
-		spec.Coordinators.Count = 4
+		spec.DBServers.Count = util.NewInt(5)
+		spec.Coordinators.Count = util.NewInt(4)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -65,8 +67,8 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 	// Remove 3 DBServers, 2 coordinator
 	updated, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 3
-		spec.Coordinators.Count = 2
+		spec.DBServers.Count = util.NewInt(3)
+		spec.Coordinators.Count = util.NewInt(2)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -83,15 +85,15 @@ func TestScaleClusterNonTLS(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 }
 
-func TestScaleClusterTLS(t *testing.T) {
+func TestScaleCluster(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-scale-tls" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl := newDeployment("test-scale" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.TLS = api.TLSSpec{}         // should auto-generate cert
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
@@ -119,8 +121,8 @@ func TestScaleClusterTLS(t *testing.T) {
 
 	// Add 2 DBServers, 1 coordinator
 	updated, err := updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 5
-		spec.Coordinators.Count = 4
+		spec.DBServers.Count = util.NewInt(5)
+		spec.Coordinators.Count = util.NewInt(4)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)
@@ -135,8 +137,8 @@ func TestScaleClusterTLS(t *testing.T) {
 
 	// Remove 3 DBServers, 2 coordinator
 	updated, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-		spec.DBServers.Count = 3
-		spec.Coordinators.Count = 2
+		spec.DBServers.Count = util.NewInt(3)
+		spec.Coordinators.Count = util.NewInt(2)
 	})
 	if err != nil {
 		t.Fatalf("Failed to update deployment: %v", err)

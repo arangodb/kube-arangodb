@@ -207,17 +207,30 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 
 // waitUntilVersionUp waits until the arango database responds to
 // an `/_api/version` request without an error.
-func waitUntilVersionUp(cli driver.Client) error {
+func waitUntilVersionUp(cli driver.Client, allowNoLeaderResponse ...bool) error {
+	var noLeaderErr error
+	allowNoLead := len(allowNoLeaderResponse) > 0 && allowNoLeaderResponse[0]
 	ctx := context.Background()
+
 	op := func() error {
-		if _, err := cli.Version(ctx); err != nil {
+		if _, err := cli.Version(ctx); allowNoLead && driver.IsNoLeader(err) {
+			noLeaderErr = err
+			return nil //return nil to make the retry below pass
+		} else if err != nil {
 			return maskAny(err)
 		}
 		return nil
 	}
+
 	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
 		return maskAny(err)
 	}
+
+	// noLeadErr updated in op
+	if noLeaderErr != nil {
+		return maskAny(noLeaderErr)
+	}
+
 	return nil
 }
 
@@ -239,13 +252,13 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 			}
 		}
 	}
-	if spec.Agents.Count == agents &&
-		spec.DBServers.Count == goodDBServers &&
-		spec.Coordinators.Count == goodCoordinators {
+	if spec.Agents.GetCount() == agents &&
+		spec.DBServers.GetCount() == goodDBServers &&
+		spec.Coordinators.GetCount() == goodCoordinators {
 		return nil
 	}
 	return fmt.Errorf("Expected %d,%d,%d got %d,%d,%d",
-		spec.Agents.Count, spec.DBServers.Count, spec.Coordinators.Count,
+		spec.Agents.GetCount(), spec.DBServers.GetCount(), spec.Coordinators.GetCount(),
 		agents, goodDBServers, goodCoordinators,
 	)
 }

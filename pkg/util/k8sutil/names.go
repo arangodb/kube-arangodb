@@ -25,10 +25,12 @@ package k8sutil
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var (
-	resourceNameRE = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
+	resourceNameRE  = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
+	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-"}
 )
 
 // ValidateOptionalResourceName validates a kubernetes resource name.
@@ -54,4 +56,14 @@ func ValidateResourceName(name string) error {
 		return nil
 	}
 	return maskAny(fmt.Errorf("Name '%s' is not a valid resource name", name))
+}
+
+// stripArangodPrefix removes well know arangod ID prefixes from the given id.
+func stripArangodPrefix(id string) string {
+	for _, prefix := range arangodPrefixes {
+		if strings.HasPrefix(id, prefix) {
+			return id[len(prefix):]
+		}
+	}
+	return id
 }

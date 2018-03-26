@@ -27,6 +27,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/validation"
 )
@@ -37,9 +38,9 @@ const (
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName string        `json:"caSecretName,omitempty"`
-	AltNames     []string      `json:"altNames,omitempty"`
-	TTL          time.Duration `json:"ttl,omitempty"`
+	CASecretName *string        `json:"caSecretName,omitempty"`
+	AltNames     []string       `json:"altNames,omitempty"`
+	TTL          *time.Duration `json:"ttl,omitempty"`
 }
 
 const (
@@ -47,15 +48,30 @@ const (
 	CASecretNameDisabled = "None"
 )
 
-// IsSecure returns true when a CA secret has been set, false otherwise.
-func (s TLSSpec) IsSecure() bool {
-	return s.CASecretName != CASecretNameDisabled
+// GetCASecretName returns the value of caSecretName.
+func (s TLSSpec) GetCASecretName() string {
+	return util.StringOrDefault(s.CASecretName)
 }
 
-// GetAltNames splits the list of AltNames into DNS names, IP addresses & email addresses.
+// GetAltNames returns the value of altNames.
+func (s TLSSpec) GetAltNames() []string {
+	return s.AltNames
+}
+
+// GetTTL returns the value of ttl.
+func (s TLSSpec) GetTTL() time.Duration {
+	return util.DurationOrDefault(s.TTL)
+}
+
+// IsSecure returns true when a CA secret has been set, false otherwise.
+func (s TLSSpec) IsSecure() bool {
+	return s.GetCASecretName() != CASecretNameDisabled
+}
+
+// GetParsedAltNames splits the list of AltNames into DNS names, IP addresses & email addresses.
 // When an entry is not valid for any of those categories, an error is returned.
-func (s TLSSpec) GetAltNames() (dnsNames, ipAddresses, emailAddresses []string, err error) {
-	for _, name := range s.AltNames {
+func (s TLSSpec) GetParsedAltNames() (dnsNames, ipAddresses, emailAddresses []string, err error) {
+	for _, name := range s.GetAltNames() {
 		if net.ParseIP(name) != nil {
 			ipAddresses = append(ipAddresses, name)
 		} else if validation.IsValidDNSName(name) {
@@ -71,21 +87,40 @@ func (s TLSSpec) GetAltNames() (dnsNames, ipAddresses, emailAddresses []string, 
 
 // Validate the given spec
 func (s TLSSpec) Validate() error {
-	if err := k8sutil.ValidateOptionalResourceName(s.CASecretName); err != nil {
-		return maskAny(err)
-	}
-	if _, _, _, err := s.GetAltNames(); err != nil {
-		return maskAny(err)
+	if s.IsSecure() {
+		if err := k8sutil.ValidateResourceName(s.GetCASecretName()); err != nil {
+			return maskAny(err)
+		}
+		if _, _, _, err := s.GetParsedAltNames(); err != nil {
+			return maskAny(err)
+		}
 	}
 	return nil
 }
 
 // SetDefaults fills in missing defaults
 func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
-	if s.CASecretName == "" {
-		s.CASecretName = defaultCASecretName
+	if s.GetCASecretName() == "" {
+		// Note that we don't check for nil here, since even a specified, but empty
+		// string should result in the default value.
+		s.CASecretName = util.NewString(defaultCASecretName)
 	}
-	if s.TTL == 0 {
-		s.TTL = defaultTLSTTL
+	if s.GetTTL() == 0 {
+		// Note that we don't check for nil here, since even a specified, but zero
+		// should result in the default value.
+		s.TTL = util.NewDuration(defaultTLSTTL)
+	}
+}
+
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
+	if s.CASecretName == nil {
+		s.CASecretName = util.NewStringOrNil(source.CASecretName)
+	}
+	if s.AltNames == nil {
+		s.AltNames = source.AltNames
+	}
+	if s.TTL == nil {
+		s.TTL = util.NewDurationOrNil(source.TTL)
 	}
 }
