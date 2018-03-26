@@ -342,7 +342,7 @@ func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8s
 
 		var goodResults, noLeaderResults int
 		for _, single := range singles {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, single.ID)
+			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupSingle, single.ID)
 			if err != nil {
 				t.Fatalf("Unable to create connection to: %v", single.ID)
 			}
