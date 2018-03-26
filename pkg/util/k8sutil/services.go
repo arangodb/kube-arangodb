@@ -50,7 +50,8 @@ func CreateSyncMasterClientServiceName(deploymentName string) string {
 // DNS name for all pods.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateHeadlessService(kubecli kubernetes.Interface, deployment metav1.Object, owner metav1.OwnerReference) (string, error) {
+// The returned bool is true if the service is created, or false when the service already existed.
+func CreateHeadlessService(kubecli kubernetes.Interface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
 	ports := []v1.ServicePort{
@@ -62,16 +63,18 @@ func CreateHeadlessService(kubecli kubernetes.Interface, deployment metav1.Objec
 	}
 	publishNotReadyAddresses := false
 	sessionAffinity := v1.ServiceAffinityNone
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
-		return "", maskAny(err)
+	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", ports, publishNotReadyAddresses, sessionAffinity, owner)
+	if err != nil {
+		return "", false, maskAny(err)
 	}
-	return svcName, nil
+	return svcName, newlyCreated, nil
 }
 
 // CreateDatabaseClientService prepares and creates a service in k8s, used by database clients within the k8s cluster.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1.Object, single bool, owner metav1.OwnerReference) (string, error) {
+// The returned bool is true if the service is created, or false when the service already existed.
+func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1.Object, single bool, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
 	ports := []v1.ServicePort{
@@ -89,16 +92,18 @@ func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1
 	}
 	publishNotReadyAddresses := true
 	sessionAffinity := v1.ServiceAffinityClientIP
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
-		return "", maskAny(err)
+	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, ports, publishNotReadyAddresses, sessionAffinity, owner)
+	if err != nil {
+		return "", false, maskAny(err)
 	}
-	return svcName, nil
+	return svcName, newlyCreated, nil
 }
 
 // CreateSyncMasterClientService prepares and creates a service in k8s, used by syncmaster clients within the k8s cluster.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment metav1.Object, owner metav1.OwnerReference) (string, error) {
+// The returned bool is true if the service is created, or false when the service already existed.
+func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateSyncMasterClientServiceName(deploymentName)
 	ports := []v1.ServicePort{
@@ -110,17 +115,19 @@ func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment meta
 	}
 	publishNotReadyAddresses := true
 	sessionAffinity := v1.ServiceAffinityNone
-	if err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", "syncmaster", ports, publishNotReadyAddresses, sessionAffinity, owner); err != nil {
-		return "", maskAny(err)
+	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", "syncmaster", ports, publishNotReadyAddresses, sessionAffinity, owner)
+	if err != nil {
+		return "", false, maskAny(err)
 	}
-	return svcName, nil
+	return svcName, newlyCreated, nil
 }
 
 // createService prepares and creates a service in k8s.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
+// The returned bool is true if the service is created, or false when the service already existed.
 func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, clusterIP, role string,
-	ports []v1.ServicePort, publishNotReadyAddresses bool, sessionAffinity v1.ServiceAffinity, owner metav1.OwnerReference) error {
+	ports []v1.ServicePort, publishNotReadyAddresses bool, sessionAffinity v1.ServiceAffinity, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -142,8 +149,10 @@ func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, cl
 		},
 	}
 	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := kubecli.CoreV1().Services(ns).Create(svc); err != nil && !IsAlreadyExists(err) {
-		return maskAny(err)
+	if _, err := kubecli.CoreV1().Services(ns).Create(svc); IsAlreadyExists(err) {
+		return false, nil
+	} else if err != nil {
+		return false, maskAny(err)
 	}
-	return nil
+	return true, nil
 }
