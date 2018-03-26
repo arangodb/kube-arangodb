@@ -87,6 +87,12 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
 	}
 
+	// At the end of the inspect, we cleanup terminated pods.
+	if d.resources.CleanupTerminatedPods(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
+	}
+
 	// Update next interval (on errors)
 	if hasError {
 		if d.recentInspectionErrors == 0 {

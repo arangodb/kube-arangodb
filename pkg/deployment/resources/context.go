@@ -62,4 +62,7 @@ type Context interface {
 	CreateEvent(evt *v1.Event)
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
+	// CleanupPod deletes a given pod with force and explicit UID.
+	// If the pod does not exist, the error is ignored.
+	CleanupPod(p v1.Pod) error
 }

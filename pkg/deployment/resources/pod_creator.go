@@ -369,6 +369,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, spec.GetImagePullPolicy(), args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
+		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
 		// Find image ID
 		info, found := status.Images.GetByImage(spec.Sync.GetImage())
@@ -390,6 +391,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, spec.Sync.GetImagePullPolicy(), args, env, livenessProbe, affinityWithRole); err != nil {
 			return maskAny(err)
 		}
+		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	}
 	// Record new member state
 	m.State = newState

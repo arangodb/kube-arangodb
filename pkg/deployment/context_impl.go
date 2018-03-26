@@ -141,6 +141,21 @@ func (d *Deployment) DeletePod(podName string) error {
 	return nil
 }
 
+// CleanupPod deletes a given pod with force and explicit UID.
+// If the pod does not exist, the error is ignored.
+func (d *Deployment) CleanupPod(p v1.Pod) error {
+	log := d.deps.Log
+	podName := p.GetName()
+	ns := p.GetNamespace()
+	options := metav1.NewDeleteOptions(0)
+	options.Preconditions = metav1.NewUIDPreconditions(string(p.GetUID()))
+	if err := d.deps.KubeCli.Core().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
+		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
+		return maskAny(err)
+	}
+	return nil
+}
+
 // DeletePvc deletes a persistent volume claim with given name in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(pvcName string) error {
