@@ -3,20 +3,19 @@ package tests
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/dchest/uniuri"	
+	"github.com/dchest/uniuri"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	
+
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
-
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
-// TestResiliencePod 
+// TestResiliencePod
 // Tests handling of individual pod deletions
 func TestResiliencePod(t *testing.T) {
 	longOrSkip(t)
@@ -28,7 +27,7 @@ func TestResiliencePod(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-pod-resilience" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -38,7 +37,8 @@ func TestResiliencePod(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -53,26 +53,40 @@ func TestResiliencePod(t *testing.T) {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
-	// Delete one pod after the other			
-	pods, err := kubecli.CoreV1().Pods(ns).List(metav1.ListOptions{})
-	if err != nil {
-		t.Fatalf("Could not find any pods in the %s, namespace: %v\n", ns, err)
-	}
-	fmt.Fprintf(os.Stderr, 
-		"There are %d pods in the %s namespace\n", len(pods.Items), ns)
-	for _, pod := range pods.Items {
-		if pod.GetName() == "arangodb-operator-test" { continue }
-		fmt.Fprintf(os.Stderr, 
-			"Deleting pod %s in the %s namespace\n", pod.GetName(), ns)
-		kubecli.CoreV1().Pods(ns).Delete(pod.GetName(),&metav1.DeleteOptions{})
-		time.Sleep(30 * time.Second) // wait for problem to arise
-		// Wait for cluster to be completely ready
-		if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
-			return clusterHealthEqualsSpec(h, apiObject.Spec)
-		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
+	// Delete one pod after the other
+	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+		for _, m := range *status {
+			// Get current pod so we can compare UID later
+			originalPod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Failed to get pod %s: %v", m.PodName, err)
+			}
+			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
+			}
+			// Wait for pod to return with different UID
+			op := func() error {
+				pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+				if err != nil {
+					return maskAny(err)
+				}
+				if pod.GetUID() == originalPod.GetUID() {
+					return fmt.Errorf("Still original pod")
+				}
+				return nil
+			}
+			if err := retry.Retry(op, time.Minute); err != nil {
+				t.Fatalf("Pod did not restart: %v", err)
+			}
+			// Wait for cluster to be completely ready
+			if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+				return clusterHealthEqualsSpec(h, apiObject.Spec)
+			}); err != nil {
+				t.Fatalf("Cluster not running in expected health in time: %v", err)
+			}
 		}
-	}
+		return nil
+	}, &apiObject.Status)
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
@@ -87,8 +101,8 @@ func TestResiliencePVC(t *testing.T) {
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-pod-resilience" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl := newDeployment("test-pvc-resilience" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -98,7 +112,8 @@ func TestResiliencePVC(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -113,30 +128,45 @@ func TestResiliencePVC(t *testing.T) {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
-	// Delete one pod after the other			
-	pvcs, err := kubecli.CoreV1().PersistentVolumeClaims(ns).List(metav1.ListOptions{})
-	if err != nil {
-		t.Fatalf("Could not find any persisted volume claims in the %s, namespace: %v\n", ns, err)
-	}
-	fmt.Fprintf(os.Stderr, 
-		"There are %d peristent volume claims in the %s namespace\n", len(pvcs.Items), ns)
-	for _, pvc := range pvcs.Items {
-		if pvc.GetName() == "arangodb-operator-test" { continue }
-		fmt.Fprintf(os.Stderr, 
-			"Deleting persistent volume claim %s in the %s namespace\n", pvc.GetName(), ns)
-		kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(pvc.GetName(),&metav1.DeleteOptions{})
-		time.Sleep(30 * time.Second) // wait for problem to arise
-		// Wait for cluster to be completely ready
-		if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
-			return clusterHealthEqualsSpec(h, apiObject.Spec)
-		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
+	// Delete one pvc after the other
+	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+		for _, m := range *status {
+			// Get current pvc so we can compare UID later
+			originalPVC, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Failed to get pvc %s: %v", m.PersistentVolumeClaimName, err)
+			}
+			if err := kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(m.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pvc %s: %v", m.PersistentVolumeClaimName, err)
+			}
+			// Wait for pvc to return with different UID
+			op := func() error {
+				pvc, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+				if err != nil {
+					return maskAny(err)
+				}
+				if pvc.GetUID() == originalPVC.GetUID() {
+					return fmt.Errorf("Still original pvc")
+				}
+				return nil
+			}
+			if err := retry.Retry(op, time.Minute); err != nil {
+				t.Fatalf("PVC did not restart: %v", err)
+			}
+			// Wait for cluster to be completely ready
+			if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+				return clusterHealthEqualsSpec(h, apiObject.Spec)
+			}); err != nil {
+				t.Fatalf("Cluster not running in expected health in time: %v", err)
+			}
 		}
-	}
+		return nil
+	}, &apiObject.Status)
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
 }
+
 // TestResilienceService
 // Tests handling of individual service deletions
 func TestResilienceService(t *testing.T) {
@@ -147,7 +177,7 @@ func TestResilienceService(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-service-resilience" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -157,8 +187,8 @@ func TestResilienceService(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(
-		c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	apiObject, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -173,24 +203,37 @@ func TestResilienceService(t *testing.T) {
 		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
-	// Delete one pod after the other			
-	services, err := kubecli.CoreV1().Services(ns).List(metav1.ListOptions{})
+	// Delete database service
+	// Get current pod so we can compare UID later
+	serviceName := apiObject.Status.ServiceName
+	originalService, err := kubecli.CoreV1().Services(ns).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
-		t.Fatalf("Could not find any services in the %s, namespace: %v\n", ns, err)
+		t.Fatalf("Failed to get service %s: %v", serviceName, err)
 	}
-	fmt.Fprintf(os.Stderr, "There are %d services in the %s namespace \n", len(services.Items), ns)
-	for _, service := range services.Items {
-		kubecli.CoreV1().Services(ns).Delete(service.GetName(),&metav1.DeleteOptions{})
-		time.Sleep(30 * time.Second)
-		// Wait for cluster to be completely ready
-		if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
-			return clusterHealthEqualsSpec(h, apiObject.Spec)
-		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
+	if err := kubecli.CoreV1().Services(ns).Delete(serviceName, &metav1.DeleteOptions{}); err != nil {
+		t.Fatalf("Failed to delete service %s: %v", serviceName, err)
+	}
+	// Wait for service to return with different UID
+	op := func() error {
+		service, err := kubecli.CoreV1().Services(ns).Get(serviceName, metav1.GetOptions{})
+		if err != nil {
+			return maskAny(err)
 		}
+		if service.GetUID() == originalService.GetUID() {
+			return fmt.Errorf("Still original service")
+		}
+		return nil
+	}
+	if err := retry.Retry(op, time.Minute); err != nil {
+		t.Fatalf("PVC did not restart: %v", err)
+	}
+	// Wait for cluster to be completely ready
+	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, apiObject.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running in expected health in time: %v", err)
 	}
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
 }
-
