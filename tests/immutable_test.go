@@ -27,26 +27,27 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dchest/uniuri"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// TestImmutableStorageEngine
-// Tests that storage engine of deployed cluster cannot be changed
-func TestImmutableStorageEngine(t *testing.T) {
+// TestImmutableFields tests that several immutable fields in the deployment
+// spec are reverted to their original value.
+func TestImmutableFields(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
+	revertTimeout := time.Second * 30
 
 	// Prepare deployment config
 	depl := newDeployment("test-ise-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
@@ -64,11 +65,9 @@ func TestImmutableStorageEngine(t *testing.T) {
 	ctx := context.Background()
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
-	// Wait for cluster to be completely ready
-	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
-		return clusterHealthEqualsSpec(h, apiObject.Spec)
-	}); err != nil {
-		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	// Wait for single server to be completely ready
+	if err := waitUntilVersionUp(client); err != nil {
+		t.Fatalf("Single server not up in time: %v", err)
 	}
 
 	// Try to reset storageEngine ===============================================
@@ -86,8 +85,8 @@ func TestImmutableStorageEngine(t *testing.T) {
 				return nil
 			}
 			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)
-		}); err != nil {
-		t.Fatalf("StorageEngine parameter should not be immutable: %v", err)
+		}, revertTimeout); err != nil {
+		t.Errorf("StorageEngine parameter is immutable: %v", err)
 	}
 
 	// Try to reset the RocksDB encryption key ==================================
@@ -105,14 +104,14 @@ func TestImmutableStorageEngine(t *testing.T) {
 				return nil
 			}
 			return fmt.Errorf("RocksDB encryption key not back to %s", "test.encryption.keySecretName")
-		}); err != nil {
-		t.Fatalf("RocksDB encryption key not be mutable: %v", err)
+		}, revertTimeout); err != nil {
+		t.Errorf("RocksDB encryption key is mutable: %v", err)
 	}
 
 	// Try to reset the deployment type ==========================================
 	if _, err := updateDeployment(c, depl.GetName(), ns,
 		func(spec *api.DeploymentSpec) {
-			spec.Mode = api.NewMode(api.DeploymentModeSingle)
+			spec.Mode = api.NewMode(api.DeploymentModeCluster)
 		}); err != nil {
 		t.Fatalf("Failed to update the deployment mode: %v", err)
 	}
@@ -120,12 +119,13 @@ func TestImmutableStorageEngine(t *testing.T) {
 	// Wait for deployment mode to be set back to cluster
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
 		func(depl *api.ArangoDeployment) error {
-			if api.ModeOrDefault(depl.Spec.Mode) == api.DeploymentModeCluster {
+			expected := api.DeploymentModeSingle
+			if api.ModeOrDefault(depl.Spec.Mode) == expected {
 				return nil
 			}
-			return fmt.Errorf("Deployment mode not back to %s", api.DeploymentModeCluster)
-		}); err != nil {
-		t.Fatalf("Deployment mode should not be mutable: %v", err)
+			return fmt.Errorf("Deployment mode not back to %s", expected)
+		}, revertTimeout); err != nil {
+		t.Errorf("Deployment mode is mutable: %v", err)
 	}
 
 	// Cleanup

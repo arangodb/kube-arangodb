@@ -116,7 +116,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 
 // waitUntilDeployment waits until a deployment with given name in given namespace
 // reached a state where the given predicate returns true.
-func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, predicate func(*api.ArangoDeployment) error) (*api.ArangoDeployment, error) {
+func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, predicate func(*api.ArangoDeployment) error, timeout ...time.Duration) (*api.ArangoDeployment, error) {
 	var result *api.ArangoDeployment
 	op := func() error {
 		obj, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
@@ -132,7 +132,11 @@ func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, pre
 		}
 		return nil
 	}
-	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+	actualTimeout := deploymentReadyTimeout
+	if len(timeout) > 0 {
+		actualTimeout = timeout[0]
+	}
+	if err := retry.Retry(op, actualTimeout); err != nil {
 		return nil, maskAny(err)
 	}
 	return result, nil
