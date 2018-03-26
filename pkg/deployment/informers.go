@@ -133,7 +133,7 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 		return service, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.PersistentVolumeClaim{}, 0, cache.ResourceEventHandlerFuncs{
+	_, informer := cache.NewIndexerInformer(source, &v1.Service{}, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			if s, ok := getService(obj); ok && d.isOwnerOf(s) {
 				d.triggerInspection()
