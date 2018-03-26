@@ -140,6 +140,10 @@ func TestResiliencePVC(t *testing.T) {
 
 	// Delete one pvc after the other
 	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+		if group == api.ServerGroupCoordinators {
+			// Coordinators have no PVC
+			return nil
+		}
 		for _, m := range *status {
 			// Get current pvc so we can compare UID later
 			originalPVC, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
