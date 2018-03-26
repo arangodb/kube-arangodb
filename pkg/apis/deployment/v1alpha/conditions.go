@@ -35,6 +35,8 @@ const (
 	ConditionTypeReady ConditionType = "Ready"
 	// ConditionTypeTerminated indicates that the member has terminated and will not restart.
 	ConditionTypeTerminated ConditionType = "Terminated"
+	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
+	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

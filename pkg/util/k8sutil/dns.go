@@ -29,7 +29,7 @@ import (
 // CreatePodDNSName returns the DNS of a pod with a given role & id in
 // a given deployment.
 func CreatePodDNSName(deployment metav1.Object, role, id string) string {
-	return CreatePodName(deployment.GetName(), role, id) + "." +
+	return CreatePodHostName(deployment.GetName(), role, id) + "." +
 		CreateHeadlessServiceName(deployment.GetName()) + "." +
 		deployment.GetNamespace() + ".svc"
 }

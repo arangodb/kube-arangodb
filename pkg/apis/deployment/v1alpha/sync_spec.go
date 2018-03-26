@@ -25,31 +25,48 @@ package v1alpha
 import (
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
-	Enabled         bool          `json:"enabled,omitempty"`
-	Image           string        `json:"image,omitempty"`
-	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	Enabled         *bool          `json:"enabled,omitempty"`
+	Image           *string        `json:"image,omitempty"`
+	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
 	Authentication AuthenticationSpec `json:"auth"`
 	TLS            TLSSpec            `json:"tls"`
 	Monitoring     MonitoringSpec     `json:"monitoring"`
 }
 
+// IsEnabled returns the value of enabled.
+func (s SyncSpec) IsEnabled() bool {
+	return util.BoolOrDefault(s.Enabled)
+}
+
+// GetImage returns the value of image.
+func (s SyncSpec) GetImage() string {
+	return util.StringOrDefault(s.Image)
+}
+
+// GetImagePullPolicy returns the value of imagePullPolicy.
+func (s SyncSpec) GetImagePullPolicy() v1.PullPolicy {
+	return util.PullPolicyOrDefault(s.ImagePullPolicy)
+}
+
 // Validate the given spec
 func (s SyncSpec) Validate(mode DeploymentMode) error {
-	if s.Enabled && !mode.SupportsSync() {
+	if s.IsEnabled() && !mode.SupportsSync() {
 		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
 	}
-	if s.Image == "" {
+	if s.GetImage() == "" {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
-	if err := s.Authentication.Validate(s.Enabled); err != nil {
+	if err := s.Authentication.Validate(s.IsEnabled()); err != nil {
 		return maskAny(err)
 	}
-	if s.Enabled {
+	if s.IsEnabled() {
 		if err := s.TLS.Validate(); err != nil {
 			return maskAny(err)
 		}
@@ -62,15 +79,31 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 
 // SetDefaults fills in missing defaults
 func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultCASecretName string) {
-	if s.Image == "" {
-		s.Image = defaultImage
+	if s.GetImage() == "" {
+		s.Image = util.NewString(defaultImage)
 	}
-	if s.ImagePullPolicy == "" {
-		s.ImagePullPolicy = defaulPullPolicy
+	if s.GetImagePullPolicy() == "" {
+		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
 	}
 	s.Authentication.SetDefaults(defaultJWTSecretName)
 	s.TLS.SetDefaults(defaultCASecretName)
 	s.Monitoring.SetDefaults()
+}
+
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
+	if s.Enabled == nil {
+		s.Enabled = util.NewBoolOrNil(source.Enabled)
+	}
+	if s.Image == nil {
+		s.Image = util.NewStringOrNil(source.Image)
+	}
+	if s.ImagePullPolicy == nil {
+		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
+	}
+	s.Authentication.SetDefaultsFrom(source.Authentication)
+	s.TLS.SetDefaultsFrom(source.TLS)
+	s.Monitoring.SetDefaultsFrom(source.Monitoring)
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.

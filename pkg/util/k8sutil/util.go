@@ -27,6 +27,20 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+const (
+	// LabelKeyArangoDeployment is the key of the label used to store the ArangoDeployment name in
+	LabelKeyArangoDeployment = "arango_deployment"
+	// LabelKeyArangoLocalStorage is the key of the label used to store the ArangoLocalStorage name in
+	LabelKeyArangoLocalStorage = "arango_local_storage"
+	// LabelKeyApp is the key of the label used to store the application name in (fixed to AppName)
+	LabelKeyApp = "app"
+	// LabelKeyRole is the key of the label used to store the role of the resource in
+	LabelKeyRole = "role"
+
+	// AppName is the fixed value for the "app" label
+	AppName = "arangodb"
+)
+
 // addOwnerRefToObject adds given owner reference to given object
 func addOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
 	if ownerRef != nil {
@@ -37,11 +51,11 @@ func addOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
 // LabelsForDeployment returns a map of labels, given to all resources for given deployment name
 func LabelsForDeployment(deploymentName, role string) map[string]string {
 	l := map[string]string{
-		"arango_deployment": deploymentName,
-		"app":               "arangodb",
+		LabelKeyArangoDeployment: deploymentName,
+		LabelKeyApp:              AppName,
 	}
 	if role != "" {
-		l["role"] = role
+		l[LabelKeyRole] = role
 	}
 	return l
 }
@@ -49,11 +63,11 @@ func LabelsForDeployment(deploymentName, role string) map[string]string {
 // LabelsForLocalStorage returns a map of labels, given to all resources for given local storage name
 func LabelsForLocalStorage(localStorageName, role string) map[string]string {
 	l := map[string]string{
-		"arango_local_storage": localStorageName,
-		"app": "arangodb",
+		LabelKeyArangoLocalStorage: localStorageName,
+		LabelKeyApp:                AppName,
 	}
 	if role != "" {
-		l["role"] = role
+		l[LabelKeyRole] = role
 	}
 	return l
 }

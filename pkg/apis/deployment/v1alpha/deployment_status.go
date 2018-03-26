@@ -47,4 +47,7 @@ type DeploymentStatus struct {
 
 	// Plan to update this deployment
 	Plan Plan `json:"plan,omitempty"`
+
+	// AcceptedSpec contains the last specification that was accepted by the operator.
+	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
 }

@@ -217,6 +217,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/deployment/v1alpha \
 			$(REPOPATH)/pkg/deployment \
+			$(REPOPATH)/pkg/deployment/reconcile \
 			$(REPOPATH)/pkg/util/k8sutil \
 			$(REPOPATH)/pkg/util/k8sutil/test
 

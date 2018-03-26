@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package reconcile
 
 import (
 	"testing"
@@ -28,21 +28,30 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeSingle,
+		Mode: api.NewMode(api.DeploymentModeSingle),
 	}
 	spec.SetDefaults("test")
+	depl := &api.ArangoDeployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test_depl",
+			Namespace: "test",
+		},
+		Spec: spec,
+	}
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, nil, spec, status)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -53,7 +62,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, nil, spec, status)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -68,7 +77,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(log, nil, spec, status)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
@@ -77,14 +86,21 @@ func TestCreatePlanSingleScale(t *testing.T) {
 func TestCreatePlanResilientSingleScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeResilientSingle,
+		Mode: api.NewMode(api.DeploymentModeResilientSingle),
 	}
 	spec.SetDefaults("test")
-	spec.Single.Count = 2
+	spec.Single.Count = util.NewInt(2)
+	depl := &api.ArangoDeployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test_depl",
+			Namespace: "test",
+		},
+		Spec: spec,
+	}
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, nil, spec, status)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -97,7 +113,7 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, nil, spec, status)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -122,7 +138,7 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(log, nil, spec, status)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -135,13 +151,20 @@ func TestCreatePlanResilientSingleScale(t *testing.T) {
 func TestCreatePlanClusterScale(t *testing.T) {
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.DeploymentModeCluster,
+		Mode: api.NewMode(api.DeploymentModeCluster),
 	}
 	spec.SetDefaults("test")
+	depl := &api.ArangoDeployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test_depl",
+			Namespace: "test",
+		},
+		Spec: spec,
+	}
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, nil, spec, status)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -174,7 +197,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(log, nil, spec, status)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -209,9 +232,9 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator2",
 		},
 	}
-	spec.DBServers.Count = 1
-	spec.Coordinators.Count = 1
-	newPlan, changed = createPlan(log, nil, spec, status)
+	spec.DBServers.Count = util.NewInt(1)
+	spec.Coordinators.Count = util.NewInt(1)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)

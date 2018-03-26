@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package deployment
+package resources
 
 import (
 	"testing"
@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
@@ -41,7 +42,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -50,16 +51,60 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, apiObject.Spec.Agents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
 				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
 				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
 				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
-				"--cluster.my-id=a1",
+				"--database.directory=/data",
+				"--foxx.queues=false",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=false",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
+	// Default+AutoUpgrade deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "name",
+				Namespace: "ns",
+			},
+			Spec: api.DeploymentSpec{
+				Mode: api.NewMode(api.DeploymentModeCluster),
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		agents := api.MemberStatusList{
+			api.MemberStatus{ID: "a1"},
+			api.MemberStatus{ID: "a2"},
+			api.MemberStatus{ID: "a3"},
+		}
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", true)
+		assert.Equal(t,
+			[]string{
+				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
+				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--agency.size=3",
+				"--agency.supervision=true",
+				"--database.auto-upgrade=true",
 				"--database.directory=/data",
 				"--foxx.queues=false",
 				"--log.level=INFO",
@@ -84,9 +129,9 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 				TLS: api.TLSSpec{
-					CASecretName: "None",
+					CASecretName: util.NewString("None"),
 				},
 			},
 		}
@@ -96,16 +141,16 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, apiObject.Spec.Agents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
 				"--agency.endpoint=tcp://name-agent-a2.name-int.ns.svc:8529",
 				"--agency.endpoint=tcp://name-agent-a3.name-int.ns.svc:8529",
 				"--agency.my-address=tcp://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
-				"--cluster.my-id=a1",
 				"--database.directory=/data",
 				"--foxx.queues=false",
 				"--log.level=INFO",
@@ -128,27 +173,27 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		apiObject.Spec.Authentication.JWTSecretName = "None"
-		apiObject.Spec.StorageEngine = api.StorageEngineMMFiles
+		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
+		apiObject.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 		agents := api.MemberStatusList{
 			api.MemberStatus{ID: "a1"},
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, apiObject.Spec.Agents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
 				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
 				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
 				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
-				"--cluster.my-id=a1",
 				"--database.directory=/data",
 				"--foxx.queues=false",
 				"--log.level=INFO",
@@ -172,7 +217,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.DeploymentModeCluster,
+				Mode: api.NewMode(api.DeploymentModeCluster),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
@@ -182,16 +227,16 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, apiObject.Spec.Agents, agents, "a1")
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
+				"--agency.disaster-recovery-id=a1",
 				"--agency.endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
 				"--agency.endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
 				"--agency.my-address=ssl://name-agent-a1.name-int.ns.svc:8529",
 				"--agency.size=3",
 				"--agency.supervision=true",
-				"--cluster.my-id=a1",
 				"--database.directory=/data",
 				"--foxx.queues=false",
 				"--log.level=INFO",

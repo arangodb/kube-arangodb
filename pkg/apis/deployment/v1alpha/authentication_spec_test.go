@@ -25,23 +25,24 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthenticationSpecValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: "None"}.Validate(false))
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: "foo"}.Validate(false))
-	assert.Nil(t, AuthenticationSpec{JWTSecretName: "foo"}.Validate(true))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("None")}.Validate(false))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.Validate(false))
+	assert.Nil(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.Validate(true))
 
 	// Not valid
-	assert.Error(t, AuthenticationSpec{JWTSecretName: "Foo"}.Validate(false))
+	assert.Error(t, AuthenticationSpec{JWTSecretName: util.NewString("Foo")}.Validate(false))
 }
 
 func TestAuthenticationSpecIsAuthenticated(t *testing.T) {
-	assert.False(t, AuthenticationSpec{JWTSecretName: "None"}.IsAuthenticated())
-	assert.True(t, AuthenticationSpec{JWTSecretName: "foo"}.IsAuthenticated())
-	assert.True(t, AuthenticationSpec{JWTSecretName: ""}.IsAuthenticated())
+	assert.False(t, AuthenticationSpec{JWTSecretName: util.NewString("None")}.IsAuthenticated())
+	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewString("foo")}.IsAuthenticated())
+	assert.True(t, AuthenticationSpec{JWTSecretName: util.NewString("")}.IsAuthenticated())
 }
 
 func TestAuthenticationSpecSetDefaults(t *testing.T) {
@@ -50,8 +51,8 @@ func TestAuthenticationSpecSetDefaults(t *testing.T) {
 		return spec
 	}
 
-	assert.Equal(t, "test-jwt", def(AuthenticationSpec{}).JWTSecretName)
-	assert.Equal(t, "foo", def(AuthenticationSpec{JWTSecretName: "foo"}).JWTSecretName)
+	assert.Equal(t, "test-jwt", def(AuthenticationSpec{}).GetJWTSecretName())
+	assert.Equal(t, "foo", def(AuthenticationSpec{JWTSecretName: util.NewString("foo")}).GetJWTSecretName())
 }
 
 func TestAuthenticationSpecResetImmutableFields(t *testing.T) {
@@ -63,35 +64,35 @@ func TestAuthenticationSpecResetImmutableFields(t *testing.T) {
 	}{
 		// Valid "changes"
 		{
-			AuthenticationSpec{JWTSecretName: "None"},
-			AuthenticationSpec{JWTSecretName: "None"},
-			AuthenticationSpec{JWTSecretName: "None"},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
 			nil,
 		},
 		{
-			AuthenticationSpec{JWTSecretName: "foo"},
-			AuthenticationSpec{JWTSecretName: "foo"},
-			AuthenticationSpec{JWTSecretName: "foo"},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
 			nil,
 		},
 		{
-			AuthenticationSpec{JWTSecretName: "foo"},
-			AuthenticationSpec{JWTSecretName: "foo2"},
-			AuthenticationSpec{JWTSecretName: "foo2"},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo2")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo2")},
 			nil,
 		},
 
 		// Invalid changes
 		{
-			AuthenticationSpec{JWTSecretName: "foo"},
-			AuthenticationSpec{JWTSecretName: "None"},
-			AuthenticationSpec{JWTSecretName: "foo"},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
 			[]string{"test.jwtSecretName"},
 		},
 		{
-			AuthenticationSpec{JWTSecretName: "None"},
-			AuthenticationSpec{JWTSecretName: "foo"},
-			AuthenticationSpec{JWTSecretName: "None"},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
+			AuthenticationSpec{JWTSecretName: util.NewString("foo")},
+			AuthenticationSpec{JWTSecretName: util.NewString("None")},
 			[]string{"test.jwtSecretName"},
 		},
 	}

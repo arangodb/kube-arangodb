@@ -46,3 +46,27 @@ func (se StorageEngine) Validate() error {
 		return maskAny(errors.Wrapf(ValidationError, "Unknown storage engine: '%s'", string(se)))
 	}
 }
+
+// NewStorageEngine returns a reference to a string with given value.
+func NewStorageEngine(input StorageEngine) *StorageEngine {
+	return &input
+}
+
+// NewStorageEngineOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewStorageEngineOrNil(input *StorageEngine) *StorageEngine {
+	if input == nil {
+		return nil
+	}
+	return NewStorageEngine(*input)
+}
+
+// StorageEngineOrDefault returns the default value (or empty string) if input is nil, otherwise returns the referenced value.
+func StorageEngineOrDefault(input *StorageEngine, defaultValue ...StorageEngine) StorageEngine {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return ""
+	}
+	return *input
+}
