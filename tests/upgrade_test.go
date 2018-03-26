@@ -30,6 +30,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	arangod "github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
@@ -78,7 +79,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
-	deploymentTemplate.Spec.Image = "arangodb/arangodb:" + fromVersion
+	deploymentTemplate.Spec.Image = util.NewString("arangodb/arangodb:" + fromVersion)
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
 
 	// Create deployment
@@ -89,15 +90,14 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 
 	// Wait for deployment to be ready
 	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentHasState(api.DeploymentStateRunning))
-
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Try to change image version
-	updated, err = updateDeployment(c, depl.GetName(), ns,
+	deployment, err = updateDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace,
 		func(spec *api.DeploymentSpec) {
-			spec.Image = "arangodb/arangodb:" + toVersion
+			spec.Image = util.NewString("arangodb/arangodb:" + toVersion)
 		})
 	if err != nil {
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
@@ -139,18 +139,30 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 				t.Fatal("Unable to create connection to: %v", agent.ID)
 			}
 			if waitUntilVersionUp(dbclient) != nil {
-				t.Fatal("Version check failed for: %v", single.ID)
+				t.Fatal("Version check failed for: %v", agent.ID)
 			}
 		}
+
+		var goodResults, noLeaderResults int
 		for _, single := range singles {
 			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, single.ID)
 			if err != nil {
 				t.Fatal("Unable to create connection to: %v", single.ID)
 			}
-			if waitUntilVersionUp(dbclient) != nil {
+
+			if err := waitUntilVersionUp(dbclient, true); err == nil {
+				goodResults++
+			} else if driver.IsNoLeader(err) {
+				noLeaderResults++
+			} else {
 				t.Fatal("Version check failed for: %v", single.ID)
 			}
 		}
+
+		if goodResults < 1 || noLeaderResults > 1 {
+			t.Fatal("Wrong number of results: good %v - noleader %v", goodResults, noLeaderResults)
+		}
+
 	default:
 		t.Fatalf("DeploymentMode %v is not supported!", mode)
 	}
