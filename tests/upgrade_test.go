@@ -23,6 +23,7 @@ package tests
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -74,7 +75,11 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	deploymentTemplate := newDeployment("test-upgrade-" + string(mode) + "-" + string(engine) + "-" + fromVersion + "to" + toVersion + "-" + uniuri.NewLen(4))
+	deploymentName := "test-upgrade-" + string(mode) + "-" + string(engine)
+	deploymentName += "-" + strings.Replace(fromVersion, ".", "-", -1)
+	deploymentName += "to" + strings.Replace(toVersion, ".", "-", -1)
+	deploymentName += "-" + uniuri.NewLen(4)
+	deploymentTemplate := newDeployment(deploymentName)
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
