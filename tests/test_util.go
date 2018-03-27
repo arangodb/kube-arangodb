@@ -206,7 +206,8 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 }
 
 // waitUntilVersionUp waits until the arango database responds to
-// an `/_api/version` request without an error.
+// an `/_api/version` request without an error. An additional Predicate
+// can do a check on the VersionInfo object returned by the server.
 func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) error, allowNoLeaderResponse ...bool) error {
 	var (
 		noLeaderErr error
@@ -240,6 +241,23 @@ func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) er
 	}
 
 	return nil
+}
+
+// creates predicate to be used in waitUntilVersionUp
+func createEqualVersionsPredicate(info driver.VersionInfo) func(driver.VersionInfo) error {
+	return func(infoFromServer driver.VersionInfo) error {
+		if (info.Version.CompareTo(infoFromServer.Version)) != 0 {
+			return maskAny(fmt.Errorf("given version %v and version from server %v do not match", info.Version, infoFromServer.Version))
+		}
+		return nil
+	}
+}
+
+// creates predicate to be used in waitUntilVersionUp
+func createEqualVersionsPredicateFromString(version_string string) func(driver.VersionInfo) error {
+	var info driver.VersionInfo
+	info.Version = driver.Version(version_string)
+	return createEqualVersionsPredicate(info)
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches
