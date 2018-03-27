@@ -52,12 +52,10 @@ type ArangoLocalStorage struct {
 
 // AsOwner creates an OwnerReference for the given storage
 func (d *ArangoLocalStorage) AsOwner() metav1.OwnerReference {
-	controller := true
 	return metav1.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       ArangoLocalStorageResourceKind,
 		Name:       d.Name,
 		UID:        d.UID,
-		Controller: &controller,
 	}
 }
