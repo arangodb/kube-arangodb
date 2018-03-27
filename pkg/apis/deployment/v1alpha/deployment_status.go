@@ -50,4 +50,8 @@ type DeploymentStatus struct {
 
 	// AcceptedSpec contains the last specification that was accepted by the operator.
 	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
+
+	// SecretHashes keeps a sha256 hash of secret values, so we can
+	// detect changes in secret values.
+	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
 }

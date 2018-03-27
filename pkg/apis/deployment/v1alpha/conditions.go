@@ -37,6 +37,10 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+	// ConditionTypeSecretsChanged indicates that the value of one of more secrets used by
+	// the deployment have changed. Once that is the case, the operator will no longer
+	// touch the deployment, until the original secrets have been restored.
+	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

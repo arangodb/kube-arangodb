@@ -26,6 +26,7 @@ import (
 	"context"
 	"time"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -37,11 +38,29 @@ import (
 // - once in a while
 // Returns the delay until this function should be called again.
 func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration {
-	//	log := d.deps.Log
+	log := d.deps.Log
 
 	nextInterval := lastInterval
 	hasError := false
 	ctx := context.Background()
+
+	// Is the deployment in failed state, if so, give up.
+	if d.status.State == api.DeploymentStateFailed {
+		log.Debug().Msg("Deployment is in Failed state.")
+		return nextInterval
+	}
+
+	// Inspect secret hashes
+	if err := d.resources.ValidateSecretHashes(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Secret hash validation failed", err, d.apiObject))
+	}
+
+	// Is the deployment in a good state?
+	if d.status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
+		log.Debug().Msg("Condition SecretsChanged is true. Revert secrets before we can continue")
+		return nextInterval
+	}
 
 	// Ensure we have image info
 	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
