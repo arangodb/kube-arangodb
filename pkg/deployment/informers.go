@@ -112,6 +112,49 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 	informer.Run(stopCh)
 }
 
+// listenForSecretEvents keep listening for changes in Secrets's until the given channel is closed.
+func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
+	source := cache.NewListWatchFromClient(
+		d.deps.KubeCli.CoreV1().RESTClient(),
+		"secrets",
+		d.apiObject.GetNamespace(),
+		fields.Everything())
+
+	getSecret := func(obj interface{}) (*v1.Secret, bool) {
+		secret, ok := obj.(*v1.Secret)
+		if !ok {
+			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+			if !ok {
+				return nil, false
+			}
+			secret, ok = tombstone.Obj.(*v1.Secret)
+			return secret, ok
+		}
+		return secret, true
+	}
+
+	_, informer := cache.NewIndexerInformer(source, &v1.Secret{}, 0, cache.ResourceEventHandlerFuncs{
+		// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
+		AddFunc: func(obj interface{}) {
+			if _, ok := getSecret(obj); ok {
+				d.triggerInspection()
+			}
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			if _, ok := getSecret(newObj); ok {
+				d.triggerInspection()
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			if _, ok := getSecret(obj); ok {
+				d.triggerInspection()
+			}
+		},
+	}, cache.Indexers{})
+
+	informer.Run(stopCh)
+}
+
 // listenForServiceEvents keep listening for changes in Service's until the given channel is closed.
 func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 	source := cache.NewListWatchFromClient(
