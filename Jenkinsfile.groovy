@@ -24,6 +24,8 @@ def myParams = [:];
 def fetchParamsFromGitLog() {
     // Copy configured params 
     for (entry in params) {
+        println("Fetching entry from params: ${entry}");
+        println("Fetching entry from params: key=${entry.key}, value=${entry.value}");
         myParams[entry.key] = entry.value;
     }
 
