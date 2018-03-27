@@ -32,7 +32,7 @@ func TestSimpleSingle(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestSimpleCluster(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}

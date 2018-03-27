@@ -35,7 +35,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -88,7 +88,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -134,7 +134,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -171,7 +171,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -224,7 +224,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -270,7 +270,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 

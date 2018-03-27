@@ -56,7 +56,7 @@ func TestImmutableFields(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
