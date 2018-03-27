@@ -24,8 +24,8 @@ package v1alpha
 
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
-	// State holds the current state of the deployment
-	State DeploymentState `json:"state"`
+	// Phase holds the current lifetime phase of the deployment
+	Phase DeploymentPhase `json:"phase"`
 	// Reason contains a human readable reason for reaching the current state (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current state
 

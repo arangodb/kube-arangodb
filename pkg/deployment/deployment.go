@@ -167,7 +167,7 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
-	if d.status.State == api.DeploymentStateNone {
+	if d.status.Phase == api.DeploymentPhaseNone {
 		// Create secrets
 		if err := d.resources.EnsureSecrets(); err != nil {
 			d.failOnError(err, "Failed to create secrets")
@@ -198,7 +198,7 @@ func (d *Deployment) run() {
 			return
 		}
 
-		d.status.State = api.DeploymentStateRunning
+		d.status.Phase = api.DeploymentPhaseRunning
 		if err := d.updateCRStatus(); err != nil {
 			log.Warn().Err(err).Msg("update initial CR status failed")
 		}
@@ -402,7 +402,7 @@ func (d *Deployment) reportFailedStatus() {
 	log.Info().Msg("deployment failed. Reporting failed reason...")
 
 	op := func() error {
-		d.status.State = api.DeploymentStateFailed
+		d.status.Phase = api.DeploymentPhaseFailed
 		err := d.updateCRStatus()
 		if err == nil || k8sutil.IsNotFound(err) {
 			// Status has been updated

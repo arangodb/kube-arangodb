@@ -142,14 +142,9 @@ func (r *Resources) InspectPods() error {
 		return nil
 	})
 
-	// Check overall status update
-	switch status.State {
-	case api.DeploymentStateCreating:
-		if status.Members.AllMembersReady() {
-			status.State = api.DeploymentStateRunning
-		}
-		// TODO handle other State values
-	}
+	// Update overall conditions
+	allMembersReady := status.Members.AllMembersReady()
+	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
 
 	// Save status
 	if err := r.context.UpdateStatus(status); err != nil {

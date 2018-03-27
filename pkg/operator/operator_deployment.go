@@ -136,7 +136,7 @@ func (o *Operator) syncArangoDeployment(apiObject *api.ArangoDeployment) {
 func (o *Operator) handleDeploymentEvent(event *Event) error {
 	apiObject := event.Deployment
 
-	if apiObject.Status.State.IsFailed() {
+	if apiObject.Status.Phase.IsFailed() {
 		deploymentsFailed.Inc()
 		if event.Type == kwatch.Deleted {
 			delete(o.deployments, apiObject.Name)
