@@ -238,10 +238,10 @@ func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) er
 }
 
 // creates predicate to be used in waitUntilVersionUp
-func createEqualVersionsPredicate(info driver.Version) func(driver.VersionInfo) error {
+func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInfo) error {
 	return func(infoFromServer driver.VersionInfo) error {
-		if (info.CompareTo(infoFromServer.Version)) != 0 {
-			return maskAny(fmt.Errorf("given version %v and version from server %v do not match", info, infoFromServer.Version))
+		if version.CompareTo(infoFromServer.Version) != 0 {
+			return maskAny(fmt.Errorf("given version %v and version from server %v do not match", version, infoFromServer.Version))
 		}
 		return nil
 	}
