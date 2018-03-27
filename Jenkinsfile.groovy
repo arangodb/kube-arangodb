@@ -83,10 +83,10 @@ def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
 }
 
 node {
-    options {
+    /*options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
         lock resource: 'kube-arangodb'
-    }
+    }*/
 //    agent any
     parameters {
       booleanParam(name: 'LONG', defaultValue: false, description: 'Execute long running tests')
