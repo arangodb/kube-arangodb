@@ -96,7 +96,7 @@ node {
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
     def myParams = [:];
-    stages {
+    //stages {
         stage("Prepare") {
             steps {
                 script {
@@ -133,7 +133,7 @@ node {
                 }
             }
         }
-    }
+    //}
 
     post {
         always {
