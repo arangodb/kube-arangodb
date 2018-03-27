@@ -95,7 +95,7 @@ pipeline {
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
-    def myParams;
+    def myParams = [:];
     stages {
         stage("Prepare") {
             steps {
