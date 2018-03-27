@@ -22,6 +22,7 @@
 package tests
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -29,8 +30,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 )
-
-// TODO - environments (provided from outside)
 
 // test deployment single server mmfiles
 func TestDeploymentSingleMMFiles(t *testing.T) {
@@ -89,7 +88,13 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
-	arangoDeploymentHealthy(t, deployment, k8sClient)
+	// Create a database client
+	ctx := context.Background()
+	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
+
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+		t.Fatalf("Deployment not healthy in time: %v", err)
+	}
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)

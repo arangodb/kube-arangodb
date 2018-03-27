@@ -34,8 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// TODO - environments (provided from outside)
-
 // test upgrade single server mmfiles 3.2 -> 3.3
 func TestUpgradeSingleMMFiles32to33(t *testing.T) {
 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.2.12", "3.3.3")
@@ -98,7 +96,13 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
-	arangoDeploymentHealthy(t, deployment, k8sClient)
+	// Create a database client
+	ctx := context.Background()
+	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
+
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+		t.Fatalf("Deployment not healthy in time: %v", err)
+	}
 
 	// Try to change image version
 	deployment, err = updateDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace,
@@ -109,10 +113,10 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
 	}
 
-	arangoDeploymentHealthy(t, deployment, k8sClient)
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+		t.Fatalf("Deployment not healthy in time: %v", err)
+	}
 
-	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
 	DBClient.Version(ctx)
 	if vInfo, err := DBClient.Version(ctx); err != nil {
 		t.Fatalf("Failed to receive version: %v", err)

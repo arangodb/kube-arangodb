@@ -298,11 +298,7 @@ func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
 	return nil
 }
 
-func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8sClient kubernetes.Interface) {
-	// Create a database client
-	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-
+func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface) error {
 	// deployment checks
 	switch mode := deployment.Spec.GetMode(); mode {
 	case api.DeploymentModeCluster:
@@ -310,15 +306,15 @@ func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8s
 		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
 			return clusterHealthEqualsSpec(h, deployment.Spec)
 		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
+			return maskAny(fmt.Errorf("Cluster not running in expected health in time: %v", err))
 		}
 	case api.DeploymentModeSingle:
 		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
+			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 	case api.DeploymentModeResilientSingle:
 		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
+			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 
 		members := deployment.Status.Members
@@ -326,17 +322,19 @@ func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8s
 		agents := members.Agents
 
 		if len(singles) != 2 || len(agents) != 3 {
-			t.Fatalf("Wrong number of servers: single %v - agents %v", len(singles), len(agents))
+			return maskAny(fmt.Errorf("Wrong number of servers: single %v - agents %v", len(singles), len(agents)))
 		}
+
+		ctx := context.Background()
 
 		for _, agent := range agents {
 			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, agent.ID)
 			if err != nil {
-				t.Fatalf("Unable to create connection to: %v", agent.ID)
+				return maskAny(fmt.Errorf("Unable to create connection to: %v", agent.ID))
 			}
 
 			if err := waitUntilVersionUp(dbclient); err != nil {
-				t.Fatalf("Version check failed for: %v", agent.ID)
+				return maskAny(fmt.Errorf("Version check failed for: %v", agent.ID))
 			}
 		}
 
@@ -344,7 +342,7 @@ func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8s
 		for _, single := range singles {
 			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupSingle, single.ID)
 			if err != nil {
-				t.Fatalf("Unable to create connection to: %v", single.ID)
+				return maskAny(fmt.Errorf("Unable to create connection to: %v", single.ID))
 			}
 
 			if err := waitUntilVersionUp(dbclient, true); err == nil {
@@ -352,14 +350,15 @@ func arangoDeploymentHealthy(t *testing.T, deployment *api.ArangoDeployment, k8s
 			} else if driver.IsNoLeader(err) {
 				noLeaderResults++
 			} else {
-				t.Fatalf("Version check failed for: %v", single.ID)
+				return maskAny(fmt.Errorf("Version check failed for: %v", single.ID))
 			}
 		}
 
 		if goodResults < 1 || noLeaderResults > 1 {
-			t.Fatalf("Wrong number of results: good %v - noleader %v", goodResults, noLeaderResults)
+			return maskAny(fmt.Errorf("Wrong number of results: good %v - noleader %v", goodResults, noLeaderResults))
 		}
 	default:
-		t.Fatalf("DeploymentMode %v is not supported!", mode)
+		return maskAny(fmt.Errorf("DeploymentMode %v is not supported!", mode))
 	}
+	return nil
 }
