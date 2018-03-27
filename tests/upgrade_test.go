@@ -27,6 +27,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dchest/uniuri"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -70,9 +72,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	k8sClient := mustNewKubeClient(t)
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
-	// Prepare deployment config
-
-	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("test-upgrade-%s-%s-%sto%s", mode, engine, fromVersion, toVersion), ".", "-", -1))
+	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%st%s-%s", mode[:2], engine[:2], fromVersion, toVersion, uniuri.NewLen(4)), ".", "", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
@@ -106,6 +106,11 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		})
 	if err != nil {
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
+	}
+
+	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentHasState(api.DeploymentStateRunning))
+	if err != nil {
+		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, toVersion); err != nil {
