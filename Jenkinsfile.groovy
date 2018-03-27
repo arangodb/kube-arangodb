@@ -19,6 +19,19 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
+def fetchParamsFromGitLog() {
+    def options = sh(returnStdout: true, script: "git log --reverse master..HEAD | grep -o '\[ci[^\[]*\]' | sed -E 's/\[ci (.*)\]/\1/'").trim().split("\n")
+    for (opt in options) {
+        def idx = opt.indexOf('=');
+        if (idx > 0) {
+            def key = opt.subString(0, idx);
+            def value = opt.subString(idx+1);
+            params[key] = value;
+            println("Overwriting params.${key} with ${value}");
+        }
+    }
+}
+
 def kubeConfigRoot = "/home/jenkins/.kube"
 
 def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
@@ -32,6 +45,7 @@ def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
                 "IMAGETAG=jenkins-test",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
                 "LONG=${params.LONG ? 1 : 0}",
+                "TESTOPTIONS=${params.TESTOPTIONS}",
                 ]) {
                     sh "make run-tests"
                 }
@@ -68,6 +82,13 @@ pipeline {
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
     stages {
+        stage("Prepare") {
+            steps {
+                script {
+                    fetchParamsFromGitLog()
+                }
+            }
+        }
         stage('Build') {
             steps {
                 timestamps {
@@ -76,6 +97,7 @@ pipeline {
                     "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
                     "IMAGETAG=jenkins-test",
                     "LONG=${params.LONG ? 1 : 0}",
+                    "TESTOPTIONS=${params.TESTOPTIONS}",
                     ]) {
                         sh "make"
                         sh "make run-unit-tests"
