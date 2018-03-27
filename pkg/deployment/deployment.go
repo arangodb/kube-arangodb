@@ -120,6 +120,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	go d.run()
 	go d.listenForPodEvents(d.stopCh)
 	go d.listenForPVCEvents(d.stopCh)
+	go d.listenForSecretEvents(d.stopCh)
 	go d.listenForServiceEvents(d.stopCh)
 	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
