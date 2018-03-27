@@ -26,8 +26,8 @@ def fetchParamsFromGitLog() {
         def idx = opt.indexOf('=');
         println("Processing option ${opt} with idx=${idx}");
         if (idx > 0) {
-            def key = opt.subString(0, idx);
-            def value = opt.subString(idx+1);
+            def key = opt.substring(0, idx);
+            def value = opt.substring(idx+1);
             params[key] = value;
             println("Overwriting params.${key} with ${value}");
         }
