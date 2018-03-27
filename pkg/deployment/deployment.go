@@ -170,32 +170,27 @@ func (d *Deployment) run() {
 	if d.status.Phase == api.DeploymentPhaseNone {
 		// Create secrets
 		if err := d.resources.EnsureSecrets(); err != nil {
-			d.failOnError(err, "Failed to create secrets")
-			return
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create secrets", err, d.GetAPIObject()))
 		}
 
 		// Create services
 		if err := d.resources.EnsureServices(); err != nil {
-			d.failOnError(err, "Failed to create services")
-			return
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create services", err, d.GetAPIObject()))
 		}
 
 		// Create members
 		if err := d.createInitialMembers(d.apiObject); err != nil {
-			d.failOnError(err, "Failed to create initial members")
-			return
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
 		}
 
 		// Create PVCs
 		if err := d.resources.EnsurePVCs(); err != nil {
-			d.failOnError(err, "Failed to create persistent volume claims")
-			return
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create persistent volume claims", err, d.GetAPIObject()))
 		}
 
 		// Create pods
 		if err := d.resources.EnsurePods(); err != nil {
-			d.failOnError(err, "Failed to create pods")
-			return
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pods", err, d.GetAPIObject()))
 		}
 
 		d.status.Phase = api.DeploymentPhaseRunning
@@ -226,8 +221,7 @@ func (d *Deployment) run() {
 
 		case <-d.updateDeploymentTrigger.Done():
 			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
-				d.failOnError(err, "Failed to handle deployment update")
-				return
+				d.CreateEvent(k8sutil.NewErrorEvent("Failed to handle deployment update", err, d.GetAPIObject()))
 			}
 
 		case <-time.After(inspectionInterval):
@@ -389,6 +383,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
 }
 
 // failOnError reports the given error and sets the deployment status to failed.
+// Since there is no recovery from a failed deployment, use with care!
 func (d *Deployment) failOnError(err error, msg string) {
 	log.Error().Err(err).Msg(msg)
 	d.status.Reason = err.Error()
