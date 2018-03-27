@@ -36,9 +36,15 @@ def fetchParamsFromGitLog() {
             def key = opt.substring(0, idx);
             def value = opt.substring(idx+1).replaceAll('^\"|\"$', '');
             myParams[key] = value;
-            println("Overwriting myParams.${key} with ${value}");
+            //println("Overwriting myParams.${key} with ${value}");
         }
     }
+
+    // Show params in log
+    for (entry in myParams) {
+        println("Using myParams.${entry.key} with ${entry.value}");
+    }
+
     return myParams;
 }
 
