@@ -22,7 +22,9 @@ def notifySlack(String buildStatus = 'STARTED') {
 def fetchParamsFromGitLog() {
     def options = sh(returnStdout: true, script: "git log --reverse remotes/origin/master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
     for (opt in options) {
+        println("Processing option ${opt}");
         def idx = opt.indexOf('=');
+        println("Processing option ${opt} with idx=${idx}");
         if (idx > 0) {
             def key = opt.subString(0, idx);
             def value = opt.subString(idx+1);
