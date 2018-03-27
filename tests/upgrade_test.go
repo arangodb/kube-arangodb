@@ -38,32 +38,32 @@ import (
 
 // test upgrade single server mmfiles 3.2 -> 3.3
 func TestUpgradeSingleMMFiles32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.2.0", "3.3.3")
+	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.2.12", "3.3.3")
 }
 
 // test upgrade single server rocksdb 3.3 -> 3.4
 func TestUpgradeSingleRocksDB33to34(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB, "3.3.0", "3.4")
+	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB, "3.3.3", "3.4.0")
 }
 
 // test upgrade resilient single server rocksdb 3.2 -> 3.3
 func TestUpgradeResilientSingleRocksDB32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB, "3.2.0", "3.3.3")
+	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB, "3.2.12", "3.3.3")
 }
 
 // test upgrade resilient single server mmfiles 3.3 -> 3.4
 func TestUpgradeResilientSingleMMFiles33to34(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineMMFiles, "3.3.0", "3.4")
+	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineMMFiles, "3.3.0", "3.4.0")
 }
 
 // test upgrade cluster rocksdb 3.2 -> 3.3
 func TestUpgradeClusterRocksDB32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.0", "3.3.3")
+	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.12", "3.3.3")
 }
 
 // test upgrade cluster mmfiles 3.3 -> 3.4
 func TestUpgradeClusterMMFiles33to34(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.0", "3.4")
+	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.12", "3.4.0")
 }
 
 func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromVersion, toVersion string) error {
