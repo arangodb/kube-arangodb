@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -55,7 +56,8 @@ func (r *Resources) InspectPods() error {
 	// Update member status from all pods found
 	status := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
-	podWithScheduleTimeout := 0
+	var podNamesWithScheduleTimeout []string
+	var unscheduledPodNames []string
 	for _, p := range pods {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(p) {
 			// Image ID pods are not relevant to inspect here
@@ -102,7 +104,10 @@ func (r *Resources) InspectPods() error {
 		}
 		if k8sutil.IsPodNotScheduledFor(&p, podScheduleTimeout) {
 			// Pod cannot be scheduled for to long
-			podWithScheduleTimeout++
+			log.Debug().Str("pod-name", p.GetName()).Msg("Pod scheduling timeout")
+			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, p.GetName())
+		} else if !k8sutil.IsPodScheduled(&p) {
+			unscheduledPodNames = append(unscheduledPodNames, p.GetName())
 		}
 		if updateMemberStatusNeeded {
 			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
@@ -160,6 +165,22 @@ func (r *Resources) InspectPods() error {
 			status.State = api.DeploymentStateRunning
 		}
 		// TODO handle other State values
+	}
+
+	// Update conditions
+	if len(podNamesWithScheduleTimeout) > 0 {
+		if status.Conditions.Update(api.ConditionTypePodSchedulingFailure, true,
+			"Pods Scheduling Timeout",
+			fmt.Sprintf("The following pods cannot be scheduled: %v", podNamesWithScheduleTimeout)) {
+			r.context.CreateEvent(k8sutil.NewPodsSchedulingFailureEvent(podNamesWithScheduleTimeout, r.context.GetAPIObject()))
+		}
+	} else if status.Conditions.IsTrue(api.ConditionTypePodSchedulingFailure) &&
+		len(unscheduledPodNames) == 0 {
+		if status.Conditions.Update(api.ConditionTypePodSchedulingFailure, false,
+			"Pods Scheduling Resolved",
+			"No pod reports a scheduling timeout") {
+			r.context.CreateEvent(k8sutil.NewPodsSchedulingResolvedEvent(r.context.GetAPIObject()))
+		}
 	}
 
 	// Save status

@@ -37,6 +37,8 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+	// ConditionTypePodSchedulingFailure indicates that one or more pods belonging to the deployment cannot be schedule.
+	ConditionTypePodSchedulingFailure ConditionType = "PodSchedulingFailure"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

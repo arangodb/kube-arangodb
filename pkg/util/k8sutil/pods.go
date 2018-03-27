@@ -88,13 +88,19 @@ func IsPodFailed(pod *v1.Pod) bool {
 	return pod.Status.Phase == v1.PodFailed
 }
 
+// IsPodScheduled returns true if the pod has been scheduled.
+func IsPodScheduled(pod *v1.Pod) bool {
+	condition := getPodCondition(&pod.Status, v1.PodScheduled)
+	return condition != nil && condition.Status == v1.ConditionTrue
+}
+
 // IsPodNotScheduledFor returns true if the pod has not been scheduled
 // for longer than the given duration.
 func IsPodNotScheduledFor(pod *v1.Pod, timeout time.Duration) bool {
 	condition := getPodCondition(&pod.Status, v1.PodScheduled)
 	return condition != nil &&
-		condition.Status == v1.ConditionTrue &&
-		condition.LastTransitionTime.Time.Add(timeout).After(time.Now())
+		condition.Status == v1.ConditionFalse &&
+		condition.LastTransitionTime.Time.Add(timeout).Before(time.Now())
 }
 
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
