@@ -82,12 +82,12 @@ def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     }
 }
 
-pipeline {
+node {
     options {
         buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10'))
         lock resource: 'kube-arangodb'
     }
-    agent any
+//    agent any
     parameters {
       booleanParam(name: 'LONG', defaultValue: false, description: 'Execute long running tests')
       string(name: 'DOCKERNAMESPACE', defaultValue: 'arangodb', description: 'DOCKERNAMESPACE sets the docker registry namespace in which the operator docker image will be pushed', )
