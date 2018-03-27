@@ -34,7 +34,7 @@ def fetchParamsFromGitLog() {
         def idx = opt.indexOf('=');
         if (idx > 0) {
             def key = opt.substring(0, idx);
-            def value = opt.substring(idx+1);
+            def value = opt.substring(idx+1).replaceAll("^\"|\"$", "");
             myParams[key] = value;
             println("Overwriting myParams.${key} with ${value}");
         }
