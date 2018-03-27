@@ -28,7 +28,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	driver "github.com/arangodb/go-driver"
+	//driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -113,15 +113,8 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
 	}
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, toVersion); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
-	}
-
-	DBClient.Version(ctx)
-	if vInfo, err := DBClient.Version(ctx); err != nil {
-		t.Fatalf("Failed to receive version: %v", err)
-	} else if vInfo.Version.CompareTo(driver.Version(toVersion)) != 0 {
-		t.Fatalf("version %v returned by _api/version does not match specified version %v", vInfo.Version, toVersion)
 	}
 
 	// Cleanup

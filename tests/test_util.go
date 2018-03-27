@@ -324,8 +324,12 @@ func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
 	return nil
 }
 
-func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface) error {
+func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface, versionString ...string) error {
 	// deployment checks
+	var checkVersionPredicate func(driver.VersionInfo) error
+	if len(versionString) > 0 {
+		checkVersionPredicate = createEqualVersionsPredicateFromString(versionString[0])
+	}
 	switch mode := deployment.Spec.GetMode(); mode {
 	case api.DeploymentModeCluster:
 		// Wait for cluster to be completely ready
@@ -335,11 +339,11 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 			return maskAny(fmt.Errorf("Cluster not running in expected health in time: %v", err))
 		}
 	case api.DeploymentModeSingle:
-		if err := waitUntilVersionUp(DBClient, nil); err != nil {
+		if err := waitUntilVersionUp(DBClient, checkVersionPredicate); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 	case api.DeploymentModeResilientSingle:
-		if err := waitUntilVersionUp(DBClient, nil); err != nil {
+		if err := waitUntilVersionUp(DBClient, checkVersionPredicate); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 
@@ -359,7 +363,7 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				return maskAny(fmt.Errorf("Unable to create connection to: %v", agent.ID))
 			}
 
-			if err := waitUntilVersionUp(dbclient, nil); err != nil {
+			if err := waitUntilVersionUp(dbclient, checkVersionPredicate); err != nil {
 				return maskAny(fmt.Errorf("Version check failed for: %v", agent.ID))
 			}
 		}
@@ -371,7 +375,7 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				return maskAny(fmt.Errorf("Unable to create connection to: %v", single.ID))
 			}
 
-			if err := waitUntilVersionUp(dbclient, nil, true); err == nil {
+			if err := waitUntilVersionUp(dbclient, checkVersionPredicate, true); err == nil {
 				goodResults++
 			} else if driver.IsNoLeader(err) {
 				noLeaderResults++
