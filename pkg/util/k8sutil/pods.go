@@ -25,6 +25,7 @@ package k8sutil
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,6 +86,15 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 // have terminated and at least one of them wih a non-zero exit code.
 func IsPodFailed(pod *v1.Pod) bool {
 	return pod.Status.Phase == v1.PodFailed
+}
+
+// IsPodNotScheduledFor returns true if the pod has not been scheduled
+// for longer than the given duration.
+func IsPodNotScheduledFor(pod *v1.Pod, timeout time.Duration) bool {
+	condition := getPodCondition(&pod.Status, v1.PodScheduled)
+	return condition != nil &&
+		condition.Status == v1.ConditionTrue &&
+		condition.LastTransitionTime.Time.Add(timeout).After(time.Now())
 }
 
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
