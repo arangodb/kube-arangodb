@@ -33,7 +33,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestImmutableFields tests that several immutable fields in the deployment
@@ -89,24 +88,27 @@ func TestImmutableFields(t *testing.T) {
 		t.Errorf("StorageEngine parameter is immutable: %v", err)
 	}
 
-	// Try to reset the RocksDB encryption key ==================================
-	if _, err := updateDeployment(c, depl.GetName(), ns,
-		func(spec *api.DeploymentSpec) {
-			spec.RocksDB.Encryption.KeySecretName = util.NewString("foobarbaz")
-		}); err != nil {
-		t.Fatalf("Failed to update the RocksDB encryption key: %v", err)
-	}
+	/*
+		 Secrets are a special case that we'll deal with later
+		// Try to reset the RocksDB encryption key ==================================
+		if _, err := updateDeployment(c, depl.GetName(), ns,
+			func(spec *api.DeploymentSpec) {
+				spec.RocksDB.Encryption.KeySecretName = util.NewString("foobarbaz")
+			}); err != nil {
+			t.Fatalf("Failed to update the RocksDB encryption key: %v", err)
+		}
 
-	// Wait for deployment mode to be set back to cluster
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
-		func(depl *api.ArangoDeployment) error {
-			if util.StringOrDefault(depl.Spec.RocksDB.Encryption.KeySecretName) == "test.encryption.keySecretName" {
-				return nil
-			}
-			return fmt.Errorf("RocksDB encryption key not back to %s", "test.encryption.keySecretName")
-		}, revertTimeout); err != nil {
-		t.Errorf("RocksDB encryption key is mutable: %v", err)
-	}
+		// Wait for deployment mode to be set back to cluster
+		if _, err := waitUntilDeployment(c, depl.GetName(), ns,
+			func(depl *api.ArangoDeployment) error {
+				if util.StringOrDefault(depl.Spec.RocksDB.Encryption.KeySecretName) == "test.encryption.keySecretName" {
+					return nil
+				}
+				return fmt.Errorf("RocksDB encryption key not back to %s", "test.encryption.keySecretName")
+			}, revertTimeout); err != nil {
+			t.Errorf("RocksDB encryption key is mutable: %v", err)
+		}
+	*/
 
 	// Try to reset the deployment type ==========================================
 	if _, err := updateDeployment(c, depl.GetName(), ns,
