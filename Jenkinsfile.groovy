@@ -19,9 +19,8 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
-def myParams = [:];
-
 def fetchParamsFromGitLog() {
+    def myParams = [:];
     // Copy configured params 
     for (entry in params) {
         println("Fetching entry from params: ${entry}");
@@ -44,11 +43,12 @@ def fetchParamsFromGitLog() {
             println("Overwriting myParams.${key} with ${value}");
         }
     }
+    return myParams;
 }
 
 def kubeConfigRoot = "/home/jenkins/.kube"
 
-def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
+def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
@@ -68,7 +68,7 @@ def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
     }
 }
 
-def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
+def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
@@ -95,11 +95,12 @@ pipeline {
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
+    def myParams;
     stages {
         stage("Prepare") {
             steps {
                 script {
-                    fetchParamsFromGitLog()
+                    myParams = fetchParamsFromGitLog();
                 }
             }
         }
@@ -126,7 +127,7 @@ pipeline {
                     def configs = "${myParams['KUBECONFIGS']}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
-                        testTasks["${kubeconfig}"] = buildTestSteps(kubeConfigRoot, kubeconfig)
+                        testTasks["${kubeconfig}"] = buildTestSteps(myParams, kubeConfigRoot, kubeconfig)
                     }
                     parallel testTasks
                 }
@@ -140,7 +141,7 @@ pipeline {
                 def configs = "${myParams['KUBECONFIGS']}".split(",")
                 def cleanupTasks = [:]
                 for (kubeconfig in configs) {
-                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeConfigRoot, kubeconfig)
+                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(myParams, kubeConfigRoot, kubeconfig)
                 }
                 parallel cleanupTasks
             }
