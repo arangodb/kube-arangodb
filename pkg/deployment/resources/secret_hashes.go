@@ -75,7 +75,10 @@ func (r *Resources) ValidateSecretHashes() error {
 		}
 		if hash != expectedHash {
 			// Oops, hash has changed
-			log.Error().Msg("Secret has changed. You must revert it to the original value!")
+			log.Debug().
+				Str("expected-hash", expectedHash).
+				Str("new-hash", hash).
+				Msg("Secret has changed.")
 			// This is not good, return false so SecretsChanged condition will be set.
 			return false, nil
 		}
@@ -139,7 +142,7 @@ func (r *Resources) ValidateSecretHashes() error {
 	} else {
 		// All good, we van remove the SecretsChanged condition
 		if status.Conditions.Remove(api.ConditionTypeSecretsChanged) {
-			log.Warn().Msg("Resetting SecretsChanged condition")
+			log.Info().Msg("Resetting SecretsChanged condition")
 			if err := r.context.UpdateStatus(status); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
 				return maskAny(err)
