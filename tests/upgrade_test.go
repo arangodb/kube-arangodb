@@ -23,12 +23,10 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/dchest/uniuri"
-
-	//driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -73,11 +71,8 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	deploymentName := "test-upgrade-" + string(mode) + "-" + string(engine)
-	deploymentName += "-" + strings.Replace(fromVersion, ".", "-", -1)
-	deploymentName += "to" + strings.Replace(toVersion, ".", "-", -1)
-	deploymentName += "-" + uniuri.NewLen(4)
-	deploymentTemplate := newDeployment(deploymentName)
+
+	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("test-upgrade-%s-%s-%sto%s", mode, engine, fromVersion, toVersion), ".", "-", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
@@ -100,7 +95,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 

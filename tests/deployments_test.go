@@ -92,7 +92,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 

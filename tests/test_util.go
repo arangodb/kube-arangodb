@@ -209,20 +209,18 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 // an `/_api/version` request without an error. An additional Predicate
 // can do a check on the VersionInfo object returned by the server.
 func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) error, allowNoLeaderResponse ...bool) error {
-	var (
-		noLeaderErr error
-		vInfo       driver.VersionInfo
-	)
+	var noLeaderErr error
 	allowNoLead := len(allowNoLeaderResponse) > 0 && allowNoLeaderResponse[0]
 	ctx := context.Background()
 
 	op := func() error {
 		if version, err := cli.Version(ctx); allowNoLead && driver.IsNoLeader(err) {
 			noLeaderErr = err
-			vInfo = version
 			return nil //return nil to make the retry below pass
 		} else if err != nil {
 			return maskAny(err)
+		} else if predicate != nil {
+			return predicate(version)
 		}
 		return nil
 	}
@@ -236,28 +234,17 @@ func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) er
 		return maskAny(noLeaderErr)
 	}
 
-	if predicate != nil {
-		return predicate(vInfo)
-	}
-
 	return nil
 }
 
 // creates predicate to be used in waitUntilVersionUp
-func createEqualVersionsPredicate(info driver.VersionInfo) func(driver.VersionInfo) error {
+func createEqualVersionsPredicate(info driver.Version) func(driver.VersionInfo) error {
 	return func(infoFromServer driver.VersionInfo) error {
-		if (info.Version.CompareTo(infoFromServer.Version)) != 0 {
-			return maskAny(fmt.Errorf("given version %v and version from server %v do not match", info.Version, infoFromServer.Version))
+		if (info.CompareTo(infoFromServer.Version)) != 0 {
+			return maskAny(fmt.Errorf("given version %v and version from server %v do not match", info, infoFromServer.Version))
 		}
 		return nil
 	}
-}
-
-// creates predicate to be used in waitUntilVersionUp
-func createEqualVersionsPredicateFromString(version_string string) func(driver.VersionInfo) error {
-	var info driver.VersionInfo
-	info.Version = driver.Version(version_string)
-	return createEqualVersionsPredicate(info)
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches
@@ -324,11 +311,13 @@ func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
 	return nil
 }
 
-func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface, versionString ...string) error {
+// check if a deployment is up and has reached a state where it is able to answer to /_api/version requests.
+// Optionally the returned version can be checked against a user provided version
+func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface, versionString string) error {
 	// deployment checks
 	var checkVersionPredicate func(driver.VersionInfo) error
 	if len(versionString) > 0 {
-		checkVersionPredicate = createEqualVersionsPredicateFromString(versionString[0])
+		checkVersionPredicate = createEqualVersionsPredicate(driver.Version(versionString))
 	}
 	switch mode := deployment.Spec.GetMode(); mode {
 	case api.DeploymentModeCluster:
@@ -351,12 +340,13 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 		singles := members.Single
 		agents := members.Agents
 
-		if len(singles) != 2 || len(agents) != 3 {
+		if len(singles) != *deployment.Spec.Single.Count || len(agents) != *deployment.Spec.Agents.Count {
 			return maskAny(fmt.Errorf("Wrong number of servers: single %d - agents %d", len(singles), len(agents)))
 		}
 
 		ctx := context.Background()
 
+		//check agents
 		for _, agent := range agents {
 			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, agent.ID)
 			if err != nil {
@@ -367,25 +357,27 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				return maskAny(fmt.Errorf("Version check failed for: %s", agent.ID))
 			}
 		}
+		//check single servers
+		{
+			var goodResults, noLeaderResults int
+			for _, single := range singles {
+				dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupSingle, single.ID)
+				if err != nil {
+					return maskAny(fmt.Errorf("Unable to create connection to: %s", single.ID))
+				}
 
-		var goodResults, noLeaderResults int
-		for _, single := range singles {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupSingle, single.ID)
-			if err != nil {
-				return maskAny(fmt.Errorf("Unable to create connection to: %s", single.ID))
+				if err := waitUntilVersionUp(dbclient, checkVersionPredicate, true); err == nil {
+					goodResults++
+				} else if driver.IsNoLeader(err) {
+					noLeaderResults++
+				} else {
+					return maskAny(fmt.Errorf("Version check failed for: %s", single.ID))
+				}
 			}
 
-			if err := waitUntilVersionUp(dbclient, checkVersionPredicate, true); err == nil {
-				goodResults++
-			} else if driver.IsNoLeader(err) {
-				noLeaderResults++
-			} else {
-				return maskAny(fmt.Errorf("Version check failed for: %s", single.ID))
+			if goodResults != 1 || noLeaderResults != *deployment.Spec.Single.Count-1 {
+				return maskAny(fmt.Errorf("Wrong number of results: good %d - noleader %d", goodResults, noLeaderResults))
 			}
-		}
-
-		if goodResults < 1 || noLeaderResults > 1 {
-			return maskAny(fmt.Errorf("Wrong number of results: good %d - noleader %d", goodResults, noLeaderResults))
 		}
 	default:
 		return maskAny(fmt.Errorf("DeploymentMode %s is not supported!", mode))
