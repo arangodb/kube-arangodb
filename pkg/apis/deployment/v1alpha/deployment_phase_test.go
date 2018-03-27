@@ -30,7 +30,6 @@ import (
 
 func TestDeploymentPhaseIsFailed(t *testing.T) {
 	assert.False(t, DeploymentPhaseNone.IsFailed())
-	assert.False(t, DeploymentPhaseCreating.IsFailed())
 	assert.True(t, DeploymentPhaseFailed.IsFailed())
 	assert.False(t, DeploymentPhaseRunning.IsFailed())
 }
