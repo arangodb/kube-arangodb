@@ -19,7 +19,17 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
+def myParams = [:];
+
 def fetchParamsFromGitLog() {
+    // Copy configured params 
+    for (entry in params) {
+        myParams[entry.key] = entry.value;
+    }
+
+    // Fetch params configured in git commit messages 
+    // Syntax: [ci OPT=value]
+    // Example: [ci TESTOPTIONS="-test.run ^TestSimpleSingle$"]
     def options = sh(returnStdout: true, script: "git log --reverse remotes/origin/master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
     for (opt in options) {
         println("Processing option ${opt}");
@@ -28,8 +38,8 @@ def fetchParamsFromGitLog() {
         if (idx > 0) {
             def key = opt.substring(0, idx);
             def value = opt.substring(idx+1);
-            params[key] = value;
-            println("Overwriting params.${key} with ${value}");
+            myParams[key] = value;
+            println("Overwriting myParams.${key} with ${value}");
         }
     }
 }
@@ -41,13 +51,13 @@ def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
         timestamps {
             withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                 withEnv([
-                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
                 "IMAGETAG=jenkins-test",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                "LONG=${params.LONG ? 1 : 0}",
-                "TESTOPTIONS=${params.TESTOPTIONS}",
+                "LONG=${myParams.LONG ? 1 : 0}",
+                "TESTOPTIONS=${myParams.TESTOPTIONS}",
                 ]) {
                     sh "make run-tests"
                 }
@@ -60,8 +70,8 @@ def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
-                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
             ]) {
                 sh "make cleanup-tests"
@@ -95,11 +105,11 @@ pipeline {
             steps {
                 timestamps {
                     withEnv([
-                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                    "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                     "IMAGETAG=jenkins-test",
-                    "LONG=${params.LONG ? 1 : 0}",
-                    "TESTOPTIONS=${params.TESTOPTIONS}",
+                    "LONG=${myParams.LONG ? 1 : 0}",
+                    "TESTOPTIONS=${myParams.TESTOPTIONS}",
                     ]) {
                         sh "make"
                         sh "make run-unit-tests"
@@ -111,7 +121,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    def configs = "${params.KUBECONFIGS}".split(",")
+                    def configs = "${myParams.KUBECONFIGS}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
                         testTasks["${kubeconfig}"] = buildTestSteps(kubeConfigRoot, kubeconfig)
@@ -125,7 +135,7 @@ pipeline {
     post {
         always {
             script {
-                def configs = "${params.KUBECONFIGS}".split(",")
+                def configs = "${myParams.KUBECONFIGS}".split(",")
                 def cleanupTasks = [:]
                 for (kubeconfig in configs) {
                     cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeConfigRoot, kubeconfig)
