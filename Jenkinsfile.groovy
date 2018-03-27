@@ -48,6 +48,24 @@ def fetchParamsFromGitLog() {
 
 def kubeConfigRoot = "/home/jenkins/.kube"
 
+def buildBuildSteps(Map myParams) {
+    return {
+        timestamps {
+            withEnv([
+            "DEPLOYMENTNAMESPACE=${myParams['TESTNAMESPACE']}-${env.GIT_COMMIT}",
+            "DOCKERNAMESPACE=${myParams['DOCKERNAMESPACE']}",
+            "IMAGETAG=jenkins-test",
+            "LONG=${myParams['LONG'] ? 1 : 0}",
+            "TESTOPTIONS=${myParams['TESTOPTIONS']}",
+            ]) {
+                sh "make"
+                sh "make run-unit-tests"
+                sh "make docker-test"
+            }
+        }
+    }
+}
+
 def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
@@ -96,34 +114,19 @@ pipeline {
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
     }
     stages {
-        def myParams = [:];
-        stage("Prepare") {
-            steps {
-                script {
-                    myParams = fetchParamsFromGitLog();
-                }
-            }
-        }
         stage('Build') {
             steps {
-                timestamps {
-                    withEnv([
-                    "DEPLOYMENTNAMESPACE=${myParams['TESTNAMESPACE']}-${env.GIT_COMMIT}",
-                    "DOCKERNAMESPACE=${myParams['DOCKERNAMESPACE']}",
-                    "IMAGETAG=jenkins-test",
-                    "LONG=${myParams['LONG'] ? 1 : 0}",
-                    "TESTOPTIONS=${myParams['TESTOPTIONS']}",
-                    ]) {
-                        sh "make"
-                        sh "make run-unit-tests"
-                        sh "make docker-test"
-                    }
+                script {
+                    def myParams = fetchParamsFromGitLog();
+                    def buildSteps = buildBuildSteps(myParams);
+                    buildSteps();
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
+                    def myParams = fetchParamsFromGitLog();
                     def configs = "${myParams['KUBECONFIGS']}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
@@ -138,6 +141,7 @@ pipeline {
     post {
         always {
             script {
+                def myParams = fetchParamsFromGitLog();
                 def configs = "${myParams['KUBECONFIGS']}".split(",")
                 def cleanupTasks = [:]
                 for (kubeconfig in configs) {
