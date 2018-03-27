@@ -39,6 +39,10 @@ const (
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
 	// ConditionTypePodSchedulingFailure indicates that one or more pods belonging to the deployment cannot be schedule.
 	ConditionTypePodSchedulingFailure ConditionType = "PodSchedulingFailure"
+	// ConditionTypeSecretsChanged indicates that the value of one of more secrets used by
+	// the deployment have changed. Once that is the case, the operator will no longer
+	// touch the deployment, until the original secrets have been restored.
+	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

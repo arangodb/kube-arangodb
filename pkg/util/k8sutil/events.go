@@ -97,6 +97,25 @@ func NewPodsSchedulingResolvedEvent(apiObject APIObject) *v1.Event {
 	return event
 }
 
+// NewSecretsChangedEvent creates an event indicating that one of more secrets have changed.
+func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Secrets changed"
+	event.Message = fmt.Sprintf("Found %d changed secrets. You must revert them before the operator can continue. Secrets: %v", len(changedSecretNames), changedSecretNames)
+	return event
+}
+
+// NewSecretsRestoredEvent creates an event indicating that all secrets have been restored
+// to their original values.
+func NewSecretsRestoredEvent(apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Secrets restored"
+	event.Message = "All secrets have been restored to their original value"
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)
