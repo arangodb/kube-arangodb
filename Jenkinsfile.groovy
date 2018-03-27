@@ -20,7 +20,7 @@ def notifySlack(String buildStatus = 'STARTED') {
 }
 
 def fetchParamsFromGitLog() {
-    def options = sh(returnStdout: true, script: "git log --reverse master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
+    def options = sh(returnStdout: true, script: "git log --reverse remotes/origin/master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
     for (opt in options) {
         def idx = opt.indexOf('=');
         if (idx > 0) {
