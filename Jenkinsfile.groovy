@@ -23,8 +23,6 @@ def fetchParamsFromGitLog() {
     def myParams = [:];
     // Copy configured params 
     for (entry in params) {
-        println("Fetching entry from params: ${entry}");
-        println("Fetching entry from params: key=${entry.key}, value=${entry.value}");
         myParams[entry.key] = entry.value;
     }
 
@@ -33,9 +31,7 @@ def fetchParamsFromGitLog() {
     // Example: [ci TESTOPTIONS="-test.run ^TestSimpleSingle$"]
     def options = sh(returnStdout: true, script: "git log --reverse remotes/origin/master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
     for (opt in options) {
-        println("Processing option ${opt}");
         def idx = opt.indexOf('=');
-        println("Processing option ${opt} with idx=${idx}");
         if (idx > 0) {
             def key = opt.substring(0, idx);
             def value = opt.substring(idx+1);
@@ -52,11 +48,11 @@ def buildBuildSteps(Map myParams) {
     return {
         timestamps {
             withEnv([
-            "DEPLOYMENTNAMESPACE=${myParams['TESTNAMESPACE']}-${env.GIT_COMMIT}",
-            "DOCKERNAMESPACE=${myParams['DOCKERNAMESPACE']}",
+            "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+            "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
             "IMAGETAG=jenkins-test",
-            "LONG=${myParams['LONG'] ? 1 : 0}",
-            "TESTOPTIONS=${myParams['TESTOPTIONS']}",
+            "LONG=${myParams.LONG ? 1 : 0}",
+            "TESTOPTIONS=${myParams.TESTOPTIONS}",
             ]) {
                 sh "make"
                 sh "make run-unit-tests"
@@ -71,13 +67,13 @@ def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
         timestamps {
             withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                 withEnv([
-                "DEPLOYMENTNAMESPACE=${myParams['TESTNAMESPACE']}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${myParams['DOCKERNAMESPACE']}",
-                "ENTERPRISEIMAGE=${myParams['ENTERPRISEIMAGE']}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
                 "IMAGETAG=jenkins-test",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                "LONG=${myParams['LONG'] ? 1 : 0}",
-                "TESTOPTIONS=${myParams['TESTOPTIONS']}",
+                "LONG=${myParams.LONG ? 1 : 0}",
+                "TESTOPTIONS=${myParams.TESTOPTIONS}",
                 ]) {
                     sh "make run-tests"
                 }
@@ -90,8 +86,8 @@ def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
-                "DEPLOYMENTNAMESPACE=${myParams['TESTNAMESPACE']}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${myParams['DOCKERNAMESPACE']}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
             ]) {
                 sh "make cleanup-tests"
@@ -127,7 +123,7 @@ pipeline {
             steps {
                 script {
                     def myParams = fetchParamsFromGitLog();
-                    def configs = "${myParams['KUBECONFIGS']}".split(",")
+                    def configs = "${myParams.KUBECONFIGS}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
                         testTasks["${kubeconfig}"] = buildTestSteps(myParams, kubeConfigRoot, kubeconfig)
