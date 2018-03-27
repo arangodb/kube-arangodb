@@ -207,14 +207,18 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 
 // waitUntilVersionUp waits until the arango database responds to
 // an `/_api/version` request without an error.
-func waitUntilVersionUp(cli driver.Client, allowNoLeaderResponse ...bool) error {
-	var noLeaderErr error
+func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) error, allowNoLeaderResponse ...bool) error {
+	var (
+		noLeaderErr error
+		vInfo       driver.VersionInfo
+	)
 	allowNoLead := len(allowNoLeaderResponse) > 0 && allowNoLeaderResponse[0]
 	ctx := context.Background()
 
 	op := func() error {
-		if _, err := cli.Version(ctx); allowNoLead && driver.IsNoLeader(err) {
+		if version, err := cli.Version(ctx); allowNoLead && driver.IsNoLeader(err) {
 			noLeaderErr = err
+			vInfo = version
 			return nil //return nil to make the retry below pass
 		} else if err != nil {
 			return maskAny(err)
@@ -229,6 +233,10 @@ func waitUntilVersionUp(cli driver.Client, allowNoLeaderResponse ...bool) error 
 	// noLeadErr updated in op
 	if noLeaderErr != nil {
 		return maskAny(noLeaderErr)
+	}
+
+	if predicate != nil {
+		return predicate(vInfo)
 	}
 
 	return nil
@@ -309,11 +317,11 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 			return maskAny(fmt.Errorf("Cluster not running in expected health in time: %v", err))
 		}
 	case api.DeploymentModeSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
+		if err := waitUntilVersionUp(DBClient, nil); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 	case api.DeploymentModeResilientSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
+		if err := waitUntilVersionUp(DBClient, nil); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %v", err))
 		}
 
@@ -333,7 +341,7 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				return maskAny(fmt.Errorf("Unable to create connection to: %v", agent.ID))
 			}
 
-			if err := waitUntilVersionUp(dbclient); err != nil {
+			if err := waitUntilVersionUp(dbclient, nil); err != nil {
 				return maskAny(fmt.Errorf("Version check failed for: %v", agent.ID))
 			}
 		}
@@ -345,7 +353,7 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				return maskAny(fmt.Errorf("Unable to create connection to: %v", single.ID))
 			}
 
-			if err := waitUntilVersionUp(dbclient, true); err == nil {
+			if err := waitUntilVersionUp(dbclient, nil, true); err == nil {
 				goodResults++
 			} else if driver.IsNoLeader(err) {
 				noLeaderResults++
