@@ -108,6 +108,7 @@ pipeline {
       string(name: 'KUBECONFIGS', defaultValue: 'kube-ams1,scw-183a3b', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
+      string(name: 'TESTOPTIONS', defaultValue: '', description: 'TESTOPTIONS is used to pass additional test options to the integration test', )
     }
     stages {
         stage('Build') {
