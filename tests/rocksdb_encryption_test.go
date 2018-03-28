@@ -46,7 +46,7 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 	// Wait for deployment to be ready
 	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
-		t.Errorf("Deployment not running in time: %v", err)
+		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Create database client
