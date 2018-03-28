@@ -64,6 +64,21 @@ func TestUpgradeClusterRocksDB32to33(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.4", "3.4.0")
 // }
 
+// test downgrade single server mmfiles 3.3.3 -> 3.3.2
+func TestDowngradeSingleMMFiles333to332(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.3.3", "3.3.2")
+}
+
+// test downgrade resilient single server rocksdb 3.3.3 -> 3.3.2
+func TestDowngradeResilientSingleRocksDB333to332(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB, "3.3.3", "3.3.2")
+}
+
+// test downgrade cluster rocksdb 3.3.3 -> 3.3.2
+func TestDowngradeClusterRocksDB332to332(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.3", "3.3.2")
+}
+
 func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromVersion, toVersion string) error {
 	// check environment
 	longOrSkip(t)
