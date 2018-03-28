@@ -54,7 +54,7 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
