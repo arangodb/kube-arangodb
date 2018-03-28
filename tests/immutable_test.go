@@ -65,7 +65,7 @@ func TestImmutableFields(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server to be completely ready
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not up in time: %v", err)
 	}
 
