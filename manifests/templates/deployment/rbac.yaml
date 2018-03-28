@@ -8,6 +8,9 @@ rules:
 - apiGroups: ["database.arangodb.com"]
   resources: ["arangodeployments"]
   verbs: ["*"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["*"]
 
 ---
 
