@@ -379,8 +379,10 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 				}
 			}
 
-			if goodResults != 1 || noLeaderResults != *deployment.Spec.Single.Count-1 {
-				return maskAny(fmt.Errorf("Wrong number of results: good %d - noleader %d", goodResults, noLeaderResults))
+			expectedGood := *deployment.Spec.Single.Count
+			expectedNoLeader := 0
+			if goodResults != expectedGood || noLeaderResults != expectedNoLeader {
+				return maskAny(fmt.Errorf("Wrong number of results: good %d (expected: %d)- noleader %d (expected %d)", goodResults, expectedGood, noLeaderResults, expectedNoLeader))
 			}
 		}
 	default:
