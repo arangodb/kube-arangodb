@@ -20,24 +20,16 @@
 // Author Ewout Prangsma
 //
 
-package tests
+package v1alpha
 
 import (
-	"fmt"
+	"testing"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/stretchr/testify/assert"
 )
 
-// deploymentIsReady creates a predicate that returns nil when the deployment is in
-// the running phase and the `Ready` condition is true.
-func deploymentIsReady() func(*api.ArangoDeployment) error {
-	return func(obj *api.ArangoDeployment) error {
-		if obj.Status.Phase != api.DeploymentPhaseRunning {
-			return fmt.Errorf("Expected Running phase, got %s", obj.Status.Phase)
-		}
-		if obj.Status.Conditions.IsTrue(api.ConditionTypeReady) {
-			return nil
-		}
-		return fmt.Errorf("Expected Ready condition to be set, it is not")
-	}
+func TestDeploymentPhaseIsFailed(t *testing.T) {
+	assert.False(t, DeploymentPhaseNone.IsFailed())
+	assert.True(t, DeploymentPhaseFailed.IsFailed())
+	assert.False(t, DeploymentPhaseRunning.IsFailed())
 }

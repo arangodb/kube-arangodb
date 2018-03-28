@@ -45,7 +45,7 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	ctx := context.Background()
 
 	// Is the deployment in failed state, if so, give up.
-	if d.status.State == api.DeploymentStateFailed {
+	if d.status.Phase == api.DeploymentPhaseFailed {
 		log.Debug().Msg("Deployment is in Failed state.")
 		return nextInterval
 	}

@@ -22,17 +22,21 @@
 
 package v1alpha
 
-import (
-	"testing"
+// DeploymentPhase is a strongly typed lifetime phase of a deployment
+type DeploymentPhase string
 
-	"github.com/stretchr/testify/assert"
+const (
+	// DeploymentPhaseNone indicates that the phase is not set yet
+	DeploymentPhaseNone DeploymentPhase = ""
+	// DeploymentPhaseRunning indicates that the deployment is under control of the
+	// ArangoDeployment operator.
+	DeploymentPhaseRunning DeploymentPhase = "Running"
+	// DeploymentPhaseFailed indicates that a deployment is in a failed state
+	// from which automatic recovery is impossible. Inspect `Reason` for more info.
+	DeploymentPhaseFailed DeploymentPhase = "Failed"
 )
 
-func TestDeploymentStateIsFailed(t *testing.T) {
-	assert.False(t, DeploymentStateNone.IsFailed())
-	assert.False(t, DeploymentStateCreating.IsFailed())
-	assert.True(t, DeploymentStateFailed.IsFailed())
-	assert.False(t, DeploymentStateRunning.IsFailed())
-	assert.False(t, DeploymentStateScaling.IsFailed())
-	assert.False(t, DeploymentStateUpgrading.IsFailed())
+// IsFailed returns true if given state is DeploymentStateFailed
+func (cs DeploymentPhase) IsFailed() bool {
+	return cs == DeploymentPhaseFailed
 }

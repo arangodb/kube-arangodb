@@ -87,7 +87,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	}
 
 	// Wait for deployment to be ready
-	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentHasState(api.DeploymentStateRunning))
+	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
