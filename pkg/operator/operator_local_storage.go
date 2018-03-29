@@ -23,7 +23,6 @@
 package operator
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -46,11 +45,11 @@ var (
 
 // run the local storages part of the operator.
 // This registers a listener and waits until the process stops.
-func (o *Operator) runLocalStorages() {
+func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 	source := cache.NewListWatchFromClient(
 		o.Dependencies.CRCli.StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
-		o.Config.Namespace,
+		"", //o.Config.Namespace,
 		fields.Everything())
 
 	_, informer := cache.NewIndexerInformer(source, &api.ArangoLocalStorage{}, 0, cache.ResourceEventHandlerFuncs{
@@ -59,16 +58,13 @@ func (o *Operator) runLocalStorages() {
 		DeleteFunc: o.onDeleteArangoLocalStorage,
 	}, cache.Indexers{})
 
-	ctx := context.TODO()
-	// TODO: use workqueue to avoid blocking
-	informer.Run(ctx.Done())
+	informer.Run(stop)
 }
 
 // onAddArangoLocalStorage local storage addition callback
 func (o *Operator) onAddArangoLocalStorage(obj interface{}) {
-	log := o.Dependencies.Log
 	apiObject := obj.(*api.ArangoLocalStorage)
-	log.Debug().
+	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoLocalStorage added")
 	o.syncArangoLocalStorage(apiObject)
@@ -76,9 +72,8 @@ func (o *Operator) onAddArangoLocalStorage(obj interface{}) {
 
 // onUpdateArangoLocalStorage local storage update callback
 func (o *Operator) onUpdateArangoLocalStorage(oldObj, newObj interface{}) {
-	log := o.Dependencies.Log
 	apiObject := newObj.(*api.ArangoLocalStorage)
-	log.Debug().
+	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoLocalStorage updated")
 	o.syncArangoLocalStorage(apiObject)
@@ -86,7 +81,7 @@ func (o *Operator) onUpdateArangoLocalStorage(oldObj, newObj interface{}) {
 
 // onDeleteArangoLocalStorage local storage delete callback
 func (o *Operator) onDeleteArangoLocalStorage(obj interface{}) {
-	log := o.Dependencies.Log
+	log := o.log
 	apiObject, ok := obj.(*api.ArangoLocalStorage)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -132,7 +127,7 @@ func (o *Operator) syncArangoLocalStorage(apiObject *api.ArangoLocalStorage) {
 	//pt.start()
 	err := o.handleLocalStorageEvent(ev)
 	if err != nil {
-		o.Dependencies.Log.Warn().Err(err).Msg("Failed to handle event")
+		o.log.Warn().Err(err).Msg("Failed to handle event")
 	}
 	//pt.stop()
 }
@@ -197,12 +192,12 @@ func (o *Operator) handleLocalStorageEvent(event *Event) error {
 // makeLocalStorageConfigAndDeps creates a Config & Dependencies object for a new LocalStorage.
 func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStorage) (storage.Config, storage.Dependencies) {
 	cfg := storage.Config{
+		Namespace:      o.Config.Namespace,
 		PodName:        o.Config.PodName,
 		ServiceAccount: o.Config.ServiceAccount,
 	}
 	deps := storage.Dependencies{
-		Log: o.Dependencies.Log.With().
-			Str("component", "storage").
+		Log: o.Dependencies.LogService.MustGetLogger("storage").With().
 			Str("localStorage", apiObject.GetName()).
 			Logger(),
 		KubeCli:      o.Dependencies.KubeCli,

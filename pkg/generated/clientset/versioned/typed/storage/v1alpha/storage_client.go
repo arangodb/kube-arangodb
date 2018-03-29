@@ -36,8 +36,8 @@ type StorageV1alphaClient struct {
 	restClient rest.Interface
 }
 
-func (c *StorageV1alphaClient) ArangoLocalStorages(namespace string) ArangoLocalStorageInterface {
-	return newArangoLocalStorages(c, namespace)
+func (c *StorageV1alphaClient) ArangoLocalStorages() ArangoLocalStorageInterface {
+	return newArangoLocalStorages(c)
 }
 
 // NewForConfig creates a new StorageV1alphaClient for the given config.

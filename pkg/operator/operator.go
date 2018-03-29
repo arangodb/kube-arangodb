@@ -27,14 +27,17 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/record"
 
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 )
 
@@ -52,22 +55,27 @@ type Operator struct {
 	Config
 	Dependencies
 
+	log           zerolog.Logger
 	deployments   map[string]*deployment.Deployment
 	localStorages map[string]*storage.LocalStorage
 }
 
 type Config struct {
-	Namespace      string
-	PodName        string
-	ServiceAccount string
-	CreateCRD      bool
+	ID               string
+	Namespace        string
+	PodName          string
+	ServiceAccount   string
+	EnableDeployment bool
+	EnableStorage    bool
+	CreateCRD        bool
 }
 
 type Dependencies struct {
-	Log        zerolog.Logger
-	KubeCli    kubernetes.Interface
-	KubeExtCli apiextensionsclient.Interface
-	CRCli      versioned.Interface
+	LogService    logging.Service
+	KubeCli       kubernetes.Interface
+	KubeExtCli    apiextensionsclient.Interface
+	CRCli         versioned.Interface
+	EventRecorder record.EventRecorder
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -75,18 +83,29 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
 		Config:        config,
 		Dependencies:  deps,
+		log:           deps.LogService.MustGetLogger("operator"),
 		deployments:   make(map[string]*deployment.Deployment),
 		localStorages: make(map[string]*storage.LocalStorage),
 	}
 	return o, nil
 }
 
-// Start the operator
-func (o *Operator) Start() error {
-	log := o.Dependencies.Log
+// Run the operator
+func (o *Operator) Run() {
+	if o.Config.EnableDeployment {
+		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment)
+	}
+	if o.Config.EnableStorage {
+		go o.runLeaderElection("arango-storage-operator", o.onStartStorage)
+	}
+	// Wait until process terminates
+	<-context.TODO().Done()
+}
 
+// onStartDeployment starts the deployment operator and run till given channel is closed.
+func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.initResourceIfNeeded(); err == nil {
+		if err := o.waitForCRD(true, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -94,23 +113,19 @@ func (o *Operator) Start() error {
 			time.Sleep(initRetryWaitTime)
 		}
 	}
-
-	//probe.SetReady()
-	o.run()
-	panic("unreachable")
+	o.runDeployments(stop)
 }
 
-// run the operator.
-// This registers a listener and waits until the process stops.
-func (o *Operator) run() {
-	log := o.Dependencies.Log
-
-	log.Info().Msgf("Running controller in namespace '%s'", o.Config.Namespace)
-
-	go o.runDeployments()
-	go o.runLocalStorages()
-
-	// Wait till done
-	ctx := context.TODO()
-	<-ctx.Done()
+// onStartStorage starts the storage operator and run till given channel is closed.
+func (o *Operator) onStartStorage(stop <-chan struct{}) {
+	for {
+		if err := o.waitForCRD(false, true); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+	o.runLocalStorages(stop)
 }

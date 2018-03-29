@@ -45,5 +45,5 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 
 // ArangoLocalStorages returns a ArangoLocalStorageInformer.
 func (v *version) ArangoLocalStorages() ArangoLocalStorageInformer {
-	return &arangoLocalStorageInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &arangoLocalStorageInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

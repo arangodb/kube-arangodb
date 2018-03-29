@@ -28,12 +28,16 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
-// deploymentHasState creates a predicate that returns nil when the deployment has the given state.
-func deploymentHasState(state api.DeploymentState) func(*api.ArangoDeployment) error {
+// deploymentIsReady creates a predicate that returns nil when the deployment is in
+// the running phase and the `Ready` condition is true.
+func deploymentIsReady() func(*api.ArangoDeployment) error {
 	return func(obj *api.ArangoDeployment) error {
-		if obj.Status.State == state {
+		if obj.Status.Phase != api.DeploymentPhaseRunning {
+			return fmt.Errorf("Expected Running phase, got %s", obj.Status.Phase)
+		}
+		if obj.Status.Conditions.IsTrue(api.ConditionTypeReady) {
 			return nil
 		}
-		return fmt.Errorf("Expected state %s, got %s", state, obj.Status.State)
+		return fmt.Errorf("Expected Ready condition to be set, it is not")
 	}
 }

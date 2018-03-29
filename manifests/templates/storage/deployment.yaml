@@ -1,0 +1,37 @@
+## Service accounts
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: {{ .Storage.Operator.Namespace }}
+  name: {{ .Storage.Operator.ServiceAccountName }}
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Storage.OperatorDeploymentName }}
+  namespace: {{ .Storage.Operator.Namespace }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: {{ .Storage.OperatorDeploymentName }}
+    spec:
+      serviceAccountName: {{ .Storage.Operator.ServiceAccountName }}
+      containers:
+      - name: operator
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        image: {{ .Image }}
+        args:
+        - --operator.storage
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name

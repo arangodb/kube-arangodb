@@ -21,7 +21,7 @@ func TestSimpleSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-sng-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeSingle
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -32,7 +32,7 @@ func TestSimpleSingle(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestSimpleSingle(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -62,7 +62,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-rs-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeResilientSingle
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeResilientSingle)
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -73,7 +73,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("ResilientSingle servers not running returning version in time: %v", err)
 	}
 
@@ -103,7 +103,7 @@ func TestSimpleCluster(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-cls-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -114,7 +114,7 @@ func TestSimpleCluster(t *testing.T) {
 	defer removeDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning))
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestSimpleCluster(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Cluster not running returning version in time: %v", err)
 	}
 

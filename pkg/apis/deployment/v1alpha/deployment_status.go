@@ -24,8 +24,8 @@ package v1alpha
 
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
-	// State holds the current state of the deployment
-	State DeploymentState `json:"state"`
+	// Phase holds the current lifetime phase of the deployment
+	Phase DeploymentPhase `json:"phase"`
 	// Reason contains a human readable reason for reaching the current state (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current state
 
@@ -36,6 +36,9 @@ type DeploymentStatus struct {
 	// to access syncmasters (only set when dc2dc synchronization is enabled).
 	SyncServiceName string `json:"syncServiceName,omitempty"`
 
+	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
+	Images ImageInfoList `json:"arangodb-images,omitempty"`
+
 	// Members holds the status for all members in all server groups
 	Members DeploymentStatusMembers `json:"members"`
 
@@ -44,4 +47,11 @@ type DeploymentStatus struct {
 
 	// Plan to update this deployment
 	Plan Plan `json:"plan,omitempty"`
+
+	// AcceptedSpec contains the last specification that was accepted by the operator.
+	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
+
+	// SecretHashes keeps a sha256 hash of secret values, so we can
+	// detect changes in secret values.
+	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
 }

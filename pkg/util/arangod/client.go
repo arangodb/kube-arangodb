@@ -24,6 +24,7 @@ package arangod
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	nhttp "net/http"
@@ -70,6 +71,19 @@ var (
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+	sharedHTTPSTransport = &nhttp.Transport{
+		Proxy: nhttp.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
 )
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
@@ -94,14 +108,32 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 	return c, nil
 }
 
+// CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
+// running in an Image-ID pod.
+func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
+	// Create connection
+	dnsName := k8sutil.CreatePodDNSName(deployment, role, id)
+	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
 	scheme := "http"
-	connConfig := http.ConnectionConfig{
-		Endpoints: []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
-		Transport: sharedHTTPTransport,
+	transport := sharedHTTPTransport
+	if apiObject != nil && apiObject.Spec.IsSecure() {
+		scheme = "https"
+		transport = sharedHTTPSTransport
 	}
-	// TODO deal with TLS
+	connConfig := http.ConnectionConfig{
+		Endpoints:          []string{scheme + "://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort))},
+		Transport:          transport,
+		DontFollowRedirect: true,
+	}
+	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
 	if err != nil {
 		return nil, maskAny(err)
@@ -111,11 +143,11 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 	config := driver.ClientConfig{
 		Connection: conn,
 	}
-	if apiObject.Spec.IsAuthenticated() {
+	if apiObject != nil && apiObject.Spec.IsAuthenticated() {
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
-			s, err := k8sutil.GetJWTSecret(cli, apiObject.Spec.Authentication.JWTSecretName, apiObject.GetNamespace())
+			s, err := k8sutil.GetJWTSecret(cli, apiObject.Spec.Authentication.GetJWTSecretName(), apiObject.GetNamespace())
 			if err != nil {
 				return nil, maskAny(err)
 			}

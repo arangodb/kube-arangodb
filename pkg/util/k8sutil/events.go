@@ -78,6 +78,44 @@ func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *v1.Event {
 	return event
 }
 
+// NewPodsSchedulingFailureEvent creates an event indicating that one of more cannot be scheduled.
+func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Pods Scheduling Failure"
+	event.Message = fmt.Sprintf("One or more pods are not scheduled in time. Pods: %v", unscheduledPodNames)
+	return event
+}
+
+// NewPodsSchedulingResolvedEvent creates an event indicating that an earlier problem with
+// pod scheduling has been resolved.
+func NewPodsSchedulingResolvedEvent(apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Pods Scheduling Resolved"
+	event.Message = "All pods have been scheduled"
+	return event
+}
+
+// NewSecretsChangedEvent creates an event indicating that one of more secrets have changed.
+func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Secrets changed"
+	event.Message = fmt.Sprintf("Found %d changed secrets. You must revert them before the operator can continue. Secrets: %v", len(changedSecretNames), changedSecretNames)
+	return event
+}
+
+// NewSecretsRestoredEvent creates an event indicating that all secrets have been restored
+// to their original values.
+func NewSecretsRestoredEvent(apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Secrets restored"
+	event.Message = "All secrets have been restored to their original value"
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)

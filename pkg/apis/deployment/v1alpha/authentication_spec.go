@@ -25,12 +25,13 @@ package v1alpha
 import (
 	"github.com/pkg/errors"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // AuthenticationSpec holds authentication specific configuration settings
 type AuthenticationSpec struct {
-	JWTSecretName string `json:"jwtSecretName,omitempty"`
+	JWTSecretName *string `json:"jwtSecretName,omitempty"`
 }
 
 const (
@@ -38,10 +39,15 @@ const (
 	JWTSecretNameDisabled = "None"
 )
 
+// GetJWTSecretName returns the value of jwtSecretName.
+func (s AuthenticationSpec) GetJWTSecretName() string {
+	return util.StringOrDefault(s.JWTSecretName)
+}
+
 // IsAuthenticated returns true if authentication is enabled.
 // Returns false other (when JWTSecretName == "None").
 func (s AuthenticationSpec) IsAuthenticated() bool {
-	return s.JWTSecretName != JWTSecretNameDisabled
+	return s.GetJWTSecretName() != JWTSecretNameDisabled
 }
 
 // Validate the given spec
@@ -50,7 +56,7 @@ func (s AuthenticationSpec) Validate(required bool) error {
 		return maskAny(errors.Wrap(ValidationError, "JWT secret is required"))
 	}
 	if s.IsAuthenticated() {
-		if err := k8sutil.ValidateResourceName(s.JWTSecretName); err != nil {
+		if err := k8sutil.ValidateResourceName(s.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -59,8 +65,17 @@ func (s AuthenticationSpec) Validate(required bool) error {
 
 // SetDefaults fills in missing defaults
 func (s *AuthenticationSpec) SetDefaults(defaultJWTSecretName string) {
-	if s.JWTSecretName == "" {
-		s.JWTSecretName = defaultJWTSecretName
+	if s.GetJWTSecretName() == "" {
+		// Note that we don't check for nil here, since even a specified, but empty
+		// string should result in the default value.
+		s.JWTSecretName = util.NewString(defaultJWTSecretName)
+	}
+}
+
+// SetDefaultsFrom fills unspecified fields with a value from given source spec.
+func (s *AuthenticationSpec) SetDefaultsFrom(source AuthenticationSpec) {
+	if s.JWTSecretName == nil {
+		s.JWTSecretName = util.NewStringOrNil(source.JWTSecretName)
 	}
 }
 
@@ -71,7 +86,7 @@ func (s AuthenticationSpec) ResetImmutableFields(fieldPrefix string, target *Aut
 	var resetFields []string
 	if s.IsAuthenticated() != target.IsAuthenticated() {
 		// Note: You can change the name, but not from empty to non-empty (or reverse).
-		target.JWTSecretName = s.JWTSecretName
+		target.JWTSecretName = util.NewStringOrNil(s.JWTSecretName)
 		resetFields = append(resetFields, fieldPrefix+".jwtSecretName")
 	}
 	return resetFields

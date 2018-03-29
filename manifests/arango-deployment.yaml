@@ -1,0 +1,103 @@
+## deployment/rbac.yaml
+## Cluster role granting access to ArangoDeployment resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-deployments
+rules:
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeployment operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-deployment-operator
+rules:
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["*"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+
+---
+
+## Bind the cluster role granting access to ArangoLocalStorage resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: arango-deployments
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployments
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeployment operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-deployment-operator-default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployment-operator
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+
+## deployment/deployment.yaml
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-deployment-operator
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: arango-deployment-operator
+    spec:
+      containers:
+      - name: operator
+        imagePullPolicy: IfNotPresent
+        image: arangodb/kube-arangodb@sha256:88d2ef08c9e96f1f98a0d108acf51b09bccd1506105e8c2e3790815d27a984ae
+        args:
+          - --operator.deployment
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+

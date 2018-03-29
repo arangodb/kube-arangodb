@@ -23,46 +23,29 @@
 package operator
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
-
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
 )
 
-// initResourceIfNeeded initializes the custom resource definition when
-// instructed to do so by the config.
-func (o *Operator) initResourceIfNeeded() error {
-	if o.Config.CreateCRD {
-		if err := o.initCRD(); err != nil {
-			return maskAny(fmt.Errorf("Failed to initialize Custom Resource Definition: %v", err))
+// waitForCRD waits for the CustomResourceDefinition (created externally)
+// to be ready.
+func (o *Operator) waitForCRD(enableDeployment, enableStorage bool) error {
+	log := o.log
+
+	if enableDeployment {
+		log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
+			return maskAny(err)
 		}
 	}
-	return nil
-}
 
-// initCRD creates the CustomResourceDefinition and waits for it to be ready.
-func (o *Operator) initCRD() error {
-	log := o.Dependencies.Log
-
-	log.Debug().Msg("Creating ArangoDeployment CRD")
-	if err := crd.CreateCRD(o.KubeExtCli, deplapi.SchemeGroupVersion, deplapi.ArangoDeploymentCRDName, deplapi.ArangoDeploymentResourceKind, deplapi.ArangoDeploymentResourcePlural, deplapi.ArangoDeploymentShortNames...); err != nil {
-		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
-	}
-	log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
-	if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
-		return maskAny(err)
+	if enableStorage {
+		log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
+			return maskAny(err)
+		}
 	}
 
-	log.Debug().Msg("Creating ArangoLocalStorage CRD")
-	if err := crd.CreateCRD(o.KubeExtCli, lsapi.SchemeGroupVersion, lsapi.ArangoLocalStorageCRDName, lsapi.ArangoLocalStorageResourceKind, lsapi.ArangoLocalStorageResourcePlural, lsapi.ArangoLocalStorageShortNames...); err != nil {
-		return maskAny(errors.Wrapf(err, "failed to create CRD: %v", err))
-	}
-	log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
-	if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
-		return maskAny(err)
-	}
 	return nil
 }

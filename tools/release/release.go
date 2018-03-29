@@ -47,7 +47,7 @@ func init() {
 	flag.StringVar(&versionFile, "versionfile", "./VERSION", "Path of the VERSION file")
 	flag.StringVar(&releaseType, "type", "patch", "Type of release to build (major|minor|patch)")
 	flag.StringVar(&ghRelease, "github-release", ".gobuild/bin/github-release", "Full path of github-release tool")
-	flag.StringVar(&ghUser, "github-user", "arangodbdb", "Github account name to create release in")
+	flag.StringVar(&ghUser, "github-user", "arangodb", "Github account name to create release in")
 	flag.StringVar(&ghRepo, "github-repo", "kube-arangodb", "Github repository name to create release in")
 }
 
@@ -60,7 +60,7 @@ func main() {
 	make("all", map[string]string{
 		"DOCKERNAMESPACE": "arangodb",
 		"IMAGETAG":        version,
-		"MANIFESTPATH":    "manifests/arango-operator.yaml",
+		"MANIFESTSUFFIX":  "-",
 	})
 	make("build-ghrelease", nil)
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest

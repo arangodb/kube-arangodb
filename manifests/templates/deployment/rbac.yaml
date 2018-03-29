@@ -1,0 +1,72 @@
+{{- if .RBAC -}}
+## Cluster role granting access to ArangoDeployment resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Deployment.User.RoleName }}
+rules:
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeployment operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Deployment.Operator.RoleName }}
+rules:
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["*"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+
+---
+
+## Bind the cluster role granting access to ArangoLocalStorage resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .Deployment.User.RoleBindingName }}
+  namespace: {{ .Deployment.User.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Deployment.User.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Deployment.User.ServiceAccountName }}
+  namespace: {{ .Deployment.User.Namespace }}
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeployment operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Deployment.Operator.RoleBindingName }}-{{ .Deployment.Operator.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Deployment.Operator.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Deployment.Operator.ServiceAccountName }}
+  namespace: {{ .Deployment.Operator.Namespace }}
+
+{{- end -}}

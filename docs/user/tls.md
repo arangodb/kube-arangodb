@@ -1,10 +1,12 @@
 # TLS
 
-The ArangoDB operator allows you to create ArangoDB deployments that use
+The ArangoDB operator will by default create ArangoDB deployments that use
 secure TLS connections.
 
 It uses a single CA certificate (stored in a Kubernetes secret) and
 one certificate per ArangoDB server (stored in a Kubernetes secret per server).
+
+To disable TLS, set `spec.tls.caSecretName` to `None`.
 
 ## Install CA certificate
 
@@ -16,7 +18,7 @@ To do so, you first have to fetch the CA certificate from its Kubernetes
 secret.
 
 ```bash
-kubectl get secret <deploy-name> --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
+kubectl get secret <deploy-name>-ca --template='{{index .data "ca.crt"}}' | base64 -D > ca.crt
 ```
 
 ### Windows

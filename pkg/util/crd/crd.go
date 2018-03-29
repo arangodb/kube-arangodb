@@ -26,41 +26,12 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
-
-// CreateCRD creates a custom resouce definition.
-func CreateCRD(clientset apiextensionsclient.Interface, groupVersion schema.GroupVersion, crdName, rkind, rplural string, shortName ...string) error {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: crdName,
-		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   groupVersion.Group,
-			Version: groupVersion.Version,
-			Scope:   apiextensionsv1beta1.NamespaceScoped,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural: rplural,
-				Kind:   rkind,
-			},
-		},
-	}
-	if len(shortName) != 0 {
-		crd.Spec.Names.ShortNames = shortName
-	}
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
-	if err != nil && !k8sutil.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
-}
 
 // WaitCRDReady waits for a custom resource definition with given name to be ready.
 func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error {
@@ -83,7 +54,7 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 		}
 		return maskAny(fmt.Errorf("Retry needed"))
 	}
-	if err := retry.Retry(op, time.Minute*5); err != nil {
+	if err := retry.Retry(op, time.Second*30); err != nil {
 		return maskAny(err)
 	}
 	return nil

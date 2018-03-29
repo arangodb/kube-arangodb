@@ -41,8 +41,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/client"
@@ -77,7 +75,11 @@ var (
 		host string
 		port int
 	}
-	createCRD bool
+	operatorOptions struct {
+		enableDeployment bool // Run deployment operator
+		enableStorage    bool // Run deployment operator
+		createCRD        bool
+	}
 )
 
 func init() {
@@ -85,7 +87,9 @@ func init() {
 	f.StringVar(&server.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&server.port, "server.port", defaultServerPort, "Port to listen on")
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
-	f.BoolVar(&createCRD, "operator.create-crd", true, "Disable to avoid create the custom resource definition")
+	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
+	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
+	f.BoolVar(&operatorOptions.createCRD, "operator.create-crd", true, "Disable to avoid create the custom resource definition")
 }
 
 func main() {
@@ -107,6 +111,11 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
 
+	// Check operating mode
+	if !operatorOptions.enableDeployment && !operatorOptions.enableStorage {
+		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment or --operator.storage or both")
+	}
+
 	// Log version
 	cliLog.Info().Msgf("Starting arangodb-operator, version %s build %s", projectVersion, projectBuild)
 
@@ -126,48 +135,12 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to get hostname")
 	}
 
-	// Create k8s client
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create kubernetes client")
-	}
-
 	//http.HandleFunc(probe.HTTPReadyzEndpoint, probe.ReadyzHandler)
 	http.Handle("/metrics", prometheus.Handler())
 	listenAddr := net.JoinHostPort(server.host, strconv.Itoa(server.port))
 	go http.ListenAndServe(listenAddr, nil)
 
-	rl, err := resourcelock.New(resourcelock.EndpointsResourceLock,
-		namespace,
-		"arangodb-operator",
-		kubecli.CoreV1(),
-		resourcelock.ResourceLockConfig{
-			Identity:      id,
-			EventRecorder: createRecorder(cliLog, kubecli, name, namespace),
-		})
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create resource lock")
-	}
-
-	leaderelection.RunOrDie(leaderelection.LeaderElectionConfig{
-		Lock:          rl,
-		LeaseDuration: 15 * time.Second,
-		RenewDeadline: 10 * time.Second,
-		RetryPeriod:   2 * time.Second,
-		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(stop <-chan struct{}) {
-				run(stop, namespace, name)
-			},
-			OnStoppedLeading: func() {
-				cliLog.Fatal().Msg("Leader election lost")
-			},
-		},
-	})
-}
-
-// run the operator
-func run(stop <-chan struct{}, namespace, name string) {
-	cfg, deps, err := newOperatorConfigAndDeps(namespace, name)
+	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
 	}
@@ -178,13 +151,11 @@ func run(stop <-chan struct{}, namespace, name string) {
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create operator")
 	}
-	if err := o.Start(); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to start operator")
-	}
+	o.Run()
 }
 
 // newOperatorConfigAndDeps creates operator config & dependencies.
-func newOperatorConfigAndDeps(namespace, name string) (operator.Config, operator.Dependencies, error) {
+func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, operator.Dependencies, error) {
 	kubecli, err := k8sutil.NewKubeClient()
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(err)
@@ -203,18 +174,23 @@ func newOperatorConfigAndDeps(namespace, name string) (operator.Config, operator
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}
+	eventRecorder := createRecorder(cliLog, kubecli, name, namespace)
 
 	cfg := operator.Config{
-		Namespace:      namespace,
-		PodName:        name,
-		ServiceAccount: serviceAccount,
-		CreateCRD:      createCRD,
+		ID:               id,
+		Namespace:        namespace,
+		PodName:          name,
+		ServiceAccount:   serviceAccount,
+		EnableDeployment: operatorOptions.enableDeployment,
+		EnableStorage:    operatorOptions.enableStorage,
+		CreateCRD:        operatorOptions.createCRD,
 	}
 	deps := operator.Dependencies{
-		Log:        logService.MustGetLogger("operator"),
-		KubeCli:    kubecli,
-		KubeExtCli: kubeExtCli,
-		CRCli:      crCli,
+		LogService:    logService,
+		KubeCli:       kubecli,
+		KubeExtCli:    kubeExtCli,
+		CRCli:         crCli,
+		EventRecorder: eventRecorder,
 	}
 
 	return cfg, deps, nil

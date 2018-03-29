@@ -1,0 +1,75 @@
+
+{{- if .RBAC -}}
+## Cluster role granting access to ArangoLocalStorage resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Storage.User.RoleName }}
+rules:
+- apiGroups: ["storage.arangodb.com"]
+  resources: ["arangolocalstorages"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoLocalStorage operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Storage.Operator.RoleName }}
+rules:
+- apiGroups: ["storage.arangodb.com"]
+  resources: ["arangolocalstorages"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["*"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["*"]
+
+---
+
+## Bind the cluster role granting access to ArangoLocalStorage resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .Storage.User.RoleBindingName }}
+  namespace: {{ .Storage.User.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Storage.User.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Storage.User.ServiceAccountName }}
+  namespace: {{ .Storage.User.Namespace }}
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoLocalStorage operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Storage.Operator.RoleBindingName }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Storage.Operator.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Storage.Operator.ServiceAccountName }}
+  namespace: {{ .Storage.Operator.Namespace }}
+{{- end -}}

@@ -40,18 +40,25 @@ else
 	IMAGESUFFIX := :dev
 endif
 
-ifndef MANIFESTPATH 
-	MANIFESTPATH := manifests/arango-operator-dev.yaml
+ifeq ($(MANIFESTSUFFIX),-)
+	# Release setting
+	MANIFESTSUFFIX :=
+else
+ifndef MANIFESTSUFFIX
+	MANIFESTSUFFIX := -dev
 endif
+endif
+MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
+MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
 
 ifndef OPERATORIMAGE
-	OPERATORIMAGE := $(DOCKERNAMESPACE)/arangodb-operator$(IMAGESUFFIX)
+	OPERATORIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)
 endif
 ifndef TESTIMAGE
-	TESTIMAGE := $(DOCKERNAMESPACE)/arangodb-operator-test$(IMAGESUFFIX)
+	TESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-test$(IMAGESUFFIX)
 endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
@@ -189,7 +196,7 @@ endif
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
-		--output=$(MANIFESTPATH) \
+		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
 		--image-sha256=$(IMAGESHA256) \
 		--namespace=$(DEPLOYMENTNAMESPACE)
@@ -210,7 +217,8 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/deployment/v1alpha \
 			$(REPOPATH)/pkg/apis/storage/v1alpha \
-			$(REPOPATH)/pkg/deployment \
+			$(REPOPATH)/pkg/deployment/reconcile \
+			$(REPOPATH)/pkg/deployment/resources \
 			$(REPOPATH)/pkg/util/k8sutil \
 			$(REPOPATH)/pkg/util/k8sutil/test
 
@@ -241,15 +249,11 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f $(MANIFESTPATH)
+	kubectl apply -f manifests/crd.yaml
+	kubectl apply -f $(MANIFESTPATHSTORAGE)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	kubectl --namespace $(DEPLOYMENTNAMESPACE) \
-		run arangodb-operator-test -i --rm --quiet --restart=Never \
-		--image=$(TESTIMAGE) \
-		--env="ENTERPRISEIMAGE=$(ENTERPRISEIMAGE)" \
-		--env="TEST_NAMESPACE=$(DEPLOYMENTNAMESPACE)" \
-		-- \
-		-test.v -test.timeout $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 ifneq ($(DEPLOYMENTNAMESPACE), default)
 	kubectl delete namespace $(DEPLOYMENTNAMESPACE) --ignore-not-found --now
 endif
@@ -309,9 +313,12 @@ minikube-start:
 
 .PHONY: delete-operator
 delete-operator:
-	kubectl delete -f $(MANIFESTPATH) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
-	kubectl apply -f $(MANIFESTPATH)
+	kubectl apply -f manifests/crd.yaml
+	kubectl apply -f $(MANIFESTPATHSTORAGE)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl get pods 

@@ -1,0 +1,28 @@
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Deployment.OperatorDeploymentName }}
+  namespace: {{ .Deployment.Operator.Namespace }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: {{ .Deployment.OperatorDeploymentName }}
+    spec:
+      containers:
+      - name: operator
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        image: {{ .Image }}
+        args:
+          - --operator.deployment
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name

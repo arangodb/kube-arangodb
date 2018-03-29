@@ -10,6 +10,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -24,7 +25,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-sng-def-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeSingle
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
@@ -34,12 +35,12 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Secret must now exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 
@@ -48,7 +49,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -56,7 +57,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must no longer exist
-	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.JWTSecretName, ns, time.Minute); err != nil {
+	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Minute); err != nil {
 		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 }
@@ -71,12 +72,12 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-sng-cst-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeSingle
-	depl.Spec.Authentication.JWTSecretName = strings.ToLower(uniuri.New())
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+	depl.Spec.Authentication.JWTSecretName = util.NewString(strings.ToLower(uniuri.New()))
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.JWTSecretName, ns, "foo", nil); err != nil {
+	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 
@@ -87,7 +88,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -96,7 +97,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -104,12 +105,12 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must still exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 
 	// Cleanup secret
-	removeSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns)
+	removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
 }
 
 // TestAuthenticationNoneSingle creating a single server
@@ -122,8 +123,8 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-none-sng-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeSingle
-	depl.Spec.Authentication.JWTSecretName = api.JWTSecretNameDisabled
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+	depl.Spec.Authentication.JWTSecretName = util.NewString(api.JWTSecretNameDisabled)
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
@@ -133,7 +134,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -142,7 +143,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -160,7 +161,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-cls-def-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
@@ -170,12 +171,12 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Secret must now exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 
@@ -184,7 +185,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -192,7 +193,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must no longer exist
-	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.JWTSecretName, ns, time.Minute); err != nil {
+	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Minute); err != nil {
 		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 }
@@ -207,12 +208,12 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-cls-cst-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
-	depl.Spec.Authentication.JWTSecretName = strings.ToLower(uniuri.New())
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.Authentication.JWTSecretName = util.NewString(strings.ToLower(uniuri.New()))
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.JWTSecretName, ns, "foo", nil); err != nil {
+	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 
@@ -223,7 +224,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -232,7 +233,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 
@@ -240,12 +241,12 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must still exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
 	}
 
 	// Cleanup secret
-	removeSecret(kubecli, depl.Spec.Authentication.JWTSecretName, ns)
+	removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
 }
 
 // TestAuthenticationNoneCluster creating a cluster
@@ -258,8 +259,8 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-auth-none-cls-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.DeploymentModeCluster
-	depl.Spec.Authentication.JWTSecretName = api.JWTSecretNameDisabled
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.Authentication.JWTSecretName = util.NewString(api.JWTSecretNameDisabled)
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
@@ -269,7 +270,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	}
 
 	// Wait for deployment to be ready
-	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentHasState(api.DeploymentStateRunning)); err != nil {
+	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
@@ -278,7 +279,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
 	// Wait for single server available
-	if err := waitUntilVersionUp(client); err != nil {
+	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Single server not running returning version in time: %v", err)
 	}
 

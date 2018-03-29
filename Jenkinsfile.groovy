@@ -19,19 +19,72 @@ def notifySlack(String buildStatus = 'STARTED') {
     slackSend(color: color, channel: '#status-k8s', message: msg)
 }
 
+def fetchParamsFromGitLog() {
+    def myParams = [:];
+    // Copy configured params 
+    for (entry in params) {
+        myParams[entry.key] = entry.value;
+    }
+
+    // Is this a LONG test?
+    if ("${env.JOB_NAME}" == "kube-arangodb-long") {
+        myParams["LONG"] = true;
+    }
+
+    // Fetch params configured in git commit messages 
+    // Syntax: [ci OPT=value]
+    // Example: [ci TESTOPTIONS="-test.run ^TestSimpleSingle$"]
+    def options = sh(returnStdout: true, script: "git log --reverse remotes/origin/master..HEAD | grep -o \'\\[ci[^\\[]*\\]\' | sed -E \'s/\\[ci (.*)\\]/\\1/\'").trim().split("\n")
+    for (opt in options) {
+        def idx = opt.indexOf('=');
+        if (idx > 0) {
+            def key = opt.substring(0, idx);
+            def value = opt.substring(idx+1).replaceAll('^\"|\"$', '');
+            myParams[key] = value;
+            //println("Overwriting myParams.${key} with ${value}");
+        }
+    }
+
+    // Show params in log
+    for (entry in myParams) {
+        println("Using myParams.${entry.key} with ${entry.value}");
+    }
+
+    return myParams;
+}
+
 def kubeConfigRoot = "/home/jenkins/.kube"
 
-def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
+def buildBuildSteps(Map myParams) {
+    return {
+        timestamps {
+            withEnv([
+            "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+            "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+            "IMAGETAG=jenkins-test",
+            "LONG=${myParams.LONG ? 1 : 0}",
+            "TESTOPTIONS=${myParams.TESTOPTIONS}",
+            ]) {
+                sh "make"
+                sh "make run-unit-tests"
+                sh "make docker-test"
+            }
+        }
+    }
+}
+
+def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                 withEnv([
-                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                "ENTERPRISEIMAGE=${params.ENTERPRISEIMAGE}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
                 "IMAGETAG=jenkins-test",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                "LONG=${params.LONG ? 1 : 0}",
+                "LONG=${myParams.LONG ? 1 : 0}",
+                "TESTOPTIONS=${myParams.TESTOPTIONS}",
                 ]) {
                     sh "make run-tests"
                 }
@@ -40,12 +93,12 @@ def buildTestSteps(String kubeConfigRoot, String kubeconfig) {
     }
 }
 
-def buildCleanupSteps(String kubeConfigRoot, String kubeconfig) {
+def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             withEnv([
-                "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
             ]) {
                 sh "make cleanup-tests"
@@ -66,31 +119,26 @@ pipeline {
       string(name: 'KUBECONFIGS', defaultValue: 'kube-ams1,scw-183a3b', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
+      string(name: 'TESTOPTIONS', defaultValue: '', description: 'TESTOPTIONS is used to pass additional test options to the integration test', )
     }
     stages {
         stage('Build') {
             steps {
-                timestamps {
-                    withEnv([
-                    "DEPLOYMENTNAMESPACE=${params.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                    "DOCKERNAMESPACE=${params.DOCKERNAMESPACE}",
-                    "IMAGETAG=jenkins-test",
-                    "LONG=${params.LONG ? 1 : 0}",
-                    ]) {
-                        sh "make"
-                        sh "make run-unit-tests"
-                        sh "make docker-test"
-                    }
+                script {
+                    def myParams = fetchParamsFromGitLog();
+                    def buildSteps = buildBuildSteps(myParams);
+                    buildSteps();
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    def configs = "${params.KUBECONFIGS}".split(",")
+                    def myParams = fetchParamsFromGitLog();
+                    def configs = "${myParams.KUBECONFIGS}".split(",")
                     def testTasks = [:]
                     for (kubeconfig in configs) {
-                        testTasks["${kubeconfig}"] = buildTestSteps(kubeConfigRoot, kubeconfig)
+                        testTasks["${kubeconfig}"] = buildTestSteps(myParams, kubeConfigRoot, kubeconfig)
                     }
                     parallel testTasks
                 }
@@ -101,10 +149,11 @@ pipeline {
     post {
         always {
             script {
-                def configs = "${params.KUBECONFIGS}".split(",")
+                def myParams = fetchParamsFromGitLog();
+                def configs = "${myParams['KUBECONFIGS']}".split(",")
                 def cleanupTasks = [:]
                 for (kubeconfig in configs) {
-                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(kubeConfigRoot, kubeconfig)
+                    cleanupTasks["${kubeconfig}"] = buildCleanupSteps(myParams, kubeConfigRoot, kubeconfig)
                 }
                 parallel cleanupTasks
             }
