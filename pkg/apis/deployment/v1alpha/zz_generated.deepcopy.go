@@ -371,6 +371,13 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.RecentTerminations != nil {
+		in, out := &in.RecentTerminations, &out.RecentTerminations
+		*out = make([]v1.Time, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 

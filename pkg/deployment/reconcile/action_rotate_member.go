@@ -110,6 +110,7 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
 	}
 	// Pod is now gone, update the member status
 	m.State = api.MemberStateNone
+	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}

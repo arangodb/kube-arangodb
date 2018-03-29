@@ -26,11 +26,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
@@ -81,12 +82,18 @@ func (r *Resources) InspectPods() error {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
+				// Record termination time
+				now := metav1.Now()
+				memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
 			}
 		} else if k8sutil.IsPodFailed(&p) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
+				// Record termination time
+				now := metav1.Now()
+				memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
 			}
 		}
 		if k8sutil.IsPodReady(&p) {

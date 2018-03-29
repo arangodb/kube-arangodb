@@ -22,6 +22,12 @@
 
 package v1alpha
 
+import (
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // MemberStatus holds the current status of a single member (server)
 type MemberStatus struct {
 	// ID holds the unique ID of the member.
@@ -35,4 +41,40 @@ type MemberStatus struct {
 	PodName string `json:"podName,omitempty"`
 	// Conditions specific to this member
 	Conditions ConditionList `json:"conditions,omitempty"`
+	// RecentTerminatons holds the times when this member was recently terminated.
+	// First entry is the oldest. (do not add omitempty, since we want to be able to switch from a list to an empty list)
+	RecentTerminations []metav1.Time `json:"recent-terminations"`
+}
+
+// RemoveTerminationsBefore removes all recent terminations before the given timestamp.
+// It returns the number of terminations that have been removed.
+func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
+	removed := 0
+	for {
+		if len(s.RecentTerminations) == 0 {
+			// Nothing left
+			return removed
+		}
+		if s.RecentTerminations[0].Time.Before(timestamp) {
+			// Let's remove it
+			s.RecentTerminations = s.RecentTerminations[1:]
+			removed++
+		} else {
+			// First (oldest) is not before given timestamp, we're done
+			return removed
+		}
+	}
+}
+
+// RecentTerminationsSince returns the number of terminations since the given timestamp.
+func (s MemberStatus) RecentTerminationsSince(timestamp time.Time) int {
+	count := 0
+	for idx := len(s.RecentTerminations) - 1; idx >= 0; idx-- {
+		if s.RecentTerminations[idx].Time.Before(timestamp) {
+			// This termination is before the timestamp, so we're done
+			return count
+		}
+		count++
+	}
+	return count
 }
