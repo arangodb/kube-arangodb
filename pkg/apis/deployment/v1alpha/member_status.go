@@ -33,8 +33,8 @@ type MemberStatus struct {
 	// ID holds the unique ID of the member.
 	// This id is also used within the ArangoDB cluster to identify this server.
 	ID string `json:"id"`
-	// State holds the current state of this member
-	State MemberState `json:"state"`
+	// Phase holds the current lifetime phase of this member
+	Phase MemberPhase `json:"phase"`
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member

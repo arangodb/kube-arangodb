@@ -83,7 +83,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Update status
-	m.State = api.MemberStateRotating
+	m.Phase = api.MemberPhaseRotating
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
@@ -109,7 +109,7 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	// Pod is now gone, update the member status
-	m.State = api.MemberStateNone
+	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)

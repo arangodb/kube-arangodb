@@ -137,10 +137,10 @@ func (r *Resources) InspectPods() error {
 		for _, m := range *members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
-					switch m.State {
-					case api.MemberStateNone:
+					switch m.Phase {
+					case api.MemberPhaseNone:
 						// Do nothing
-					case api.MemberStateShuttingDown, api.MemberStateRotating, api.MemberStateUpgrading:
+					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
@@ -150,7 +150,7 @@ func (r *Resources) InspectPods() error {
 						}
 					default:
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
-						m.State = api.MemberStateNone // This is trigger a recreate of the pod.
+						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
 						// Create event
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {

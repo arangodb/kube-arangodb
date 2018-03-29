@@ -81,7 +81,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding single server")
 		if err := d.status.Members.Single.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}); err != nil {
@@ -91,7 +91,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding agent")
 		if err := d.status.Members.Agents.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}); err != nil {
@@ -101,7 +101,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding dbserver")
 		if err := d.status.Members.DBServers.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}); err != nil {
@@ -111,7 +111,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding coordinator")
 		if err := d.status.Members.Coordinators.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}); err != nil {
@@ -121,7 +121,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
 		if err := d.status.Members.SyncMasters.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}); err != nil {
@@ -131,7 +131,7 @@ func (d *Deployment) createMember(group api.ServerGroup, apiObject *api.ArangoDe
 		log.Debug().Str("id", id).Msg("Adding syncworker")
 		if err := d.status.Members.SyncWorkers.Add(api.MemberStatus{
 			ID:    id,
-			State: api.MemberStateNone,
+			Phase: api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}); err != nil {
