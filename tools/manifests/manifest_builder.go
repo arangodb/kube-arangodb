@@ -57,6 +57,9 @@ var (
 		"rbac.yaml",
 		"deployment.yaml",
 	}
+	testTemplateNames = []string{
+		"rbac.yaml",
+	}
 )
 
 func init() {
@@ -79,6 +82,7 @@ type TemplateOptions struct {
 	RBAC            bool
 	Deployment      ResourceOptions
 	Storage         ResourceOptions
+	Test            CommonOptions
 }
 
 type CommonOptions struct {
@@ -123,6 +127,7 @@ func main() {
 	templateNameSet := map[string][]string{
 		"deployment": deploymentTemplateNames,
 		"storage":    storageTemplateNames,
+		"test":       testTemplateNames,
 	}
 
 	// Process templates
@@ -159,6 +164,12 @@ func main() {
 				ServiceAccountName: "arango-storage-operator",
 			},
 			OperatorDeploymentName: "arango-storage-operator",
+		},
+		Test: CommonOptions{
+			Namespace:          options.Namespace,
+			RoleName:           "arango-operator-test",
+			RoleBindingName:    "arango-operator-test",
+			ServiceAccountName: "default",
 		},
 	}
 	for group, templateNames := range templateNameSet {

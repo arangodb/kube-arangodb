@@ -50,6 +50,7 @@ endif
 endif
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
+MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
@@ -216,6 +217,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		golang:$(GOVERSION) \
 		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/deployment/v1alpha \
+			$(REPOPATH)/pkg/apis/storage/v1alpha \
 			$(REPOPATH)/pkg/deployment/reconcile \
 			$(REPOPATH)/pkg/deployment/resources \
 			$(REPOPATH)/pkg/util/k8sutil \
@@ -251,6 +253,7 @@ endif
 	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
+	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 ifneq ($(DEPLOYMENTNAMESPACE), default)
@@ -312,6 +315,7 @@ minikube-start:
 
 .PHONY: delete-operator
 delete-operator:
+	kubectl delete -f $(MANIFESTPATHTEST) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 
@@ -320,4 +324,5 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
+	kubectl apply -f $(MANIFESTPATHTEST)
 	kubectl get pods 

@@ -45,6 +45,11 @@ func (s LocalStorageSpec) Validate() error {
 	if len(s.LocalPath) == 0 {
 		return maskAny(errors.Wrapf(ValidationError, "localPath cannot be empty"))
 	}
+	for _, p := range s.LocalPath {
+		if len(p) == 0 {
+			return maskAny(errors.Wrapf(ValidationError, "localPath cannot contain empty strings"))
+		}
+	}
 	return nil
 }
 
