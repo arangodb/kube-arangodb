@@ -144,6 +144,10 @@ func (r *Resources) InspectPods() error {
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
+							// Record termination time
+							now := metav1.Now()
+							m.RecentTerminations = append(m.RecentTerminations, now)
+							// Save it
 							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
 							}
@@ -154,6 +158,10 @@ func (r *Resources) InspectPods() error {
 						// Create event
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
+							// Record termination time
+							now := metav1.Now()
+							m.RecentTerminations = append(m.RecentTerminations, now)
+							// Save it
 							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
 							}

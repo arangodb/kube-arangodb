@@ -119,9 +119,11 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 }
 
 // CreateMember adds a new member to the given group.
-func (d *Deployment) CreateMember(group api.ServerGroup) error {
+// If ID is non-empty, it will be used, otherwise a new ID is created.
+func (d *Deployment) CreateMember(group api.ServerGroup, id string) error {
 	log := d.deps.Log
-	if err := d.createMember(group, d.apiObject); err != nil {
+	id, err := d.createMember(group, id, d.apiObject)
+	if err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
 		return maskAny(err)
 	}
@@ -130,6 +132,9 @@ func (d *Deployment) CreateMember(group api.ServerGroup) error {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)
 	}
+	// Create event about it
+	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
+
 	return nil
 }
 

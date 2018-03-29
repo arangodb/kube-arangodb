@@ -405,7 +405,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		return maskAny(err)
 	}
 	// Create event
-	r.context.CreateEvent(k8sutil.NewMemberAddEvent(m.PodName, role, apiObject))
+	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.PodName, role, apiObject))
 
 	return nil
 }

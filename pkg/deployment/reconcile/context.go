@@ -53,7 +53,8 @@ type Context interface {
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
 	// CreateMember adds a new member to the given group.
-	CreateMember(group api.ServerGroup) error
+	// If ID is non-empty, it will be used, otherwise a new ID is created.
+	CreateMember(group api.ServerGroup, id string) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error

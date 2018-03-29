@@ -35,6 +35,8 @@ type MemberStatus struct {
 	ID string `json:"id"`
 	// Phase holds the current lifetime phase of this member
 	Phase MemberPhase `json:"phase"`
+	// CreatedAt holds the creation timestamp of this member.
+	CreatedAt metav1.Time `json:"created-at"`
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member

@@ -89,9 +89,13 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
 		for _, m := range *members {
 			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
+				newID := ""
+				if group == api.ServerGroupAgents {
+					newID = m.ID // Agents cannot (yet) be replaced with new IDs
+				}
 				plan = append(plan,
 					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-					api.NewAction(api.ActionTypeAddMember, group, ""),
+					api.NewAction(api.ActionTypeAddMember, group, newID),
 				)
 			}
 		}

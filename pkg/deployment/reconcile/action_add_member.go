@@ -51,7 +51,7 @@ type actionAddMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
-	if err := a.actionCtx.CreateMember(a.action.Group); err != nil {
+	if err := a.actionCtx.CreateMember(a.action.Group, a.action.MemberID); err != nil {
 		log.Debug().Err(err).Msg("Failed to create member")
 		return false, maskAny(err)
 	}
