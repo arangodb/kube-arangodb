@@ -27,13 +27,9 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
-	arangod "github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
-
-// TODO - environements (provided from outside)
 
 // test deployment single server mmfiles
 func TestDeploymentSingleMMFiles(t *testing.T) {
@@ -96,64 +92,8 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
 
-	// deployment checks
-	switch mode := deployment.Spec.GetMode(); mode {
-	case api.DeploymentModeCluster:
-		// Wait for cluster to be completely ready
-		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
-			return clusterHealthEqualsSpec(h, deployment.Spec)
-		}); err != nil {
-			t.Fatalf("Cluster not running in expected health in time: %v", err)
-		}
-	case api.DeploymentModeSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
-		}
-	case api.DeploymentModeResilientSingle:
-		if err := waitUntilVersionUp(DBClient); err != nil {
-			t.Fatalf("Single Server not running in time: %v", err)
-		}
-
-		members := deployment.Status.Members
-		singles := members.Single
-		agents := members.Agents
-
-		if len(singles) != 2 || len(agents) != 3 {
-			t.Fatalf("Wrong number of servers: single %d - agents %d", len(singles), len(agents))
-		}
-
-		for _, agent := range agents {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupAgents, agent.ID)
-			if err != nil {
-				t.Fatalf("Unable to create connection to: %s", agent.ID)
-			}
-
-			if err := waitUntilVersionUp(dbclient); err != nil {
-				t.Fatalf("Version check failed for: %s", agent.ID)
-			}
-		}
-
-		var goodResults, noLeaderResults int
-		for _, single := range singles {
-			dbclient, err := arangod.CreateArangodClient(ctx, k8sClient.CoreV1(), deployment, api.ServerGroupSingle, single.ID)
-			if err != nil {
-				t.Fatalf("Unable to create connection to: %s", single.ID)
-			}
-
-			if err := waitUntilVersionUp(dbclient, true); err == nil {
-				goodResults++
-			} else if driver.IsNoLeader(err) {
-				noLeaderResults++
-			} else {
-				t.Fatalf("Version check failed for: %s", single.ID)
-			}
-		}
-
-		if goodResults < 1 || noLeaderResults > 1 {
-			t.Fatalf("Wrong number of results: good %d - noleader %d", goodResults, noLeaderResults)
-		}
-	default:
-		t.Fatalf("DeploymentMode %v is not supported!", mode)
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
+		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 
 	// Cleanup
