@@ -26,6 +26,11 @@ def fetchParamsFromGitLog() {
         myParams[entry.key] = entry.value;
     }
 
+    // Is this a LONG test?
+    if ("${env.JOB_NAME}" == "kube-arangodb-long") {
+        myParams["LONG"] = true;
+    }
+
     // Fetch params configured in git commit messages 
     // Syntax: [ci OPT=value]
     // Example: [ci TESTOPTIONS="-test.run ^TestSimpleSingle$"]
