@@ -28,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
+	"github.com/stretchr/testify/assert"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -51,8 +52,10 @@ func TestProduction(t *testing.T) {
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
 	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
 	deploymentTemplate.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
+	deploymentTemplate.Spec.Image = util.NewString("arangodb/arangodb:3.3.4")
 	deploymentTemplate.Spec.DBServers.Count = util.NewInt(4)
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
+	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	dbserverCount := *deploymentTemplate.Spec.DBServers.Count
 	if dbserverCount < 3 {
