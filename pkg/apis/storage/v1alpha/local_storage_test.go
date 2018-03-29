@@ -28,6 +28,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_ArangoLocalStorage_Creation(t *testing.T) {
-	assert.True(t, true)
+// test creation of arango local storage
+func TestArangoLocalStorageCreation(t *testing.T) {
+	// REVIEW - is there something more meaningful to test
+	storage := ArangoLocalStorage{}
+	list := ArangoLocalStorageList{}
+	list.Items = append(list.Items, storage)
+	assert.Equal(t, 1, len(list.Items))
 }

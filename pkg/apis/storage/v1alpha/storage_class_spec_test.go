@@ -29,27 +29,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_StorageClassSpec_Creation(t *testing.T) {
+// test creation of storage class spec
+func TestStorageClassSpecCreation(t *testing.T) {
 	storageClassSpec := StorageClassSpec{}
-	assert.True(t, nil != storageClassSpec.Validate())
+	assert.Error(t, storageClassSpec.Validate(), "empty name name is not allowed")
 
-	storageClassSpec = StorageClassSpec{Name: "TheSpecName", IsDefault: true} // no upper-case allowed
-	assert.True(t, nil != storageClassSpec.Validate())
+	storageClassSpec = StorageClassSpec{Name: "TheSpecName", IsDefault: true}
+	assert.Error(t, storageClassSpec.Validate(), "upper case letters are not allowed in resources")
 
 	storageClassSpec = StorageClassSpec{"the-spec-name", true}
-	assert.Equal(t, nil, storageClassSpec.Validate())
+	assert.NoError(t, storageClassSpec.Validate())
 
-	storageClassSpec = StorageClassSpec{} // this is invalid because it was not created with a proper name
-	storageClassSpec.SetDefaults("foo")   // here the Name is fixed
-	assert.Equal(t, nil, storageClassSpec.Validate())
+	storageClassSpec = StorageClassSpec{} // no proper name -> invalid
+	storageClassSpec.SetDefaults("foo")   // name is fixed -> vaild
+	assert.NoError(t, storageClassSpec.Validate())
 }
 
-func Test_StorageClassSpec_ResetImmutableFileds(t *testing.T) {
+// test reset of storage class spec
+func TestStorageClassSpecResetImmutableFileds(t *testing.T) {
 	specSource := StorageClassSpec{"source", true}
 	specTarget := StorageClassSpec{"target", true}
 
 	assert.Equal(t, "target", specTarget.Name)
 	rv := specSource.ResetImmutableFields("fieldPrefix-", &specTarget)
-	assert.Equal(t, "fieldPrefix-name", strings.Join(rv[:], ", "))
+	assert.Equal(t, "fieldPrefix-name", strings.Join(rv, ", "))
 	assert.Equal(t, "source", specTarget.Name)
 }

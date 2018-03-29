@@ -25,34 +25,28 @@ package v1alpha
 import (
 	"testing"
 
-	"github.com/pkg/errors"
+	//"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_LocalStorageSpec_Creation(t *testing.T) {
-	var (
-		class StorageClassSpec
-		local LocalStorageSpec
-		err   error
-	)
+// Test creation of local storage spec
+func TestLocalStorageSpecCreation(t *testing.T) {
 
-	class = StorageClassSpec{"SpecName", true}
-	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{""}}
-	err = local.Validate()
-	assert.Equal(t, errors.Cause(class.Validate()), errors.Cause(err))
+	class := StorageClassSpec{"SpecName", true}
+	local := LocalStorageSpec{StorageClass: class, LocalPath: []string{""}}
+	assert.Error(t, local.Validate())
 
 	class = StorageClassSpec{"spec-name", true}
-	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{""}} //is this allowed - should the paths be checked?
-	err = local.Validate()
-	assert.Equal(t, nil, errors.Cause(err))
+	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{""}}
+	assert.Error(t, local.Validate(), "should fail as the empty sting is not a valid path")
 
 	class = StorageClassSpec{"spec-name", true}
 	local = LocalStorageSpec{StorageClass: class, LocalPath: []string{}}
-	err = local.Validate()
-	assert.Equal(t, ValidationError, errors.Cause(err)) //path empty
+	assert.True(t, IsValidation(local.Validate()))
 }
 
-func Test_LocalStorageSpec_Reset(t *testing.T) {
+// Test reset of local storage spec
+func TestLocalStorageSpecReset(t *testing.T) {
 	class := StorageClassSpec{"spec-name", true}
 	source := LocalStorageSpec{StorageClass: class, LocalPath: []string{"/a/path", "/another/path"}}
 	target := LocalStorageSpec{}
