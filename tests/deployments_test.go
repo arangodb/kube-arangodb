@@ -23,9 +23,13 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/dchest/uniuri"
+	"github.com/stretchr/testify/assert"
+
+	driver "github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
@@ -77,24 +81,17 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
-	if err != nil {
-		t.Fatalf("Create deployment failed: %v", err)
-	}
+	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	assert.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
 
 	// Wait for deployment to be ready
-	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
-	if err != nil {
-		t.Fatalf("Deployment not running in time: %v", err)
-	}
+	deployment, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	// Create a database client
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
-		t.Fatalf("Deployment not healthy in time: %v", err)
-	}
+	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
@@ -124,40 +121,57 @@ func TestMultiDeployment1(t *testing.T) {
 	deploymentTemplate2.Spec.SetDefaults(deploymentTemplate2.GetName()) // this must be last
 
 	// Create deployment
-	deployment1, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
-	if err != nil {
-		t.Fatalf("Create deployment failed: %v", err)
-	}
+	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
+	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
-	deployment2, err := deploymentClient.DatabaseV2alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
-	if err != nil {
-		t.Fatalf("Create deployment failed: %v", err)
-	}
+	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
+	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
 	// Wait for deployment to be ready
-	deployment1, err = waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())
-	if err != nil {
-		t.Fatalf("Deployment not running in time: %v", err)
-	}
+	deployment1, err := waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())
+	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
-	deployment2, err = waitUntilDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace, deploymentIsReady())
-	if err != nil {
-		t.Fatalf("Deployment not running in time: %v", err)
-	}
+	deployment2, err := waitUntilDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace, deploymentIsReady())
+	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	// Create a database client
 	ctx := context.Background()
-
 	DBClient1 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment1, t)
-	if err := waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""); err != nil {
-		t.Fatalf("Deployment not healthy in time: %v", err)
-	}
+	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 	DBClient2 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment2, t)
-	if err := waitUntilArangoDeploymentHealthy(deployment2, DBClient2, k8sClient, ""); err != nil {
-		t.Fatalf("Deployment not healthy in time: %v", err)
-	}
+	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+
+	db1, err := DBClient1.Database(ctx, "_system")
+	assert.NoError(t, err, "failed to get database")
+	_, err = db1.CreateCollection(ctx, "col1", nil)
+	assert.NoError(t, err, "failed to create collection")
+
+	db2, err := DBClient2.Database(ctx, "_system")
+	assert.NoError(t, err, "failed to get database")
+	_, err = db2.CreateCollection(ctx, "col2", nil)
+	assert.NoError(t, err, "failed to create collection")
+
+	collections1, err := db1.Collections(ctx)
+	assert.NoError(t, err, "failed to get collections")
+	collections2, err := db2.Collections(ctx)
+	assert.NoError(t, err, "failed to get collections")
+
+	assert.True(t, containsCollection(collections1, "col1"), "collection missing")
+	assert.True(t, containsCollection(collections2, "col2"), "collection missing")
+	assert.False(t, containsCollection(collections1, "col2"), "collection must not be in this deployment")
+	assert.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
 	removeDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace)
+
+}
+
+func containsCollection(colls []driver.Collection, name string) bool {
+	for _, col := range colls {
+		if name == col.Name() {
+			return true
+		}
+	}
+	return false
 }
