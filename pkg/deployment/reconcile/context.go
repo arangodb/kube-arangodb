@@ -50,7 +50,8 @@ type Context interface {
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]arangod.Agency, error)
+	// If the given predicate is not nil, only agents are included where the given predicate returns true.
+	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
 	// CreateMember adds a new member to the given group.
 	CreateMember(group api.ServerGroup) error
 	// DeletePod deletes a pod with given name in the namespace

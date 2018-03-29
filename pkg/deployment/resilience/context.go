@@ -23,7 +23,10 @@
 package resilience
 
 import (
+	"context"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // Context provides methods to the resilience package.
@@ -35,4 +38,7 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(status api.DeploymentStatus, force ...bool) error
+	// GetAgencyClients returns a client connection for every agency member.
+	// If the given predicate is not nil, only agents are included where the given predicate returns true.
+	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
 }

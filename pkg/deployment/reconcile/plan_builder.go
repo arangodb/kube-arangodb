@@ -89,7 +89,10 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
 		for _, m := range *members {
 			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
-				plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, m.ID))
+				plan = append(plan,
+					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+					api.NewAction(api.ActionTypeAddMember, group, ""),
+				)
 			}
 		}
 		return nil

@@ -23,9 +23,11 @@
 package resilience
 
 import (
+	"context"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 const (
@@ -88,8 +90,23 @@ func (r *Resilience) CheckMemberFailure() error {
 // to failed, which means that it will be replaced.
 // Return: failureAcceptable, notAcceptableReason, error
 func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, group api.ServerGroup, m api.MemberStatus) (bool, string, error) {
+	ctx := context.Background()
 	switch group {
+	case api.ServerGroupAgents:
+		// All good when remaining agents are health
+		clients, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != m.ID })
+		if err != nil {
+			return false, "", maskAny(err)
+		}
+		if err := arangod.AreAgentsHealthy(ctx, clients); err != nil {
+			return false, err.Error(), nil
+		}
+		return true, "", nil
 	case api.ServerGroupCoordinators:
+		// Coordinators can be replaced at will
+		return true, "", nil
+	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
+		// Sync masters & workers can be replaced at will
 		return true, "", nil
 	default:
 		// TODO

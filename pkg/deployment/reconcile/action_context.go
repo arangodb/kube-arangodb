@@ -105,7 +105,7 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 
 // GetAgencyClients returns a client connection for every agency member.
 func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
-	c, err := ac.context.GetAgencyClients(ctx)
+	c, err := ac.context.GetAgencyClients(ctx, nil)
 	if err != nil {
 		return nil, maskAny(err)
 	}

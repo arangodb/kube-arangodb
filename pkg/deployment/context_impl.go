@@ -97,10 +97,14 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 }
 
 // GetAgencyClients returns a client connection for every agency member.
-func (d *Deployment) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
+// If the given predicate is not nil, only agents are included where the given predicate returns true.
+func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error) {
 	agencyMembers := d.status.Members.Agents
 	result := make([]arangod.Agency, 0, len(agencyMembers))
 	for _, m := range agencyMembers {
+		if predicate != nil && !predicate(m.ID) {
+			continue
+		}
 		client, err := d.GetServerClient(ctx, api.ServerGroupAgents, m.ID)
 		if err != nil {
 			return nil, maskAny(err)
