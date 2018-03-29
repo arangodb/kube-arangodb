@@ -22,7 +22,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -30,14 +29,16 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/assert"
 
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// test if deployment comes up in production mode if there are enough nodes and fails if there are too few
+// Test if deployment comes up in production environment.
+// LONG: The test ensures that the deployment fails if there are
+// less nodes available than servers required.
 func TestProduction(t *testing.T) {
 	longOrSkip(t)
 
@@ -46,14 +47,21 @@ func TestProduction(t *testing.T) {
 
 	k8sNameSpace := getNamespace(t)
 	k8sClient := mustNewKubeClient(t)
+
+	nodeList, err := k8sClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		t.Fatalf("Unable to receive node list: %v", err)
+	}
+	numNodes := len(nodeList.Items)
+
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("tprod-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
-	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
+	deploymentTemplate.Spec.TLS = api.TLSSpec{}
 	deploymentTemplate.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
 	deploymentTemplate.Spec.Image = util.NewString("arangodb/arangodb:3.3.4")
-	deploymentTemplate.Spec.DBServers.Count = util.NewInt(4)
+	deploymentTemplate.Spec.DBServers.Count = util.NewInt(numNodes + 1)
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
@@ -62,42 +70,15 @@ func TestProduction(t *testing.T) {
 		t.Fatalf("Not enough DBServers to run this test: server count %d", dbserverCount)
 	}
 
-	options := meta_v1.ListOptions{}
-	nodeList, err := k8sClient.CoreV1().Nodes().List(options)
-	if err != nil {
-		t.Fatalf("Unable to receive node list: %v", err)
-	}
-
-	numNodes := len(nodeList.Items)
-	failExpected := false
-
-	if numNodes < dbserverCount {
-		failExpected = true
-	}
-
 	// Create deployment
 	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	if err != nil {
+		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}
 
-	deployment, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
-	if failExpected {
-		if err == nil {
-			t.Fatalf("Deployment is up and running when it should not! There are not enough nodes(%d) for all DBServers(%d) in production modes.", numNodes, dbserverCount)
-		}
-	} else {
-		if err != nil {
-			t.Fatalf("Deployment not running in time: %v", err)
-		}
-		// Create a database client
-		ctx := context.Background()
-		DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-
-		if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
-			t.Fatalf("Deployment not healthy in time: %v", err)
-		}
-	}
+	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	assert.Error(t, err, fmt.Sprintf("Deployment is up and running when it should not! There are not enough nodes(%d) for all DBServers(%d) in production modes.", numNodes, dbserverCount))
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
