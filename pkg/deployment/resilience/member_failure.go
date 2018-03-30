@@ -32,6 +32,7 @@ import (
 
 const (
 	recentTerminationsSinceGracePeriod = time.Minute * 10
+	notReadySinceGracePeriod           = time.Minute * 5
 	recentTerminationThreshold         = 5
 )
 
@@ -49,26 +50,49 @@ func (r *Resilience) CheckMemberFailure() error {
 				Logger()
 			// Check current state
 			if m.Phase != api.MemberPhaseCreated {
+				// Phase is not Created, so we're not looking further.
 				continue
 			}
 			// Check if pod is ready
 			if m.Conditions.IsTrue(api.ConditionTypeReady) {
+				// Pod is now ready, so we're not looking further
 				continue
 			}
+
+			// Check not ready for a long time
+			if !m.Phase.IsFailed() {
+				if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
+					// Member has terminated too often in recent history.
+					failureAcceptable, reason, err := r.isMemberFailureAcceptable(status, group, m)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
+					} else if failureAcceptable {
+						log.Info().Msg("Member is not ready for long time, marking is failed")
+						m.Phase = api.MemberPhaseFailed
+						list.Update(m)
+						updateStatusNeeded = true
+					} else {
+						log.Warn().Msgf("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
+					}
+				}
+			}
+
 			// Check recent terminations
-			count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
-			if count >= recentTerminationThreshold {
-				// Member has terminated too often in recent history.
-				failureAcceptable, reason, err := r.isMemberFailureAcceptable(status, group, m)
-				if err != nil {
-					log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
-				} else if failureAcceptable {
-					log.Info().Msg("Member has terminated too often in recent history, marking is failed")
-					m.Phase = api.MemberPhaseFailed
-					list.Update(m)
-					updateStatusNeeded = true
-				} else {
-					log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
+			if !m.Phase.IsFailed() {
+				count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
+				if count >= recentTerminationThreshold {
+					// Member has terminated too often in recent history.
+					failureAcceptable, reason, err := r.isMemberFailureAcceptable(status, group, m)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
+					} else if failureAcceptable {
+						log.Info().Msg("Member has terminated too often in recent history, marking is failed")
+						m.Phase = api.MemberPhaseFailed
+						list.Update(m)
+						updateStatusNeeded = true
+					} else {
+						log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
+					}
 				}
 			}
 		}

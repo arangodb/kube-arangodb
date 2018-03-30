@@ -51,3 +51,24 @@ func TestMemberStatusRecentTerminations(t *testing.T) {
 	assert.Equal(t, 2, s.RemoveTerminationsBefore(time.Now()))
 	assert.Len(t, s.RecentTerminations, 1)
 }
+
+// TestMemberStatusIsNotReadySince tests the functions related to MemberStatus.IsNotReadySince.
+func TestMemberStatusIsNotReadySince(t *testing.T) {
+	s := MemberStatus{
+		CreatedAt: metav1.Now(),
+	}
+	assert.False(t, s.IsNotReadySince(time.Now().Add(-time.Hour)))
+
+	s.CreatedAt.Time = time.Now().Add(-time.Hour)
+	assert.False(t, s.IsNotReadySince(time.Now().Add(-2*time.Hour)))
+	assert.True(t, s.IsNotReadySince(time.Now().Add(-(time.Hour - time.Minute))))
+
+	s.CreatedAt = metav1.Now()
+	s.Conditions.Update(ConditionTypeReady, true, "", "")
+	assert.False(t, s.IsNotReadySince(time.Now().Add(-time.Minute)))
+	assert.False(t, s.IsNotReadySince(time.Now().Add(time.Minute)))
+
+	s.Conditions.Update(ConditionTypeReady, false, "", "")
+	assert.False(t, s.IsNotReadySince(time.Now().Add(-time.Minute)))
+	assert.True(t, s.IsNotReadySince(time.Now().Add(time.Minute)))
+}

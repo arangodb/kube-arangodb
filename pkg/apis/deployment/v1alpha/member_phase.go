@@ -41,3 +41,8 @@ const (
 	// MemberPhaseUpgrading indicates that a member is in the process of upgrading its database data format
 	MemberPhaseUpgrading MemberPhase = "Upgrading"
 )
+
+// IsFailed returns true when given phase == "Failed"
+func (p MemberPhase) IsFailed() bool {
+	return p == MemberPhaseFailed
+}

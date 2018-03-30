@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"time"
 
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -79,4 +80,18 @@ func (s MemberStatus) RecentTerminationsSince(timestamp time.Time) int {
 		count++
 	}
 	return count
+}
+
+// IsNotReadySince returns true when the given member has not been ready since the given timestamp.
+// That means it:
+// - A) Was created before timestamp and never reached a ready state or
+// - B) The Ready condition is set to false, and last transision is before timestamp
+func (s MemberStatus) IsNotReadySince(timestamp time.Time) bool {
+	cond, found := s.Conditions.Get(ConditionTypeReady)
+	if found {
+		// B
+		return cond.Status != v1.ConditionTrue && cond.LastTransitionTime.Time.Before(timestamp)
+	}
+	// A
+	return s.CreatedAt.Time.Before(timestamp)
 }

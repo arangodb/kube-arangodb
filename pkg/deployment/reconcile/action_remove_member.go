@@ -25,8 +25,12 @@ package reconcile
 import (
 	"context"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	driver "github.com/arangodb/go-driver"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // NewRemoveMemberAction creates a new Action that implements the given
@@ -54,6 +58,18 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	if !ok {
 		// We wanted to remove and it is already gone. All ok
 		return true, nil
+	}
+	// For safety, remove from cluster
+	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
+		client, err := a.actionCtx.GetDatabaseClient(ctx)
+		if err != nil {
+			return false, maskAny(err)
+		}
+		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
+			if !driver.IsNotFound(err) {
+				return false, maskAny(errors.Wrapf(err, "Failed to remove server from cluster: %#v", err))
+			}
+		}
 	}
 	// Remove the pod (if any)
 	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
