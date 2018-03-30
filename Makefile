@@ -65,6 +65,10 @@ ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
 
+ifndef ALLOWCHAOS
+	ALLOWCHAOS := true
+endif
+
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
 TESTBINNAME := $(PROJECT)_test
@@ -200,7 +204,8 @@ manifests: $(GOBUILDDIR)
 		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
 		--image-sha256=$(IMAGESHA256) \
-		--namespace=$(DEPLOYMENTNAMESPACE)
+		--namespace=$(DEPLOYMENTNAMESPACE) \
+		--allow-chaos=$(ALLOWCHAOS)
 
 # Testing
 

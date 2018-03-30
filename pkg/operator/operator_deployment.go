@@ -193,6 +193,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount: o.Config.ServiceAccount,
+		AllowChaos:     o.Config.AllowChaos,
 	}
 	deps := deployment.Dependencies{
 		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().

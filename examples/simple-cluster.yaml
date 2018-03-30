@@ -10,3 +10,5 @@ spec:
   coordinators:
     args:
       - --log.level=true
+  chaos:
+    enabled: true

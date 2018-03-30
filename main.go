@@ -78,7 +78,9 @@ var (
 	operatorOptions struct {
 		enableDeployment bool // Run deployment operator
 		enableStorage    bool // Run deployment operator
-		createCRD        bool
+	}
+	chaosOptions struct {
+		allowed bool
 	}
 )
 
@@ -89,7 +91,7 @@ func init() {
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
-	f.BoolVar(&operatorOptions.createCRD, "operator.create-crd", true, "Disable to avoid create the custom resource definition")
+	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 }
 
 func main() {
@@ -183,7 +185,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ServiceAccount:   serviceAccount,
 		EnableDeployment: operatorOptions.enableDeployment,
 		EnableStorage:    operatorOptions.enableStorage,
-		CreateCRD:        operatorOptions.createCRD,
+		AllowChaos:       chaosOptions.allowed,
 	}
 	deps := operator.Dependencies{
 		LogService:    logService,

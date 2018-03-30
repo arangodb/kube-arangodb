@@ -58,6 +58,7 @@ func main() {
 	version := bumpVersion(releaseType)
 	make("clean", nil)
 	make("all", map[string]string{
+		"ALLOWCHAOS":      "false",
 		"DOCKERNAMESPACE": "arangodb",
 		"IMAGETAG":        version,
 		"MANIFESTSUFFIX":  "-",
