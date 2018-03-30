@@ -102,6 +102,15 @@ func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, grou
 			return false, err.Error(), nil
 		}
 		return true, "", nil
+	case api.ServerGroupDBServers:
+		client, err := r.context.GetDatabaseClient(ctx)
+		if err != nil {
+			return false, "", maskAny(err)
+		}
+		if err := arangod.IsDBServerEmpty(ctx, m.ID, client); err != nil {
+			return false, err.Error(), nil
+		}
+		return true, "", nil
 	case api.ServerGroupCoordinators:
 		// Coordinators can be replaced at will
 		return true, "", nil
