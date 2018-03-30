@@ -44,6 +44,9 @@ type MemberStatus struct {
 	// RecentTerminatons holds the times when this member was recently terminated.
 	// First entry is the oldest. (do not add omitempty, since we want to be able to switch from a list to an empty list)
 	RecentTerminations []metav1.Time `json:"recent-terminations"`
+	// IsInitialized is set after the very first time a pod was created for this member.
+	// After that, DBServers must have a UUID field or fail.
+	IsInitialized bool `json:"initialized"`
 }
 
 // RemoveTerminationsBefore removes all recent terminations before the given timestamp.

@@ -100,6 +100,7 @@ func (r *Resources) InspectPods() error {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to true")
+				memberStatus.IsInitialized = true // Require future pods for this member to have an existing UUID (in case of dbserver).
 				updateMemberStatusNeeded = true
 			}
 		} else {
