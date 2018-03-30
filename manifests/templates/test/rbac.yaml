@@ -9,6 +9,9 @@ rules:
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["list"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["*"]
 
 ---
 

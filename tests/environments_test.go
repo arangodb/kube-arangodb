@@ -65,14 +65,13 @@ func TestProduction(t *testing.T) {
 	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
-	dbserverCount := *deploymentTemplate.Spec.DBServers.Count
+	dbserverCount := deploymentTemplate.Spec.DBServers.GetCount()
 	if dbserverCount < 3 {
-		t.Fatalf("Not enough DBServers to run this test: server count %d", dbserverCount)
+		t.Skipf("Not enough DBServers to run this test: server count %d", dbserverCount)
 	}
 
 	// Create deployment
-	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
-	if err != nil {
+	if _, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate); err != nil {
 		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}
