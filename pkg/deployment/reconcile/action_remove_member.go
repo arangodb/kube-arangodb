@@ -66,7 +66,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			return false, maskAny(err)
 		}
 		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
-			if !driver.IsNotFound(err) {
+			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
 				return false, maskAny(errors.Wrapf(err, "Failed to remove server from cluster: %#v", err))
 			}
 		}

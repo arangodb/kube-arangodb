@@ -79,21 +79,27 @@ func (r *Resources) InspectPods() error {
 		updateMemberStatusNeeded := false
 		if k8sutil.IsPodSucceeded(&p) {
 			// Pod has terminated with exit code 0.
+			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
-				// Record termination time
-				now := metav1.Now()
-				memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+				if !wasTerminated {
+					// Record termination time
+					now := metav1.Now()
+					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+				}
 			}
 		} else if k8sutil.IsPodFailed(&p) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
+			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
-				// Record termination time
-				now := metav1.Now()
-				memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+				if !wasTerminated {
+					// Record termination time
+					now := metav1.Now()
+					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+				}
 			}
 		}
 		if k8sutil.IsPodReady(&p) {
@@ -143,10 +149,13 @@ func (r *Resources) InspectPods() error {
 					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
+						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
-							// Record termination time
-							now := metav1.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
+							if !wasTerminated {
+								// Record termination time
+								now := metav1.Now()
+								m.RecentTerminations = append(m.RecentTerminations, now)
+							}
 							// Save it
 							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
@@ -157,10 +166,20 @@ func (r *Resources) InspectPods() error {
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
 						// Create event
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
+						updateMemberNeeded := false
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
-							// Record termination time
-							now := metav1.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
+							updateMemberNeeded = true
+						}
+						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
+						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
+							if !wasTerminated {
+								// Record termination time
+								now := metav1.Now()
+								m.RecentTerminations = append(m.RecentTerminations, now)
+							}
+							updateMemberNeeded = true
+						}
+						if updateMemberNeeded {
 							// Save it
 							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 								return maskAny(err)
