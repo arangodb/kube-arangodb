@@ -58,6 +58,7 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 		DeleteFunc: o.onDeleteArangoDeployment,
 	}, cache.Indexers{})
 
+	o.Dependencies.DeploymentProbe.SetReady()
 	informer.Run(stop)
 }
 

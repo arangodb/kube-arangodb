@@ -48,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operator"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
@@ -80,6 +81,8 @@ var (
 		enableStorage    bool // Run deployment operator
 		createCRD        bool
 	}
+	deploymentProbe probe.Probe
+	storageProbe    probe.Probe
 )
 
 func init() {
@@ -135,7 +138,9 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to get hostname")
 	}
 
-	//http.HandleFunc(probe.HTTPReadyzEndpoint, probe.ReadyzHandler)
+	http.HandleFunc("/health", probe.LivenessHandler)
+	http.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
+	http.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
 	http.Handle("/metrics", prometheus.Handler())
 	listenAddr := net.JoinHostPort(server.host, strconv.Itoa(server.port))
 	go http.ListenAndServe(listenAddr, nil)
@@ -186,11 +191,13 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		CreateCRD:        operatorOptions.createCRD,
 	}
 	deps := operator.Dependencies{
-		LogService:    logService,
-		KubeCli:       kubecli,
-		KubeExtCli:    kubeExtCli,
-		CRCli:         crCli,
-		EventRecorder: eventRecorder,
+		LogService:      logService,
+		KubeCli:         kubecli,
+		KubeExtCli:      kubeExtCli,
+		CRCli:           crCli,
+		EventRecorder:   eventRecorder,
+		DeploymentProbe: &deploymentProbe,
+		StorageProbe:    &storageProbe,
 	}
 
 	return cfg, deps, nil
