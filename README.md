@@ -4,7 +4,8 @@
 
 State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS WILL CHANGE.
 
-- [User manual](./docs/user/README.md)
+- [Getting Started](./docs/Manual/GettingStarted/kube-arangodb/README.md)
+- [User manual](./docs/Manual/Programs/kube-arangodb/README.md)
 - [Design documents](./docs/design/README.md)
 
 ## Installation of latest release
