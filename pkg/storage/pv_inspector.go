@@ -23,6 +23,8 @@
 package storage
 
 import (
+	"time"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -38,6 +40,7 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 	}
 	spec := ls.apiObject.Spec
 	availableVolumes := 0
+	cleanupBeforeTimestamp := time.Now().Add(time.Hour * -24)
 	for _, pv := range list.Items {
 		if pv.Spec.StorageClassName != spec.StorageClass.Name {
 			// Not our storage class
@@ -45,7 +48,20 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 		}
 		switch pv.Status.Phase {
 		case v1.VolumeAvailable:
-			availableVolumes++
+			// Is this an old volume?
+			if pv.GetObjectMeta().GetCreationTimestamp().Time.Before(cleanupBeforeTimestamp) {
+				// Let's clean it up
+				if ls.isOwnerOf(&pv) {
+					// Cleanup this volume
+					log.Debug().Str("name", pv.GetName()).Msg("Added PersistentVolume to cleaner")
+					ls.pvCleaner.Add(pv)
+				} else {
+					log.Debug().Str("name", pv.GetName()).Msg("PersistentVolume is not owned by us")
+					availableVolumes++
+				}
+			} else {
+				availableVolumes++
+			}
 		case v1.VolumeReleased:
 			if ls.isOwnerOf(&pv) {
 				// Cleanup this volume
