@@ -627,7 +627,7 @@ func (in *TLSSpec) DeepCopyInto(out *TLSSpec) {
 		if *in == nil {
 			*out = nil
 		} else {
-			*out = new(time.Duration)
+			*out = new(Duration)
 			**out = **in
 		}
 	}
