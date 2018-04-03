@@ -30,12 +30,12 @@ import (
 
 func TestEnvironmentValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, Environment("development").Validate())
-	assert.Nil(t, Environment("production").Validate())
+	assert.Nil(t, Environment("Development").Validate())
+	assert.Nil(t, Environment("Production").Validate())
 
 	// Not valid
 	assert.Error(t, Environment("").Validate())
 	assert.Error(t, Environment(" development").Validate())
-	assert.Error(t, Environment("Development").Validate())
-	assert.Error(t, Environment("Production").Validate())
+	assert.Error(t, Environment("development").Validate())
+	assert.Error(t, Environment("production").Validate())
 }

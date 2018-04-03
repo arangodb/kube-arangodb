@@ -92,7 +92,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 
 	// Storage engine
 	options = append(options,
-		optionPair{"--server.storage-engine", string(deplSpec.GetStorageEngine())},
+		optionPair{"--server.storage-engine", strings.ToLower(string(deplSpec.GetStorageEngine()))},
 	)
 
 	// Logging

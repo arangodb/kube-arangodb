@@ -31,11 +31,11 @@ type DeploymentMode string
 
 const (
 	// DeploymentModeSingle yields a single server
-	DeploymentModeSingle DeploymentMode = "single"
+	DeploymentModeSingle DeploymentMode = "Single"
 	// DeploymentModeResilientSingle yields an agency and a resilient-single server pair
-	DeploymentModeResilientSingle DeploymentMode = "resilientsingle"
+	DeploymentModeResilientSingle DeploymentMode = "ResilientSingle"
 	// DeploymentModeCluster yields an full cluster (agency, dbservers & coordinators)
-	DeploymentModeCluster DeploymentMode = "cluster"
+	DeploymentModeCluster DeploymentMode = "Cluster"
 )
 
 // Validate the mode.
@@ -49,22 +49,22 @@ func (m DeploymentMode) Validate() error {
 	}
 }
 
-// HasSingleServers returns true when the given mode is "single" or "resilientsingle".
+// HasSingleServers returns true when the given mode is "Single" or "ResilientSingle".
 func (m DeploymentMode) HasSingleServers() bool {
 	return m == DeploymentModeSingle || m == DeploymentModeResilientSingle
 }
 
-// HasAgents returns true when the given mode is "resilientsingle" or "cluster".
+// HasAgents returns true when the given mode is "ResilientSingle" or "Cluster".
 func (m DeploymentMode) HasAgents() bool {
 	return m == DeploymentModeResilientSingle || m == DeploymentModeCluster
 }
 
-// HasDBServers returns true when the given mode is "cluster".
+// HasDBServers returns true when the given mode is "Cluster".
 func (m DeploymentMode) HasDBServers() bool {
 	return m == DeploymentModeCluster
 }
 
-// HasCoordinators returns true when the given mode is "cluster".
+// HasCoordinators returns true when the given mode is "Cluster".
 func (m DeploymentMode) HasCoordinators() bool {
 	return m == DeploymentModeCluster
 }

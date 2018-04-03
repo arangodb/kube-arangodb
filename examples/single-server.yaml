@@ -3,6 +3,6 @@ kind: "ArangoDeployment"
 metadata:
   name: "example-simple-single"
 spec:
-  mode: single
+  mode: Single
   single:
     storageClassName: my-local-ssd

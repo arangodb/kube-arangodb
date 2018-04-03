@@ -61,7 +61,7 @@ kind: "ArangoDeployment"
 metadata:
   name: "single-server"
 spec:
-  mode: single
+  mode: Single
 ```
 
 Now insert this resource in your Kubernetes cluster using:
@@ -164,7 +164,7 @@ kind: "ArangoDeployment"
 metadata:
   name: "cluster"
 spec:
-  mode: cluster
+  mode: Cluster
 ```
 
 Now insert this resource in your Kubernetes cluster using:
