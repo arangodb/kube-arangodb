@@ -25,6 +25,7 @@ package k8sutil
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -170,13 +171,28 @@ func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 
 // arangodInitContainer creates a container configured to
 // initalize a UUID file.
-func arangodInitContainer(name, id string) v1.Container {
+func arangodInitContainer(name, id, engine string, requireUUID bool) v1.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
+	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
+	var command string
+	if requireUUID {
+		command = strings.Join([]string{
+			// Files must exist
+			fmt.Sprintf("test -f %s", uuidFile),
+			fmt.Sprintf("test -f %s", engineFile),
+			// Content must match
+			fmt.Sprintf("grep -q %s %s", id, uuidFile),
+			fmt.Sprintf("grep -q %s %s", engine, engineFile),
+		}, " && ")
+
+	} else {
+		command = fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile)
+	}
 	c := v1.Container{
 		Command: []string{
 			"/bin/sh",
 			"-c",
-			fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile),
+			command,
 		},
 		Name:         name,
 		Image:        alpineImage,
@@ -261,6 +277,7 @@ func newPod(deploymentName, ns, role, id, podName string) v1.Pod {
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
 	role, id, podName, pvcName, image string, imagePullPolicy v1.PullPolicy,
+	engine string, requireUUID bool,
 	args []string, env map[string]EnvValue,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
@@ -278,7 +295,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add UUID init container
-	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id))
+	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, requireUUID))
 
 	// Add volume
 	if pvcName != "" {

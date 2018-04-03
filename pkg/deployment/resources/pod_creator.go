@@ -366,7 +366,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				SecretKey:  constants.SecretKeyJWT,
 			}
 		}
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, spec.GetImagePullPolicy(), args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+		engine := string(spec.GetStorageEngine())
+		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
+		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, spec.GetImagePullPolicy(),
+			engine, requireUUID, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
