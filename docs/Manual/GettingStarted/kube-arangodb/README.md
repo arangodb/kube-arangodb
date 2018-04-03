@@ -3,8 +3,8 @@
 Starting an ArangoDB database (either single server or full blown cluster)
 on Kubernetes involves a lot of resources.
 
-The servers needs to run in Pods, you need secrets for authentication,
-TLS certificates and Services to enable communication with the database.
+The servers needs to run in `Pods`, you need `Secrets` for authentication,
+TLS certificates and `Services` to enable communication with the database.
 
 Use `kube-arangodb`, the ArangoDB Kubernetes operator to greatly simplify
 this process.
@@ -17,11 +17,11 @@ in a Kubernetes cluster.
 
 `kube-arangodb` is a set of two operators that you deploy in your Kubernetes
 cluster to (1) manage deployments of the ArangoDB database and (2)
-provide `PersistenVolume's` on local storage of your nodes for optimal
+provide `PersistenVolumes` on local storage of your nodes for optimal
 storage performace.
 
-Note that the operator that provides `PersistentVolume's` is not needed to
-run ArangoDB deployments. You can also use `PersistentVolume's` provided
+Note that the operator that provides `PersistentVolumes` is not needed to
+run ArangoDB deployments. You can also use `PersistentVolumes` provided
 by other controllers.
 
 In this guide we'll focus on the `ArangoDeployment` operator.
@@ -29,7 +29,7 @@ In this guide we'll focus on the `ArangoDeployment` operator.
 ## Installing `kube-arangodb`
 
 To install `kube-arangodb` in your Kubernetes cluster, make sure
-you have acces to this cluster and the rights to deployment resources
+you have acces to this cluster and the rights to deploy resources
 at cluster level.
 
 For now, any recent Kubernetes cluster will do (e.g. `minikube`).
@@ -41,10 +41,10 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<versi
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/arango-deployment.yaml
 ```
 
-The first command installs two `CustomResourceDefinition's` in your Kubernetes cluster:
+The first command installs two `CustomResourceDefinitions` in your Kubernetes cluster:
 
 - `ArangoDeployment` is the resource used to deploy ArangoDB database.
-- `ArangoLocalStorage` is the resource used to provision `PersistentVolume's` on local storage.
+- `ArangoLocalStorage` is the resource used to provision `PersistentVolumes` on local storage.
 
 The second command installs a `Deployment` that runs the operator that controls
 `ArangoDeployment` resources.
@@ -87,7 +87,7 @@ To inspect the pods created for this deployment, run:
 kubectl get pods --selector=arango_deployment=single-server
 ```
 
-The result will looks something like this:
+The result will look similar to this:
 
 ```plain
 NAME                                 READY     STATUS    RESTARTS   AGE
@@ -178,7 +178,7 @@ to inspect your cluster. Just use the correct deployment name (`cluster` instead
 
 Connecting to your cluster requires a different `Service` since the
 selector now has to select your `cluster` deployment and instead
-of selecting all `Pod's` with role `single` it will have to select
+of selecting all `Pods` with role `single` it will have to select
 all coordinator pods.
 
 The service looks like this:
