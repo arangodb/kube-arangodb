@@ -20,23 +20,18 @@
 // Author Ewout Prangsma
 //
 
-package reconcile
+package resilience
 
 import (
 	"context"
 
 	driver "github.com/arangodb/go-driver"
-	"k8s.io/api/core/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// Context provides methods to the reconcile package.
+// Context provides methods to the resilience package.
 type Context interface {
-	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() k8sutil.APIObject
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
@@ -44,23 +39,10 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(status api.DeploymentStatus, force ...bool) error
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
-	// GetServerClient returns a cached client for a specific server.
-	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
-	// CreateMember adds a new member to the given group.
-	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(group api.ServerGroup, id string) error
-	// DeletePod deletes a pod with given name in the namespace
-	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(podName string) error
-	// DeletePvc deletes a persistent volume claim with given name in the namespace
-	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(pvcName string) error
-	// GetOwnedPods returns a list of all pods owned by the deployment.
-	GetOwnedPods() ([]v1.Pod, error)
+	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
+	// creating one if needed.
+	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 }

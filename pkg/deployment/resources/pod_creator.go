@@ -317,7 +317,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	roleAbbr := group.AsRoleAbbreviated()
 	podSuffix := createPodSuffix(spec)
 	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
-	newState := api.MemberStateCreated
+	newPhase := api.MemberPhaseCreated
 	// Create pod
 	if group.IsArangod() {
 		// Find image ID
@@ -329,7 +329,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
-			newState = api.MemberStateUpgrading
+			newPhase = api.MemberPhaseUpgrading
 		}
 		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, autoUpgrade)
 		env := make(map[string]k8sutil.EnvValue)
@@ -393,8 +393,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	}
-	// Record new member state
-	m.State = newState
+	// Record new member phase
+	m.Phase = newPhase
 	m.Conditions.Remove(api.ConditionTypeReady)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
@@ -405,7 +405,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		return maskAny(err)
 	}
 	// Create event
-	r.context.CreateEvent(k8sutil.NewMemberAddEvent(m.PodName, role, apiObject))
+	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.PodName, role, apiObject))
 
 	return nil
 }
@@ -416,7 +416,7 @@ func (r *Resources) EnsurePods() error {
 	status := r.context.GetStatus()
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			if m.State != api.MemberStateNone {
+			if m.Phase != api.MemberPhaseNone {
 				continue
 			}
 			spec := r.context.GetSpec()
