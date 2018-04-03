@@ -58,6 +58,7 @@ func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 		DeleteFunc: o.onDeleteArangoLocalStorage,
 	}, cache.Indexers{})
 
+	o.Dependencies.StorageProbe.SetReady()
 	informer.Run(stop)
 }
 
