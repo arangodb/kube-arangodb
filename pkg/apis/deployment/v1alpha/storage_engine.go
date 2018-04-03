@@ -31,9 +31,9 @@ type StorageEngine string
 
 const (
 	// StorageEngineMMFiles yields a cluster using the mmfiles storage engine
-	StorageEngineMMFiles StorageEngine = "mmfiles"
+	StorageEngineMMFiles StorageEngine = "MMFiles"
 	// StorageEngineRocksDB yields a cluster using the rocksdb storage engine
-	StorageEngineRocksDB StorageEngine = "rocksdb"
+	StorageEngineRocksDB StorageEngine = "RocksDB"
 )
 
 // Validate the storage engine.

@@ -30,17 +30,17 @@ import (
 
 func TestDeploymentModeValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, DeploymentMode("single").Validate())
-	assert.Nil(t, DeploymentMode("resilientsingle").Validate())
-	assert.Nil(t, DeploymentMode("cluster").Validate())
+	assert.Nil(t, DeploymentMode("Single").Validate())
+	assert.Nil(t, DeploymentMode("ResilientSingle").Validate())
+	assert.Nil(t, DeploymentMode("Cluster").Validate())
 
 	// Not valid
 	assert.Error(t, DeploymentMode("").Validate())
 	assert.Error(t, DeploymentMode(" cluster").Validate())
 	assert.Error(t, DeploymentMode("singles").Validate())
-	assert.Error(t, DeploymentMode("Single").Validate())
-	assert.Error(t, DeploymentMode("Resilientsingle").Validate())
-	assert.Error(t, DeploymentMode("Cluster").Validate())
+	assert.Error(t, DeploymentMode("single").Validate())
+	assert.Error(t, DeploymentMode("resilientsingle").Validate())
+	assert.Error(t, DeploymentMode("cluster").Validate())
 }
 
 func TestDeploymentModeHasX(t *testing.T) {

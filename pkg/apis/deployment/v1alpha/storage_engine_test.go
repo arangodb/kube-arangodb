@@ -30,12 +30,12 @@ import (
 
 func TestStorageEngineValidate(t *testing.T) {
 	// Valid
-	assert.Nil(t, StorageEngine("mmfiles").Validate())
-	assert.Nil(t, StorageEngine("rocksdb").Validate())
+	assert.Nil(t, StorageEngine("MMFiles").Validate())
+	assert.Nil(t, StorageEngine("RocksDB").Validate())
 
 	// Not valid
 	assert.Error(t, StorageEngine("").Validate())
 	assert.Error(t, StorageEngine(" mmfiles").Validate())
-	assert.Error(t, StorageEngine("MMFiles").Validate())
-	assert.Error(t, StorageEngine("RocksDB").Validate())
+	assert.Error(t, StorageEngine("mmfiles").Validate())
+	assert.Error(t, StorageEngine("rocksdb").Validate())
 }

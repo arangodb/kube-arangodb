@@ -34,7 +34,7 @@ kind: "Cluster"
 metadata:
   name: "example-arangodb-cluster"
 spec:
-  mode: cluster
+  mode: Cluster
   auth:
     jwtSecretName: <name-of-JWT-token-secret>
 ```

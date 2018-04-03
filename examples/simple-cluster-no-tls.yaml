@@ -3,6 +3,6 @@ kind: "ArangoDeployment"
 metadata:
   name: "example-simple-cluster-no-tls"
 spec:
-  mode: cluster
+  mode: Cluster
   tls:
     caSecretName: None

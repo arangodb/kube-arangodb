@@ -3,7 +3,7 @@ kind: "ArangoDeployment"
 metadata:
   name: "example-simple-single-no-auth"
 spec:
-  mode: single
+  mode: Single
   auth:
     jwtSecretName: None
 
