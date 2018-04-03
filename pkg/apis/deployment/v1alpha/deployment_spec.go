@@ -62,6 +62,8 @@ type DeploymentSpec struct {
 	Coordinators ServerGroupSpec `json:"coordinators"`
 	SyncMasters  ServerGroupSpec `json:"syncmasters"`
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
+
+	Chaos ChaosSpec `json:"chaos"`
 }
 
 // GetMode returns the value of mode.
@@ -147,6 +149,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.GetMode().HasCoordinators(), s.GetMode())
 	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode())
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
+	s.Chaos.SetDefaults()
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -176,6 +179,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.Coordinators.SetDefaultsFrom(source.Coordinators)
 	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
+	s.Chaos.SetDefaultsFrom(source.Chaos)
 }
 
 // Validate the specification.
@@ -225,6 +229,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
 		return maskAny(err)
+	}
+	if err := s.Chaos.Validate(); err != nil {
+		return maskAny(errors.Wrap(err, "spec.chaos"))
 	}
 	return nil
 }

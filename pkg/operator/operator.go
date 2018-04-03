@@ -68,7 +68,7 @@ type Config struct {
 	ServiceAccount   string
 	EnableDeployment bool
 	EnableStorage    bool
-	CreateCRD        bool
+	AllowChaos       bool
 }
 
 type Dependencies struct {

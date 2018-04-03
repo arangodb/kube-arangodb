@@ -19,6 +19,7 @@ spec:
         image: {{ .Image }}
         args:
           - --operator.deployment
+          - --chaos.allowed={{ .Deployment.AllowChaos }}
         env:
         - name: MY_POD_NAMESPACE
           valueFrom:
