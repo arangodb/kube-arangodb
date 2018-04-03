@@ -25,8 +25,6 @@
 package v1alpha
 
 import (
-	time "time"
-
 	core_v1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -583,7 +581,7 @@ func (in *TLSSpec) DeepCopyInto(out *TLSSpec) {
 		if *in == nil {
 			*out = nil
 		} else {
-			*out = new(time.Duration)
+			*out = new(Duration)
 			**out = **in
 		}
 	}

@@ -62,5 +62,5 @@ func TestTLSSpecSetDefaults(t *testing.T) {
 	assert.Len(t, def(TLSSpec{}).GetAltNames(), 0)
 	assert.Len(t, def(TLSSpec{AltNames: []string{"foo.local"}}).GetAltNames(), 1)
 	assert.Equal(t, defaultTLSTTL, def(TLSSpec{}).GetTTL())
-	assert.Equal(t, time.Hour, def(TLSSpec{TTL: util.NewDuration(time.Hour)}).GetTTL())
+	assert.Equal(t, time.Hour, def(TLSSpec{TTL: NewDuration("1h")}).GetTTL().AsDuration())
 }
