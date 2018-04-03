@@ -206,4 +206,4 @@ to avoid conflicts with the port used in `single-server-service`.
 
 ## Where to go from here
 
-- [Reference manual](../../Programs/kube-arangodb/README.md)
+- [Reference manual](../../Deployment/Kubernetes/README.md)
