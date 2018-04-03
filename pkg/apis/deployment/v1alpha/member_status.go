@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"time"
 
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,8 +34,10 @@ type MemberStatus struct {
 	// ID holds the unique ID of the member.
 	// This id is also used within the ArangoDB cluster to identify this server.
 	ID string `json:"id"`
-	// State holds the current state of this member
-	State MemberState `json:"state"`
+	// Phase holds the current lifetime phase of this member
+	Phase MemberPhase `json:"phase"`
+	// CreatedAt holds the creation timestamp of this member.
+	CreatedAt metav1.Time `json:"created-at"`
 	// PersistentVolumeClaimName holds the name of the persistent volume claim used for this member (if any).
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member
@@ -44,6 +47,9 @@ type MemberStatus struct {
 	// RecentTerminatons holds the times when this member was recently terminated.
 	// First entry is the oldest. (do not add omitempty, since we want to be able to switch from a list to an empty list)
 	RecentTerminations []metav1.Time `json:"recent-terminations"`
+	// IsInitialized is set after the very first time a pod was created for this member.
+	// After that, DBServers must have a UUID field or fail.
+	IsInitialized bool `json:"initialized"`
 }
 
 // RemoveTerminationsBefore removes all recent terminations before the given timestamp.
@@ -77,4 +83,18 @@ func (s MemberStatus) RecentTerminationsSince(timestamp time.Time) int {
 		count++
 	}
 	return count
+}
+
+// IsNotReadySince returns true when the given member has not been ready since the given timestamp.
+// That means it:
+// - A) Was created before timestamp and never reached a ready state or
+// - B) The Ready condition is set to false, and last transision is before timestamp
+func (s MemberStatus) IsNotReadySince(timestamp time.Time) bool {
+	cond, found := s.Conditions.Get(ConditionTypeReady)
+	if found {
+		// B
+		return cond.Status != v1.ConditionTrue && cond.LastTransitionTime.Time.Before(timestamp)
+	}
+	// A
+	return s.CreatedAt.Time.Before(timestamp)
 }

@@ -76,6 +76,12 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 	}
 
+	// Check members for resilience
+	if err := d.resilience.CheckMemberFailure(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
+	}
+
 	// Create scale/update plan
 	if err := d.reconciler.CreatePlan(); err != nil {
 		hasError = true
