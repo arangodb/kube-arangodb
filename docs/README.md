@@ -1,5 +1,5 @@
 # ArangoDB operator docs
 
-- [Getting Started](./Manual/GettingStarted/kube-arangodb/README.md)
-- [User manual](./Manual/Programs/kube-arangodb/README.md)
+- [Getting Started](./Manual/GettingStarted/Kubernetes/README.md)
+- [User manual](./Manual/Programs/Kubernetes/README.md)
 - [Design documents](./design/README.md)
