@@ -45,7 +45,7 @@ type agentStatus struct {
 // The function returns nil when all agents are healthy or an error when something is wrong.
 func AreAgentsHealthy(ctx context.Context, clients []Agency) error {
 	wg := sync.WaitGroup{}
-	invalidKey := []string{"does-not-exists-149e97e8-4b81-5664-a8a8-9ba93881d64c"}
+	invalidKey := []string{"does-not-exist-149e97e8-4b81-5664-a8a8-9ba93881d64c"}
 	statuses := make([]agentStatus, len(clients))
 	for i, c := range clients {
 		wg.Add(1)
