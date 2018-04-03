@@ -59,6 +59,15 @@ func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *v1.Even
 	return event
 }
 
+// NewPodCreatedEvent creates an event indicating that a pod has been created
+func NewPodCreatedEvent(podName, role string, apiObject APIObject) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = fmt.Sprintf("Pod Of %s Created", strings.Title(role))
+	event.Message = fmt.Sprintf("Pod %s of member %s is created", podName, role)
+	return event
+}
+
 // NewPodGoneEvent creates an event indicating that a pod is missing
 func NewPodGoneEvent(podName, role string, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)

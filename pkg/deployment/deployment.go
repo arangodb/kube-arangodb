@@ -37,6 +37,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -94,6 +95,7 @@ type Deployment struct {
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
+	resilience                *resilience.Resilience
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
 }
@@ -114,6 +116,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
+	d.resilience = resilience.NewResilience(deps.Log, d)
 	d.resources = resources.NewResources(deps.Log, d)
 	if d.status.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.

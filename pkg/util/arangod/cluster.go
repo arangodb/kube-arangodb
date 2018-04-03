@@ -92,3 +92,22 @@ func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinat
 	}
 	return nil
 }
+
+// RemoveServerFromCluster tries to remove a coordinator or DBServer from the cluster.
+func RemoveServerFromCluster(ctx context.Context, conn driver.Connection, id driver.ServerID) error {
+	req, err := conn.NewRequest("POST", "_admin/cluster/removeServer")
+	if err != nil {
+		return maskAny(err)
+	}
+	if _, err := req.SetBody(id); err != nil {
+		return maskAny(err)
+	}
+	resp, err := conn.Do(ctx, req)
+	if err != nil {
+		return maskAny(err)
+	}
+	if err := resp.CheckStatus(200); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
