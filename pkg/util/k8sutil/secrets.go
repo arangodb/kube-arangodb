@@ -114,6 +114,22 @@ func CreateCASecret(cli corev1.CoreV1Interface, secretName, namespace string, ce
 	return nil
 }
 
+// GetTLSKeyfileSecret loads a secret used to store a PEM encoded keyfile
+// in the format ArangoDB accepts it for its `--ssl.keyfile` option.
+// Returns: keyfile (pem encoded), error
+func GetTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return "", maskAny(err)
+	}
+	// Load `tls.keyfile` field
+	keyfile, found := s.Data[constants.SecretTLSKeyfile]
+	if !found {
+		return "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, secretName))
+	}
+	return string(keyfile), nil
+}
+
 // CreateTLSKeyfileSecret creates a secret used to store a PEM encoded keyfile
 // in the format ArangoDB accepts it for its `--ssl.keyfile` option.
 func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace string, keyfile string, ownerRef *metav1.OwnerReference) error {

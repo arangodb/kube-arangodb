@@ -63,4 +63,10 @@ type Context interface {
 	DeletePvc(pvcName string) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
+	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
+	// the given member.
+	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
+	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+	// If the secret does not exist, the error is ignored.
+	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
 }

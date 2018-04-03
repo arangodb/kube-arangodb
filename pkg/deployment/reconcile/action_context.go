@@ -64,6 +64,9 @@ type ActionContext interface {
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(pvcName string) error
+	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+	// If the secret does not exist, the error is ignored.
+	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -177,6 +180,15 @@ func (ac *actionContext) DeletePod(podName string) error {
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (ac *actionContext) DeletePvc(pvcName string) error {
 	if err := ac.context.DeletePvc(pvcName); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+// If the secret does not exist, the error is ignored.
+func (ac *actionContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+	if err := ac.context.DeleteTLSKeyfile(group, member); err != nil {
 		return maskAny(err)
 	}
 	return nil

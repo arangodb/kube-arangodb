@@ -194,3 +194,26 @@ func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
 	}
 	return myPods, nil
 }
+
+// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
+// the given member.
+func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
+	ns := d.apiObject.GetNamespace()
+	result, err := k8sutil.GetTLSKeyfileSecret(d.deps.KubeCli.CoreV1(), secretName, ns)
+	if err != nil {
+		return "", maskAny(err)
+	}
+	return result, nil
+}
+
+// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+// If the secret does not exist, the error is ignored.
+func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
+	ns := d.apiObject.GetNamespace()
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}

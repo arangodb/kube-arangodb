@@ -134,6 +134,8 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewUpgradeMemberAction(log, action, actionCtx)
 	case api.ActionTypeWaitForMemberUp:
 		return NewWaitForMemberUpAction(log, action, actionCtx)
+	case api.ActionTypeRenewTLSCertificate:
+		return NewRenewTLSCertificateAction(log, action, actionCtx)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}
