@@ -205,3 +205,5 @@ Note that we've choosen a different node port (31529) for this `Service`
 to avoid conflicts with the port used in `single-server-service`.
 
 ## Where to go from here
+
+- [Reference manual](../../Programs/kube-arangodb/README.md)
