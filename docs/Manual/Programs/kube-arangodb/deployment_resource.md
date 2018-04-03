@@ -1,11 +1,11 @@
-# Custom Resource
+# ArangoLocalStorage Custom Resource
 
-The ArangoDB operator creates and maintains ArangoDB deployments
-in a Kubernetes cluster, given a cluster specification.
-This cluster specification is a CustomResource following
-a CustomResourceDefinition created by the operator.
+The ArangoDB Deployment operator creates and maintains ArangoDB deployments
+in a Kubernetes cluster, given a deployment specification.
+This deployment specification is a `CustomResource` following
+a `CustomResourceDefinition` created by the operator.
 
-Example minimal cluster definition:
+Example minimal deployment definition of an ArangoDB database cluster:
 
 ```yaml
 apiVersion: "database.arangodb.com/v1alpha"
@@ -16,7 +16,7 @@ spec:
   mode: cluster
 ```
 
-Example more elaborate cluster definition:
+Example more elaborate deployment definition:
 
 ```yaml
 apiVersion: "database.arangodb.com/v1alpha"
@@ -41,7 +41,7 @@ spec:
     storageClassName: ssd
   coordinators:
     count: 3
-  image: "arangodb/arangodb:3.3.3"
+  image: "arangodb/arangodb:3.3.4"
 ```
 
 ## Specification reference
