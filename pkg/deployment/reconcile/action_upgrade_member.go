@@ -88,7 +88,7 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Update status
-	m.State = api.MemberStateRotating // We keep the rotation state here, since only when a new pod is created, it will get the Upgrading state.
+	m.Phase = api.MemberPhaseRotating // We keep the rotation phase here, since only when a new pod is created, it will get the Upgrading phase.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
@@ -105,7 +105,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
 		log.Error().Msg("No such member")
 		return true, nil
 	}
-	isUpgrading := m.State == api.MemberStateUpgrading
+	isUpgrading := m.Phase == api.MemberPhaseUpgrading
 	log = log.With().
 		Str("pod-name", m.PodName).
 		Bool("is-upgrading", isUpgrading).Logger()
@@ -119,7 +119,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	// Pod is now gone, update the member status
-	m.State = api.MemberStateNone
+	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)

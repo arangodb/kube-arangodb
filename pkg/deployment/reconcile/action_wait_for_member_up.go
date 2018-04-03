@@ -24,8 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"sync"
-	"time"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
@@ -43,10 +41,6 @@ func NewWaitForMemberUpAction(log zerolog.Logger, action api.Action, actionCtx A
 		actionCtx: actionCtx,
 	}
 }
-
-const (
-	maxAgentResponseTime = time.Second * 10
-)
 
 // actionWaitForMemberUp implements an WaitForMemberUp.
 type actionWaitForMemberUp struct {
@@ -99,12 +93,6 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	return true, nil
 }
 
-type agentStatus struct {
-	IsLeader       bool
-	LeaderEndpoint string
-	IsResponding   bool
-}
-
 // checkProgressAgent checks the progress of the action in the case
 // of an agent.
 func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, error) {
@@ -115,65 +103,12 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, e
 		return false, maskAny(err)
 	}
 
-	wg := sync.WaitGroup{}
-	invalidKey := []string{"does-not-exists-149e97e8-4b81-5664-a8a8-9ba93881d64c"}
-	statuses := make([]agentStatus, len(clients))
-	for i, c := range clients {
-		wg.Add(1)
-		go func(i int, c arangod.Agency) {
-			defer wg.Done()
-			var trash interface{}
-			lctx, cancel := context.WithTimeout(ctx, maxAgentResponseTime)
-			defer cancel()
-			if err := c.ReadKey(lctx, invalidKey, &trash); err == nil || arangod.IsKeyNotFound(err) {
-				// We got a valid read from the leader
-				statuses[i].IsLeader = true
-				statuses[i].LeaderEndpoint = c.Endpoint()
-				statuses[i].IsResponding = true
-			} else {
-				if location, ok := arangod.IsNotLeader(err); ok {
-					// Valid response from a follower
-					statuses[i].IsLeader = false
-					statuses[i].LeaderEndpoint = location
-					statuses[i].IsResponding = true
-				} else {
-					// Unexpected / invalid response
-					log.Debug().Err(err).Str("endpoint", c.Endpoint()).Msg("Agent is not responding")
-					statuses[i].IsResponding = false
-				}
-			}
-		}(i, c)
-	}
-	wg.Wait()
-
-	// Check the results
-	noLeaders := 0
-	for i, status := range statuses {
-		if !status.IsResponding {
-			log.Debug().Msg("Not all agents are responding")
-			return false, nil
-		}
-		if status.IsLeader {
-			noLeaders++
-		}
-		if i > 0 {
-			// Compare leader endpoint with previous
-			prev := statuses[i-1].LeaderEndpoint
-			if !arangod.IsSameEndpoint(prev, status.LeaderEndpoint) {
-				log.Debug().Msg("Not all agents report the same leader endpoint")
-				return false, nil
-			}
-		}
-	}
-	if noLeaders != 1 {
-		log.Debug().Int("leaders", noLeaders).Msg("Unexpected number of agency leaders")
+	if err := arangod.AreAgentsHealthy(ctx, clients); err != nil {
+		log.Debug().Err(err).Msg("Not all agents are ready")
 		return false, nil
 	}
 
-	log.Debug().
-		Int("leaders", noLeaders).
-		Int("followers", len(statuses)-noLeaders).
-		Msg("Agency is happy")
+	log.Debug().Msg("Agency is happy")
 
 	return true, nil
 }

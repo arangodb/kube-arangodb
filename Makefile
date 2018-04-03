@@ -272,6 +272,16 @@ endif
 patch-readme:
 	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
 
+.PHONY: update-changelog
+changelog:
+	docker run -it --rm \
+		-e CHANGELOG_GITHUB_TOKEN=$(shell cat ~/.arangodb/github-token) \
+		-v "$(ROOTDIR)":/usr/local/src/your-app \
+		ferrarimarco/github-changelog-generator \
+		--user arangodb \
+		--project kube-arangodb \
+		--no-author
+
 .PHONY: docker-push
 docker-push: docker
 ifneq ($(DOCKERNAMESPACE), arangodb)
