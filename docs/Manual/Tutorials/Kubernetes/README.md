@@ -9,7 +9,7 @@ TLS certificates and `Services` to enable communication with the database.
 Use `kube-arangodb`, the ArangoDB Kubernetes Operator to greatly simplify
 this process.
 
-In this guide, we'll explain what the ArangoDB Kubernetes Operator is,
+In this guide, we will explain what the ArangoDB Kubernetes Operator is,
 how to install it and how use it to deploy your first ArangoDB database
 in a Kubernetes cluster.
 
@@ -24,7 +24,7 @@ Note that the operator that provides `PersistentVolumes` is not needed to
 run ArangoDB deployments. You can also use `PersistentVolumes` provided
 by other controllers.
 
-In this guide we'll focus on the `ArangoDeployment` operator.
+In this guide we will focus on the `ArangoDeployment` operator.
 
 ## Installing `kube-arangodb`
 
@@ -51,7 +51,7 @@ The second command installs a `Deployment` that runs the operator that controls
 
 ## Deploying your first ArangoDB database
 
-The first database we're going to deploy is a single server database.
+The first database we are going to deploy is a single server database.
 
 Create a file called `single-server.yaml` with the following content.
 
@@ -106,7 +106,7 @@ To make the database available outside your Kubernetes cluster (e.g. for browser
 you must deploy an additional `Service`.
 
 There are several possible types of `Service` to choose from.
-We're going to use the `NodePort` type to expose the database on port 30529 of
+We are going to use the `NodePort` type to expose the database on port 30529 of
 every node of your Kubernetes cluster.
 
 Create a file called `single-server-service.yaml` with the following content.
@@ -201,7 +201,7 @@ spec:
     nodePort: 31529
 ```
 
-Note that we've chosen a different node port (31529) for this `Service`
+Note that we have chosen a different node port (31529) for this `Service`
 to avoid conflicts with the port used in `single-server-service`.
 
 ## Where to go from here
