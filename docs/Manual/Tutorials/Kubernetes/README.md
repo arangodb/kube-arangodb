@@ -6,10 +6,10 @@ on Kubernetes involves a lot of resources.
 The servers needs to run in `Pods`, you need `Secrets` for authentication,
 TLS certificates and `Services` to enable communication with the database.
 
-Use `kube-arangodb`, the ArangoDB Kubernetes operator to greatly simplify
+Use `kube-arangodb`, the ArangoDB Kubernetes Operator to greatly simplify
 this process.
 
-In this guide, we'll explain what the ArangoDB Kubernetes operator is,
+In this guide, we'll explain what the ArangoDB Kubernetes Operator is,
 how to install it and how use it to deploy your first ArangoDB database
 in a Kubernetes cluster.
 
