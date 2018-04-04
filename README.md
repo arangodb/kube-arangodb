@@ -4,9 +4,7 @@
 
 State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS WILL CHANGE.
 
-- [Getting Started](./docs/Manual/GettingStarted/Kubernetes/README.md)
-- [User manual](./docs/Manual/Deployment/Kubernetes/README.md)
-- [Design documents](./docs/design/README.md)
+[Documentation](./docs/README.md)
 
 ## Installation of latest release
 

@@ -1,12 +1,6 @@
-# ArangoDB operator user manual
+# ArangoDB Kubernetes Operator
 
-- [Using the operator](./usage.md)
-- [Deployment Resource](./deployment_resource.md)
-- [ArangoDB configuration & secrets](./config_and_secrets.md)
-- [Metrics](./metrics.md)
-- [Scaling](./scaling.md)
-- [Services & Load balancer](./services_and_loadbalancer.md)
-- [Storage](./storage.md)
-- [Storage Resource](./storage_resource.md)
-- [TLS](./tls.md)
-- [Upgrading](./upgrading.md)
+The ArangoDB Kubernetes Operator (`kube-arangodb`) is a set of two operators
+that you deploy in your Kubernetes cluster to manage deployments of the
+ArangoDB database and provide `PersistenVolumes` on local storage of your
+nodes for optimal storage performance.
