@@ -261,9 +261,6 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
-ifneq ($(DEPLOYMENTNAMESPACE), default)
-	kubectl delete namespace $(DEPLOYMENTNAMESPACE) --ignore-not-found --now
-endif
 
 .PHONY: cleanup-tests
 cleanup-tests:
