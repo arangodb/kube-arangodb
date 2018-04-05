@@ -17,7 +17,7 @@ in a Kubernetes cluster.
 
 `kube-arangodb` is a set of two operators that you deploy in your Kubernetes
 cluster to (1) manage deployments of the ArangoDB database and (2)
-provide `PersistenVolumes` on local storage of your nodes for optimal
+provide `PersistentVolumes` on local storage of your nodes for optimal
 storage performance.
 
 Note that the operator that provides `PersistentVolumes` is not needed to
