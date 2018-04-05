@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         name: {{ .Deployment.OperatorDeploymentName }}
+        app: arango-deployment-operator
     spec:
       containers:
       - name: operator

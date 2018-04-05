@@ -20,6 +20,7 @@ spec:
     metadata:
       labels:
         name: {{ .Storage.OperatorDeploymentName }}
+        app: arango-storage-operator
     spec:
       serviceAccountName: {{ .Storage.Operator.ServiceAccountName }}
       containers:
