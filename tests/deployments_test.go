@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	driver "github.com/arangodb/go-driver"
@@ -161,10 +162,10 @@ func TestMultiDeployment(t *testing.T) {
 	collections2, err := db2.Collections(ctx)
 	require.NoError(t, err, "failed to get collections")
 
-	require.True(t, containsCollection(collections1, "col1"), "collection missing")
-	require.True(t, containsCollection(collections2, "col2"), "collection missing")
-	require.False(t, containsCollection(collections1, "col2"), "collection must not be in this deployment")
-	require.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
+	assert.True(t, containsCollection(collections1, "col1"), "collection missing")
+	assert.True(t, containsCollection(collections2, "col2"), "collection missing")
+	assert.False(t, containsCollection(collections1, "col2"), "collection must not be in this deployment")
+	assert.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
