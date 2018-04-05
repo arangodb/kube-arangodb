@@ -1,0 +1,34 @@
+# This example shows how to integrate with the Prometheus Operator
+# to bring metrics from kube-arangodb to Prometheus.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: arango-deployment-operator
+  labels:
+    app: arango-deployment-operator
+spec:
+  selector:
+    app: arango-deployment-operator
+  ports:
+  - name: metrics
+    port: 8528
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: arango-deployment-operator
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: arango-deployment-operator
+  endpoints:
+  - port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+
