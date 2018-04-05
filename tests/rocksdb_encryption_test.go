@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/dchest/uniuri"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -22,6 +24,9 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
+
+	// Prepull enterprise images
+	assert.NoError(t, prepullArangoImage(kubecli, image, ns))
 
 	// Prepare deployment config
 	depl := newDeployment("test-rocksdb-enc-sng-" + uniuri.NewLen(4))

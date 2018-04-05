@@ -31,9 +31,9 @@ type Environment string
 
 const (
 	// EnvironmentDevelopment yields a cluster optimized for development
-	EnvironmentDevelopment Environment = "development"
+	EnvironmentDevelopment Environment = "Development"
 	// EnvironmentProduction yields a cluster optimized for production
-	EnvironmentProduction Environment = "production"
+	EnvironmentProduction Environment = "Production"
 )
 
 // Validate the environment.

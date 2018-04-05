@@ -45,6 +45,8 @@ const (
 	ActionTypeUpgradeMember ActionType = "UpgradeMember"
 	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
+	// ActionTypeRenewTLSCertificate causes the TLS certificate of a member to be renewed.
+	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 )
 
 // Action represents a single action to be taken to update a deployment.

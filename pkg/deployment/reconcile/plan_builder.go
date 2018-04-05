@@ -23,11 +23,16 @@
 package reconcile
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"crypto/x509"
+	"encoding/pem"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
 // upgradeDecision is the result of an upgrade check.
@@ -52,7 +57,7 @@ func (d *Reconciler) CreatePlan() error {
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status := d.context.GetStatus()
-	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods)
+	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile)
 
 	// If not change, we're done
 	if !changed {
@@ -76,7 +81,8 @@ func (d *Reconciler) CreatePlan() error {
 // Otherwise the new plan is returned with a boolean true.
 func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, pods []v1.Pod) (api.Plan, bool) {
+	status api.DeploymentStatus, pods []v1.Pod,
+	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error)) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -85,57 +91,111 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	// Check for various scenario's
 	var plan api.Plan
 
-	// Check for scale up/down
-	switch spec.GetMode() {
-	case api.DeploymentModeSingle:
-		// Never scale down
-	case api.DeploymentModeResilientSingle:
-		// Only scale singles
-		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
-	case api.DeploymentModeCluster:
-		// Scale dbservers, coordinators, syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
-		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
-	}
-
-	// Check for the need to rotate one or more members
-	getPod := func(podName string) *v1.Pod {
-		for _, p := range pods {
-			if p.GetName() == podName {
-				return &p
-			}
-		}
-		return nil
-	}
+	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
 		for _, m := range *members {
-			if len(plan) > 0 {
-				// Only 1 change at a time
-				continue
-			}
-			if m.State != api.MemberStateCreated {
-				// Only rotate when state is created
-				continue
-			}
-			if podName := m.PodName; podName != "" {
-				if p := getPod(podName); p != nil {
-					// Got pod, compare it with what it should be
-					decision := podNeedsUpgrading(*p, spec, status.Images)
-					if decision.UpgradeNeeded && decision.UpgradeAllowed {
-						plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
-					} else {
-						rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
-						if rotNeeded {
-							plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
-						}
-					}
+			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
+				newID := ""
+				if group == api.ServerGroupAgents {
+					newID = m.ID // Agents cannot (yet) be replaced with new IDs
 				}
+				plan = append(plan,
+					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+					api.NewAction(api.ActionTypeAddMember, group, newID),
+				)
 			}
 		}
 		return nil
 	})
+
+	// Check for scale up/down
+	if len(plan) == 0 {
+		switch spec.GetMode() {
+		case api.DeploymentModeSingle:
+			// Never scale down
+		case api.DeploymentModeResilientSingle:
+			// Only scale singles
+			plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
+		case api.DeploymentModeCluster:
+			// Scale dbservers, coordinators, syncmasters & syncworkers
+			plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
+			plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+			plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
+			plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
+		}
+	}
+
+	// Check for the need to rotate one or more members
+	if len(plan) == 0 {
+		getPod := func(podName string) *v1.Pod {
+			for _, p := range pods {
+				if p.GetName() == podName {
+					return &p
+				}
+			}
+			return nil
+		}
+		status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+			for _, m := range *members {
+				if len(plan) > 0 {
+					// Only 1 change at a time
+					continue
+				}
+				if m.Phase != api.MemberPhaseCreated {
+					// Only rotate when phase is created
+					continue
+				}
+				if podName := m.PodName; podName != "" {
+					if p := getPod(podName); p != nil {
+						// Got pod, compare it with what it should be
+						decision := podNeedsUpgrading(*p, spec, status.Images)
+						if decision.UpgradeNeeded && decision.UpgradeAllowed {
+							plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
+						} else {
+							rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
+							if rotNeeded {
+								plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
+							}
+						}
+					}
+				}
+			}
+			return nil
+		})
+	}
+
+	// Check for the need to rotate TLS certificate of a members
+	if len(plan) == 0 && spec.TLS.IsSecure() {
+		status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
+			for _, m := range *members {
+				if len(plan) > 0 {
+					// Only 1 change at a time
+					continue
+				}
+				if m.Phase != api.MemberPhaseCreated {
+					// Only make changes when phase is created
+					continue
+				}
+				// Load keyfile
+				keyfile, err := getTLSKeyfile(group, m)
+				if err != nil {
+					log.Warn().Err(err).
+						Str("role", group.AsRole()).
+						Str("id", m.ID).
+						Msg("Failed to get TLS secret")
+					continue
+				}
+				renewalNeeded := tlsKeyfileNeedsRenewal(log, keyfile)
+				if renewalNeeded {
+					plan = append(append(plan,
+						api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID)),
+						createRotateMemberPlan(log, m, group, "TLS certificate renewal")...,
+					)
+				}
+			}
+			return nil
+		})
+	}
 
 	// Return plan
 	return plan, true
@@ -210,6 +270,44 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	}*/
 
 	return false, ""
+}
+
+// tlsKeyfileNeedsRenewal decides if the certificate in the given keyfile
+// should be renewed.
+func tlsKeyfileNeedsRenewal(log zerolog.Logger, keyfile string) bool {
+	raw := []byte(keyfile)
+	for {
+		var derBlock *pem.Block
+		derBlock, raw = pem.Decode(raw)
+		if derBlock == nil {
+			break
+		}
+		if derBlock.Type == "CERTIFICATE" {
+			cert, err := x509.ParseCertificate(derBlock.Bytes)
+			if err != nil {
+				// We do not understand the certificate, let's renew it
+				log.Warn().Err(err).Msg("Failed to parse x509 certificate. Renewing it")
+				return true
+			}
+			if cert.IsCA {
+				// Only look at the server certificate, not CA or intermediate
+				continue
+			}
+			// Check expiration date. Renewal at 2/3 of lifetime.
+			ttl := cert.NotAfter.Sub(cert.NotBefore)
+			expirationDate := cert.NotBefore.Add((ttl / 3) * 2)
+			if expirationDate.Before(time.Now()) {
+				// We should renew now
+				log.Debug().
+					Str("not-before", cert.NotBefore.String()).
+					Str("not-after", cert.NotAfter.String()).
+					Str("expiration-date", expirationDate.String()).
+					Msg("TLS certificate renewal needed")
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // createScalePlan creates a scaling plan for a single server group

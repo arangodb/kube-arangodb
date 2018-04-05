@@ -1,7 +1,7 @@
 # Configuration & secrets
 
 An ArangoDB cluster has lots of configuration options.
-Some will be supported directly in the ArangoDB operator,
+Some will be supported directly in the ArangoDB Operator,
 others will have to specified separately.
 
 ## Built-in options
@@ -34,7 +34,7 @@ kind: "Cluster"
 metadata:
   name: "example-arangodb-cluster"
 spec:
-  mode: cluster
+  mode: Cluster
   auth:
     jwtSecretName: <name-of-JWT-token-secret>
 ```

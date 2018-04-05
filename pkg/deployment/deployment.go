@@ -25,6 +25,7 @@ package deployment
 import (
 	"fmt"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -35,7 +36,9 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -46,6 +49,7 @@ import (
 // Config holds configuration settings for a Deployment
 type Config struct {
 	ServiceAccount string
+	AllowChaos     bool
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -83,6 +87,7 @@ type Deployment struct {
 
 	eventCh chan *deploymentEvent
 	stopCh  chan struct{}
+	stopped int32
 
 	eventsCli corev1.EventInterface
 
@@ -92,7 +97,9 @@ type Deployment struct {
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
+	resilience                *resilience.Resilience
 	resources                 *resources.Resources
+	chaosMonkey               *chaos.Monkey
 }
 
 // New creates a new Deployment from the given API object.
@@ -111,6 +118,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
+	d.resilience = resilience.NewResilience(deps.Log, d)
 	d.resources = resources.NewResources(deps.Log, d)
 	if d.status.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
@@ -126,6 +134,10 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
 		go ci.ListenForClusterEvents(d.stopCh)
+	}
+	if config.AllowChaos {
+		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
+		d.chaosMonkey.Run(d.stopCh)
 	}
 
 	return d, nil
@@ -144,7 +156,9 @@ func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
 // Called when the deployment was deleted by the user.
 func (d *Deployment) Delete() {
 	d.deps.Log.Info().Msg("deployment is deleted by user")
-	close(d.stopCh)
+	if atomic.CompareAndSwapInt32(&d.stopped, 0, 1) {
+		close(d.stopCh)
+	}
 }
 
 // send given event into the deployment event queue.

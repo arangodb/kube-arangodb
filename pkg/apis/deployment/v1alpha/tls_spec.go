@@ -25,7 +25,6 @@ package v1alpha
 import (
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -33,14 +32,14 @@ import (
 )
 
 const (
-	defaultTLSTTL = time.Hour * 2160 // About 3 month
+	defaultTLSTTL = Duration("2610h") // About 3 month
 )
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName *string        `json:"caSecretName,omitempty"`
-	AltNames     []string       `json:"altNames,omitempty"`
-	TTL          *time.Duration `json:"ttl,omitempty"`
+	CASecretName *string   `json:"caSecretName,omitempty"`
+	AltNames     []string  `json:"altNames,omitempty"`
+	TTL          *Duration `json:"ttl,omitempty"`
 }
 
 const (
@@ -59,8 +58,8 @@ func (s TLSSpec) GetAltNames() []string {
 }
 
 // GetTTL returns the value of ttl.
-func (s TLSSpec) GetTTL() time.Duration {
-	return util.DurationOrDefault(s.TTL)
+func (s TLSSpec) GetTTL() Duration {
+	return DurationOrDefault(s.TTL)
 }
 
 // IsSecure returns true when a CA secret has been set, false otherwise.
@@ -94,6 +93,9 @@ func (s TLSSpec) Validate() error {
 		if _, _, _, err := s.GetParsedAltNames(); err != nil {
 			return maskAny(err)
 		}
+		if err := s.GetTTL().Validate(); err != nil {
+			return maskAny(err)
+		}
 	}
 	return nil
 }
@@ -105,10 +107,10 @@ func (s *TLSSpec) SetDefaults(defaultCASecretName string) {
 		// string should result in the default value.
 		s.CASecretName = util.NewString(defaultCASecretName)
 	}
-	if s.GetTTL() == 0 {
+	if s.GetTTL() == "" {
 		// Note that we don't check for nil here, since even a specified, but zero
 		// should result in the default value.
-		s.TTL = util.NewDuration(defaultTLSTTL)
+		s.TTL = NewDuration(defaultTLSTTL)
 	}
 }
 
@@ -121,6 +123,6 @@ func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
 		s.AltNames = source.AltNames
 	}
 	if s.TTL == nil {
-		s.TTL = util.NewDurationOrNil(source.TTL)
+		s.TTL = NewDurationOrNil(source.TTL)
 	}
 }

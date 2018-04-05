@@ -50,9 +50,11 @@ type Context interface {
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]arangod.Agency, error)
+	// If the given predicate is not nil, only agents are included where the given predicate returns true.
+	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
 	// CreateMember adds a new member to the given group.
-	CreateMember(group api.ServerGroup) error
+	// If ID is non-empty, it will be used, otherwise a new ID is created.
+	CreateMember(group api.ServerGroup, id string) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error
@@ -61,4 +63,10 @@ type Context interface {
 	DeletePvc(pvcName string) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
+	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
+	// the given member.
+	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
+	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+	// If the secret does not exist, the error is ignored.
+	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
 }

@@ -97,10 +97,14 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 }
 
 // GetAgencyClients returns a client connection for every agency member.
-func (d *Deployment) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
+// If the given predicate is not nil, only agents are included where the given predicate returns true.
+func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error) {
 	agencyMembers := d.status.Members.Agents
 	result := make([]arangod.Agency, 0, len(agencyMembers))
 	for _, m := range agencyMembers {
+		if predicate != nil && !predicate(m.ID) {
+			continue
+		}
 		client, err := d.GetServerClient(ctx, api.ServerGroupAgents, m.ID)
 		if err != nil {
 			return nil, maskAny(err)
@@ -115,9 +119,11 @@ func (d *Deployment) GetAgencyClients(ctx context.Context) ([]arangod.Agency, er
 }
 
 // CreateMember adds a new member to the given group.
-func (d *Deployment) CreateMember(group api.ServerGroup) error {
+// If ID is non-empty, it will be used, otherwise a new ID is created.
+func (d *Deployment) CreateMember(group api.ServerGroup, id string) error {
 	log := d.deps.Log
-	if err := d.createMember(group, d.apiObject); err != nil {
+	id, err := d.createMember(group, id, d.apiObject)
+	if err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
 		return maskAny(err)
 	}
@@ -126,6 +132,9 @@ func (d *Deployment) CreateMember(group api.ServerGroup) error {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)
 	}
+	// Create event about it
+	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
+
 	return nil
 }
 
@@ -184,4 +193,27 @@ func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
 		}
 	}
 	return myPods, nil
+}
+
+// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
+// the given member.
+func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
+	ns := d.apiObject.GetNamespace()
+	result, err := k8sutil.GetTLSKeyfileSecret(d.deps.KubeCli.CoreV1(), secretName, ns)
+	if err != nil {
+		return "", maskAny(err)
+	}
+	return result, nil
+}
+
+// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+// If the secret does not exist, the error is ignored.
+func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
+	ns := d.apiObject.GetNamespace()
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
 }

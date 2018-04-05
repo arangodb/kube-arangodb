@@ -65,6 +65,10 @@ ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
 
+ifndef ALLOWCHAOS
+	ALLOWCHAOS := true
+endif
+
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
 TESTBINNAME := $(PROJECT)_test
@@ -200,7 +204,8 @@ manifests: $(GOBUILDDIR)
 		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
 		--image-sha256=$(IMAGESHA256) \
-		--namespace=$(DEPLOYMENTNAMESPACE)
+		--namespace=$(DEPLOYMENTNAMESPACE) \
+		--allow-chaos=$(ALLOWCHAOS)
 
 # Testing
 
@@ -256,9 +261,6 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
-ifneq ($(DEPLOYMENTNAMESPACE), default)
-	kubectl delete namespace $(DEPLOYMENTNAMESPACE) --ignore-not-found --now
-endif
 
 .PHONY: cleanup-tests
 cleanup-tests:
@@ -267,6 +269,20 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 endif
 
 # Release building
+
+.PHONY: patch-readme
+patch-readme:
+	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: update-changelog
+changelog:
+	docker run -it --rm \
+		-e CHANGELOG_GITHUB_TOKEN=$(shell cat ~/.arangodb/github-token) \
+		-v "$(ROOTDIR)":/usr/local/src/your-app \
+		ferrarimarco/github-changelog-generator \
+		--user arangodb \
+		--project kube-arangodb \
+		--no-author
 
 .PHONY: docker-push
 docker-push: docker

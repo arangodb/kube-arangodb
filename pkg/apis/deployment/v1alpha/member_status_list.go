@@ -108,7 +108,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 	if len(l) > 0 {
 		// Try to find a not ready member
 		for _, m := range l {
-			if m.State == MemberStateNone {
+			if m.Phase == MemberPhaseNone {
 				return m, nil
 			}
 		}
@@ -116,7 +116,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 		perm := rand.Perm(len(l))
 		for _, idx := range perm {
 			m := l[idx]
-			if m.State == MemberStateCreated {
+			if m.Phase == MemberPhaseCreated {
 				return m, nil
 			}
 		}

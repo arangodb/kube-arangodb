@@ -14,6 +14,8 @@ metadata:
   namespace: {{ .Storage.Operator.Namespace }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -35,3 +37,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        ports:
+        - name: metrics
+          containerPort: 8528
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8528
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready/storage
+            port: 8528
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      

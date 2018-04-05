@@ -24,18 +24,13 @@ package deployment
 
 import (
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // listenForPodEvents keep listening for changes in pod until the given channel is closed.
 func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
-	source := cache.NewListWatchFromClient(
-		d.deps.KubeCli.CoreV1().RESTClient(),
-		"pods",
-		d.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getPod := func(obj interface{}) (*v1.Pod, bool) {
 		pod, ok := obj.(*v1.Pod)
 		if !ok {
@@ -49,35 +44,35 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 		return pod, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.Pod{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if p, ok := getPod(newObj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		d.deps.Log,
+		d.deps.KubeCli.CoreV1().RESTClient(),
+		"pods",
+		d.apiObject.GetNamespace(),
+		&v1.Pod{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if p, ok := getPod(newObj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				if p, ok := getPod(obj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+		})
 
-	informer.Run(stopCh)
+	rw.Run(stopCh)
 }
 
 // listenForPVCEvents keep listening for changes in PVC's until the given channel is closed.
 func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
-	source := cache.NewListWatchFromClient(
-		d.deps.KubeCli.CoreV1().RESTClient(),
-		"persistentvolumeclaims",
-		d.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getPVC := func(obj interface{}) (*v1.PersistentVolumeClaim, bool) {
 		pvc, ok := obj.(*v1.PersistentVolumeClaim)
 		if !ok {
@@ -91,35 +86,35 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 		return pvc, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.PersistentVolumeClaim{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if p, ok := getPVC(newObj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
-				d.triggerInspection()
-			}
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		d.deps.Log,
+		d.deps.KubeCli.CoreV1().RESTClient(),
+		"persistentvolumeclaims",
+		d.apiObject.GetNamespace(),
+		&v1.PersistentVolumeClaim{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if p, ok := getPVC(newObj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				if p, ok := getPVC(obj); ok && d.isOwnerOf(p) {
+					d.triggerInspection()
+				}
+			},
+		})
 
-	informer.Run(stopCh)
+	rw.Run(stopCh)
 }
 
 // listenForSecretEvents keep listening for changes in Secrets's until the given channel is closed.
 func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
-	source := cache.NewListWatchFromClient(
-		d.deps.KubeCli.CoreV1().RESTClient(),
-		"secrets",
-		d.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getSecret := func(obj interface{}) (*v1.Secret, bool) {
 		secret, ok := obj.(*v1.Secret)
 		if !ok {
@@ -133,36 +128,36 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 		return secret, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.Secret{}, 0, cache.ResourceEventHandlerFuncs{
-		// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
-		AddFunc: func(obj interface{}) {
-			if _, ok := getSecret(obj); ok {
-				d.triggerInspection()
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if _, ok := getSecret(newObj); ok {
-				d.triggerInspection()
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			if _, ok := getSecret(obj); ok {
-				d.triggerInspection()
-			}
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		d.deps.Log,
+		d.deps.KubeCli.CoreV1().RESTClient(),
+		"secrets",
+		d.apiObject.GetNamespace(),
+		&v1.Secret{},
+		cache.ResourceEventHandlerFuncs{
+			// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
+			AddFunc: func(obj interface{}) {
+				if _, ok := getSecret(obj); ok {
+					d.triggerInspection()
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if _, ok := getSecret(newObj); ok {
+					d.triggerInspection()
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				if _, ok := getSecret(obj); ok {
+					d.triggerInspection()
+				}
+			},
+		})
 
-	informer.Run(stopCh)
+	rw.Run(stopCh)
 }
 
 // listenForServiceEvents keep listening for changes in Service's until the given channel is closed.
 func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
-	source := cache.NewListWatchFromClient(
-		d.deps.KubeCli.CoreV1().RESTClient(),
-		"services",
-		d.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getService := func(obj interface{}) (*v1.Service, bool) {
 		service, ok := obj.(*v1.Service)
 		if !ok {
@@ -176,23 +171,29 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 		return service, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.Service{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			if s, ok := getService(obj); ok && d.isOwnerOf(s) {
-				d.triggerInspection()
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if s, ok := getService(newObj); ok && d.isOwnerOf(s) {
-				d.triggerInspection()
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			if s, ok := getService(obj); ok && d.isOwnerOf(s) {
-				d.triggerInspection()
-			}
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		d.deps.Log,
+		d.deps.KubeCli.CoreV1().RESTClient(),
+		"services",
+		d.apiObject.GetNamespace(),
+		&v1.Service{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				if s, ok := getService(obj); ok && d.isOwnerOf(s) {
+					d.triggerInspection()
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if s, ok := getService(newObj); ok && d.isOwnerOf(s) {
+					d.triggerInspection()
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				if s, ok := getService(obj); ok && d.isOwnerOf(s) {
+					d.triggerInspection()
+				}
+			},
+		})
 
-	informer.Run(stopCh)
+	rw.Run(stopCh)
 }

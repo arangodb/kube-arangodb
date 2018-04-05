@@ -1,7 +1,7 @@
 # Storage
 
 An ArangoDB cluster relies heavily on fast persistent storage.
-The ArangoDB operator uses `PersistenVolumeClaims` to deliver
+The ArangoDB Kubernetes Operator uses `PersistentVolumeClaims` to deliver
 the storage to Pods that need them.
 
 ## Storage configuration
@@ -24,7 +24,7 @@ SSD storage.
 
 To accomplish this, one must create `PersistentVolumes` for all servers that
 need persistent storage (single, agents & dbservers).
-E.g. for a `cluster` with 3 agents and 5 dbservers, you must create 8 volumes.
+E.g. for a `Cluster` with 3 agents and 5 dbservers, you must create 8 volumes.
 
 Note that each volume must have a capacity that is equal to or higher than the
 capacity needed for each server.

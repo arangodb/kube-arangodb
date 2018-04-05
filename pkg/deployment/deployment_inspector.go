@@ -28,6 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // inspectDeployment inspects the entire deployment, creates
@@ -43,6 +44,14 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	nextInterval := lastInterval
 	hasError := false
 	ctx := context.Background()
+
+	// Check deployment still exists
+	if _, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		// Deployment is gone
+		log.Info().Msg("Deployment is gone")
+		d.Delete()
+		return nextInterval
+	}
 
 	// Is the deployment in failed state, if so, give up.
 	if d.status.Phase == api.DeploymentPhaseFailed {
@@ -74,6 +83,12 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	if err := d.resources.InspectPods(); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+	}
+
+	// Check members for resilience
+	if err := d.resilience.CheckMemberFailure(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
 	}
 
 	// Create scale/update plan

@@ -48,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operator"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
@@ -78,8 +79,12 @@ var (
 	operatorOptions struct {
 		enableDeployment bool // Run deployment operator
 		enableStorage    bool // Run deployment operator
-		createCRD        bool
 	}
+	chaosOptions struct {
+		allowed bool
+	}
+	deploymentProbe probe.Probe
+	storageProbe    probe.Probe
 )
 
 func init() {
@@ -89,7 +94,7 @@ func init() {
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
-	f.BoolVar(&operatorOptions.createCRD, "operator.create-crd", true, "Disable to avoid create the custom resource definition")
+	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 }
 
 func main() {
@@ -135,7 +140,9 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to get hostname")
 	}
 
-	//http.HandleFunc(probe.HTTPReadyzEndpoint, probe.ReadyzHandler)
+	http.HandleFunc("/health", probe.LivenessHandler)
+	http.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
+	http.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
 	http.Handle("/metrics", prometheus.Handler())
 	listenAddr := net.JoinHostPort(server.host, strconv.Itoa(server.port))
 	go http.ListenAndServe(listenAddr, nil)
@@ -183,14 +190,16 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ServiceAccount:   serviceAccount,
 		EnableDeployment: operatorOptions.enableDeployment,
 		EnableStorage:    operatorOptions.enableStorage,
-		CreateCRD:        operatorOptions.createCRD,
+		AllowChaos:       chaosOptions.allowed,
 	}
 	deps := operator.Dependencies{
-		LogService:    logService,
-		KubeCli:       kubecli,
-		KubeExtCli:    kubeExtCli,
-		CRCli:         crCli,
-		EventRecorder: eventRecorder,
+		LogService:      logService,
+		KubeCli:         kubecli,
+		KubeExtCli:      kubeExtCli,
+		CRCli:           crCli,
+		EventRecorder:   eventRecorder,
+		DeploymentProbe: &deploymentProbe,
+		StorageProbe:    &storageProbe,
 	}
 
 	return cfg, deps, nil

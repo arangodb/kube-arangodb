@@ -1,11 +1,11 @@
-# Custom Resource
+# ArangoLocalStorage Custom Resource
 
-The ArangoDB operator creates and maintains ArangoDB deployments
-in a Kubernetes cluster, given a cluster specification.
-This cluster specification is a CustomResource following
-a CustomResourceDefinition created by the operator.
+The ArangoDB Deployment Operator creates and maintains ArangoDB deployments
+in a Kubernetes cluster, given a deployment specification.
+This deployment specification is a `CustomResource` following
+a `CustomResourceDefinition` created by the operator.
 
-Example minimal cluster definition:
+Example minimal deployment definition of an ArangoDB database cluster:
 
 ```yaml
 apiVersion: "database.arangodb.com/v1alpha"
@@ -13,10 +13,10 @@ kind: "ArangoDeployment"
 metadata:
   name: "example-arangodb-cluster"
 spec:
-  mode: cluster
+  mode: Cluster
 ```
 
-Example more elaborate cluster definition:
+Example more elaborate deployment definition:
 
 ```yaml
 apiVersion: "database.arangodb.com/v1alpha"
@@ -24,7 +24,8 @@ kind: "ArangoDeployment"
 metadata:
   name: "example-arangodb-cluster"
 spec:
-  mode: cluster
+  mode: Cluster
+  environment: Production
   agents:
     count: 3
     args:
@@ -41,7 +42,7 @@ spec:
     storageClassName: ssd
   coordinators:
     count: 3
-  image: "arangodb/arangodb:3.3.3"
+  image: "arangodb/arangodb:3.3.4"
 ```
 
 ## Specification reference
@@ -50,21 +51,21 @@ Below you'll find all settings of the `ArangoDeployment` custom resource.
 Several settings are for various groups of servers. These are indicated
 with `<group>` where `<group>` can be any of:
 
-- `agents` for all agents of a `cluster` or `resilientsingle` pair.
-- `dbservers` for all dbservers of a `cluster`.
-- `coordinators` for all coordinators of a `cluster`.
-- `single` for all single servers of a `single` instance or `resilientsingle` pair.
-- `syncmasters` for all syncmasters of a `cluster`.
-- `syncworkers` for all syncworkers of a `cluster`.
+- `agents` for all agents of a `Cluster` or `ResilientSingle` pair.
+- `dbservers` for all dbservers of a `Cluster`.
+- `coordinators` for all coordinators of a `Cluster`.
+- `single` for all single servers of a `Single` instance or `ResilientSingle` pair.
+- `syncmasters` for all syncmasters of a `Cluster`.
+- `syncworkers` for all syncworkers of a `Cluster`.
 
 ### `spec.mode: string`
 
 This setting specifies the type of deployment you want to create.
 Possible values are:
 
-- `cluster` (default) Full cluster. Defaults to 3 agents, 3 dbservers & 3 coordinators.
-- `resilientsingle` Resilient single pair. Defaults to 3 agents and 2 single servers.
-- `single` Single server only (note this does not provide high availability or reliability).
+- `Cluster` (default) Full cluster. Defaults to 3 agents, 3 dbservers & 3 coordinators.
+- `ResilientSingle` Resilient single pair. Defaults to 3 agents and 2 single servers.
+- `Single` Single server only (note this does not provide high availability or reliability).
 
 This setting cannot be changed after the deployment has been created.
 
@@ -73,9 +74,9 @@ This setting cannot be changed after the deployment has been created.
 This setting specifies the type of environment in which the deployment is created.
 Possible values are:
 
-- `development` (default) This value optimizes the deployment for development
+- `Development` (default) This value optimizes the deployment for development
   use. It is possible to run a deployment on a small number of nodes (e.g. minikube).
-- `production` This value optimizes the deployment for production use.
+- `Production` This value optimizes the deployment for production use.
   It puts required affinity constraints on all pods to avoid agents & dbservers
   from running on the same machine.
 
@@ -101,8 +102,8 @@ This setting specifies the type of storage engine used for all servers
 in the cluster.
 Possible values are:
 
-- `mmfiles` To use the MMfiles storage engine.
-- `rocksdb` (default) To use the RocksDB storage engine.
+- `MMFiles` To use the MMFiles storage engine.
+- `RocksDB` (default) To use the RocksDB storage engine.
 
 This setting cannot be changed after the cluster has been created.
 
@@ -211,7 +212,7 @@ The default value is empty.
 This setting sets the type of message queue used by ArangoSync.
 Possible values are:
 
-- `direct` (default) for direct HTTP connections between the 2 data centers.
+- `Direct` (default) for direct HTTP connections between the 2 data centers.
 
 ### `spec.sync.tls.caSecretName: string`
 

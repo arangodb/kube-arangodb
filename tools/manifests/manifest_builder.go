@@ -48,6 +48,7 @@ var (
 		DeploymentOperatorName string
 		StorageOperatorName    string
 		RBAC                   bool
+		AllowChaos             bool
 	}
 	deploymentTemplateNames = []string{
 		"rbac.yaml",
@@ -72,6 +73,7 @@ func init() {
 	pflag.StringVar(&options.DeploymentOperatorName, "deployment-operator-name", "arango-deployment-operator", "Name of the ArangoDeployment operator deployment")
 	pflag.StringVar(&options.StorageOperatorName, "storage-operator-name", "arango-storage-operator", "Name of the ArangoLocalStorage operator deployment")
 	pflag.BoolVar(&options.RBAC, "rbac", true, "Use role based access control")
+	pflag.BoolVar(&options.AllowChaos, "allow-chaos", false, "If set, allows chaos in deployments")
 
 	pflag.Parse()
 }
@@ -96,6 +98,7 @@ type ResourceOptions struct {
 	User                   CommonOptions
 	Operator               CommonOptions
 	OperatorDeploymentName string
+	AllowChaos             bool
 }
 
 func main() {
@@ -149,6 +152,7 @@ func main() {
 				ServiceAccountName: "default",
 			},
 			OperatorDeploymentName: "arango-deployment-operator",
+			AllowChaos:             options.AllowChaos,
 		},
 		Storage: ResourceOptions{
 			User: CommonOptions{

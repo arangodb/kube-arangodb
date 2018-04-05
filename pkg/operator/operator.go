@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 const (
@@ -67,15 +68,17 @@ type Config struct {
 	ServiceAccount   string
 	EnableDeployment bool
 	EnableStorage    bool
-	CreateCRD        bool
+	AllowChaos       bool
 }
 
 type Dependencies struct {
-	LogService    logging.Service
-	KubeCli       kubernetes.Interface
-	KubeExtCli    apiextensionsclient.Interface
-	CRCli         versioned.Interface
-	EventRecorder record.EventRecorder
+	LogService      logging.Service
+	KubeCli         kubernetes.Interface
+	KubeExtCli      apiextensionsclient.Interface
+	CRCli           versioned.Interface
+	EventRecorder   record.EventRecorder
+	DeploymentProbe *probe.Probe
+	StorageProbe    *probe.Probe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.

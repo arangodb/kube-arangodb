@@ -101,6 +101,8 @@ def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
                 "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
             ]) {
+                sh "./scripts/collect_logs.sh ${env.DEPLOYMENTNAMESPACE} ${kubeconfig}" 
+                archive includes: 'logs/*'
                 sh "make cleanup-tests"
             }
         }

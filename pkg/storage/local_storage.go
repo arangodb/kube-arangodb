@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -89,6 +90,7 @@ type LocalStorage struct {
 
 	eventCh chan *localStorageEvent
 	stopCh  chan struct{}
+	stopped int32
 
 	eventsCli corev1.EventInterface
 
@@ -136,7 +138,9 @@ func (ls *LocalStorage) Update(apiObject *api.ArangoLocalStorage) {
 // Called when the local storage was deleted by the user.
 func (ls *LocalStorage) Delete() {
 	ls.deps.Log.Info().Msg("local storage is deleted by user")
-	close(ls.stopCh)
+	if atomic.CompareAndSwapInt32(&ls.stopped, 0, 1) {
+		close(ls.stopCh)
+	}
 }
 
 // send given event into the local storage event queue.

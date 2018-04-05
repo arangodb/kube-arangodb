@@ -1,6 +1,6 @@
 # Upgrading
 
-The ArangoDB operator supports upgrading an ArangoDB from
+The ArangoDB Kubernetes Operator supports upgrading an ArangoDB from
 one version to the next.
 
 To upgrade a cluster, change the version by changing
@@ -11,7 +11,7 @@ custom resource using:
 kubectl apply -f yourCustomResourceFile.yaml
 ```
 
-To update the ArangoDB operator itself to a new version,
+To update the ArangoDB Kubernetes Operator itself to a new version,
 update the image version of the deployment resource
 and apply it using:
 

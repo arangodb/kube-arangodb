@@ -4,8 +4,7 @@
 
 State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS WILL CHANGE.
 
-- [User manual](./docs/user/README.md)
-- [Design documents](./docs/design/README.md)
+[Documentation](./docs/README.md)
 
 ## Installation of latest release
 

@@ -71,7 +71,7 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	// Update status
-	m.State = api.MemberStateCleanOut
+	m.Phase = api.MemberPhaseCleanOut
 	if a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}

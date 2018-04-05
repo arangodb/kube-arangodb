@@ -58,13 +58,17 @@ func main() {
 	version := bumpVersion(releaseType)
 	make("clean", nil)
 	make("all", map[string]string{
+		"ALLOWCHAOS":      "false",
 		"DOCKERNAMESPACE": "arangodb",
 		"IMAGETAG":        version,
 		"MANIFESTSUFFIX":  "-",
 	})
+	make("patch-readme", nil)
 	make("build-ghrelease", nil)
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest
 	gitTag(version)
+	make("changelog", nil)
+	gitCommitAll(fmt.Sprintf("Updated changelog for %s", version)) // Commit CHANGELOG.md
 	githubCreateRelease(version)
 	bumpVersion("devel")
 }

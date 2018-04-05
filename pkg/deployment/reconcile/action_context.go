@@ -52,7 +52,8 @@ type ActionContext interface {
 	// when no such member is found.
 	GetMemberStatusByID(id string) (api.MemberStatus, bool)
 	// CreateMember adds a new member to the given group.
-	CreateMember(group api.ServerGroup) error
+	// If ID is non-empty, it will be used, otherwise a new ID is created.
+	CreateMember(group api.ServerGroup, id string) error
 	// UpdateMember updates the deployment status wrt the given member.
 	UpdateMember(member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
@@ -63,6 +64,9 @@ type ActionContext interface {
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(pvcName string) error
+	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+	// If the secret does not exist, the error is ignored.
+	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -105,7 +109,7 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 
 // GetAgencyClients returns a client connection for every agency member.
 func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
-	c, err := ac.context.GetAgencyClients(ctx)
+	c, err := ac.context.GetAgencyClients(ctx, nil)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -122,8 +126,9 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 }
 
 // CreateMember adds a new member to the given group.
-func (ac *actionContext) CreateMember(group api.ServerGroup) error {
-	if err := ac.context.CreateMember(group); err != nil {
+// If ID is non-empty, it will be used, otherwise a new ID is created.
+func (ac *actionContext) CreateMember(group api.ServerGroup, id string) error {
+	if err := ac.context.CreateMember(group, id); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -175,6 +180,15 @@ func (ac *actionContext) DeletePod(podName string) error {
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (ac *actionContext) DeletePvc(pvcName string) error {
 	if err := ac.context.DeletePvc(pvcName); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
+// If the secret does not exist, the error is ignored.
+func (ac *actionContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+	if err := ac.context.DeleteTLSKeyfile(group, member); err != nil {
 		return maskAny(err)
 	}
 	return nil

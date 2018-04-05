@@ -105,7 +105,7 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 		Hosts:          append(append(serverNames, dnsNames...), ipAddresses...),
 		EmailAddresses: emailAddress,
 		ValidFrom:      time.Now(),
-		ValidFor:       spec.GetTTL(),
+		ValidFor:       spec.GetTTL().AsDuration(),
 		IsCA:           false,
 		ECDSACurve:     tlsECDSACurve,
 	}

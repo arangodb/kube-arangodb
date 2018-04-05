@@ -24,18 +24,13 @@ package storage
 
 import (
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // listenForPvEvents keep listening for changes in PV's until the given channel is closed.
 func (ls *LocalStorage) listenForPvEvents() {
-	source := cache.NewListWatchFromClient(
-		ls.deps.KubeCli.CoreV1().RESTClient(),
-		"persistentvolumes",
-		"", //ls.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getPv := func(obj interface{}) (*v1.PersistentVolume, bool) {
 		pv, ok := obj.(*v1.PersistentVolume)
 		if !ok {
@@ -49,22 +44,28 @@ func (ls *LocalStorage) listenForPvEvents() {
 		return pv, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.PersistentVolume{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Ignore
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if pv, ok := getPv(newObj); ok {
-				ls.send(&localStorageEvent{
-					Type:             eventPVUpdated,
-					PersistentVolume: pv,
-				})
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Ignore
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		ls.deps.Log,
+		ls.deps.KubeCli.CoreV1().RESTClient(),
+		"persistentvolumes",
+		"", //ls.apiObject.GetNamespace(),
+		&v1.PersistentVolume{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				// Ignore
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if pv, ok := getPv(newObj); ok {
+					ls.send(&localStorageEvent{
+						Type:             eventPVUpdated,
+						PersistentVolume: pv,
+					})
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				// Ignore
+			},
+		})
 
-	informer.Run(ls.stopCh)
+	rw.Run(ls.stopCh)
 }
