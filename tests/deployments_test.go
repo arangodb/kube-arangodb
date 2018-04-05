@@ -99,15 +99,15 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	return nil
 }
 
-// test setup containing multiple deployments
-func TestMultiDeployment1(t *testing.T) {
+// test a setup containing multiple deployments
+func TestMultiDeployment(t *testing.T) {
 	longOrSkip(t)
 
 	k8sNameSpace := getNamespace(t)
 	k8sClient := mustNewKubeClient(t)
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 
-	// Prepare deployment config
+	// Prepare deployment configurations
 	deploymentTemplate1 := newDeployment("test-multidep1-1-" + uniuri.NewLen(4))
 	deploymentTemplate1.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	deploymentTemplate1.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineRocksDB)
@@ -120,27 +120,28 @@ func TestMultiDeployment1(t *testing.T) {
 	deploymentTemplate2.Spec.TLS = api.TLSSpec{}                        // should auto-generate cert
 	deploymentTemplate2.Spec.SetDefaults(deploymentTemplate2.GetName()) // this must be last
 
-	// Create deployment
+	// Create deployments
 	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
 	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
 	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
 	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
-	// Wait for deployment to be ready
+	// Wait for deployments to be ready
 	deployment1, err := waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())
 	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	deployment2, err := waitUntilDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace, deploymentIsReady())
 	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
-	// Create a database client
+	// Create a database clients
 	ctx := context.Background()
 	DBClient1 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment1, t)
 	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 	DBClient2 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment2, t)
 	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
+	// Test if we are able to create a collections in both deployments.
 	db1, err := DBClient1.Database(ctx, "_system")
 	assert.NoError(t, err, "failed to get database")
 	_, err = db1.CreateCollection(ctx, "col1", nil)
@@ -151,6 +152,8 @@ func TestMultiDeployment1(t *testing.T) {
 	_, err = db2.CreateCollection(ctx, "col2", nil)
 	assert.NoError(t, err, "failed to create collection")
 
+	// The newly created collections must be (only) visible in the deployment
+	// that it was created in. The following lines ensure this behavior.
 	collections1, err := db1.Collections(ctx)
 	assert.NoError(t, err, "failed to get collections")
 	collections2, err := db2.Collections(ctx)
