@@ -26,13 +26,13 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/fields"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
@@ -46,20 +46,20 @@ var (
 // run the deployments part of the operator.
 // This registers a listener and waits until the process stops.
 func (o *Operator) runDeployments(stop <-chan struct{}) {
-	source := cache.NewListWatchFromClient(
+	rw := k8sutil.NewResourceWatcher(
+		o.log,
 		o.Dependencies.CRCli.DatabaseV1alpha().RESTClient(),
 		api.ArangoDeploymentResourcePlural,
 		o.Config.Namespace,
-		fields.Everything())
-
-	_, informer := cache.NewIndexerInformer(source, &api.ArangoDeployment{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.onAddArangoDeployment,
-		UpdateFunc: o.onUpdateArangoDeployment,
-		DeleteFunc: o.onDeleteArangoDeployment,
-	}, cache.Indexers{})
+		&api.ArangoDeployment{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    o.onAddArangoDeployment,
+			UpdateFunc: o.onUpdateArangoDeployment,
+			DeleteFunc: o.onDeleteArangoDeployment,
+		})
 
 	o.Dependencies.DeploymentProbe.SetReady()
-	informer.Run(stop)
+	rw.Run(stop)
 }
 
 // onAddArangoDeployment deployment addition callback

@@ -24,18 +24,13 @@ package storage
 
 import (
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // listenForPvcEvents keep listening for changes in PVC's until the given channel is closed.
 func (ls *LocalStorage) listenForPvcEvents() {
-	source := cache.NewListWatchFromClient(
-		ls.deps.KubeCli.CoreV1().RESTClient(),
-		"persistentvolumeclaims",
-		"", //ls.apiObject.GetNamespace(),
-		fields.Everything())
-
 	getPvc := func(obj interface{}) (*v1.PersistentVolumeClaim, bool) {
 		pvc, ok := obj.(*v1.PersistentVolumeClaim)
 		if !ok {
@@ -49,27 +44,33 @@ func (ls *LocalStorage) listenForPvcEvents() {
 		return pvc, true
 	}
 
-	_, informer := cache.NewIndexerInformer(source, &v1.PersistentVolumeClaim{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			if pvc, ok := getPvc(obj); ok {
-				ls.send(&localStorageEvent{
-					Type: eventPVCAdded,
-					PersistentVolumeClaim: pvc,
-				})
-			}
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			if pvc, ok := getPvc(newObj); ok {
-				ls.send(&localStorageEvent{
-					Type: eventPVCUpdated,
-					PersistentVolumeClaim: pvc,
-				})
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Ignore
-		},
-	}, cache.Indexers{})
+	rw := k8sutil.NewResourceWatcher(
+		ls.deps.Log,
+		ls.deps.KubeCli.CoreV1().RESTClient(),
+		"persistentvolumeclaims",
+		"", //ls.apiObject.GetNamespace(),
+		&v1.PersistentVolumeClaim{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				if pvc, ok := getPvc(obj); ok {
+					ls.send(&localStorageEvent{
+						Type: eventPVCAdded,
+						PersistentVolumeClaim: pvc,
+					})
+				}
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				if pvc, ok := getPvc(newObj); ok {
+					ls.send(&localStorageEvent{
+						Type: eventPVCUpdated,
+						PersistentVolumeClaim: pvc,
+					})
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				// Ignore
+			},
+		})
 
-	informer.Run(ls.stopCh)
+	rw.Run(ls.stopCh)
 }
