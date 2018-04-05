@@ -102,7 +102,8 @@ def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
                 "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
             ]) {
                 sh "mkdir -p logs" 
-                sh "kubectl logs -n ${env.DEPLOYMENTNAMESPACE} --selector=name=arango-deployment-operator > ./logs/deployment-${kubeconfig}.log" 
+                sh returnStatus: true, script:"kubectl logs -n ${env.DEPLOYMENTNAMESPACE} --selector=name=arango-deployment-operator > ./logs/deployment-${kubeconfig}.log" 
+                sh returnStatus: true, script:"kubectl logs -n kube-system --selector=name=arango-storage-operator > ./logs/storage-${kubeconfig}.log"
                 archive includes: 'logs/*'
                 sh "make cleanup-tests"
             }
