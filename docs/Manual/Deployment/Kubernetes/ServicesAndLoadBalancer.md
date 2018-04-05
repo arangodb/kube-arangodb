@@ -1,6 +1,6 @@
 # Services and load balancer
 
-The ArangoDB operator will create services that can be used to
+The ArangoDB Kubernetes Operator will create services that can be used to
 reach the ArangoDB servers from inside the Kubernetes cluster.
 
 To use the ArangoDB servers from outside the Kubernetes cluster

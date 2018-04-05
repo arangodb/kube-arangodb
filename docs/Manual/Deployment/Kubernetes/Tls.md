@@ -1,7 +1,7 @@
 # TLS
 
-The ArangoDB operator will by default create ArangoDB deployments that use
-secure TLS connections.
+The ArangoDB Kubernetes Operator will by default create ArangoDB deployments
+that use secure TLS connections.
 
 It uses a single CA certificate (stored in a Kubernetes secret) and
 one certificate per ArangoDB server (stored in a Kubernetes secret per server).

@@ -1,7 +1,7 @@
 # Configuration & secrets
 
 An ArangoDB cluster has lots of configuration options.
-Some will be supported directly in the ArangoDB operator,
+Some will be supported directly in the ArangoDB Operator,
 others will have to specified separately.
 
 ## Built-in options

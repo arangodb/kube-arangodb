@@ -1,4 +1,4 @@
-# Start ArangoDB on Kubernetes in 5min
+# Start ArangoDB on Kubernetes in 5 minutes
 
 Starting an ArangoDB database (either single server or full blown cluster)
 on Kubernetes involves a lot of resources.
@@ -6,10 +6,10 @@ on Kubernetes involves a lot of resources.
 The servers needs to run in `Pods`, you need `Secrets` for authentication,
 TLS certificates and `Services` to enable communication with the database.
 
-Use `kube-arangodb`, the ArangoDB Kubernetes operator to greatly simplify
+Use `kube-arangodb`, the ArangoDB Kubernetes Operator to greatly simplify
 this process.
 
-In this guide, we'll explain what the ArangoDB Kubernetes operator is,
+In this guide, we will explain what the ArangoDB Kubernetes Operator is,
 how to install it and how use it to deploy your first ArangoDB database
 in a Kubernetes cluster.
 
@@ -17,19 +17,19 @@ in a Kubernetes cluster.
 
 `kube-arangodb` is a set of two operators that you deploy in your Kubernetes
 cluster to (1) manage deployments of the ArangoDB database and (2)
-provide `PersistenVolumes` on local storage of your nodes for optimal
-storage performace.
+provide `PersistentVolumes` on local storage of your nodes for optimal
+storage performance.
 
 Note that the operator that provides `PersistentVolumes` is not needed to
 run ArangoDB deployments. You can also use `PersistentVolumes` provided
 by other controllers.
 
-In this guide we'll focus on the `ArangoDeployment` operator.
+In this guide we will focus on the `ArangoDeployment` operator.
 
 ## Installing `kube-arangodb`
 
 To install `kube-arangodb` in your Kubernetes cluster, make sure
-you have acces to this cluster and the rights to deploy resources
+you have access to this cluster and the rights to deploy resources
 at cluster level.
 
 For now, any recent Kubernetes cluster will do (e.g. `minikube`).
@@ -51,7 +51,7 @@ The second command installs a `Deployment` that runs the operator that controls
 
 ## Deploying your first ArangoDB database
 
-The first database we're going to deploy is a single server database.
+The first database we are going to deploy is a single server database.
 
 Create a file called `single-server.yaml` with the following content.
 
@@ -73,7 +73,7 @@ kubectl apply -f single-server.yaml
 The `ArangoDeployment` operator in `kube-arangodb` will now inspect the
 resource you just deployed and start the process to run a single server database.
 
-To inspect the currentl status of your deployment, run:
+To inspect the current status of your deployment, run:
 
 ```bash
 kubectl describe ArangoDeployment single-server
@@ -102,11 +102,11 @@ your database s available.
 The single server database you deployed in the previous chapter is now
 available, but only from within the Kubernetes cluster.
 
-To make the database available outside your Kubernetes cluster (e.g. for browser acces)
+To make the database available outside your Kubernetes cluster (e.g. for browser access)
 you must deploy an additional `Service`.
 
 There are several possible types of `Service` to choose from.
-We're going to use the `NodePort` type to expose the database on port 30529 of
+We are going to use the `NodePort` type to expose the database on port 30529 of
 every node of your Kubernetes cluster.
 
 Create a file called `single-server-service.yaml` with the following content.
@@ -201,9 +201,9 @@ spec:
     nodePort: 31529
 ```
 
-Note that we've choosen a different node port (31529) for this `Service`
+Note that we have chosen a different node port (31529) for this `Service`
 to avoid conflicts with the port used in `single-server-service`.
 
 ## Where to go from here
 
-- [Reference manual](../../Deployment/Kubernetes/README.md)
+- [ArangoDB Kubernetes Operator](../../Deployment/Kubernetes/README.md)

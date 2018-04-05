@@ -1,7 +1,7 @@
 # Storage
 
 An ArangoDB cluster relies heavily on fast persistent storage.
-The ArangoDB operator uses `PersistenVolumeClaims` to deliver
+The ArangoDB Kubernetes Operator uses `PersistentVolumeClaims` to deliver
 the storage to Pods that need them.
 
 ## Storage configuration

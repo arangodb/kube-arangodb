@@ -1,6 +1,6 @@
 # Scaling
 
-The ArangoDB operator supports up and down scaling of
+The ArangoDB Kubernetes Operator supports up and down scaling of
 the number of dbservers & coordinators.
 
 Currently it is not possible to change the number of

@@ -1,8 +1,8 @@
-# Using the ArangoDB operator
+# Using the ArangoDB Kubernetes Operator
 
 ## Installation
 
-The ArangoDB operator needs to be installed in your Kubernetes
+The ArangoDB Kubernetes Operator needs to be installed in your Kubernetes
 cluster first. To do so, clone this repository and run:
 
 ```bash
@@ -40,7 +40,7 @@ kubectl delete -f examples/simple-cluster.yaml
 
 ## Operator removal
 
-To remove the entire ArangoDB operator, remove all
+To remove the entire ArangoDB Kubernetes Operator, remove all
 clusters first and then remove the operator by running:
 
 ```bash
