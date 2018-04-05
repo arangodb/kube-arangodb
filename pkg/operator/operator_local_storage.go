@@ -64,6 +64,9 @@ func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 
 // onAddArangoLocalStorage local storage addition callback
 func (o *Operator) onAddArangoLocalStorage(obj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	apiObject := obj.(*api.ArangoLocalStorage)
 	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
@@ -73,6 +76,9 @@ func (o *Operator) onAddArangoLocalStorage(obj interface{}) {
 
 // onUpdateArangoLocalStorage local storage update callback
 func (o *Operator) onUpdateArangoLocalStorage(oldObj, newObj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	apiObject := newObj.(*api.ArangoLocalStorage)
 	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
@@ -82,6 +88,9 @@ func (o *Operator) onUpdateArangoLocalStorage(oldObj, newObj interface{}) {
 
 // onDeleteArangoLocalStorage local storage delete callback
 func (o *Operator) onDeleteArangoLocalStorage(obj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	log := o.log
 	apiObject, ok := obj.(*api.ArangoLocalStorage)
 	if !ok {

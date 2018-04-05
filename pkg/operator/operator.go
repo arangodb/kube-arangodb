@@ -77,8 +77,9 @@ type Dependencies struct {
 	KubeExtCli      apiextensionsclient.Interface
 	CRCli           versioned.Interface
 	EventRecorder   record.EventRecorder
-	DeploymentProbe *probe.Probe
-	StorageProbe    *probe.Probe
+	LivenessProbe   *probe.LivenessProbe
+	DeploymentProbe *probe.ReadyProbe
+	StorageProbe    *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.

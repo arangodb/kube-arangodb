@@ -27,18 +27,18 @@ import (
 	"sync/atomic"
 )
 
-// Probe wraps a readiness probe handler.
-type Probe struct {
+// ReadyProbe wraps a readiness probe handler.
+type ReadyProbe struct {
 	ready int32
 }
 
 // SetReady marks the probe as ready.
-func (p *Probe) SetReady() {
+func (p *ReadyProbe) SetReady() {
 	atomic.StoreInt32(&p.ready, 1)
 }
 
 // ReadyHandler writes back the HTTP status code 200 if the operator is ready, and 500 otherwise.
-func (p *Probe) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+func (p *ReadyProbe) ReadyHandler(w http.ResponseWriter, r *http.Request) {
 	isReady := atomic.LoadInt32(&p.ready) != 0
 	if isReady {
 		w.WriteHeader(http.StatusOK)

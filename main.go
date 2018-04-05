@@ -85,8 +85,9 @@ var (
 	chaosOptions struct {
 		allowed bool
 	}
-	deploymentProbe probe.Probe
-	storageProbe    probe.Probe
+	livenessProbe   probe.LivenessProbe
+	deploymentProbe probe.ReadyProbe
+	storageProbe    probe.ReadyProbe
 )
 
 func init() {
@@ -154,7 +155,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", probe.LivenessHandler)
+	mux.HandleFunc("/health", livenessProbe.LivenessHandler)
 	mux.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
 	mux.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
 	mux.Handle("/metrics", prometheus.Handler())
@@ -222,6 +223,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		KubeExtCli:      kubeExtCli,
 		CRCli:           crCli,
 		EventRecorder:   eventRecorder,
+		LivenessProbe:   &livenessProbe,
 		DeploymentProbe: &deploymentProbe,
 		StorageProbe:    &storageProbe,
 	}
