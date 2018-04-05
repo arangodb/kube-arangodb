@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	driver "github.com/arangodb/go-driver"
 
@@ -82,16 +82,16 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 
 	// Create deployment
 	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
-	assert.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
 
 	// Wait for deployment to be ready
 	deployment, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
-	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	// Create a database client
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
@@ -122,47 +122,49 @@ func TestMultiDeployment(t *testing.T) {
 
 	// Create deployments
 	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
-	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
 	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
-	assert.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 
 	// Wait for deployments to be ready
 	deployment1, err := waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())
-	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	deployment2, err := waitUntilDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace, deploymentIsReady())
-	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
+
+	require.True(t, deployment1 != nil && deployment2 != nil, "deployment is nil")
 
 	// Create a database clients
 	ctx := context.Background()
 	DBClient1 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment1, t)
-	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 	DBClient2 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment2, t)
-	assert.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Test if we are able to create a collections in both deployments.
 	db1, err := DBClient1.Database(ctx, "_system")
-	assert.NoError(t, err, "failed to get database")
+	require.NoError(t, err, "failed to get database")
 	_, err = db1.CreateCollection(ctx, "col1", nil)
-	assert.NoError(t, err, "failed to create collection")
+	require.NoError(t, err, "failed to create collection")
 
 	db2, err := DBClient2.Database(ctx, "_system")
-	assert.NoError(t, err, "failed to get database")
+	require.NoError(t, err, "failed to get database")
 	_, err = db2.CreateCollection(ctx, "col2", nil)
-	assert.NoError(t, err, "failed to create collection")
+	require.NoError(t, err, "failed to create collection")
 
 	// The newly created collections must be (only) visible in the deployment
 	// that it was created in. The following lines ensure this behavior.
 	collections1, err := db1.Collections(ctx)
-	assert.NoError(t, err, "failed to get collections")
+	require.NoError(t, err, "failed to get collections")
 	collections2, err := db2.Collections(ctx)
-	assert.NoError(t, err, "failed to get collections")
+	require.NoError(t, err, "failed to get collections")
 
-	assert.True(t, containsCollection(collections1, "col1"), "collection missing")
-	assert.True(t, containsCollection(collections2, "col2"), "collection missing")
-	assert.False(t, containsCollection(collections1, "col2"), "collection must not be in this deployment")
-	assert.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
+	require.True(t, containsCollection(collections1, "col1"), "collection missing")
+	require.True(t, containsCollection(collections2, "col2"), "collection missing")
+	require.False(t, containsCollection(collections1, "col2"), "collection must not be in this deployment")
+	require.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
 
 	// Cleanup
 	removeDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
