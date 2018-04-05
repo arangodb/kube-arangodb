@@ -25,6 +25,7 @@ package deployment
 import (
 	"fmt"
 	"reflect"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -86,6 +87,7 @@ type Deployment struct {
 
 	eventCh chan *deploymentEvent
 	stopCh  chan struct{}
+	stopped int32
 
 	eventsCli corev1.EventInterface
 
@@ -154,7 +156,9 @@ func (d *Deployment) Update(apiObject *api.ArangoDeployment) {
 // Called when the deployment was deleted by the user.
 func (d *Deployment) Delete() {
 	d.deps.Log.Info().Msg("deployment is deleted by user")
-	close(d.stopCh)
+	if atomic.CompareAndSwapInt32(&d.stopped, 0, 1) {
+		close(d.stopCh)
+	}
 }
 
 // send given event into the deployment event queue.
