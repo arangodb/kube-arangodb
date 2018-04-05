@@ -137,7 +137,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 	if config.AllowChaos {
 		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
-		d.chaosMonkey.Run(d.stopCh)
+		go d.chaosMonkey.Run(d.stopCh)
 	}
 
 	return d, nil
