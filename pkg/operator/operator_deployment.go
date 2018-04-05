@@ -64,6 +64,9 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 
 // onAddArangoDeployment deployment addition callback
 func (o *Operator) onAddArangoDeployment(obj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	apiObject := obj.(*api.ArangoDeployment)
 	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
@@ -73,6 +76,9 @@ func (o *Operator) onAddArangoDeployment(obj interface{}) {
 
 // onUpdateArangoDeployment deployment update callback
 func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	apiObject := newObj.(*api.ArangoDeployment)
 	o.log.Debug().
 		Str("name", apiObject.GetObjectMeta().GetName()).
@@ -82,6 +88,9 @@ func (o *Operator) onUpdateArangoDeployment(oldObj, newObj interface{}) {
 
 // onDeleteArangoDeployment deployment delete callback
 func (o *Operator) onDeleteArangoDeployment(obj interface{}) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
 	log := o.log
 	apiObject, ok := obj.(*api.ArangoDeployment)
 	if !ok {

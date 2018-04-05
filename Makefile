@@ -226,7 +226,9 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 			$(REPOPATH)/pkg/deployment/reconcile \
 			$(REPOPATH)/pkg/deployment/resources \
 			$(REPOPATH)/pkg/util/k8sutil \
-			$(REPOPATH)/pkg/util/k8sutil/test
+			$(REPOPATH)/pkg/util/k8sutil/test \
+			$(REPOPATH)/pkg/util/probe \
+			$(REPOPATH)/pkg/util/validation 
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
