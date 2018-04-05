@@ -46,6 +46,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
+	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
@@ -69,12 +70,13 @@ var (
 		Run: cmdMainRun,
 	}
 
-	logLevel   string
-	cliLog     = logging.NewRootLogger()
-	logService logging.Service
-	server     struct {
-		host string
-		port int
+	logLevel      string
+	cliLog        = logging.NewRootLogger()
+	logService    logging.Service
+	serverOptions struct {
+		host          string
+		port          int
+		tlsSecretName string
 	}
 	operatorOptions struct {
 		enableDeployment bool // Run deployment operator
@@ -89,8 +91,9 @@ var (
 
 func init() {
 	f := cmdMain.Flags()
-	f.StringVar(&server.host, "server.host", defaultServerHost, "Host to listen on")
-	f.IntVar(&server.port, "server.port", defaultServerPort, "Port to listen on")
+	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
+	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
+	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
@@ -133,6 +136,10 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	if len(name) == 0 {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
 	}
+	ip := os.Getenv(constants.EnvOperatorPodIP)
+	if len(ip) == 0 {
+		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodIP)
+	}
 
 	// Get host name
 	id, err := os.Hostname()
@@ -140,12 +147,29 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to get hostname")
 	}
 
-	http.HandleFunc("/health", probe.LivenessHandler)
-	http.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
-	http.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
-	http.Handle("/metrics", prometheus.Handler())
-	listenAddr := net.JoinHostPort(server.host, strconv.Itoa(server.port))
-	go http.ListenAndServe(listenAddr, nil)
+	// Create kubernetes client
+	kubecli, err := k8sutil.NewKubeClient()
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", probe.LivenessHandler)
+	mux.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
+	mux.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
+	mux.Handle("/metrics", prometheus.Handler())
+	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
+	if svr, err := server.NewServer(kubecli.CoreV1(), mux, server.Config{
+		Address:            listenAddr,
+		TLSSecretName:      serverOptions.tlsSecretName,
+		TLSSecretNamespace: namespace,
+		PodName:            name,
+		PodIP:              ip,
+	}); err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+	} else {
+		go svr.Run()
+	}
 
 	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
 	if err != nil {
