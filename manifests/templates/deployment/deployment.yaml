@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         name: {{ .Deployment.OperatorDeploymentName }}
+        app: arango-deployment-operator
     spec:
       containers:
       - name: operator
@@ -29,6 +30,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         ports:
         - name: metrics
           containerPort: 8528
@@ -36,11 +41,13 @@ spec:
           httpGet:
             path: /health
             port: 8528
+            scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /ready/deployment
             port: 8528
+            scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10

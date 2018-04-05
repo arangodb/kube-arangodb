@@ -26,6 +26,7 @@ const (
 	EnvOperatorNodeName     = "MY_NODE_NAME"
 	EnvOperatorPodName      = "MY_POD_NAME"
 	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
+	EnvOperatorPodIP        = "MY_POD_IP"
 
 	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
 	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
