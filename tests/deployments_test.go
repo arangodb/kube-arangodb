@@ -70,33 +70,33 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	// check environment
 	longOrSkip(t)
 
-	k8sNameSpace := getNamespace(t)
-	k8sClient := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	ns := getNamespace(t)
+	kubecli := mustNewKubeClient(t)
+	c := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	deploymentTemplate := newDeployment("test-1-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
-	deploymentTemplate.Spec.Mode = api.NewMode(mode)
-	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
-	deploymentTemplate.Spec.TLS = api.TLSSpec{}                       // should auto-generate cert
-	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
+	depl := newDeployment("test-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.NewMode(mode)
+	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
+	depl.Spec.TLS = api.TLSSpec{}         // should auto-generate cert
+	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	require.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
-	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	deployment, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	deployment, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	// Create a database client
 	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
-	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t)
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Cleanup
-	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	removeDeployment(c, depl.GetName(), ns)
 
 	return nil
 }
@@ -105,47 +105,47 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 func TestMultiDeployment(t *testing.T) {
 	longOrSkip(t)
 
-	k8sNameSpace := getNamespace(t)
-	k8sClient := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	ns := getNamespace(t)
+	kubecli := mustNewKubeClient(t)
+	c := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment configurations
-	deploymentTemplate1 := newDeployment("test-multidep1-1-" + uniuri.NewLen(4))
-	deploymentTemplate1.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
-	deploymentTemplate1.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineRocksDB)
-	deploymentTemplate1.Spec.TLS = api.TLSSpec{}                        // should auto-generate cert
-	deploymentTemplate1.Spec.SetDefaults(deploymentTemplate1.GetName()) // this must be last
+	depl1 := newDeployment("test-multidep-1-" + uniuri.NewLen(4))
+	depl1.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl1.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineRocksDB)
+	depl1.Spec.TLS = api.TLSSpec{}          // should auto-generate cert
+	depl1.Spec.SetDefaults(depl1.GetName()) // this must be last
 
-	deploymentTemplate2 := newDeployment("test-multidep1-2-" + uniuri.NewLen(4))
-	deploymentTemplate2.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
-	deploymentTemplate2.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
-	deploymentTemplate2.Spec.TLS = api.TLSSpec{}                        // should auto-generate cert
-	deploymentTemplate2.Spec.SetDefaults(deploymentTemplate2.GetName()) // this must be last
+	depl2 := newDeployment("test-multidep-2-" + uniuri.NewLen(4))
+	depl2.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+	depl2.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
+	depl2.Spec.TLS = api.TLSSpec{}          // should auto-generate cert
+	depl2.Spec.SetDefaults(depl2.GetName()) // this must be last
 
 	// Create deployments
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl1)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
-	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
+	defer deferedCleanupDeployment(c, depl1.GetName(), ns)
 
-	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
+	_, err = c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl2)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
-	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace)
+	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 
 	// Wait for deployments to be ready
-	deployment1, err := waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())
+	deployment1, err := waitUntilDeployment(c, depl1.GetName(), ns, deploymentIsReady())
 	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
-	deployment2, err := waitUntilDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace, deploymentIsReady())
+	deployment2, err := waitUntilDeployment(c, depl2.GetName(), ns, deploymentIsReady())
 	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %v", err))
 
 	require.True(t, deployment1 != nil && deployment2 != nil, "deployment is nil")
 
 	// Create a database clients
 	ctx := context.Background()
-	DBClient1 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment1, t)
-	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
-	DBClient2 := mustNewArangodDatabaseClient(ctx, k8sClient, deployment2, t)
-	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, k8sClient, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	DBClient1 := mustNewArangodDatabaseClient(ctx, kubecli, deployment1, t)
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
+	DBClient2 := mustNewArangodDatabaseClient(ctx, kubecli, deployment2, t)
+	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Test if we are able to create a collections in both deployments.
 	db1, err := DBClient1.Database(ctx, "_system")
@@ -171,8 +171,8 @@ func TestMultiDeployment(t *testing.T) {
 	assert.False(t, containsCollection(collections2, "col1"), "collection must not be in this deployment")
 
 	// Cleanup
-	removeDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
-	removeDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace)
+	removeDeployment(c, depl1.GetName(), ns)
+	removeDeployment(c, depl2.GetName(), ns)
 
 }
 

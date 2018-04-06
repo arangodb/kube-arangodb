@@ -36,50 +36,50 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// Test if deployment comes up in production environment.
+// TestEnvironmentProduction tests if deployment comes up in production environment.
 // LONG: The test ensures that the deployment fails if there are
 // less nodes available than servers required.
-func TestProduction(t *testing.T) {
+func TestEnvironmentProduction(t *testing.T) {
 	longOrSkip(t)
 
 	mode := api.DeploymentModeCluster
 	engine := api.StorageEngineRocksDB
 
-	k8sNameSpace := getNamespace(t)
-	k8sClient := mustNewKubeClient(t)
+	ns := getNamespace(t)
+	kubecli := mustNewKubeClient(t)
 
-	nodeList, err := k8sClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodeList, err := kubecli.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		t.Fatalf("Unable to receive node list: %v", err)
 	}
 	numNodes := len(nodeList.Items)
 
-	deploymentClient := kubeArangoClient.MustNewInCluster()
-	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("tprod-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
-	deploymentTemplate.Spec.Mode = api.NewMode(mode)
-	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
-	deploymentTemplate.Spec.TLS = api.TLSSpec{}
-	deploymentTemplate.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
-	deploymentTemplate.Spec.Image = util.NewString("arangodb/arangodb:3.3.4")
-	deploymentTemplate.Spec.DBServers.Count = util.NewInt(numNodes + 1)
-	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
-	assert.NoError(t, deploymentTemplate.Spec.Validate())
+	c := kubeArangoClient.MustNewInCluster()
+	depl := newDeployment(strings.Replace(fmt.Sprintf("tprod-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
+	depl.Spec.Mode = api.NewMode(mode)
+	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
+	depl.Spec.TLS = api.TLSSpec{}
+	depl.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
+	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.4")
+	depl.Spec.DBServers.Count = util.NewInt(numNodes + 1)
+	depl.Spec.SetDefaults(depl.GetName()) // this must be last
+	assert.NoError(t, depl.Spec.Validate())
 
-	dbserverCount := deploymentTemplate.Spec.DBServers.GetCount()
+	dbserverCount := depl.Spec.DBServers.GetCount()
 	if dbserverCount < 3 {
 		t.Skipf("Not enough DBServers to run this test: server count %d", dbserverCount)
 	}
 
 	// Create deployment
-	if _, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate); err != nil {
+	if _, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl); err != nil {
 		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}
-	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
-	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	_, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	assert.Error(t, err, fmt.Sprintf("Deployment is up and running when it should not! There are not enough nodes(%d) for all DBServers(%d) in production modes.", numNodes, dbserverCount))
 
 	// Cleanup
-	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	removeDeployment(c, depl.GetName(), ns)
 }
