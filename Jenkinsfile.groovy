@@ -78,6 +78,7 @@ def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
         timestamps {
             withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
                 withEnv([
+                "CLEANDEPLOYMENTS=1",
                 "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
                 "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                 "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",

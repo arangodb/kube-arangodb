@@ -75,6 +75,7 @@ func TestProduction(t *testing.T) {
 		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 
 	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
 	assert.Error(t, err, fmt.Sprintf("Deployment is up and running when it should not! There are not enough nodes(%d) for all DBServers(%d) in production modes.", numNodes, dbserverCount))

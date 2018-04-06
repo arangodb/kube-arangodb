@@ -47,6 +47,7 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())

@@ -84,6 +84,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	// Create deployment
 	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	require.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
+	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 
 	// Wait for deployment to be ready
 	deployment, err := waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
@@ -124,9 +125,11 @@ func TestMultiDeployment(t *testing.T) {
 	// Create deployments
 	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate1)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
+	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace)
 
 	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate2)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
+	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate2.GetName(), k8sNameSpace)
 
 	// Wait for deployments to be ready
 	deployment1, err := waitUntilDeployment(deploymentClient, deploymentTemplate1.GetName(), k8sNameSpace, deploymentIsReady())

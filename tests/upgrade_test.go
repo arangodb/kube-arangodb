@@ -99,6 +99,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 
 	// Wait for deployment to be ready
 	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())

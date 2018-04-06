@@ -33,6 +33,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -86,6 +87,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -106,7 +108,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 
 	// Secret must still exist
 	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
-		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
 	// Cleanup secret
@@ -132,6 +134,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -169,6 +172,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -222,6 +226,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -242,7 +247,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 
 	// Secret must still exist
 	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
-		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
 	// Cleanup secret
@@ -268,6 +273,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {

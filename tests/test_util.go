@@ -71,6 +71,12 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
+// shouldCleanDeployments returns true when deployments created
+// by tests should be removed, even when the test fails.
+func shouldCleanDeployments() bool {
+	return os.Getenv("CLEANDEPLOYMENTS") != ""
+}
+
 // mustNewKubeClient creates a kubernetes client
 // failing the test on errors.
 func mustNewKubeClient(t *testing.T) kubernetes.Interface {
@@ -302,6 +308,18 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
 	if err := cli.Database().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// deferedCleanupDeployment removes a deployment when shouldCleanDeployments return true.
+// This function is intended to be used in a defer statement.
+func deferedCleanupDeployment(cli versioned.Interface, deploymentName, ns string) error {
+	if !shouldCleanDeployments() {
+		return nil
+	}
+	if err := removeDeployment(cli, deploymentName, ns); err != nil {
 		return maskAny(err)
 	}
 	return nil
