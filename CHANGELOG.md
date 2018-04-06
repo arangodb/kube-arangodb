@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/arangodb/kube-arangodb/tree/HEAD)
-
-[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.0.1...HEAD)
+## [0.1.0](https://github.com/arangodb/kube-arangodb/tree/0.1.0) (2018-04-06)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.0.1...0.1.0)
 
 **Closed issues:**
 
@@ -12,9 +11,38 @@
 
 **Merged pull requests:**
 
+- Fixed down/upgrading resilient single deployments. [\#123](https://github.com/arangodb/kube-arangodb/pull/123)
+- Various docs improvements & fixes [\#122](https://github.com/arangodb/kube-arangodb/pull/122)
+- Added tests for query cursors on various deployments. [\#121](https://github.com/arangodb/kube-arangodb/pull/121)
+- Remove upgrade resilient single 3.2 -\> 3.3 test. [\#120](https://github.com/arangodb/kube-arangodb/pull/120)
+- Various renamings in tests such that common names are used. [\#119](https://github.com/arangodb/kube-arangodb/pull/119)
+- Added envvar \(CLEANUPDEPLOYMENTS\) to cleanup failed tests. [\#118](https://github.com/arangodb/kube-arangodb/pull/118)
+- Added test that removes PV, PVC & Pod or dbserver. \[ci VERBOSE=1\] \[ci LONG=1\] \[ci TESTOPTIONS="-test.run ^TestResiliencePVDBServer$"\] [\#117](https://github.com/arangodb/kube-arangodb/pull/117)
+- Fixed expected value for ENGINE file in init container of dbserver. [\#116](https://github.com/arangodb/kube-arangodb/pull/116)
+- Improved liveness detection [\#115](https://github.com/arangodb/kube-arangodb/pull/115)
+- Run chaos-monkey in go-routine to avoid blocking the operator [\#114](https://github.com/arangodb/kube-arangodb/pull/114)
+- Added examples for exposing metrics to Prometheus [\#113](https://github.com/arangodb/kube-arangodb/pull/113)
+- Replace HTTP server with HTTPS server [\#112](https://github.com/arangodb/kube-arangodb/pull/112)
+- Disabled colorizing logs [\#111](https://github.com/arangodb/kube-arangodb/pull/111)
+- Safe resource watcher [\#110](https://github.com/arangodb/kube-arangodb/pull/110)
+- Archive log files [\#109](https://github.com/arangodb/kube-arangodb/pull/109)
+- Doc - Follow file name conventions of main docs, move to Tutorials [\#108](https://github.com/arangodb/kube-arangodb/pull/108)
+- Quickly fail when deployment no longer exists [\#107](https://github.com/arangodb/kube-arangodb/pull/107)
+- BREAKING CHANGE: Renamed all enum values to title case [\#104](https://github.com/arangodb/kube-arangodb/pull/104)
+- Changed TLSSpec.TTL to new string based `Duration` type [\#103](https://github.com/arangodb/kube-arangodb/pull/103)
+- Added automatic renewal of TLS server certificates [\#102](https://github.com/arangodb/kube-arangodb/pull/102)
+- Adding GettingStarted page and structuring docs for website [\#101](https://github.com/arangodb/kube-arangodb/pull/101)
+- Added LivenessProbe & Readiness probe [\#100](https://github.com/arangodb/kube-arangodb/pull/100)
+- Patch latest version number in README [\#99](https://github.com/arangodb/kube-arangodb/pull/99)
+- Adding CHANGELOG.md generation [\#98](https://github.com/arangodb/kube-arangodb/pull/98)
+- Adding chaos-monkey for deployments [\#96](https://github.com/arangodb/kube-arangodb/pull/96)
+- Check contents of persisted volume when dbserver is restarting [\#95](https://github.com/arangodb/kube-arangodb/pull/95)
 - Added helper to prepull arangodb \(enterprise\) image. This allows the normal tests to have decent timeouts while prevent a timeout caused by a long during image pull. [\#94](https://github.com/arangodb/kube-arangodb/pull/94)
+- Fixing PV cleanup [\#93](https://github.com/arangodb/kube-arangodb/pull/93)
+- Check member failure [\#92](https://github.com/arangodb/kube-arangodb/pull/92)
 - Tracking recent pod terminations [\#91](https://github.com/arangodb/kube-arangodb/pull/91)
 - Enable LONG on kube-arangodb-long test [\#90](https://github.com/arangodb/kube-arangodb/pull/90)
+- Tests/multi deployment [\#89](https://github.com/arangodb/kube-arangodb/pull/89)
 - Tests/modes [\#88](https://github.com/arangodb/kube-arangodb/pull/88)
 - increase timeout for long running tests [\#87](https://github.com/arangodb/kube-arangodb/pull/87)
 - fix rocksdb\_encryption\_test [\#86](https://github.com/arangodb/kube-arangodb/pull/86)
