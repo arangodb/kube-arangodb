@@ -34,6 +34,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -134,6 +135,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -230,6 +232,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {

@@ -31,6 +31,7 @@ func TestScaleClusterNonTLS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
@@ -101,6 +102,7 @@ func TestScaleCluster(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
