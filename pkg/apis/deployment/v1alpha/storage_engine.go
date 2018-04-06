@@ -23,6 +23,8 @@
 package v1alpha
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 )
 
@@ -45,6 +47,12 @@ func (se StorageEngine) Validate() error {
 	default:
 		return maskAny(errors.Wrapf(ValidationError, "Unknown storage engine: '%s'", string(se)))
 	}
+}
+
+// AsArangoArgument returns the value for the given storage engine as it is to be used
+// for arangod's --server.storage-engine option.
+func (se StorageEngine) AsArangoArgument() string {
+	return strings.ToLower(string(se))
 }
 
 // NewStorageEngine returns a reference to a string with given value.
