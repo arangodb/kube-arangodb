@@ -1,8 +1,22 @@
 # ArangoDB Kubernetes Operator
 
-"Starter for Kubernetes"
+ArangoDB Kubernetes Operator helps do run ArangoDB deployments
+on Kubernetes clusters.
 
-State: In heavy development. DO NOT USE FOR ANY PRODUCTION LIKE PURPOSE! THINGS WILL CHANGE.
+To get started, follow the Installation instructions below and/or
+read the [tutorial](./docs/Manual/Tutorials/Kubernetes/README.md).
+
+## State
+
+The ArangoDB Kubernetes Operator is still in **heavy development**.
+
+Running ArangoDB deployments (single, resilient-single or cluster)
+is becoming reasonably stable, but you should **not yet use it for production
+environments**.
+
+The feature set of the ArangoDB Kubernetes Operator is close to what
+it is intended to be, with the exeption of Datacenter to Datacenter replication
+support. That is still completely missing.
 
 [Documentation](./docs/README.md)
 
