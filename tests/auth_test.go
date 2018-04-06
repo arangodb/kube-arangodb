@@ -42,7 +42,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 
 	// Secret must now exist
 	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
-		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
 	// Create a database client
@@ -59,7 +59,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 
 	// Secret must no longer exist
 	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Minute); err != nil {
-		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 }
 
@@ -181,7 +181,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 
 	// Secret must now exist
 	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
-		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
 	// Create a database client
@@ -198,7 +198,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 
 	// Secret must no longer exist
 	if err := waitUntilSecretNotFound(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Minute); err != nil {
-		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.JWTSecretName, err)
+		t.Fatalf("JWT secret '%s' still found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 }
 

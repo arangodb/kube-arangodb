@@ -75,7 +75,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	c := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment config
-	depl := newDeployment("test-1-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
+	depl := newDeployment("test-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(mode)
 	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
 	depl.Spec.TLS = api.TLSSpec{}         // should auto-generate cert
@@ -110,13 +110,13 @@ func TestMultiDeployment(t *testing.T) {
 	c := kubeArangoClient.MustNewInCluster()
 
 	// Prepare deployment configurations
-	depl1 := newDeployment("test-multidep1-1-" + uniuri.NewLen(4))
+	depl1 := newDeployment("test-multidep-1-" + uniuri.NewLen(4))
 	depl1.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl1.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineRocksDB)
 	depl1.Spec.TLS = api.TLSSpec{}          // should auto-generate cert
 	depl1.Spec.SetDefaults(depl1.GetName()) // this must be last
 
-	depl2 := newDeployment("test-multidep1-2-" + uniuri.NewLen(4))
+	depl2 := newDeployment("test-multidep-2-" + uniuri.NewLen(4))
 	depl2.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 	depl2.Spec.StorageEngine = api.NewStorageEngine(api.StorageEngineMMFiles)
 	depl2.Spec.TLS = api.TLSSpec{}          // should auto-generate cert
