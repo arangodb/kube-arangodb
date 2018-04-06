@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/dchest/uniuri"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,7 +28,7 @@ func TestResiliencePod(t *testing.T) {
 	//fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
 	// Prepare deployment config
-	depl := newDeployment("test-pod-resilience" + uniuri.NewLen(4))
+	depl := newDeployment("test-pod-resilience-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
@@ -106,7 +108,7 @@ func TestResiliencePVC(t *testing.T) {
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-pvc-resilience" + uniuri.NewLen(4))
+	depl := newDeployment("test-pvc-resilience-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
@@ -181,6 +183,109 @@ func TestResiliencePVC(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 }
 
+// TestResiliencePVDBServer
+// Tests handling of entire PVs of dbservers being removed.
+func TestResiliencePVDBServer(t *testing.T) {
+	longOrSkip(t)
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	// Prepare deployment config
+	depl := newDeployment("test-pv-prmr-resi-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.SetDefaults(depl.GetName()) // this must be last
+
+	// Create deployment
+	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	if err != nil {
+		t.Fatalf("Create deployment failed: %v", err)
+	}
+
+	// Wait for deployment to be ready
+	if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
+		t.Fatalf("Deployment not running in time: %v", err)
+	}
+
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for cluster to be completely ready
+	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, apiObject.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running in expected health in time: %v", err)
+	}
+
+	// Fetch latest status so we know all member details
+	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get deployment: %v", err)
+	}
+
+	// Delete one pv, pvc & pod after the other
+	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+		if group != api.ServerGroupDBServers {
+			// Agents cannot be replaced with a new ID
+			// Coordinators, Sync masters/workers have no persistent storage
+			return nil
+		}
+		for i, m := range *status {
+			// Only test first 2
+			if i >= 2 {
+				continue
+			}
+			// Get current pvc so we can compare UID later
+			originalPVC, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Failed to get pvc %s: %v", m.PersistentVolumeClaimName, err)
+			}
+			// Get current pv
+			pvName := originalPVC.Spec.VolumeName
+			require.NotEmpty(t, pvName, "VolumeName of %s must be non-empty", originalPVC.GetName())
+			// Delete PV
+			if err := kubecli.CoreV1().PersistentVolumes().Delete(pvName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pv %s: %v", pvName, err)
+			}
+			// Delete PVC
+			if err := kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(m.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pvc %s: %v", m.PersistentVolumeClaimName, err)
+			}
+			// Delete Pod
+			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
+			}
+			// Wait for cluster to be healthy again with the same number of
+			// dbservers, but the current dbserver being replaced.
+			expectedDBServerCount := apiObject.Spec.DBServers.GetCount()
+			unexpectedID := m.ID
+			pred := func(depl *api.ArangoDeployment) error {
+				if len(depl.Status.Members.DBServers) != expectedDBServerCount {
+					return maskAny(fmt.Errorf("Expected %d dbservers, got %d", expectedDBServerCount, len(depl.Status.Members.DBServers)))
+				}
+				if depl.Status.Members.ContainsID(unexpectedID) {
+					return maskAny(fmt.Errorf("Member %s should be gone", unexpectedID))
+				}
+				return nil
+			}
+			if _, err := waitUntilDeployment(c, apiObject.GetName(), ns, pred, time.Minute*5); err != nil {
+				t.Fatalf("Deployment not ready in time: %v", err)
+			}
+			// Wait for cluster to be completely ready
+			if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
+				return clusterHealthEqualsSpec(h, apiObject.Spec)
+			}); err != nil {
+				t.Fatalf("Cluster not running in expected health in time: %v", err)
+			}
+		}
+		return nil
+	}, &apiObject.Status)
+
+	// Cleanup
+	removeDeployment(c, depl.GetName(), ns)
+}
+
 // TestResilienceService
 // Tests handling of individual service deletions
 func TestResilienceService(t *testing.T) {
@@ -190,7 +295,7 @@ func TestResilienceService(t *testing.T) {
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-service-resilience" + uniuri.NewLen(4))
+	depl := newDeployment("test-service-resilience-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
