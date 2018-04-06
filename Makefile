@@ -278,7 +278,7 @@ patch-readme:
 
 .PHONY: update-changelog
 changelog:
-	docker run -it --rm \
+	docker run --rm \
 		-e CHANGELOG_GITHUB_TOKEN=$(shell cat ~/.arangodb/github-token) \
 		-v "$(ROOTDIR)":/usr/local/src/your-app \
 		ferrarimarco/github-changelog-generator \
