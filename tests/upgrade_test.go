@@ -83,40 +83,40 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	// check environment
 	longOrSkip(t)
 
-	k8sNameSpace := getNamespace(t)
-	k8sClient := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	ns := getNamespace(t)
+	kubecli := mustNewKubeClient(t)
+	c := kubeArangoClient.MustNewInCluster()
 
-	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%st%s-%s", mode[:2], engine[:2], fromVersion, toVersion, uniuri.NewLen(4)), ".", "", -1))
-	deploymentTemplate.Spec.Mode = api.NewMode(mode)
-	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
-	deploymentTemplate.Spec.TLS = api.TLSSpec{} // should auto-generate cert
-	deploymentTemplate.Spec.Image = util.NewString("arangodb/arangodb:" + fromVersion)
-	deploymentTemplate.Spec.SetDefaults(deploymentTemplate.GetName()) // this must be last
+	depl := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%st%s-%s", mode[:2], engine[:2], fromVersion, toVersion, uniuri.NewLen(4)), ".", "", -1))
+	depl.Spec.Mode = api.NewMode(mode)
+	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
+	depl.Spec.TLS = api.TLSSpec{} // should auto-generate cert
+	depl.Spec.Image = util.NewString("arangodb/arangodb:" + fromVersion)
+	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	deployment, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
-	defer deferedCleanupDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
 	// Create a database client
 	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, k8sClient, deployment, t)
+	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t)
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, ""); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, ""); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 
 	// Try to change image version
-	deployment, err = updateDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace,
+	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(spec *api.DeploymentSpec) {
 			spec.Image = util.NewString("arangodb/arangodb:" + toVersion)
 		})
@@ -124,17 +124,17 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
 	}
 
-	deployment, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
+	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, k8sClient, toVersion); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, toVersion); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 
 	// Cleanup
-	removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
+	removeDeployment(c, depl.GetName(), ns)
 
 	return nil
 }
