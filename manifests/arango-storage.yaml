@@ -91,16 +91,19 @@ metadata:
   namespace: kube-system
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         name: arango-storage-operator
+        app: arango-storage-operator
     spec:
       serviceAccountName: arango-storage-operator
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:88d2ef08c9e96f1f98a0d108acf51b09bccd1506105e8c2e3790815d27a984ae
+        image: arangodb/kube-arangodb@sha256:2a91efa8b567c9bcd23a16e091329a9c9894959a4719aabc95e37eed17a9767b
         args:
         - --operator.storage
         env:
@@ -112,4 +115,25 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        ports:
+        - name: metrics
+          containerPort: 8528
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8528
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready/storage
+            port: 8528
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      
