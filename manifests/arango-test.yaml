@@ -1,0 +1,34 @@
+## test/rbac.yaml
+## Cluster role granting access to resources needed by the integration tests.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-operator-test
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list"]
+- apiGroups: [""]
+  resources: ["pods", "services", "persistentvolumes", "persistentvolumeclaims", "secrets"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["*"]
+
+---
+
+## Bind the cluster role granting access to ArangoLocalStorage resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-operator-test
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-operator-test
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
