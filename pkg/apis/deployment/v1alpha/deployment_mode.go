@@ -32,8 +32,8 @@ type DeploymentMode string
 const (
 	// DeploymentModeSingle yields a single server
 	DeploymentModeSingle DeploymentMode = "Single"
-	// DeploymentModeResilientSingle yields an agency and a resilient-single server pair
-	DeploymentModeResilientSingle DeploymentMode = "ResilientSingle"
+	// DeploymentModeActiveFailover yields an agency and a active-failover server pair
+	DeploymentModeActiveFailover DeploymentMode = "ActiveFailover"
 	// DeploymentModeCluster yields an full cluster (agency, dbservers & coordinators)
 	DeploymentModeCluster DeploymentMode = "Cluster"
 )
@@ -42,21 +42,21 @@ const (
 // Return errors when validation fails, nil on success.
 func (m DeploymentMode) Validate() error {
 	switch m {
-	case DeploymentModeSingle, DeploymentModeResilientSingle, DeploymentModeCluster:
+	case DeploymentModeSingle, DeploymentModeActiveFailover, DeploymentModeCluster:
 		return nil
 	default:
 		return maskAny(errors.Wrapf(ValidationError, "Unknown deployment mode: '%s'", string(m)))
 	}
 }
 
-// HasSingleServers returns true when the given mode is "Single" or "ResilientSingle".
+// HasSingleServers returns true when the given mode is "Single" or "ActiveFailover".
 func (m DeploymentMode) HasSingleServers() bool {
-	return m == DeploymentModeSingle || m == DeploymentModeResilientSingle
+	return m == DeploymentModeSingle || m == DeploymentModeActiveFailover
 }
 
-// HasAgents returns true when the given mode is "ResilientSingle" or "Cluster".
+// HasAgents returns true when the given mode is "ActiveFailover" or "Cluster".
 func (m DeploymentMode) HasAgents() bool {
-	return m == DeploymentModeResilientSingle || m == DeploymentModeCluster
+	return m == DeploymentModeActiveFailover || m == DeploymentModeCluster
 }
 
 // HasDBServers returns true when the given mode is "Cluster".

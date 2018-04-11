@@ -69,7 +69,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, error)
 	switch a.actionCtx.GetMode() {
 	case api.DeploymentModeSingle:
 		return a.checkProgressSingle(ctx)
-	case api.DeploymentModeResilientSingle:
+	case api.DeploymentModeActiveFailover:
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctx)
 		}

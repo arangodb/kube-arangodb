@@ -185,7 +185,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.GetMode() == api.DeploymentModeResilientSingle {
+		if deplSpec.GetMode() == api.DeploymentModeActiveFailover {
 			addAgentEndpoints = true
 			options = append(options,
 				optionPair{"--replication.automatic-failover", "true"},

@@ -86,14 +86,14 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
 
-// TestCreatePlanResilientSingleScale creates a `resilientsingle` deployment to test the creating of scaling plan.
-func TestCreatePlanResilientSingleScale(t *testing.T) {
+// TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
+func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
 		return "", maskAny(fmt.Errorf("Not implemented"))
 	}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
-		Mode: api.NewMode(api.DeploymentModeResilientSingle),
+		Mode: api.NewMode(api.DeploymentModeActiveFailover),
 	}
 	spec.SetDefaults("test")
 	spec.Single.Count = util.NewInt(2)

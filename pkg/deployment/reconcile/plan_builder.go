@@ -113,7 +113,7 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 		switch spec.GetMode() {
 		case api.DeploymentModeSingle:
 			// Never scale down
-		case api.DeploymentModeResilientSingle:
+		case api.DeploymentModeActiveFailover:
 			// Only scale singles
 			plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 		case api.DeploymentModeCluster:

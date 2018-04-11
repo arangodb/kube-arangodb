@@ -64,7 +64,7 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 		if env == EnvironmentProduction {
 			switch group {
 			case ServerGroupSingle:
-				if mode == DeploymentModeResilientSingle {
+				if mode == DeploymentModeActiveFailover {
 					minCount = 2
 				}
 			case ServerGroupAgents:
@@ -93,7 +93,7 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 			if mode == DeploymentModeSingle {
 				s.Count = util.NewInt(1) // Single server
 			} else {
-				s.Count = util.NewInt(2) // Resilient single
+				s.Count = util.NewInt(2) // ActiveFailover
 			}
 		default:
 			s.Count = util.NewInt(3)
