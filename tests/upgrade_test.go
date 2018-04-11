@@ -44,14 +44,14 @@ func TestUpgradeSingleMMFiles32to33(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB, "3.3.4", "3.4.0")
 // }
 
-/*// test upgrade resilient single server rocksdb 3.3 -> 3.4
-func TestUpgradeResilientSingleRocksDB33to34(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB, "3.3.5", "3.4.0")
+/*// test upgrade active-failover server rocksdb 3.3 -> 3.4
+func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "3.3.5", "3.4.0")
 }*/
 
-// // test upgrade resilient single server mmfiles 3.3 -> 3.4
-// func TestUpgradeResilientSingleMMFiles33to34(t *testing.T) {
-// 	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineMMFiles, "3.3.0", "3.4.0")
+// // test upgrade active-failover server mmfiles 3.3 -> 3.4
+// func TestUpgradeActiveFailoverMMFiles33to34(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineMMFiles, "3.3.0", "3.4.0")
 // }
 
 // test upgrade cluster rocksdb 3.2 -> 3.3
@@ -69,9 +69,9 @@ func TestDowngradeSingleMMFiles333to332(t *testing.T) {
 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.3.3", "3.3.2")
 }
 
-// test downgrade resilient single server rocksdb 3.3.3 -> 3.3.2
-func TestDowngradeResilientSingleRocksDB333to332(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB, "3.3.3", "3.3.2")
+// test downgrade ActiveFailover server rocksdb 3.3.3 -> 3.3.2
+func TestDowngradeActiveFailoverRocksDB333to332(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "3.3.3", "3.3.2")
 }
 
 // test downgrade cluster rocksdb 3.3.3 -> 3.3.2

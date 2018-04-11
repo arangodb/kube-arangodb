@@ -353,7 +353,7 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 		if err := waitUntilVersionUp(DBClient, checkVersionPredicate); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %s", err))
 		}
-	case api.DeploymentModeResilientSingle:
+	case api.DeploymentModeActiveFailover:
 		if err := waitUntilVersionUp(DBClient, checkVersionPredicate); err != nil {
 			return maskAny(fmt.Errorf("Single Server not running in time: %s", err))
 		}

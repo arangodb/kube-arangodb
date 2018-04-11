@@ -202,7 +202,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		)
 	}
 
-	// Resilient single
+	// ActiveFailover
 	{
 		apiObject := &api.ArangoDeployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -210,7 +210,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 				Namespace: "ns",
 			},
 			Spec: api.DeploymentSpec{
-				Mode: api.NewMode(api.DeploymentModeResilientSingle),
+				Mode: api.NewMode(api.DeploymentModeActiveFailover),
 			},
 		}
 		apiObject.Spec.SetDefaults("test")

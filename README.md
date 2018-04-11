@@ -10,7 +10,7 @@ read the [tutorial](./docs/Manual/Tutorials/Kubernetes/README.md).
 
 The ArangoDB Kubernetes Operator is still in **heavy development**.
 
-Running ArangoDB deployments (single, resilient-single or cluster)
+Running ArangoDB deployments (single, active-failover or cluster)
 is becoming reasonably stable, but you should **not yet use it for production
 environments**.
 

@@ -75,16 +75,16 @@ func TestSimpleSingle(t *testing.T) {
 	assert.Equal(t, driver.ServerRoleSingle, role)
 }
 
-// TestSimpleResilientSingle tests the creating of a resilientsingle server deployment
+// TestSimpleActiveFailover tests the creating of a ActiveFailover server deployment
 // with default settings.
-func TestSimpleResilientSingle(t *testing.T) {
+func TestSimpleActiveFailover(t *testing.T) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Prepare deployment config
 	depl := newDeployment("test-rs-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.NewMode(api.DeploymentModeResilientSingle)
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -106,7 +106,7 @@ func TestSimpleResilientSingle(t *testing.T) {
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
-		t.Fatalf("ResilientSingle servers not running returning version in time: %v", err)
+		t.Fatalf("ActiveFailover servers not running returning version in time: %v", err)
 	}
 
 	// Check server role

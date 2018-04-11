@@ -31,7 +31,7 @@ import (
 func TestDeploymentModeValidate(t *testing.T) {
 	// Valid
 	assert.Nil(t, DeploymentMode("Single").Validate())
-	assert.Nil(t, DeploymentMode("ResilientSingle").Validate())
+	assert.Nil(t, DeploymentMode("ActiveFailover").Validate())
 	assert.Nil(t, DeploymentMode("Cluster").Validate())
 
 	// Not valid
@@ -39,30 +39,30 @@ func TestDeploymentModeValidate(t *testing.T) {
 	assert.Error(t, DeploymentMode(" cluster").Validate())
 	assert.Error(t, DeploymentMode("singles").Validate())
 	assert.Error(t, DeploymentMode("single").Validate())
-	assert.Error(t, DeploymentMode("resilientsingle").Validate())
+	assert.Error(t, DeploymentMode("activefailover").Validate())
 	assert.Error(t, DeploymentMode("cluster").Validate())
 }
 
 func TestDeploymentModeHasX(t *testing.T) {
 	assert.True(t, DeploymentModeSingle.HasSingleServers())
-	assert.True(t, DeploymentModeResilientSingle.HasSingleServers())
+	assert.True(t, DeploymentModeActiveFailover.HasSingleServers())
 	assert.False(t, DeploymentModeCluster.HasSingleServers())
 
 	assert.False(t, DeploymentModeSingle.HasAgents())
-	assert.True(t, DeploymentModeResilientSingle.HasAgents())
+	assert.True(t, DeploymentModeActiveFailover.HasAgents())
 	assert.True(t, DeploymentModeCluster.HasAgents())
 
 	assert.False(t, DeploymentModeSingle.HasDBServers())
-	assert.False(t, DeploymentModeResilientSingle.HasDBServers())
+	assert.False(t, DeploymentModeActiveFailover.HasDBServers())
 	assert.True(t, DeploymentModeCluster.HasDBServers())
 
 	assert.False(t, DeploymentModeSingle.HasCoordinators())
-	assert.False(t, DeploymentModeResilientSingle.HasCoordinators())
+	assert.False(t, DeploymentModeActiveFailover.HasCoordinators())
 	assert.True(t, DeploymentModeCluster.HasCoordinators())
 }
 
 func TestDeploymentModeSupportsSync(t *testing.T) {
 	assert.False(t, DeploymentModeSingle.SupportsSync())
-	assert.False(t, DeploymentModeResilientSingle.SupportsSync())
+	assert.False(t, DeploymentModeActiveFailover.SupportsSync())
 	assert.True(t, DeploymentModeCluster.SupportsSync())
 }

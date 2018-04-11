@@ -83,9 +83,9 @@ func TestCursorSingle(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 }
 
-// TestCursorResilientSingle tests the creating of a resilientsingle server deployment
+// TestCursorActiveFailover tests the creating of a ActiveFailover server deployment
 // with default settings.
-func TestCursorResilientSingle(t *testing.T) {
+func TestCursorActiveFailover(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
@@ -93,7 +93,7 @@ func TestCursorResilientSingle(t *testing.T) {
 
 	// Prepare deployment config
 	depl := newDeployment("test-cur-rs-" + uniuri.NewLen(4))
-	depl.Spec.Mode = api.NewMode(api.DeploymentModeResilientSingle)
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -114,7 +114,7 @@ func TestCursorResilientSingle(t *testing.T) {
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
-		t.Fatalf("ResilientSingle servers not running returning version in time: %v", err)
+		t.Fatalf("ActiveFailover servers not running returning version in time: %v", err)
 	}
 
 	// Check server role

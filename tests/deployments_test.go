@@ -46,14 +46,14 @@ func TestDeploymentSingleRocksDB(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB)
 }
 
-// test deployment resilient single server mmfiles
-func TestDeploymentResilientSingleMMFiles(t *testing.T) {
-	deploymentSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineMMFiles)
+// test deployment active-failover server mmfiles
+func TestDeploymentActiveFailoverMMFiles(t *testing.T) {
+	deploymentSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineMMFiles)
 }
 
-// test deployment resilient single server rocksdb
-func TestDeploymentResilientSingleRocksDB(t *testing.T) {
-	deploymentSubTest(t, api.DeploymentModeResilientSingle, api.StorageEngineRocksDB)
+// test deployment active-failover server rocksdb
+func TestDeploymentActiveFailoverRocksDB(t *testing.T) {
+	deploymentSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB)
 }
 
 // test deployment cluster mmfiles
