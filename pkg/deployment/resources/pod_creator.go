@@ -32,8 +32,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
@@ -232,7 +232,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -262,7 +262,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -291,7 +291,7 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		authorization, err = arangod.CreateArangodJwtAuthorizationHeader(secretData)
+		authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
 		if err != nil {
 			return nil, maskAny(err)
 		}

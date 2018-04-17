@@ -27,7 +27,6 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // Context provides methods to the resilience package.
@@ -41,7 +40,7 @@ type Context interface {
 	UpdateStatus(status api.DeploymentStatus, force ...bool) error
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
-	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
+	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)

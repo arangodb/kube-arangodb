@@ -31,7 +31,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // ActionContext provides methods to the Action implementations
@@ -45,7 +44,7 @@ type ActionContext interface {
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]arangod.Agency, error)
+	GetAgencyClients(ctx context.Context) ([]driver.Connection, error)
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
 	// Returns member status, true when found, or false
@@ -108,7 +107,7 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 }
 
 // GetAgencyClients returns a client connection for every agency member.
-func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]arangod.Agency, error) {
+func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
 	c, err := ac.context.GetAgencyClients(ctx, nil)
 	if err != nil {
 		return nil, maskAny(err)

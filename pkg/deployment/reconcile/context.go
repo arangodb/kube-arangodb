@@ -29,7 +29,6 @@ import (
 	"k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -51,7 +50,7 @@ type Context interface {
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
-	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error)
+	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	CreateMember(group api.ServerGroup, id string) error

@@ -33,6 +33,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
+	"github.com/arangodb/go-driver/jwt"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -151,7 +152,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			jwt, err := CreateArangodJwtAuthorizationHeader(s)
+			jwt, err := jwt.CreateArangodJwtAuthorizationHeader(s, "kube-arangodb")
 			if err != nil {
 				return nil, maskAny(err)
 			}

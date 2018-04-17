@@ -20,23 +20,27 @@
 // Author Ewout Prangsma
 //
 
-package arangod
+package agency
 
-import "net/url"
+import (
+	"errors"
 
-// IsSameEndpoint returns true when the 2 given endpoints
-// refer to the same server.
-func IsSameEndpoint_(a, b string) bool {
-	if a == b {
-		return true
-	}
-	ua, err := url.Parse(a)
-	if err != nil {
-		return false
-	}
-	ub, err := url.Parse(b)
-	if err != nil {
-		return false
-	}
-	return ua.Hostname() == ub.Hostname()
+	driver "github.com/arangodb/go-driver"
+)
+
+var (
+	// AlreadyLockedError indicates that the lock is already locked.
+	AlreadyLockedError = errors.New("already locked")
+	// NotLockedError indicates that the lock is not locked when trying to unlock.
+	NotLockedError = errors.New("not locked")
+)
+
+// IsAlreadyLocked returns true if the given error is or is caused by an AlreadyLockedError.
+func IsAlreadyLocked(err error) bool {
+	return driver.Cause(err) == AlreadyLockedError
+}
+
+// IsNotLocked returns true if the given error is or is caused by an NotLockedError.
+func IsNotLocked(err error) bool {
+	return driver.Cause(err) == NotLockedError
 }

@@ -26,6 +26,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
@@ -122,7 +123,7 @@ func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, grou
 		if err != nil {
 			return false, "", maskAny(err)
 		}
-		if err := arangod.AreAgentsHealthy(ctx, clients); err != nil {
+		if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
 			return false, err.Error(), nil
 		}
 		return true, "", nil
