@@ -411,6 +411,15 @@ func (in *ExternalAccessSpec) DeepCopyInto(out *ExternalAccessSpec) {
 			**out = **in
 		}
 	}
+	if in.LoadBalancerIP != nil {
+		in, out := &in.LoadBalancerIP, &out.LoadBalancerIP
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	return
 }
 
