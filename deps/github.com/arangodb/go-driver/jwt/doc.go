@@ -20,23 +20,12 @@
 // Author Ewout Prangsma
 //
 
-package arangod
+package jwt
 
-import "net/url"
-
-// IsSameEndpoint returns true when the 2 given endpoints
-// refer to the same server.
-func IsSameEndpoint_(a, b string) bool {
-	if a == b {
-		return true
-	}
-	ua, err := url.Parse(a)
-	if err != nil {
-		return false
-	}
-	ub, err := url.Parse(b)
-	if err != nil {
-		return false
-	}
-	return ua.Hostname() == ub.Hostname()
-}
+//
+// This package provides a help function used to access ArangoDB
+// servers using a JWT secret.
+//
+// Authenticating with a JWT secret results in "super-user" access
+// to the database.
+//

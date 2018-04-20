@@ -32,7 +32,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -98,9 +97,9 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 
 // GetAgencyClients returns a client connection for every agency member.
 // If the given predicate is not nil, only agents are included where the given predicate returns true.
-func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]arangod.Agency, error) {
+func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
 	agencyMembers := d.status.Members.Agents
-	result := make([]arangod.Agency, 0, len(agencyMembers))
+	result := make([]driver.Connection, 0, len(agencyMembers))
 	for _, m := range agencyMembers {
 		if predicate != nil && !predicate(m.ID) {
 			continue
@@ -109,11 +108,8 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		aClient, err := arangod.NewAgencyClient(client)
-		if err != nil {
-			return nil, maskAny(err)
-		}
-		result = append(result, aClient)
+		conn := client.Connection()
+		result = append(result, conn)
 	}
 	return result, nil
 }

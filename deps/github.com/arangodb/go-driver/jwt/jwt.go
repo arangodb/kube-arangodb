@@ -20,9 +20,10 @@
 // Author Ewout Prangsma
 //
 
-package arangod
+package jwt
 
 import (
+	driver "github.com/arangodb/go-driver"
 	jg "github.com/dgrijalva/jwt-go"
 )
 
@@ -33,21 +34,22 @@ const (
 // CreateArangodJwtAuthorizationHeader calculates a JWT authorization header, for authorization
 // of a request to an arangod server, based on the given secret.
 // If the secret is empty, nothing is done.
-func CreateArangodJwtAuthorizationHeader(jwtSecret string) (string, error) {
-	if jwtSecret == "" {
+// Use the result of this function as input for driver.RawAuthentication.
+func CreateArangodJwtAuthorizationHeader(jwtSecret, serverID string) (string, error) {
+	if jwtSecret == "" || serverID == "" {
 		return "", nil
 	}
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
 	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims{
 		"iss":       issArangod,
-		"server_id": "foo",
+		"server_id": serverID,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
 	signedToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", maskAny(err)
+		return "", driver.WithStack(err)
 	}
 
 	return "bearer " + signedToken, nil

@@ -26,10 +26,10 @@ import (
 	"context"
 
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 // NewWaitForMemberUpAction creates a new Action that implements the given
@@ -108,7 +108,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, e
 		return false, maskAny(err)
 	}
 
-	if err := arangod.AreAgentsHealthy(ctx, clients); err != nil {
+	if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")
 		return false, nil
 	}
