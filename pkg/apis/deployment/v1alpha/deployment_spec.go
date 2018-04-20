@@ -51,6 +51,7 @@ type DeploymentSpec struct {
 	Image           *string         `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 
+	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
 	Authentication AuthenticationSpec `json:"auth"`
 	TLS            TLSSpec            `json:"tls"`
@@ -139,6 +140,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)
 	}
+	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
 	s.TLS.SetDefaults(deploymentName + "-ca")
@@ -169,6 +171,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	if s.ImagePullPolicy == nil {
 		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
+	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
@@ -199,6 +202,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if s.GetImage() == "" {
 		return maskAny(errors.Wrapf(ValidationError, "spec.image must be set"))
+	}
+	if err := s.ExternalAccess.Validate(); err != nil {
+		return maskAny(errors.Wrap(err, "spec.externalAccess"))
 	}
 	if err := s.RocksDB.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.rocksdb"))
@@ -253,6 +259,9 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if s.GetStorageEngine() != target.GetStorageEngine() {
 		target.StorageEngine = NewStorageEngineOrNil(s.StorageEngine)
 		resetFields = append(resetFields, "storageEngine")
+	}
+	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
+		resetFields = append(resetFields, l...)
 	}
 	if l := s.RocksDB.ResetImmutableFields("rocksdb", &target.RocksDB); l != nil {
 		resetFields = append(resetFields, l...)

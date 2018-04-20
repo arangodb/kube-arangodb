@@ -134,6 +134,13 @@ Possible values are:
 - `Auto` (default) To create a `Service` of type `LoadBalancer` and fallback to a `Service` or type `NodePort` when the
   `LoadBalancer` is not assigned an IP address.
 
+### `spec.externalAccess.loadBalancerIP: string`
+
+This setting specifies the IP used to for the LoadBalancer to expose the ArangoDB deployment on.
+This setting is used when `spec.externalAccess.type` is set to `LoadBalancer` or `Auto`.
+
+If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
+
 ### `spec.externalAccess.nodePort: int`
 
 This setting specifies the port used to expose the ArangoDB deployment on.
