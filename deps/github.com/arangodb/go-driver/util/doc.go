@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2017 ArangoDB GmbH, Cologne, Germany
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,19 +20,7 @@
 // Author Ewout Prangsma
 //
 
-// +build go1.8
-
-package driver
-
-import "net/url"
-
-// pathEscape the given value for use in a URL path.
-func pathEscape(s string) string {
-	return url.PathEscape(s)
-}
-
-// pathUnescape unescapes the given value for use in a URL path.
-func pathUnescape(s string) string {
-	r, _ := url.PathUnescape(s)
-	return r
-}
+/*
+Package util provides some helper methods for the go-driver (it is unlikely that you need this package directly).
+*/
+package util

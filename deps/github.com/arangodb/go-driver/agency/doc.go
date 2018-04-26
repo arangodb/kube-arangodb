@@ -20,20 +20,19 @@
 // Author Ewout Prangsma
 //
 
-package agency
+/*
+Package agency provides an API to access the ArangoDB agency (it is unlikely that you need this package directly).
 
-//
-// The Agency is fault-tolerant and highly-available key-value store
-// that is used to store critical, low-level information about
-// an ArangoDB cluster.
-//
-// The API provided in this package gives access to the Agency.
-//
-// THIS API IS NOT USED FOR NORMAL DATABASE ACCESS.
-//
-// Reasons for using this API are:
-// - You want to make use of an indepent Agency as your own HA key-value store.
-// - You want access to low-level information of your database. USE WITH GREAT CARE!
-//
-// WARNING: Messing around in the Agency can quickly lead to a corrupt database!
-//
+The Agency is fault-tolerant and highly-available key-value store
+that is used to store critical, low-level information about
+an ArangoDB cluster.
+
+THIS API IS NOT USED FOR NORMAL DATABASE ACCESS.
+
+Reasons for using this API are:
+- You want to make use of an indepent Agency as your own HA key-value store.
+- You want access to low-level information of your database. USE WITH GREAT CARE!
+
+WARNING: Messing around in the Agency can quickly lead to a corrupt database!
+*/
+package agency
