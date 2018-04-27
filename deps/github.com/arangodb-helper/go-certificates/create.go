@@ -44,6 +44,7 @@ const (
 )
 
 type CreateCertificateOptions struct {
+	Subject        *pkix.Name    // If set, this name is used for the subject of the certificate and CommonName is ignored.
 	CommonName     string        // Common name set in the certificate. If not specified, defaults to first email address, then first host and if all not set 'ArangoDB'.
 	Hosts          []string      // Comma-separated hostnames and IPs to generate a certificate for
 	EmailAddresses []string      // List of email address to include in the certificate as alternative name
@@ -101,14 +102,18 @@ func CreateCertificate(options CreateCertificateOptions, ca *CA) (string, string
 	} else if len(options.Hosts) > 0 {
 		commonName = options.Hosts[0]
 	}
+	var subject pkix.Name
+	if options.Subject != nil {
+		subject = *options.Subject
+	} else {
+		subject.CommonName = commonName
+		subject.Organization = []string{"ArangoDB"}
+	}
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			CommonName:   commonName,
-			Organization: []string{"ArangoDB"},
-		},
-		NotBefore: notBefore,
-		NotAfter:  notAfter,
+		Subject:      subject,
+		NotBefore:    notBefore,
+		NotAfter:     notAfter,
 
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageAny},

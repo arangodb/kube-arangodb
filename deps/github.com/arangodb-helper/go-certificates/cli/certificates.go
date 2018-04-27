@@ -43,6 +43,9 @@ const (
 	// Client authentication valid for defaults
 	defaultClientAuthValidFor   = time.Hour * 24 * 365 * 1  // 1 years
 	defaultClientAuthCAValidFor = time.Hour * 24 * 365 * 15 // 15 years
+	// TLS curve defaults
+	defaultTLSCurve        = "P256"
+	defaultClientAuthCurve = "P521"
 )
 
 var (
@@ -148,11 +151,11 @@ type createCAOptions struct {
 	ecdsaCurve string
 }
 
-func (o *createCAOptions) ConfigureFlags(f *pflag.FlagSet, defaultFName string, defaultValidFor time.Duration) {
+func (o *createCAOptions) ConfigureFlags(f *pflag.FlagSet, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
 	f.StringVar(&o.certFile, "cert", defaultFName+".crt", "Filename of the generated CA certificate")
 	f.StringVar(&o.keyFile, "key", defaultFName+".key", "Filename of the generated CA private key")
 	f.DurationVar(&o.validFor, "validfor", defaultValidFor, "Lifetime of the certificate until expiration")
-	f.StringVar(&o.ecdsaCurve, "curve", "P521", "ECDSA curve used for private key")
+	f.StringVar(&o.ecdsaCurve, "curve", defaultCurve, "ECDSA curve used for private key")
 }
 
 func (o *createCAOptions) CreateCA() {
@@ -184,13 +187,13 @@ type createCertificateBaseOptions struct {
 	ecdsaCurve     string
 }
 
-func (o *createCertificateBaseOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
+func (o *createCertificateBaseOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
 	f.StringVar(&o.caCertFile, "cacert", defaultCAFName+".crt", "File containing TLS CA certificate")
 	f.StringVar(&o.caKeyFile, "cakey", defaultCAFName+".key", "File containing TLS CA private key")
 	f.StringSliceVar(&o.hosts, "host", nil, "Host name to include in the certificate")
 	f.StringSliceVar(&o.emailAddresses, "email", nil, "Email address to include in the certificate")
 	f.DurationVar(&o.validFor, "validfor", defaultValidFor, "Lifetime of the certificate until expiration")
-	f.StringVar(&o.ecdsaCurve, "curve", "P521", "ECDSA curve used for private key")
+	f.StringVar(&o.ecdsaCurve, "curve", defaultCurve, "ECDSA curve used for private key")
 }
 
 // Create a certificate from given options.
@@ -206,8 +209,8 @@ func (o *createCertificateBaseOptions) CreateCertificate(isClientAuth bool) (str
 
 	// Create certificate
 	options := certificates.CreateCertificateOptions{
-		Hosts:          o.hosts,
-		EmailAddresses: o.emailAddresses,
+		Hosts:          removeEmptyStrings(o.hosts),
+		EmailAddresses: removeEmptyStrings(o.emailAddresses),
 		ValidFor:       o.validFor,
 		ECDSACurve:     o.ecdsaCurve,
 		IsClientAuth:   isClientAuth,
@@ -225,8 +228,8 @@ type createKeyFileOptions struct {
 	keyFile string
 }
 
-func (o *createKeyFileOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createKeyFileOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.keyFile, "keyfile", defaultFName+".keyfile", "Filename of keyfile to generate")
 }
 
@@ -247,8 +250,8 @@ type createCertificateOptions struct {
 	keyFile  string
 }
 
-func (o *createCertificateOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createCertificateOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.certFile, "cert", defaultFName+".crt", "Filename of the generated certificate")
 	f.StringVar(&o.keyFile, "key", defaultFName+".key", "Filename of the generated private key")
 }
@@ -272,8 +275,8 @@ type createKeystoreOptions struct {
 	alias            string
 }
 
-func (o *createKeystoreOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createKeystoreOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.keystoreFile, "keystore", defaultFName+".jks", "Filename of the generated keystore")
 	f.StringVar(&o.keystorePassword, "keystore-password", "", "Password of the generated keystore")
 	f.StringVar(&o.alias, "alias", "", "Aliases use to store the certificate under in the keystore")
@@ -317,12 +320,12 @@ func AddCommands(cmd *cobra.Command, logFatalFunc func(error, string), showUsage
 	cmdCreateClientAuth.AddCommand(cmdCreateClientAuthKeyFile)
 
 	createOptions.jwtsecret.ConfigureFlags(cmdCreateJWTSecret.Flags())
-	createOptions.tls.ca.ConfigureFlags(cmdCreateTLSCA.Flags(), "tls-ca", defaultTLSCAValidFor)
-	createOptions.tls.keyFile.ConfigureFlags(cmdCreateTLSKeyFile.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.tls.certificate.ConfigureFlags(cmdCreateTLSCertificate.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.tls.keystore.ConfigureFlags(cmdCreateTLSKeystore.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.clientAuth.ca.ConfigureFlags(cmdCreateClientAuthCA.Flags(), "client-auth-ca", defaultClientAuthCAValidFor)
-	createOptions.clientAuth.keyFile.ConfigureFlags(cmdCreateClientAuthKeyFile.Flags(), "client-auth-ca", "client-auth", defaultClientAuthValidFor)
+	createOptions.tls.ca.ConfigureFlags(cmdCreateTLSCA.Flags(), "tls-ca", defaultTLSCAValidFor, defaultTLSCurve)
+	createOptions.tls.keyFile.ConfigureFlags(cmdCreateTLSKeyFile.Flags(), "tls-ca", "tls", defaultTLSValidFor, defaultTLSCurve)
+	createOptions.tls.certificate.ConfigureFlags(cmdCreateTLSCertificate.Flags(), "tls-ca", "tls", defaultTLSValidFor, defaultTLSCurve)
+	createOptions.tls.keystore.ConfigureFlags(cmdCreateTLSKeystore.Flags(), "tls-ca", "tls", defaultTLSValidFor, defaultTLSCurve)
+	createOptions.clientAuth.ca.ConfigureFlags(cmdCreateClientAuthCA.Flags(), "client-auth-ca", defaultClientAuthCAValidFor, defaultClientAuthCurve)
+	createOptions.clientAuth.keyFile.ConfigureFlags(cmdCreateClientAuthKeyFile.Flags(), "client-auth-ca", "client-auth", defaultClientAuthValidFor, defaultClientAuthCurve)
 }
 
 // Cobra run function using the usage of the given command
@@ -400,4 +403,15 @@ func mustReadFile(filename string, flagName string) string {
 		logFatal(err, fmt.Sprintf("Failed to read %s", filename))
 	}
 	return string(content)
+}
+
+// removeEmptyStrings returns the given slice without all empty entries removed.
+func removeEmptyStrings(slice []string) []string {
+	result := make([]string, 0, len(slice))
+	for _, x := range slice {
+		if x != "" {
+			result = append(result, x)
+		}
+	}
+	return result
 }
