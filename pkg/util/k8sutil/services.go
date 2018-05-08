@@ -148,7 +148,7 @@ func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment meta
 		v1.ServicePort{
 			Name:     "server",
 			Protocol: v1.ProtocolTCP,
-			Port:     ArangoPort,
+			Port:     ArangoSyncMasterPort,
 		},
 	}
 	publishNotReadyAddresses := true

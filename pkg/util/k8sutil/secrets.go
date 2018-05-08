@@ -71,6 +71,21 @@ func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace
 	return nil
 }
 
+// ValidateCACertificateSecret checks that a secret with given name in given namespace
+// exists and it contains a 'ca.crt' data field.
+func ValidateCACertificateSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return maskAny(err)
+	}
+	// Check `ca.crt` field
+	_, found := s.Data[constants.SecretCACertificate]
+	if !found {
+		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+	}
+	return nil
+}
+
 // GetCASecret loads a secret with given name in the given namespace
 // and extracts the `ca.crt` & `ca.key` field.
 // If the secret does not exists or one of the fields is missing,
@@ -147,6 +162,21 @@ func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace st
 	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
+	}
+	return nil
+}
+
+// ValidateJWTSecret checks that a secret with given name in given namespace
+// exists and it contains a 'token' data field.
+func ValidateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return maskAny(err)
+	}
+	// Check `token` field
+	_, found := s.Data[constants.SecretKeyJWT]
+	if !found {
+		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretKeyJWT, secretName))
 	}
 	return nil
 }

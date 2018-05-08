@@ -35,9 +35,9 @@ type SyncSpec struct {
 	Image           *string        `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
-	Authentication AuthenticationSpec `json:"auth"`
-	TLS            TLSSpec            `json:"tls"`
-	Monitoring     MonitoringSpec     `json:"monitoring"`
+	Authentication SyncAuthenticationSpec `json:"auth"`
+	TLS            TLSSpec                `json:"tls"`
+	Monitoring     MonitoringSpec         `json:"monitoring"`
 }
 
 // IsEnabled returns the value of enabled.
@@ -63,10 +63,10 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.GetImage() == "" {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
-	if err := s.Authentication.Validate(s.IsEnabled()); err != nil {
-		return maskAny(err)
-	}
 	if s.IsEnabled() {
+		if err := s.Authentication.Validate(); err != nil {
+			return maskAny(err)
+		}
 		if err := s.TLS.Validate(); err != nil {
 			return maskAny(err)
 		}
@@ -78,15 +78,15 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultCASecretName string) {
+func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName string) {
 	if s.GetImage() == "" {
 		s.Image = util.NewString(defaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
 	}
-	s.Authentication.SetDefaults(defaultJWTSecretName)
-	s.TLS.SetDefaults(defaultCASecretName)
+	s.Authentication.SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName)
+	s.TLS.SetDefaults(defaultTLSCASecretName)
 	s.Monitoring.SetDefaults()
 }
 
