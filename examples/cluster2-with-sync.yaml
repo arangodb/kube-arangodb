@@ -1,7 +1,7 @@
 apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoDeployment"
 metadata:
-  name: "cluster-with-sync"
+  name: "cluster2-with-sync"
 spec:
   mode: Cluster
   image: ewoutp/arangodb:3.3.8
@@ -13,5 +13,5 @@ spec:
       clientCASecretName: client-auth-ca
     externalAccess:
       type: LoadBalancer
-      loadBalancerIP: 192.168.140.210
+      loadBalancerIP: 192.168.140.211
 
