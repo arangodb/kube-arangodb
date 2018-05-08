@@ -88,7 +88,7 @@ func (r *Resources) EnsureServices() error {
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
 		role := "syncmaster"
 		sessionAffinity := v1.ServiceAffinityNone
-		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, sessionAffinity, spec.Sync.ExternalAccess, apiObject, log, kubecli); err != nil {
+		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, sessionAffinity, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
 			return maskAny(err)
 		}
 		status := r.context.GetStatus()

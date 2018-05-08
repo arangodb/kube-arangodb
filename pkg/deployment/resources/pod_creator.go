@@ -235,10 +235,12 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	options = append(options,
 		optionPair{"--master.jwt-secret", masterSecretPath},
 	)
+	var masterEndpoint []string
 	switch group {
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
 		port = k8sutil.ArangoSyncMasterPort
+		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), port)
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options = append(options,
@@ -262,9 +264,12 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	case api.ServerGroupSyncWorkers:
 		runCmd = "worker"
 		port = k8sutil.ArangoSyncWorkerPort
-		syncServiceName := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
+		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
+		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}
+	}
+	for _, ep := range masterEndpoint {
 		options = append(options,
-			optionPair{"--master.endpoint", fmt.Sprintf("https://%s:%d", syncServiceName, k8sutil.ArangoSyncMasterPort)})
+			optionPair{"--master.endpoint", ep})
 	}
 	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id), strconv.Itoa(port))
 	options = append(options,

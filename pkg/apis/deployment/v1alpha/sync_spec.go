@@ -35,7 +35,7 @@ type SyncSpec struct {
 	Image           *string        `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
-	ExternalAccess ExternalAccessSpec     `json:"externalAccess"`
+	ExternalAccess SyncExternalAccessSpec `json:"externalAccess"`
 	Authentication SyncAuthenticationSpec `json:"auth"`
 	TLS            TLSSpec                `json:"tls"`
 	Monitoring     MonitoringSpec         `json:"monitoring"`

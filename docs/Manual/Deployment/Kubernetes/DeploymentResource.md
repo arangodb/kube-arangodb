@@ -244,6 +244,14 @@ This setting is used when `spec.sync.externalAccess.type` is set to `NodePort` o
 
 If you do not specify this setting, a random port will be chosen automatically.
 
+### `spec.sync.externalAccess.masterEndpoint: []string`
+
+This setting specifies the master endpoint(s) advertised by the ArangoSync SyncMasters.
+If not set, this setting defaults to:
+
+- If `spec.sync.externalAccess.loadBalancerIP` is set, it defaults to `https://<load-balancer-ip>:<8629>`.
+- Otherwise it defaults to `https://<sync-service-dns-name>:<8629>`.
+
 ### `spec.sync.auth.jwtSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
