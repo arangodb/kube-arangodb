@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/url"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -421,6 +422,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
 				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
 			}
+			if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
+				serverNames = append(serverNames, ip)
+			}
 			owner := apiObject.AsOwner()
 			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
@@ -468,7 +472,14 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 			serverNames := []string{
 				k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName()),
+				k8sutil.CreateSyncMasterClientServiceDNSName(apiObject),
 				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+			}
+			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), k8sutil.ArangoSyncMasterPort)
+			for _, ep := range masterEndpoint {
+				if u, err := url.Parse(ep); err == nil {
+					serverNames = append(serverNames, u.Hostname())
+				}
 			}
 			owner := apiObject.AsOwner()
 			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
