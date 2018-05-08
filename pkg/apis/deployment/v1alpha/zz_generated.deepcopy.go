@@ -667,6 +667,7 @@ func (in *SyncSpec) DeepCopyInto(out *SyncSpec) {
 			**out = **in
 		}
 	}
+	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	in.TLS.DeepCopyInto(&out.TLS)
 	in.Monitoring.DeepCopyInto(&out.Monitoring)

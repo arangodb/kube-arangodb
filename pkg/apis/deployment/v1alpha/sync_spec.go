@@ -35,6 +35,7 @@ type SyncSpec struct {
 	Image           *string        `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
+	ExternalAccess ExternalAccessSpec     `json:"externalAccess"`
 	Authentication SyncAuthenticationSpec `json:"auth"`
 	TLS            TLSSpec                `json:"tls"`
 	Monitoring     MonitoringSpec         `json:"monitoring"`
@@ -64,6 +65,9 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
 	if s.IsEnabled() {
+		if err := s.ExternalAccess.Validate(); err != nil {
+			return maskAny(err)
+		}
 		if err := s.Authentication.Validate(); err != nil {
 			return maskAny(err)
 		}
@@ -85,6 +89,7 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
 	}
+	s.ExternalAccess.SetDefaults()
 	s.Authentication.SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName)
 	s.TLS.SetDefaults(defaultTLSCASecretName)
 	s.Monitoring.SetDefaults()
@@ -101,6 +106,7 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 	if s.ImagePullPolicy == nil {
 		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
+	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
 	s.Monitoring.SetDefaultsFrom(source.Monitoring)
@@ -111,6 +117,9 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 // Field names are relative to given field prefix.
 func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []string {
 	var resetFields []string
+	if list := s.ExternalAccess.ResetImmutableFields(fieldPrefix+".externalAccess", &target.ExternalAccess); len(list) > 0 {
+		resetFields = append(resetFields, list...)
+	}
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
 	}
