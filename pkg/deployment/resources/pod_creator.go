@@ -379,9 +379,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		}
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
+		terminationGracePeriod := group.DefaultTerminationGracePeriod()
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
-			engine, requireUUID, args, env, finalizers, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

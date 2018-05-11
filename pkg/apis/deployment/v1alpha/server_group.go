@@ -22,6 +22,8 @@
 
 package v1alpha
 
+import time "time"
+
 type ServerGroup int
 
 const (
@@ -82,6 +84,20 @@ func (g ServerGroup) AsRoleAbbreviated() string {
 		return "sywo"
 	default:
 		return "?"
+	}
+}
+
+// DefaultTerminationGracePeriod returns the default period between SIGTERM & SIGKILL for a server in the given group.
+func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
+	switch g {
+	case ServerGroupSingle:
+		return time.Minute
+	case ServerGroupAgents:
+		return time.Minute
+	case ServerGroupDBServers:
+		return time.Hour
+	default:
+		return time.Second * 30
 	}
 }
 

@@ -26,7 +26,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,10 +117,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
 		}
-		imageID := pod.Status.ContainerStatuses[0].ImageID
-		if strings.HasPrefix(imageID, dockerPullableImageIDPrefix) {
-			imageID = imageID[len(dockerPullableImageIDPrefix):]
-		} else if imageID == "" {
+		imageID := k8sutil.ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID)
+		if imageID == "" {
 			// Fall back to specified image
 			imageID = image
 		}
@@ -166,7 +164,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		"--server.authentication=false",
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
 	}
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, args, nil, nil, nil, nil, "", ""); err != nil {
+	terminationGracePeriod := time.Second * 30
+	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil, "", ""); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

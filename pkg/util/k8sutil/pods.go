@@ -24,6 +24,7 @@ package k8sutil
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -369,12 +370,14 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string) v
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
 	role, id, podName, pvcName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	engine string, requireUUID bool,
+	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers)
+	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
+	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
 	// Add lifecycle container
 	var lifecycle *v1.Lifecycle
