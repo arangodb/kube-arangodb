@@ -24,23 +24,30 @@ package k8sutil
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const (
+	InitDataContainerName           = "init-data"
+	InitLifecycleContainerName      = "init-lifecycle"
+	ServerContainerName             = "server"
 	alpineImage                     = "alpine"
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
+	lifecycleVolumeName             = "lifecycle"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
+	LifecycleVolumeMountDir         = "/lifecycle/tools"
 )
 
 // EnvValue is a helper structure for environment variable sources.
@@ -147,6 +154,13 @@ func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
 	return CreatePodName(deploymentName, role, id, "-tls-keyfile")
 }
 
+// lifecycleVolumeMounts creates a volume mount structure for shared lifecycle emptyDir.
+func lifecycleVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{Name: lifecycleVolumeName, MountPath: LifecycleVolumeMountDir},
+	}
+}
+
 // arangodVolumeMounts creates a volume mount structure for arangod.
 func arangodVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
@@ -207,12 +221,14 @@ func arangodInitContainer(name, id, engine string, requireUUID bool) v1.Containe
 }
 
 // arangodContainer creates a container configured to run `arangod`.
-func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig) v1.Container {
+func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
-		Name:            name,
+		Name:            ServerContainerName,
 		Image:           image,
 		ImagePullPolicy: imagePullPolicy,
+		Lifecycle:       lifecycle,
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "server",
@@ -231,17 +247,23 @@ func arangodContainer(name string, image string, imagePullPolicy v1.PullPolicy, 
 	if readinessProbe != nil {
 		c.ReadinessProbe = readinessProbe.Create()
 	}
+	if lifecycle != nil {
+		c.Env = append(c.Env, lifecycleEnvVars...)
+		c.VolumeMounts = append(c.VolumeMounts, lifecycleVolumeMounts()...)
+	}
 
 	return c
 }
 
 // arangosyncContainer creates a container configured to run `arangosync`.
-func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig,
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
-		Name:            name,
+		Name:            ServerContainerName,
 		Image:           image,
 		ImagePullPolicy: imagePullPolicy,
+		Lifecycle:       lifecycle,
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "server",
@@ -256,8 +278,72 @@ func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolic
 	if livenessProbe != nil {
 		c.LivenessProbe = livenessProbe.Create()
 	}
+	if lifecycle != nil {
+		c.Env = append(c.Env, lifecycleEnvVars...)
+		c.VolumeMounts = append(c.VolumeMounts, lifecycleVolumeMounts()...)
+	}
 
 	return c
+}
+
+// newLifecycle creates a lifecycle structure with preStop handler.
+func newLifecycle() (*v1.Lifecycle, []v1.EnvVar, []v1.Volume, error) {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return nil, nil, nil, maskAny(err)
+	}
+	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
+	lifecycle := &v1.Lifecycle{
+		PreStop: &v1.Handler{
+			Exec: &v1.ExecAction{
+				Command: append([]string{exePath}, "lifecycle", "preStop"),
+			},
+		},
+	}
+	envVars := []v1.EnvVar{
+		v1.EnvVar{
+			Name: constants.EnvOperatorPodName,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		v1.EnvVar{
+			Name: constants.EnvOperatorPodNamespace,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+	}
+	vols := []v1.Volume{
+		v1.Volume{
+			Name: lifecycleVolumeName,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+	return lifecycle, envVars, vols, nil
+}
+
+// initLifecycleContainer creates an init-container to copy the lifecycle binary
+// to a shared volume.
+func initLifecycleContainer(image string) (v1.Container, error) {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return v1.Container{}, maskAny(err)
+	}
+	c := v1.Container{
+		Command:         append([]string{binaryPath}, "lifecycle", "copy", "--target", LifecycleVolumeMountDir),
+		Name:            InitLifecycleContainerName,
+		Image:           image,
+		ImagePullPolicy: v1.PullIfNotPresent,
+		VolumeMounts:    lifecycleVolumeMounts(),
+	}
+	return c, nil
 }
 
 // newPod creates a basic Pod for given settings.
@@ -282,7 +368,7 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string) v
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, podName, pvcName, image string, imagePullPolicy v1.PullPolicy,
+	role, id, podName, pvcName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	engine string, requireUUID bool,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
@@ -290,8 +376,24 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers)
 
+	// Add lifecycle container
+	var lifecycle *v1.Lifecycle
+	var lifecycleEnvVars []v1.EnvVar
+	var lifecycleVolumes []v1.Volume
+	if lifecycleImage != "" {
+		c, err := initLifecycleContainer(lifecycleImage)
+		if err != nil {
+			return maskAny(err)
+		}
+		p.Spec.InitContainers = append(p.Spec.InitContainers, c)
+		lifecycle, lifecycleEnvVars, lifecycleVolumes, err = newLifecycle()
+		if err != nil {
+			return maskAny(err)
+		}
+	}
+
 	// Add arangod container
-	c := arangodContainer("arangod", image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
+	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -352,6 +454,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		p.Spec.Volumes = append(p.Spec.Volumes, vol)
 	}
 
+	// Lifecycle volumes (if any)
+	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
+
 	// Add (anti-)affinity
 	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, "")
 
@@ -364,14 +469,33 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image string, imagePullPolicy v1.PullPolicy,
+func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil)
 
+	// Add lifecycle container
+	var lifecycle *v1.Lifecycle
+	var lifecycleEnvVars []v1.EnvVar
+	var lifecycleVolumes []v1.Volume
+	if lifecycleImage != "" {
+		c, err := initLifecycleContainer(lifecycleImage)
+		if err != nil {
+			return maskAny(err)
+		}
+		p.Spec.InitContainers = append(p.Spec.InitContainers, c)
+		lifecycle, lifecycleEnvVars, lifecycleVolumes, err = newLifecycle()
+		if err != nil {
+			return maskAny(err)
+		}
+	}
+
 	// Add arangosync container
-	c := arangosyncContainer("arangosync", image, imagePullPolicy, args, env, livenessProbe)
+	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars)
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Lifecycle volumes (if any)
+	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
 
 	// Add (anti-)affinity
 	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, affinityWithRole)

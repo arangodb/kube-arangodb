@@ -50,6 +50,11 @@ func (d *Deployment) GetKubeCli() kubernetes.Interface {
 	return d.deps.KubeCli
 }
 
+// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
+func (d *Deployment) GetLifecycleImage() string {
+	return d.config.LifecycleImage
+}
+
 // GetNamespace returns the kubernetes namespace that contains
 // this deployment.
 func (d *Deployment) GetNamespace() string {

@@ -203,6 +203,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount: o.Config.ServiceAccount,
+		LifecycleImage: o.Config.LifecycleImage,
 		AllowChaos:     o.Config.AllowChaos,
 	}
 	deps := deployment.Dependencies{

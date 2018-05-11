@@ -58,6 +58,8 @@ type Context interface {
 	UpdateStatus(status api.DeploymentStatus, force ...bool) error
 	// GetKubeCli returns the kubernetes client
 	GetKubeCli() kubernetes.Interface
+	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
+	GetLifecycleImage() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
 	// createEvent creates a given event.

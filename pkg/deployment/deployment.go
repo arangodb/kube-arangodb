@@ -50,6 +50,7 @@ import (
 type Config struct {
 	ServiceAccount string
 	AllowChaos     bool
+	LifecycleImage string
 }
 
 // Dependencies holds dependent services for a Deployment
