@@ -50,11 +50,14 @@ type ArangoDeployment struct {
 
 // AsOwner creates an OwnerReference for the given deployment
 func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
+	trueVar := true
 	return metav1.OwnerReference{
-		APIVersion: SchemeGroupVersion.String(),
-		Kind:       ArangoDeploymentResourceKind,
-		Name:       d.Name,
-		UID:        d.UID,
+		APIVersion:         SchemeGroupVersion.String(),
+		Kind:               ArangoDeploymentResourceKind,
+		Name:               d.Name,
+		UID:                d.UID,
+		Controller:         &trueVar,
+		BlockOwnerDeletion: &trueVar,
 	}
 }
 
