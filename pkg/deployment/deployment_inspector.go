@@ -84,6 +84,10 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 	}
+	if err := d.resources.InspectPVCs(ctx); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
+	}
 
 	// Check members for resilience
 	if err := d.resilience.CheckMemberFailure(); err != nil {

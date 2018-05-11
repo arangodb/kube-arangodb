@@ -1,0 +1,80 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Ewout Prangsma
+//
+
+package resources
+
+import (
+	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+var (
+	inspectedPVCCounter = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
+)
+
+// InspectPVCs lists all PVCs that belong to the given deployment and updates
+// the member status of the deployment accordingly.
+func (r *Resources) InspectPVCs(ctx context.Context) error {
+	log := r.log
+
+	pvcs, err := r.context.GetOwnedPVCs()
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to get owned PVCs")
+		return maskAny(err)
+	}
+
+	// Update member status from all pods found
+	status := r.context.GetStatus()
+	for _, p := range pvcs {
+		// PVC belongs to this deployment, update metric
+		inspectedPVCCounter.Inc()
+
+		// Find member status
+		memberStatus, _, found := status.Members.MemberStatusByPVCName(p.GetName())
+		if !found {
+			log.Debug().Str("pvc", p.GetName()).Msg("no memberstatus found for PVC")
+			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) && len(p.GetFinalizers()) > 0 {
+				// Strange, pvc belongs to us, but we have no member for it.
+				// Remove all finalizers, so it can be removed.
+				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
+				kubecli := r.context.GetKubeCli()
+				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
+					return maskAny(err)
+				}
+			}
+			continue
+		}
+
+		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
+			// Process finalizers
+			if err := r.runPVCFinalizers(ctx, &p, memberStatus); err != nil {
+				// Only log here, since we'll be called to try again.
+				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
+			}
+		}
+	}
+
+	return nil
+}

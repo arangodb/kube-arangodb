@@ -196,6 +196,24 @@ func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
 	return myPods, nil
 }
 
+// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
+func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
+	// Get all current PVCs
+	log := d.deps.Log
+	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to list PVCs")
+		return nil, maskAny(err)
+	}
+	myPVCs := make([]v1.PersistentVolumeClaim, 0, len(pvcs.Items))
+	for _, p := range pvcs.Items {
+		if d.isOwnerOf(&p) {
+			myPVCs = append(myPVCs, p)
+		}
+	}
+	return myPVCs, nil
+}
+
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 // the given member.
 func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {

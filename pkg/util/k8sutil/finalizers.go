@@ -58,6 +58,31 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 	return nil
 }
 
+// RemovePVCFinalizers removes the given finalizers from the given PVC.
+func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.PersistentVolumeClaim, finalizers []string) error {
+	pvcs := kubecli.CoreV1().PersistentVolumeClaims(p.GetNamespace())
+	getFunc := func() (metav1.Object, error) {
+		result, err := pvcs.Get(p.GetName(), metav1.GetOptions{})
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		return result, nil
+	}
+	updateFunc := func(updated metav1.Object) error {
+		updatedPVC := updated.(*v1.PersistentVolumeClaim)
+		result, err := pvcs.Update(updatedPVC)
+		if err != nil {
+			return maskAny(err)
+		}
+		*p = *result
+		return nil
+	}
+	if err := removeFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // removeFinalizers is a helper used to remove finalizers from an object.
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.

@@ -28,6 +28,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -40,9 +41,9 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
-		case constants.FinalizerDrainDBServer:
+		case constants.FinalizerPodDrainDBServer:
 			log.Debug().Msg("Inspecting drain dbserver finalizer")
-			if err := r.inspectFinalizerDrainDBServer(ctx, log, p, memberStatus); err == nil {
+			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
@@ -60,9 +61,9 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	return nil
 }
 
-// inspectFinalizerDrainDBServer checks the finalizer condition for drain-dbserver.
+// inspectFinalizerPodDrainDBServer checks the finalizer condition for drain-dbserver.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus) error {
+func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Pod is already failed, safe to remove drain dbserver finalizer")
@@ -74,6 +75,18 @@ func (r *Resources) inspectFinalizerDrainDBServer(ctx context.Context, log zerol
 		log.Debug().Msg("Entire deployment is being deleted, safe to remove drain dbserver finalizer")
 		return nil
 	}
+	// Check PVC
+	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
+	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get PVC for member")
+		return maskAny(err)
+	}
+	if !k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
+		log.Debug().Msg("PVC is not being deleted, so it is safe to remove drain dbserver finalizer")
+		return nil
+	}
+	log.Debug().Msg("PVC is being deleted, so we will cleanout the dbserver first")
 	// Inspect cleaned out state
 	c, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {

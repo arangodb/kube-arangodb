@@ -307,7 +307,7 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
 	switch group {
 	case api.ServerGroupDBServers:
-		return []string{constants.FinalizerDrainDBServer}
+		return []string{constants.FinalizerPodDrainDBServer}
 	default:
 		return nil
 	}

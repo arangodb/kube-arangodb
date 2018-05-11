@@ -121,6 +121,22 @@ func (ds DeploymentStatusMembers) MemberStatusByPodName(podName string) (MemberS
 	return MemberStatus{}, 0, false
 }
 
+// MemberStatusByPVCName returns a reference to the element in the given set of lists that has the given PVC name.
+// If no such element exists, nil is returned.
+func (ds DeploymentStatusMembers) MemberStatusByPVCName(pvcName string) (MemberStatus, ServerGroup, bool) {
+	if result, found := ds.Single.ElementByPVCName(pvcName); found {
+		return result, ServerGroupSingle, true
+	}
+	if result, found := ds.Agents.ElementByPVCName(pvcName); found {
+		return result, ServerGroupAgents, true
+	}
+	if result, found := ds.DBServers.ElementByPVCName(pvcName); found {
+		return result, ServerGroupDBServers, true
+	}
+	// Note: Other server groups do not have PVC's so we can skip them.
+	return MemberStatus{}, 0, false
+}
+
 // UpdateMemberStatus updates the given status in the given group.
 func (ds *DeploymentStatusMembers) UpdateMemberStatus(status MemberStatus, group ServerGroup) error {
 	var err error

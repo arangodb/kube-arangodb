@@ -28,6 +28,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// IsPersistentVolumeClaimMarkedForDeletion returns true if the pod has been marked for deletion.
+func IsPersistentVolumeClaimMarkedForDeletion(pvc *v1.PersistentVolumeClaim) bool {
+	return pvc.DeletionTimestamp != nil
+}
+
 // CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
 // a given id in a deployment with a given name.
 func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
@@ -37,13 +42,14 @@ func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deploymentName, ns, storageClassName, role string, resources v1.ResourceRequirements, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deploymentName, ns, storageClassName, role string, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   pvcName,
-			Labels: labels,
+			Name:       pvcName,
+			Labels:     labels,
+			Finalizers: finalizers,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
