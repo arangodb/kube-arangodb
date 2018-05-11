@@ -38,4 +38,6 @@ const (
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key
 
 	SecretTLSKeyfile = "tls.keyfile" // Key in Secret.data used to store a PEM encoded TLS certificate in the format used by ArangoDB (`--ssl.keyfile`)
+
+	FinalizerDrainDBServer = "dbserver.database.arangodb.com/drain" // Finalizer adds to DBServers, indicating the need for draining that dbserver
 )

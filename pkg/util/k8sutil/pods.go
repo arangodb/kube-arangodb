@@ -104,6 +104,11 @@ func IsPodNotScheduledFor(pod *v1.Pod, timeout time.Duration) bool {
 		condition.LastTransitionTime.Time.Add(timeout).Before(time.Now())
 }
 
+// IsPodMarkedForDeletion returns true if the pod has been marked for deletion.
+func IsPodMarkedForDeletion(pod *v1.Pod) bool {
+	return pod.DeletionTimestamp != nil
+}
+
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
 func IsArangoDBImageIDAndVersionPod(p v1.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]
@@ -256,12 +261,13 @@ func arangosyncContainer(name string, image string, imagePullPolicy v1.PullPolic
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string) v1.Pod {
+func newPod(deploymentName, ns, role, id, podName string, finalizers []string) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   podName,
-			Labels: LabelsForDeployment(deploymentName, role),
+			Name:       podName,
+			Labels:     LabelsForDeployment(deploymentName, role),
+			Finalizers: finalizers,
 		},
 		Spec: v1.PodSpec{
 			Hostname:      hostname,
@@ -278,11 +284,11 @@ func newPod(deploymentName, ns, role, id, podName string) v1.Pod {
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
 	role, id, podName, pvcName, image string, imagePullPolicy v1.PullPolicy,
 	engine string, requireUUID bool,
-	args []string, env map[string]EnvValue,
+	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers)
 
 	// Add arangod container
 	c := arangodContainer("arangod", image, imagePullPolicy, args, env, livenessProbe, readinessProbe)
@@ -361,7 +367,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image string, imagePullPolicy v1.PullPolicy,
 	args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil)
 
 	// Add arangosync container
 	c := arangosyncContainer("arangosync", image, imagePullPolicy, args, env, livenessProbe)

@@ -80,7 +80,7 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Inspection of generated resources needed
-	if err := d.resources.InspectPods(); err != nil {
+	if err := d.resources.InspectPods(ctx); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 	}

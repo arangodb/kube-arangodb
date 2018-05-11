@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -44,7 +45,7 @@ const (
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPods() error {
+func (r *Resources) InspectPods(ctx context.Context) error {
 	log := r.log
 	var events []*v1.Event
 
@@ -72,6 +73,16 @@ func (r *Resources) InspectPods() error {
 		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())
 		if !found {
 			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod")
+			if k8sutil.IsPodMarkedForDeletion(&p) && len(p.GetFinalizers()) > 0 {
+				// Strange, pod belongs to us, but we have no member for it.
+				// Remove all finalizers, so it can be removed.
+				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
+				kubecli := r.context.GetKubeCli()
+				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
+					return maskAny(err)
+				}
+			}
 			continue
 		}
 
@@ -122,6 +133,13 @@ func (r *Resources) InspectPods() error {
 			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, p.GetName())
 		} else if !k8sutil.IsPodScheduled(&p) {
 			unscheduledPodNames = append(unscheduledPodNames, p.GetName())
+		}
+		if k8sutil.IsPodMarkedForDeletion(&p) {
+			// Process finalizers
+			if err := r.runPodFinalizers(ctx, &p, memberStatus); err != nil {
+				// Only log here, since we'll be called to try again.
+				log.Warn().Err(err).Msg("Failed to run pod finalizers")
+			}
 		}
 		if updateMemberStatusNeeded {
 			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
