@@ -473,9 +473,11 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
+	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil)
+	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
+	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
 	// Add lifecycle container
 	var lifecycle *v1.Lifecycle

@@ -322,6 +322,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	ns := r.context.GetNamespace()
 	status := r.context.GetStatus()
 	lifecycleImage := r.context.GetLifecycleImage()
+	terminationGracePeriod := group.DefaultTerminationGracePeriod()
 
 	// Update pod name
 	role := group.AsRole()
@@ -379,7 +380,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		}
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
-		terminationGracePeriod := group.DefaultTerminationGracePeriod()
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
@@ -404,7 +404,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if group == api.ServerGroupSyncWorkers {
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), args, env, livenessProbe, affinityWithRole); err != nil {
+		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), terminationGracePeriod, args, env, livenessProbe, affinityWithRole); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
