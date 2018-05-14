@@ -10,6 +10,7 @@ DOCKERCLI := $(shell which docker)
 
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
 SRCDIR := $(SCRIPTDIR)
+CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
 VENDORDIR := $(ROOTDIR)/deps
 
@@ -125,6 +126,9 @@ $(GOBUILDDIR):
 	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
 	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
 
+$(CACHEVOL):
+	@docker volume create $(CACHEVOL)
+
 .PHONY: update-vendor
 update-vendor:
 	@mkdir -p $(GOBUILDDIR)
@@ -176,11 +180,13 @@ update-generated: $(GOBUILDDIR)
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
-$(BIN): $(GOBUILDDIR) $(SOURCES)
+$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES)
 	@mkdir -p $(BINDIR)
 	docker run \
 		--rm \
 		-v $(SRCDIR):/usr/code \
+		-v $(CACHEVOL):/usr/gocache \
+		-e GOCACHE=/usr/gocache \
 		-e GOPATH=/usr/code/.gobuild \
 		-e GOOS=linux \
 		-e GOARCH=amd64 \
@@ -214,6 +220,8 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 	docker run \
 		--rm \
 		-v $(SRCDIR):/usr/code \
+		-v $(CACHEVOL):/usr/gocache \
+		-e GOCACHE=/usr/gocache \
 		-e GOPATH=/usr/code/.gobuild \
 		-e GOOS=linux \
 		-e GOARCH=amd64 \
@@ -235,6 +243,8 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	docker run \
 		--rm \
 		-v $(SRCDIR):/usr/code \
+		-v $(CACHEVOL):/usr/gocache \
+		-e GOCACHE=/usr/gocache \
 		-e GOPATH=/usr/code/.gobuild \
 		-e GOOS=linux \
 		-e GOARCH=amd64 \
