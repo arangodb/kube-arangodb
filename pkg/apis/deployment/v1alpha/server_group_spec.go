@@ -40,6 +40,8 @@ type ServerGroupSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	// Tolerations specifies the tolerations added to Pods in this group.
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
 // GetCount returns the value of count.
@@ -55,6 +57,11 @@ func (s ServerGroupSpec) GetArgs() []string {
 // GetStorageClassName returns the value of storageClassName.
 func (s ServerGroupSpec) GetStorageClassName() string {
 	return util.StringOrDefault(s.StorageClassName)
+}
+
+// GetTolerations returns the value of tolerations.
+func (s ServerGroupSpec) GetTolerations() []v1.Toleration {
+	return s.Tolerations
 }
 
 // Validate the given group spec
@@ -132,6 +139,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	}
 	if s.StorageClassName == nil {
 		s.StorageClassName = util.NewStringOrNil(source.StorageClassName)
+	}
+	if s.Tolerations == nil {
+		s.Tolerations = source.Tolerations
 	}
 	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)

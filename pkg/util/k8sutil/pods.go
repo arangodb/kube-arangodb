@@ -348,7 +348,7 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string, finalizers []string) v1.Pod {
+func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -360,6 +360,7 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string) v
 			Hostname:      hostname,
 			Subdomain:     CreateHeadlessServiceName(deploymentName),
 			RestartPolicy: v1.RestartPolicyNever,
+			Tolerations:   tolerations,
 		},
 	}
 	return p
@@ -372,10 +373,10 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	role, id, podName, pvcName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
-	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
+	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
@@ -473,9 +474,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, affinityWithRole string) error {
+	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, affinityWithRole string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
