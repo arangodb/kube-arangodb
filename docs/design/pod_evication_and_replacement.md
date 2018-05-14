@@ -12,7 +12,7 @@ from a taint being added to a node (either automatically by Kubernetes or manual
 
 ## Replacement
 
-Replacement is the process of replacing a pod an another pod that takes over the responsibilities
+Replacement is the process of replacing a pod by another pod that takes over the responsibilities
 of the original pod.
 
 The replacement pod has a new ID and new (read empty) persistent data.
@@ -33,13 +33,14 @@ The rules for eviction & replacement are specified per type of pod.
 
 ### Image ID Pods
 
-The Image ID pods are starter to fetch the ArangoDB version of a specific
+The Image ID pods are started to fetch the ArangoDB version of a specific
 ArangoDB image and fetch the docker sha256 of that image.
 They have no persistent state.
 
 - Image ID pods can always be evicted from any node
 - Image ID pods can always be restarted on a different node.
-  There is no need to replace an image ID pod.
+  There is no need to replace an image ID pod, nor will it cause problems when
+  2 image ID pods run at the same time.
 - `node.kubernetes.io/unreachable:NoExecute` toleration time is set very low (5sec)
 - `node.kubernetes.io/not-ready:NoExecute` toleration time is set very low (5sec)
 
@@ -56,7 +57,7 @@ They have no persistent state, but do have a unique ID.
 ### DBServer Pods
 
 DBServer pods run an ArangoDB dbserver as part of an ArangoDB cluster.
-It has persistent state potentially tight to the node it runs on and it has a unique ID.
+It has persistent state potentially tied to the node it runs on and it has a unique ID.
 
 - DBServer pods can be evicted from any node as soon as:
   - It has been completely drained AND
@@ -84,7 +85,7 @@ It has persistent state potentially tight to the node it runs on and it has a un
 ### Single Server Pods
 
 Single server pods run an ArangoDB server as part of an ArangoDB single server deployment.
-It has persistent state potentially tight to the node.
+It has persistent state potentially tied to the node.
 
 - Single server pods cannot be evicted from any node.
 - Single server pods cannot be replaced with another pod.
@@ -94,7 +95,7 @@ It has persistent state potentially tight to the node.
 ### Single Pods in Active Failover Deployment
 
 Single pods run an ArangoDB single server as part of an ArangoDB active failover deployment.
-It has persistent state potentially tight to the node it runs on and it has a unique ID.
+It has persistent state potentially tied to the node it runs on and it has a unique ID.
 
 - Single pods can be evicted from any node as soon as:
   - It is a follower of an active-failover deployment (Q: can we trigger this failover to another server?)
