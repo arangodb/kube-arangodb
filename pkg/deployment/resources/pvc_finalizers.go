@@ -74,10 +74,18 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 		log.Debug().Msg("Entire deployment is being deleted, safe to remove member-exists finalizer")
 		return nil
 	}
-	// We do allow to rebuild agents
-	if group == api.ServerGroupAgents && memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		log.Debug().Msg("Rebuilding terminated agents is allowed, safe to remove member-exists finalizer")
-		return nil
+	// We do allow to rebuild agents & dbservers
+	switch group {
+	case api.ServerGroupAgents:
+		if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+			log.Debug().Msg("Rebuilding terminated agents is allowed, safe to remove member-exists finalizer")
+			return nil
+		}
+	case api.ServerGroupDBServers:
+		if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+			log.Debug().Msg("Removing cleanedout dbservers is allowed, safe to remove member-exists finalizer")
+			return nil
+		}
 	}
 	return maskAny(fmt.Errorf("Member still exists"))
 }

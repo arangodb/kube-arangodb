@@ -136,7 +136,11 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 		}
 		if k8sutil.IsPodMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPodFinalizers(ctx, &p, memberStatus); err != nil {
+			if err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
+				updateMemberStatusNeeded = true
+				memberStatus = m
+				return nil
+			}); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run pod finalizers")
 			}

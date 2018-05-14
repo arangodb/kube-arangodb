@@ -437,6 +437,9 @@ func (r *Resources) EnsurePods() error {
 			if m.Phase != api.MemberPhaseNone {
 				continue
 			}
+			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+				continue
+			}
 			spec := r.context.GetSpec()
 			if err := r.createPodForMember(spec, group, groupSpec, m, status); err != nil {
 				return maskAny(err)

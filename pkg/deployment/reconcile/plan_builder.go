@@ -109,6 +109,16 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 		return nil
 	})
 
+	// Check for cleaned out dbserver in created state
+	for _, m := range status.Members.DBServers {
+		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+			plan = append(plan,
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
+			)
+		}
+	}
+
 	// Check for scale up/down
 	if len(plan) == 0 {
 		switch spec.GetMode() {

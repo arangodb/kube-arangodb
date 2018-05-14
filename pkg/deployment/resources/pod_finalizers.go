@@ -37,7 +37,7 @@ import (
 )
 
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
-func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus) error {
+func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
@@ -51,7 +51,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			}
 		case constants.FinalizerPodDrainDBServer:
 			log.Debug().Msg("Inspecting drain dbserver finalizer")
-			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus); err == nil {
+			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus, updateMember); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
@@ -115,7 +115,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 
 // inspectFinalizerPodDrainDBServer checks the finalizer condition for drain-dbserver.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus) error {
+func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Pod is already failed, safe to remove drain dbserver finalizer")
@@ -155,7 +155,12 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 		return maskAny(err)
 	}
 	if cleanedOut {
-		// All done
+		// Cleanout completed
+		if memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
+			if err := updateMember(memberStatus); err != nil {
+				return maskAny(err)
+			}
+		}
 		log.Debug().Msg("Server is cleaned out. Save to remove drain dbserver finalizer")
 		return nil
 	}
