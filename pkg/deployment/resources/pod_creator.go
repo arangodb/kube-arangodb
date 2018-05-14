@@ -306,6 +306,8 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 // createPodFinalizers creates a list of finalizers for a pod created for the given group.
 func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
 	switch group {
+	case api.ServerGroupAgents:
+		return []string{constants.FinalizerPodAgencyServing}
 	case api.ServerGroupDBServers:
 		return []string{constants.FinalizerPodDrainDBServer}
 	default:

@@ -72,6 +72,8 @@ type Context interface {
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
 	CleanupPod(p v1.Pod) error
+	// GetAgencyClients returns a client connection for every agency member.
+	GetAgencyClients(ctx context.Context, predicate func(memberID string) bool) ([]driver.Connection, error)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)

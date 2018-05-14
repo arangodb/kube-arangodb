@@ -35,14 +35,14 @@ import (
 )
 
 // runPVCFinalizers goes through the list of PVC finalizers to see if they can be removed.
-func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, memberStatus api.MemberStatus) error {
+func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
 	log := r.log.With().Str("pvc-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
 		case constants.FinalizerPVCMemberExists:
 			log.Debug().Msg("Inspecting member exists finalizer")
-			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, memberStatus); err == nil {
+			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, group, memberStatus); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
@@ -62,7 +62,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 
 // inspectFinalizerPVCMemberExists checks the finalizer condition for member-exists.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, p *v1.PersistentVolumeClaim, memberStatus api.MemberStatus) error {
+func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Member is already failed, safe to remove member-exists finalizer")
@@ -72,6 +72,11 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {
 		log.Debug().Msg("Entire deployment is being deleted, safe to remove member-exists finalizer")
+		return nil
+	}
+	// We do allow to rebuild agents
+	if group == api.ServerGroupAgents && memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+		log.Debug().Msg("Rebuilding terminated agents is allowed, safe to remove member-exists finalizer")
 		return nil
 	}
 	return maskAny(fmt.Errorf("Member still exists"))

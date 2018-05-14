@@ -51,7 +51,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 		inspectedPVCCounter.Inc()
 
 		// Find member status
-		memberStatus, _, found := status.Members.MemberStatusByPVCName(p.GetName())
+		memberStatus, group, found := status.Members.MemberStatusByPVCName(p.GetName())
 		if !found {
 			log.Debug().Str("pvc", p.GetName()).Msg("no memberstatus found for PVC")
 			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) && len(p.GetFinalizers()) > 0 {
@@ -69,7 +69,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPVCFinalizers(ctx, &p, memberStatus); err != nil {
+			if err := r.runPVCFinalizers(ctx, &p, group, memberStatus); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
 			}
