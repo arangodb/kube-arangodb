@@ -83,6 +83,20 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 		log.Debug().Msg("Entire deployment is being deleted, safe to remove agency serving finalizer")
 		return nil
 	}
+
+	// Check node the pod is scheduled on
+	agentDataWillBeGone := false
+	if p.Spec.NodeName != "" {
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get node for member")
+			return maskAny(err)
+		}
+		if node.Spec.Unschedulable {
+			agentDataWillBeGone = true
+		}
+	}
+
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
@@ -90,12 +104,18 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return maskAny(err)
 	}
-	if !k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
-		log.Debug().Msg("PVC is not being deleted, so it is safe to remove agency serving finalizer")
+	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
+		agentDataWillBeGone = true
+	}
+
+	// Is this a simple pod restart?
+	if !agentDataWillBeGone {
+		log.Debug().Msg("Pod is just being restarted, safe to remove agency serving finalizer")
 		return nil
 	}
-	log.Debug().Msg("PVC is being deleted, so we will check agency serving status first")
+
 	// Inspect agency state
+	log.Debug().Msg("Agent data will be gone, so we will check agency serving status first")
 	agencyConns, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
@@ -109,7 +129,13 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 		log.Debug().Err(err).Msg("Remaining agents are not health")
 		return maskAny(err)
 	}
-	// Remaining agents are health, we can remove this one
+
+	// Remaining agents are healthy, we can remove this one and trigger a delete of the PVC
+	if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
+		log.Warn().Err(err).Msg("Failed to delete PVC for member")
+		return maskAny(err)
+	}
+
 	return nil
 }
 
@@ -127,6 +153,20 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 		log.Debug().Msg("Entire deployment is being deleted, safe to remove drain dbserver finalizer")
 		return nil
 	}
+
+	// Check node the pod is scheduled on
+	dbserverDataWillBeGone := false
+	if p.Spec.NodeName != "" {
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get node for member")
+			return maskAny(err)
+		}
+		if node.Spec.Unschedulable {
+			dbserverDataWillBeGone = true
+		}
+	}
+
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
@@ -134,12 +174,18 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return maskAny(err)
 	}
-	if !k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
-		log.Debug().Msg("PVC is not being deleted, so it is safe to remove drain dbserver finalizer")
+	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
+		dbserverDataWillBeGone = true
+	}
+
+	// Is this a simple pod restart?
+	if !dbserverDataWillBeGone {
+		log.Debug().Msg("Pod is just being restarted, safe to remove drain dbserver finalizer")
 		return nil
 	}
-	log.Debug().Msg("PVC is being deleted, so we will cleanout the dbserver first")
+
 	// Inspect cleaned out state
+	log.Debug().Msg("DBServer data is being deleted, so we will cleanout the dbserver first")
 	c, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
@@ -161,6 +207,12 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 				return maskAny(err)
 			}
 		}
+		// Trigger PVC removal
+		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
+			log.Warn().Err(err).Msg("Failed to delete PVC for member")
+			return maskAny(err)
+		}
+
 		log.Debug().Msg("Server is cleaned out. Save to remove drain dbserver finalizer")
 		return nil
 	}
