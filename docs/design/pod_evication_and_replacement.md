@@ -79,8 +79,8 @@ It has persistent state potentially tight to the node it runs on and it has a un
   - There is at least an agency follower that is responding
 - Agent pods can be replaced with another agent pod with the same ID but wiped persistent state on a different node when:
   - The old pod is known to be deleted (e.g. explicit eviction)
-- `node.kubernetes.io/unreachable:NoExecute` toleration time is not set to "wait it out forever"
-- `node.kubernetes.io/not-ready:NoExecute` toleration time is not set "wait it out forever"
+- `node.kubernetes.io/unreachable:NoExecute` toleration time is set high to "wait it out a while" (5min)
+- `node.kubernetes.io/not-ready:NoExecute` toleration time is set high to "wait it out a while" (5min)
 
 ### Single Server Pods
 
