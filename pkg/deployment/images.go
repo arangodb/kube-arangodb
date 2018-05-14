@@ -170,6 +170,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	shortDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Second * 5}
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
 
 	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil, tolerations, "", ""); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")

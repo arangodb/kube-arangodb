@@ -29,8 +29,9 @@ import (
 )
 
 const (
-	TolerationKeyNodeNotReady    = "node.kubernetes.io/not-ready"
-	TolerationKeyNodeUnreachable = "node.alpha.kubernetes.io/unreachable"
+	TolerationKeyNodeNotReady         = "node.kubernetes.io/not-ready"
+	TolerationKeyNodeAlphaUnreachable = "node.alpha.kubernetes.io/unreachable"
+	TolerationKeyNodeUnreachable      = "node.kubernetes.io/unreachable"
 )
 
 // TolerationDuration is a duration spec for tolerations.
