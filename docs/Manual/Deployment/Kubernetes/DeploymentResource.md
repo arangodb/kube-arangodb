@@ -232,7 +232,7 @@ Note that when you specify a value of `None`, a `Service` will still be created,
 
 ### `spec.sync.externalAccess.loadBalancerIP: string`
 
-This setting specifies the IP used to for the LoadBalancer to expose the ArangoSync SyncMasters on.
+This setting specifies the IP used for the LoadBalancer to expose the ArangoSync SyncMasters on.
 This setting is used when `spec.sync.externalAccess.type` is set to `LoadBalancer` or `Auto`.
 
 If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
