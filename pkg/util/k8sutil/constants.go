@@ -24,7 +24,9 @@ package k8sutil
 
 const (
 	// Arango constants
-	ArangoPort = 8529
+	ArangoPort           = 8529
+	ArangoSyncMasterPort = 8629
+	ArangoSyncWorkerPort = 8729
 
 	// K8s constants
 	ClusterIPNone                      = "None"
