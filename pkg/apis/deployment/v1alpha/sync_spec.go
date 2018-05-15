@@ -35,9 +35,10 @@ type SyncSpec struct {
 	Image           *string        `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
-	Authentication AuthenticationSpec `json:"auth"`
-	TLS            TLSSpec            `json:"tls"`
-	Monitoring     MonitoringSpec     `json:"monitoring"`
+	ExternalAccess SyncExternalAccessSpec `json:"externalAccess"`
+	Authentication SyncAuthenticationSpec `json:"auth"`
+	TLS            TLSSpec                `json:"tls"`
+	Monitoring     MonitoringSpec         `json:"monitoring"`
 }
 
 // IsEnabled returns the value of enabled.
@@ -63,10 +64,13 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.GetImage() == "" {
 		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
-	if err := s.Authentication.Validate(s.IsEnabled()); err != nil {
-		return maskAny(err)
-	}
 	if s.IsEnabled() {
+		if err := s.ExternalAccess.Validate(); err != nil {
+			return maskAny(err)
+		}
+		if err := s.Authentication.Validate(); err != nil {
+			return maskAny(err)
+		}
 		if err := s.TLS.Validate(); err != nil {
 			return maskAny(err)
 		}
@@ -78,15 +82,16 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultCASecretName string) {
+func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName string) {
 	if s.GetImage() == "" {
 		s.Image = util.NewString(defaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
 	}
-	s.Authentication.SetDefaults(defaultJWTSecretName)
-	s.TLS.SetDefaults(defaultCASecretName)
+	s.ExternalAccess.SetDefaults()
+	s.Authentication.SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName)
+	s.TLS.SetDefaults(defaultTLSCASecretName)
 	s.Monitoring.SetDefaults()
 }
 
@@ -101,6 +106,7 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 	if s.ImagePullPolicy == nil {
 		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
+	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
 	s.Monitoring.SetDefaultsFrom(source.Monitoring)
@@ -111,6 +117,9 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 // Field names are relative to given field prefix.
 func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []string {
 	var resetFields []string
+	if list := s.ExternalAccess.ResetImmutableFields(fieldPrefix+".externalAccess", &target.ExternalAccess); len(list) > 0 {
+		resetFields = append(resetFields, list...)
+	}
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
 	}

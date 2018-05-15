@@ -1,0 +1,17 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "cluster2-with-sync"
+spec:
+  mode: Cluster
+  image: ewoutp/arangodb:3.3.8
+  tls:
+    altNames: ["kube-01", "kube-02", "kube-03"]
+  sync:
+    enabled: true
+    auth:
+      clientCASecretName: client-auth-ca
+    externalAccess:
+      type: LoadBalancer
+      loadBalancerIP: 192.168.140.211
+

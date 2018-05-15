@@ -29,6 +29,7 @@ type ImageInfo struct {
 	Image           string         `json:"image"`                      // Human provided name of the image
 	ImageID         string         `json:"image-id,omitempty"`         // Unique ID (with SHA256) of the image
 	ArangoDBVersion driver.Version `json:"arangodb-version,omitempty"` // ArangoDB version within the image
+	Enterprise      bool           `json:"enterprise,omitempty"`       // If set, this is an enterprise image
 }
 
 // ImageInfoList is a list of image infos
