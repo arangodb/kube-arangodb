@@ -193,7 +193,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		return operator.Config{}, operator.Dependencies{}, maskAny(err)
 	}
 
-	serviceAccount, err := getMyPodServiceAccount(kubecli, namespace, name)
+	image, serviceAccount, err := getMyPodInfo(kubecli, namespace, name)
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
@@ -213,6 +213,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		Namespace:        namespace,
 		PodName:          name,
 		ServiceAccount:   serviceAccount,
+		LifecycleImage:   image,
 		EnableDeployment: operatorOptions.enableDeployment,
 		EnableStorage:    operatorOptions.enableStorage,
 		AllowChaos:       chaosOptions.allowed,
@@ -231,9 +232,10 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	return cfg, deps, nil
 }
 
-// getMyPodServiceAccount looks up the service account of the pod with given name in given namespace
-func getMyPodServiceAccount(kubecli kubernetes.Interface, namespace, name string) (string, error) {
-	var sa string
+// getMyPodInfo looks up the image & service account of the pod with given name in given namespace
+// Returns image, serviceAccount, error.
+func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string, string, error) {
+	var image, sa string
 	op := func() error {
 		pod, err := kubecli.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
@@ -244,12 +246,17 @@ func getMyPodServiceAccount(kubecli kubernetes.Interface, namespace, name string
 			return maskAny(err)
 		}
 		sa = pod.Spec.ServiceAccountName
+		image = k8sutil.ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID)
+		if image == "" {
+			// Fallback in case we don't know the id.
+			image = pod.Spec.Containers[0].Image
+		}
 		return nil
 	}
 	if err := retry.Retry(op, time.Minute*5); err != nil {
-		return "", maskAny(err)
+		return "", "", maskAny(err)
 	}
-	return sa, nil
+	return image, sa, nil
 }
 
 func createRecorder(log zerolog.Logger, kubecli kubernetes.Interface, name, namespace string) record.EventRecorder {

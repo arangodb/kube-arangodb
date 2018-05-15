@@ -66,6 +66,7 @@ type Config struct {
 	Namespace        string
 	PodName          string
 	ServiceAccount   string
+	LifecycleImage   string
 	EnableDeployment bool
 	EnableStorage    bool
 	AllowChaos       bool

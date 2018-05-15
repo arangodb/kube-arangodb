@@ -377,6 +377,18 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 	}, nil
 }
 
+// createPodFinalizers creates a list of finalizers for a pod created for the given group.
+func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
+	switch group {
+	case api.ServerGroupAgents:
+		return []string{constants.FinalizerPodAgencyServing}
+	case api.ServerGroupDBServers:
+		return []string{constants.FinalizerPodDrainDBServer}
+	default:
+		return nil
+	}
+}
+
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.ServerGroup,
 	groupSpec api.ServerGroupSpec, m api.MemberStatus, memberStatusList *api.MemberStatusList) error {
@@ -385,6 +397,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	apiObject := r.context.GetAPIObject()
 	ns := r.context.GetNamespace()
 	status := r.context.GetStatus()
+	lifecycleImage := r.context.GetLifecycleImage()
+	terminationGracePeriod := group.DefaultTerminationGracePeriod()
 
 	// Update pod name
 	role := group.AsRole()
@@ -445,8 +459,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		}
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, spec.GetImagePullPolicy(),
-			engine, requireUUID, args, env, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+		finalizers := r.createPodFinalizers(group)
+		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
+			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -516,7 +531,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if group == api.ServerGroupSyncWorkers {
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, spec.Sync.GetImagePullPolicy(), args, env,
+		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
 			return maskAny(err)
 		}
@@ -546,6 +561,9 @@ func (r *Resources) EnsurePods() error {
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhaseNone {
+				continue
+			}
+			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 				continue
 			}
 			spec := r.context.GetSpec()

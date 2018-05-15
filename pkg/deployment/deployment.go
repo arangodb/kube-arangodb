@@ -50,6 +50,7 @@ import (
 type Config struct {
 	ServiceAccount string
 	AllowChaos     bool
+	LifecycleImage string
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -219,6 +220,14 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
+			// Remove finalizers from created resources
+			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
+			if err := d.removePodFinalizers(); err != nil {
+				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
+			}
+			if err := d.removePVCFinalizers(); err != nil {
+				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
+			}
 			// We're being stopped.
 			return
 

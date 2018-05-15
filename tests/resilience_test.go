@@ -166,8 +166,9 @@ func TestResiliencePVC(t *testing.T) {
 
 	// Delete one pvc after the other
 	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-		if group == api.ServerGroupCoordinators {
+		if group != api.ServerGroupAgents {
 			// Coordinators have no PVC
+			// DBServers will be cleaned out and create a new member
 			return nil
 		}
 		for _, m := range *status {
@@ -178,6 +179,10 @@ func TestResiliencePVC(t *testing.T) {
 			}
 			if err := kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(m.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
 				t.Fatalf("Failed to delete pvc %s: %v", m.PersistentVolumeClaimName, err)
+			}
+			// Now delete the pod as well, otherwise the PVC will only have a deletion timestamp but its finalizers will stay on.
+			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
+				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
 			}
 			// Wait for pvc to return with different UID
 			op := func() error {
