@@ -25,6 +25,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
@@ -116,6 +117,9 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 
 	// Inspect agency state
 	log.Debug().Msg("Agent data will be gone, so we will check agency serving status first")
+	ctx = agency.WithAllowNoLeader(ctx)                     // The ID we're checking may be the leader, so ignore situations where all other agents are followers
+	ctx, cancel := context.WithTimeout(ctx, time.Second*15) // Force a quick check
+	defer cancel()
 	agencyConns, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
