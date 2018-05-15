@@ -326,6 +326,7 @@ for each server of this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
 
 - `node.kubernetes.io/not-ready`
-- `node.alpha.kubernetes.io/unreachable`
+- `node.kubernetes.io/unreachable`
+- `node.alpha.kubernetes.io/unreachable` (will be removed in future version)
 
 For more information on tolerations, consult the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/).
