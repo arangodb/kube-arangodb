@@ -33,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // upgradeDecision is the result of an upgrade check.
@@ -108,6 +109,16 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 		return nil
 	})
 
+	// Check for cleaned out dbserver in created state
+	for _, m := range status.Members.DBServers {
+		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+			plan = append(plan,
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
+			)
+		}
+	}
+
 	// Check for scale up/down
 	if len(plan) == 0 {
 		switch spec.GetMode() {
@@ -176,6 +187,10 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 					// Only make changes when phase is created
 					continue
 				}
+				if group == api.ServerGroupSyncWorkers {
+					// SyncWorkers have no externally created TLS keyfile
+					continue
+				}
 				// Load keyfile
 				keyfile, err := getTLSKeyfile(group, m)
 				if err != nil {
@@ -204,8 +219,7 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
 func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
-	if len(p.Spec.Containers) == 1 {
-		c := p.Spec.Containers[0]
+	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
 		specImageInfo, found := images.GetByImage(spec.GetImage())
 		if !found {
 			return upgradeDecision{UpgradeNeeded: false}
@@ -249,14 +263,13 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 // When true is returned, a reason for the rotation is already returned.
 func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, agents api.MemberStatusList, id string) (bool, string) {
-	// Check number of containers
-	if len(p.Spec.Containers) != 1 {
-		return true, "Number of containers changed"
-	}
 	// Check image pull policy
-	c := p.Spec.Containers[0]
-	if c.ImagePullPolicy != spec.GetImagePullPolicy() {
-		return true, "Image pull policy changed"
+	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
+		if c.ImagePullPolicy != spec.GetImagePullPolicy() {
+			return true, "Image pull policy changed"
+		}
+	} else {
+		return true, "Server container not found"
 	}
 	// Check arguments
 	/*expectedArgs := createArangodArgs(apiObject, spec, group, agents, id)

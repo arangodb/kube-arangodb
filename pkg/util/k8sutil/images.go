@@ -22,17 +22,17 @@
 
 package k8sutil
 
+import "strings"
+
 const (
-	// Arango constants
-	ArangoPort           = 8529
-	ArangoSyncMasterPort = 8629
-	ArangoSyncWorkerPort = 8729
-
-	// K8s constants
-	ClusterIPNone                      = "None"
-	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
-	TopologyKeyHostname                = "kubernetes.io/hostname"
-
-	// Internal constants
-	ImageIDAndVersionRole = "id" // Role use by identification pods
+	dockerPullableImageIDPrefix = "docker-pullable://"
 )
+
+// ConvertImageID2Image converts a ImageID from a ContainerStatus to an Image that can be used
+// in a Container specification.
+func ConvertImageID2Image(imageID string) string {
+	if strings.HasPrefix(imageID, dockerPullableImageIDPrefix) {
+		return imageID[len(dockerPullableImageIDPrefix):]
+	}
+	return imageID
+}

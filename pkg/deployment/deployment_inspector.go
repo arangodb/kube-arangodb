@@ -80,9 +80,13 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Inspection of generated resources needed
-	if err := d.resources.InspectPods(); err != nil {
+	if err := d.resources.InspectPods(ctx); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+	}
+	if err := d.resources.InspectPVCs(ctx); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
 	}
 
 	// Check members for resilience
@@ -108,6 +112,10 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Ensure all resources are created
+	if err := d.resources.EnsureSecrets(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
+	}
 	if err := d.resources.EnsureServices(); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))

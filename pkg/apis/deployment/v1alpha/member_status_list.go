@@ -63,6 +63,17 @@ func (l MemberStatusList) ElementByPodName(podName string) (MemberStatus, bool) 
 	return MemberStatus{}, false
 }
 
+// ElementByPVCName returns the element in the given list that has the given PVC name and true.
+// If no such element exists, an empty element and false is returned.
+func (l MemberStatusList) ElementByPVCName(pvcName string) (MemberStatus, bool) {
+	for i, x := range l {
+		if x.PersistentVolumeClaimName == pvcName {
+			return l[i], true
+		}
+	}
+	return MemberStatus{}, false
+}
+
 // Add a member to the list.
 // Returns an AlreadyExistsError if the ID of the given member already exists.
 func (l *MemberStatusList) Add(m MemberStatus) error {

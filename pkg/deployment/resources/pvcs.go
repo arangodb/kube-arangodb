@@ -25,8 +25,14 @@ package resources
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
+
+// createPVCFinalizers creates a list of finalizers for a PVC created for the given group.
+func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
+	return []string{constants.FinalizerPVCMemberExists}
+}
 
 // EnsurePVCs creates all PVC's listed in member status
 func (r *Resources) EnsurePVCs() error {
@@ -44,7 +50,8 @@ func (r *Resources) EnsurePVCs() error {
 				storageClassName := spec.GetStorageClassName()
 				role := group.AsRole()
 				resources := spec.Resources
-				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, resources, owner); err != nil {
+				finalizers := r.createPVCFinalizers(group)
+				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, resources, finalizers, owner); err != nil {
 					return maskAny(err)
 				}
 			}

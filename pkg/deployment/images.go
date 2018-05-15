@@ -27,6 +27,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,7 +39,7 @@ import (
 )
 
 const (
-	dockerPullableImageIDPrefix = "docker-pullable://"
+	dockerPullableImageIDPrefix_ = "docker-pullable://"
 )
 
 type imagesBuilder struct {
@@ -117,10 +118,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
 		}
-		imageID := pod.Status.ContainerStatuses[0].ImageID
-		if strings.HasPrefix(imageID, dockerPullableImageIDPrefix) {
-			imageID = imageID[len(dockerPullableImageIDPrefix):]
-		} else if imageID == "" {
+		imageID := k8sutil.ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID)
+		if imageID == "" {
 			// Fall back to specified image
 			imageID = image
 		}
@@ -137,6 +136,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			return true, nil
 		}
 		version := v.Version
+		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
 		if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
@@ -148,6 +148,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			Image:           image,
 			ImageID:         imageID,
 			ArangoDBVersion: version,
+			Enterprise:      enterprise,
 		}
 		ib.Status.Images.AddOrUpdate(info)
 		if err := ib.UpdateCRStatus(ib.Status); err != nil {
@@ -166,7 +167,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		"--server.authentication=false",
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
 	}
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, ib.Spec.GetImagePullPolicy(), "", false, args, nil, nil, nil, "", ""); err != nil {
+	terminationGracePeriod := time.Second * 30
+	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil, "", ""); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

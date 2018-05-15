@@ -82,6 +82,11 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 // Returns true if the action is completely finished, false otherwise.
 func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, error) {
 	log := a.log
+	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
+	if !ok {
+		// We wanted to remove and it is already gone. All ok
+		return true, nil
+	}
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
@@ -99,6 +104,12 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, error) 
 	if !cleanedOut {
 		// We're not done yet
 		return false, nil
+	}
+	// Cleanout completed
+	if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
+		if a.actionCtx.UpdateMember(m); err != nil {
+			return false, maskAny(err)
+		}
 	}
 	// Cleanout completed
 	return true, nil

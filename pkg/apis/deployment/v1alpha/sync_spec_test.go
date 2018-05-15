@@ -32,7 +32,7 @@ import (
 
 func TestSyncSpecValidate(t *testing.T) {
 	// Valid
-	auth := AuthenticationSpec{JWTSecretName: util.NewString("foo")}
+	auth := SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("foo-client")}
 	tls := TLSSpec{CASecretName: util.NewString("None")}
 	assert.Nil(t, SyncSpec{Image: util.NewString("foo"), Authentication: auth}.Validate(DeploymentModeSingle))
 	assert.Nil(t, SyncSpec{Image: util.NewString("foo"), Authentication: auth}.Validate(DeploymentModeActiveFailover))
@@ -49,7 +49,7 @@ func TestSyncSpecValidate(t *testing.T) {
 
 func TestSyncSpecSetDefaults(t *testing.T) {
 	def := func(spec SyncSpec) SyncSpec {
-		spec.SetDefaults("test-image", v1.PullAlways, "test-jwt", "test-ca")
+		spec.SetDefaults("test-image", v1.PullAlways, "test-jwt", "test-client-auth-ca", "test-tls-ca")
 		return spec
 	}
 
@@ -61,7 +61,7 @@ func TestSyncSpecSetDefaults(t *testing.T) {
 	assert.Equal(t, v1.PullAlways, def(SyncSpec{}).GetImagePullPolicy())
 	assert.Equal(t, v1.PullNever, def(SyncSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)}).GetImagePullPolicy())
 	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.GetJWTSecretName())
-	assert.Equal(t, "foo", def(SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}}).Authentication.GetJWTSecretName())
+	assert.Equal(t, "foo", def(SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo")}}).Authentication.GetJWTSecretName())
 }
 
 func TestSyncSpecResetImmutableFields(t *testing.T) {
@@ -97,36 +97,22 @@ func TestSyncSpecResetImmutableFields(t *testing.T) {
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("None"), ClientCASecretName: util.NewString("some")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
 			nil,
 		},
 		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo2")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo2")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo2"), ClientCASecretName: util.NewString("some")}},
+			SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo2"), ClientCASecretName: util.NewString("some")}},
 			nil,
-		},
-
-		// Invalid changes
-		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			[]string{"test.auth.jwtSecretName"},
-		},
-		{
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("foo")}},
-			SyncSpec{Authentication: AuthenticationSpec{JWTSecretName: util.NewString("None")}},
-			[]string{"test.auth.jwtSecretName"},
 		},
 	}
 

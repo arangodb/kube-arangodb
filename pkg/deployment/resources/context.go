@@ -23,6 +23,9 @@
 package resources
 
 import (
+	"context"
+
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
@@ -55,6 +58,8 @@ type Context interface {
 	UpdateStatus(status api.DeploymentStatus, force ...bool) error
 	// GetKubeCli returns the kubernetes client
 	GetKubeCli() kubernetes.Interface
+	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
+	GetLifecycleImage() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
 	// createEvent creates a given event.
@@ -62,7 +67,14 @@ type Context interface {
 	CreateEvent(evt *v1.Event)
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
+	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
+	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
 	CleanupPod(p v1.Pod) error
+	// GetAgencyClients returns a client connection for every agency member.
+	GetAgencyClients(ctx context.Context, predicate func(memberID string) bool) ([]driver.Connection, error)
+	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
+	// creating one if needed.
+	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 }

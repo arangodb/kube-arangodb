@@ -22,17 +22,17 @@
 
 package k8sutil
 
-const (
-	// Arango constants
-	ArangoPort           = 8529
-	ArangoSyncMasterPort = 8629
-	ArangoSyncWorkerPort = 8729
-
-	// K8s constants
-	ClusterIPNone                      = "None"
-	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
-	TopologyKeyHostname                = "kubernetes.io/hostname"
-
-	// Internal constants
-	ImageIDAndVersionRole = "id" // Role use by identification pods
+import (
+	"k8s.io/api/core/v1"
 )
+
+// GetContainerByName returns the container in the given pod with the given name.
+// Returns false if not found.
+func GetContainerByName(p *v1.Pod, name string) (v1.Container, bool) {
+	for _, c := range p.Spec.Containers {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return v1.Container{}, false
+}
