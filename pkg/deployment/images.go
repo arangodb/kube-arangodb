@@ -26,6 +26,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -39,7 +40,7 @@ import (
 )
 
 const (
-	dockerPullableImageIDPrefix = "docker-pullable://"
+	dockerPullableImageIDPrefix_ = "docker-pullable://"
 )
 
 type imagesBuilder struct {
@@ -136,6 +137,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			return true, nil
 		}
 		version := v.Version
+		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
 		if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
@@ -147,6 +149,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			Image:           image,
 			ImageID:         imageID,
 			ArangoDBVersion: version,
+			Enterprise:      enterprise,
 		}
 		ib.Status.Images.AddOrUpdate(info)
 		if err := ib.UpdateCRStatus(ib.Status); err != nil {

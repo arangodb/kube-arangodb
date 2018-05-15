@@ -107,54 +107,22 @@ func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1
 	return svcName, newlyCreated, nil
 }
 
-// CreateDatabaseExternalAccessService prepares and creates a service in k8s, used to access the database from outside k8s cluster.
+// CreateExternalAccessService prepares and creates a service in k8s, used to access the database/sync from outside k8s cluster.
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateDatabaseExternalAccessService(kubecli kubernetes.Interface, deployment metav1.Object, single bool, serviceType v1.ServiceType, nodePort int, loadBalancerIP string, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExternalAccessService(kubecli kubernetes.Interface, svcName, role string, deployment metav1.Object, serviceType v1.ServiceType, port, nodePort int, loadBalancerIP string, sessionAffinity v1.ServiceAffinity, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
-	svcName := CreateDatabaseExternalAccessServiceName(deploymentName)
 	ports := []v1.ServicePort{
 		v1.ServicePort{
 			Name:     "server",
 			Protocol: v1.ProtocolTCP,
-			Port:     ArangoPort,
+			Port:     int32(port),
 			NodePort: int32(nodePort),
 		},
 	}
-	var role string
-	if single {
-		role = "single"
-	} else {
-		role = "coordinator"
-	}
 	publishNotReadyAddresses := true
-	sessionAffinity := v1.ServiceAffinityClientIP
 	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, publishNotReadyAddresses, sessionAffinity, owner)
-	if err != nil {
-		return "", false, maskAny(err)
-	}
-	return svcName, newlyCreated, nil
-}
-
-// CreateSyncMasterClientService prepares and creates a service in k8s, used by syncmaster clients within the k8s cluster.
-// If the service already exists, nil is returned.
-// If another error occurs, that error is returned.
-// The returned bool is true if the service is created, or false when the service already existed.
-func CreateSyncMasterClientService(kubecli kubernetes.Interface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
-	deploymentName := deployment.GetName()
-	svcName := CreateSyncMasterClientServiceName(deploymentName)
-	ports := []v1.ServicePort{
-		v1.ServicePort{
-			Name:     "server",
-			Protocol: v1.ProtocolTCP,
-			Port:     ArangoPort,
-		},
-	}
-	publishNotReadyAddresses := true
-	sessionAffinity := v1.ServiceAffinityNone
-	serviceType := v1.ServiceTypeClusterIP
-	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", "syncmaster", serviceType, ports, "", publishNotReadyAddresses, sessionAffinity, owner)
 	if err != nil {
 		return "", false, maskAny(err)
 	}

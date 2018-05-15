@@ -35,6 +35,8 @@ type HTTPProbeConfig struct {
 	Secure bool
 	// Value for an Authorization header (can be empty)
 	Authorization string
+	// Port to inspect (defaults to ArangoPort)
+	Port int
 }
 
 // Create creates a probe from given config
@@ -50,11 +52,15 @@ func (config HTTPProbeConfig) Create() *v1.Probe {
 			Value: config.Authorization,
 		})
 	}
+	port := config.Port
+	if port == 0 {
+		port = ArangoPort
+	}
 	return &v1.Probe{
 		Handler: v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path:        config.LocalPath,
-				Port:        intstr.FromInt(ArangoPort),
+				Port:        intstr.FromInt(port),
 				Scheme:      scheme,
 				HTTPHeaders: headers,
 			},

@@ -39,3 +39,9 @@ func CreateDatabaseClientServiceDNSName(deployment metav1.Object) string {
 	return CreateDatabaseClientServiceName(deployment.GetName()) + "." +
 		deployment.GetNamespace() + ".svc"
 }
+
+// CreateSyncMasterClientServiceDNSName returns the DNS of the syncmaster client service.
+func CreateSyncMasterClientServiceDNSName(deployment metav1.Object) string {
+	return CreateSyncMasterClientServiceName(deployment.GetName()) + "." +
+		deployment.GetNamespace() + ".svc"
+}
