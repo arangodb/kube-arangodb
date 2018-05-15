@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	deploymentReadyTimeout = time.Minute * 2
+	deploymentReadyTimeout = time.Minute * 4
 )
 
 var (
