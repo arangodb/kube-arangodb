@@ -32,12 +32,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -389,6 +391,42 @@ func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
 	}
 }
 
+// createPodTolerations creates a list of tolerations for a pod created for the given group.
+func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []v1.Toleration {
+	notReadyDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
+	unreachableDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
+	switch group {
+	case api.ServerGroupAgents:
+		notReadyDur.Forever = true
+		unreachableDur.Forever = true
+	case api.ServerGroupCoordinators:
+		notReadyDur.TimeSpan = 15 * time.Second
+		unreachableDur.TimeSpan = 15 * time.Second
+	case api.ServerGroupDBServers:
+		notReadyDur.TimeSpan = 5 * time.Minute
+		unreachableDur.TimeSpan = 5 * time.Minute
+	case api.ServerGroupSingle:
+		if r.context.GetSpec().GetMode() == api.DeploymentModeSingle {
+			notReadyDur.Forever = true
+			unreachableDur.Forever = true
+		} else {
+			notReadyDur.TimeSpan = 5 * time.Minute
+			unreachableDur.TimeSpan = 5 * time.Minute
+		}
+	case api.ServerGroupSyncMasters:
+		notReadyDur.TimeSpan = 15 * time.Second
+		unreachableDur.TimeSpan = 15 * time.Second
+	case api.ServerGroupSyncWorkers:
+		notReadyDur.TimeSpan = 1 * time.Minute
+		unreachableDur.TimeSpan = 1 * time.Minute
+	}
+	tolerations := groupSpec.GetTolerations()
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, notReadyDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, unreachableDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, unreachableDur))
+	return tolerations
+}
+
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.ServerGroup,
 	groupSpec api.ServerGroupSpec, m api.MemberStatus, memberStatusList *api.MemberStatusList) error {
@@ -399,6 +437,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	status := r.context.GetStatus()
 	lifecycleImage := r.context.GetLifecycleImage()
 	terminationGracePeriod := group.DefaultTerminationGracePeriod()
+	tolerations := r.createPodTolerations(group, groupSpec)
 
 	// Update pod name
 	role := group.AsRole()
@@ -461,7 +500,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
-			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -532,7 +571,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
 		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), terminationGracePeriod, args, env,
-			livenessProbe, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
+			livenessProbe, tolerations, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

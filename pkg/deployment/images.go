@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -168,7 +169,13 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
 	}
 	terminationGracePeriod := time.Second * 30
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil, "", ""); err != nil {
+	tolerations := make([]v1.Toleration, 0, 2)
+	shortDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Second * 5}
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
+
+	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil, tolerations, "", ""); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

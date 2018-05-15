@@ -353,3 +353,15 @@ for each server of this group.
 
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
+
+### `spec.<group>.tolerations: [Toleration]`
+
+This setting specifies the `tolerations` for the `Pod`s created
+for each server of this group.
+
+By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
+
+- `node.kubernetes.io/not-ready`
+- `node.alpha.kubernetes.io/unreachable`
+
+For more information on tolerations, consult the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/).

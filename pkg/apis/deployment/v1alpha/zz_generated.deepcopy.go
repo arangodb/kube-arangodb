@@ -590,6 +590,13 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		}
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]core_v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
