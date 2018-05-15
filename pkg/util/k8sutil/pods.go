@@ -44,11 +44,17 @@ const (
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	lifecycleVolumeName             = "lifecycle"
+	clientAuthCAVolumeName          = "client-auth-ca"
+	clusterJWTSecretVolumeName      = "cluster-jwt"
+	masterJWTSecretVolumeName       = "master-jwt"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
 	LifecycleVolumeMountDir         = "/lifecycle/tools"
+	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
+	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
+	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
 
 // EnvValue is a helper structure for environment variable sources.
@@ -175,6 +181,36 @@ func tlsKeyfileVolumeMounts() []v1.VolumeMount {
 		{
 			Name:      tlsKeyfileVolumeName,
 			MountPath: TLSKeyfileVolumeMountDir,
+		},
+	}
+}
+
+// clientAuthCACertificateVolumeMounts creates a volume mount structure for a client-auth CA certificate (ca.crt).
+func clientAuthCACertificateVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      clientAuthCAVolumeName,
+			MountPath: ClientAuthCAVolumeMountDir,
+		},
+	}
+}
+
+// masterJWTVolumeMounts creates a volume mount structure for a master JWT secret (token).
+func masterJWTVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      masterJWTSecretVolumeName,
+			MountPath: MasterJWTSecretVolumeMountDir,
+		},
+	}
+}
+
+// clusterJWTVolumeMounts creates a volume mount structure for a cluster JWT secret (token).
+func clusterJWTVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      clusterJWTSecretVolumeName,
+			MountPath: ClusterJWTSecretVolumeMountDir,
 		},
 	}
 }
@@ -474,7 +510,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, affinityWithRole string) error {
+	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration,
+	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -496,12 +533,76 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 		}
 	}
 
-	// Add arangosync container
-	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars)
-	p.Spec.Containers = append(p.Spec.Containers, c)
-
 	// Lifecycle volumes (if any)
 	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
+
+	// Add arangosync container
+	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars)
+	if tlsKeyfileSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
+	}
+	if clientAuthCASecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, clientAuthCACertificateVolumeMounts()...)
+	}
+	if masterJWTSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, masterJWTVolumeMounts()...)
+	}
+	if clusterJWTSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
+	}
+	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// TLS keyfile secret mount (if any)
+	if tlsKeyfileSecretName != "" {
+		vol := v1.Volume{
+			Name: tlsKeyfileVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: tlsKeyfileSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// Client Authentication certificate secret mount (if any)
+	if clientAuthCASecretName != "" {
+		vol := v1.Volume{
+			Name: clientAuthCAVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: clientAuthCASecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// Master JWT secret mount (if any)
+	if masterJWTSecretName != "" {
+		vol := v1.Volume{
+			Name: masterJWTSecretVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: masterJWTSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// Cluster JWT secret mount (if any)
+	if clusterJWTSecretName != "" {
+		vol := v1.Volume{
+			Name: clusterJWTSecretVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: clusterJWTSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
 
 	// Add (anti-)affinity
 	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, affinityWithRole)

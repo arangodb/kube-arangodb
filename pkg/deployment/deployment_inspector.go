@@ -112,6 +112,10 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	}
 
 	// Ensure all resources are created
+	if err := d.resources.EnsureSecrets(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
+	}
 	if err := d.resources.EnsureServices(); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))

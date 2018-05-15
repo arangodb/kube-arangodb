@@ -47,6 +47,9 @@ func (r *Resources) EnsureSecrets() error {
 		}
 	}
 	if spec.Sync.IsEnabled() {
+		if err := r.ensureJWTSecret(spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+			return maskAny(err)
+		}
 		if err := r.ensureCACertificateSecret(spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}

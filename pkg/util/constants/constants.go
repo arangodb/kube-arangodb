@@ -28,11 +28,12 @@ const (
 	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
 	EnvOperatorPodIP        = "MY_POD_IP"
 
-	EnvArangodJWTSecret    = "ARANGOD_JWT_SECRET"    // Contains JWT secret for the ArangoDB cluster
-	EnvArangoSyncJWTSecret = "ARANGOSYNC_JWT_SECRET" // Contains JWT secret for the ArangoSync masters
+	EnvArangodJWTSecret          = "ARANGOD_JWT_SECRET"          // Contains JWT secret for the ArangoDB cluster
+	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 
 	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
 	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
+	SecretKeyMonitoring = "token" // Key inside a Secret used to hold a monitoring token
 
 	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key

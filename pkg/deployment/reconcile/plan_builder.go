@@ -187,6 +187,10 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 					// Only make changes when phase is created
 					continue
 				}
+				if group == api.ServerGroupSyncWorkers {
+					// SyncWorkers have no externally created TLS keyfile
+					continue
+				}
 				// Load keyfile
 				keyfile, err := getTLSKeyfile(group, m)
 				if err != nil {

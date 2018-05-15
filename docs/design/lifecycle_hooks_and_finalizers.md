@@ -6,7 +6,7 @@ until it is safe to do so.
 
 To achieve this, the server containers in the `Pods` have
 a `preStop` hook configured and finalizers are added to the `Pods`
-ands `PersistentVolumeClaims`.
+and `PersistentVolumeClaims`.
 
 The `preStop` hook executes a binary that waits until all finalizers of
 the current pod have been removed.
