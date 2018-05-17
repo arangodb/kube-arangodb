@@ -4,5 +4,4 @@ metadata:
   name: "example-simple-single"
 spec:
   mode: Single
-  single:
-    storageClassName: my-local-ssd
+  image: arangodb/arangodb-preview:3.3

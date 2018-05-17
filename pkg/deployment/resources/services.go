@@ -170,6 +170,9 @@ func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, tit
 		// Let's create or update the database external access service
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
+		if eaServiceType == v1.ServiceTypeLoadBalancer {
+			sessionAffinity = v1.ServiceAffinityNone
+		}
 		_, newlyCreated, err := k8sutil.CreateExternalAccessService(kubecli, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, sessionAffinity, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
