@@ -22,55 +22,58 @@
 
 package v1alpha
 
-// DeploymentReplicationSpec contains the specification part of
-// an ArangoDeploymentReplication.
-type DeploymentReplicationSpec struct {
-	Source         EndpointSpec       `json:"source"`
-	Destination    EndpointSpec       `json:"destination"`
-	Authentication AuthenticationSpec `json:"auth"`
+import (
+	"net/url"
+
+	"github.com/pkg/errors"
+)
+
+// EndpointSpec contains the specification used to reach the syncmasters
+// in either source or destination mode.
+type EndpointSpec struct {
+	MasterEndpoint []string                   `json:"masterEndpoint,omitempty"`
+	Authentication EndpointAuthenticationSpec `json:"auth"`
+	TLS            EndpointTLSSpec            `json:"tls"`
 }
 
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
-func (s DeploymentReplicationSpec) Validate() error {
-	if err := s.Source.Validate(); err != nil {
-		return maskAny(err)
-	}
-	if err := s.Destination.Validate(); err != nil {
-		return maskAny(err)
+func (s EndpointSpec) Validate() error {
+	for _, ep := range s.MasterEndpoint {
+		if _, err := url.Parse(ep); err != nil {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid master endpoint '%s': %s", ep, err))
+		}
 	}
 	if err := s.Authentication.Validate(); err != nil {
+		return maskAny(err)
+	}
+	if err := s.TLS.Validate(); err != nil {
 		return maskAny(err)
 	}
 	return nil
 }
 
 // SetDefaults fills empty field with default values.
-func (s *DeploymentReplicationSpec) SetDefaults() {
-	s.Source.SetDefaults()
-	s.Destination.SetDefaults()
+func (s *EndpointSpec) SetDefaults() {
 	s.Authentication.SetDefaults()
+	s.TLS.SetDefaults()
 }
 
 // SetDefaultsFrom fills empty field with default values from the given source.
-func (s *DeploymentReplicationSpec) SetDefaultsFrom(source DeploymentReplicationSpec) {
-	s.Source.SetDefaultsFrom(source.Source)
-	s.Destination.SetDefaultsFrom(source.Destination)
+func (s *EndpointSpec) SetDefaultsFrom(source EndpointSpec) {
 	s.Authentication.SetDefaultsFrom(source.Authentication)
+	s.TLS.SetDefaultsFrom(source.TLS)
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to `spec.`.
-func (s DeploymentReplicationSpec) ResetImmutableFields(target *DeploymentReplicationSpec) []string {
+func (s EndpointSpec) ResetImmutableFields(target *EndpointSpec, fieldPrefix string) []string {
 	var result []string
-	if list := s.Source.ResetImmutableFields(&target.Source, "source."); len(list) > 0 {
+	if list := s.Authentication.ResetImmutableFields(&target.Authentication, fieldPrefix+"auth."); len(list) > 0 {
 		result = append(result, list...)
 	}
-	if list := s.Destination.ResetImmutableFields(&target.Destination, "destination."); len(list) > 0 {
-		result = append(result, list...)
-	}
-	if list := s.Authentication.ResetImmutableFields(&target.Authentication, "auth."); len(list) > 0 {
+	if list := s.TLS.ResetImmutableFields(&target.TLS, fieldPrefix+"tls."); len(list) > 0 {
 		result = append(result, list...)
 	}
 	return result

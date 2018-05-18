@@ -29,4 +29,7 @@ type DeploymentReplicationStatus struct {
 	Phase DeploymentReplicationPhase `json:"phase"`
 	// Reason contains a human readable reason for reaching the current phase (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current phase
+
+	// Conditions specific to the entire deployment replication
+	Conditions ConditionList `json:"conditions,omitempty"`
 }

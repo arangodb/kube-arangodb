@@ -45,7 +45,7 @@ spec:
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready/deploymentReplication
+            path: /ready/deployment-replication
             port: 8528
             scheme: HTTPS
           initialDelaySeconds: 5

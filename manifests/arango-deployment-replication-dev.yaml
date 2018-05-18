@@ -94,7 +94,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: ewoutp/kube-arangodb@sha256:ee3c19a789b7ac9e4e606617da643a7a54a2dc6d398db7a573f2120d77a45258
+        image: ewoutp/kube-arangodb@sha256:fd5b99fb3637b25f9b09b5c6dc08a2b282a9cf0624cda01db9bf2939143513e2
         args:
           - --operator.deployment-replication
         env:
@@ -122,7 +122,7 @@ spec:
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready/deploymentReplication
+            path: /ready/deployment-replication
             port: 8528
             scheme: HTTPS
           initialDelaySeconds: 5

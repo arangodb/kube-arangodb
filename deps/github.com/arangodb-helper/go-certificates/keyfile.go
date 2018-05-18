@@ -38,14 +38,13 @@ import (
 	"strings"
 )
 
-// LoadKeyFile loads a SSL keyfile formatted for the arangod server.
-func LoadKeyFile(keyFile string) (tls.Certificate, error) {
-	raw, err := ioutil.ReadFile(keyFile)
-	if err != nil {
-		return tls.Certificate{}, maskAny(err)
-	}
+// Keyfile contains 1 or more certificates and a private key.
+type Keyfile tls.Certificate
 
-	result := tls.Certificate{}
+// NewKeyfile creates a keyfile from given content.
+func NewKeyfile(content string) (Keyfile, error) {
+	raw := []byte(content)
+	result := Keyfile{}
 	for {
 		var derBlock *pem.Block
 		derBlock, raw = pem.Decode(raw)
@@ -56,22 +55,74 @@ func LoadKeyFile(keyFile string) (tls.Certificate, error) {
 			result.Certificate = append(result.Certificate, derBlock.Bytes)
 		} else if derBlock.Type == "PRIVATE KEY" || strings.HasSuffix(derBlock.Type, " PRIVATE KEY") {
 			if result.PrivateKey == nil {
+				var err error
 				result.PrivateKey, err = parsePrivateKey(derBlock.Bytes)
 				if err != nil {
-					return tls.Certificate{}, maskAny(err)
+					return Keyfile{}, maskAny(err)
 				}
 			}
 		}
 	}
-
-	if len(result.Certificate) == 0 {
-		return tls.Certificate{}, maskAny(fmt.Errorf("No certificates found in %s", keyFile))
-	}
-	if result.PrivateKey == nil {
-		return tls.Certificate{}, maskAny(fmt.Errorf("No private key found in %s", keyFile))
-	}
-
 	return result, nil
+}
+
+// Validate the contents of the keyfile
+func (kf Keyfile) Validate() error {
+	if len(kf.Certificate) == 0 {
+		return maskAny(fmt.Errorf("No certificates found in keyfile"))
+	}
+	if kf.PrivateKey == nil {
+		return maskAny(fmt.Errorf("No private key found in keyfile"))
+	}
+
+	return nil
+}
+
+// EncodeCACertificates extracts the CA certificate(s) from the given keyfile (if any).
+func (kf Keyfile) EncodeCACertificates() (string, error) {
+	buf := &bytes.Buffer{}
+	for _, derBytes := range kf.Certificate {
+		c, err := x509.ParseCertificate(derBytes)
+		if err != nil {
+			return "", maskAny(err)
+		}
+		if c.IsCA {
+			pem.Encode(buf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+		}
+	}
+
+	return buf.String(), nil
+}
+
+// EncodeCertificates extracts all certificates from the given keyfile and encodes them as PEM blocks.
+func (kf Keyfile) EncodeCertificates() string {
+	buf := &bytes.Buffer{}
+	for _, derBytes := range kf.Certificate {
+		pem.Encode(buf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	}
+
+	return buf.String()
+}
+
+// EncodePrivateKey extract the private key from the given keyfile and encodes is as PEM block.
+func (kf Keyfile) EncodePrivateKey() string {
+	buf := &bytes.Buffer{}
+	pem.Encode(buf, pemBlockForKey(kf.PrivateKey))
+	return buf.String()
+}
+
+// LoadKeyFile loads a SSL keyfile formatted for the arangod server.
+func LoadKeyFile(keyFile string) (tls.Certificate, error) {
+	raw, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return tls.Certificate{}, maskAny(err)
+	}
+
+	kf, err := NewKeyfile(string(raw))
+	if err != nil {
+		return tls.Certificate{}, maskAny(err)
+	}
+	return tls.Certificate(kf), nil
 }
 
 // ExtractCACertificateFromKeyFile loads a SSL keyfile formatted for the arangod server and

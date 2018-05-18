@@ -160,6 +160,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", livenessProbe.LivenessHandler)
 	mux.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
+	mux.HandleFunc("/ready/deployment-replications", deploymentReplicationProbe.ReadyHandler)
 	mux.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
 	mux.Handle("/metrics", prometheus.Handler())
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))

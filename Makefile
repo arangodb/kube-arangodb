@@ -231,6 +231,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 		golang:$(GOVERSION) \
 		go test $(TESTVERBOSEOPTIONS) \
 			$(REPOPATH)/pkg/apis/deployment/v1alpha \
+			$(REPOPATH)/pkg/apis/replication/v1alpha \
 			$(REPOPATH)/pkg/apis/storage/v1alpha \
 			$(REPOPATH)/pkg/deployment/reconcile \
 			$(REPOPATH)/pkg/deployment/resources \

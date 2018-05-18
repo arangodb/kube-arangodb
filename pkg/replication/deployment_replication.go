@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/arangodb/arangosync/client"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -44,8 +45,6 @@ import (
 // Config holds configuration settings for a DeploymentReplication
 type Config struct {
 	Namespace string
-	//	PodName        string
-	//	ServiceAccount string
 }
 
 // Dependencies holds dependent services for a DeploymentReplication
@@ -87,7 +86,9 @@ type DeploymentReplication struct {
 
 	eventsCli corev1.EventInterface
 
-	inspectTrigger trigger.Trigger
+	inspectTrigger         trigger.Trigger
+	recentInspectionErrors int
+	clientCache            client.ClientCache
 }
 
 // New creates a new DeploymentReplication from the given API object.
@@ -150,7 +151,6 @@ func (dr *DeploymentReplication) run() {
 	//log := dr.deps.Log
 
 	inspectionInterval := maxInspectionInterval
-	recentInspectionErrors := 0
 	for {
 		select {
 		case <-dr.stopCh:
@@ -170,15 +170,7 @@ func (dr *DeploymentReplication) run() {
 			}
 
 		case <-dr.inspectTrigger.Done():
-			hasError := false
-			if hasError {
-				if recentInspectionErrors == 0 {
-					inspectionInterval = minInspectionInterval
-					recentInspectionErrors++
-				}
-			} else {
-				recentInspectionErrors = 0
-			}
+			inspectionInterval = dr.inspectDeploymentReplication(inspectionInterval)
 
 		case <-time.After(inspectionInterval):
 			// Trigger inspection

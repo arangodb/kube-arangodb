@@ -130,12 +130,12 @@ func (o *Operator) syncArangoDeploymentReplication(apiObject *api.ArangoDeployme
 	// re-watch or restart could give ADD event.
 	// If for an ADD event the cluster spec is invalid then it is not added to the local cache
 	// so modifying that deployment will result in another ADD event
-	if _, ok := o.deployments[apiObject.Name]; ok {
+	if _, ok := o.deploymentReplications[apiObject.Name]; ok {
 		ev.Type = kwatch.Modified
 	}
 
 	//pt.start()
-	err := o.handleDeploymentEvent(ev)
+	err := o.handleDeploymentReplicationEvent(ev)
 	if err != nil {
 		o.log.Warn().Err(err).Msg("Failed to handle event")
 	}

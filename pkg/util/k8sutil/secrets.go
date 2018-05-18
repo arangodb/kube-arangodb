@@ -86,6 +86,24 @@ func ValidateCACertificateSecret(cli corev1.CoreV1Interface, secretName, namespa
 	return nil
 }
 
+// GetCACertficateSecret loads a secret with given name in the given namespace
+// and extracts the `ca.crt` field.
+// If the secret does not exists the field is missing,
+// an error is returned.
+// Returns: certificate, error
+func GetCACertficateSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return "", maskAny(err)
+	}
+	// Load `ca.crt` field
+	cert, found := s.Data[constants.SecretCACertificate]
+	if !found {
+		return "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+	}
+	return string(cert), nil
+}
+
 // GetCASecret loads a secret with given name in the given namespace
 // and extracts the `ca.crt` & `ca.key` field.
 // If the secret does not exists or one of the fields is missing,
