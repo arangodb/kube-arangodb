@@ -79,15 +79,17 @@ var (
 		tlsSecretName string
 	}
 	operatorOptions struct {
-		enableDeployment bool // Run deployment operator
-		enableStorage    bool // Run deployment operator
+		enableDeployment            bool // Run deployment operator
+		enableDeploymentReplication bool // Run deployment-replication operator
+		enableStorage               bool // Run local-storage operator
 	}
 	chaosOptions struct {
 		allowed bool
 	}
-	livenessProbe   probe.LivenessProbe
-	deploymentProbe probe.ReadyProbe
-	storageProbe    probe.ReadyProbe
+	livenessProbe              probe.LivenessProbe
+	deploymentProbe            probe.ReadyProbe
+	deploymentReplicationProbe probe.ReadyProbe
+	storageProbe               probe.ReadyProbe
 )
 
 func init() {
@@ -97,6 +99,7 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
+	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 }
@@ -121,8 +124,8 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Check operating mode
-	if !operatorOptions.enableDeployment && !operatorOptions.enableStorage {
-		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment or --operator.storage or both")
+	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage {
+		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage or any combination of these")
 	}
 
 	// Log version
@@ -209,24 +212,26 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	eventRecorder := createRecorder(cliLog, kubecli, name, namespace)
 
 	cfg := operator.Config{
-		ID:               id,
-		Namespace:        namespace,
-		PodName:          name,
-		ServiceAccount:   serviceAccount,
-		LifecycleImage:   image,
-		EnableDeployment: operatorOptions.enableDeployment,
-		EnableStorage:    operatorOptions.enableStorage,
-		AllowChaos:       chaosOptions.allowed,
+		ID:                          id,
+		Namespace:                   namespace,
+		PodName:                     name,
+		ServiceAccount:              serviceAccount,
+		LifecycleImage:              image,
+		EnableDeployment:            operatorOptions.enableDeployment,
+		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
+		EnableStorage:               operatorOptions.enableStorage,
+		AllowChaos:                  chaosOptions.allowed,
 	}
 	deps := operator.Dependencies{
-		LogService:      logService,
-		KubeCli:         kubecli,
-		KubeExtCli:      kubeExtCli,
-		CRCli:           crCli,
-		EventRecorder:   eventRecorder,
-		LivenessProbe:   &livenessProbe,
-		DeploymentProbe: &deploymentProbe,
-		StorageProbe:    &storageProbe,
+		LogService:                 logService,
+		KubeCli:                    kubecli,
+		KubeExtCli:                 kubeExtCli,
+		CRCli:                      crCli,
+		EventRecorder:              eventRecorder,
+		LivenessProbe:              &livenessProbe,
+		DeploymentProbe:            &deploymentProbe,
+		DeploymentReplicationProbe: &deploymentReplicationProbe,
+		StorageProbe:               &storageProbe,
 	}
 
 	return cfg, deps, nil

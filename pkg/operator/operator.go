@@ -34,10 +34,12 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
@@ -47,50 +49,55 @@ const (
 )
 
 type Event struct {
-	Type         kwatch.EventType
-	Deployment   *deplapi.ArangoDeployment
-	LocalStorage *lsapi.ArangoLocalStorage
+	Type                  kwatch.EventType
+	Deployment            *deplapi.ArangoDeployment
+	DeploymentReplication *replapi.ArangoDeploymentReplication
+	LocalStorage          *lsapi.ArangoLocalStorage
 }
 
 type Operator struct {
 	Config
 	Dependencies
 
-	log           zerolog.Logger
-	deployments   map[string]*deployment.Deployment
-	localStorages map[string]*storage.LocalStorage
+	log                    zerolog.Logger
+	deployments            map[string]*deployment.Deployment
+	deploymentReplications map[string]*replication.DeploymentReplication
+	localStorages          map[string]*storage.LocalStorage
 }
 
 type Config struct {
-	ID               string
-	Namespace        string
-	PodName          string
-	ServiceAccount   string
-	LifecycleImage   string
-	EnableDeployment bool
-	EnableStorage    bool
-	AllowChaos       bool
+	ID                          string
+	Namespace                   string
+	PodName                     string
+	ServiceAccount              string
+	LifecycleImage              string
+	EnableDeployment            bool
+	EnableDeploymentReplication bool
+	EnableStorage               bool
+	AllowChaos                  bool
 }
 
 type Dependencies struct {
-	LogService      logging.Service
-	KubeCli         kubernetes.Interface
-	KubeExtCli      apiextensionsclient.Interface
-	CRCli           versioned.Interface
-	EventRecorder   record.EventRecorder
-	LivenessProbe   *probe.LivenessProbe
-	DeploymentProbe *probe.ReadyProbe
-	StorageProbe    *probe.ReadyProbe
+	LogService                 logging.Service
+	KubeCli                    kubernetes.Interface
+	KubeExtCli                 apiextensionsclient.Interface
+	CRCli                      versioned.Interface
+	EventRecorder              record.EventRecorder
+	LivenessProbe              *probe.LivenessProbe
+	DeploymentProbe            *probe.ReadyProbe
+	DeploymentReplicationProbe *probe.ReadyProbe
+	StorageProbe               *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
 func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
-		Config:        config,
-		Dependencies:  deps,
-		log:           deps.LogService.MustGetLogger("operator"),
-		deployments:   make(map[string]*deployment.Deployment),
-		localStorages: make(map[string]*storage.LocalStorage),
+		Config:                 config,
+		Dependencies:           deps,
+		log:                    deps.LogService.MustGetLogger("operator"),
+		deployments:            make(map[string]*deployment.Deployment),
+		deploymentReplications: make(map[string]*replication.DeploymentReplication),
+		localStorages:          make(map[string]*storage.LocalStorage),
 	}
 	return o, nil
 }
@@ -99,6 +106,9 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
 		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment)
+	}
+	if o.Config.EnableDeploymentReplication {
+		go o.runLeaderElection("arango-deployment-replication-operator", o.onStartDeploymentReplication)
 	}
 	if o.Config.EnableStorage {
 		go o.runLeaderElection("arango-storage-operator", o.onStartStorage)
@@ -110,7 +120,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(true, false); err == nil {
+		if err := o.waitForCRD(true, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -121,10 +131,24 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	o.runDeployments(stop)
 }
 
+// onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
+func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
+	for {
+		if err := o.waitForCRD(false, true, false); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+	o.runDeploymentReplications(stop)
+}
+
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, true); err == nil {
+		if err := o.waitForCRD(false, false, true); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
