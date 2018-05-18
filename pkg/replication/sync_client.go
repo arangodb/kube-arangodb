@@ -55,7 +55,6 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 			return nil, maskAny(err)
 		}
 		tlsAuth.CACertificate = caCert
-		insecureSkipVerify = false
 	}
 	auth := client.NewAuthentication(tlsAuth, jwtSecret)
 
@@ -75,8 +74,9 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 
 // createArangoSyncTLSAuthentication creates the authentication needed to authenticate
 // the destination syncmaster at the source syncmaster.
-func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.AuthenticationSpec) (client.TLSAuthentication, error) {
-	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), spec.GetClientAuthSecretName(), dr.apiObject.GetNamespace())
+func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.DeploymentReplicationSpec) (client.TLSAuthentication, error) {
+	// Fetch keyfile
+	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), spec.Authentication.GetClientAuthSecretName(), dr.apiObject.GetNamespace())
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}
@@ -84,12 +84,20 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Auth
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}
+
+	// Fetch TLS CA certificate for source
+	caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), spec.Source.TLS.GetCASecretName(), dr.apiObject.GetNamespace())
+	if err != nil {
+		return client.TLSAuthentication{}, maskAny(err)
+	}
+
+	// Create authentication
 	result := client.TLSAuthentication{
 		TLSClientAuthentication: tasks.TLSClientAuthentication{
 			ClientCertificate: kf.EncodeCertificates(),
 			ClientKey:         kf.EncodePrivateKey(),
 		},
+		CACertificate: caCert,
 	}
-	// TODO when add CA cert ????
 	return result, nil
 }

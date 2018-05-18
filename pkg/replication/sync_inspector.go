@@ -129,7 +129,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 		// Configure sync if needed
 		if configureSyncNeeded {
 			source := dr.createArangoSyncEndpoint(spec.Source)
-			auth, err := dr.createArangoSyncTLSAuthentication(spec.Authentication)
+			auth, err := dr.createArangoSyncTLSAuthentication(spec)
 			if err != nil {
 				log.Warn().Err(err).Msg("Failed to configure synchronization authentication")
 				hasError = true

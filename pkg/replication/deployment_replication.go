@@ -151,6 +151,7 @@ func (dr *DeploymentReplication) run() {
 	//log := dr.deps.Log
 
 	inspectionInterval := maxInspectionInterval
+	dr.inspectTrigger.Trigger()
 	for {
 		select {
 		case <-dr.stopCh:
