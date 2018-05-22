@@ -92,6 +92,22 @@ func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
 }
 
+// GetImageByGroup returns the image used for a server in given group.
+func (s DeploymentSpec) GetImageByGroup(group ServerGroup) string {
+	if group.IsArangosync() {
+		return s.Sync.GetImage()
+	}
+	return s.GetImage()
+}
+
+// GetImagePullPolicyByGroup returns the image pull policy used for a server in given group.
+func (s DeploymentSpec) GetImagePullPolicyByGroup(group ServerGroup) v1.PullPolicy {
+	if group.IsArangosync() {
+		return s.Sync.GetImagePullPolicy()
+	}
+	return s.GetImagePullPolicy()
+}
+
 // IsAuthenticated returns true when authentication is enabled
 func (s DeploymentSpec) IsAuthenticated() bool {
 	return s.Authentication.IsAuthenticated()
