@@ -8,7 +8,7 @@ a `CustomResourceDefinition` created by the operator.
 Example minimal replication definition:
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "replication.database.arangodb.com/v1alpha"
 kind: "ArangoDeploymentReplication"
 metadata:
   name: "replication-from-a-to-b"
@@ -18,7 +18,7 @@ spec:
   destination:
     deploymentName: cluster-b
   auth:
-    clientSecretName: client-auth-cert
+    clientAuthSecretName: client-auth-cert
 ```
 
 This definition results in:
@@ -53,6 +53,20 @@ that is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` 
 
 Specifying this setting and `spec.source.deploymentName` at the same time is not allowed.
 
+### `spec.source.auth.jwtSecretName: string`
+
+This setting specifies the name of a `Secret` containing a JWT `token` used to authenticate
+with the SyncMaster at the specified source.
+
+This setting is required, unless `spec.source.deploymentName` has been set.
+
+### `spec.source.tls.caSecretName: string`
+
+This setting specifies the name of a `Secret` containing a TLS CA certificate `ca.crt` used to verify
+the TLS connection created by the SyncMaster at the specified source.
+
+This setting is required, unless `spec.source.deploymentName` has been set.
+
 ### `spec.destination.deploymentName: string`
 
 This setting specifies the name of an `ArangoDeployment` resource that runs a cluster
@@ -75,7 +89,21 @@ that is reachable from the Kubernetes cluster the `ArangoDeploymentReplication` 
 
 Specifying this setting and `spec.destination.deploymentName` at the same time is not allowed.
 
-### `spec.auth.clientSecretName: string`
+### `spec.destination.auth.jwtSecretName: string`
+
+This setting specifies the name of a `Secret` containing a JWT `token` used to authenticate
+with the SyncMaster at the specified destination.
+
+This setting is required, unless `spec.destination.deploymentName` has been set.
+
+### `spec.destination.tls.caSecretName: string`
+
+This setting specifies the name of a `Secret` containing a TLS CA certificate `ca.crt` used to verify
+the TLS connection created by the SyncMaster at the specified destination.
+
+This setting is required, unless `spec.destination.deploymentName` has been set.
+
+### `spec.auth.clientAuthSecretName: string`
 
 This setting specifies the name of a `Secret` containing a client authentication certificate,
 used to authenticate the SyncMaster in the destination cluster with the SyncMaster in the
