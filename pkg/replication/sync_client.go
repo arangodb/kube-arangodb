@@ -23,9 +23,13 @@
 package replication
 
 import (
+	"net"
+	"strconv"
+
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -36,21 +40,28 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	log := dr.deps.Log
 
 	// Endpoint
-	source := dr.createArangoSyncEndpoint(epSpec)
+	source, err := dr.createArangoSyncEndpoint(epSpec)
+	if err != nil {
+		return nil, maskAny(err)
+	}
 
 	// Authentication
 	insecureSkipVerify := true
 	tlsAuth := tasks.TLSAuthentication{}
+	authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
+	if err != nil {
+		return nil, maskAny(err)
+	}
 	jwtSecret := ""
-	if jwtSecretName := epSpec.Authentication.GetJWTSecretName(); jwtSecretName != "" {
+	if authJWTSecretName != "" {
 		var err error
-		jwtSecret, err = k8sutil.GetJWTSecret(dr.deps.KubeCli.CoreV1(), jwtSecretName, dr.apiObject.GetNamespace())
+		jwtSecret, err = k8sutil.GetJWTSecret(dr.deps.KubeCli.CoreV1(), authJWTSecretName, dr.apiObject.GetNamespace())
 		if err != nil {
 			return nil, maskAny(err)
 		}
 	}
-	if caSecretName := epSpec.TLS.GetCASecretName(); caSecretName != "" {
-		caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), caSecretName, dr.apiObject.GetNamespace())
+	if tlsCASecretName != "" {
+		caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), tlsCASecretName, dr.apiObject.GetNamespace())
 		if err != nil {
 			return nil, maskAny(err)
 		}
@@ -67,9 +78,19 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 }
 
 // createArangoSyncEndpoint creates the endpoints for the given spec.
-func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpec) client.Endpoint {
-	// TODO when adding deploymentname to EndpointSpec, reflect that here
-	return client.Endpoint(epSpec.MasterEndpoint)
+func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpec) (client.Endpoint, error) {
+	if epSpec.HasDeploymentName() {
+		deploymentName := epSpec.GetDeploymentName()
+		depls := dr.deps.CRCli.DatabaseV1alpha().ArangoDeployments(dr.apiObject.GetNamespace())
+		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
+		if err != nil {
+			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
+			return nil, maskAny(err)
+		}
+		dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(depl)
+		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
+	}
+	return client.Endpoint(epSpec.MasterEndpoint), nil
 }
 
 // createArangoSyncTLSAuthentication creates the authentication needed to authenticate
@@ -86,7 +107,11 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch TLS CA certificate for source
-	caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), spec.Source.TLS.GetCASecretName(), dr.apiObject.GetNamespace())
+	_, tlsCASecretName, err := dr.getEndpointSecretNames(spec.Source)
+	if err != nil {
+		return client.TLSAuthentication{}, maskAny(err)
+	}
+	caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), tlsCASecretName, dr.apiObject.GetNamespace())
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}
@@ -100,4 +125,19 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 		CACertificate: caCert,
 	}
 	return result, nil
+}
+
+// getEndpointSecretNames returns the names of secrets that hold the JWT token, TLS ca.crt.
+func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec) (authJWTSecretName, tlsCASecretName string, err error) {
+	if epSpec.HasDeploymentName() {
+		deploymentName := epSpec.GetDeploymentName()
+		depls := dr.deps.CRCli.DatabaseV1alpha().ArangoDeployments(dr.apiObject.GetNamespace())
+		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
+		if err != nil {
+			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
+			return "", "", maskAny(err)
+		}
+		return depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil
+	}
+	return epSpec.Authentication.GetJWTSecretName(), epSpec.TLS.GetCASecretName(), nil
 }

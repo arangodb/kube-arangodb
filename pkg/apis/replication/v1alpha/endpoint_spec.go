@@ -25,29 +25,54 @@ package v1alpha
 import (
 	"net/url"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 )
 
 // EndpointSpec contains the specification used to reach the syncmasters
 // in either source or destination mode.
 type EndpointSpec struct {
-	MasterEndpoint []string                   `json:"masterEndpoint,omitempty"`
+	// DeploymentName holds the name of an ArangoDeployment resource.
+	// If set this provides default values for masterEndpoint, auth & tls.
+	DeploymentName *string `json:"deploymentName,omitempty"`
+	// MasterEndpoints holds a list of URLs used to reach the syncmaster(s).
+	MasterEndpoint []string `json:"masterEndpoint,omitempty"`
+	// Authentication holds settings needed to authentication at the syncmaster.
 	Authentication EndpointAuthenticationSpec `json:"auth"`
-	TLS            EndpointTLSSpec            `json:"tls"`
+	// TLS holds settings needed to verify the TLS connection to the syncmaster.
+	TLS EndpointTLSSpec `json:"tls"`
+}
+
+// GetDeploymentName returns the value of deploymentName.
+func (s EndpointSpec) GetDeploymentName() string {
+	return util.StringOrDefault(s.DeploymentName)
+}
+
+// HasDeploymentName returns the true when a non-empty deployment name it set.
+func (s EndpointSpec) HasDeploymentName() bool {
+	return s.GetDeploymentName() != ""
 }
 
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
 func (s EndpointSpec) Validate() error {
+	if err := k8sutil.ValidateOptionalResourceName(s.GetDeploymentName()); err != nil {
+		return maskAny(err)
+	}
 	for _, ep := range s.MasterEndpoint {
 		if _, err := url.Parse(ep); err != nil {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid master endpoint '%s': %s", ep, err))
 		}
 	}
-	if err := s.Authentication.Validate(); err != nil {
+	hasDeploymentName := s.HasDeploymentName()
+	if !hasDeploymentName && len(s.MasterEndpoint) == 0 {
+		return maskAny(errors.Wrapf(ValidationError, "Provide a deploy name or at least one master endpoint"))
+	}
+	if err := s.Authentication.Validate(!hasDeploymentName); err != nil {
 		return maskAny(err)
 	}
-	if err := s.TLS.Validate(); err != nil {
+	if err := s.TLS.Validate(!hasDeploymentName); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -61,6 +86,9 @@ func (s *EndpointSpec) SetDefaults() {
 
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *EndpointSpec) SetDefaultsFrom(source EndpointSpec) {
+	if s.DeploymentName == nil {
+		s.DeploymentName = util.NewStringOrNil(source.DeploymentName)
+	}
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
 }
@@ -70,6 +98,9 @@ func (s *EndpointSpec) SetDefaultsFrom(source EndpointSpec) {
 // Field names are relative to `spec.`.
 func (s EndpointSpec) ResetImmutableFields(target *EndpointSpec, fieldPrefix string) []string {
 	var result []string
+	if s.GetDeploymentName() != target.GetDeploymentName() {
+		result = append(result, fieldPrefix+"deploymentName")
+	}
 	if list := s.Authentication.ResetImmutableFields(&target.Authentication, fieldPrefix+"auth."); len(list) > 0 {
 		result = append(result, list...)
 	}

@@ -66,17 +66,22 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 		} else {
 			// Inspect destination status
 			if destStatus.Status.IsActive() {
-				if dr.isIncomingEndpoint(destStatus, spec.Source) {
-					// Destination is correctly configured
-					if dr.status.Conditions.Update(api.ConditionTypeConfigured, true, "Active", "Destination syncmaster is configured correctly and active") {
-						updateStatusNeeded = true
-					}
+				isIncomingEndpoint, err := dr.isIncomingEndpoint(destStatus, spec.Source)
+				if err != nil {
+					log.Warn().Err(err).Msg("Failed to check is-incoming-endpoint")
 				} else {
-					// Sync is active, but from different source
-					log.Warn().Msg("Destination syncmaster is configured for different source")
-					cancelSyncNeeded = true
-					if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, "Invalid", "Destination syncmaster is configured for different source") {
-						updateStatusNeeded = true
+					if isIncomingEndpoint {
+						// Destination is correctly configured
+						if dr.status.Conditions.Update(api.ConditionTypeConfigured, true, "Active", "Destination syncmaster is configured correctly and active") {
+							updateStatusNeeded = true
+						}
+					} else {
+						// Sync is active, but from different source
+						log.Warn().Msg("Destination syncmaster is configured for different source")
+						cancelSyncNeeded = true
+						if dr.status.Conditions.Update(api.ConditionTypeConfigured, false, "Invalid", "Destination syncmaster is configured for different source") {
+							updateStatusNeeded = true
+						}
 					}
 				}
 			} else {
@@ -99,8 +104,13 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			}
 
 			if sourceStatus.Status.IsActive() {
-				if dr.hasOutgoingEndpoint(sourceStatus, spec.Destination) {
-					// Source is correctly configured
+				hasOutgoingEndpoint, err := dr.hasOutgoingEndpoint(sourceStatus, spec.Destination)
+				if err != nil {
+					log.Warn().Err(err).Msg("Failed to check has-outgoing-endpoint")
+				} else {
+					if hasOutgoingEndpoint {
+						// Source is correctly configured
+					}
 				}
 			}
 		}
@@ -128,23 +138,28 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 
 		// Configure sync if needed
 		if configureSyncNeeded {
-			source := dr.createArangoSyncEndpoint(spec.Source)
-			auth, err := dr.createArangoSyncTLSAuthentication(spec)
+			source, err := dr.createArangoSyncEndpoint(spec.Source)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to configure synchronization authentication")
+				log.Warn().Err(err).Msg("Failed to create syncmaster endpoint")
 				hasError = true
 			} else {
-				req := client.SynchronizationRequest{
-					Source:         source,
-					Authentication: auth,
-				}
-				log.Info().Msg("Configuring synchronization")
-				if err := destClient.Master().Synchronize(ctx, req); err != nil {
-					log.Warn().Err(err).Msg("Failed to configure synchronization")
+				auth, err := dr.createArangoSyncTLSAuthentication(spec)
+				if err != nil {
+					log.Warn().Err(err).Msg("Failed to configure synchronization authentication")
 					hasError = true
 				} else {
-					log.Info().Msg("Configured synchronization")
-					nextInterval = time.Second * 10
+					req := client.SynchronizationRequest{
+						Source:         source,
+						Authentication: auth,
+					}
+					log.Info().Msg("Configuring synchronization")
+					if err := destClient.Master().Synchronize(ctx, req); err != nil {
+						log.Warn().Err(err).Msg("Failed to configure synchronization")
+						hasError = true
+					} else {
+						log.Info().Msg("Configured synchronization")
+						nextInterval = time.Second * 10
+					}
 				}
 			}
 		}
@@ -172,19 +187,25 @@ func (dr *DeploymentReplication) triggerInspection() {
 
 // isIncomingEndpoint returns true when given sync status's endpoint
 // intersects with the given endpoint spec.
-func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) bool {
-	ep := dr.createArangoSyncEndpoint(epSpec)
-	return !status.Source.Intersection(ep).IsEmpty()
+func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) (bool, error) {
+	ep, err := dr.createArangoSyncEndpoint(epSpec)
+	if err != nil {
+		return false, maskAny(err)
+	}
+	return !status.Source.Intersection(ep).IsEmpty(), nil
 }
 
 // hasOutgoingEndpoint returns true when given sync status has an outgoing
 // item that intersects with the given endpoint spec.
-func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) bool {
-	ep := dr.createArangoSyncEndpoint(epSpec)
+func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) (bool, error) {
+	ep, err := dr.createArangoSyncEndpoint(epSpec)
+	if err != nil {
+		return false, maskAny(err)
+	}
 	for _, o := range status.Outgoing {
 		if !o.Endpoint.Intersection(ep).IsEmpty() {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

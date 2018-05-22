@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/pkg/errors"
 )
 
 // EndpointAuthenticationSpec contains the specification to authentication with the syncmasters
@@ -41,9 +42,12 @@ func (s EndpointAuthenticationSpec) GetJWTSecretName() string {
 
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
-func (s EndpointAuthenticationSpec) Validate() error {
+func (s EndpointAuthenticationSpec) Validate(jwtSecretNameRequired bool) error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetJWTSecretName()); err != nil {
 		return maskAny(err)
+	}
+	if jwtSecretNameRequired && s.GetJWTSecretName() == "" {
+		return maskAny(errors.Wrapf(ValidationError, "Provide a jwtSecretName"))
 	}
 	return nil
 }
