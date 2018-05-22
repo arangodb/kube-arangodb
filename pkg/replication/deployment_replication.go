@@ -148,7 +148,12 @@ func (dr *DeploymentReplication) send(ev *deploymentReplicationEvent) {
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
 func (dr *DeploymentReplication) run() {
-	//log := dr.deps.Log
+	log := dr.deps.Log
+
+	// Add finalizers
+	if err := dr.addFinalizers(); err != nil {
+		log.Warn().Err(err).Msg("Failed to add finalizers")
+	}
 
 	inspectionInterval := maxInspectionInterval
 	dr.inspectTrigger.Trigger()
