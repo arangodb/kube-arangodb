@@ -234,7 +234,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 			optionPair{"--monitoring.token", "$(" + constants.EnvArangoSyncMonitoringToken + ")"},
 		)
 	}
-	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyJWT)
+	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	options = append(options,
 		optionPair{"--master.jwt-secret", masterSecretPath},
 	)
@@ -252,7 +252,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 			optionPair{"--mq.type", "direct"},
 		)
 		if spec.IsAuthenticated() {
-			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyJWT)
+			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options = append(options,
 				optionPair{"--cluster.jwt-secret", clusterSecretPath},
 			)
@@ -493,7 +493,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if spec.IsAuthenticated() {
 			env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
 				SecretName: spec.Authentication.GetJWTSecretName(),
-				SecretKey:  constants.SecretKeyJWT,
+				SecretKey:  constants.SecretKeyToken,
 			}
 		}
 		engine := spec.GetStorageEngine().AsArangoArgument()
@@ -513,8 +513,13 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
-		if err := k8sutil.ValidateJWTSecret(kubecli.CoreV1(), masterJWTSecretName, ns); err != nil {
+		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), masterJWTSecretName, ns); err != nil {
 			return maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
+		}
+		// Check monitoring token secret
+		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
+		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), monitoringTokenSecretName, ns); err != nil {
+			return maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
@@ -537,7 +542,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateJWTSecret(kubecli.CoreV1(), clusterJWTSecretName, ns); err != nil {
+				if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), clusterJWTSecretName, ns); err != nil {
 					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
@@ -554,7 +559,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 			env[constants.EnvArangoSyncMonitoringToken] = k8sutil.EnvValue{
 				SecretName: spec.Sync.Monitoring.GetTokenSecretName(),
-				SecretKey:  constants.SecretKeyJWT,
+				SecretKey:  constants.SecretKeyToken,
 			}
 		}
 		livenessProbe, err := r.createLivenessProbe(spec, group)

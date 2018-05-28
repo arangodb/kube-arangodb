@@ -66,11 +66,11 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName string) {
+func (s *SyncSpec) SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName, defaultMonitoringSecretName string) {
 	s.ExternalAccess.SetDefaults()
 	s.Authentication.SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName)
 	s.TLS.SetDefaults(defaultTLSCASecretName)
-	s.Monitoring.SetDefaults()
+	s.Monitoring.SetDefaults(defaultMonitoringSecretName)
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.

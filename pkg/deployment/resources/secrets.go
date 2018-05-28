@@ -25,7 +25,6 @@ package resources
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -37,7 +36,7 @@ import (
 func (r *Resources) EnsureSecrets() error {
 	spec := r.context.GetSpec()
 	if spec.IsAuthenticated() {
-		if err := r.ensureJWTSecret(spec.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.ensureTokenSecret(spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -47,7 +46,10 @@ func (r *Resources) EnsureSecrets() error {
 		}
 	}
 	if spec.Sync.IsEnabled() {
-		if err := r.ensureJWTSecret(spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.ensureTokenSecret(spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+			return maskAny(err)
+		}
+		if err := r.ensureTokenSecret(spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
 			return maskAny(err)
 		}
 		if err := r.ensureCACertificateSecret(spec.Sync.TLS); err != nil {
@@ -57,10 +59,10 @@ func (r *Resources) EnsureSecrets() error {
 	return nil
 }
 
-// ensureJWTSecret checks if a secret with given name exists in the namespace
+// ensureTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a random
-// JWT token.
-func (r *Resources) ensureJWTSecret(secretName string) error {
+// token.
+func (r *Resources) ensureTokenSecret(secretName string) error {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	if _, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
@@ -72,7 +74,7 @@ func (r *Resources) ensureJWTSecret(secretName string) error {
 
 		// Create secret
 		owner := r.context.GetAPIObject().AsOwner()
-		if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := k8sutil.CreateTokenSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -119,7 +121,7 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secretName := spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, ns)
+	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", maskAny(err)
@@ -132,7 +134,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetJWTSecret(kubecli.CoreV1(), secretName, ns)
+	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", maskAny(err)
@@ -145,13 +147,10 @@ func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, err
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get monitoring token secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
+		return "", maskAny(err)
 	}
-	// Take the first data
-	for _, v := range s.Data {
-		return string(v), nil
-	}
-	return "", maskAny(fmt.Errorf("No data found in secret '%s'", secretName))
+	return s, nil
 }
