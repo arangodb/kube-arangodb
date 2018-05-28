@@ -128,9 +128,12 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 			// Only scale singles
 			plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 		case api.DeploymentModeCluster:
-			// Scale dbservers, coordinators, syncmasters & syncworkers
+			// Scale dbservers, coordinators
 			plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
 			plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+		}
+		if spec.GetMode().SupportsSync() {
+			// Scale syncmasters & syncworkers
 			plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
 			plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
 		}
