@@ -23,6 +23,8 @@ import (
 	clientset "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
 	fakedatabasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
+	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1alpha"
+	fakereplicationv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1alpha/fake"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	fakestoragev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,6 +83,16 @@ func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
 // Database retrieves the DatabaseV1alphaClient
 func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
 	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
+}
+
+// ReplicationV1alpha retrieves the ReplicationV1alphaClient
+func (c *Clientset) ReplicationV1alpha() replicationv1alpha.ReplicationV1alphaInterface {
+	return &fakereplicationv1alpha.FakeReplicationV1alpha{Fake: &c.Fake}
+}
+
+// Replication retrieves the ReplicationV1alphaClient
+func (c *Clientset) Replication() replicationv1alpha.ReplicationV1alphaInterface {
+	return &fakereplicationv1alpha.FakeReplicationV1alpha{Fake: &c.Fake}
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient
