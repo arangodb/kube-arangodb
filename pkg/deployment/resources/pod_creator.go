@@ -445,14 +445,14 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	podSuffix := createPodSuffix(spec)
 	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
 	newPhase := api.MemberPhaseCreated
+	// Find image ID
+	imageInfo, imageFound := status.Images.GetByImage(spec.GetImage())
+	if !imageFound {
+		log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+		return nil
+	}
 	// Create pod
 	if group.IsArangod() {
-		// Find image ID
-		info, found := status.Images.GetByImage(spec.GetImage())
-		if !found {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
-			return nil
-		}
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
@@ -499,21 +499,16 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
+		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
-		// Find image ID
-		info, found := status.Images.GetByImage(spec.Sync.GetImage())
-		if !found {
-			log.Debug().Str("image", spec.Sync.GetImage()).Msg("Image ID is not known yet for sync image")
-			return nil
-		}
-		if !info.Enterprise {
-			log.Debug().Str("image", spec.Sync.GetImage()).Msg("Image is not an enterprise image")
-			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.Sync.GetImage()))
+		// Check image
+		if !imageInfo.Enterprise {
+			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
+			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
@@ -570,7 +565,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if group == api.ServerGroupSyncWorkers {
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), terminationGracePeriod, args, env,
+		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tolerations, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
 			return maskAny(err)
 		}

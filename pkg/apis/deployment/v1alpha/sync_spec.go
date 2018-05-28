@@ -24,16 +24,13 @@ package v1alpha
 
 import (
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // SyncSpec holds dc2dc replication specific configuration settings
 type SyncSpec struct {
-	Enabled         *bool          `json:"enabled,omitempty"`
-	Image           *string        `json:"image,omitempty"`
-	ImagePullPolicy *v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
 
 	ExternalAccess SyncExternalAccessSpec `json:"externalAccess"`
 	Authentication SyncAuthenticationSpec `json:"auth"`
@@ -46,23 +43,10 @@ func (s SyncSpec) IsEnabled() bool {
 	return util.BoolOrDefault(s.Enabled)
 }
 
-// GetImage returns the value of image.
-func (s SyncSpec) GetImage() string {
-	return util.StringOrDefault(s.Image)
-}
-
-// GetImagePullPolicy returns the value of imagePullPolicy.
-func (s SyncSpec) GetImagePullPolicy() v1.PullPolicy {
-	return util.PullPolicyOrDefault(s.ImagePullPolicy)
-}
-
 // Validate the given spec
 func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.IsEnabled() && !mode.SupportsSync() {
 		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
-	}
-	if s.GetImage() == "" {
-		return maskAny(errors.Wrapf(ValidationError, "image must be set"))
 	}
 	if s.IsEnabled() {
 		if err := s.ExternalAccess.Validate(); err != nil {
@@ -82,13 +66,7 @@ func (s SyncSpec) Validate(mode DeploymentMode) error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPolicy, defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName string) {
-	if s.GetImage() == "" {
-		s.Image = util.NewString(defaultImage)
-	}
-	if s.GetImagePullPolicy() == "" {
-		s.ImagePullPolicy = util.NewPullPolicy(defaulPullPolicy)
-	}
+func (s *SyncSpec) SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName, defaultTLSCASecretName string) {
 	s.ExternalAccess.SetDefaults()
 	s.Authentication.SetDefaults(defaultJWTSecretName, defaultClientAuthCASecretName)
 	s.TLS.SetDefaults(defaultTLSCASecretName)
@@ -99,12 +77,6 @@ func (s *SyncSpec) SetDefaults(defaultImage string, defaulPullPolicy v1.PullPoli
 func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 	if s.Enabled == nil {
 		s.Enabled = util.NewBoolOrNil(source.Enabled)
-	}
-	if s.Image == nil {
-		s.Image = util.NewStringOrNil(source.Image)
-	}
-	if s.ImagePullPolicy == nil {
-		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.Authentication.SetDefaultsFrom(source.Authentication)

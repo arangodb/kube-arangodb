@@ -205,17 +205,6 @@ replication in the cluster. When enabled, the cluster will contain
 a number of `syncmaster` & `syncworker` servers.
 The default value is `false`.
 
-### `spec.sync.image: string`
-
-This setting specifies the docker image to use for all ArangoSync servers.
-When not specified, the `spec.image` value is used.
-
-### `spec.sync.imagePullPolicy: string`
-
-This setting specifies the pull policy for the docker image to use for all ArangoSync servers.
-For possible values, see `spec.imagePullPolicy`.
-When not specified, the `spec.imagePullPolicy` value is used.
-
 ### `spec.sync.externalAccess.type: string`
 
 This setting specifies the type of `Service` that will be created to provide

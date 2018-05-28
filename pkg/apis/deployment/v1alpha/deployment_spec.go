@@ -92,22 +92,6 @@ func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
 }
 
-// GetImageByGroup returns the image used for a server in given group.
-func (s DeploymentSpec) GetImageByGroup(group ServerGroup) string {
-	if group.IsArangosync() {
-		return s.Sync.GetImage()
-	}
-	return s.GetImage()
-}
-
-// GetImagePullPolicyByGroup returns the image pull policy used for a server in given group.
-func (s DeploymentSpec) GetImagePullPolicyByGroup(group ServerGroup) v1.PullPolicy {
-	if group.IsArangosync() {
-		return s.Sync.GetImagePullPolicy()
-	}
-	return s.GetImagePullPolicy()
-}
-
 // IsAuthenticated returns true when authentication is enabled
 func (s DeploymentSpec) IsAuthenticated() bool {
 	return s.Authentication.IsAuthenticated()
@@ -160,7 +144,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
 	s.TLS.SetDefaults(deploymentName + "-ca")
-	s.Sync.SetDefaults(s.GetImage(), s.GetImagePullPolicy(), deploymentName+"-sync-jwt", deploymentName+"-sync-client-auth-ca", deploymentName+"-sync-ca")
+	s.Sync.SetDefaults(deploymentName+"-sync-jwt", deploymentName+"-sync-client-auth-ca", deploymentName+"-sync-ca")
 	s.Single.SetDefaults(ServerGroupSingle, s.GetMode().HasSingleServers(), s.GetMode())
 	s.Agents.SetDefaults(ServerGroupAgents, s.GetMode().HasAgents(), s.GetMode())
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.GetMode().HasDBServers(), s.GetMode())
