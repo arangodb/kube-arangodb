@@ -301,6 +301,48 @@ func waitUntilSyncVersionUp(cli client.API, predicate func(client.VersionInfo) e
 	return nil
 }
 
+// waitUntilSyncMasterCountReached waits until the number of syncmasters
+// is equal to the given number.
+func waitUntilSyncMasterCountReached(cli client.API, expectedSyncMasters int) error {
+	ctx := context.Background()
+
+	op := func() error {
+		if list, err := cli.Master().Masters(ctx); err != nil {
+			return maskAny(err)
+		} else if len(list) != expectedSyncMasters {
+			return maskAny(fmt.Errorf("Expected %d syncmasters, got %d", expectedSyncMasters, len(list)))
+		}
+		return nil
+	}
+
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+
+	return nil
+}
+
+// waitUntilSyncWorkerCountReached waits until the number of syncworkers
+// is equal to the given number.
+func waitUntilSyncWorkerCountReached(cli client.API, expectedSyncWorkers int) error {
+	ctx := context.Background()
+
+	op := func() error {
+		if list, err := cli.Master().RegisteredWorkers(ctx); err != nil {
+			return maskAny(err)
+		} else if len(list) != expectedSyncWorkers {
+			return maskAny(fmt.Errorf("Expected %d syncworkers, got %d", expectedSyncWorkers, len(list)))
+		}
+		return nil
+	}
+
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+
+	return nil
+}
+
 // creates predicate to be used in waitUntilVersionUp
 func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInfo) error {
 	return func(infoFromServer driver.VersionInfo) error {
