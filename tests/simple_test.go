@@ -146,7 +146,7 @@ func TestSimpleCluster(t *testing.T) {
 	ctx := context.Background()
 	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
 
-	// Wait for single server available
+	// Wait for cluster to be available
 	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Cluster not running returning version in time: %v", err)
 	}
