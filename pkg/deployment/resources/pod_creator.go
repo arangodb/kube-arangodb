@@ -327,7 +327,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization = "bearer: " + token
+			authorization = "bearer " + token
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -479,7 +479,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				serverNames = append(serverNames, ip)
 			}
 			owner := apiObject.AsOwner()
-			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
@@ -536,7 +536,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				}
 			}
 			owner := apiObject.AsOwner()
-			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 			// Check cluster JWT secret

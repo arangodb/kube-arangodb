@@ -41,7 +41,7 @@ func (r *Resources) EnsureSecrets() error {
 		}
 	}
 	if spec.IsSecure() {
-		if err := r.ensureCACertificateSecret(spec.TLS); err != nil {
+		if err := r.ensureTLSCACertificateSecret(spec.TLS); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -52,7 +52,10 @@ func (r *Resources) EnsureSecrets() error {
 		if err := r.ensureTokenSecret(spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
 			return maskAny(err)
 		}
-		if err := r.ensureCACertificateSecret(spec.Sync.TLS); err != nil {
+		if err := r.ensureTLSCACertificateSecret(spec.Sync.TLS); err != nil {
+			return maskAny(err)
+		}
+		if err := r.ensureClientAuthCACertificateSecret(spec.Sync.Authentication); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -88,10 +91,9 @@ func (r *Resources) ensureTokenSecret(secretName string) error {
 	return nil
 }
 
-// ensureCACertificateSecret checks if a secret with given name exists in the namespace
+// ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-// JWT token.
-func (r *Resources) ensureCACertificateSecret(spec api.TLSSpec) error {
+func (r *Resources) ensureTLSCACertificateSecret(spec api.TLSSpec) error {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
@@ -99,7 +101,31 @@ func (r *Resources) ensureCACertificateSecret(spec api.TLSSpec) error {
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		if err := createCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := createTLSCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
+			// Secret added while we tried it also
+			return nil
+		} else if err != nil {
+			// Failed to create secret
+			return maskAny(err)
+		}
+	} else if err != nil {
+		// Failed to get secret for other reasons
+		return maskAny(err)
+	}
+	return nil
+}
+
+// ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
+// of the deployment. If not, it will add such a secret with a generated CA certificate.
+func (r *Resources) ensureClientAuthCACertificateSecret(spec api.SyncAuthenticationSpec) error {
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.GetClientCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		// Secret not found, create it
+		apiObject := r.context.GetAPIObject()
+		owner := apiObject.AsOwner()
+		deploymentName := apiObject.GetName()
+		if err := createClientAuthCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
