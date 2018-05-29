@@ -23,7 +23,6 @@
 package deployment
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"sync/atomic"
@@ -277,18 +276,11 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 		return maskAny(err)
 	}
 
-	toJSON := func(x interface{}) string {
-		raw, _ := json.Marshal(x)
-		return string(raw)
-	}
-
 	specBefore := d.apiObject.Spec
 	if d.status.AcceptedSpec != nil {
 		specBefore = *d.status.AcceptedSpec
 	}
 	newAPIObject := current.DeepCopy()
-	log.Debug().Msgf("current.Spec: %#v", toJSON(current.Spec))
-	log.Debug().Msgf("specBefore: %#v", toJSON(specBefore))
 	newAPIObject.Spec.SetDefaultsFrom(specBefore)
 	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
 	newAPIObject.Status = d.status
@@ -296,7 +288,6 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
 	}
-	log.Debug().Msgf("newAPIObject.Spec before validation: %#v", toJSON(newAPIObject.Spec))
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
