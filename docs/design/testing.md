@@ -23,6 +23,14 @@ The following test scenario's must be covered by automated tests:
   - Restart Node
   - API server unavailable
 
+- Persistent Volumes:
+  - hint: RBAC file might need to be changed
+  - hint: get info via - client-go.CoreV1()
+  - Number of volumes should stay in reasonable bounds
+  - For some cases it might be possible to check that, the amount before and after the test stays the same
+  - A Cluster start should need 6 Volumes (DBServer + Agents)
+  - The release of a volume-claim should result in a release of the volume
+
 ## Test environments
 
 - Kubernetes clusters
