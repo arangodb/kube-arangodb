@@ -32,6 +32,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestSimpleSingle tests the creating of a single server deployment
@@ -148,6 +149,58 @@ func TestSimpleCluster(t *testing.T) {
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
 		t.Fatalf("Cluster not running returning version in time: %v", err)
+	}
+
+	// Check server role
+	assert.NoError(t, client.SynchronizeEndpoints(ctx))
+	role, err := client.ServerRole(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, driver.ServerRoleCoordinator, role)
+}
+
+// TestSimpleClusterWithSync tests the creating of a cluster deployment
+// with default settings and sync enabled.
+func TestSimpleClusterWithSync(t *testing.T) {
+	img := getEnterpriseImageOrSkip(t)
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	// Prepare deployment config
+	depl := newDeployment("test-cls-sync-" + uniuri.NewLen(4))
+	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl.Spec.Image = util.NewString(img)
+	depl.Spec.Sync.Enabled = util.NewBool(true)
+
+	// Create deployment
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	if err != nil {
+		t.Fatalf("Create deployment failed: %v", err)
+	}
+	// Prepare cleanup
+	defer removeDeployment(c, depl.GetName(), ns)
+
+	// Wait for deployment to be ready
+	apiObject, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
+	if err != nil {
+		t.Fatalf("Deployment not running in time: %v", err)
+	}
+
+	// Create a database client
+	ctx := context.Background()
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+
+	// Wait for cluster to be available
+	if err := waitUntilVersionUp(client, nil); err != nil {
+		t.Fatalf("Cluster not running returning version in time: %v", err)
+	}
+
+	// Create a syncmaster client
+	syncClient := mustNewArangoSyncClient(ctx, kubecli, apiObject, t)
+
+	// Wait for syncmasters to be available
+	if err := waitUntilSyncVersionUp(syncClient, nil); err != nil {
+		t.Fatalf("SyncMasters not running returning version in time: %v", err)
 	}
 
 	// Check server role
