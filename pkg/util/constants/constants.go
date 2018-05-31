@@ -39,6 +39,9 @@ const (
 
 	SecretTLSKeyfile = "tls.keyfile" // Key in Secret.data used to store a PEM encoded TLS certificate in the format used by ArangoDB (`--ssl.keyfile`)
 
+	SecretUsername = "username" // Key in Secret.data used to store a username used for basic authentication
+	SecretPassword = "password" // Key in Secret.data used to store a password used for basic authentication
+
 	FinalizerPodDrainDBServer = "dbserver.database.arangodb.com/drain"        // Finalizer added to DBServers, indicating the need for draining that dbserver
 	FinalizerPodAgencyServing = "agent.database.arangodb.com/agency-serving"  // Finalizer added to Agents, indicating the need for keeping enough agents alive
 	FinalizerPVCMemberExists  = "pvc.database.arangodb.com/member-exists"     // Finalizer added to PVCs, indicating the need to keep is as long as its member exists

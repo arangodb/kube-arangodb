@@ -233,3 +233,25 @@ func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token 
 	}
 	return nil
 }
+
+// GetBasicAuthSecret loads a secret with given name in the given namespace
+// and extracts the `username` & `password` field.
+// If the secret does not exists or one of the fields is missing,
+// an error is returned.
+// Returns: username, password, error
+func GetBasicAuthSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, string, error) {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return "", "", maskAny(err)
+	}
+	// Load `ca.crt` field
+	username, found := s.Data[constants.SecretUsername]
+	if !found {
+		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secretName))
+	}
+	password, found := s.Data[constants.SecretPassword]
+	if !found {
+		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secretName))
+	}
+	return string(username), string(password), nil
+}

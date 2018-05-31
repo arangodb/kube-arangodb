@@ -85,7 +85,10 @@ func (cc *ClientCache) createClient(source Endpoint, auth Authentication, insecu
 		return nil, maskAny(err)
 	}
 	ac := AuthenticationConfig{}
-	if auth.JWTSecret != "" {
+	if auth.Username != "" {
+		ac.UserName = auth.Username
+		ac.Password = auth.Password
+	} else if auth.JWTSecret != "" {
 		ac.JWTSecret = auth.JWTSecret
 	} else if auth.ClientToken != "" {
 		ac.BearerToken = auth.ClientToken
@@ -113,11 +116,13 @@ func NewAuthentication(tlsAuth TLSAuthentication, jwtSecret string) Authenticati
 type Authentication struct {
 	TLSAuthentication
 	JWTSecret string
+	Username  string
+	Password  string
 }
 
 // String returns a string used to unique identify the authentication settings.
 func (a Authentication) String() string {
-	return a.TLSAuthentication.String() + ":" + a.JWTSecret
+	return a.TLSAuthentication.String() + ":" + a.JWTSecret + ":" + a.Username + ":" + a.Password
 }
 
 // AuthProxy is a helper that implements github.com/arangodb-helper/go-certificates#TLSAuthentication.
