@@ -241,6 +241,17 @@ If not set, this setting defaults to:
 - If `spec.sync.externalAccess.loadBalancerIP` is set, it defaults to `https://<load-balancer-ip>:<8629>`.
 - Otherwise it defaults to `https://<sync-service-dns-name>:<8629>`.
 
+### `spec.sync.externalAccess.accessPackageSecretNames: []string`
+
+This setting specifies the names of zero of more `Secrets` that will be created by the deployment
+operator containing "access packages". An access package contains those `Secrets` that are needed
+to access the SyncMasters of this `ArangoDeployment`.
+
+By removing a name from this setting, the corresponding `Secret` is also deleted.
+
+See [the `ArangoDeploymentReplication` specification](./DeploymentReplicationResource.md) for more information
+on access packages.
+
 ### `spec.sync.auth.jwtSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
