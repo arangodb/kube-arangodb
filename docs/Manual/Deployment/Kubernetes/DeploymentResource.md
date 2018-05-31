@@ -248,6 +248,8 @@ operator containing "access packages". An access package contains those `Secrets
 to access the SyncMasters of this `ArangoDeployment`.
 
 By removing a name from this setting, the corresponding `Secret` is also deleted.
+Note that to remove all access packages, leave an empty array in place (`[]`).
+Completely removing the setting results in not modifying the list.
 
 See [the `ArangoDeploymentReplication` specification](./DeploymentReplicationResource.md) for more information
 on access packages.

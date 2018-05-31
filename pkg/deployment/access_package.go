@@ -36,23 +36,57 @@ import (
 )
 
 const (
-	clientAuthValidFor = time.Hour * 24 * 365 // 1yr
-	clientAuthCurve    = "P256"
+	clientAuthValidFor         = time.Hour * 24 * 365 // 1yr
+	clientAuthCurve            = "P256"
+	labelKeyOriginalDeployment = "original-deployment-name"
 )
 
 // createAccessPackages creates a arangosync access packages specified
 // in spec.sync.externalAccess.accessPackageSecretNames.
 func (d *Deployment) createAccessPackages() error {
+	log := d.deps.Log
 	spec := d.apiObject.Spec
+	secrets := d.deps.KubeCli.CoreV1().Secrets(d.GetNamespace())
 
 	if !spec.Sync.IsEnabled() {
 		// We're only relevant when sync is enabled
 		return nil
 	}
 
+	// Create all access packages that we're asked to build
+	apNameMap := make(map[string]struct{})
 	for _, apSecretName := range spec.Sync.ExternalAccess.AccessPackageSecretNames {
+		apNameMap[apSecretName] = struct{}{}
 		if err := d.ensureAccessPackage(apSecretName); err != nil {
 			return maskAny(err)
+		}
+	}
+
+	// Remove all access packages that we did build, but are no longer needed
+	secretList, err := secrets.List(metav1.ListOptions{})
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to list secrets")
+		return maskAny(err)
+	}
+	for _, secret := range secretList.Items {
+		if d.isOwnerOf(&secret) {
+			if _, found := secret.Data[constants.SecretAccessPackageYaml]; found {
+				// Secret is an access package
+				if _, wanted := apNameMap[secret.GetName()]; !wanted {
+					// We found an obsolete access package secret. Remove it.
+					if err := secrets.Delete(secret.GetName(), &metav1.DeleteOptions{
+						Preconditions: &metav1.Preconditions{UID: &secret.UID},
+					}); err != nil && !k8sutil.IsNotFound(err) {
+						// Not serious enough to stop everything now, just log and create an event
+						log.Warn().Err(err).Msg("Failed to remove obsolete access package secret")
+						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.apiObject))
+					} else {
+						// Access package removed, notify user
+						log.Info().Str("secret-name", secret.GetName()).Msg("Removed access package Secret")
+						d.CreateEvent(k8sutil.NewAccessPackageDeletedEvent(d.apiObject, secret.GetName()))
+					}
+				}
+			}
 		}
 	}
 
@@ -117,7 +151,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: apSecretName + "-auth",
 			Labels: map[string]string{
-				"remote-deployment": d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.apiObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{
@@ -133,7 +167,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: apSecretName + "-ca",
 			Labels: map[string]string{
-				"remote-deployment": d.apiObject.GetName(),
+				labelKeyOriginalDeployment: d.apiObject.GetName(),
 			},
 		},
 		Data: map[string][]byte{

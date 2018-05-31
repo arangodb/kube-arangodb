@@ -135,6 +135,16 @@ func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *v1.
 	return event
 }
 
+// NewAccessPackageDeletedEvent creates an event indicating that a secret containing an access package
+// has been deleted.
+func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Access package deleted"
+	event.Message = fmt.Sprintf("An access package named %s has been deleted", apSecretName)
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)
