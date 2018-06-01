@@ -26,7 +26,7 @@ package v1alpha
 // an ArangoDeploymentReplication.
 type DeploymentReplicationStatus struct {
 	// Phase holds the current lifetime phase of the deployment replication
-	Phase DeploymentReplicationPhase `json:"phase"`
+	Phase DeploymentReplicationPhase `json:"phase,omitempty"`
 	// Reason contains a human readable reason for reaching the current phase (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current phase
 

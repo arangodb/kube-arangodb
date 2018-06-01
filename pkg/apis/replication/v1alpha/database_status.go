@@ -22,7 +22,11 @@
 
 package v1alpha
 
-// ShardStatus contains the status of a single shard.
-type ShardStatus struct {
-	Status string `json:"status"`
+// DatabaseStatus contains the status of a single database.
+type DatabaseStatus struct {
+	// Name of the database
+	Name string `json:"name"`
+	// Collections holds the replication status of each collection in the database.
+	// List is ordered by name of the collection.
+	Collections []CollectionStatus `json:"collections,omitempty"`
 }

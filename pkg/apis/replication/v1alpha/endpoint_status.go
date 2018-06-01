@@ -24,5 +24,7 @@ package v1alpha
 
 // EndpointStatus contains the status of either the source or destination endpoint.
 type EndpointStatus struct {
-	Shards []ShardStatus `json:"shards,omitempty"`
+	// Databases holds the replication status of all databases from the point of view of this endpoint.
+	// List is ordered by name of the database.
+	Databases []DatabaseStatus `json:"databases,omitempty"`
 }

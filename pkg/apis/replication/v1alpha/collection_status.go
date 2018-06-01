@@ -22,7 +22,11 @@
 
 package v1alpha
 
-// ShardStatus contains the status of a single shard.
-type ShardStatus struct {
-	Status string `json:"status"`
+// CollectionStatus contains the status of a single collection.
+type CollectionStatus struct {
+	// Name of the collection
+	Name string `json:"name"`
+	// Replication status per shard.
+	// The list is ordered by shard index (0..noShards-1)
+	Shards []ShardStatus `json:"shards,omitempty"`
 }
