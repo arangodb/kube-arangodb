@@ -28,9 +28,6 @@ type DeploymentReplicationPhase string
 const (
 	// DeploymentReplicationPhaseNone indicates that the phase is not set yet
 	DeploymentReplicationPhaseNone DeploymentReplicationPhase = ""
-	// DeploymentReplicationPhaseRunning indicates that the deployment replication is under control of the
-	// ArangoDeploymentReplication operator.
-	DeploymentReplicationPhaseRunning DeploymentReplicationPhase = "Running"
 	// DeploymentReplicationPhaseFailed indicates that a deployment replication is in a failed state
 	// from which automatic recovery is impossible. Inspect `Reason` for more info.
 	DeploymentReplicationPhaseFailed DeploymentReplicationPhase = "Failed"
