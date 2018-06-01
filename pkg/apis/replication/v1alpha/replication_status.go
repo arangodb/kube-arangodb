@@ -37,4 +37,8 @@ type DeploymentReplicationStatus struct {
 	Source EndpointStatus `json:"source"`
 	// Destination contains the detailed status of the destination endpoint
 	Destination EndpointStatus `json:"destination"`
+
+	// CancelFailures records the number of times that the configuration was canceled
+	// which resulted in an error.
+	CancelFailures int `json:"cancel-failures,omitempty"`
 }
