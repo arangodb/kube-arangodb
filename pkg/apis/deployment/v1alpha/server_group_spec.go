@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
@@ -42,6 +43,8 @@ type ServerGroupSpec struct {
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// ServiceAccountName specifies the name of the service account used for Pods in this group.
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 }
 
 // GetCount returns the value of count.
@@ -62,6 +65,11 @@ func (s ServerGroupSpec) GetStorageClassName() string {
 // GetTolerations returns the value of tolerations.
 func (s ServerGroupSpec) GetTolerations() []v1.Toleration {
 	return s.Tolerations
+}
+
+// GetServiceAccountName returns the value of serviceAccountName.
+func (s ServerGroupSpec) GetServiceAccountName() string {
+	return util.StringOrDefault(s.ServiceAccountName)
 }
 
 // Validate the given group spec
@@ -85,6 +93,16 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 		}
 		if s.GetCount() > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
+		}
+		if name := s.GetServiceAccountName(); name != "" {
+			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid serviceAccountName: %s", err))
+			}
+		}
+		if name := s.GetStorageClassName(); name != "" {
+			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid storageClassName: %s", err))
+			}
 		}
 	} else if s.GetCount() != 0 {
 		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
@@ -142,6 +160,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	}
 	if s.Tolerations == nil {
 		s.Tolerations = source.Tolerations
+	}
+	if s.ServiceAccountName == nil {
+		s.ServiceAccountName = util.NewStringOrNil(source.ServiceAccountName)
 	}
 	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
