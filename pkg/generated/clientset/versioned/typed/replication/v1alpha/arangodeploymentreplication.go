@@ -1,0 +1,175 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+package v1alpha
+
+import (
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
+	watch "k8s.io/apimachinery/pkg/watch"
+	rest "k8s.io/client-go/rest"
+)
+
+// ArangoDeploymentReplicationsGetter has a method to return a ArangoDeploymentReplicationInterface.
+// A group's client should implement this interface.
+type ArangoDeploymentReplicationsGetter interface {
+	ArangoDeploymentReplications(namespace string) ArangoDeploymentReplicationInterface
+}
+
+// ArangoDeploymentReplicationInterface has methods to work with ArangoDeploymentReplication resources.
+type ArangoDeploymentReplicationInterface interface {
+	Create(*v1alpha.ArangoDeploymentReplication) (*v1alpha.ArangoDeploymentReplication, error)
+	Update(*v1alpha.ArangoDeploymentReplication) (*v1alpha.ArangoDeploymentReplication, error)
+	UpdateStatus(*v1alpha.ArangoDeploymentReplication) (*v1alpha.ArangoDeploymentReplication, error)
+	Delete(name string, options *v1.DeleteOptions) error
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string, options v1.GetOptions) (*v1alpha.ArangoDeploymentReplication, error)
+	List(opts v1.ListOptions) (*v1alpha.ArangoDeploymentReplicationList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha.ArangoDeploymentReplication, err error)
+	ArangoDeploymentReplicationExpansion
+}
+
+// arangoDeploymentReplications implements ArangoDeploymentReplicationInterface
+type arangoDeploymentReplications struct {
+	client rest.Interface
+	ns     string
+}
+
+// newArangoDeploymentReplications returns a ArangoDeploymentReplications
+func newArangoDeploymentReplications(c *ReplicationV1alphaClient, namespace string) *arangoDeploymentReplications {
+	return &arangoDeploymentReplications{
+		client: c.RESTClient(),
+		ns:     namespace,
+	}
+}
+
+// Get takes name of the arangoDeploymentReplication, and returns the corresponding arangoDeploymentReplication object, and an error if there is any.
+func (c *arangoDeploymentReplications) Get(name string, options v1.GetOptions) (result *v1alpha.ArangoDeploymentReplication, err error) {
+	result = &v1alpha.ArangoDeploymentReplication{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		Name(name).
+		VersionedParams(&options, scheme.ParameterCodec).
+		Do().
+		Into(result)
+	return
+}
+
+// List takes label and field selectors, and returns the list of ArangoDeploymentReplications that match those selectors.
+func (c *arangoDeploymentReplications) List(opts v1.ListOptions) (result *v1alpha.ArangoDeploymentReplicationList, err error) {
+	result = &v1alpha.ArangoDeploymentReplicationList{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Do().
+		Into(result)
+	return
+}
+
+// Watch returns a watch.Interface that watches the requested arangoDeploymentReplications.
+func (c *arangoDeploymentReplications) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	opts.Watch = true
+	return c.client.Get().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Watch()
+}
+
+// Create takes the representation of a arangoDeploymentReplication and creates it.  Returns the server's representation of the arangoDeploymentReplication, and an error, if there is any.
+func (c *arangoDeploymentReplications) Create(arangoDeploymentReplication *v1alpha.ArangoDeploymentReplication) (result *v1alpha.ArangoDeploymentReplication, err error) {
+	result = &v1alpha.ArangoDeploymentReplication{}
+	err = c.client.Post().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		Body(arangoDeploymentReplication).
+		Do().
+		Into(result)
+	return
+}
+
+// Update takes the representation of a arangoDeploymentReplication and updates it. Returns the server's representation of the arangoDeploymentReplication, and an error, if there is any.
+func (c *arangoDeploymentReplications) Update(arangoDeploymentReplication *v1alpha.ArangoDeploymentReplication) (result *v1alpha.ArangoDeploymentReplication, err error) {
+	result = &v1alpha.ArangoDeploymentReplication{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		Name(arangoDeploymentReplication.Name).
+		Body(arangoDeploymentReplication).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *arangoDeploymentReplications) UpdateStatus(arangoDeploymentReplication *v1alpha.ArangoDeploymentReplication) (result *v1alpha.ArangoDeploymentReplication, err error) {
+	result = &v1alpha.ArangoDeploymentReplication{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		Name(arangoDeploymentReplication.Name).
+		SubResource("status").
+		Body(arangoDeploymentReplication).
+		Do().
+		Into(result)
+	return
+}
+
+// Delete takes name of the arangoDeploymentReplication and deletes it. Returns an error if one occurs.
+func (c *arangoDeploymentReplications) Delete(name string, options *v1.DeleteOptions) error {
+	return c.client.Delete().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		Name(name).
+		Body(options).
+		Do().
+		Error()
+}
+
+// DeleteCollection deletes a collection of objects.
+func (c *arangoDeploymentReplications) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	return c.client.Delete().
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Body(options).
+		Do().
+		Error()
+}
+
+// Patch applies the patch and returns the patched arangoDeploymentReplication.
+func (c *arangoDeploymentReplications) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha.ArangoDeploymentReplication, err error) {
+	result = &v1alpha.ArangoDeploymentReplication{}
+	err = c.client.Patch(pt).
+		Namespace(c.ns).
+		Resource("arangodeploymentreplications").
+		SubResource(subresources...).
+		Name(name).
+		Body(data).
+		Do().
+		Into(result)
+	return
+}

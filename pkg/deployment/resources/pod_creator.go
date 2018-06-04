@@ -536,7 +536,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				}
 			}
 			owner := apiObject.AsOwner()
-			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 			// Check cluster JWT secret
