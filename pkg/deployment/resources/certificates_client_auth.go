@@ -37,35 +37,27 @@ import (
 )
 
 const (
-	caTTL         = time.Hour * 24 * 365 * 10 // 10 year
-	tlsECDSACurve = "P256"                    // This curve is the default that ArangoDB accepts and plenty strong
+	clientAuthECDSACurve = "P256" // This curve is the default that ArangoDB accepts and plenty strong
 )
 
-// createCACertificate creates a CA certificate and stores it in a secret with name
+// createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
-	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
-	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return maskAny(err)
-	}
-
+func createClientAuthCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.SyncAuthenticationSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
+	log = log.With().Str("secret", spec.GetClientCASecretName()).Logger()
 	options := certificates.CreateCertificateOptions{
-		CommonName:     fmt.Sprintf("%s Root Certificate", deploymentName),
-		Hosts:          append(dnsNames, ipAddresses...),
-		EmailAddresses: emailAddress,
-		ValidFrom:      time.Now(),
-		ValidFor:       caTTL,
-		IsCA:           true,
-		ECDSACurve:     tlsECDSACurve,
+		CommonName:   fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName),
+		ValidFrom:    time.Now(),
+		ValidFor:     caTTL,
+		IsCA:         true,
+		IsClientAuth: true,
+		ECDSACurve:   clientAuthECDSACurve,
 	}
 	cert, priv, err := certificates.CreateCertificate(options, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
 		return maskAny(err)
 	}
-	if err := k8sutil.CreateCASecret(cli, spec.GetCASecretName(), namespace, cert, priv, ownerRef); err != nil {
+	if err := k8sutil.CreateCASecret(cli, spec.GetClientCASecretName(), namespace, cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("CA Secret already exists")
 		} else {
@@ -77,19 +69,12 @@ func createCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TL
 	return nil
 }
 
-// createServerCertificate creates a TLS certificate for a specific server and stores
+// createClientAuthCertificateKeyfile creates a client authentication certificate for a specific user and stores
 // it in a secret with the given name.
-func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverNames []string, spec api.TLSSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
+func createClientAuthCertificateKeyfile(log zerolog.Logger, cli v1.CoreV1Interface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", secretName).Logger()
-	// Load alt names
-	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return maskAny(err)
-	}
-
 	// Load CA certificate
-	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.GetCASecretName(), namespace)
+	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.GetClientCASecretName(), namespace)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return maskAny(err)
@@ -101,13 +86,12 @@ func createServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serverN
 	}
 
 	options := certificates.CreateCertificateOptions{
-		CommonName:     serverNames[0],
-		Hosts:          append(append(serverNames, dnsNames...), ipAddresses...),
-		EmailAddresses: emailAddress,
-		ValidFrom:      time.Now(),
-		ValidFor:       spec.GetTTL().AsDuration(),
-		IsCA:           false,
-		ECDSACurve:     tlsECDSACurve,
+		CommonName:   commonName,
+		ValidFrom:    time.Now(),
+		ValidFor:     ttl,
+		IsCA:         false,
+		IsClientAuth: true,
+		ECDSACurve:   clientAuthECDSACurve,
 	}
 	cert, priv, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {

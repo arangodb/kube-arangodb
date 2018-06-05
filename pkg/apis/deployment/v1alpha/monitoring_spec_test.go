@@ -42,10 +42,15 @@ func TestMonitoringSpecValidate(t *testing.T) {
 
 func TestMonitoringSpecSetDefaults(t *testing.T) {
 	def := func(spec MonitoringSpec) MonitoringSpec {
-		spec.SetDefaults()
+		spec.SetDefaults("")
+		return spec
+	}
+	def2 := func(spec MonitoringSpec) MonitoringSpec {
+		spec.SetDefaults("def2")
 		return spec
 	}
 
 	assert.Equal(t, "", def(MonitoringSpec{}).GetTokenSecretName())
+	assert.Equal(t, "def2", def2(MonitoringSpec{}).GetTokenSecretName())
 	assert.Equal(t, "foo", def(MonitoringSpec{TokenSecretName: util.NewString("foo")}).GetTokenSecretName())
 }

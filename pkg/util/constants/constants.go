@@ -32,15 +32,15 @@ const (
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 
 	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
-	SecretKeyMonitoring = "token" // Key inside a Secret used to hold a monitoring token
+	SecretKeyToken      = "token" // Key inside a Secret used to hold a JWT or monitoring token
 
 	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key
 
 	SecretTLSKeyfile = "tls.keyfile" // Key in Secret.data used to store a PEM encoded TLS certificate in the format used by ArangoDB (`--ssl.keyfile`)
 
-	FinalizerPodDrainDBServer = "dbserver.database.arangodb.com/drain"       // Finalizer added to DBServers, indicating the need for draining that dbserver
-	FinalizerPodAgencyServing = "agent.database.arangodb.com/agency-serving" // Finalizer added to Agents, indicating the need for keeping enough agents alive
-	FinalizerPVCMemberExists  = "pvc.database.arangodb.com/member-exists"    // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
+	FinalizerPodDrainDBServer = "dbserver.database.arangodb.com/drain"        // Finalizer added to DBServers, indicating the need for draining that dbserver
+	FinalizerPodAgencyServing = "agent.database.arangodb.com/agency-serving"  // Finalizer added to Agents, indicating the need for keeping enough agents alive
+	FinalizerPVCMemberExists  = "pvc.database.arangodb.com/member-exists"     // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
+	FinalizerDeplReplStopSync = "replication.database.arangodb.com/stop-sync" // Finalizer added to ArangoDeploymentReplication, indicating the need to stop synchronization
 )

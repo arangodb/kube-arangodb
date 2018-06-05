@@ -25,6 +25,8 @@ package deployment
 import (
 	"context"
 
+	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync/tasks"
 	driver "github.com/arangodb/go-driver"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,6 +119,38 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 		result = append(result, conn)
 	}
 	return result, nil
+}
+
+// GetSyncServerClient returns a cached client for a specific arangosync server.
+func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
+	// Fetch monitoring token
+	log := d.deps.Log
+	kubecli := d.deps.KubeCli
+	ns := d.apiObject.GetNamespace()
+	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
+	monitoringToken, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	if err != nil {
+		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
+		return nil, maskAny(err)
+	}
+
+	// Fetch server DNS name
+	dnsName := k8sutil.CreatePodDNSName(d.apiObject, group.AsRole(), id)
+
+	// Build client
+	source := client.Endpoint{dnsName}
+	tlsAuth := tasks.TLSAuthentication{
+		TLSClientAuthentication: tasks.TLSClientAuthentication{
+			ClientToken: monitoringToken,
+		},
+	}
+	auth := client.NewAuthentication(tlsAuth, "")
+	insecureSkipVerify := true
+	c, err := d.syncClientCache.GetClient(d.deps.Log, source, auth, insecureSkipVerify)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
 }
 
 // CreateMember adds a new member to the given group.
