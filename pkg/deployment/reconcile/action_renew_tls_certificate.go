@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
@@ -68,4 +69,9 @@ func (a *renewTLSCertificateAction) Start(ctx context.Context) (bool, error) {
 // Returns true if the action is completely finished, false otherwise.
 func (a *renewTLSCertificateAction) CheckProgress(ctx context.Context) (bool, error) {
 	return true, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *renewTLSCertificateAction) Timeout() time.Duration {
+	return renewTLSCertificateTimeout
 }

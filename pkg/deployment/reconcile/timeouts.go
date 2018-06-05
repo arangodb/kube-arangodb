@@ -22,20 +22,15 @@
 
 package reconcile
 
-import (
-	"context"
-	"time"
-)
+import "time"
 
-// Action executes a single Plan item.
-type Action interface {
-	// Start performs the start of the action.
-	// Returns true if the action is completely finished, false in case
-	// the start time needs to be recorded and a ready condition needs to be checked.
-	Start(ctx context.Context) (bool, error)
-	// CheckProgress checks the progress of the action.
-	// Returns true if the action is completely finished, false otherwise.
-	CheckProgress(ctx context.Context) (bool, error)
-	// Timeout returns the amount of time after which this action will timeout.
-	Timeout() time.Duration
-}
+const (
+	addMemberTimeout           = time.Minute * 5
+	cleanoutMemberTimeout      = time.Hour * 12
+	removeMemberTimeout        = time.Minute * 15
+	renewTLSCertificateTimeout = time.Minute * 30
+	rotateMemberTimeout        = time.Minute * 30
+	shutdownMemberTimeout      = time.Minute * 30
+	upgradeMemberTimeout       = time.Hour * 6
+	waitForMemberUpTimeout     = time.Minute * 15
+)

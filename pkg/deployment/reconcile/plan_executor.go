@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -106,7 +107,20 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 			}
 			log.Debug().Bool("ready", ready).Msg("Action CheckProgress completed")
 			if !ready {
-				// Not ready check, come back soon
+				// Not ready yet, check timeout
+				deadline := planAction.CreationTime.Add(action.Timeout())
+				if time.Now().After(deadline) {
+					// Timeout has expired
+					log.Warn().Msg("Action not finished in time. Removing the entire plan")
+					status.Plan = api.Plan{}
+					// Save plan update
+					if err := d.context.UpdateStatus(status); err != nil {
+						log.Debug().Err(err).Msg("Failed to update CR status")
+						return false, maskAny(err)
+					}
+					return true, nil
+				}
+				// Timeout not yet expired, come back soon
 				return true, nil
 			}
 			// Continue with next action
