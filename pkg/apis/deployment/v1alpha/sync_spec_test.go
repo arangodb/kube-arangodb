@@ -53,6 +53,7 @@ func TestSyncSpecSetDefaults(t *testing.T) {
 	assert.False(t, def(SyncSpec{Enabled: util.NewBool(false)}).IsEnabled())
 	assert.True(t, def(SyncSpec{Enabled: util.NewBool(true)}).IsEnabled())
 	assert.Equal(t, "test-jwt", def(SyncSpec{}).Authentication.GetJWTSecretName())
+	assert.Equal(t, "test-mon", def(SyncSpec{}).Monitoring.GetTokenSecretName())
 	assert.Equal(t, "foo", def(SyncSpec{Authentication: SyncAuthenticationSpec{JWTSecretName: util.NewString("foo")}}).Authentication.GetJWTSecretName())
 }
 
