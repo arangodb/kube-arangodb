@@ -52,12 +52,13 @@ type ArangoDeployment struct {
 func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
-		APIVersion:         SchemeGroupVersion.String(),
-		Kind:               ArangoDeploymentResourceKind,
-		Name:               d.Name,
-		UID:                d.UID,
-		Controller:         &trueVar,
-		BlockOwnerDeletion: &trueVar,
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       ArangoDeploymentResourceKind,
+		Name:       d.Name,
+		UID:        d.UID,
+		Controller: &trueVar,
+		// For now BlockOwnerDeletion does not work on OpenShift, so we leave it out.
+		//BlockOwnerDeletion: &trueVar,
 	}
 }
 

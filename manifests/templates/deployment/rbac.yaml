@@ -38,7 +38,7 @@ rules:
 
 ---
 
-## Bind the cluster role granting access to ArangoLocalStorage resources
+## Bind the cluster role granting access to ArangoDeployment resources
 ## to the default service account of the configured namespace.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding

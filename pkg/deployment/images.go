@@ -167,6 +167,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	args := []string{
 		"--server.authentication=false",
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
+		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		"--log.output=+",
 	}
 	terminationGracePeriod := time.Second * 30
 	tolerations := make([]v1.Toleration, 0, 2)
