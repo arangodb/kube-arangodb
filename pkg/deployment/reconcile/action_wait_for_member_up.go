@@ -152,6 +152,15 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 // checkProgressArangoSync checks the progress of the action in the case
 // of a sync master / worker.
 func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, error) {
-	// TODO
+	log := a.log
+	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.ID)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create arangosync client")
+		return false, maskAny(err)
+	}
+	if err := c.Health(ctx); err != nil {
+		log.Debug().Err(err).Msg("Health not ok yet")
+		return false, maskAny(err)
+	}
 	return true, nil
 }

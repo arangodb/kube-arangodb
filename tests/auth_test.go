@@ -100,7 +100,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
+	if err := k8sutil.CreateTokenSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 
@@ -239,7 +239,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateJWTSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
+	if err := k8sutil.CreateTokenSecret(kubecli.CoreV1(), depl.Spec.Authentication.GetJWTSecretName(), ns, "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 

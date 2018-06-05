@@ -41,18 +41,23 @@ var (
 		OutputSuffix string
 		TemplatesDir string
 
-		Namespace              string
-		Image                  string
-		ImagePullPolicy        string
-		ImageSHA256            bool
-		DeploymentOperatorName string
-		StorageOperatorName    string
-		RBAC                   bool
-		AllowChaos             bool
+		Namespace                         string
+		Image                             string
+		ImagePullPolicy                   string
+		ImageSHA256                       bool
+		DeploymentOperatorName            string
+		DeploymentReplicationOperatorName string
+		StorageOperatorName               string
+		RBAC                              bool
+		AllowChaos                        bool
 	}
 	deploymentTemplateNames = []string{
 		"rbac.yaml",
 		"deployment.yaml",
+	}
+	deploymentReplicationTemplateNames = []string{
+		"rbac.yaml",
+		"deployment-replication.yaml",
 	}
 	storageTemplateNames = []string{
 		"rbac.yaml",
@@ -71,6 +76,7 @@ func init() {
 	pflag.StringVar(&options.ImagePullPolicy, "image-pull-policy", "IfNotPresent", "Pull policy of the ArangoDB operator image")
 	pflag.BoolVar(&options.ImageSHA256, "image-sha256", true, "Use SHA256 syntax for image")
 	pflag.StringVar(&options.DeploymentOperatorName, "deployment-operator-name", "arango-deployment-operator", "Name of the ArangoDeployment operator deployment")
+	pflag.StringVar(&options.DeploymentReplicationOperatorName, "deployment-replication-operator-name", "arango-deployment-replication-operator", "Name of the ArangoDeploymentReplication operator deployment")
 	pflag.StringVar(&options.StorageOperatorName, "storage-operator-name", "arango-storage-operator", "Name of the ArangoLocalStorage operator deployment")
 	pflag.BoolVar(&options.RBAC, "rbac", true, "Use role based access control")
 	pflag.BoolVar(&options.AllowChaos, "allow-chaos", false, "If set, allows chaos in deployments")
@@ -79,12 +85,13 @@ func init() {
 }
 
 type TemplateOptions struct {
-	Image           string
-	ImagePullPolicy string
-	RBAC            bool
-	Deployment      ResourceOptions
-	Storage         ResourceOptions
-	Test            CommonOptions
+	Image                 string
+	ImagePullPolicy       string
+	RBAC                  bool
+	Deployment            ResourceOptions
+	DeploymentReplication ResourceOptions
+	Storage               ResourceOptions
+	Test                  CommonOptions
 }
 
 type CommonOptions struct {
@@ -128,9 +135,10 @@ func main() {
 
 	// Prepare templates to include
 	templateNameSet := map[string][]string{
-		"deployment": deploymentTemplateNames,
-		"storage":    storageTemplateNames,
-		"test":       testTemplateNames,
+		"deployment":             deploymentTemplateNames,
+		"deployment-replication": deploymentReplicationTemplateNames,
+		"storage":                storageTemplateNames,
+		"test":                   testTemplateNames,
 	}
 
 	// Process templates
@@ -153,6 +161,21 @@ func main() {
 			},
 			OperatorDeploymentName: "arango-deployment-operator",
 			AllowChaos:             options.AllowChaos,
+		},
+		DeploymentReplication: ResourceOptions{
+			User: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-deployment-replications",
+				RoleBindingName:    "arango-deployment-replications",
+				ServiceAccountName: "default",
+			},
+			Operator: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-deployment-replication-operator",
+				RoleBindingName:    "arango-deployment-replication-operator",
+				ServiceAccountName: "default",
+			},
+			OperatorDeploymentName: "arango-deployment-replication-operator",
 		},
 		Storage: ResourceOptions{
 			User: CommonOptions{
