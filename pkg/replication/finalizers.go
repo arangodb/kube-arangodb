@@ -37,6 +37,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+const (
+	maxCancelFailures = 5 // After this amount of failed cancel-synchronization attempts, the operator switch to abort-sychronization.
+)
+
 // addFinalizers adds a stop-sync finalizer to the api object when needed.
 func (dr *DeploymentReplication) addFinalizers() error {
 	apiObject := dr.apiObject
@@ -92,7 +96,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	}
 
 	// Inspect deployment deletion state in source
-	abort := false
+	abort := dr.status.CancelFailures > maxCancelFailures
 	depls := dr.deps.CRCli.DatabaseV1alpha().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(name, metav1.GetOptions{})
@@ -150,6 +154,10 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		_, err = destClient.Master().CancelSynchronization(ctx, req)
 		if err != nil && !client.IsPreconditionFailed(err) {
 			log.Warn().Err(err).Bool("abort", abort).Msg("Failed to stop synchronization")
+			dr.status.CancelFailures++
+			if err := dr.updateCRStatus(); err != nil {
+				log.Warn().Err(err).Msg("Failed to update status to reflect cancel-failures increment")
+			}
 			return maskAny(err)
 		}
 		return nil

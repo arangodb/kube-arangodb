@@ -26,10 +26,19 @@ package v1alpha
 // an ArangoDeploymentReplication.
 type DeploymentReplicationStatus struct {
 	// Phase holds the current lifetime phase of the deployment replication
-	Phase DeploymentReplicationPhase `json:"phase"`
+	Phase DeploymentReplicationPhase `json:"phase,omitempty"`
 	// Reason contains a human readable reason for reaching the current phase (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current phase
 
 	// Conditions specific to the entire deployment replication
 	Conditions ConditionList `json:"conditions,omitempty"`
+
+	// Source contains the detailed status of the source endpoint
+	Source EndpointStatus `json:"source"`
+	// Destination contains the detailed status of the destination endpoint
+	Destination EndpointStatus `json:"destination"`
+
+	// CancelFailures records the number of times that the configuration was canceled
+	// which resulted in an error.
+	CancelFailures int `json:"cancel-failures,omitempty"`
 }

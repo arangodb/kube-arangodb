@@ -22,18 +22,11 @@
 
 package v1alpha
 
-// DeploymentReplicationPhase is a strongly typed lifetime phase of a deployment replication
-type DeploymentReplicationPhase string
-
-const (
-	// DeploymentReplicationPhaseNone indicates that the phase is not set yet
-	DeploymentReplicationPhaseNone DeploymentReplicationPhase = ""
-	// DeploymentReplicationPhaseFailed indicates that a deployment replication is in a failed state
-	// from which automatic recovery is impossible. Inspect `Reason` for more info.
-	DeploymentReplicationPhaseFailed DeploymentReplicationPhase = "Failed"
-)
-
-// IsFailed returns true if given state is DeploymentStateFailed
-func (cs DeploymentReplicationPhase) IsFailed() bool {
-	return cs == DeploymentReplicationPhaseFailed
+// CollectionStatus contains the status of a single collection.
+type CollectionStatus struct {
+	// Name of the collection
+	Name string `json:"name"`
+	// Replication status per shard.
+	// The list is ordered by shard index (0..noShards-1)
+	Shards []ShardStatus `json:"shards,omitempty"`
 }
