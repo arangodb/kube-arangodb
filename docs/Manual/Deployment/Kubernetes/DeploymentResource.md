@@ -335,6 +335,14 @@ The default value is `8Gi`.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
 
+### `spec.<group>.serviceAccountName: string`
+
+This setting specifies the `serviceAccountName` for the `Pods` created
+for each server of this group.
+
+Using an alternative `ServiceAccount` is typically used to separate access rights.
+The ArangoDB deployments do not require any special rights.
+
 ### `spec.<group>.storageClassName: string`
 
 This setting specifies the `storageClass` for the `PersistentVolume`s created
