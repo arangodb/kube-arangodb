@@ -184,45 +184,45 @@ func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace st
 	return nil
 }
 
-// ValidateJWTSecret checks that a secret with given name in given namespace
+// ValidateTokenSecret checks that a secret with given name in given namespace
 // exists and it contains a 'token' data field.
-func ValidateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
+func ValidateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
 	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
 	// Check `token` field
-	_, found := s.Data[constants.SecretKeyJWT]
+	_, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretKeyJWT, secretName))
+		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretKeyToken, secretName))
 	}
 	return nil
 }
 
-// GetJWTSecret loads the JWT secret from a Secret with given name.
-func GetJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+// GetTokenSecret loads the token secret from a Secret with given name.
+func GetTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
 	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
 	// Take the first data from the token key
-	data, found := s.Data[constants.SecretKeyJWT]
+	data, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyJWT, secretName))
+		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, secretName))
 	}
 	return string(data), nil
 }
 
-// CreateJWTSecret creates a secret with given name in given namespace
+// CreateTokenSecret creates a secret with given name in given namespace
 // with a given token as value.
-func CreateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
+func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretKeyJWT: []byte(token),
+			constants.SecretKeyToken: []byte(token),
 		},
 	}
 	// Attach secret to owner

@@ -678,24 +678,6 @@ func (in *SyncSpec) DeepCopyInto(out *SyncSpec) {
 			**out = **in
 		}
 	}
-	if in.Image != nil {
-		in, out := &in.Image, &out.Image
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(string)
-			**out = **in
-		}
-	}
-	if in.ImagePullPolicy != nil {
-		in, out := &in.ImagePullPolicy, &out.ImagePullPolicy
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(core_v1.PullPolicy)
-			**out = **in
-		}
-	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	in.TLS.DeepCopyInto(&out.TLS)

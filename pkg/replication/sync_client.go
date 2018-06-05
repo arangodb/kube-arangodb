@@ -55,7 +55,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	jwtSecret := ""
 	if authJWTSecretName != "" {
 		var err error
-		jwtSecret, err = k8sutil.GetJWTSecret(dr.deps.KubeCli.CoreV1(), authJWTSecretName, dr.apiObject.GetNamespace())
+		jwtSecret, err = k8sutil.GetTokenSecret(dr.deps.KubeCli.CoreV1(), authJWTSecretName, dr.apiObject.GetNamespace())
 		if err != nil {
 			return nil, maskAny(err)
 		}

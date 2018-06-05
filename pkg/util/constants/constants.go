@@ -32,8 +32,7 @@ const (
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 
 	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyJWT        = "token" // Key inside a Secret used to hold a JW token
-	SecretKeyMonitoring = "token" // Key inside a Secret used to hold a monitoring token
+	SecretKeyToken      = "token" // Key inside a Secret used to hold a JWT or monitoring token
 
 	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key

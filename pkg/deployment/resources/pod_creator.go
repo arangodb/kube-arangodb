@@ -234,7 +234,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 			optionPair{"--monitoring.token", "$(" + constants.EnvArangoSyncMonitoringToken + ")"},
 		)
 	}
-	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyJWT)
+	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	options = append(options,
 		optionPair{"--master.jwt-secret", masterSecretPath},
 	)
@@ -252,7 +252,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 			optionPair{"--mq.type", "direct"},
 		)
 		if spec.IsAuthenticated() {
-			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyJWT)
+			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options = append(options,
 				optionPair{"--cluster.jwt-secret", clusterSecretPath},
 			)
@@ -327,7 +327,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization = "bearer: " + token
+			authorization = "bearer " + token
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -445,14 +445,14 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	podSuffix := createPodSuffix(spec)
 	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
 	newPhase := api.MemberPhaseCreated
+	// Find image ID
+	imageInfo, imageFound := status.Images.GetByImage(spec.GetImage())
+	if !imageFound {
+		log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+		return nil
+	}
 	// Create pod
 	if group.IsArangod() {
-		// Find image ID
-		info, found := status.Images.GetByImage(spec.GetImage())
-		if !found {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
-			return nil
-		}
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
@@ -479,7 +479,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				serverNames = append(serverNames, ip)
 			}
 			owner := apiObject.AsOwner()
-			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
@@ -493,33 +493,33 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if spec.IsAuthenticated() {
 			env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
 				SecretName: spec.Authentication.GetJWTSecretName(),
-				SecretKey:  constants.SecretKeyJWT,
+				SecretKey:  constants.SecretKeyToken,
 			}
 		}
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, info.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
+		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
-		// Find image ID
-		info, found := status.Images.GetByImage(spec.Sync.GetImage())
-		if !found {
-			log.Debug().Str("image", spec.Sync.GetImage()).Msg("Image ID is not known yet for sync image")
-			return nil
-		}
-		if !info.Enterprise {
-			log.Debug().Str("image", spec.Sync.GetImage()).Msg("Image is not an enterprise image")
-			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.Sync.GetImage()))
+		// Check image
+		if !imageInfo.Enterprise {
+			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
+			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
-		if err := k8sutil.ValidateJWTSecret(kubecli.CoreV1(), masterJWTSecretName, ns); err != nil {
+		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), masterJWTSecretName, ns); err != nil {
 			return maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
+		}
+		// Check monitoring token secret
+		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
+		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), monitoringTokenSecretName, ns); err != nil {
+			return maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
@@ -536,13 +536,13 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 				}
 			}
 			owner := apiObject.AsOwner()
-			if err := createServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateJWTSecret(kubecli.CoreV1(), clusterJWTSecretName, ns); err != nil {
+				if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), clusterJWTSecretName, ns); err != nil {
 					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
@@ -559,7 +559,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 			env[constants.EnvArangoSyncMonitoringToken] = k8sutil.EnvValue{
 				SecretName: spec.Sync.Monitoring.GetTokenSecretName(),
-				SecretKey:  constants.SecretKeyJWT,
+				SecretKey:  constants.SecretKeyToken,
 			}
 		}
 		livenessProbe, err := r.createLivenessProbe(spec, group)
@@ -570,7 +570,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 		if group == api.ServerGroupSyncWorkers {
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, info.ImageID, lifecycleImage, spec.Sync.GetImagePullPolicy(), terminationGracePeriod, args, env,
+		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tolerations, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
 			return maskAny(err)
 		}
