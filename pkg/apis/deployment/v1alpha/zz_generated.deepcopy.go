@@ -653,6 +653,11 @@ func (in *SyncExternalAccessSpec) DeepCopyInto(out *SyncExternalAccessSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.AccessPackageSecretNames != nil {
+		in, out := &in.AccessPackageSecretNames, &out.AccessPackageSecretNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

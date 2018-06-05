@@ -48,16 +48,37 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	// Authentication
 	insecureSkipVerify := true
 	tlsAuth := tasks.TLSAuthentication{}
-	authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
+	clientAuthKeyfileSecretName, userSecretName, authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
 	if err != nil {
 		return nil, maskAny(err)
 	}
+	username := ""
+	password := ""
 	jwtSecret := ""
-	if authJWTSecretName != "" {
+	if userSecretName != "" {
+		var err error
+		username, password, err = k8sutil.GetBasicAuthSecret(dr.deps.KubeCli.CoreV1(), userSecretName, dr.apiObject.GetNamespace())
+		if err != nil {
+			return nil, maskAny(err)
+		}
+	} else if authJWTSecretName != "" {
 		var err error
 		jwtSecret, err = k8sutil.GetTokenSecret(dr.deps.KubeCli.CoreV1(), authJWTSecretName, dr.apiObject.GetNamespace())
 		if err != nil {
 			return nil, maskAny(err)
+		}
+	} else if clientAuthKeyfileSecretName != "" {
+		keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), clientAuthKeyfileSecretName, dr.apiObject.GetNamespace())
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		kf, err := certificates.NewKeyfile(keyFileContent)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		tlsAuth.TLSClientAuthentication = tasks.TLSClientAuthentication{
+			ClientCertificate: kf.EncodeCertificates(),
+			ClientKey:         kf.EncodePrivateKey(),
 		}
 	}
 	if tlsCASecretName != "" {
@@ -68,6 +89,8 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		tlsAuth.CACertificate = caCert
 	}
 	auth := client.NewAuthentication(tlsAuth, jwtSecret)
+	auth.Username = username
+	auth.Password = password
 
 	// Create client
 	c, err := dr.clientCache.GetClient(log, source, auth, insecureSkipVerify)
@@ -90,14 +113,20 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 		dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(depl)
 		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
 	}
-	return client.Endpoint(epSpec.MasterEndpoint), nil
+	return client.Endpoint(epSpec.Endpoint), nil
 }
 
 // createArangoSyncTLSAuthentication creates the authentication needed to authenticate
 // the destination syncmaster at the source syncmaster.
 func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.DeploymentReplicationSpec) (client.TLSAuthentication, error) {
+	// Fetch secret names of source
+	clientAuthKeyfileSecretName, _, _, tlsCASecretName, err := dr.getEndpointSecretNames(spec.Source)
+	if err != nil {
+		return client.TLSAuthentication{}, maskAny(err)
+	}
+
 	// Fetch keyfile
-	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), spec.Authentication.GetClientAuthSecretName(), dr.apiObject.GetNamespace())
+	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), clientAuthKeyfileSecretName, dr.apiObject.GetNamespace())
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}
@@ -107,10 +136,6 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch TLS CA certificate for source
-	_, tlsCASecretName, err := dr.getEndpointSecretNames(spec.Source)
-	if err != nil {
-		return client.TLSAuthentication{}, maskAny(err)
-	}
 	caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), tlsCASecretName, dr.apiObject.GetNamespace())
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
@@ -127,17 +152,23 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	return result, nil
 }
 
-// getEndpointSecretNames returns the names of secrets that hold the JWT token, TLS ca.crt.
-func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec) (authJWTSecretName, tlsCASecretName string, err error) {
+// getEndpointSecretNames returns the names of secrets that hold the:
+// - client authentication certificate keyfile,
+// - user (basic auth) secret,
+// - JWT secret name,
+// - TLS ca.crt
+func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec) (clientAuthCertKeyfileSecretName, userSecretName, jwtSecretName, tlsCASecretName string, err error) {
+	clientAuthCertKeyfileSecretName = epSpec.Authentication.GetKeyfileSecretName()
+	userSecretName = epSpec.Authentication.GetUserSecretName()
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.CRCli.DatabaseV1alpha().ArangoDeployments(dr.apiObject.GetNamespace())
 		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
-			return "", "", maskAny(err)
+			return "", "", "", "", maskAny(err)
 		}
-		return depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil
+		return clientAuthCertKeyfileSecretName, userSecretName, depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil
 	}
-	return epSpec.Authentication.GetJWTSecretName(), epSpec.TLS.GetCASecretName(), nil
+	return clientAuthCertKeyfileSecretName, userSecretName, "", epSpec.TLS.GetCASecretName(), nil
 }

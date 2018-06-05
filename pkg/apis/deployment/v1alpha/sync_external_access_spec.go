@@ -27,17 +27,25 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // SyncExternalAccessSpec holds configuration for the external access provided for the sync deployment.
 type SyncExternalAccessSpec struct {
 	ExternalAccessSpec
-	MasterEndpoint []string `json:"masterEndpoint,omitempty"`
+	MasterEndpoint           []string `json:"masterEndpoint,omitempty"`
+	AccessPackageSecretNames []string `json:accessPackageSecretNames,omitempty"`
 }
 
 // GetMasterEndpoint returns the value of masterEndpoint.
 func (s SyncExternalAccessSpec) GetMasterEndpoint() []string {
 	return s.MasterEndpoint
+}
+
+// GetAccessPackageSecretNames returns the value of accessPackageSecretNames.
+func (s SyncExternalAccessSpec) GetAccessPackageSecretNames() []string {
+	return s.AccessPackageSecretNames
 }
 
 // ResolveMasterEndpoint returns the value of `--master.endpoint` option passed to arangosync.
@@ -61,6 +69,11 @@ func (s SyncExternalAccessSpec) Validate() error {
 			return maskAny(fmt.Errorf("Failed to parse master endpoint '%s': %s", ep, err))
 		}
 	}
+	for _, name := range s.AccessPackageSecretNames {
+		if err := k8sutil.ValidateResourceName(name); err != nil {
+			return maskAny(fmt.Errorf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
+		}
+	}
 	return nil
 }
 
@@ -74,6 +87,9 @@ func (s *SyncExternalAccessSpec) SetDefaultsFrom(source SyncExternalAccessSpec) 
 	s.ExternalAccessSpec.SetDefaultsFrom(source.ExternalAccessSpec)
 	if s.MasterEndpoint == nil && source.MasterEndpoint != nil {
 		s.MasterEndpoint = append([]string{}, source.MasterEndpoint...)
+	}
+	if s.AccessPackageSecretNames == nil && source.AccessPackageSecretNames != nil {
+		s.AccessPackageSecretNames = append([]string{}, source.AccessPackageSecretNames...)
 	}
 }
 
