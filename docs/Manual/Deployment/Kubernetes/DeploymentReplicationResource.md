@@ -187,7 +187,7 @@ add a name of a non-existing `Secret` to the `spec.sync.externalAccess.accessPac
 In response, a `Secret` is created in that Kubernetes cluster, with the given name, that contains a `accessPackage.yaml` data field
 that contains a Kubernetes resource specification that can be inserted into the other Kubernetes cluster.
 
-The process for creating and using an access package to authentication at the source cluster is as follows:
+The process for creating and using an access package for authentication at the source cluster is as follows:
 
 - Edit the `ArangoDeployment` resource of the source cluster, set `spec.sync.externalAccess.accessPackageSecretNames` to `["my-access-package"]`
 - Wait for the `ArangoDeployment` operator to create a `Secret` named `my-access-package`.
@@ -203,5 +203,5 @@ kubectl get secret my-access-package --template='{{index .data "accessPackage.ya
 kubectl apply -f accessPackage.yaml
 ```
 
-As a result, the destination Kubernetes cluster will have 2 additional `Secrets`. One containing a client authentication certificate
-formatted ad a keyfile. Another containing the public key of the TLS CA certificate of the source cluster.
+As a result, the destination Kubernetes cluster will have 2 additional `Secrets`. One contains a client authentication certificate
+formatted as a keyfile. Another contains the public key of the TLS CA certificate of the source cluster.
