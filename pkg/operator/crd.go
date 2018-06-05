@@ -24,18 +24,26 @@ package operator
 
 import (
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
 )
 
 // waitForCRD waits for the CustomResourceDefinition (created externally)
 // to be ready.
-func (o *Operator) waitForCRD(enableDeployment, enableStorage bool) error {
+func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage bool) error {
 	log := o.log
 
 	if enableDeployment {
 		log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
 		if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
+			return maskAny(err)
+		}
+	}
+
+	if enableDeploymentReplication {
+		log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, replapi.ArangoDeploymentReplicationCRDName); err != nil {
 			return maskAny(err)
 		}
 	}

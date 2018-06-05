@@ -46,8 +46,12 @@ func (s MonitoringSpec) Validate() error {
 }
 
 // SetDefaults fills in missing defaults
-func (s *MonitoringSpec) SetDefaults() {
-	// Nothing needed
+func (s *MonitoringSpec) SetDefaults(defaultTokenSecretName string) {
+	if s.GetTokenSecretName() == "" {
+		// Note that we don't check for nil here, since even a specified, but empty
+		// string should result in the default value.
+		s.TokenSecretName = util.NewString(defaultTokenSecretName)
+	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.

@@ -28,6 +28,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/arangosync/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
@@ -101,6 +102,7 @@ type Deployment struct {
 	resilience                *resilience.Resilience
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
+	syncClientCache           client.ClientCache
 }
 
 // New creates a new Deployment from the given API object.
@@ -280,6 +282,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	}
 	newAPIObject := current.DeepCopy()
 	newAPIObject.Spec.SetDefaultsFrom(specBefore)
+	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
 	newAPIObject.Status = d.status
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {

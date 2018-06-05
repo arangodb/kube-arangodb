@@ -25,7 +25,9 @@ package tests
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -33,10 +35,13 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync/tasks"
+	driver "github.com/arangodb/go-driver"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -49,7 +54,8 @@ const (
 )
 
 var (
-	maskAny = errors.WithStack
+	maskAny         = errors.WithStack
+	syncClientCache client.ClientCache
 )
 
 // longOrSkip checks the short test flag.
@@ -93,6 +99,32 @@ func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interf
 	c, err := arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject)
 	if err != nil {
 		t.Fatalf("Failed to create arango database client: %v", err)
+	}
+	return c
+}
+
+// mustNewArangoSyncClient creates a new arangosync client, with all syncmasters
+// as endpoint. It is failing the test on errors.
+func mustNewArangoSyncClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) client.API {
+	ns := apiObject.GetNamespace()
+	secretName := apiObject.Spec.Sync.Authentication.GetJWTSecretName()
+	jwtToken, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	if err != nil {
+		t.Fatalf("Failed to get sync jwt secret '%s': %s", secretName, err)
+	}
+
+	// Fetch service DNS name
+	dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(apiObject)
+	ep := client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}
+
+	// Build client
+	log := zerolog.Logger{}
+	tlsAuth := tasks.TLSAuthentication{}
+	auth := client.NewAuthentication(tlsAuth, jwtToken)
+	insecureSkipVerify := true
+	c, err := syncClientCache.GetClient(log, ep, auth, insecureSkipVerify)
+	if err != nil {
+		t.Fatalf("Failed to get sync client: %s", err)
 	}
 	return c
 }
@@ -242,6 +274,70 @@ func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) er
 	// noLeadErr updated in op
 	if noLeaderErr != nil {
 		return maskAny(noLeaderErr)
+	}
+
+	return nil
+}
+
+// waitUntilSyncVersionUp waits until the syncmasters responds to
+// an `/_api/version` request without an error. An additional Predicate
+// can do a check on the VersionInfo object returned by the server.
+func waitUntilSyncVersionUp(cli client.API, predicate func(client.VersionInfo) error) error {
+	ctx := context.Background()
+
+	op := func() error {
+		if version, err := cli.Version(ctx); err != nil {
+			return maskAny(err)
+		} else if predicate != nil {
+			return predicate(version)
+		}
+		return nil
+	}
+
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+
+	return nil
+}
+
+// waitUntilSyncMasterCountReached waits until the number of syncmasters
+// is equal to the given number.
+func waitUntilSyncMasterCountReached(cli client.API, expectedSyncMasters int) error {
+	ctx := context.Background()
+
+	op := func() error {
+		if list, err := cli.Master().Masters(ctx); err != nil {
+			return maskAny(err)
+		} else if len(list) != expectedSyncMasters {
+			return maskAny(fmt.Errorf("Expected %d syncmasters, got %d", expectedSyncMasters, len(list)))
+		}
+		return nil
+	}
+
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
+	}
+
+	return nil
+}
+
+// waitUntilSyncWorkerCountReached waits until the number of syncworkers
+// is equal to the given number.
+func waitUntilSyncWorkerCountReached(cli client.API, expectedSyncWorkers int) error {
+	ctx := context.Background()
+
+	op := func() error {
+		if list, err := cli.Master().RegisteredWorkers(ctx); err != nil {
+			return maskAny(err)
+		} else if len(list) != expectedSyncWorkers {
+			return maskAny(fmt.Errorf("Expected %d syncworkers, got %d", expectedSyncWorkers, len(list)))
+		}
+		return nil
+	}
+
+	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+		return maskAny(err)
 	}
 
 	return nil

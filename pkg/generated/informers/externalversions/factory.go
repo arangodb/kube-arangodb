@@ -30,6 +30,7 @@ import (
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	deployment "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
+	replication "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/replication"
 	storage "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/storage"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -129,11 +130,16 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Database() deployment.Interface
+	Replication() replication.Interface
 	Storage() storage.Interface
 }
 
 func (f *sharedInformerFactory) Database() deployment.Interface {
 	return deployment.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Replication() replication.Interface {
+	return replication.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Storage() storage.Interface {

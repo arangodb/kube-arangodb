@@ -86,6 +86,24 @@ func ValidateCACertificateSecret(cli corev1.CoreV1Interface, secretName, namespa
 	return nil
 }
 
+// GetCACertficateSecret loads a secret with given name in the given namespace
+// and extracts the `ca.crt` field.
+// If the secret does not exists the field is missing,
+// an error is returned.
+// Returns: certificate, error
+func GetCACertficateSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		return "", maskAny(err)
+	}
+	// Load `ca.crt` field
+	cert, found := s.Data[constants.SecretCACertificate]
+	if !found {
+		return "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+	}
+	return string(cert), nil
+}
+
 // GetCASecret loads a secret with given name in the given namespace
 // and extracts the `ca.crt` & `ca.key` field.
 // If the secret does not exists or one of the fields is missing,
@@ -166,45 +184,45 @@ func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace st
 	return nil
 }
 
-// ValidateJWTSecret checks that a secret with given name in given namespace
+// ValidateTokenSecret checks that a secret with given name in given namespace
 // exists and it contains a 'token' data field.
-func ValidateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
+func ValidateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
 	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
 	// Check `token` field
-	_, found := s.Data[constants.SecretKeyJWT]
+	_, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretKeyJWT, secretName))
+		return maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretKeyToken, secretName))
 	}
 	return nil
 }
 
-// GetJWTSecret loads the JWT secret from a Secret with given name.
-func GetJWTSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
+// GetTokenSecret loads the token secret from a Secret with given name.
+func GetTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
 	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
 	// Take the first data from the token key
-	data, found := s.Data[constants.SecretKeyJWT]
+	data, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyJWT, secretName))
+		return "", maskAny(fmt.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, secretName))
 	}
 	return string(data), nil
 }
 
-// CreateJWTSecret creates a secret with given name in given namespace
+// CreateTokenSecret creates a secret with given name in given namespace
 // with a given token as value.
-func CreateJWTSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
+func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretKeyJWT: []byte(token),
+			constants.SecretKeyToken: []byte(token),
 		},
 	}
 	// Attach secret to owner

@@ -52,7 +52,7 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		*p = *result
 		return nil
 	}
-	if err := removeFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -77,17 +77,17 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		*p = *result
 		return nil
 	}
-	if err := removeFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
 		return maskAny(err)
 	}
 	return nil
 }
 
-// removeFinalizers is a helper used to remove finalizers from an object.
+// RemoveFinalizers is a helper used to remove finalizers from an object.
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.
 // In case of an update conflict, the functions tries again.
-func removeFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error) error {
+func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error) error {
 	attempts := 0
 	for {
 		attempts++

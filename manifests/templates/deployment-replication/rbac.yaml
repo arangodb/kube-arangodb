@@ -1,0 +1,75 @@
+{{- if .RBAC -}}
+## Cluster role granting access to ArangoDeploymentReplication resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .DeploymentReplication.User.RoleName }}
+rules:
+- apiGroups: ["replication.database.arangodb.com"]
+  resources: ["arangodeploymentreplications"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeploymentReplication operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .DeploymentReplication.Operator.RoleName }}
+rules:
+- apiGroups: ["replication.database.arangodb.com"]
+  resources: ["arangodeploymentreplications"]
+  verbs: ["*"]
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["get"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["*"]
+
+---
+
+## Bind the cluster role granting access to ArangoDeploymentReplication resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .DeploymentReplication.User.RoleBindingName }}
+  namespace: {{ .DeploymentReplication.User.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .DeploymentReplication.User.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .DeploymentReplication.User.ServiceAccountName }}
+  namespace: {{ .DeploymentReplication.User.Namespace }}
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeploymentReplication operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .DeploymentReplication.Operator.RoleBindingName }}-{{ .DeploymentReplication.Operator.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .DeploymentReplication.Operator.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .DeploymentReplication.Operator.ServiceAccountName }}
+  namespace: {{ .DeploymentReplication.Operator.Namespace }}
+
+{{- end -}}

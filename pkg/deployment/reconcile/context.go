@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/arangosync/client"
 	driver "github.com/arangodb/go-driver"
 	"k8s.io/api/core/v1"
 
@@ -51,6 +52,8 @@ type Context interface {
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
+	// GetSyncServerClient returns a cached client for a specific arangosync server.
+	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	CreateMember(group api.ServerGroup, id string) error
