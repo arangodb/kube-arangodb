@@ -45,7 +45,7 @@ func TestSyncSpecValidate(t *testing.T) {
 
 func TestSyncSpecSetDefaults(t *testing.T) {
 	def := func(spec SyncSpec) SyncSpec {
-		spec.SetDefaults("test-jwt", "test-client-auth-ca", "test-tls-ca")
+		spec.SetDefaults("test-jwt", "test-client-auth-ca", "test-tls-ca", "test-mon")
 		return spec
 	}
 

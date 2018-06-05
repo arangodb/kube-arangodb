@@ -86,8 +86,8 @@ func TestCreateEncryptionKeySecret(t *testing.T) {
 	assert.Error(t, CreateEncryptionKeySecret(cli, "short-key", "ns", key))
 }
 
-// TestGetJWTSecret tests GetJWTSecret.
-func TestGetJWTSecret(t *testing.T) {
+// TestGetTokenSecret tests GetTokenSecret.
+func TestGetTokenSecret(t *testing.T) {
 	cli := mocks.NewCore()
 
 	// Prepare mock
@@ -104,17 +104,17 @@ func TestGetJWTSecret(t *testing.T) {
 	}, nil)
 	m.On("Get", "notfound", mock.Anything).Return(nil, apierrors.NewNotFound(schema.GroupResource{}, "notfound"))
 
-	token, err := GetJWTSecret(cli, "good", "ns")
+	token, err := GetTokenSecret(cli, "good", "ns")
 	assert.NoError(t, err)
 	assert.Equal(t, token, "foo")
-	_, err = GetJWTSecret(cli, "no-token", "ns")
+	_, err = GetTokenSecret(cli, "no-token", "ns")
 	assert.Error(t, err)
-	_, err = GetJWTSecret(cli, "notfound", "ns")
+	_, err = GetTokenSecret(cli, "notfound", "ns")
 	assert.True(t, IsNotFound(err))
 }
 
-// TestCreateJWTSecret tests CreateJWTSecret
-func TestCreateJWTSecret(t *testing.T) {
+// TestCreateTokenSecret tests CreateTokenSecret
+func TestCreateTokenSecret(t *testing.T) {
 	cli := mocks.NewCore()
 
 	// Prepare mock
@@ -130,6 +130,6 @@ func TestCreateJWTSecret(t *testing.T) {
 		}
 	}).Return(nil, nil)
 
-	assert.NoError(t, CreateJWTSecret(cli, "good", "ns", "token", nil))
-	assert.NoError(t, CreateJWTSecret(cli, "with-owner", "ns", "token", &metav1.OwnerReference{}))
+	assert.NoError(t, CreateTokenSecret(cli, "good", "ns", "token", nil))
+	assert.NoError(t, CreateTokenSecret(cli, "with-owner", "ns", "token", &metav1.OwnerReference{}))
 }

@@ -42,7 +42,7 @@ func TestMonitoringSpecValidate(t *testing.T) {
 
 func TestMonitoringSpecSetDefaults(t *testing.T) {
 	def := func(spec MonitoringSpec) MonitoringSpec {
-		spec.SetDefaults()
+		spec.SetDefaults("")
 		return spec
 	}
 
