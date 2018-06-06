@@ -123,6 +123,12 @@ func IsPodMarkedForDeletion(pod *v1.Pod) bool {
 	return pod.DeletionTimestamp != nil
 }
 
+// IsPodTerminating returns true if the pod has been marked for deletion
+// but is still running.
+func IsPodTerminating(pod *v1.Pod) bool {
+	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == v1.PodRunning
+}
+
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
 func IsArangoDBImageIDAndVersionPod(p v1.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]

@@ -101,6 +101,16 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 	}
 }
 
+// IsStateless returns true when the groups runs servers without a persistent volume.
+func (g ServerGroup) IsStateless() bool {
+	switch g {
+	case ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+	default:
+		return false
+	}
+}
+
 // IsArangod returns true when the groups runs servers of type `arangod`.
 func (g ServerGroup) IsArangod() bool {
 	switch g {

@@ -23,9 +23,15 @@
 package resources
 
 import (
+	"time"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+)
+
+const (
+	statelessTerminationPeriod = time.Minute // We wait this long for a stateless server to terminate on it's own. Afterwards we kill it.
 )
 
 // CleanupTerminatedPods removes all pods in Terminated state that belong to a member in Created state.
@@ -47,20 +53,29 @@ func (r *Resources) CleanupTerminatedPods() error {
 		}
 
 		// Check pod state
-		if !(k8sutil.IsPodSucceeded(&p) || k8sutil.IsPodFailed(&p)) {
+		if !(k8sutil.IsPodSucceeded(&p) || k8sutil.IsPodFailed(&p) || k8sutil.IsPodTerminating(&p)) {
 			continue
 		}
 
 		// Find member status
-		memberStatus, _, found := status.Members.MemberStatusByPodName(p.GetName())
+		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())
 		if !found {
-			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod")
-			continue
-		}
-
-		// Check member termination condition
-		if !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-			continue
+			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod. Performing cleanup")
+		} else {
+			// Check member termination condition
+			if !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+				if !group.IsStateless() {
+					// For statefull members, we have to wait for confirmed termination
+					continue
+				} else {
+					// If a stateless server does not terminate within a reasonable amount or time, we kill it.
+					t := p.GetDeletionTimestamp()
+					if t == nil || t.Add(statelessTerminationPeriod).After(time.Now()) {
+						// Either delete timestamp is not set, or not yet waiting long enough
+						continue
+					}
+				}
+			}
 		}
 
 		// Ok, we can delete the pod
