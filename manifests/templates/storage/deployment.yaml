@@ -13,7 +13,7 @@ metadata:
   name: {{ .Storage.OperatorDeploymentName }}
   namespace: {{ .Storage.Operator.Namespace }}
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: Recreate
   template:

@@ -25,21 +25,17 @@ package v1alpha
 // DeploymentReplicationSpec contains the specification part of
 // an ArangoDeploymentReplication.
 type DeploymentReplicationSpec struct {
-	Source         EndpointSpec       `json:"source"`
-	Destination    EndpointSpec       `json:"destination"`
-	Authentication AuthenticationSpec `json:"auth"`
+	Source      EndpointSpec `json:"source"`
+	Destination EndpointSpec `json:"destination"`
 }
 
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
 func (s DeploymentReplicationSpec) Validate() error {
-	if err := s.Source.Validate(); err != nil {
+	if err := s.Source.Validate(true); err != nil {
 		return maskAny(err)
 	}
-	if err := s.Destination.Validate(); err != nil {
-		return maskAny(err)
-	}
-	if err := s.Authentication.Validate(); err != nil {
+	if err := s.Destination.Validate(false); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -49,14 +45,12 @@ func (s DeploymentReplicationSpec) Validate() error {
 func (s *DeploymentReplicationSpec) SetDefaults() {
 	s.Source.SetDefaults()
 	s.Destination.SetDefaults()
-	s.Authentication.SetDefaults()
 }
 
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *DeploymentReplicationSpec) SetDefaultsFrom(source DeploymentReplicationSpec) {
 	s.Source.SetDefaultsFrom(source.Source)
 	s.Destination.SetDefaultsFrom(source.Destination)
-	s.Authentication.SetDefaultsFrom(source.Authentication)
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
@@ -68,9 +62,6 @@ func (s DeploymentReplicationSpec) ResetImmutableFields(target *DeploymentReplic
 		result = append(result, list...)
 	}
 	if list := s.Destination.ResetImmutableFields(&target.Destination, "destination."); len(list) > 0 {
-		result = append(result, list...)
-	}
-	if list := s.Authentication.ResetImmutableFields(&target.Authentication, "auth."); len(list) > 0 {
 		result = append(result, list...)
 	}
 	return result
