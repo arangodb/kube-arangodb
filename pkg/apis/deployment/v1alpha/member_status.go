@@ -52,6 +52,11 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 }
 
+// Age returns the duration since the creation timestamp of this member.
+func (s MemberStatus) Age() time.Duration {
+	return time.Since(s.CreatedAt.Time)
+}
+
 // RemoveTerminationsBefore removes all recent terminations before the given timestamp.
 // It returns the number of terminations that have been removed.
 func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {

@@ -72,6 +72,12 @@ type Context interface {
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
 	CleanupPod(p v1.Pod) error
+	// DeletePod deletes a pod with given name in the namespace
+	// of the deployment. If the pod does not exist, the error is ignored.
+	DeletePod(podName string) error
+	// DeletePvc deletes a persistent volume claim with given name in the namespace
+	// of the deployment. If the pvc does not exist, the error is ignored.
+	DeletePvc(pvcName string) error
 	// GetAgencyClients returns a client connection for every agency member.
 	GetAgencyClients(ctx context.Context, predicate func(memberID string) bool) ([]driver.Connection, error)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
