@@ -266,6 +266,8 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 // When true is returned, a reason for the rotation is already returned.
 func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, agents api.MemberStatusList, id string) (bool, string) {
+	groupSpec := spec.GetServerGroupSpec(group)
+
 	// Check image pull policy
 	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
 		if c.ImagePullPolicy != spec.GetImagePullPolicy() {
@@ -274,6 +276,7 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	} else {
 		return true, "Server container not found"
 	}
+
 	// Check arguments
 	/*expectedArgs := createArangodArgs(apiObject, spec, group, agents, id)
 	if len(expectedArgs) != len(c.Args) {
@@ -284,6 +287,11 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 			return true, "Arguments changed"
 		}
 	}*/
+
+	// Check service account
+	if p.Spec.ServiceAccountName != groupSpec.GetServiceAccountName() {
+		return true, "ServiceAccountName changed"
+	}
 
 	return false, ""
 }
