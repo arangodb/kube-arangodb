@@ -31,23 +31,37 @@ import (
 // EndpointAuthenticationSpec contains the specification to authentication with the syncmasters
 // in either source or destination endpoint.
 type EndpointAuthenticationSpec struct {
-	// JWTSecretName holds the name of a Secret containing a JWT token.
-	JWTSecretName *string `json:"jwtSecretName,omitempty"`
+	// KeyfileSecretName holds the name of a Secret containing a client authentication
+	// certificate formatted at keyfile in a `tls.keyfile` field.
+	KeyfileSecretName *string `json:"keyfileSecretName,omitempty"`
+	// UserSecretName holds the name of a Secret containing a `username` & `password`
+	// field used for basic authentication.
+	// The user identified by the username must have write access in the `_system` database
+	// of the ArangoDB cluster at the endpoint.
+	UserSecretName *string `json:"userSecretName,omitempty"`
 }
 
-// GetJWTSecretName returns the value of jwtSecretName.
-func (s EndpointAuthenticationSpec) GetJWTSecretName() string {
-	return util.StringOrDefault(s.JWTSecretName)
+// GetKeyfileSecretName returns the value of keyfileSecretName.
+func (s EndpointAuthenticationSpec) GetKeyfileSecretName() string {
+	return util.StringOrDefault(s.KeyfileSecretName)
+}
+
+// GetUserSecretName returns the value of userSecretName.
+func (s EndpointAuthenticationSpec) GetUserSecretName() string {
+	return util.StringOrDefault(s.UserSecretName)
 }
 
 // Validate the given spec, returning an error on validation
 // problems or nil if all ok.
-func (s EndpointAuthenticationSpec) Validate(jwtSecretNameRequired bool) error {
-	if err := k8sutil.ValidateOptionalResourceName(s.GetJWTSecretName()); err != nil {
+func (s EndpointAuthenticationSpec) Validate(keyfileSecretNameRequired bool) error {
+	if err := k8sutil.ValidateOptionalResourceName(s.GetKeyfileSecretName()); err != nil {
 		return maskAny(err)
 	}
-	if jwtSecretNameRequired && s.GetJWTSecretName() == "" {
-		return maskAny(errors.Wrapf(ValidationError, "Provide a jwtSecretName"))
+	if err := k8sutil.ValidateOptionalResourceName(s.GetUserSecretName()); err != nil {
+		return maskAny(err)
+	}
+	if keyfileSecretNameRequired && s.GetKeyfileSecretName() == "" {
+		return maskAny(errors.Wrapf(ValidationError, "Provide a keyfileSecretName"))
 	}
 	return nil
 }
@@ -58,8 +72,11 @@ func (s *EndpointAuthenticationSpec) SetDefaults() {
 
 // SetDefaultsFrom fills empty field with default values from the given source.
 func (s *EndpointAuthenticationSpec) SetDefaultsFrom(source EndpointAuthenticationSpec) {
-	if s.JWTSecretName == nil {
-		s.JWTSecretName = util.NewStringOrNil(source.JWTSecretName)
+	if s.KeyfileSecretName == nil {
+		s.KeyfileSecretName = util.NewStringOrNil(source.KeyfileSecretName)
+	}
+	if s.UserSecretName == nil {
+		s.UserSecretName = util.NewStringOrNil(source.UserSecretName)
 	}
 }
 

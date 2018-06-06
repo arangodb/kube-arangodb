@@ -123,6 +123,12 @@ func IsPodMarkedForDeletion(pod *v1.Pod) bool {
 	return pod.DeletionTimestamp != nil
 }
 
+// IsPodTerminating returns true if the pod has been marked for deletion
+// but is still running.
+func IsPodTerminating(pod *v1.Pod) bool {
+	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == v1.PodRunning
+}
+
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
 func IsArangoDBImageIDAndVersionPod(p v1.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]
@@ -384,7 +390,7 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration) v1.Pod {
+func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -393,10 +399,11 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 			Finalizers: finalizers,
 		},
 		Spec: v1.PodSpec{
-			Hostname:      hostname,
-			Subdomain:     CreateHeadlessServiceName(deploymentName),
-			RestartPolicy: v1.RestartPolicyNever,
-			Tolerations:   tolerations,
+			Hostname:           hostname,
+			Subdomain:          CreateHeadlessServiceName(deploymentName),
+			RestartPolicy:      v1.RestartPolicyNever,
+			Tolerations:        tolerations,
+			ServiceAccountName: serviceAccountName,
 		},
 	}
 	return p
@@ -409,10 +416,10 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	role, id, podName, pvcName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
-	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration,
+	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
@@ -510,10 +517,10 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration,
+	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 

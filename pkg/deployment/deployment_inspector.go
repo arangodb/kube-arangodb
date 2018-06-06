@@ -129,8 +129,20 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
 	}
 
+	// Create access packages
+	if err := d.createAccessPackages(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
+	}
+
+	// Inspect deployment for obsolete members
+	if err := d.resources.CleanupRemovedMembers(); err != nil {
+		hasError = true
+		d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
+	}
+
 	// At the end of the inspect, we cleanup terminated pods.
-	if d.resources.CleanupTerminatedPods(); err != nil {
+	if err := d.resources.CleanupTerminatedPods(); err != nil {
 		hasError = true
 		d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
 	}

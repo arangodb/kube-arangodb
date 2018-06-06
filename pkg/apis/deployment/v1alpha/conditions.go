@@ -46,6 +46,8 @@ const (
 	// the deployment have changed. Once that is the case, the operator will no longer
 	// touch the deployment, until the original secrets have been restored.
 	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
+	// ConditionTypeMemberOfCluster indicates that the member is a known member of the ArangoDB cluster.
+	ConditionTypeMemberOfCluster ConditionType = "MemberOfCluster"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

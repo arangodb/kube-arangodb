@@ -597,6 +597,15 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.ServiceAccountName != nil {
+		in, out := &in.ServiceAccountName, &out.ServiceAccountName
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
+	}
 	return
 }
 
@@ -650,6 +659,11 @@ func (in *SyncExternalAccessSpec) DeepCopyInto(out *SyncExternalAccessSpec) {
 	in.ExternalAccessSpec.DeepCopyInto(&out.ExternalAccessSpec)
 	if in.MasterEndpoint != nil {
 		in, out := &in.MasterEndpoint, &out.MasterEndpoint
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.AccessPackageSecretNames != nil {
+		in, out := &in.AccessPackageSecretNames, &out.AccessPackageSecretNames
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
