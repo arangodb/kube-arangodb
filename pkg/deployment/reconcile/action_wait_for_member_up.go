@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -163,4 +164,9 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 		return false, maskAny(err)
 	}
 	return true, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionWaitForMemberUp) Timeout() time.Duration {
+	return waitForMemberUpTimeout
 }
