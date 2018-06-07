@@ -352,6 +352,8 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 			plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, ""))
 		}
 		log.Debug().
+			Int("count", count).
+			Int("actual-count", len(members)).
 			Int("delta", toAdd).
 			Str("role", group.AsRole()).
 			Msg("Creating scale-up plan")
@@ -368,6 +370,8 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 			)
 			log.Debug().
+				Int("count", count).
+				Int("actual-count", len(members)).
 				Str("role", group.AsRole()).
 				Msg("Creating scale-down plan")
 		}
