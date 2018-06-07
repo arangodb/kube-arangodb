@@ -24,6 +24,7 @@ package storage
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -137,7 +138,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				continue
 			}
 			// Create a volume
-			pvName := apiObject.GetName() + "-" + name
+			pvName := strings.ToLower(apiObject.GetName() + "-" + shortHash(info.NodeName) + "-" + name)
 			volumeMode := v1.PersistentVolumeFilesystem
 			nodeAff, err := createNodeAffinity(info.NodeName)
 			if err != nil {
@@ -331,4 +332,10 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 	}
 	log.Error().Msg("All attempts to bind PVC to volume failed")
 	return maskAny(fmt.Errorf("All attempts to bind PVC to volume failed"))
+}
+
+// shortHash creates a 6 letter hash of the given name.
+func shortHash(name string) string {
+	h := sha1.Sum([]byte(name))
+	return fmt.Sprintf("%0x", h)[:6]
 }
