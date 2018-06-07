@@ -289,11 +289,19 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	}*/
 
 	// Check service account
-	if p.Spec.ServiceAccountName != groupSpec.GetServiceAccountName() {
+	if normalizeServiceAccountName(p.Spec.ServiceAccountName) != normalizeServiceAccountName(groupSpec.GetServiceAccountName()) {
 		return true, "ServiceAccountName changed"
 	}
 
 	return false, ""
+}
+
+// normalizeServiceAccountName replaces default with empty string, otherwise returns the input.
+func normalizeServiceAccountName(name string) string {
+	if name == "default" {
+		return ""
+	}
+	return ""
 }
 
 // tlsKeyfileNeedsRenewal decides if the certificate in the given keyfile
@@ -374,6 +382,7 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
+		Str("reason", reason).
 		Msg("Creating rotation plan")
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
@@ -389,6 +398,7 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
+		Str("reason", reason).
 		Msg("Creating upgrade plan")
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
