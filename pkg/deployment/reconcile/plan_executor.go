@@ -27,10 +27,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // ExecutePlan tries to execute the plan as far as possible.
@@ -112,8 +113,9 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 				if time.Now().After(deadline) {
 					// Timeout has expired
 					log.Warn().Msg("Action not finished in time. Removing the entire plan")
+					d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+					// Replace plan with empty one and save it.
 					status.Plan = api.Plan{}
-					// Save plan update
 					if err := d.context.UpdateStatus(status); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
 						return false, maskAny(err)

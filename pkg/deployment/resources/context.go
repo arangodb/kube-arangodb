@@ -62,7 +62,7 @@ type Context interface {
 	GetLifecycleImage() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
-	// createEvent creates a given event.
+	// CreateEvent creates a given event.
 	// On error, the error is logged.
 	CreateEvent(evt *v1.Event)
 	// GetOwnedPods returns a list of all pods owned by the deployment.
