@@ -23,9 +23,13 @@
 package k8sutil
 
 import (
+	"strconv"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pod has been marked for deletion.
@@ -42,7 +46,7 @@ func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deploymentName, ns, storageClassName, role string, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{
@@ -50,6 +54,9 @@ func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deployme
 			Name:       pvcName,
 			Labels:     labels,
 			Finalizers: finalizers,
+			Annotations: map[string]string{
+				constants.AnnotationEnforceAntiAffinity: strconv.FormatBool(enforceAntiAffinity),
+			},
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{

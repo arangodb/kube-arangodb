@@ -47,6 +47,11 @@ func (e Environment) Validate() error {
 	}
 }
 
+// IsProduction returns true when the given environment is a production environment.
+func (e Environment) IsProduction() bool {
+	return e == EnvironmentProduction
+}
+
 // NewEnvironment returns a reference to a string with given value.
 func NewEnvironment(input Environment) *Environment {
 	return &input
