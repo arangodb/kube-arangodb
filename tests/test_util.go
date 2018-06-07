@@ -70,7 +70,7 @@ func longOrSkip(t *testing.T) {
 // getEnterpriseImageOrSkip returns the docker image used for enterprise
 // tests. If empty, enterprise tests are skipped.
 func getEnterpriseImageOrSkip(t *testing.T) string {
-	image := os.Getenv("ENTERPRISEIMAGE")
+	image := strings.TrimSpace(os.Getenv("ENTERPRISEIMAGE"))
 	if image == "" {
 		t.Skip("Skipping test because ENTERPRISEIMAGE is not set")
 	}
