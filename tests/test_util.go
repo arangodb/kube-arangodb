@@ -29,6 +29,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -54,8 +55,9 @@ const (
 )
 
 var (
-	maskAny         = errors.WithStack
-	syncClientCache client.ClientCache
+	maskAny                 = errors.WithStack
+	syncClientCache         client.ClientCache
+	showEnterpriseImageOnce sync.Once
 )
 
 // longOrSkip checks the short test flag.
@@ -73,6 +75,10 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	image := strings.TrimSpace(os.Getenv("ENTERPRISEIMAGE"))
 	if image == "" {
 		t.Skip("Skipping test because ENTERPRISEIMAGE is not set")
+	} else {
+		showEnterpriseImageOnce.Do(func() {
+			t.Logf("Using enterprise image: %s", image)
+		})
 	}
 	return image
 }
