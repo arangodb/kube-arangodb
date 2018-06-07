@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -93,4 +94,9 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 func (a *actionRemoveMember) CheckProgress(ctx context.Context) (bool, error) {
 	// Nothing todo
 	return true, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionRemoveMember) Timeout() time.Duration {
+	return removeMemberTimeout
 }
