@@ -48,4 +48,6 @@ const (
 	FinalizerPodAgencyServing = "agent.database.arangodb.com/agency-serving"  // Finalizer added to Agents, indicating the need for keeping enough agents alive
 	FinalizerPVCMemberExists  = "pvc.database.arangodb.com/member-exists"     // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDeplReplStopSync = "replication.database.arangodb.com/stop-sync" // Finalizer added to ArangoDeploymentReplication, indicating the need to stop synchronization
+
+	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 )

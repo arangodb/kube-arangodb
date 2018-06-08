@@ -43,6 +43,7 @@ func (r *Resources) EnsurePVCs() error {
 	owner := apiObject.AsOwner()
 	iterator := r.context.GetServerGroupIterator()
 	status := r.context.GetStatus()
+	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -51,7 +52,7 @@ func (r *Resources) EnsurePVCs() error {
 				role := group.AsRole()
 				resources := spec.Resources
 				finalizers := r.createPVCFinalizers(group)
-				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, resources, finalizers, owner); err != nil {
+				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, finalizers, owner); err != nil {
 					return maskAny(err)
 				}
 			}
