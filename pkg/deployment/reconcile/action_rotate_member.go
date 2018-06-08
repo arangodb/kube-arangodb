@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
@@ -115,4 +116,9 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	return true, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionRotateMember) Timeout() time.Duration {
+	return rotateMemberTimeout
 }

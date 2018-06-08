@@ -145,6 +145,16 @@ func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *v1.
 	return event
 }
 
+// NewPlanTimeoutEvent creates an event indicating that an item on a reconciliation plan did not
+// finish before its deadline.
+func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Reconciliation Plan Timeout"
+	event.Message = fmt.Sprintf("An plan item of type %s or member %s with role %s did not finish in time", itemType, memberID, role)
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)

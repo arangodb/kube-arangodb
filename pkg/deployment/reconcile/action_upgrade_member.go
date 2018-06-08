@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
@@ -125,4 +126,9 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	return isUpgrading, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionUpgradeMember) Timeout() time.Duration {
+	return upgradeMemberTimeout
 }

@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
@@ -113,4 +114,9 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, error) 
 	}
 	// Cleanout completed
 	return true, nil
+}
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionCleanoutMember) Timeout() time.Duration {
+	return cleanoutMemberTimeout
 }

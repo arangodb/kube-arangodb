@@ -1,0 +1,8 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "production-cluster"
+spec:
+  mode: Cluster
+  image: arangodb/arangodb:3.3.10
+  environment: Production

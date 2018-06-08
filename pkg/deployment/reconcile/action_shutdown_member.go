@@ -111,3 +111,8 @@ func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, error) 
 	// Member still not shutdown, retry soon
 	return false, nil
 }
+
+// Timeout returns the amount of time after which this action will timeout.
+func (a *actionShutdownMember) Timeout() time.Duration {
+	return shutdownMemberTimeout
+}

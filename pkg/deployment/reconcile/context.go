@@ -54,6 +54,9 @@ type Context interface {
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
 	// GetSyncServerClient returns a cached client for a specific arangosync server.
 	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
+	// CreateEvent creates a given event.
+	// On error, the error is logged.
+	CreateEvent(evt *v1.Event)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	CreateMember(group api.ServerGroup, id string) error
