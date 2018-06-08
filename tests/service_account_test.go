@@ -84,10 +84,7 @@ func TestServiceAccountSingle(t *testing.T) {
 	checkMembersUsingServiceAccount(kubecli, ns, apiObject.Status.Members.Single, saName, t)
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingle, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingle))
 }
 
 // TestServiceAccountActiveFailover tests the creating of a ActiveFailover server deployment
@@ -137,10 +134,7 @@ func TestServiceAccountActiveFailover(t *testing.T) {
 	checkMembersUsingServiceAccount(kubecli, ns, apiObject.Status.Members.Agents, saName, t)
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingleActive, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingleActive))
 }
 
 // TestServiceAccountCluster tests the creating of a cluster deployment
@@ -192,10 +186,7 @@ func TestServiceAccountCluster(t *testing.T) {
 	checkMembersUsingServiceAccount(kubecli, ns, apiObject.Status.Members.DBServers, saName, t)
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleCoordinator, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleCoordinator))
 }
 
 // TestServiceAccountClusterWithSync tests the creating of a cluster deployment
@@ -262,10 +253,7 @@ func TestServiceAccountClusterWithSync(t *testing.T) {
 	checkMembersUsingServiceAccount(kubecli, ns, apiObject.Status.Members.SyncWorkers, saName, t)
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleCoordinator, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleCoordinator))
 }
 
 // mustCreateServiceAccount creates an empty service account with random name and returns

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -71,10 +71,7 @@ func TestCursorSingle(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingle, role)
+	require.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingle))
 
 	// Run cursor tests
 	runCursorTests(t, client)
@@ -118,10 +115,7 @@ func TestCursorActiveFailover(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingleActive, role)
+	require.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingleActive))
 
 	// Run cursor tests
 	runCursorTests(t, client)
@@ -165,10 +159,7 @@ func TestCursorCluster(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleCoordinator, role)
+	require.NoError(t, testServerRole(ctx, client, driver.ServerRoleCoordinator))
 
 	// Run cursor tests
 	runCursorTests(t, client)

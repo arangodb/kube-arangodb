@@ -20,3 +20,5 @@ if [ "${REQUIRE_LOCAL_STORAGE}" = "1" ]; then
 else
   echo "No local storage needed for this cluster"
 fi
+echo "Found $(kubectl get pv | wc -l) PersistentVolumes"
+echo "Found $(kubectl get pv | grep Available | wc -l) available PersistentVolumes"
