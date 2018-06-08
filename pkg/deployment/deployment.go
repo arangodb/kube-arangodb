@@ -345,13 +345,17 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 	}
 
 	// Send update to API server
+	ns := d.apiObject.GetNamespace()
+	depls := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns)
 	update := d.apiObject.DeepCopy()
 	attempt := 0
 	for {
 		attempt++
 		update.Status = d.status
-		ns := d.apiObject.GetNamespace()
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		if update.GetDeletionTimestamp() == nil {
+			ensureFinalizers(update)
+		}
+		newAPIObject, err := depls.Update(update)
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -361,7 +365,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = depls.Get(update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue

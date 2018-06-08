@@ -46,105 +46,112 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	ctx := context.Background()
 
 	// Check deployment still exists
-	if _, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
 		d.Delete()
 		return nextInterval
-	}
+	} else if updated != nil && updated.GetDeletionTimestamp() != nil {
+		// Deployment is marked for deletion
+		if err := d.runDeploymentFinalizers(ctx); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("ArangoDeployment finalizer inspection failed", err, d.apiObject))
+		}
+	} else {
+		// Is the deployment in failed state, if so, give up.
+		if d.status.Phase == api.DeploymentPhaseFailed {
+			log.Debug().Msg("Deployment is in Failed state.")
+			return nextInterval
+		}
 
-	// Is the deployment in failed state, if so, give up.
-	if d.status.Phase == api.DeploymentPhaseFailed {
-		log.Debug().Msg("Deployment is in Failed state.")
-		return nextInterval
-	}
+		// Inspect secret hashes
+		if err := d.resources.ValidateSecretHashes(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Secret hash validation failed", err, d.apiObject))
+		}
 
-	// Inspect secret hashes
-	if err := d.resources.ValidateSecretHashes(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Secret hash validation failed", err, d.apiObject))
-	}
+		// Is the deployment in a good state?
+		if d.status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
+			log.Debug().Msg("Condition SecretsChanged is true. Revert secrets before we can continue")
+			return nextInterval
+		}
 
-	// Is the deployment in a good state?
-	if d.status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
-		log.Debug().Msg("Condition SecretsChanged is true. Revert secrets before we can continue")
-		return nextInterval
-	}
+		// Ensure we have image info
+		if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
+		} else if retrySoon {
+			nextInterval = minInspectionInterval
+		}
 
-	// Ensure we have image info
-	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
-	} else if retrySoon {
-		nextInterval = minInspectionInterval
-	}
+		// Inspection of generated resources needed
+		if err := d.resources.InspectPods(ctx); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+		}
+		if err := d.resources.InspectPVCs(ctx); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
+		}
 
-	// Inspection of generated resources needed
-	if err := d.resources.InspectPods(ctx); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
-	}
-	if err := d.resources.InspectPVCs(ctx); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
-	}
+		// Check members for resilience
+		if err := d.resilience.CheckMemberFailure(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
+		}
 
-	// Check members for resilience
-	if err := d.resilience.CheckMemberFailure(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
-	}
+		// Create scale/update plan
+		if err := d.reconciler.CreatePlan(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+		}
 
-	// Create scale/update plan
-	if err := d.reconciler.CreatePlan(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
-	}
+		// Execute current step of scale/update plan
+		retrySoon, err := d.reconciler.ExecutePlan(ctx)
+		if err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+		}
+		if retrySoon {
+			nextInterval = minInspectionInterval
+		}
 
-	// Execute current step of scale/update plan
-	retrySoon, err := d.reconciler.ExecutePlan(ctx)
-	if err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
-	}
-	if retrySoon {
-		nextInterval = minInspectionInterval
-	}
+		// Ensure all resources are created
+		if err := d.resources.EnsureSecrets(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsureServices(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsurePVCs(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsurePods(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+		}
 
-	// Ensure all resources are created
-	if err := d.resources.EnsureSecrets(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
-	}
-	if err := d.resources.EnsureServices(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
-	}
-	if err := d.resources.EnsurePVCs(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
-	}
-	if err := d.resources.EnsurePods(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
-	}
+		// Create access packages
+		if err := d.createAccessPackages(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
+		}
 
-	// Create access packages
-	if err := d.createAccessPackages(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
-	}
+		// Inspect deployment for obsolete members
+		if err := d.resources.CleanupRemovedMembers(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
+		}
 
-	// Inspect deployment for obsolete members
-	if err := d.resources.CleanupRemovedMembers(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
-	}
-
-	// At the end of the inspect, we cleanup terminated pods.
-	if err := d.resources.CleanupTerminatedPods(); err != nil {
-		hasError = true
-		d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
+		// At the end of the inspect, we cleanup terminated pods.
+		if err := d.resources.CleanupTerminatedPods(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
+		}
 	}
 
 	// Update next interval (on errors)
