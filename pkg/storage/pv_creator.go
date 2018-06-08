@@ -315,6 +315,10 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 
 		// Check claim. If already bound, bail out
 		if !pvcNeedsVolume(*updated) {
+			if updated.Spec.VolumeName == volumeName {
+				log.Info().Msg("PersistentVolumeClaim already bound to PersistentVolume")
+				return nil
+			}
 			return maskAny(fmt.Errorf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
 		}
 
