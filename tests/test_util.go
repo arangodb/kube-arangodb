@@ -506,7 +506,30 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 			}
 		}
 	default:
-		return maskAny(fmt.Errorf("DeploymentMode %s is not supported!", mode))
+		return maskAny(fmt.Errorf("DeploymentMode %s is not supported", mode))
+	}
+	return nil
+}
+
+// testServerRole performs a synchronize endpoints and then requests the server role.
+// On success, the role is compared with the given expected role.
+// When the requests fail or the role is not equal to the expected role, an error is returned.
+func testServerRole(ctx context.Context, client driver.Client, expectedRole driver.ServerRole) error {
+	op := func(ctx context.Context) error {
+		if err := client.SynchronizeEndpoints(ctx); err != nil {
+			return maskAny(err)
+		}
+		role, err := client.ServerRole(ctx)
+		if err != nil {
+			return maskAny(err)
+		}
+		if role != expectedRole {
+			return retry.Permanent(fmt.Errorf("Unexpected server role: Expected '%s', got '%s'", expectedRole, role))
+		}
+		return nil
+	}
+	if err := retry.RetryWithContext(ctx, op, time.Second*20); err != nil {
+		return maskAny(err)
 	}
 	return nil
 }

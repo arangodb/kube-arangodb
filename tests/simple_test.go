@@ -70,10 +70,7 @@ func TestSimpleSingle(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingle, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingle))
 }
 
 // TestSimpleActiveFailover tests the creating of a ActiveFailover server deployment
@@ -111,10 +108,7 @@ func TestSimpleActiveFailover(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleSingleActive, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleSingleActive))
 }
 
 // TestSimpleCluster tests the creating of a cluster deployment
@@ -152,10 +146,7 @@ func TestSimpleCluster(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleCoordinator, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleCoordinator))
 }
 
 // TestSimpleClusterWithSync tests the creating of a cluster deployment
@@ -204,8 +195,5 @@ func TestSimpleClusterWithSync(t *testing.T) {
 	}
 
 	// Check server role
-	assert.NoError(t, client.SynchronizeEndpoints(ctx))
-	role, err := client.ServerRole(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, driver.ServerRoleCoordinator, role)
+	assert.NoError(t, testServerRole(ctx, client, driver.ServerRoleCoordinator))
 }
