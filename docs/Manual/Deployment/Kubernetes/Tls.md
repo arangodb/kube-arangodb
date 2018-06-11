@@ -1,4 +1,4 @@
-# TLS
+# Secure connections (TLS)
 
 The ArangoDB Kubernetes Operator will by default create ArangoDB deployments
 that use secure TLS connections.
@@ -23,7 +23,8 @@ kubectl get secret <deploy-name>-ca --template='{{index .data "ca.crt"}}' | base
 
 ### Windows
 
-TODO
+To install a CA certificate in Windows, follow the
+[procedure described here](http://wiki.cacert.org/HowTo/InstallCAcertRoots).
 
 ### MacOS
 
@@ -41,4 +42,13 @@ sudo /usr/bin/security remove-trusted-cert -d ca.crt
 
 ### Linux
 
-TODO
+To install a CA certificate in Linux, on Ubuntu, run:
+
+```bash
+sudo cp ca.crt /usr/local/share/ca-certificates/<some-name>.crt
+sudo update-ca-certificates
+```
+
+## See also
+
+- [Authentication](./Authentication.md)
