@@ -65,6 +65,7 @@ def buildBuildSteps(Map myParams) {
             "LONG=${myParams.LONG ? 1 : 0}",
             "TESTOPTIONS=${myParams.TESTOPTIONS}",
             ]) {
+                sh "make clean"
                 sh "make"
                 sh "make run-unit-tests"
                 sh "make docker-test"
