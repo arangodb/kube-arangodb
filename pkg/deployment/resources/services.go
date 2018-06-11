@@ -78,8 +78,7 @@ func (r *Resources) EnsureServices() error {
 	if single {
 		role = "single"
 	}
-	sessionAffinity := v1.ServiceAffinityClientIP
-	if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, sessionAffinity, spec.ExternalAccess, apiObject, log, kubecli); err != nil {
+	if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, kubecli); err != nil {
 		return maskAny(err)
 	}
 
@@ -87,8 +86,7 @@ func (r *Resources) EnsureServices() error {
 		// External (and internal) Sync master service
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
 		role := "syncmaster"
-		sessionAffinity := v1.ServiceAffinityNone
-		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, sessionAffinity, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
+		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
 			return maskAny(err)
 		}
 		status := r.context.GetStatus()
@@ -103,7 +101,7 @@ func (r *Resources) EnsureServices() error {
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, sessionAffinity v1.ServiceAffinity, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, kubecli kubernetes.Interface) error {
+func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, kubecli kubernetes.Interface) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false
@@ -170,10 +168,7 @@ func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, tit
 		// Let's create or update the database external access service
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
-		if eaServiceType == v1.ServiceTypeLoadBalancer {
-			sessionAffinity = v1.ServiceAffinityNone
-		}
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(kubecli, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, sessionAffinity, apiObject.AsOwner())
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(kubecli, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return maskAny(err)
