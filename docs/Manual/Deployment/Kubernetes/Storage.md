@@ -11,7 +11,7 @@ used by groups of servers using the `spec.<group>.storageClassName`
 setting.
 
 This is an example of a `Cluster` deployment that stores its agent & dbserver
-data on `PersistentVolumes` that using the `my-local-ssd` `StorageClass`
+data on `PersistentVolumes` that use the `my-local-ssd` `StorageClass`
 
 ```yaml
 apiVersion: "database.arangodb.com/v1alpha"

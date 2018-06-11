@@ -44,11 +44,11 @@ Another invaluable source of information is the log of containers being run
 in Kubernetes.
 These logs are accessible through the `Pods` that group these containers.
 
-The fetch the logs of the default container running in a `Pod`, run:
+To fetch the logs of the default container running in a `Pod`, run:
 
 ```bash
 kubectl logs <pod-name> -n <namespace>
-# or with follow option to keep inspecting logs while their are written
+# or with follow option to keep inspecting logs while they are written
 kubectl logs <pod-name> -n <namespace> -f
 ```
 
@@ -67,7 +67,7 @@ those replicas.
 
 There are two common causes for this.
 
-1) The `Pods` cannot be scheduled because there are no enough nodes available.
+1) The `Pods` cannot be scheduled because there are not enough nodes available.
    This is usally only the case with a `spec.environment` setting that has a value of `Production`.
 
    Solution: Add more nodes.
@@ -101,7 +101,7 @@ those `PersistentVolumes`, it depends on the type of server that was using the v
 
 - If an `Agent` was using the volume, it can be repaired as long as 2 other agents are still     healthy.
 - If a `DBServer` was using the volume, and the replication factor of all database
-  collections is 2 of higher, and the remaining dbservers are still healthy,
+  collections is 2 or higher, and the remaining dbservers are still healthy,
   the cluster will duplicate the remaining replicas to
   bring the number of replicases back to the original number.
 - If a `DBServer` was using the volume, and the replication factor of a database

@@ -103,7 +103,7 @@ Note that even a simple `Service` of type `ClusterIP` already behaves as a load-
 The exception to this is cursor related requests made to an ArangoDB `Cluster` deployment.
 The coordinator that handles an initial query request (that results in a `Cursor`)
 will save some in-memory state in that coordinator, if the result of the query
-is to big to be transfer back in the response of the initial request.
+is too big to be transfer back in the response of the initial request.
 
 Follow-up requests have to be made to fetch the remaining data.
 These follow-up requests must be handled by the same coordinator to which the initial
@@ -116,7 +116,7 @@ To resolve this uncertainty, make sure to run your client application in the sam
 Kubernetes cluster and synchronize your endpoints before making the
 initial query request.
 This will result in the use (by the driver) of internal DNS names of all coordinators.
-A follow-up request can then be send to exaclty the same coordinator.
+A follow-up request can then be sent to exactly the same coordinator.
 
 If your client application is running outside the Kubernetes cluster this is much harder
 to solve.
