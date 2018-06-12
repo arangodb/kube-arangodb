@@ -24,6 +24,8 @@ package deployment
 
 import (
 	"context"
+	"fmt"
+	"sync/atomic"
 
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
@@ -63,20 +65,31 @@ func (d *Deployment) GetNamespace() string {
 	return d.apiObject.GetNamespace()
 }
 
+// GetPhase returns the current phase of the deployment
+func (d *Deployment) GetPhase() api.DeploymentPhase {
+	return d.status.last.Phase
+}
+
 // GetSpec returns the current specification
 func (d *Deployment) GetSpec() api.DeploymentSpec {
 	return d.apiObject.Spec
 }
 
 // GetStatus returns the current status of the deployment
-func (d *Deployment) GetStatus() api.DeploymentStatus {
-	return d.status
+// together with the current version of that status.
+func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
+	version := atomic.LoadInt32(&d.status.version)
+	return *d.status.last.DeepCopy(), version
 }
 
 // UpdateStatus replaces the status of the deployment with the given status and
 // updates the resources in k8s.
-func (d *Deployment) UpdateStatus(status api.DeploymentStatus, force ...bool) error {
-	d.status = status
+func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+	if !atomic.CompareAndSwapInt32(&d.status.version, lastVersion, lastVersion+1) {
+		// Status is obsolete
+		return maskAny(fmt.Errorf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
+	}
+	d.status.last = *status.DeepCopy()
 	if err := d.updateCRStatus(force...); err != nil {
 		return maskAny(err)
 	}
@@ -105,7 +118,7 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 // GetAgencyClients returns a client connection for every agency member.
 // If the given predicate is not nil, only agents are included where the given predicate returns true.
 func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
-	agencyMembers := d.status.Members.Agents
+	agencyMembers := d.status.last.Members.Agents
 	result := make([]driver.Connection, 0, len(agencyMembers))
 	for _, m := range agencyMembers {
 		if predicate != nil && !predicate(m.ID) {
@@ -157,13 +170,14 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 // If ID is non-empty, it will be used, otherwise a new ID is created.
 func (d *Deployment) CreateMember(group api.ServerGroup, id string) error {
 	log := d.deps.Log
-	id, err := d.createMember(group, id, d.apiObject)
+	status, lastVersion := d.GetStatus()
+	id, err := createMember(log, &status, group, id, d.apiObject)
 	if err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
 		return maskAny(err)
 	}
 	// Save added member
-	if err := d.updateCRStatus(); err != nil {
+	if err := d.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)
 	}

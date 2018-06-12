@@ -60,7 +60,7 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 	} else {
 		// Is the deployment in failed state, if so, give up.
-		if d.status.Phase == api.DeploymentPhaseFailed {
+		if d.GetPhase() == api.DeploymentPhaseFailed {
 			log.Debug().Msg("Deployment is in Failed state.")
 			return nextInterval
 		}
@@ -72,7 +72,8 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// Is the deployment in a good state?
-		if d.status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
+		status, _ := d.GetStatus()
+		if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
 			log.Debug().Msg("Condition SecretsChanged is true. Revert secrets before we can continue")
 			return nextInterval
 		}

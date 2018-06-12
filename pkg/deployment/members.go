@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/dchest/uniuri"
+	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -42,22 +43,23 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 
 	// Go over all groups and create members
 	var events []*v1.Event
-	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-		for len(*status) < spec.GetCount() {
-			id, err := d.createMember(group, "", apiObject)
+	status, lastVersion := d.GetStatus()
+	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, members *api.MemberStatusList) error {
+		for len(*members) < spec.GetCount() {
+			id, err := createMember(log, &status, group, "", apiObject)
 			if err != nil {
 				return maskAny(err)
 			}
 			events = append(events, k8sutil.NewMemberAddEvent(id, group.AsRole(), apiObject))
 		}
 		return nil
-	}, &d.status); err != nil {
+	}, &status); err != nil {
 		return maskAny(err)
 	}
 
 	// Save status
 	log.Debug().Msg("saving initial members...")
-	if err := d.updateCRStatus(); err != nil {
+	if err := d.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 	// Save events
@@ -71,13 +73,12 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (string, error) {
-	log := d.deps.Log
+func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (string, error) {
 	if id == "" {
 		idPrefix := getArangodIDPrefix(group)
 		for {
 			id = idPrefix + strings.ToLower(uniuri.NewLen(8)) // K8s accepts only lowercase, so we use it here as well
-			if !d.status.Members.ContainsID(id) {
+			if !status.Members.ContainsID(id) {
 				break
 			}
 			// Duplicate, try again
@@ -89,7 +90,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 	switch group {
 	case api.ServerGroupSingle:
 		log.Debug().Str("id", id).Msg("Adding single server")
-		if err := d.status.Members.Single.Add(api.MemberStatus{
+		if err := status.Members.Single.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
@@ -100,7 +101,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 		}
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
-		if err := d.status.Members.Agents.Add(api.MemberStatus{
+		if err := status.Members.Agents.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
@@ -111,7 +112,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 		}
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
-		if err := d.status.Members.DBServers.Add(api.MemberStatus{
+		if err := status.Members.DBServers.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
@@ -122,7 +123,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 		}
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
-		if err := d.status.Members.Coordinators.Add(api.MemberStatus{
+		if err := status.Members.Coordinators.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
@@ -133,7 +134,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 		}
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
-		if err := d.status.Members.SyncMasters.Add(api.MemberStatus{
+		if err := status.Members.SyncMasters.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
@@ -144,7 +145,7 @@ func (d *Deployment) createMember(group api.ServerGroup, id string, apiObject *a
 		}
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
-		if err := d.status.Members.SyncWorkers.Add(api.MemberStatus{
+		if err := status.Members.SyncWorkers.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,

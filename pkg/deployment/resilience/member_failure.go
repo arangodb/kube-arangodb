@@ -41,7 +41,7 @@ const (
 // - They are frequently restarted
 // - They cannot be scheduled for a long time (TODO)
 func (r *Resilience) CheckMemberFailure() error {
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list *api.MemberStatusList) error {
 		for _, m := range *list {
@@ -103,7 +103,7 @@ func (r *Resilience) CheckMemberFailure() error {
 		return maskAny(err)
 	}
 	if updateStatusNeeded {
-		if err := r.context.UpdateStatus(status); err != nil {
+		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 			return maskAny(err)
 		}
 	}

@@ -132,7 +132,8 @@ func (ac *actionContext) GetSyncServerClient(ctx context.Context, group api.Serv
 // Returns member status, true when found, or false
 // when no such member is found.
 func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool) {
-	m, _, ok := ac.context.GetStatus().Members.ElementByID(id)
+	status, _ := ac.context.GetStatus()
+	m, _, ok := status.Members.ElementByID(id)
 	return m, ok
 }
 
@@ -147,13 +148,13 @@ func (ac *actionContext) CreateMember(group api.ServerGroup, id string) error {
 
 // UpdateMember updates the deployment status wrt the given member.
 func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
-	status := ac.context.GetStatus()
+	status, lastVersion := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
 		return maskAny(fmt.Errorf("Member %s not found", member.ID))
 	}
 	status.Members.UpdateMemberStatus(member, group)
-	if err := ac.context.UpdateStatus(status); err != nil {
+	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)
 	}
@@ -162,7 +163,7 @@ func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
 
 // RemoveMemberByID removes a member with given id.
 func (ac *actionContext) RemoveMemberByID(id string) error {
-	status := ac.context.GetStatus()
+	status, lastVersion := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(id)
 	if !found {
 		return nil
@@ -172,7 +173,7 @@ func (ac *actionContext) RemoveMemberByID(id string) error {
 		return maskAny(err)
 	}
 	// Save removed member
-	if err := ac.context.UpdateStatus(status); err != nil {
+	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 	return nil

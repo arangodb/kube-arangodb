@@ -428,13 +428,17 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, m api.MemberStatus, memberStatusList *api.MemberStatusList) error {
+func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string) error {
 	kubecli := r.context.GetKubeCli()
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	ns := r.context.GetNamespace()
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
+	m, group, found := status.Members.ElementByID(memberID)
+	if !found {
+		return maskAny(fmt.Errorf("Member '%s' not found", memberID))
+	}
+	groupSpec := spec.GetServerGroupSpec(group)
 	lifecycleImage := r.context.GetLifecycleImage()
 	terminationGracePeriod := group.DefaultTerminationGracePeriod()
 	tolerations := r.createPodTolerations(group, groupSpec)
@@ -582,10 +586,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 	m.Conditions.Remove(api.ConditionTypeReady)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
-	if err := memberStatusList.Update(m); err != nil {
+	if err := status.Members.UpdateMemberStatus(m, group); err != nil {
 		return maskAny(err)
 	}
-	if err := r.context.UpdateStatus(status); err != nil {
+	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 	// Create event
@@ -597,7 +601,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, group api.Server
 // EnsurePods creates all Pods listed in member status
 func (r *Resources) EnsurePods() error {
 	iterator := r.context.GetServerGroupIterator()
-	status := r.context.GetStatus()
+	status, _ := r.context.GetStatus()
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhaseNone {
@@ -607,7 +611,7 @@ func (r *Resources) EnsurePods() error {
 				continue
 			}
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(spec, group, groupSpec, m, status); err != nil {
+			if err := r.createPodForMember(spec, m.ID); err != nil {
 				return maskAny(err)
 			}
 		}

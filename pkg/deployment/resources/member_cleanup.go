@@ -77,7 +77,9 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	}
 
 	// For over all members that can be removed
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
+	updateStatusNeeded := false
+	var podNamesToRemove, pvcNamesToRemove []string
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list *api.MemberStatusList) error {
 		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
 			// We're not interested in these other groups
@@ -88,9 +90,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
 					list.Update(m)
-					if err := r.context.UpdateStatus(status); err != nil {
-						return maskAny(err)
-					}
+					updateStatusNeeded = true
 				}
 				continue
 			} else if !m.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
@@ -104,23 +104,34 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 				log.Info().Str("member", m.ID).Str("role", group.AsRole()).Msg("Member is no longer part of the ArangoDB cluster. Removing it.")
 			}
 			list.RemoveByID(m.ID)
-			if err := r.context.UpdateStatus(status); err != nil {
-				return maskAny(err)
-			}
+			updateStatusNeeded = true
 			// Remove Pod & PVC (if any)
 			if m.PodName != "" {
-				if err := r.context.DeletePod(m.PodName); err != nil && !k8sutil.IsNotFound(err) {
-					log.Warn().Err(err).Str("pod", m.PodName).Msg("Failed to remove obsolete pod")
-				}
+				podNamesToRemove = append(podNamesToRemove, m.PodName)
 			}
 			if m.PersistentVolumeClaimName != "" {
-				if err := r.context.DeletePvc(m.PersistentVolumeClaimName); err != nil && !k8sutil.IsNotFound(err) {
-					log.Warn().Err(err).Str("pvc", m.PersistentVolumeClaimName).Msg("Failed to remove obsolete PVC")
-				}
+				pvcNamesToRemove = append(pvcNamesToRemove, m.PersistentVolumeClaimName)
 			}
 		}
 		return nil
 	})
+
+	if updateStatusNeeded {
+		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			return maskAny(err)
+		}
+	}
+
+	for _, podName := range podNamesToRemove {
+		if err := r.context.DeletePod(podName); err != nil && !k8sutil.IsNotFound(err) {
+			log.Warn().Err(err).Str("pod", podName).Msg("Failed to remove obsolete pod")
+		}
+	}
+	for _, pvcName := range pvcNamesToRemove {
+		if err := r.context.DeletePvc(pvcName); err != nil && !k8sutil.IsNotFound(err) {
+			log.Warn().Err(err).Str("pvc", pvcName).Msg("Failed to remove obsolete PVC")
+		}
+	}
 
 	return nil
 }

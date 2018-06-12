@@ -57,7 +57,7 @@ func (d *Reconciler) CreatePlan() error {
 	// Create plan
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
-	status := d.context.GetStatus()
+	status, lastVersion := d.context.GetStatus()
 	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile)
 
 	// If not change, we're done
@@ -71,7 +71,7 @@ func (d *Reconciler) CreatePlan() error {
 		return nil
 	}
 	status.Plan = newPlan
-	if err := d.context.UpdateStatus(status); err != nil {
+	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 	return nil

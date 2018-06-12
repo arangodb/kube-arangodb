@@ -56,7 +56,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
@@ -236,7 +236,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Save status
-	if err := r.context.UpdateStatus(status); err != nil {
+	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 
