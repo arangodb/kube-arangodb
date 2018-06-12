@@ -59,7 +59,8 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+				ignoreNotFound := false
+				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
 					return maskAny(err)
 				}

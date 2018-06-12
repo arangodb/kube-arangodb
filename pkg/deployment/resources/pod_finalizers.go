@@ -62,7 +62,8 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
 		kubecli := r.context.GetKubeCli()
-		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList); err != nil {
+		ignoreNotFound := false
+		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
 			return maskAny(err)
 		}
