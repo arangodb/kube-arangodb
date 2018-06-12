@@ -44,9 +44,9 @@ func (r *Resources) ValidateSecretHashes() error {
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
-	validate := func(secretName string, expectedHashRef *string, status *api.DeploymentStatus) (bool, error) {
+	validate := func(secretName string, getExpectedHash func() string, setExpectedHash func(string) error) (bool, error) {
 		log := r.log.With().Str("secret-name", secretName).Logger()
-		expectedHash := *expectedHashRef
+		expectedHash := getExpectedHash()
 		hash, err := r.getSecretHash(secretName)
 		if expectedHash == "" {
 			// No hash set yet, try to fill it
@@ -59,8 +59,7 @@ func (r *Resources) ValidateSecretHashes() error {
 				return true, nil // Since we do not yet have a hash, we let this go with only a warning.
 			}
 			// Hash fetched succesfully, store it
-			*expectedHashRef = hash
-			if r.context.UpdateStatus(*status); err != nil {
+			if err := setExpectedHash(hash); err != nil {
 				log.Debug().Msg("Failed to save secret hash")
 				return true, maskAny(err)
 			}
@@ -89,14 +88,33 @@ func (r *Resources) ValidateSecretHashes() error {
 	spec := r.context.GetSpec()
 	log := r.log
 	var badSecretNames []string
-	status := r.context.GetStatus()
-	if status.SecretHashes == nil {
-		status.SecretHashes = &api.SecretHashes{}
+	status, lastVersion := r.context.GetStatus()
+	getHashes := func() *api.SecretHashes {
+		if status.SecretHashes == nil {
+			status.SecretHashes = &api.SecretHashes{}
+		}
+		return status.SecretHashes
 	}
-	hashes := status.SecretHashes
+	updateHashes := func(updater func(*api.SecretHashes)) error {
+		if status.SecretHashes == nil {
+			status.SecretHashes = &api.SecretHashes{}
+		}
+		updater(status.SecretHashes)
+		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			return maskAny(err)
+		}
+		// Reload status
+		status, lastVersion = r.context.GetStatus()
+		return nil
+	}
+
 	if spec.IsAuthenticated() {
 		secretName := spec.Authentication.GetJWTSecretName()
-		if hashOK, err := validate(secretName, &hashes.AuthJWT, &status); err != nil {
+		getExpectedHash := func() string { return getHashes().AuthJWT }
+		setExpectedHash := func(h string) error {
+			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
+		}
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -104,7 +122,11 @@ func (r *Resources) ValidateSecretHashes() error {
 	}
 	if spec.RocksDB.IsEncrypted() {
 		secretName := spec.RocksDB.Encryption.GetKeySecretName()
-		if hashOK, err := validate(secretName, &hashes.RocksDBEncryptionKey, &status); err != nil {
+		getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
+		setExpectedHash := func(h string) error {
+			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
+		}
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -112,7 +134,11 @@ func (r *Resources) ValidateSecretHashes() error {
 	}
 	if spec.IsSecure() {
 		secretName := spec.TLS.GetCASecretName()
-		if hashOK, err := validate(secretName, &hashes.TLSCA, &status); err != nil {
+		getExpectedHash := func() string { return getHashes().TLSCA }
+		setExpectedHash := func(h string) error {
+			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.TLSCA = h }))
+		}
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -120,7 +146,11 @@ func (r *Resources) ValidateSecretHashes() error {
 	}
 	if spec.Sync.IsEnabled() {
 		secretName := spec.Sync.TLS.GetCASecretName()
-		if hashOK, err := validate(secretName, &hashes.SyncTLSCA, &status); err != nil {
+		getExpectedHash := func() string { return getHashes().SyncTLSCA }
+		setExpectedHash := func(h string) error {
+			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.SyncTLSCA = h }))
+		}
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -132,7 +162,7 @@ func (r *Resources) ValidateSecretHashes() error {
 		if status.Conditions.Update(api.ConditionTypeSecretsChanged, true,
 			"Secrets have changed", fmt.Sprintf("Found %d changed secrets", len(badSecretNames))) {
 			log.Warn().Msgf("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
-			if err := r.context.UpdateStatus(status); err != nil {
+			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
 				return maskAny(err)
 			}
@@ -143,7 +173,7 @@ func (r *Resources) ValidateSecretHashes() error {
 		// All good, we van remove the SecretsChanged condition
 		if status.Conditions.Remove(api.ConditionTypeSecretsChanged) {
 			log.Info().Msg("Resetting SecretsChanged condition")
-			if err := r.context.UpdateStatus(status); err != nil {
+			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
 				return maskAny(err)
 			}

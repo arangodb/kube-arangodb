@@ -34,10 +34,10 @@ type Context interface {
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
-	GetStatus() api.DeploymentStatus
+	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
-	UpdateStatus(status api.DeploymentStatus, force ...bool) error
+	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)

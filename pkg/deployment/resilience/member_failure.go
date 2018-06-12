@@ -41,10 +41,10 @@ const (
 // - They are frequently restarted
 // - They cannot be scheduled for a long time (TODO)
 func (r *Resilience) CheckMemberFailure() error {
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
-	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list *api.MemberStatusList) error {
-		for _, m := range *list {
+	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
 			log := r.log.With().
 				Str("id", m.ID).
 				Str("role", group.AsRole()).
@@ -70,7 +70,7 @@ func (r *Resilience) CheckMemberFailure() error {
 					} else if failureAcceptable {
 						log.Info().Msg("Member is not ready for long time, marking is failed")
 						m.Phase = api.MemberPhaseFailed
-						list.Update(m)
+						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
 						log.Warn().Msgf("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
@@ -89,7 +89,7 @@ func (r *Resilience) CheckMemberFailure() error {
 					} else if failureAcceptable {
 						log.Info().Msg("Member has terminated too often in recent history, marking is failed")
 						m.Phase = api.MemberPhaseFailed
-						list.Update(m)
+						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
 						log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)
@@ -103,7 +103,7 @@ func (r *Resilience) CheckMemberFailure() error {
 		return maskAny(err)
 	}
 	if updateStatusNeeded {
-		if err := r.context.UpdateStatus(status); err != nil {
+		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 			return maskAny(err)
 		}
 	}

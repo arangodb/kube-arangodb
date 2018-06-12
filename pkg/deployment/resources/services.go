@@ -64,11 +64,13 @@ func (r *Resources) EnsureServices() error {
 	if newlyCreated {
 		log.Debug().Str("service", svcName).Msg("Created database client service")
 	}
-	status := r.context.GetStatus()
-	if status.ServiceName != svcName {
-		status.ServiceName = svcName
-		if err := r.context.UpdateStatus(status); err != nil {
-			return maskAny(err)
+	{
+		status, lastVersion := r.context.GetStatus()
+		if status.ServiceName != svcName {
+			status.ServiceName = svcName
+			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+				return maskAny(err)
+			}
 		}
 	}
 
@@ -89,10 +91,10 @@ func (r *Resources) EnsureServices() error {
 		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
 			return maskAny(err)
 		}
-		status := r.context.GetStatus()
+		status, lastVersion := r.context.GetStatus()
 		if status.SyncServiceName != eaServiceName {
 			status.SyncServiceName = eaServiceName
-			if err := r.context.UpdateStatus(status); err != nil {
+			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				return maskAny(err)
 			}
 		}

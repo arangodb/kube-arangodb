@@ -25,6 +25,7 @@ package deployment
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -83,9 +84,13 @@ const (
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
 	apiObject *api.ArangoDeployment // API object
-	status    api.DeploymentStatus  // Internal status of the CR
-	config    Config
-	deps      Dependencies
+	status    struct {
+		mutex   sync.Mutex
+		version int32
+		last    api.DeploymentStatus // Internal status copy of the CR
+	}
+	config Config
+	deps   Dependencies
 
 	eventCh chan *deploymentEvent
 	stopCh  chan struct{}
@@ -112,7 +117,6 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 	d := &Deployment{
 		apiObject:   apiObject,
-		status:      *(apiObject.Status.DeepCopy()),
 		config:      config,
 		deps:        deps,
 		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
@@ -120,12 +124,13 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
+	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	d.resilience = resilience.NewResilience(deps.Log, d)
 	d.resources = resources.NewResources(deps.Log, d)
-	if d.status.AcceptedSpec == nil {
+	if d.status.last.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
-		d.status.AcceptedSpec = apiObject.Spec.DeepCopy()
+		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
 	}
 
 	go d.run()
@@ -185,7 +190,7 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
-	if d.status.Phase == api.DeploymentPhaseNone {
+	if d.GetPhase() == api.DeploymentPhaseNone {
 		// Create secrets
 		if err := d.resources.EnsureSecrets(); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create secrets", err, d.GetAPIObject()))
@@ -211,8 +216,9 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pods", err, d.GetAPIObject()))
 		}
 
-		d.status.Phase = api.DeploymentPhaseRunning
-		if err := d.updateCRStatus(); err != nil {
+		status, lastVersion := d.GetStatus()
+		status.Phase = api.DeploymentPhaseRunning
+		if err := d.UpdateStatus(status, lastVersion); err != nil {
 			log.Warn().Err(err).Msg("update initial CR status failed")
 		}
 		log.Info().Msg("start running...")
@@ -277,13 +283,14 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	}
 
 	specBefore := d.apiObject.Spec
-	if d.status.AcceptedSpec != nil {
-		specBefore = *d.status.AcceptedSpec
+	status := d.status.last
+	if d.status.last.AcceptedSpec != nil {
+		specBefore = *status.AcceptedSpec.DeepCopy()
 	}
 	newAPIObject := current.DeepCopy()
 	newAPIObject.Spec.SetDefaultsFrom(specBefore)
 	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
-	newAPIObject.Status = d.status
+	newAPIObject.Status = status
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
@@ -309,9 +316,12 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
-	d.status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
-	if err := d.updateCRStatus(); err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
+	{
+		status, lastVersion := d.GetStatus()
+		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
+		if err := d.UpdateStatus(status, lastVersion); err != nil {
+			return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
+		}
 	}
 
 	// Notify cluster of desired server count
@@ -351,7 +361,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 	attempt := 0
 	for {
 		attempt++
-		update.Status = d.status
+		update.Status = d.status.last
 		if update.GetDeletionTimestamp() == nil {
 			ensureFinalizers(update)
 		}
@@ -388,7 +398,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
 	for {
 		attempt++
 		update.Spec = newSpec
-		update.Status = d.status
+		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
 		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
 		if err == nil {
@@ -417,7 +427,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
 // Since there is no recovery from a failed deployment, use with care!
 func (d *Deployment) failOnError(err error, msg string) {
 	log.Error().Err(err).Msg(msg)
-	d.status.Reason = err.Error()
+	d.status.last.Reason = err.Error()
 	d.reportFailedStatus()
 }
 
@@ -428,7 +438,7 @@ func (d *Deployment) reportFailedStatus() {
 	log.Info().Msg("deployment failed. Reporting failed reason...")
 
 	op := func() error {
-		d.status.Phase = api.DeploymentPhaseFailed
+		d.status.last.Phase = api.DeploymentPhaseFailed
 		err := d.updateCRStatus()
 		if err == nil || k8sutil.IsNotFound(err) {
 			// Status has been updated

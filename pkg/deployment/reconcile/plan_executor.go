@@ -39,19 +39,20 @@ import (
 // False otherwise.
 func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	log := d.log
-	initialPlanLen := len(d.context.GetStatus().Plan)
+	firstLoop := true
 
 	for {
-		status := d.context.GetStatus()
-		if len(status.Plan) == 0 {
+		loopStatus, _ := d.context.GetStatus()
+		if len(loopStatus.Plan) == 0 {
 			// No plan exists, nothing to be done
-			return initialPlanLen > 0, nil
+			return !firstLoop, nil
 		}
+		firstLoop = false
 
 		// Take first action
-		planAction := status.Plan[0]
+		planAction := loopStatus.Plan[0]
 		log := log.With().
-			Int("plan-len", len(status.Plan)).
+			Int("plan-len", len(loopStatus.Plan)).
 			Str("action-id", planAction.ID).
 			Str("action-type", string(planAction.Type)).
 			Str("group", planAction.Group.AsRole()).
@@ -66,21 +67,22 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 					Msg("Failed to start action")
 				return false, maskAny(err)
 			}
-			// action.Start may have changed status, so reload it.
-			status = d.context.GetStatus()
-			// Update status according to result on action.Start.
-			if ready {
-				// Remove action from list
-				status.Plan = status.Plan[1:]
-			} else {
-				// Mark start time
-				now := metav1.Now()
-				status.Plan[0].StartTime = &now
-			}
-			// Save plan update
-			if err := d.context.UpdateStatus(status, true); err != nil {
-				log.Debug().Err(err).Msg("Failed to update CR status")
-				return false, maskAny(err)
+			{ // action.Start may have changed status, so reload it.
+				status, lastVersion := d.context.GetStatus()
+				// Update status according to result on action.Start.
+				if ready {
+					// Remove action from list
+					status.Plan = status.Plan[1:]
+				} else {
+					// Mark start time
+					now := metav1.Now()
+					status.Plan[0].StartTime = &now
+				}
+				// Save plan update
+				if err := d.context.UpdateStatus(status, lastVersion, true); err != nil {
+					log.Debug().Err(err).Msg("Failed to update CR status")
+					return false, maskAny(err)
+				}
 			}
 			log.Debug().Bool("ready", ready).Msg("Action Start completed")
 			if !ready {
@@ -96,14 +98,15 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 				return false, maskAny(err)
 			}
 			if ready {
-				// action.CheckProgress may have changed status, so reload it.
-				status = d.context.GetStatus()
-				// Remove action from list
-				status.Plan = status.Plan[1:]
-				// Save plan update
-				if err := d.context.UpdateStatus(status); err != nil {
-					log.Debug().Err(err).Msg("Failed to update CR status")
-					return false, maskAny(err)
+				{ // action.CheckProgress may have changed status, so reload it.
+					status, lastVersion := d.context.GetStatus()
+					// Remove action from list
+					status.Plan = status.Plan[1:]
+					// Save plan update
+					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
+						log.Debug().Err(err).Msg("Failed to update CR status")
+						return false, maskAny(err)
+					}
 				}
 			}
 			log.Debug().
@@ -127,8 +130,9 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 				}
 				if abort || deadlineExpired {
 					// Replace plan with empty one and save it.
+					status, lastVersion := d.context.GetStatus()
 					status.Plan = api.Plan{}
-					if err := d.context.UpdateStatus(status); err != nil {
+					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
 						return false, maskAny(err)
 					}
