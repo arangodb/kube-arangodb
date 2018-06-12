@@ -153,7 +153,9 @@ func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
 	if !found {
 		return maskAny(fmt.Errorf("Member %s not found", member.ID))
 	}
-	status.Members.UpdateMemberStatus(member, group)
+	if err := status.Members.UpdateMemberStatus(member, group); err != nil {
+		return maskAny(err)
+	}
 	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)

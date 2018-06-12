@@ -75,23 +75,23 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.
-func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list *MemberStatusList) error) error {
-	if err := cb(ServerGroupSingle, &ds.Single); err != nil {
+func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list MemberStatusList) error) error {
+	if err := cb(ServerGroupSingle, ds.Single); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupAgents, &ds.Agents); err != nil {
+	if err := cb(ServerGroupAgents, ds.Agents); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupDBServers, &ds.DBServers); err != nil {
+	if err := cb(ServerGroupDBServers, ds.DBServers); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupCoordinators, &ds.Coordinators); err != nil {
+	if err := cb(ServerGroupCoordinators, ds.Coordinators); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupSyncMasters, &ds.SyncMasters); err != nil {
+	if err := cb(ServerGroupSyncMasters, ds.SyncMasters); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupSyncWorkers, &ds.SyncWorkers); err != nil {
+	if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -190,8 +190,8 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 
 // AllMembersReady returns true when all members are in the Ready state.
 func (ds DeploymentStatusMembers) AllMembersReady() bool {
-	if err := ds.ForeachServerGroup(func(group ServerGroup, list *MemberStatusList) error {
-		for _, x := range *list {
+	if err := ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
+		for _, x := range list {
 			if !x.Conditions.IsTrue(ConditionTypeReady) {
 				return fmt.Errorf("not ready")
 			}
