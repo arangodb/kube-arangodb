@@ -49,6 +49,8 @@ func TestMemberStatusList(t *testing.T) {
 	assert.NoError(t, list.RemoveByID(m3.ID))
 	assert.Equal(t, 2, len(*list))
 	assert.False(t, list.ContainsID(m3.ID))
+	assert.Equal(t, m1.ID, (*list)[0].ID)
+	assert.Equal(t, m2.ID, (*list)[1].ID)
 
 	m2.PodName = "foo"
 	assert.NoError(t, list.Update(m2))
@@ -58,4 +60,10 @@ func TestMemberStatusList(t *testing.T) {
 	assert.True(t, found)
 	assert.Equal(t, "foo", x.PodName)
 	assert.Equal(t, m2.ID, x.ID)
+
+	assert.NoError(t, list.Add(m3))
+	assert.Equal(t, 3, len(*list))
+	assert.Equal(t, m1.ID, (*list)[0].ID)
+	assert.Equal(t, m2.ID, (*list)[1].ID)
+	assert.Equal(t, m3.ID, (*list)[2].ID)
 }

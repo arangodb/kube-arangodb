@@ -163,8 +163,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Go over all members, check for missing pods
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-		for _, m := range *members {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
 					switch m.Phase {

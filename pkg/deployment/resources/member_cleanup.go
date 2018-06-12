@@ -80,12 +80,12 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
 	var podNamesToRemove, pvcNamesToRemove []string
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list *api.MemberStatusList) error {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
 			// We're not interested in these other groups
 			return nil
 		}
-		for _, m := range *list {
+		for _, m := range list {
 			if serverFound(m.ID) {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
@@ -103,7 +103,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 				// Member no longer part of cluster, remove it
 				log.Info().Str("member", m.ID).Str("role", group.AsRole()).Msg("Member is no longer part of the ArangoDB cluster. Removing it.")
 			}
-			list.RemoveByID(m.ID)
+			status.Members.RemoveByID(m.ID, group)
 			updateStatusNeeded = true
 			// Remove Pod & PVC (if any)
 			if m.PodName != "" {

@@ -93,8 +93,8 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	var plan api.Plan
 
 	// Check for members in failed state
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-		for _, m := range *members {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
 			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
 				newID := ""
 				if group == api.ServerGroupAgents {
@@ -149,8 +149,8 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 			}
 			return nil
 		}
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-			for _, m := range *members {
+		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+			for _, m := range members {
 				if len(plan) > 0 {
 					// Only 1 change at a time
 					continue
@@ -180,8 +180,8 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 
 	// Check for the need to rotate TLS certificate of a members
 	if len(plan) == 0 && spec.TLS.IsSecure() {
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-			for _, m := range *members {
+		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+			for _, m := range members {
 				if len(plan) > 0 {
 					// Only 1 change at a time
 					continue
