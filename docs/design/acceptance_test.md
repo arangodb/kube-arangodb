@@ -51,48 +51,82 @@ Run the following tests for the following images:
 - Community 3.3.10
 - Enterprise 3.3.10
 
-### Test 1: Create single server deployment
+### Test 1a: Create single server deployment
 
 Create an `ArangoDeployment` of mode `Single`.
 
 - [ ] The deployment must start
-- [ ] The deployment 
+- [ ] The deployment must yield 1 `Pod`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
 
-## Scenario's
+### Test 1b: Create active failover deployment
 
-The following test scenario's must be covered by automated tests:
+Create an `ArangoDeployment` of mode `ActiveFailover`.
 
-- Creating 1 deployment (all modes, all environments, all storage engines)
-- Creating multiple deployments (all modes, all environments, all storage engines),
-  controlling each individually
-- Creating deployment with/without authentication
-- Creating deployment with/without TLS
+- [ ] The deployment must start
+- [ ] The deployment must yield 5 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
 
-- Updating deployment wrt:
-  - Number of servers (scaling, up/down)
-  - Image version (upgrading, downgrading within same minor version range (e.g. 3.2.x))
-  - Immutable fields (should be reset automatically)
+### Test 1c: Create cluster deployment
 
-- Resilience:
-  - Delete individual pods
-  - Delete individual PVCs
-  - Delete individual Services
-  - Delete Node
-  - Restart Node
-  - API server unavailable
+Create an `ArangoDeployment` of mode `Cluster`.
 
-- Persistent Volumes:
-  - hint: RBAC file might need to be changed
-  - hint: get info via - client-go.CoreV1()
-  - Number of volumes should stay in reasonable bounds
-  - For some cases it might be possible to check that, the amount before and after the test stays the same
-  - A Cluster start should need 6 Volumes (DBServer + Agents)
-  - The release of a volume-claim should result in a release of the volume
+- [ ] The deployment must start
+- [ ] The deployment must yield 9 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
 
-## Test environments
+### Test 2a: Scale an active failover deployment
 
-- Kubernetes clusters
-  - Single node
-  - Multi node
-  - Access control mode (RBAC, ...)
-  - Persistent volumes ...
+Create an `ArangoDeployment` of mode `ActiveFailover`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 5 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Change the value of `spec.single.count` from 2 to 3.
+
+- [ ] A single server is added
+- [ ] The deployment must yield 6 `Pods`
+
+Change the value of `spec.single.count` from 3 to 2.
+
+- [ ] A single server is removed
+- [ ] The deployment must yield 5 `Pods`
+
+### Test 2b: Scale a cluster deployment
+
+Create an `ArangoDeployment` of mode `Cluster`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 9 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Change the value of `spec.dbservers.count` from 3 to 5.
+
+- [ ] Two dbservers are added
+- [ ] The deployment must yield 11 `Pods`
+
+Change the value of `spec.coordinators.count` from 3 to 4.
+
+- [ ] A coordinator is added
+- [ ] The deployment must yield 12 `Pods`
+
+Change the value of `spec.dbservers.count` from 5 to 2.
+
+- [ ] Three dbservers are removed (one by one)
+- [ ] The deployment must yield 9 `Pods`
+
+Change the value of `spec.coordinators.count` from 4 to 1.
+
+- [ ] Three coordinators are removed (one by one)
+- [ ] The deployment must yield 6 `Pods`
