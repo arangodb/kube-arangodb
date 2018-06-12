@@ -45,7 +45,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, _ := r.context.GetStatus()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCCounter.Inc()

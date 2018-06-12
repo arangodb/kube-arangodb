@@ -45,7 +45,7 @@ func (r *Resources) CleanupTerminatedPods() error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, _ := r.context.GetStatus()
 	for _, p := range pods {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(p) {
 			// Image ID pods are not relevant to inspect here

@@ -71,7 +71,7 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 		delay := time.Second * 2
 
 		// Is deployment in running state
-		if ci.depl.status.Phase == api.DeploymentPhaseRunning {
+		if ci.depl.GetPhase() == api.DeploymentPhaseRunning {
 			// Update cluster with our state
 			ctx := context.Background()
 			safeToAskCluster, err := ci.updateClusterServerCount(ctx)

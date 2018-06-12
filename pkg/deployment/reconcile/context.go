@@ -40,10 +40,10 @@ type Context interface {
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
-	GetStatus() api.DeploymentStatus
+	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
-	UpdateStatus(status api.DeploymentStatus, force ...bool) error
+	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)

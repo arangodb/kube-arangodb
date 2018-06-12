@@ -56,7 +56,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
@@ -162,8 +162,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Go over all members, check for missing pods
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-		for _, m := range *members {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
 					switch m.Phase {
@@ -236,7 +236,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Save status
-	if err := r.context.UpdateStatus(status); err != nil {
+	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 

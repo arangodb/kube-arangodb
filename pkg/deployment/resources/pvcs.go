@@ -42,7 +42,7 @@ func (r *Resources) EnsurePVCs() error {
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	iterator := r.context.GetServerGroupIterator()
-	status := r.context.GetStatus()
+	status, _ := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {

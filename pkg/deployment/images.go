@@ -55,15 +55,15 @@ type imagesBuilder struct {
 // ensureImages creates pods needed to detect ImageID for specified images.
 // Returns: retrySoon, error
 func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, error) {
+	status, lastVersion := d.GetStatus()
 	ib := imagesBuilder{
 		APIObject: apiObject,
 		Spec:      apiObject.Spec,
-		Status:    d.status,
+		Status:    status,
 		Log:       d.deps.Log,
 		KubeCli:   d.deps.KubeCli,
 		UpdateCRStatus: func(status api.DeploymentStatus) error {
-			d.status = status
-			if err := d.updateCRStatus(); err != nil {
+			if err := d.UpdateStatus(status, lastVersion); err != nil {
 				return maskAny(err)
 			}
 			return nil
