@@ -70,7 +70,7 @@ func (r *Resilience) CheckMemberFailure() error {
 					} else if failureAcceptable {
 						log.Info().Msg("Member is not ready for long time, marking is failed")
 						m.Phase = api.MemberPhaseFailed
-						status.Members.UpdateMemberStatus(m, group)
+						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
 						log.Warn().Msgf("Member is not ready for long time, but it is not safe to mark it a failed because: %s", reason)
@@ -89,7 +89,7 @@ func (r *Resilience) CheckMemberFailure() error {
 					} else if failureAcceptable {
 						log.Info().Msg("Member has terminated too often in recent history, marking is failed")
 						m.Phase = api.MemberPhaseFailed
-						status.Members.UpdateMemberStatus(m, group)
+						status.Members.Update(m, group)
 						updateStatusNeeded = true
 					} else {
 						log.Warn().Msgf("Member has terminated too often in recent history, but it is not safe to mark it a failed because: %s", reason)

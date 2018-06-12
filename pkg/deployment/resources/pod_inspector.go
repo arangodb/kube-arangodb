@@ -147,7 +147,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 			}
 		}
 		if updateMemberStatusNeeded {
-			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
+			if err := status.Members.Update(memberStatus, group); err != nil {
 				return maskAny(err)
 			}
 		}
@@ -181,7 +181,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 								m.RecentTerminations = append(m.RecentTerminations, now)
 							}
 							// Save it
-							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.Update(m, group); err != nil {
 								return maskAny(err)
 							}
 						}
@@ -205,7 +205,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 						}
 						if updateMemberNeeded {
 							// Save it
-							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.Update(m, group); err != nil {
 								return maskAny(err)
 							}
 						}

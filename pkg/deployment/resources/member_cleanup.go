@@ -89,7 +89,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 			if serverFound(m.ID) {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
-					list.Update(m)
+					status.Members.Update(m, group)
 					updateStatusNeeded = true
 				}
 				continue
