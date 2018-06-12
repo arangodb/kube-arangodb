@@ -25,6 +25,7 @@ package deployment
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -84,6 +85,7 @@ const (
 type Deployment struct {
 	apiObject *api.ArangoDeployment // API object
 	status    struct {
+		mutex   sync.Mutex
 		version int32
 		last    api.DeploymentStatus // Internal status copy of the CR
 	}

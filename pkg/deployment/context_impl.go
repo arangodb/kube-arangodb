@@ -25,7 +25,6 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
 
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
@@ -78,7 +77,10 @@ func (d *Deployment) GetSpec() api.DeploymentSpec {
 // GetStatus returns the current status of the deployment
 // together with the current version of that status.
 func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
-	version := atomic.LoadInt32(&d.status.version)
+	d.status.mutex.Lock()
+	defer d.status.mutex.Unlock()
+
+	version := d.status.version
 	return *d.status.last.DeepCopy(), version
 }
 
@@ -87,7 +89,10 @@ func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
 // If the given last version does not match the actual last version of the status object,
 // an error is returned.
 func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
-	if !atomic.CompareAndSwapInt32(&d.status.version, lastVersion, lastVersion+1) {
+	d.status.mutex.Lock()
+	defer d.status.mutex.Unlock()
+
+	if d.status.version != lastVersion {
 		// Status is obsolete
 		d.deps.Log.Error().
 			Int32("expected-version", lastVersion).
@@ -95,6 +100,7 @@ func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32
 			Msg("UpdateStatus version conflict error.")
 		return maskAny(fmt.Errorf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
+	d.status.version++
 	d.status.last = *status.DeepCopy()
 	if err := d.updateCRStatus(force...); err != nil {
 		return maskAny(err)
