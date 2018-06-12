@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/arangosync/client"
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	"k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -52,6 +53,8 @@ type Context interface {
 	// GetAgencyClients returns a client connection for every agency member.
 	// If the given predicate is not nil, only agents are included where the given predicate returns true.
 	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
+	// GetAgency returns a connection to the entire agency.
+	GetAgency(ctx context.Context) (agency.Agency, error)
 	// GetSyncServerClient returns a cached client for a specific arangosync server.
 	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
 	// CreateEvent creates a given event.

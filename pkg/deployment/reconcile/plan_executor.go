@@ -90,7 +90,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 			// Continue with next action
 		} else {
 			// First action of plan has been started, check its progress
-			ready, err := action.CheckProgress(ctx)
+			ready, abort, err := action.CheckProgress(ctx)
 			if err != nil {
 				log.Debug().Err(err).Msg("Failed to check action progress")
 				return false, maskAny(err)
@@ -106,14 +106,26 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 					return false, maskAny(err)
 				}
 			}
-			log.Debug().Bool("ready", ready).Msg("Action CheckProgress completed")
+			log.Debug().
+				Bool("abort", abort).
+				Bool("ready", ready).
+				Msg("Action CheckProgress completed")
 			if !ready {
-				// Not ready yet, check timeout
-				deadline := planAction.CreationTime.Add(action.Timeout())
-				if time.Now().After(deadline) {
-					// Timeout has expired
-					log.Warn().Msg("Action not finished in time. Removing the entire plan")
-					d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+				deadlineExpired := false
+				if abort {
+					log.Warn().Msg("Action aborted. Removing the entire plan")
+					d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+				} else {
+					// Not ready yet & no abort, check timeout
+					deadline := planAction.CreationTime.Add(action.Timeout())
+					if time.Now().After(deadline) {
+						// Timeout has expired
+						deadlineExpired = true
+						log.Warn().Msg("Action not finished in time. Removing the entire plan")
+						d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+					}
+				}
+				if abort || deadlineExpired {
 					// Replace plan with empty one and save it.
 					status.Plan = api.Plan{}
 					if err := d.context.UpdateStatus(status); err != nil {

@@ -28,12 +28,14 @@ import (
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -117,6 +119,15 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 		}
 		conn := client.Connection()
 		result = append(result, conn)
+	}
+	return result, nil
+}
+
+// GetAgency returns a connection to the entire agency.
+func (d *Deployment) GetAgency(ctx context.Context) (agency.Agency, error) {
+	result, err := arangod.CreateArangodAgencyClient(ctx, d.deps.KubeCli.CoreV1(), d.apiObject)
+	if err != nil {
+		return nil, maskAny(err)
 	}
 	return result, nil
 }

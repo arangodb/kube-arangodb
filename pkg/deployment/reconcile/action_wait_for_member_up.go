@@ -54,7 +54,7 @@ type actionWaitForMemberUp struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionWaitForMemberUp) Start(ctx context.Context) (bool, error) {
-	ready, err := a.CheckProgress(ctx)
+	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
 		return false, maskAny(err)
 	}
@@ -63,7 +63,7 @@ func (a *actionWaitForMemberUp) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, error) {
 	if a.action.Group.IsArangosync() {
 		return a.checkProgressArangoSync(ctx)
 	}
@@ -85,85 +85,85 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, error)
 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
-func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, bool, error) {
 	log := a.log
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
-	return true, nil
+	return true, false, nil
 }
 
 // checkProgressAgent checks the progress of the action in the case
 // of an agent.
-func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, bool, error) {
 	log := a.log
 	clients, err := a.actionCtx.GetAgencyClients(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency clients")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 
 	if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")
-		return false, nil
+		return false, false, nil
 	}
 
 	log.Debug().Msg("Agency is happy")
 
-	return true, nil
+	return true, false, nil
 }
 
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
-func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, bool, error) {
 	log := a.log
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	cluster, err := c.Cluster(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	h, err := cluster.Health(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get cluster health")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	sh, found := h.Health[driver.ServerID(a.action.MemberID)]
 	if !found {
 		log.Debug().Msg("Member not yet found in cluster health")
-		return false, nil
+		return false, false, nil
 	}
 	if sh.Status != driver.ServerStatusGood {
 		log.Debug().Str("status", string(sh.Status)).Msg("Member set status not yet good")
-		return false, nil
+		return false, false, nil
 	}
-	return true, nil
+	return true, false, nil
 }
 
 // checkProgressArangoSync checks the progress of the action in the case
 // of a sync master / worker.
-func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, bool, error) {
 	log := a.log
 	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.ID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create arangosync client")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	if err := c.Health(ctx); err != nil {
 		log.Debug().Err(err).Msg("Health not ok yet")
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
-	return true, nil
+	return true, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.
