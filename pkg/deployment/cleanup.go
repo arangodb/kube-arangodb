@@ -35,7 +35,8 @@ func (d *Deployment) removePodFinalizers() error {
 		return maskAny(err)
 	}
 	for _, p := range pods {
-		if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+		ignoreNotFound := true
+		if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove pod finalizers")
 		}
 	}
@@ -51,7 +52,8 @@ func (d *Deployment) removePVCFinalizers() error {
 		return maskAny(err)
 	}
 	for _, p := range pvcs {
-		if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+		ignoreNotFound := true
+		if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 		}
 	}

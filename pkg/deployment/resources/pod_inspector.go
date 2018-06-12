@@ -56,7 +56,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, lastVersion := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
@@ -78,7 +78,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+				ignoreNotFound := false
+				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
 					return maskAny(err)
 				}
@@ -146,7 +147,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 			}
 		}
 		if updateMemberStatusNeeded {
-			if err := status.Members.UpdateMemberStatus(memberStatus, group); err != nil {
+			if err := status.Members.Update(memberStatus, group); err != nil {
 				return maskAny(err)
 			}
 		}
@@ -162,8 +163,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Go over all members, check for missing pods
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members *api.MemberStatusList) error {
-		for _, m := range *members {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
 					switch m.Phase {
@@ -180,7 +181,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 								m.RecentTerminations = append(m.RecentTerminations, now)
 							}
 							// Save it
-							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.Update(m, group); err != nil {
 								return maskAny(err)
 							}
 						}
@@ -204,7 +205,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 						}
 						if updateMemberNeeded {
 							// Save it
-							if err := status.Members.UpdateMemberStatus(m, group); err != nil {
+							if err := status.Members.Update(m, group); err != nil {
 								return maskAny(err)
 							}
 						}
@@ -236,7 +237,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 
 	// Save status
-	if err := r.context.UpdateStatus(status); err != nil {
+	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 

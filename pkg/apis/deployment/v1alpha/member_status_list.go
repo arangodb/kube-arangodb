@@ -76,7 +76,7 @@ func (l MemberStatusList) ElementByPVCName(pvcName string) (MemberStatus, bool) 
 
 // Add a member to the list.
 // Returns an AlreadyExistsError if the ID of the given member already exists.
-func (l *MemberStatusList) Add(m MemberStatus) error {
+func (l *MemberStatusList) add(m MemberStatus) error {
 	src := *l
 	for _, x := range src {
 		if x.ID == m.ID {
@@ -89,7 +89,7 @@ func (l *MemberStatusList) Add(m MemberStatus) error {
 
 // Update a member in the list.
 // Returns a NotFoundError if the ID of the given member cannot be found.
-func (l MemberStatusList) Update(m MemberStatus) error {
+func (l MemberStatusList) update(m MemberStatus) error {
 	for i, x := range l {
 		if x.ID == m.ID {
 			l[i] = m
@@ -101,7 +101,7 @@ func (l MemberStatusList) Update(m MemberStatus) error {
 
 // RemoveByID a member with given ID from the list.
 // Returns a NotFoundError if the ID of the given member cannot be found.
-func (l *MemberStatusList) RemoveByID(id string) error {
+func (l *MemberStatusList) removeByID(id string) error {
 	src := *l
 	for i, x := range src {
 		if x.ID == id {

@@ -50,6 +50,10 @@ type clusterScalingIntegration struct {
 	}
 }
 
+const (
+	maxClusterBootstrapTime = time.Minute * 2 // Time we allow a cluster bootstrap to take, before we can do cluster inspections.
+)
+
 // newClusterScalingIntegration creates a new clusterScalingIntegration.
 func newClusterScalingIntegration(depl *Deployment) *clusterScalingIntegration {
 	return &clusterScalingIntegration{
@@ -67,20 +71,29 @@ func (ci *clusterScalingIntegration) SendUpdateToCluster(spec api.DeploymentSpec
 
 // listenForClusterEvents keep listening for changes entered in the UI of the cluster.
 func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct{}) {
+	start := time.Now()
+	goodInspections := 0
 	for {
 		delay := time.Second * 2
 
 		// Is deployment in running state
-		if ci.depl.status.Phase == api.DeploymentPhaseRunning {
+		if ci.depl.GetPhase() == api.DeploymentPhaseRunning {
 			// Update cluster with our state
 			ctx := context.Background()
-			safeToAskCluster, err := ci.updateClusterServerCount(ctx)
+			expectSuccess := goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
+			safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
 			if err != nil {
-				ci.log.Debug().Err(err).Msg("Cluster update failed")
+				if expectSuccess {
+					ci.log.Debug().Err(err).Msg("Cluster update failed")
+				}
 			} else if safeToAskCluster {
 				// Inspect once
-				if err := ci.inspectCluster(ctx); err != nil {
-					ci.log.Debug().Err(err).Msg("Cluster inspection failed")
+				if err := ci.inspectCluster(ctx, expectSuccess); err != nil {
+					if expectSuccess {
+						ci.log.Debug().Err(err).Msg("Cluster inspection failed")
+					}
+				} else {
+					goodInspections++
 				}
 			}
 		}
@@ -96,7 +109,7 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 }
 
 // Perform a single inspection of the cluster
-func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context) error {
+func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectSuccess bool) error {
 	log := ci.log
 	c, err := ci.depl.clientCache.GetDatabase(ctx)
 	if err != nil {
@@ -104,7 +117,9 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context) error {
 	}
 	req, err := arangod.GetNumberOfServers(ctx, c.Connection())
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get number of servers")
+		if expectSuccess {
+			log.Debug().Err(err).Msg("Failed to get number of servers")
+		}
 		return maskAny(err)
 	}
 	if req.Coordinators == nil && req.DBServers == nil {
@@ -150,7 +165,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context) error {
 
 // updateClusterServerCount updates the intended number of servers of the cluster.
 // Returns true when it is safe to ask the cluster for updates.
-func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Context) (bool, error) {
+func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Context, expectSuccess bool) (bool, error) {
 	// Any update needed?
 	ci.pendingUpdate.mutex.Lock()
 	spec := ci.pendingUpdate.spec
@@ -168,7 +183,9 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	coordinatorCount := spec.Coordinators.GetCount()
 	dbserverCount := spec.DBServers.GetCount()
 	if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
-		log.Debug().Err(err).Msg("Failed to set number of servers")
+		if expectSuccess {
+			log.Debug().Err(err).Msg("Failed to set number of servers")
+		}
 		return false, maskAny(err)
 	}
 

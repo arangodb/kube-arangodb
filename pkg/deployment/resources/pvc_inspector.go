@@ -45,7 +45,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 	}
 
 	// Update member status from all pods found
-	status := r.context.GetStatus()
+	status, _ := r.context.GetStatus()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCCounter.Inc()
@@ -59,7 +59,8 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+				ignoreNotFound := false
+				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
 					return maskAny(err)
 				}

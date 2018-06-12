@@ -4,9 +4,4 @@ metadata:
   name: "example-simple-cluster"
 spec:
   mode: Cluster
-  image: arangodb/arangodb:3.3.4
-  tls:
-    altNames: ["kube-01", "kube-02", "kube-03"]
-  coordinators:
-    args:
-      - --log.level=true
+  image: arangodb/arangodb:3.3.10

@@ -75,23 +75,23 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 // ForeachServerGroup calls the given callback for all server groups.
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.
-func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list *MemberStatusList) error) error {
-	if err := cb(ServerGroupSingle, &ds.Single); err != nil {
+func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list MemberStatusList) error) error {
+	if err := cb(ServerGroupSingle, ds.Single); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupAgents, &ds.Agents); err != nil {
+	if err := cb(ServerGroupAgents, ds.Agents); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupDBServers, &ds.DBServers); err != nil {
+	if err := cb(ServerGroupDBServers, ds.DBServers); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupCoordinators, &ds.Coordinators); err != nil {
+	if err := cb(ServerGroupCoordinators, ds.Coordinators); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupSyncMasters, &ds.SyncMasters); err != nil {
+	if err := cb(ServerGroupSyncMasters, ds.SyncMasters); err != nil {
 		return maskAny(err)
 	}
-	if err := cb(ServerGroupSyncWorkers, &ds.SyncWorkers); err != nil {
+	if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -137,22 +137,47 @@ func (ds DeploymentStatusMembers) MemberStatusByPVCName(pvcName string) (MemberS
 	return MemberStatus{}, 0, false
 }
 
-// UpdateMemberStatus updates the given status in the given group.
-func (ds *DeploymentStatusMembers) UpdateMemberStatus(status MemberStatus, group ServerGroup) error {
+// Add adds the given status in the given group.
+func (ds *DeploymentStatusMembers) Add(status MemberStatus, group ServerGroup) error {
 	var err error
 	switch group {
 	case ServerGroupSingle:
-		err = ds.Single.Update(status)
+		err = ds.Single.add(status)
 	case ServerGroupAgents:
-		err = ds.Agents.Update(status)
+		err = ds.Agents.add(status)
 	case ServerGroupDBServers:
-		err = ds.DBServers.Update(status)
+		err = ds.DBServers.add(status)
 	case ServerGroupCoordinators:
-		err = ds.Coordinators.Update(status)
+		err = ds.Coordinators.add(status)
 	case ServerGroupSyncMasters:
-		err = ds.SyncMasters.Update(status)
+		err = ds.SyncMasters.add(status)
 	case ServerGroupSyncWorkers:
-		err = ds.SyncWorkers.Update(status)
+		err = ds.SyncWorkers.add(status)
+	default:
+		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+	}
+	if err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// Update updates the given status in the given group.
+func (ds *DeploymentStatusMembers) Update(status MemberStatus, group ServerGroup) error {
+	var err error
+	switch group {
+	case ServerGroupSingle:
+		err = ds.Single.update(status)
+	case ServerGroupAgents:
+		err = ds.Agents.update(status)
+	case ServerGroupDBServers:
+		err = ds.DBServers.update(status)
+	case ServerGroupCoordinators:
+		err = ds.Coordinators.update(status)
+	case ServerGroupSyncMasters:
+		err = ds.SyncMasters.update(status)
+	case ServerGroupSyncWorkers:
+		err = ds.SyncWorkers.update(status)
 	default:
 		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
@@ -168,17 +193,17 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 	var err error
 	switch group {
 	case ServerGroupSingle:
-		err = ds.Single.RemoveByID(id)
+		err = ds.Single.removeByID(id)
 	case ServerGroupAgents:
-		err = ds.Agents.RemoveByID(id)
+		err = ds.Agents.removeByID(id)
 	case ServerGroupDBServers:
-		err = ds.DBServers.RemoveByID(id)
+		err = ds.DBServers.removeByID(id)
 	case ServerGroupCoordinators:
-		err = ds.Coordinators.RemoveByID(id)
+		err = ds.Coordinators.removeByID(id)
 	case ServerGroupSyncMasters:
-		err = ds.SyncMasters.RemoveByID(id)
+		err = ds.SyncMasters.removeByID(id)
 	case ServerGroupSyncWorkers:
-		err = ds.SyncWorkers.RemoveByID(id)
+		err = ds.SyncWorkers.removeByID(id)
 	default:
 		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
@@ -190,8 +215,8 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 
 // AllMembersReady returns true when all members are in the Ready state.
 func (ds DeploymentStatusMembers) AllMembersReady() bool {
-	if err := ds.ForeachServerGroup(func(group ServerGroup, list *MemberStatusList) error {
-		for _, x := range *list {
+	if err := ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
+		for _, x := range list {
 			if !x.Conditions.IsTrue(ConditionTypeReady) {
 				return fmt.Errorf("not ready")
 			}
