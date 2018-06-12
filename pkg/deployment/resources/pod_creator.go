@@ -586,7 +586,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string)
 	m.Conditions.Remove(api.ConditionTypeReady)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
-	if err := status.Members.UpdateMemberStatus(m, group); err != nil {
+	if err := status.Members.Update(m, group); err != nil {
 		return maskAny(err)
 	}
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
