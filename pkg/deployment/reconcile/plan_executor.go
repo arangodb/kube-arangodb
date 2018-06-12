@@ -44,7 +44,10 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	for {
 		loopStatus, _ := d.context.GetStatus()
 		if len(loopStatus.Plan) == 0 {
-			// No plan exists, nothing to be done
+			// No plan exists or all action have finished, nothing to be done
+			if !firstLoop {
+				log.Debug().Msg("Reconciliation plan has finished")
+			}
 			return !firstLoop, nil
 		}
 		firstLoop = false
