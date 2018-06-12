@@ -90,68 +90,68 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	switch group {
 	case api.ServerGroupSingle:
 		log.Debug().Str("id", id).Msg("Adding single server")
-		if err := status.Members.Single.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
-		if err := status.Members.Agents.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
-		if err := status.Members.DBServers.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
-		if err := status.Members.Coordinators.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
-		if err := status.Members.SyncMasters.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
-		if err := status.Members.SyncWorkers.Add(api.MemberStatus{
+		if err := status.Members.Add(api.MemberStatus{
 			ID:        id,
 			CreatedAt: metav1.Now(),
 			Phase:     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
-		}); err != nil {
+		}, group); err != nil {
 			return "", maskAny(err)
 		}
 	default:
