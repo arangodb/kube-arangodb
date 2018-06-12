@@ -34,7 +34,7 @@ const (
 )
 
 // RemovePodFinalizers removes the given finalizers from the given pod.
-func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.Pod, finalizers []string) error {
+func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.Pod, finalizers []string, ignoreNotFound bool) error {
 	pods := kubecli.CoreV1().Pods(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := pods.Get(p.GetName(), metav1.GetOptions{})
@@ -52,14 +52,14 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		*p = *result
 		return nil
 	}
-	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return maskAny(err)
 	}
 	return nil
 }
 
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
-func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.PersistentVolumeClaim, finalizers []string) error {
+func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
 	pvcs := kubecli.CoreV1().PersistentVolumeClaims(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := pvcs.Get(p.GetName(), metav1.GetOptions{})
@@ -77,7 +77,7 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		*p = *result
 		return nil
 	}
-	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -87,12 +87,16 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.
 // In case of an update conflict, the functions tries again.
-func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error) error {
+func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error, ignoreNotFound bool) error {
 	attempts := 0
 	for {
 		attempts++
 		obj, err := getFunc()
 		if err != nil {
+			if IsNotFound(err) && ignoreNotFound {
+				// Object no longer found and we're allowed to ignore that.
+				return nil
+			}
 			log.Warn().Err(err).Msg("Failed to get resource")
 			return maskAny(err)
 		}
@@ -125,6 +129,9 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 					// Try again
 					continue
 				}
+			} else if IsNotFound(err) && ignoreNotFound {
+				// Object no longer found and we're allowed to ignore that.
+				return nil
 			} else if err != nil {
 				log.Warn().Err(err).Msg("Failed to update resource with fewer finalizers")
 				return maskAny(err)

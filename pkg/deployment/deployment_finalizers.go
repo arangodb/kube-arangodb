@@ -109,7 +109,8 @@ func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, dep
 		*depl = *result
 		return nil
 	}
-	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	ignoreNotFound := false
+	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return maskAny(err)
 	}
 	return nil

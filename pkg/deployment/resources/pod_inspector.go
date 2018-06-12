@@ -78,7 +78,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers()); err != nil {
+				ignoreNotFound := false
+				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
 					return maskAny(err)
 				}

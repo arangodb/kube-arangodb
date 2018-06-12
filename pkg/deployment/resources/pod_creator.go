@@ -32,6 +32,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/arangodb/go-driver/jwt"
@@ -428,7 +429,7 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string) error {
+func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once) error {
 	kubecli := r.context.GetKubeCli()
 	log := r.log
 	apiObject := r.context.GetAPIObject()
@@ -453,7 +454,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string)
 	// Find image ID
 	imageInfo, imageFound := status.Images.GetByImage(spec.GetImage())
 	if !imageFound {
-		log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+		imageNotFoundOnce.Do(func() {
+			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+		})
 		return nil
 	}
 	// Create pod
@@ -602,6 +605,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string)
 func (r *Resources) EnsurePods() error {
 	iterator := r.context.GetServerGroupIterator()
 	status, _ := r.context.GetStatus()
+	imageNotFoundOnce := &sync.Once{}
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhaseNone {
@@ -611,7 +615,7 @@ func (r *Resources) EnsurePods() error {
 				continue
 			}
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(spec, m.ID); err != nil {
+			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce); err != nil {
 				return maskAny(err)
 			}
 		}

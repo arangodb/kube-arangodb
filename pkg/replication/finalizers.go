@@ -78,7 +78,8 @@ func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.Arang
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if err := removeDeploymentReplicationFinalizers(log, dr.deps.CRCli, p, removalList); err != nil {
+		ignoreNotFound := false
+		if err := removeDeploymentReplicationFinalizers(log, dr.deps.CRCli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update deployment replication (to remove finalizers)")
 			return maskAny(err)
 		}
@@ -165,7 +166,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 }
 
 // removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
-func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string) error {
+func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
 	repls := crcli.ReplicationV1alpha().ArangoDeploymentReplications(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := repls.Get(p.GetName(), metav1.GetOptions{})
@@ -183,7 +184,7 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 		*p = *result
 		return nil
 	}
-	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc); err != nil {
+	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return maskAny(err)
 	}
 	return nil
