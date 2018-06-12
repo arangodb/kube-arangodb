@@ -84,9 +84,15 @@ func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
 
 // UpdateStatus replaces the status of the deployment with the given status and
 // updates the resources in k8s.
+// If the given last version does not match the actual last version of the status object,
+// an error is returned.
 func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	if !atomic.CompareAndSwapInt32(&d.status.version, lastVersion, lastVersion+1) {
 		// Status is obsolete
+		d.deps.Log.Error().
+			Int32("expected-version", lastVersion).
+			Int32("actual-version", d.status.version).
+			Msg("UpdateStatus version conflict error.")
 		return maskAny(fmt.Errorf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
 	d.status.last = *status.DeepCopy()
