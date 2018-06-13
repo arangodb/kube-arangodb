@@ -130,3 +130,20 @@ Change the value of `spec.coordinators.count` from 4 to 1.
 
 - [ ] Three coordinators are removed (one by one)
 - [ ] The deployment must yield 6 `Pods`
+
+
+## Further ideas to be discussed
+
+I just collect further things which I think are missing:
+
+  - test at least a cluster with local storage and without
+  - test at least a cluster with production and development settings,
+    note that this implies a minimal size of the kubernetes cluster,
+    at least if we do all of the above tests
+  - add resilience tests:
+     - kill a pod, should come back (try all three types agent, coord, dbserver)
+     - reboot a node, should come back, at least if nothing is ephemeral
+     - kill a node permanently with replicated data, should recover and repair
+     - kill a node if it contains non-replicated data
+       should hang and not recover, but dropping the collection should
+       alow it to recover and repair (obviously, without the data)
