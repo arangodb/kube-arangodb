@@ -41,9 +41,9 @@ func (s CleanoutJobStatus) IsFailed() bool {
 	return s.state == "Failed"
 }
 
-// IsDone returns true when the job is finished
-func (s CleanoutJobStatus) IsDone() bool {
-	return s.state == "Done"
+// IsFinished returns true when the job is finished
+func (s CleanoutJobStatus) IsFinished() bool {
+	return s.state == "Finished"
 }
 
 // Reason returns the reason for the current state.
@@ -60,7 +60,7 @@ var (
 	agencyJobStateKeyPrefixes = [][]string{
 		{"arango", "Target", "ToDo"},
 		{"arango", "Target", "Pending"},
-		{"arango", "Target", "Done"},
+		{"arango", "Target", "Finished"},
 		{"arango", "Target", "Failed"},
 	}
 )
