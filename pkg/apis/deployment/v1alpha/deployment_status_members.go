@@ -23,8 +23,6 @@
 package v1alpha
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 )
 
@@ -214,16 +212,24 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 }
 
 // AllMembersReady returns true when all members are in the Ready state.
-func (ds DeploymentStatusMembers) AllMembersReady() bool {
-	if err := ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
-		for _, x := range list {
-			if !x.Conditions.IsTrue(ConditionTypeReady) {
-				return fmt.Errorf("not ready")
-			}
+func (ds DeploymentStatusMembers) AllMembersReady(mode DeploymentMode, syncEnabled bool) bool {
+	syncReady := func() bool {
+		if syncEnabled {
+			return ds.SyncMasters.AllMembersReady() && ds.SyncWorkers.AllMembersReady()
 		}
-		return nil
-	}); err != nil {
+		return true
+	}
+	switch mode {
+	case DeploymentModeSingle:
+		return ds.Single.MembersReady() > 0
+	case DeploymentModeActiveFailover:
+		return ds.Agents.AllMembersReady() && ds.Single.MembersReady() > 0
+	case DeploymentModeCluster:
+		return ds.Agents.AllMembersReady() &&
+			ds.DBServers.AllMembersReady() &&
+			ds.Coordinators.AllMembersReady() &&
+			syncReady()
+	default:
 		return false
 	}
-	return true
 }
