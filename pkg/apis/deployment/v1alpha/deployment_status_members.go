@@ -211,7 +211,7 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 	return nil
 }
 
-// AllMembersReady returns true when all members are in the Ready state.
+// AllMembersReady returns true when all members, that must be ready for the given mode, are in the Ready state.
 func (ds DeploymentStatusMembers) AllMembersReady(mode DeploymentMode, syncEnabled bool) bool {
 	syncReady := func() bool {
 		if syncEnabled {
