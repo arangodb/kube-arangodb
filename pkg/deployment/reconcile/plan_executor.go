@@ -44,7 +44,10 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	for {
 		loopStatus, _ := d.context.GetStatus()
 		if len(loopStatus.Plan) == 0 {
-			// No plan exists, nothing to be done
+			// No plan exists or all action have finished, nothing to be done
+			if !firstLoop {
+				log.Debug().Msg("Reconciliation plan has finished")
+			}
 			return !firstLoop, nil
 		}
 		firstLoop = false
@@ -92,7 +95,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 			// Continue with next action
 		} else {
 			// First action of plan has been started, check its progress
-			ready, err := action.CheckProgress(ctx)
+			ready, abort, err := action.CheckProgress(ctx)
 			if err != nil {
 				log.Debug().Err(err).Msg("Failed to check action progress")
 				return false, maskAny(err)
@@ -109,14 +112,26 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 					}
 				}
 			}
-			log.Debug().Bool("ready", ready).Msg("Action CheckProgress completed")
+			log.Debug().
+				Bool("abort", abort).
+				Bool("ready", ready).
+				Msg("Action CheckProgress completed")
 			if !ready {
-				// Not ready yet, check timeout
-				deadline := planAction.CreationTime.Add(action.Timeout())
-				if time.Now().After(deadline) {
-					// Timeout has expired
-					log.Warn().Msg("Action not finished in time. Removing the entire plan")
-					d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+				deadlineExpired := false
+				if abort {
+					log.Warn().Msg("Action aborted. Removing the entire plan")
+					d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+				} else {
+					// Not ready yet & no abort, check timeout
+					deadline := planAction.CreationTime.Add(action.Timeout())
+					if time.Now().After(deadline) {
+						// Timeout has expired
+						deadlineExpired = true
+						log.Warn().Msg("Action not finished in time. Removing the entire plan")
+						d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+					}
+				}
+				if abort || deadlineExpired {
 					// Replace plan with empty one and save it.
 					status, lastVersion := d.context.GetStatus()
 					status.Plan = api.Plan{}

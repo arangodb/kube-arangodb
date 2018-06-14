@@ -67,8 +67,8 @@ func (a *renewTLSCertificateAction) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *renewTLSCertificateAction) CheckProgress(ctx context.Context) (bool, error) {
-	return true, nil
+func (a *renewTLSCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+	return true, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.

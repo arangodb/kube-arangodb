@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -86,14 +87,18 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.RemoveMemberByID(a.action.MemberID); err != nil {
 		return false, maskAny(err)
 	}
+	// Check that member has been removed
+	if _, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID); found {
+		return false, maskAny(fmt.Errorf("Member %s still exists", a.action.MemberID))
+	}
 	return true, nil
 }
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *actionRemoveMember) CheckProgress(ctx context.Context) (bool, error) {
+func (a *actionRemoveMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Nothing todo
-	return true, nil
+	return true, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.

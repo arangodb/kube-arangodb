@@ -75,7 +75,7 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 		defer cancel()
 		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
 			// Shutdown failed. Let's check if we're already done
-			if ready, err := a.CheckProgress(ctx); err == nil && ready {
+			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
 				// We're done
 				return true, nil
 			}
@@ -97,19 +97,19 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 }
 
 // CheckProgress checks the progress of the action.
-// Returns true if the action is completely finished, false otherwise.
-func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, error) {
+// Returns: ready, abort, error.
+func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
 		// Member not long exists
-		return true, nil
+		return true, false, nil
 	}
 	if m.Conditions.IsTrue(api.ConditionTypeTerminated) {
 		// Shutdown completed
-		return true, nil
+		return true, false, nil
 	}
 	// Member still not shutdown, retry soon
-	return false, nil
+	return false, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.

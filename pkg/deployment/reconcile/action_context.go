@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/arangodb/go-driver/agency"
+
 	"github.com/arangodb/arangosync/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
@@ -46,6 +48,8 @@ type ActionContext interface {
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAgencyClients returns a client connection for every agency member.
 	GetAgencyClients(ctx context.Context) ([]driver.Connection, error)
+	// GetAgency returns a connection to the entire agency.
+	GetAgency(ctx context.Context) (agency.Agency, error)
 	// GetSyncServerClient returns a cached client for a specific arangosync server.
 	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
 	// GetMemberStatusByID returns the current member status
@@ -116,6 +120,15 @@ func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connect
 		return nil, maskAny(err)
 	}
 	return c, nil
+}
+
+// GetAgency returns a connection to the entire agency.
+func (ac *actionContext) GetAgency(ctx context.Context) (agency.Agency, error) {
+	a, err := ac.context.GetAgency(ctx)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return a, nil
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.
