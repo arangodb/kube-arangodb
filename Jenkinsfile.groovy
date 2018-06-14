@@ -58,17 +58,19 @@ def kubeConfigRoot = "/home/jenkins/.kube"
 def buildBuildSteps(Map myParams) {
     return {
         timestamps {
-            withEnv([
-            "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
-            "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
-            "IMAGETAG=jenkins-test",
-            "LONG=${myParams.LONG ? 1 : 0}",
-            "TESTOPTIONS=${myParams.TESTOPTIONS}",
-            ]) {
-                sh "make clean"
-                sh "make"
-                sh "make run-unit-tests"
-                sh "make docker-test"
+            timeout(time: 15) {
+                withEnv([
+                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                "IMAGETAG=jenkins-test",
+                "LONG=${myParams.LONG ? 1 : 0}",
+                "TESTOPTIONS=${myParams.TESTOPTIONS}",
+                ]) {
+                    sh "make clean"
+                    sh "make"
+                    sh "make run-unit-tests"
+                    sh "make docker-test"
+                }
             }
         }
     }
@@ -77,18 +79,20 @@ def buildBuildSteps(Map myParams) {
 def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
-            withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
-                withEnv([
-                "CLEANDEPLOYMENTS=1",
-                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
-                "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
-                "IMAGETAG=jenkins-test",
-                "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-                "LONG=${myParams.LONG ? 1 : 0}",
-                "TESTOPTIONS=${myParams.TESTOPTIONS}",
-                ]) {
-                    sh "make run-tests"
+            timeout(time: myParams.LONG ? 180 : 30) {
+                withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                    withEnv([
+                    "CLEANDEPLOYMENTS=1",
+                    "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                    "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
+                    "IMAGETAG=jenkins-test",
+                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                    "LONG=${myParams.LONG ? 1 : 0}",
+                    "TESTOPTIONS=${myParams.TESTOPTIONS}",
+                    ]) {
+                        sh "make run-tests"
+                    }
                 }
             }
         }
@@ -98,14 +102,16 @@ def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
 def buildCleanupSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
-            withEnv([
-                "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
-                "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
-                "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
-            ]) {
-                sh "./scripts/collect_logs.sh ${env.DEPLOYMENTNAMESPACE} ${kubeconfig}" 
-                archive includes: 'logs/*'
-                sh "make cleanup-tests"
+            timeout(time: 15) {
+                withEnv([
+                    "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
+                    "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
+                    "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
+                ]) {
+                    sh "./scripts/collect_logs.sh ${env.DEPLOYMENTNAMESPACE} ${kubeconfig}" 
+                    archive includes: 'logs/*'
+                    sh "make cleanup-tests"
+                }
             }
         }
     }
