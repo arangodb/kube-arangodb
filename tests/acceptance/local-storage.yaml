@@ -1,0 +1,9 @@
+apiVersion: "storage.arangodb.com/v1alpha"
+kind: "ArangoLocalStorage"
+metadata:
+  name: "acceptance-local-storage"
+spec:
+  storageClass:
+    name: acceptance
+  localPath:
+  - /var/lib/acceptance-test

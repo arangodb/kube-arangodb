@@ -55,6 +55,8 @@ Run the following tests for the following images:
 
 Create an `ArangoDeployment` of mode `Single`.
 
+Hint: Use `tests/acceptance/single.yaml`.
+
 - [ ] The deployment must start
 - [ ] The deployment must yield 1 `Pod`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
@@ -65,6 +67,8 @@ Create an `ArangoDeployment` of mode `Single`.
 
 Create an `ArangoDeployment` of mode `ActiveFailover`.
 
+Hint: Use `tests/acceptance/activefailover.yaml`.
+
 - [ ] The deployment must start
 - [ ] The deployment must yield 5 `Pods`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
@@ -74,6 +78,8 @@ Create an `ArangoDeployment` of mode `ActiveFailover`.
 ### Test 1c: Create cluster deployment
 
 Create an `ArangoDeployment` of mode `Cluster`.
+
+Hint: Use `tests/acceptance/cluster.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
@@ -104,6 +110,8 @@ Change the value of `spec.single.count` from 3 to 2.
 ### Test 2b: Scale a cluster deployment
 
 Create an `ArangoDeployment` of mode `Cluster`.
+
+Hint: Use `tests/acceptance/cluster.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
@@ -143,6 +151,8 @@ any group.
 
 Create an `ArangoDeployment` of mode `Single` with an environment of `Production`.
 
+Hint: Derive from `tests/acceptance/single.yaml`.
+
 - [ ] The deployment must start
 - [ ] The deployment must yield 1 `Pod`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
@@ -152,6 +162,8 @@ Create an `ArangoDeployment` of mode `Single` with an environment of `Production
 ### Test 3b: Create active failover deployment in production environment
 
 Create an `ArangoDeployment` of mode `ActiveFailover` with an environment of `Production`.
+
+Hint: Derive from `tests/acceptance/activefailover.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 5 `Pods`
@@ -163,6 +175,8 @@ Create an `ArangoDeployment` of mode `ActiveFailover` with an environment of `Pr
 
 Create an `ArangoDeployment` of mode `Cluster` with an environment of `Production`.
 
+Hint: Derive from `tests/acceptance/cluster.yaml`.
+
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
@@ -172,6 +186,8 @@ Create an `ArangoDeployment` of mode `Cluster` with an environment of `Productio
 ### Test 3d: Create cluster deployment in production environment and scale it
 
 Create an `ArangoDeployment` of mode `Cluster` with an environment of `Production`.
+
+Hint: Derive from `tests/acceptance/cluster.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
@@ -203,8 +219,12 @@ Change the value of `spec.coordinators.count` from 4 to 1.
 
 Ensure an `ArangoLocalStorage` is deployed.
 
+Hint: Use from `tests/acceptance/local-storage.yaml`.
+
 Create an `ArangoDeployment` of mode `Cluster` with a `StorageClass` that is
 mapped to an `ArangoLocalStorage` provider.
+
+Hint: Derive from `tests/acceptance/cluster.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
@@ -219,6 +239,8 @@ This test only applies to platforms that provide their own `StorageClasses`.
 Create an `ArangoDeployment` of mode `Cluster` with a `StorageClass` that is
 provided by the platform.
 
+Hint: Derive from `tests/acceptance/cluster.yaml`.
+
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
@@ -228,6 +250,8 @@ provided by the platform.
 ### Test 5a: Test `Pod` resilience on single servers
 
 Create an `ArangoDeployment` of mode `Single`.
+
+Hint: Use from `tests/acceptance/single.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 1 `Pod`
@@ -243,6 +267,8 @@ Delete the `Pod` of the deployment that contains the single server.
 ### Test 5b: Test `Pod` resilience on active failover
 
 Create an `ArangoDeployment` of mode `ActiveFailover`.
+
+Hint: Use from `tests/acceptance/activefailover.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 5 `Pods`
@@ -263,6 +289,8 @@ Delete a `Pod` of the deployment that contains a single server.
 ### Test 5c: Test `Pod` resilience on clusters
 
 Create an `ArangoDeployment` of mode `Cluster`.
+
+Hint: Use from `tests/acceptance/single.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
