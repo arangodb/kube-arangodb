@@ -37,6 +37,16 @@ type HTTPProbeConfig struct {
 	Authorization string
 	// Port to inspect (defaults to ArangoPort)
 	Port int
+	// Number of seconds after the container has started before liveness probes are initiated (defaults to 30)
+	InitialDelaySeconds int32
+	// Number of seconds after which the probe times out (defaults to 2).
+	TimeoutSeconds int32
+	// How often (in seconds) to perform the probe (defaults to 10).
+	PeriodSeconds int32
+	// Minimum consecutive successes for the probe to be considered successful after having failed (defaults to 1).
+	SuccessThreshold int32
+	// Minimum consecutive failures for the probe to be considered failed after having succeeded (defaults to 3).
+	FailureThreshold int32
 }
 
 // Create creates a probe from given config
@@ -52,23 +62,25 @@ func (config HTTPProbeConfig) Create() *v1.Probe {
 			Value: config.Authorization,
 		})
 	}
-	port := config.Port
-	if port == 0 {
-		port = ArangoPort
+	def := func(value, defaultValue int32) int32 {
+		if value != 0 {
+			return value
+		}
+		return defaultValue
 	}
 	return &v1.Probe{
 		Handler: v1.Handler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path:        config.LocalPath,
-				Port:        intstr.FromInt(port),
+				Port:        intstr.FromInt(int(def(int32(config.Port), ArangoPort))),
 				Scheme:      scheme,
 				HTTPHeaders: headers,
 			},
 		},
-		InitialDelaySeconds: 30, // Wait 30s before first probe
-		TimeoutSeconds:      2,  // Timeout of each probe is 2s
-		PeriodSeconds:       10, // Interval between probes is 10s
-		SuccessThreshold:    1,  // Single probe is enough to indicate success
-		FailureThreshold:    3,  // Need 3 failed probes to consider a failed state
+		InitialDelaySeconds: def(config.InitialDelaySeconds, 30), // Wait 30s before first probe
+		TimeoutSeconds:      def(config.TimeoutSeconds, 2),       // Timeout of each probe is 2s
+		PeriodSeconds:       def(config.PeriodSeconds, 10),       // Interval between probes is 10s
+		SuccessThreshold:    def(config.SuccessThreshold, 1),     // Single probe is enough to indicate success
+		FailureThreshold:    def(config.FailureThreshold, 3),     // Need 3 failed probes to consider a failed state
 	}
 }
