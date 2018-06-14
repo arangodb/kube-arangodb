@@ -1,7 +1,7 @@
 # Acceptance test for kube-arangodb operator on specific Kubernetes platform
 
 This acceptance test plan describes all test scenario's that must be executed
-succesfully in order to consider the kube-arangodb operator production ready
+successfully in order to consider the kube-arangodb operator production ready
 on a specific Kubernetes setup (from now on we'll call a Kubernetes setup a platform).
 
 ## Platform parameters
@@ -96,7 +96,7 @@ This test requires the use of the enterprise image.
 
 Create an `ArangoDeployment` of mode `Cluster` and dc2dc enabled.
 
-Hint: Derive `tests/acceptance/cluster.yaml`.
+Hint: Derive from `tests/acceptance/cluster-sync.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 15 `Pods`

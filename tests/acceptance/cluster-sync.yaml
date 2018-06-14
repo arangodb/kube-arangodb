@@ -1,0 +1,9 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "acceptance-cluster"
+spec:
+  mode: Cluster
+  image: <todo set enterprise image>
+  sync:
+    enabled: true
