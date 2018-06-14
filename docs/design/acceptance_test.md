@@ -250,7 +250,7 @@ Hint: Derive from `tests/acceptance/cluster.yaml`.
 - [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
 - [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
 
-### Test 4b: Create cluster deployment with a platform provides `StorageClass`
+### Test 4b: Create cluster deployment with a platform provided `StorageClass`
 
 This test only applies to platforms that provide their own `StorageClasses`.
 
