@@ -358,7 +358,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 			Str("role", group.AsRole()).
 			Msg("Creating scale-up plan")
 	} else if len(members) > count {
-		// Note, we scale down 1 member as a time
+		// Note, we scale down 1 member at a time
 		if m, err := members.SelectMemberToRemove(); err == nil {
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
@@ -373,6 +373,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 				Int("count", count).
 				Int("actual-count", len(members)).
 				Str("role", group.AsRole()).
+				Str("member-id", m.ID).
 				Msg("Creating scale-down plan")
 		}
 	}

@@ -34,8 +34,8 @@ type Action interface {
 	// the start time needs to be recorded and a ready condition needs to be checked.
 	Start(ctx context.Context) (bool, error)
 	// CheckProgress checks the progress of the action.
-	// Returns true if the action is completely finished, false otherwise.
-	CheckProgress(ctx context.Context) (bool, error)
+	// Returns: ready, abort, error.
+	CheckProgress(ctx context.Context) (bool, bool, error)
 	// Timeout returns the amount of time after which this action will timeout.
 	Timeout() time.Duration
 }

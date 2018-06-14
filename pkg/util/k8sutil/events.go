@@ -155,6 +155,16 @@ func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *
 	return event
 }
 
+// NewPlanAbortedEvent creates an event indicating that an item on a reconciliation plan wants to abort
+// the entire plan.
+func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *v1.Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Reconciliation Plan Aborted"
+	event.Message = fmt.Sprintf("An plan item of type %s or member %s with role %s wants to abort the plan", itemType, memberID, role)
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 	event := newDeploymentEvent(apiObject)

@@ -50,6 +50,8 @@ type MemberStatus struct {
 	// IsInitialized is set after the very first time a pod was created for this member.
 	// After that, DBServers must have a UUID field or fail.
 	IsInitialized bool `json:"initialized"`
+	// CleanoutJobID holds the ID of the agency job for cleaning out this server
+	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
 }
 
 // Age returns the duration since the creation timestamp of this member.

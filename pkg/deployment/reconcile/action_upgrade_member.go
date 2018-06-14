@@ -75,7 +75,7 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 		defer cancel()
 		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
 			// Shutdown failed. Let's check if we're already done
-			if ready, err := a.CheckProgress(ctx); err == nil && ready {
+			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
 				// We're done
 				return true, nil
 			}
@@ -98,13 +98,13 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
+func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
 	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
 		log.Error().Msg("No such member")
-		return true, nil
+		return true, false, nil
 	}
 	isUpgrading := m.Phase == api.MemberPhaseUpgrading
 	log = log.With().
@@ -112,20 +112,21 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, error) {
 		Bool("is-upgrading", isUpgrading).Logger()
 	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
 		// Pod is not yet terminated
-		return false, nil
+		return false, false, nil
 	}
 	// Pod is terminated, we can now remove it
 	log.Debug().Msg("Deleting pod")
 	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
 	// Pod is now gone, update the member status
 	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
+	m.CleanoutJobID = ""
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, false, maskAny(err)
 	}
-	return isUpgrading, nil
+	return isUpgrading, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.
