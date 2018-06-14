@@ -134,3 +134,19 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 	}
 	return MemberStatus{}, maskAny(errors.Wrap(NotFoundError, "No member available for removal"))
 }
+
+// MembersReady returns the number of members that are in the Ready state.
+func (l MemberStatusList) MembersReady() int {
+	readyCount := 0
+	for _, x := range l {
+		if x.Conditions.IsTrue(ConditionTypeReady) {
+			readyCount++
+		}
+	}
+	return readyCount
+}
+
+// AllMembersReady returns the true if all members are in the Ready state.
+func (l MemberStatusList) AllMembersReady() bool {
+	return len(l) == l.MembersReady()
+}

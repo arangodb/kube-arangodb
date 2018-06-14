@@ -359,7 +359,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 
 // createReadinessProbe creates configuration for a readiness probe of a server in the given group.
 func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
-	if group != api.ServerGroupCoordinators {
+	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators {
 		return nil, nil
 	}
 	authorization := ""
@@ -373,11 +373,18 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 			return nil, maskAny(err)
 		}
 	}
-	return &k8sutil.HTTPProbeConfig{
-		LocalPath:     "/_api/version",
-		Secure:        spec.IsSecure(),
-		Authorization: authorization,
-	}, nil
+	probeCfg := &k8sutil.HTTPProbeConfig{
+		LocalPath:           "/_api/version",
+		Secure:              spec.IsSecure(),
+		Authorization:       authorization,
+		InitialDelaySeconds: 2,
+		PeriodSeconds:       2,
+	}
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		probeCfg.LocalPath = "/_admin/echo"
+	}
+	return probeCfg, nil
 }
 
 // createPodFinalizers creates a list of finalizers for a pod created for the given group.

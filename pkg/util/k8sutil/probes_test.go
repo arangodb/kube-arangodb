@@ -34,7 +34,7 @@ func TestCreate(t *testing.T) {
 	secret := "the secret"
 
 	// http
-	config := HTTPProbeConfig{path, false, secret, 0}
+	config := HTTPProbeConfig{path, false, secret, 0, 0, 0, 0, 0, 0}
 	probe := config.Create()
 
 	assert.Equal(t, probe.InitialDelaySeconds, int32(30))
@@ -50,8 +50,18 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, probe.Handler.HTTPGet.Scheme, v1.URISchemeHTTP)
 
 	// https
-	config = HTTPProbeConfig{path, true, secret, 0}
+	config = HTTPProbeConfig{path, true, secret, 0, 0, 0, 0, 0, 0}
 	probe = config.Create()
 
 	assert.Equal(t, probe.Handler.HTTPGet.Scheme, v1.URISchemeHTTPS)
+
+	// http, custom timing
+	config = HTTPProbeConfig{path, false, secret, 0, 1, 2, 3, 4, 5}
+	probe = config.Create()
+
+	assert.Equal(t, probe.InitialDelaySeconds, int32(1))
+	assert.Equal(t, probe.TimeoutSeconds, int32(2))
+	assert.Equal(t, probe.PeriodSeconds, int32(3))
+	assert.Equal(t, probe.SuccessThreshold, int32(4))
+	assert.Equal(t, probe.FailureThreshold, int32(5))
 }

@@ -217,7 +217,8 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	})
 
 	// Update overall conditions
-	allMembersReady := status.Members.AllMembersReady()
+	spec := r.context.GetSpec()
+	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), spec.Sync.IsEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
 
 	// Update conditions

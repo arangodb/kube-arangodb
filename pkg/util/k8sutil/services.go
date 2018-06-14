@@ -23,6 +23,8 @@
 package k8sutil
 
 import (
+	"strconv"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -67,7 +69,7 @@ func CreateHeadlessService(kubecli kubernetes.Interface, deployment metav1.Objec
 			Port:     ArangoPort,
 		},
 	}
-	publishNotReadyAddresses := false
+	publishNotReadyAddresses := true
 	serviceType := v1.ServiceTypeClusterIP
 	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", publishNotReadyAddresses, owner)
 	if err != nil {
@@ -96,8 +98,8 @@ func CreateDatabaseClientService(kubecli kubernetes.Interface, deployment metav1
 	} else {
 		role = "coordinator"
 	}
-	publishNotReadyAddresses := true
 	serviceType := v1.ServiceTypeClusterIP
+	publishNotReadyAddresses := false
 	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, maskAny(err)
@@ -119,7 +121,7 @@ func CreateExternalAccessService(kubecli kubernetes.Interface, svcName, role str
 			NodePort: int32(nodePort),
 		},
 	}
-	publishNotReadyAddresses := true
+	publishNotReadyAddresses := false
 	newlyCreated, err := createService(kubecli, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, maskAny(err)
@@ -142,7 +144,7 @@ func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, cl
 				// This annotation is deprecated, PublishNotReadyAddresses is
 				// used instead. We leave the annotation in for a while.
 				// See https://github.com/kubernetes/kubernetes/pull/49061
-				TolerateUnreadyEndpointsAnnotation: "true",
+				TolerateUnreadyEndpointsAnnotation: strconv.FormatBool(publishNotReadyAddresses),
 			},
 		},
 		Spec: v1.ServiceSpec{
