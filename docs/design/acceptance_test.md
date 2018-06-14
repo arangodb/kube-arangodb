@@ -46,10 +46,13 @@ kubectl apply -f examples/arango-local-storage.yaml
 
 The basis tests are executed on every platform with various images:
 
-Run the following tests for the following images:
+Run the following tests with the following images:
 
 - Community 3.3.10
 - Enterprise 3.3.10
+
+For every tests, one of these images can be chosen, as long as each image
+is used in a test at least once.
 
 ### Test 1a: Create single server deployment
 
@@ -85,6 +88,21 @@ Hint: Use `tests/acceptance/cluster.yaml`.
 - [ ] The deployment must yield 9 `Pods`
 - [ ] The deployment must yield a `Service` named `<deployment-name>`
 - [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+### Test 1d: Create cluster deployment with dc2dc
+
+This test requires the use of the enterprise image.
+
+Create an `ArangoDeployment` of mode `Cluster` and dc2dc enabled.
+
+Hint: Derive `tests/acceptance/cluster.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 15 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-sync`
 - [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
 
 ### Test 2a: Scale an active failover deployment
@@ -290,7 +308,7 @@ Delete a `Pod` of the deployment that contains a single server.
 
 Create an `ArangoDeployment` of mode `Cluster`.
 
-Hint: Use from `tests/acceptance/single.yaml`.
+Hint: Use from `tests/acceptance/cluster.yaml`.
 
 - [ ] The deployment must start
 - [ ] The deployment must yield 9 `Pods`
@@ -315,13 +333,142 @@ Delete a `Pod` of the deployment that contains an coordinator.
       requests targeting the restarting coordinator.
 - [ ] The `Pod` must be restarted
 
-## Further ideas to be discussed
+### Test 6a: Test `Node` reboot on single servers
 
-I just collect further things which I think are missing:
+Create an `ArangoDeployment` of mode `Single`.
 
-  - add resilience tests:
-     - reboot a node, should come back, at least if nothing is ephemeral
-     - kill a node permanently with replicated data, should recover and repair
-     - kill a node if it contains non-replicated data
-       should hang and not recover, but dropping the collection should
-       alow it to recover and repair (obviously, without the data)
+Hint: Use from `tests/acceptance/single.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 1 `Pod`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Reboot the `Node` of the deployment that contains the single server.
+
+- [ ] The `Pod` running on the `Node` must be restarted
+- [ ] After the `Pod` has restarted, the server must have the same data and be responsive again
+
+### Test 6b: Test `Node` reboot on active failover
+
+Create an `ArangoDeployment` of mode `ActiveFailover` with an environment of `Production`.
+
+Hint: Use from `tests/acceptance/activefailover.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 5 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Reboot a `Node`.
+
+- [ ] While the `Node` is restarting, the cluster must still respond to requests (R/W)
+- [ ] All `Pods` on the `Node` must be restarted
+
+### Test 6c: Test `Node` reboot on clusters
+
+Create an `ArangoDeployment` of mode `Cluster` with an environment of `Production`.
+
+Hint: Use from `tests/acceptance/cluster.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 9 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Reboot a `Node`.
+
+- [ ] While the `Node` is restarting, the cluster must still respond to requests (R/W)
+- [ ] All `Pods` on the `Node` must be restarted
+
+### Test 6d: Test `Node` removal on single servers
+
+This test is only valid when `StorageClass` is used that provides network attached `PersistentVolumes`.
+
+Create an `ArangoDeployment` of mode `Single`.
+
+Hint: Use from `tests/acceptance/single.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 1 `Pod`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Remove the `Node` containing the deployment from the Kubernetes cluster.
+
+- [ ] The `Pod` running on the `Node` must be restarted on another `Node`
+- [ ] After the `Pod` has restarted, the server must have the same data and be responsive again
+
+### Test 6e: Test `Node` removal on active failover
+
+Create an `ArangoDeployment` of mode `ActiveFailover` with an environment of `Production`.
+
+Hint: Use from `tests/acceptance/activefailover.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 5 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Remove a `Node` containing the `Pods` of the deployment from the Kubernetes cluster.
+
+- [ ] While the `Pods` are being restarted on new `Nodes`, the cluster must still respond to requests (R/W)
+- [ ] The `Pods` running on the `Node` must be restarted on another `Node`
+- [ ] After the `Pods` have restarted, the server must have the same data and be responsive again
+
+### Test 6f: Test `Node` removal on clusters
+
+This test is only valid when:
+
+- A `StorageClass` is used that provides network attached `PersistentVolumes`
+- or all collections have a replication factor of 2 or higher
+
+Create an `ArangoDeployment` of mode `Cluster` with an environment of `Production`.
+
+Hint: Use from `tests/acceptance/cluster.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 9 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Remove a `Node` containing the `Pods` of the deployment from the Kubernetes cluster.
+
+- [ ] While the `Pods` are being restarted on new `Nodes`, the cluster must still respond to requests (R/W)
+- [ ] The `Pods` running on the `Node` must be restarted on another `Node`
+- [ ] After the `Pods` have restarted, the server must have the same data and be responsive again
+
+### Test 6g: Test `Node` removal on clusters with replication factor 1
+
+This test is only valid when:
+
+- A `StorageClass` is used that provides `Node` local `PersistentVolumes`
+- and at least some collections have a replication factor of 1
+
+Create an `ArangoDeployment` of mode `Cluster` with an environment of `Production`.
+
+Hint: Use from `tests/acceptance/cluster.yaml`.
+
+- [ ] The deployment must start
+- [ ] The deployment must yield 9 `Pods`
+- [ ] The deployment must yield a `Service` named `<deployment-name>`
+- [ ] The deployment must yield a `Service` named `<deployment-name>-ea`
+- [ ] The `Service` named `<deployment-name>-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Remove a `Node`, containing the dbserver `Pod` that holds a collection with replication factor 1,
+from the Kubernetes cluster.
+
+- [ ] While the `Pods` are being restarted on new `Nodes`, the cluster must still respond to requests (R/W),
+      except requests involving collections with a replication factor of 1
+- [ ] The `Pod` running the dbserver with a collection that has a replication factor of 1 must NOT be restarted on another `Node`
+
+Remove the collections with the replication factor of 1
+
+- [ ] The remaining `Pods` running on the `Node` must be restarted on another `Node`
+- [ ] After the `Pods` have restarted, the server must have the same data, except for the removed collections, and be responsive again
