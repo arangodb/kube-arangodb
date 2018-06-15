@@ -37,7 +37,7 @@ func TestServerGroupSpecValidateCount(t *testing.T) {
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(3)}.Validate(ServerGroupAgents, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(3)}.Validate(ServerGroupAgents, true, DeploymentModeActiveFailover, EnvironmentDevelopment))
-	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(6)}.Validate(ServerGroupDBServers, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
