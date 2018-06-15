@@ -359,7 +359,9 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 			Msg("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(); err == nil {
+		if m, err := members.SelectMemberToRemove(); err != nil {
+			log.Warn().Err(err).Str("role", group.AsRole()).Msg("Failed to select member to remove")
+		} else {
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
 					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),

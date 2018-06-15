@@ -131,6 +131,12 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
+			// Revert cleanout state
+			m.Phase = api.MemberPhaseCreated
+			m.CleanoutJobID = ""
+			if a.actionCtx.UpdateMember(m); err != nil {
+				return false, false, maskAny(err)
+			}
 			return false, true, nil
 		}
 		return false, false, nil
