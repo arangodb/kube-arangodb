@@ -33,6 +33,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // clusterScalingIntegration is a helper to communicate with the clusters
@@ -150,15 +151,24 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 		log.Debug().Err(err).Msg("Failed to get current deployment")
 		return maskAny(err)
 	}
+	newSpec := current.Spec.DeepCopy()
 	if coordinatorsChanged {
-		current.Spec.Coordinators.Count = util.NewInt(req.GetCoordinators())
+		newSpec.Coordinators.Count = util.NewInt(req.GetCoordinators())
 	}
 	if dbserversChanged {
-		current.Spec.DBServers.Count = util.NewInt(req.GetDBServers())
+		newSpec.DBServers.Count = util.NewInt(req.GetDBServers())
 	}
-	if err := ci.depl.updateCRSpec(current.Spec); err != nil {
-		log.Warn().Err(err).Msg("Failed to update current deployment")
-		return maskAny(err)
+	if err := newSpec.Validate(); err != nil {
+		// Log failure & create event
+		log.Warn().Err(err).Msg("Validation of updated spec has failed")
+		ci.depl.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, apiObject))
+		// Restore original spec in cluster
+		ci.SendUpdateToCluster(current.Spec)
+	} else {
+		if err := ci.depl.updateCRSpec(*newSpec); err != nil {
+			log.Warn().Err(err).Msg("Failed to update current deployment")
+			return maskAny(err)
+		}
 	}
 	return nil
 }

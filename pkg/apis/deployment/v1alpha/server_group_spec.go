@@ -77,6 +77,7 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 	if used {
 		minCount := 1
 		if env == EnvironmentProduction {
+			// Set validation boundaries for production mode
 			switch group {
 			case ServerGroupSingle:
 				if mode == DeploymentModeActiveFailover {
@@ -85,6 +86,16 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			case ServerGroupAgents:
 				minCount = 3
 			case ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+				minCount = 2
+			}
+		} else {
+			// Set validation boundaries for development mode
+			switch group {
+			case ServerGroupSingle:
+				if mode == DeploymentModeActiveFailover {
+					minCount = 2
+				}
+			case ServerGroupDBServers:
 				minCount = 2
 			}
 		}
