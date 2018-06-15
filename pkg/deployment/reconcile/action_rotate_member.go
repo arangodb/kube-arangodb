@@ -57,6 +57,10 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	if !ok {
 		log.Error().Msg("No such member")
 	}
+	// Remove finalizers, so Kubernetes will quickly terminate the pod
+	if err := a.actionCtx.RemovePodFinalizers(m.PodName); err != nil {
+		return false, maskAny(err)
+	}
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
 		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)

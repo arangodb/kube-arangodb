@@ -47,6 +47,8 @@ const (
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 	// ActionTypeRenewTLSCertificate causes the TLS certificate of a member to be renewed.
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
+	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
+	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
 )
 
 // Action represents a single action to be taken to update a deployment.

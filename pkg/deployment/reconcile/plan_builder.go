@@ -23,10 +23,6 @@
 package reconcile
 
 import (
-	"crypto/x509"
-	"encoding/pem"
-	"time"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
@@ -58,7 +54,7 @@ func (d *Reconciler) CreatePlan() error {
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status, lastVersion := d.context.GetStatus()
-	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile)
+	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile, d.context.GetTLSCA)
 
 	// If not change, we're done
 	if !changed {
@@ -83,7 +79,8 @@ func (d *Reconciler) CreatePlan() error {
 func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
-	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error)) (api.Plan, bool) {
+	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error),
+	getTLSCA func(string) (string, string, bool, error)) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -178,41 +175,14 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 		})
 	}
 
+	// Check for the need to rotate TLS CA certificate and all members
+	if len(plan) == 0 {
+		plan = createRotateTLSCAPlan(log, spec, status, getTLSCA)
+	}
+
 	// Check for the need to rotate TLS certificate of a members
-	if len(plan) == 0 && spec.TLS.IsSecure() {
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-			for _, m := range members {
-				if len(plan) > 0 {
-					// Only 1 change at a time
-					continue
-				}
-				if m.Phase != api.MemberPhaseCreated {
-					// Only make changes when phase is created
-					continue
-				}
-				if group == api.ServerGroupSyncWorkers {
-					// SyncWorkers have no externally created TLS keyfile
-					continue
-				}
-				// Load keyfile
-				keyfile, err := getTLSKeyfile(group, m)
-				if err != nil {
-					log.Warn().Err(err).
-						Str("role", group.AsRole()).
-						Str("id", m.ID).
-						Msg("Failed to get TLS secret")
-					continue
-				}
-				renewalNeeded := tlsKeyfileNeedsRenewal(log, keyfile)
-				if renewalNeeded {
-					plan = append(append(plan,
-						api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID)),
-						createRotateMemberPlan(log, m, group, "TLS certificate renewal")...,
-					)
-				}
-			}
-			return nil
-		})
+	if len(plan) == 0 {
+		plan = createRotateTLSServerCertificatePlan(log, spec, status, getTLSKeyfile)
 	}
 
 	// Return plan
@@ -302,44 +272,6 @@ func normalizeServiceAccountName(name string) string {
 		return ""
 	}
 	return ""
-}
-
-// tlsKeyfileNeedsRenewal decides if the certificate in the given keyfile
-// should be renewed.
-func tlsKeyfileNeedsRenewal(log zerolog.Logger, keyfile string) bool {
-	raw := []byte(keyfile)
-	for {
-		var derBlock *pem.Block
-		derBlock, raw = pem.Decode(raw)
-		if derBlock == nil {
-			break
-		}
-		if derBlock.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(derBlock.Bytes)
-			if err != nil {
-				// We do not understand the certificate, let's renew it
-				log.Warn().Err(err).Msg("Failed to parse x509 certificate. Renewing it")
-				return true
-			}
-			if cert.IsCA {
-				// Only look at the server certificate, not CA or intermediate
-				continue
-			}
-			// Check expiration date. Renewal at 2/3 of lifetime.
-			ttl := cert.NotAfter.Sub(cert.NotBefore)
-			expirationDate := cert.NotBefore.Add((ttl / 3) * 2)
-			if expirationDate.Before(time.Now()) {
-				// We should renew now
-				log.Debug().
-					Str("not-before", cert.NotBefore.String()).
-					Str("not-after", cert.NotAfter.String()).
-					Str("expiration-date", expirationDate.String()).
-					Msg("TLS certificate renewal needed")
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // createScalePlan creates a scaling plan for a single server group

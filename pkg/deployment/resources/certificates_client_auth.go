@@ -74,7 +74,7 @@ func createClientAuthCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, s
 func createClientAuthCertificateKeyfile(log zerolog.Logger, cli v1.CoreV1Interface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
-	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.GetClientCASecretName(), namespace)
+	caCert, caKey, _, err := k8sutil.GetCASecret(cli, spec.GetClientCASecretName(), namespace, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return maskAny(err)

@@ -70,9 +70,14 @@ type ActionContext interface {
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(pvcName string) error
+	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
+	// of the deployment. If the pod does not exist, the error is ignored.
+	RemovePodFinalizers(podName string) error
 	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 	// If the secret does not exist, the error is ignored.
 	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
+	// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
+	DeleteTLSCASecret() error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -212,10 +217,44 @@ func (ac *actionContext) DeletePvc(pvcName string) error {
 	return nil
 }
 
+// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
+// of the deployment. If the pod does not exist, the error is ignored.
+func (ac *actionContext) RemovePodFinalizers(podName string) error {
+	if err := ac.context.RemovePodFinalizers(podName); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 // If the secret does not exist, the error is ignored.
 func (ac *actionContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
 	if err := ac.context.DeleteTLSKeyfile(group, member); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
+func (ac *actionContext) DeleteTLSCASecret() error {
+	spec := ac.context.GetSpec().TLS
+	if !spec.IsSecure() {
+		return nil
+	}
+	secretName := spec.GetCASecretName()
+	if secretName == "" {
+		return nil
+	}
+	// Remove secret hash, since it is going to change
+	status, lastVersion := ac.context.GetStatus()
+	if status.SecretHashes != nil {
+		status.SecretHashes.TLSCA = ""
+		if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
+			return maskAny(err)
+		}
+	}
+	// Do delete the secret
+	if err := ac.context.DeleteSecret(secretName); err != nil {
 		return maskAny(err)
 	}
 	return nil

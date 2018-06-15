@@ -40,6 +40,9 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
 		return "", maskAny(fmt.Errorf("Not implemented"))
 	}
+	getTLSCA := func(string) (string, string, bool, error) {
+		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
+	}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeSingle),
@@ -55,7 +58,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -66,7 +69,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -81,7 +84,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
@@ -90,6 +93,9 @@ func TestCreatePlanSingleScale(t *testing.T) {
 func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
 		return "", maskAny(fmt.Errorf("Not implemented"))
+	}
+	getTLSCA := func(string) (string, string, bool, error) {
+		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
 	}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
@@ -107,7 +113,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -120,7 +126,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -145,7 +151,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -158,6 +164,9 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 func TestCreatePlanClusterScale(t *testing.T) {
 	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
 		return "", maskAny(fmt.Errorf("Not implemented"))
+	}
+	getTLSCA := func(string) (string, string, bool, error) {
+		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
 	}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
@@ -174,7 +183,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -207,7 +216,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -244,7 +253,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
