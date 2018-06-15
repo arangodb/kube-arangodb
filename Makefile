@@ -27,6 +27,7 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile 
 DOCKERTESTFILE := Dockerfile.test
+DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
 ifndef LOCALONLY 
 	PUSHIMAGES := 1
@@ -63,6 +64,9 @@ endif
 ifndef TESTIMAGE
 	TESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-test$(IMAGESUFFIX)
 endif
+ifndef DURATIONTESTIMAGE
+	DURATIONTESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-durationtest$(IMAGESUFFIX)
+endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
@@ -75,6 +79,8 @@ BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
 TESTBINNAME := $(PROJECT)_test
 TESTBIN := $(BINDIR)/$(TESTBINNAME)
+DURATIONTESTBINNAME := $(PROJECT)_duration_test
+DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release 
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
@@ -277,6 +283,28 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+
+$(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
+	@mkdir -p $(BINDIR)
+	docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-v $(CACHEVOL):/usr/gocache \
+		-e GOCACHE=/usr/gocache \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
+
+.PHONY: docker-duration-test
+docker-duration-test: $(DURATIONTESTBIN)
+	docker build --quiet -f $(DOCKERDURATIONTESTFILE) -t $(DURATIONTESTIMAGE) .
+ifdef PUSHIMAGES
+	docker push $(DURATIONTESTIMAGE)
+endif
 
 .PHONY: cleanup-tests
 cleanup-tests:
