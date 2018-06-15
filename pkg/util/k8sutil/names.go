@@ -30,7 +30,7 @@ import (
 
 var (
 	resourceNameRE  = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
-	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-"}
+	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-"}
 )
 
 // ValidateOptionalResourceName validates a kubernetes resource name.

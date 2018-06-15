@@ -165,6 +165,8 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 // in the given group.
 func getArangodIDPrefix(group api.ServerGroup) string {
 	switch group {
+	case api.ServerGroupSingle:
+		return "SNGL-"
 	case api.ServerGroupCoordinators:
 		return "CRDN-"
 	case api.ServerGroupDBServers:
