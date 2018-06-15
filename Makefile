@@ -235,6 +235,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 			$(REPOPATH)/pkg/apis/storage/v1alpha \
 			$(REPOPATH)/pkg/deployment/reconcile \
 			$(REPOPATH)/pkg/deployment/resources \
+			$(REPOPATH)/pkg/storage \
 			$(REPOPATH)/pkg/util/k8sutil \
 			$(REPOPATH)/pkg/util/k8sutil/test \
 			$(REPOPATH)/pkg/util/probe \
