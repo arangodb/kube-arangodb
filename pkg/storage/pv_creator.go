@@ -81,7 +81,7 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 		// Find deployment name & role in the claim (if any)
 		deplName, role, enforceAniAffinity := getDeploymentInfo(claim)
 		allowedClients := clients
-		if enforceAniAffinity && deplName != "" {
+		if deplName != "" {
 			// Select nodes to choose from such that no volume in group lands on the same node
 			if nodeClientMap == nil {
 				nodeClientMap = createNodeClientMap(ctx, clients)
@@ -91,6 +91,11 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 			if err != nil {
 				log.Warn().Err(err).Msg("Failed to filter allowed nodes")
 				continue // We'll try this claim again later
+			}
+			if !enforceAniAffinity && len(allowedClients) == 0 {
+				// No possible nodes found that have no other volume (in same group) on it.
+				// We don't have to enforce separate nodes, so use all clients.
+				allowedClients = clients
 			}
 		}
 
