@@ -99,8 +99,8 @@ func TestCreateNodeAffinity(t *testing.T) {
 // TestCreateNodeClientMap tests createNodeClientMap.
 func TestCreateNodeClientMap(t *testing.T) {
 	GB := int64(1024 * 1024 * 1024)
-	foo := mocks.NewProvisioner("foo", 100*GB, 100*GB)
-	bar := mocks.NewProvisioner("bar", 100*GB, 100*GB)
+	foo := mocks.NewProvisioner("foo", 100*GB, 200*GB)
+	bar := mocks.NewProvisioner("bar", 300*GB, 400*GB)
 	tests := []struct {
 		Input    []provisioner.API
 		Expected map[string]provisioner.API
