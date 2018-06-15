@@ -98,9 +98,9 @@ func createRotateServerStoragePlan(log zerolog.Logger, spec api.DeploymentSpec, 
 				)
 				if group == api.ServerGroupAgents {
 					plan = append(plan,
-						// Scale up, so we're adding the remove agent
-						api.NewAction(api.ActionTypeAddMember, group, ""),
-						api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
+						// Scale up, so we're adding the removed agent (note: with the old ID)
+						api.NewAction(api.ActionTypeAddMember, group, m.ID),
+						api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID),
 					)
 				}
 			}
