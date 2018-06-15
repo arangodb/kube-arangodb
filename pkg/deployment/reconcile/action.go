@@ -38,4 +38,6 @@ type Action interface {
 	CheckProgress(ctx context.Context) (bool, bool, error)
 	// Timeout returns the amount of time after which this action will timeout.
 	Timeout() time.Duration
+	// Return the MemberID used / created in this action
+	MemberID() string
 }

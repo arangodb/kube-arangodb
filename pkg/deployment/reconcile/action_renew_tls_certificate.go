@@ -75,3 +75,8 @@ func (a *renewTLSCertificateAction) CheckProgress(ctx context.Context) (bool, bo
 func (a *renewTLSCertificateAction) Timeout() time.Duration {
 	return renewTLSCertificateTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *renewTLSCertificateAction) MemberID() string {
+	return a.action.MemberID
+}

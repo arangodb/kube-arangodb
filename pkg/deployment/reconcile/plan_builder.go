@@ -54,7 +54,7 @@ func (d *Reconciler) CreatePlan() error {
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status, lastVersion := d.context.GetStatus()
-	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile, d.context.GetTLSCA)
+	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile, d.context.GetTLSCA, d.context.GetPvc)
 
 	// If not change, we're done
 	if !changed {
@@ -80,7 +80,8 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
 	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error),
-	getTLSCA func(string) (string, string, bool, error)) (api.Plan, bool) {
+	getTLSCA func(string) (string, string, bool, error),
+	getPVC func(pvcName string) (*v1.PersistentVolumeClaim, error)) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -175,14 +176,19 @@ func createPlan(log zerolog.Logger, apiObject metav1.Object,
 		})
 	}
 
-	// Check for the need to rotate TLS CA certificate and all members
-	if len(plan) == 0 {
-		plan = createRotateTLSCAPlan(log, spec, status, getTLSCA)
-	}
-
 	// Check for the need to rotate TLS certificate of a members
 	if len(plan) == 0 {
 		plan = createRotateTLSServerCertificatePlan(log, spec, status, getTLSKeyfile)
+	}
+
+	// Check for changes storage classes or requirements
+	if len(plan) == 0 {
+		plan = createRotateServerStoragePlan(log, spec, status, getPVC)
+	}
+
+	// Check for the need to rotate TLS CA certificate and all members
+	if len(plan) == 0 {
+		plan = createRotateTLSCAPlan(log, spec, status, getTLSCA)
 	}
 
 	// Return plan

@@ -170,3 +170,8 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 func (a *actionWaitForMemberUp) Timeout() time.Duration {
 	return waitForMemberUpTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionWaitForMemberUp) MemberID() string {
+	return a.action.MemberID
+}

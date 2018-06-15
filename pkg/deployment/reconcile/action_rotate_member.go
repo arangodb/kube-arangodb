@@ -127,3 +127,8 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 func (a *actionRotateMember) Timeout() time.Duration {
 	return rotateMemberTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionRotateMember) MemberID() string {
+	return a.action.MemberID
+}

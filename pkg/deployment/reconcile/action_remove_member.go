@@ -105,3 +105,8 @@ func (a *actionRemoveMember) CheckProgress(ctx context.Context) (bool, bool, err
 func (a *actionRemoveMember) Timeout() time.Duration {
 	return removeMemberTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionRemoveMember) MemberID() string {
+	return a.action.MemberID
+}
