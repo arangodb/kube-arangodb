@@ -89,7 +89,7 @@ func createTLSServerCertificate(log zerolog.Logger, cli v1.CoreV1Interface, serv
 	}
 
 	// Load CA certificate
-	caCert, caKey, err := k8sutil.GetCASecret(cli, spec.GetCASecretName(), namespace)
+	caCert, caKey, _, err := k8sutil.GetCASecret(cli, spec.GetCASecretName(), namespace, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return maskAny(err)

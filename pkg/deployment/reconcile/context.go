@@ -69,6 +69,9 @@ type Context interface {
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(pvcName string) error
+	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
+	// of the deployment. If the pod does not exist, the error is ignored.
+	RemovePodFinalizers(podName string) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
@@ -77,4 +80,10 @@ type Context interface {
 	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 	// If the secret does not exist, the error is ignored.
 	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
+	// GetTLSCA returns the TLS CA certificate in the secret with given name.
+	// Returns: publicKey, privateKey, ownerByDeployment, error
+	GetTLSCA(secretName string) (string, string, bool, error)
+	// DeleteSecret removes the Secret with given name.
+	// If the secret does not exist, the error is ignored.
+	DeleteSecret(secretName string) error
 }

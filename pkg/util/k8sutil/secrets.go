@@ -108,22 +108,31 @@ func GetCACertficateSecret(cli corev1.CoreV1Interface, secretName, namespace str
 // and extracts the `ca.crt` & `ca.key` field.
 // If the secret does not exists or one of the fields is missing,
 // an error is returned.
-// Returns: certificate, private-key, error
-func GetCASecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, string, error) {
+// Returns: certificate, private-key, isOwnedByDeployment, error
+func GetCASecret(cli corev1.CoreV1Interface, secretName, namespace string, ownerRef *metav1.OwnerReference) (string, string, bool, error) {
 	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		return "", "", maskAny(err)
+		return "", "", false, maskAny(err)
+	}
+	isOwned := false
+	if ownerRef != nil {
+		for _, x := range s.GetOwnerReferences() {
+			if x.UID == ownerRef.UID {
+				isOwned = true
+				break
+			}
+		}
 	}
 	// Load `ca.crt` field
 	cert, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return "", "", isOwned, maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
 	}
 	priv, found := s.Data[constants.SecretCAKey]
 	if !found {
-		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCAKey, secretName))
+		return "", "", isOwned, maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretCAKey, secretName))
 	}
-	return string(cert), string(priv), nil
+	return string(cert), string(priv), isOwned, nil
 }
 
 // CreateCASecret creates a secret used to store a PEM encoded CA certificate & private key.

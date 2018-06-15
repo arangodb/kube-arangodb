@@ -108,7 +108,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 
 	// Fetch client authentication CA
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
-	clientAuthCert, clientAuthKey, err := k8sutil.GetCASecret(d.deps.KubeCli.CoreV1(), clientAuthSecretName, ns)
+	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(d.deps.KubeCli.CoreV1(), clientAuthSecretName, ns, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
 		return maskAny(err)

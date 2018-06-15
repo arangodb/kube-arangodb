@@ -237,6 +237,25 @@ func (d *Deployment) CleanupPod(p v1.Pod) error {
 	return nil
 }
 
+// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
+// of the deployment. If the pod does not exist, the error is ignored.
+func (d *Deployment) RemovePodFinalizers(podName string) error {
+	log := d.deps.Log
+	ns := d.GetNamespace()
+	kubecli := d.deps.KubeCli
+	p, err := kubecli.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		if k8sutil.IsNotFound(err) {
+			return nil
+		}
+		return maskAny(err)
+	}
+	if err := k8sutil.RemovePodFinalizers(log, d.deps.KubeCli, p, p.GetFinalizers(), true); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // DeletePvc deletes a persistent volume claim with given name in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(pvcName string) error {
@@ -301,6 +320,29 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
+	ns := d.apiObject.GetNamespace()
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// GetTLSCA returns the TLS CA certificate in the secret with given name.
+// Returns: publicKey, privateKey, ownerByDeployment, error
+func (d *Deployment) GetTLSCA(secretName string) (string, string, bool, error) {
+	ns := d.apiObject.GetNamespace()
+	owner := d.apiObject.AsOwner()
+	cert, priv, isOwned, err := k8sutil.GetCASecret(d.deps.KubeCli.CoreV1(), secretName, ns, &owner)
+	if err != nil {
+		return "", "", false, maskAny(err)
+	}
+	return cert, priv, isOwned, nil
+
+}
+
+// DeleteSecret removes the Secret with given name.
+// If the secret does not exist, the error is ignored.
+func (d *Deployment) DeleteSecret(secretName string) error {
 	ns := d.apiObject.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return maskAny(err)
