@@ -74,7 +74,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctx)
 		}
-		return a.checkProgressSingle(ctx)
+		return a.checkProgressSingleInActiveFailover(ctx)
 	default:
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctx)
@@ -94,6 +94,26 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
+		return false, false, maskAny(err)
+	}
+	return true, false, nil
+}
+
+// checkProgressSingleInActiveFailover checks the progress of the action in the case
+// of a single server as part of an active failover deployment.
+func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) (bool, bool, error) {
+	log := a.log
+	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create database client")
+		return false, false, maskAny(err)
+	}
+	if _, err := c.Version(ctx); err != nil {
+		log.Debug().Err(err).Msg("Failed to get version")
+		return false, false, maskAny(err)
+	}
+	if _, err := c.Databases(ctx); err != nil {
+		log.Debug().Err(err).Msg("Failed to get databases")
 		return false, false, maskAny(err)
 	}
 	return true, false, nil
