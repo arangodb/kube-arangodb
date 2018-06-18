@@ -191,9 +191,5 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 			resetFields = append(resetFields, fieldPrefix+".count")
 		}
 	}
-	if s.GetStorageClassName() != target.GetStorageClassName() {
-		target.StorageClassName = util.NewStringOrNil(s.StorageClassName)
-		resetFields = append(resetFields, fieldPrefix+".storageClassName")
-	}
 	return resetFields
 }

@@ -43,19 +43,22 @@ func NewAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionC
 
 // actionAddMember implements an AddMemberAction.
 type actionAddMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	log         zerolog.Logger
+	action      api.Action
+	actionCtx   ActionContext
+	newMemberID string
 }
 
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
-	if err := a.actionCtx.CreateMember(a.action.Group, a.action.MemberID); err != nil {
+	newID, err := a.actionCtx.CreateMember(a.action.Group, a.action.MemberID)
+	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member")
 		return false, maskAny(err)
 	}
+	a.newMemberID = newID
 	return true, nil
 }
 
@@ -69,4 +72,9 @@ func (a *actionAddMember) CheckProgress(ctx context.Context) (bool, bool, error)
 // Timeout returns the amount of time after which this action will timeout.
 func (a *actionAddMember) Timeout() time.Duration {
 	return addMemberTimeout
+}
+
+// Return the MemberID used / created in this action
+func (a *actionAddMember) MemberID() string {
+	return a.newMemberID
 }

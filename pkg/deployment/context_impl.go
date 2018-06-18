@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/arangosync/tasks"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -191,23 +192,23 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (d *Deployment) CreateMember(group api.ServerGroup, id string) error {
+func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, error) {
 	log := d.deps.Log
 	status, lastVersion := d.GetStatus()
 	id, err := createMember(log, &status, group, id, d.apiObject)
 	if err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
-		return maskAny(err)
+		return "", maskAny(err)
 	}
 	// Save added member
 	if err := d.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
-		return maskAny(err)
+		return "", maskAny(err)
 	}
 	// Create event about it
 	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
 
-	return nil
+	return id, nil
 }
 
 // DeletePod deletes a pod with given name in the namespace
@@ -302,6 +303,16 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 		}
 	}
 	return myPVCs, nil
+}
+
+// GetPvc gets a PVC by the given name, in the samespace of the deployment.
+func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
+	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(pvcName, metav1.GetOptions{})
+	if err != nil {
+		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
+		return nil, maskAny(err)
+	}
+	return pvc, nil
 }
 
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for

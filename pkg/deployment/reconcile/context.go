@@ -62,7 +62,8 @@ type Context interface {
 	CreateEvent(evt *v1.Event)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(group api.ServerGroup, id string) error
+	// Returns ID, error
+	CreateMember(group api.ServerGroup, id string) (string, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error
@@ -74,6 +75,8 @@ type Context interface {
 	RemovePodFinalizers(podName string) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
+	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
+	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
