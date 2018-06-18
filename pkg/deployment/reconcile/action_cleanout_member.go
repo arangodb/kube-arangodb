@@ -155,3 +155,8 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 func (a *actionCleanoutMember) Timeout() time.Duration {
 	return cleanoutMemberTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionCleanoutMember) MemberID() string {
+	return a.action.MemberID
+}

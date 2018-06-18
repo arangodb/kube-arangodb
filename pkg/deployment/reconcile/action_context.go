@@ -59,7 +59,7 @@ type ActionContext interface {
 	GetMemberStatusByID(id string) (api.MemberStatus, bool)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(group api.ServerGroup, id string) error
+	CreateMember(group api.ServerGroup, id string) (string, error)
 	// UpdateMember updates the deployment status wrt the given member.
 	UpdateMember(member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
@@ -157,11 +157,12 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (ac *actionContext) CreateMember(group api.ServerGroup, id string) error {
-	if err := ac.context.CreateMember(group, id); err != nil {
-		return maskAny(err)
+func (ac *actionContext) CreateMember(group api.ServerGroup, id string) (string, error) {
+	result, err := ac.context.CreateMember(group, id)
+	if err != nil {
+		return "", maskAny(err)
 	}
-	return nil
+	return result, nil
 }
 
 // UpdateMember updates the deployment status wrt the given member.

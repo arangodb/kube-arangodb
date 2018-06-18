@@ -116,3 +116,8 @@ func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, e
 func (a *actionShutdownMember) Timeout() time.Duration {
 	return shutdownMemberTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionShutdownMember) MemberID() string {
+	return a.action.MemberID
+}

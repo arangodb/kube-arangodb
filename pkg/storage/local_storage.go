@@ -35,6 +35,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -52,9 +53,10 @@ type Config struct {
 
 // Dependencies holds dependent services for a LocalStorage
 type Dependencies struct {
-	Log          zerolog.Logger
-	KubeCli      kubernetes.Interface
-	StorageCRCli versioned.Interface
+	Log           zerolog.Logger
+	KubeCli       kubernetes.Interface
+	StorageCRCli  versioned.Interface
+	EventRecorder record.EventRecorder
 }
 
 // localStorageEvent strongly typed type of event
@@ -112,7 +114,6 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*
 		deps:      deps,
 		eventCh:   make(chan *localStorageEvent, localStorageEventQueueSize),
 		stopCh:    make(chan struct{}),
-		eventsCli: deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 	}
 
 	ls.pvCleaner = newPVCleaner(deps.Log, deps.KubeCli, ls.GetClientByNodeName)
@@ -324,11 +325,8 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 
 // createEvent creates a given event.
 // On error, the error is logged.
-func (ls *LocalStorage) createEvent(evt *v1.Event) {
-	_, err := ls.eventsCli.Create(evt)
-	if err != nil {
-		ls.deps.Log.Error().Err(err).Interface("event", *evt).Msg("Failed to record event")
-	}
+func (ls *LocalStorage) createEvent(evt *k8sutil.Event) {
+	ls.deps.EventRecorder.Event(evt.InvolvedObject, evt.Type, evt.Reason, evt.Message)
 }
 
 // Update the status of the API object from the internal status

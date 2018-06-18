@@ -133,3 +133,8 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 func (a *actionUpgradeMember) Timeout() time.Duration {
 	return upgradeMemberTimeout
 }
+
+// Return the MemberID used / created in this action
+func (a *actionUpgradeMember) MemberID() string {
+	return a.action.MemberID
+}

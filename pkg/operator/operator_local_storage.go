@@ -210,8 +210,9 @@ func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStora
 		Log: o.Dependencies.LogService.MustGetLogger("storage").With().
 			Str("localStorage", apiObject.GetName()).
 			Logger(),
-		KubeCli:      o.Dependencies.KubeCli,
-		StorageCRCli: o.Dependencies.CRCli,
+		KubeCli:       o.Dependencies.KubeCli,
+		StorageCRCli:  o.Dependencies.CRCli,
+		EventRecorder: o.Dependencies.EventRecorder,
 	}
 	return cfg, deps
 }
