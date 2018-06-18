@@ -208,8 +208,9 @@ func (o *Operator) makeDeploymentReplicationConfigAndDeps(apiObject *api.ArangoD
 		Log: o.Dependencies.LogService.MustGetLogger("deployment-replication").With().
 			Str("deployment-replication", apiObject.GetName()).
 			Logger(),
-		KubeCli: o.Dependencies.KubeCli,
-		CRCli:   o.Dependencies.CRCli,
+		KubeCli:       o.Dependencies.KubeCli,
+		CRCli:         o.Dependencies.CRCli,
+		EventRecorder: o.Dependencies.EventRecorder,
 	}
 	return cfg, deps
 }

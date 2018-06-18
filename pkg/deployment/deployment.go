@@ -32,10 +32,9 @@ import (
 	"github.com/arangodb/arangosync/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
@@ -60,6 +59,7 @@ type Dependencies struct {
 	Log           zerolog.Logger
 	KubeCli       kubernetes.Interface
 	DatabaseCRCli versioned.Interface
+	EventRecorder record.EventRecorder
 }
 
 // deploymentEventType strongly typed type of event
@@ -96,8 +96,6 @@ type Deployment struct {
 	stopCh  chan struct{}
 	stopped int32
 
-	eventsCli corev1.EventInterface
-
 	inspectTrigger            trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               *clientCache
@@ -121,7 +119,6 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		deps:        deps,
 		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:      make(chan struct{}),
-		eventsCli:   deps.KubeCli.Core().Events(apiObject.GetNamespace()),
 		clientCache: newClientCache(deps.KubeCli, apiObject),
 	}
 	d.status.last = *(apiObject.Status.DeepCopy())
@@ -337,11 +334,8 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 
 // CreateEvent creates a given event.
 // On error, the error is logged.
-func (d *Deployment) CreateEvent(evt *v1.Event) {
-	_, err := d.eventsCli.Create(evt)
-	if err != nil {
-		d.deps.Log.Error().Err(err).Interface("event", *evt).Msg("Failed to record event")
-	}
+func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
+	d.deps.EventRecorder.Event(evt.InvolvedObject, evt.Type, evt.Reason, evt.Message)
 }
 
 // Update the status of the API object from the internal status
