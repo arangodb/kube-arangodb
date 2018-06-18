@@ -240,8 +240,8 @@ func (in *EndpointSpec) DeepCopyInto(out *EndpointSpec) {
 			**out = **in
 		}
 	}
-	if in.Endpoint != nil {
-		in, out := &in.Endpoint, &out.Endpoint
+	if in.MasterEndpoint != nil {
+		in, out := &in.MasterEndpoint, &out.MasterEndpoint
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

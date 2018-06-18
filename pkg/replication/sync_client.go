@@ -113,7 +113,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 		dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(depl)
 		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
 	}
-	return client.Endpoint(epSpec.Endpoint), nil
+	return client.Endpoint(epSpec.MasterEndpoint), nil
 }
 
 // createArangoSyncTLSAuthentication creates the authentication needed to authenticate
