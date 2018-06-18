@@ -26,14 +26,14 @@ Set:
 - `spec.tls.altNames` to `["src-db.mycompany.com"]` (can include more names / IP addresses)
 - `spec.sync.enabled` to `true`
 - `spec.sync.externalAccess.masterEndpoint` to `["https://src-sync.mycompany.com:8629"]`
-- `spec.sync.externalAccess.accessPackageSecretNames` to `["src-accessPackage"]`
+- `spec.sync.externalAccess.accessPackageSecretNames` to `["src-accesspackage"]`
 
 ## Step 2: Extract access-package from source ArangoDB cluster
 
 Run:
 
 ```bash
-kubectl get secret src-accessPackage --template='{{index .data "accessPackage.yaml"}}' | \
+kubectl get secret src-accesspackage --template='{{index .data "accessPackage.yaml"}}' | \
   base64 -D > accessPackage.yaml
 ```
 
@@ -103,9 +103,9 @@ spec:
   source:
     masterEndpoint: ["https://src-sync.mycompany.com:8629"]
     auth:
-      keyfileSecretName: src-accessPackage-auth
+      keyfileSecretName: src-accesspackage-auth
     tls:
-      caSecretName: src-accessPackage-ca
+      caSecretName: src-accesspackage-ca
   destination:
     deploymentName: <dst-deployment-name>
 ```
