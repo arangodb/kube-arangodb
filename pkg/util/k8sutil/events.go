@@ -24,25 +24,31 @@ package k8sutil
 
 import (
 	"fmt"
-	"os"
 	"strings"
-	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"k8s.io/apimachinery/pkg/runtime"
 )
+
+// Event is used to create events using an EventRecorder.
+type Event struct {
+	InvolvedObject runtime.Object
+	Type           string
+	Reason         string
+	Message        string
+}
 
 // APIObject helps to abstract an object from our custom API.
 type APIObject interface {
+	runtime.Object
 	metav1.Object
 	// AsOwner creates an OwnerReference for the given deployment
 	AsOwner() metav1.OwnerReference
 }
 
 // NewMemberAddEvent creates an event indicating that a member was added.
-func NewMemberAddEvent(memberName, role string, apiObject APIObject) *v1.Event {
+func NewMemberAddEvent(memberName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("New %s Added", strings.Title(role))
@@ -51,7 +57,7 @@ func NewMemberAddEvent(memberName, role string, apiObject APIObject) *v1.Event {
 }
 
 // NewMemberRemoveEvent creates an event indicating that an existing member was removed.
-func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *v1.Event {
+func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Removed", strings.Title(role))
@@ -60,7 +66,7 @@ func NewMemberRemoveEvent(memberName, role string, apiObject APIObject) *v1.Even
 }
 
 // NewPodCreatedEvent creates an event indicating that a pod has been created
-func NewPodCreatedEvent(podName, role string, apiObject APIObject) *v1.Event {
+func NewPodCreatedEvent(podName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("Pod Of %s Created", strings.Title(role))
@@ -69,7 +75,7 @@ func NewPodCreatedEvent(podName, role string, apiObject APIObject) *v1.Event {
 }
 
 // NewPodGoneEvent creates an event indicating that a pod is missing
-func NewPodGoneEvent(podName, role string, apiObject APIObject) *v1.Event {
+func NewPodGoneEvent(podName, role string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("Pod Of %s Gone", strings.Title(role))
@@ -79,7 +85,7 @@ func NewPodGoneEvent(podName, role string, apiObject APIObject) *v1.Event {
 
 // NewImmutableFieldEvent creates an event indicating that an attempt was made to change a field
 // that is immutable.
-func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *v1.Event {
+func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Immutable Field Change"
@@ -88,7 +94,7 @@ func NewImmutableFieldEvent(fieldName string, apiObject APIObject) *v1.Event {
 }
 
 // NewPodsSchedulingFailureEvent creates an event indicating that one of more cannot be scheduled.
-func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIObject) *v1.Event {
+func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Pods Scheduling Failure"
@@ -98,7 +104,7 @@ func NewPodsSchedulingFailureEvent(unscheduledPodNames []string, apiObject APIOb
 
 // NewPodsSchedulingResolvedEvent creates an event indicating that an earlier problem with
 // pod scheduling has been resolved.
-func NewPodsSchedulingResolvedEvent(apiObject APIObject) *v1.Event {
+func NewPodsSchedulingResolvedEvent(apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Pods Scheduling Resolved"
@@ -107,7 +113,7 @@ func NewPodsSchedulingResolvedEvent(apiObject APIObject) *v1.Event {
 }
 
 // NewSecretsChangedEvent creates an event indicating that one of more secrets have changed.
-func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *v1.Event {
+func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Secrets changed"
@@ -117,7 +123,7 @@ func NewSecretsChangedEvent(changedSecretNames []string, apiObject APIObject) *v
 
 // NewSecretsRestoredEvent creates an event indicating that all secrets have been restored
 // to their original values.
-func NewSecretsRestoredEvent(apiObject APIObject) *v1.Event {
+func NewSecretsRestoredEvent(apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Secrets restored"
@@ -127,7 +133,7 @@ func NewSecretsRestoredEvent(apiObject APIObject) *v1.Event {
 
 // NewAccessPackageCreatedEvent creates an event indicating that a secret containing an access package
 // has been created.
-func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *v1.Event {
+func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Access package created"
@@ -137,7 +143,7 @@ func NewAccessPackageCreatedEvent(apiObject APIObject, apSecretName string) *v1.
 
 // NewAccessPackageDeletedEvent creates an event indicating that a secret containing an access package
 // has been deleted.
-func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *v1.Event {
+func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Access package deleted"
@@ -147,7 +153,7 @@ func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *v1.
 
 // NewPlanTimeoutEvent creates an event indicating that an item on a reconciliation plan did not
 // finish before its deadline.
-func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *v1.Event {
+func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Reconciliation Plan Timeout"
@@ -157,7 +163,7 @@ func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *
 
 // NewPlanAbortedEvent creates an event indicating that an item on a reconciliation plan wants to abort
 // the entire plan.
-func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *v1.Event {
+func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Reconciliation Plan Aborted"
@@ -176,7 +182,7 @@ func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subRe
 }
 
 // NewErrorEvent creates an even of type error.
-func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
+func NewErrorEvent(reason string, err error, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeWarning
 	event.Reason = strings.Title(reason)
@@ -185,28 +191,8 @@ func NewErrorEvent(reason string, err error, apiObject APIObject) *v1.Event {
 }
 
 // newDeploymentEvent creates a new event for the given api object & owner.
-func newDeploymentEvent(apiObject APIObject) *v1.Event {
-	t := time.Now()
-	owner := apiObject.AsOwner()
-	return &v1.Event{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: apiObject.GetName() + "-",
-			Namespace:    apiObject.GetNamespace(),
-		},
-		InvolvedObject: v1.ObjectReference{
-			APIVersion:      owner.APIVersion,
-			Kind:            owner.Kind,
-			Name:            owner.Name,
-			Namespace:       apiObject.GetNamespace(),
-			UID:             owner.UID,
-			ResourceVersion: apiObject.GetResourceVersion(),
-		},
-		Source: v1.EventSource{
-			Component: os.Getenv(constants.EnvOperatorPodName),
-		},
-		// Each deployment event is unique so it should not be collapsed with other events
-		FirstTimestamp: metav1.Time{Time: t},
-		LastTimestamp:  metav1.Time{Time: t},
-		Count:          int32(1),
+func newDeploymentEvent(apiObject runtime.Object) *Event {
+	return &Event{
+		InvolvedObject: apiObject,
 	}
 }

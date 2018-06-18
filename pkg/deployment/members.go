@@ -28,7 +28,6 @@ import (
 
 	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -42,7 +41,7 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 	log.Debug().Msg("creating initial members...")
 
 	// Go over all groups and create members
-	var events []*v1.Event
+	var events []*k8sutil.Event
 	status, lastVersion := d.GetStatus()
 	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, members *api.MemberStatusList) error {
 		for len(*members) < spec.GetCount() {

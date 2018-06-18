@@ -59,7 +59,7 @@ type Context interface {
 	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
-	CreateEvent(evt *v1.Event)
+	CreateEvent(evt *k8sutil.Event)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	// Returns ID, error

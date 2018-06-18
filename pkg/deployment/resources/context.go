@@ -64,7 +64,7 @@ type Context interface {
 	GetNamespace() string
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
-	CreateEvent(evt *v1.Event)
+	CreateEvent(evt *k8sutil.Event)
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods() ([]v1.Pod, error)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
