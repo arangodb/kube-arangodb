@@ -62,10 +62,14 @@ func createRotateTLSServerCertificatePlan(log zerolog.Logger, spec api.Deploymen
 					Msg("Failed to get TLS secret")
 				continue
 			}
-			renewalNeeded := tlsKeyfileNeedsRenewal(log, keyfile)
+			tlsSpec := spec.TLS
+			if group.IsArangosync() {
+				tlsSpec = spec.Sync.TLS
+			}
+			renewalNeeded, reason := tlsKeyfileNeedsRenewal(log, keyfile, tlsSpec)
 			if renewalNeeded {
 				plan = append(append(plan,
-					api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID)),
+					api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID, reason)),
 					createRotateMemberPlan(log, m, group, "TLS certificate renewal")...,
 				)
 			}
@@ -124,47 +128,8 @@ func createRotateTLSCAPlan(log zerolog.Logger, spec api.DeploymentSpec, status a
 
 // tlsKeyfileNeedsRenewal decides if the certificate in the given keyfile
 // should be renewed.
-func tlsKeyfileNeedsRenewal(log zerolog.Logger, keyfile string) bool {
+func tlsKeyfileNeedsRenewal(log zerolog.Logger, keyfile string, spec api.TLSSpec) (bool, string) {
 	raw := []byte(keyfile)
-	for {
-		var derBlock *pem.Block
-		derBlock, raw = pem.Decode(raw)
-		if derBlock == nil {
-			break
-		}
-		if derBlock.Type == "CERTIFICATE" {
-			cert, err := x509.ParseCertificate(derBlock.Bytes)
-			if err != nil {
-				// We do not understand the certificate, let's renew it
-				log.Warn().Err(err).Msg("Failed to parse x509 certificate. Renewing it")
-				return true
-			}
-			if cert.IsCA {
-				// Only look at the server certificate, not CA or intermediate
-				continue
-			}
-			// Check expiration date. Renewal at 2/3 of lifetime.
-			ttl := cert.NotAfter.Sub(cert.NotBefore)
-			expirationDate := cert.NotBefore.Add((ttl / 3) * 2)
-			if expirationDate.Before(time.Now()) {
-				// We should renew now
-				log.Debug().
-					Str("not-before", cert.NotBefore.String()).
-					Str("not-after", cert.NotAfter.String()).
-					Str("expiration-date", expirationDate.String()).
-					Msg("TLS certificate renewal needed")
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// tlsCANeedsRenewal decides if the given CA certificate
-// should be renewed.
-// Returns: shouldRenew, reason
-func tlsCANeedsRenewal(log zerolog.Logger, cert string, spec api.TLSSpec) (bool, string) {
-	raw := []byte(cert)
 	// containsAll returns true when all elements in the expected list
 	// are in the actual list.
 	containsAll := func(actual []string, expected []string) bool {
@@ -202,6 +167,58 @@ func tlsCANeedsRenewal(log zerolog.Logger, cert string, spec api.TLSSpec) (bool,
 				log.Warn().Err(err).Msg("Failed to parse x509 certificate. Renewing it")
 				return true, "Cannot parse x509 certificate: " + err.Error()
 			}
+			if cert.IsCA {
+				// Only look at the server certificate, not CA or intermediate
+				continue
+			}
+			// Check expiration date. Renewal at 2/3 of lifetime.
+			ttl := cert.NotAfter.Sub(cert.NotBefore)
+			expirationDate := cert.NotBefore.Add((ttl / 3) * 2)
+			if expirationDate.Before(time.Now()) {
+				// We should renew now
+				log.Debug().
+					Str("not-before", cert.NotBefore.String()).
+					Str("not-after", cert.NotAfter.String()).
+					Str("expiration-date", expirationDate.String()).
+					Msg("TLS certificate renewal needed")
+				return true, "Server certificate about to expire"
+			}
+			// Check alternate names against spec
+			dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
+			if err == nil {
+				if !containsAll(cert.DNSNames, dnsNames) {
+					return true, "Some alternate DNS names are missing"
+				}
+				if !containsAll(ipsToStringSlice(cert.IPAddresses), ipAddresses) {
+					return true, "Some alternate IP addresses are missing"
+				}
+				if !containsAll(cert.EmailAddresses, emailAddress) {
+					return true, "Some alternate email addresses are missing"
+				}
+			}
+		}
+	}
+	return false, ""
+}
+
+// tlsCANeedsRenewal decides if the given CA certificate
+// should be renewed.
+// Returns: shouldRenew, reason
+func tlsCANeedsRenewal(log zerolog.Logger, cert string, spec api.TLSSpec) (bool, string) {
+	raw := []byte(cert)
+	for {
+		var derBlock *pem.Block
+		derBlock, raw = pem.Decode(raw)
+		if derBlock == nil {
+			break
+		}
+		if derBlock.Type == "CERTIFICATE" {
+			cert, err := x509.ParseCertificate(derBlock.Bytes)
+			if err != nil {
+				// We do not understand the certificate, let's renew it
+				log.Warn().Err(err).Msg("Failed to parse x509 certificate. Renewing it")
+				return true, "Cannot parse x509 certificate: " + err.Error()
+			}
 			if !cert.IsCA {
 				// Only look at the CA certificate
 				continue
@@ -217,19 +234,6 @@ func tlsCANeedsRenewal(log zerolog.Logger, cert string, spec api.TLSSpec) (bool,
 					Str("expiration-date", expirationDate.String()).
 					Msg("TLS CA certificate renewal needed")
 				return true, "CA Certificate about to expire"
-			}
-			// Check alternate names against spec
-			dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
-			if err == nil {
-				if !containsAll(cert.DNSNames, dnsNames) {
-					return true, "Some alternate DNS names are missing"
-				}
-				if !containsAll(ipsToStringSlice(cert.IPAddresses), ipAddresses) {
-					return true, "Some alternate IP addresses are missing"
-				}
-				if !containsAll(cert.EmailAddresses, emailAddress) {
-					return true, "Some alternate email addresses are missing"
-				}
 			}
 		}
 	}

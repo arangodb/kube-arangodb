@@ -45,20 +45,13 @@ const (
 // specified in the given spec.
 func createTLSCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.TLSSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
-	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return maskAny(err)
-	}
 
 	options := certificates.CreateCertificateOptions{
-		CommonName:     fmt.Sprintf("%s Root Certificate", deploymentName),
-		Hosts:          append(dnsNames, ipAddresses...),
-		EmailAddresses: emailAddress,
-		ValidFrom:      time.Now(),
-		ValidFor:       caTTL,
-		IsCA:           true,
-		ECDSACurve:     tlsECDSACurve,
+		CommonName: fmt.Sprintf("%s Root Certificate", deploymentName),
+		ValidFrom:  time.Now(),
+		ValidFor:   caTTL,
+		IsCA:       true,
+		ECDSACurve: tlsECDSACurve,
 	}
 	cert, priv, err := certificates.CreateCertificate(options, nil)
 	if err != nil {
