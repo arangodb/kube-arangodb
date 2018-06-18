@@ -35,7 +35,7 @@ import (
 // different storage class or a difference in storage resource requirements.
 func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus,
 	getPVC func(pvcName string) (*v1.PersistentVolumeClaim, error),
-	createEvent func(evt *v1.Event)) api.Plan {
+	createEvent func(evt *k8sutil.Event)) api.Plan {
 	if spec.GetMode() == api.DeploymentModeSingle {
 		// Storage cannot be changed in single server deployments
 		return nil
