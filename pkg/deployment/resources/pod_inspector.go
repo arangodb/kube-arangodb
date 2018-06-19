@@ -247,3 +247,16 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 	}
 	return nil
 }
+
+// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
+func (r *Resources) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+	agents api.MemberStatusList, id string) []string {
+	if group.IsArangod() {
+		return createArangodArgs(apiObject, deplSpec, group, agents, id, false)
+	}
+	if group.IsArangosync() {
+		groupSpec := deplSpec.GetServerGroupSpec(group)
+		return createArangoSyncArgs(apiObject, deplSpec, group, groupSpec, agents, id)
+	}
+	return nil
+}
