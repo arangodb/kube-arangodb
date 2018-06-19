@@ -1,0 +1,139 @@
+## deployment-replication/rbac.yaml
+## Cluster role granting access to ArangoDeploymentReplication resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-deployment-replications
+rules:
+- apiGroups: ["replication.database.arangodb.com"]
+  resources: ["arangodeploymentreplications"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeploymentReplication operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: arango-deployment-replication-operator
+rules:
+- apiGroups: ["replication.database.arangodb.com"]
+  resources: ["arangodeploymentreplications"]
+  verbs: ["*"]
+- apiGroups: ["database.arangodb.com"]
+  resources: ["arangodeployments"]
+  verbs: ["get"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["*"]
+
+---
+
+## Bind the cluster role granting access to ArangoDeploymentReplication resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: arango-deployment-replications
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployment-replications
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeploymentReplication operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-deployment-replication-operator-default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployment-replication-operator
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+
+## deployment-replication/deployment-replication.yaml
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: arango-deployment-replication-operator
+  namespace: default
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: arango-deployment-replication-operator
+        app: arango-deployment-replication-operator
+    spec:
+      containers:
+      - name: operator
+        imagePullPolicy: IfNotPresent
+        image: arangodb/kube-arangodb@sha256:43bdc14d072fb1912d885536c189a631076e13e5c3e8a87b06e5ddbe60c66a6d
+        args:
+          - --operator.deployment-replication
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        ports:
+        - name: metrics
+          containerPort: 8528
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8528
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready/deployment-replication
+            port: 8528
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      tolerations:
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
+
