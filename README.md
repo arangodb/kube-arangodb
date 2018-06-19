@@ -8,15 +8,14 @@ read the [tutorial](./docs/Manual/Tutorials/Kubernetes/README.md).
 
 ## State
 
-The ArangoDB Kubernetes Operator is still in **heavy development**.
+The ArangoDB Kubernetes Operator is still in **development**.
 
 Running ArangoDB deployments (single, active-failover or cluster)
-is becoming reasonably stable, but you should **not yet use it for production
-environments**.
+is reasonably stable, and we're in the process of validating
+production readiness of various Kubernetes platforms.
 
 The feature set of the ArangoDB Kubernetes Operator is close to what
-it is intended to be, with the exeption of Datacenter to Datacenter replication
-support. That is still completely missing.
+it is intended to be.
 
 [Documentation](./docs/README.md)
 
@@ -27,6 +26,8 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-storage.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-deployment-replication.yaml
 ```
 
 ## Building
@@ -37,4 +38,6 @@ kubectl apply -f manifests/crd.yaml
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f manifests/arango-deployment-replication-dev.yaml
 ```
