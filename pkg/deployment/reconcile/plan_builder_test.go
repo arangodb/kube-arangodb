@@ -34,6 +34,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
@@ -47,7 +48,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
 		return nil, maskAny(fmt.Errorf("Not implemented"))
 	}
-	createEvent := func(evt *v1.Event) {}
+	createEvent := func(evt *k8sutil.Event) {}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeSingle),
@@ -105,7 +106,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
 		return nil, maskAny(fmt.Errorf("Not implemented"))
 	}
-	createEvent := func(evt *v1.Event) {}
+	createEvent := func(evt *k8sutil.Event) {}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeActiveFailover),
@@ -180,7 +181,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
 		return nil, maskAny(fmt.Errorf("Not implemented"))
 	}
-	createEvent := func(evt *v1.Event) {}
+	createEvent := func(evt *k8sutil.Event) {}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeCluster),

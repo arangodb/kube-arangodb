@@ -173,7 +173,7 @@ func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *
 
 // NewCannotChangeStorageClassEvent creates an event indicating that an item would need to use a different StorageClass,
 // but this is not possible for the given reason.
-func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subReason string) *v1.Event {
+func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subReason string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Member StorageClass Cannot Change", strings.Title(role))
