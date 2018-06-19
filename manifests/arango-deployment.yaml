@@ -26,6 +26,9 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
   verbs: ["*"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
 - apiGroups: ["apps"]
   resources: ["deployments"]
   verbs: ["*"]
@@ -35,7 +38,7 @@ rules:
 
 ---
 
-## Bind the cluster role granting access to ArangoLocalStorage resources
+## Bind the cluster role granting access to ArangoDeployment resources
 ## to the default service account of the configured namespace.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -79,7 +82,7 @@ metadata:
   name: arango-deployment-operator
   namespace: default
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: Recreate
   template:
@@ -91,7 +94,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:4b58b71c0a53b7652ca6e9b518bdb1393bf3a0c79d3c666a0914dd079f8f018e
+        image: arangodb/kube-arangodb@sha256:43bdc14d072fb1912d885536c189a631076e13e5c3e8a87b06e5ddbe60c66a6d
         args:
           - --operator.deployment
           - --chaos.allowed=false
@@ -125,4 +128,13 @@ spec:
             scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
+      tolerations:
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
 

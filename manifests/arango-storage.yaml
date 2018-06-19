@@ -90,7 +90,7 @@ metadata:
   name: arango-storage-operator
   namespace: kube-system
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: Recreate
   template:
@@ -103,7 +103,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:4b58b71c0a53b7652ca6e9b518bdb1393bf3a0c79d3c666a0914dd079f8f018e
+        image: arangodb/kube-arangodb@sha256:43bdc14d072fb1912d885536c189a631076e13e5c3e8a87b06e5ddbe60c66a6d
         args:
         - --operator.storage
         env:
@@ -136,4 +136,13 @@ spec:
             scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
-      
+      tolerations:
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 5
+
