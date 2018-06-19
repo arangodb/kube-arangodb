@@ -25,6 +25,8 @@ package deployment
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
@@ -175,7 +177,11 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	dnsName := k8sutil.CreatePodDNSName(d.apiObject, group.AsRole(), id)
 
 	// Build client
-	source := client.Endpoint{dnsName}
+	port := k8sutil.ArangoSyncMasterPort
+	if group == api.ServerGroupSyncWorkers {
+		port = k8sutil.ArangoSyncWorkerPort
+	}
+	source := client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
 	tlsAuth := tasks.TLSAuthentication{
 		TLSClientAuthentication: tasks.TLSClientAuthentication{
 			ClientToken: monitoringToken,
