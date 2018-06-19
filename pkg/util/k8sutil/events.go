@@ -181,6 +181,16 @@ func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subRe
 	return event
 }
 
+// NewDowntimeNotAllowedEvent creates an event indicating that an operation cannot be executed because downtime
+// is currently not allowed.
+func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Downtime Operation Postponed"
+	event.Message = fmt.Sprintf("The '%s' operation is postponed because downtime it not allowed. Set `spec.downtimeAllowed` to true to execute this operation", operation)
+	return event
+}
+
 // NewErrorEvent creates an even of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)

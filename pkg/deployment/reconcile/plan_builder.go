@@ -189,7 +189,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate TLS CA certificate and all members
 	if len(plan) == 0 {
-		plan = createRotateTLSCAPlan(log, spec, status, getTLSCA)
+		plan = createRotateTLSCAPlan(log, apiObject, spec, status, getTLSCA, createEvent)
 	}
 
 	// Return plan
