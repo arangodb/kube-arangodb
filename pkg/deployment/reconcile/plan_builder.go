@@ -82,7 +82,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error),
 	getTLSCA func(string) (string, string, bool, error),
 	getPVC func(pvcName string) (*v1.PersistentVolumeClaim, error),
-	createEvent func(evt *v1.Event)) (api.Plan, bool) {
+	createEvent func(evt *k8sutil.Event)) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -189,7 +189,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate TLS CA certificate and all members
 	if len(plan) == 0 {
-		plan = createRotateTLSCAPlan(log, spec, status, getTLSCA)
+		plan = createRotateTLSCAPlan(log, apiObject, spec, status, getTLSCA, createEvent)
 	}
 
 	// Return plan

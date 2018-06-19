@@ -50,6 +50,7 @@ type DeploymentSpec struct {
 	StorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
 	Image           *string         `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
+	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -90,6 +91,11 @@ func (s DeploymentSpec) GetImage() string {
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
+}
+
+// IsDowntimeAllowed returns the value of downtimeAllowed.
+func (s DeploymentSpec) IsDowntimeAllowed() bool {
+	return util.BoolOrDefault(s.DowntimeAllowed)
 }
 
 // IsAuthenticated returns true when authentication is enabled
@@ -170,6 +176,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	}
 	if s.ImagePullPolicy == nil {
 		s.ImagePullPolicy = util.NewPullPolicyOrNil(source.ImagePullPolicy)
+	}
+	if s.DowntimeAllowed == nil {
+		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)

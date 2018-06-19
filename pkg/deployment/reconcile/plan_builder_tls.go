@@ -29,6 +29,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 )
 
@@ -76,8 +77,10 @@ func createRotateTLSServerCertificatePlan(log zerolog.Logger, spec api.Deploymen
 }
 
 // createRotateTLSCAPlan creates plan to replace a TLS CA and rotate all server.
-func createRotateTLSCAPlan(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus,
-	getTLSCA func(string) (string, string, bool, error)) api.Plan {
+func createRotateTLSCAPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	getTLSCA func(string) (string, string, bool, error),
+	createEvent func(evt *k8sutil.Event)) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -93,31 +96,37 @@ func createRotateTLSCAPlan(log zerolog.Logger, spec api.DeploymentSpec, status a
 	}
 	var plan api.Plan
 	if renewalNeeded, reason := tlsCANeedsRenewal(log, cert, spec.TLS); renewalNeeded {
-		var planSuffix api.Plan
-		plan = append(plan,
-			api.NewAction(api.ActionTypeRenewTLSCACertificate, 0, "", reason),
-		)
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-			for _, m := range members {
-				if m.Phase != api.MemberPhaseCreated {
-					// Only make changes when phase is created
-					continue
+		if spec.IsDowntimeAllowed() {
+			var planSuffix api.Plan
+			plan = append(plan,
+				api.NewAction(api.ActionTypeRenewTLSCACertificate, 0, "", reason),
+			)
+			status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+				for _, m := range members {
+					if m.Phase != api.MemberPhaseCreated {
+						// Only make changes when phase is created
+						continue
+					}
+					if !group.IsArangod() {
+						// Sync master/worker is not applicable here
+						continue
+					}
+					plan = append(plan,
+						api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID),
+						api.NewAction(api.ActionTypeRotateMember, group, m.ID, "TLS CA certificate changed"),
+					)
+					planSuffix = append(planSuffix,
+						api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID, "TLS CA certificate changed"),
+					)
 				}
-				if !group.IsArangod() {
-					// Sync master/worker is not applicable here
-					continue
-				}
-				plan = append(plan,
-					api.NewAction(api.ActionTypeRenewTLSCertificate, group, m.ID),
-					api.NewAction(api.ActionTypeRotateMember, group, m.ID, "TLS CA certificate changed"),
-				)
-				planSuffix = append(planSuffix,
-					api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID, "TLS CA certificate changed"),
-				)
-			}
-			return nil
-		})
-		plan = append(plan, planSuffix...)
+				return nil
+			})
+			plan = append(plan, planSuffix...)
+		} else {
+			// Rotating the CA results in downtime.
+			// That is currently not allowed.
+			createEvent(k8sutil.NewDowntimeNotAllowedEvent(apiObject, "Rotate TLS CA"))
+		}
 	}
 	return plan
 }

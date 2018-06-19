@@ -173,11 +173,21 @@ func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *
 
 // NewCannotChangeStorageClassEvent creates an event indicating that an item would need to use a different StorageClass,
 // but this is not possible for the given reason.
-func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subReason string) *v1.Event {
+func NewCannotChangeStorageClassEvent(apiObject APIObject, memberID, role, subReason string) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = fmt.Sprintf("%s Member StorageClass Cannot Change", strings.Title(role))
 	event.Message = fmt.Sprintf("Member %s with role %s should use a different StorageClass, but is cannot because: %s", memberID, role, subReason)
+	return event
+}
+
+// NewDowntimeNotAllowedEvent creates an event indicating that an operation cannot be executed because downtime
+// is currently not allowed.
+func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Downtime Operation Postponed"
+	event.Message = fmt.Sprintf("The '%s' operation is postponed because downtime it not allowed. Set `spec.downtimeAllowed` to true to execute this operation", operation)
 	return event
 }
 
