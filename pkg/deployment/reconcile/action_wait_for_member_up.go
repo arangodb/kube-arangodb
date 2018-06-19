@@ -74,7 +74,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctx)
 		}
-		return a.checkProgressSingle(ctx)
+		return a.checkProgressSingleInActiveFailover(ctx)
 	default:
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctx)
@@ -94,6 +94,26 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
+		return false, false, maskAny(err)
+	}
+	return true, false, nil
+}
+
+// checkProgressSingleInActiveFailover checks the progress of the action in the case
+// of a single server as part of an active failover deployment.
+func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) (bool, bool, error) {
+	log := a.log
+	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create database client")
+		return false, false, maskAny(err)
+	}
+	if _, err := c.Version(ctx); err != nil {
+		log.Debug().Err(err).Msg("Failed to get version")
+		return false, false, maskAny(err)
+	}
+	if _, err := c.Databases(ctx); err != nil {
+		log.Debug().Err(err).Msg("Failed to get databases")
 		return false, false, maskAny(err)
 	}
 	return true, false, nil
@@ -154,7 +174,7 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 // of a sync master / worker.
 func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, bool, error) {
 	log := a.log
-	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.ID)
+	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create arangosync client")
 		return false, false, maskAny(err)
@@ -169,4 +189,9 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 // Timeout returns the amount of time after which this action will timeout.
 func (a *actionWaitForMemberUp) Timeout() time.Duration {
 	return waitForMemberUpTimeout
+}
+
+// Return the MemberID used / created in this action
+func (a *actionWaitForMemberUp) MemberID() string {
+	return a.action.MemberID
 }

@@ -253,6 +253,15 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 			**out = **in
 		}
 	}
+	if in.DowntimeAllowed != nil {
+		in, out := &in.DowntimeAllowed, &out.DowntimeAllowed
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(bool)
+			**out = **in
+		}
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)

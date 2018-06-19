@@ -212,6 +212,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,
 		DatabaseCRCli: o.Dependencies.CRCli,
+		EventRecorder: o.Dependencies.EventRecorder,
 	}
 	return cfg, deps
 }

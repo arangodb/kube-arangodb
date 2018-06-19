@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -47,7 +46,7 @@ const (
 // the member status of the deployment accordingly.
 func (r *Resources) InspectPods(ctx context.Context) error {
 	log := r.log
-	var events []*v1.Event
+	var events []*k8sutil.Event
 
 	pods, err := r.context.GetOwnedPods()
 	if err != nil {

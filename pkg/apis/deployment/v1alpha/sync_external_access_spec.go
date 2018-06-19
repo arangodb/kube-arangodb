@@ -35,7 +35,7 @@ import (
 type SyncExternalAccessSpec struct {
 	ExternalAccessSpec
 	MasterEndpoint           []string `json:"masterEndpoint,omitempty"`
-	AccessPackageSecretNames []string `json:accessPackageSecretNames,omitempty"`
+	AccessPackageSecretNames []string `json:"accessPackageSecretNames,omitempty"`
 }
 
 // GetMasterEndpoint returns the value of masterEndpoint.

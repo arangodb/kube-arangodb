@@ -36,8 +36,8 @@ type EndpointSpec struct {
 	// DeploymentName holds the name of an ArangoDeployment resource.
 	// If set this provides default values for masterEndpoint, auth & tls.
 	DeploymentName *string `json:"deploymentName,omitempty"`
-	// Endpoint holds a list of URLs used to reach the syncmaster(s).
-	Endpoint []string `json:"endpoint,omitempty"`
+	// MasterEndpoint holds a list of URLs used to reach the syncmaster(s).
+	MasterEndpoint []string `json:"masterEndpoint,omitempty"`
 	// Authentication holds settings needed to authentication at the syncmaster.
 	Authentication EndpointAuthenticationSpec `json:"auth"`
 	// TLS holds settings needed to verify the TLS connection to the syncmaster.
@@ -60,13 +60,13 @@ func (s EndpointSpec) Validate(isSourceEndpoint bool) error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetDeploymentName()); err != nil {
 		return maskAny(err)
 	}
-	for _, ep := range s.Endpoint {
+	for _, ep := range s.MasterEndpoint {
 		if _, err := url.Parse(ep); err != nil {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid master endpoint '%s': %s", ep, err))
 		}
 	}
 	hasDeploymentName := s.HasDeploymentName()
-	if !hasDeploymentName && len(s.Endpoint) == 0 {
+	if !hasDeploymentName && len(s.MasterEndpoint) == 0 {
 		return maskAny(errors.Wrapf(ValidationError, "Provide a deploy name or at least one master endpoint"))
 	}
 	if err := s.Authentication.Validate(isSourceEndpoint || !hasDeploymentName); err != nil {

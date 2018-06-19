@@ -51,6 +51,12 @@ const (
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
 )
 
+const (
+	// MemberIDPreviousAction is used for Action.MemberID when the MemberID
+	// should be derived from the previous action.
+	MemberIDPreviousAction = "@previous"
+)
+
 // Action represents a single action to be taken to update a deployment.
 type Action struct {
 	// ID of this action (unique for every action)

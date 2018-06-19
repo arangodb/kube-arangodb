@@ -76,6 +76,10 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 				if ready {
 					// Remove action from list
 					status.Plan = status.Plan[1:]
+					if len(status.Plan) > 0 && status.Plan[0].MemberID == api.MemberIDPreviousAction {
+						// Fill in MemberID from previous action
+						status.Plan[0].MemberID = action.MemberID()
+					}
 				} else {
 					// Mark start time
 					now := metav1.Now()
@@ -105,6 +109,10 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 					status, lastVersion := d.context.GetStatus()
 					// Remove action from list
 					status.Plan = status.Plan[1:]
+					if len(status.Plan) > 0 && status.Plan[0].MemberID == api.MemberIDPreviousAction {
+						// Fill in MemberID from previous action
+						status.Plan[0].MemberID = action.MemberID()
+					}
 					// Save plan update
 					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
