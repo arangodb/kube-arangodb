@@ -29,6 +29,7 @@ it is intended to be.
 | Azure AKS            | 1.10               | ?     | No               |
 | OpenShift            | 1.10               | Runs  | No               |
 | Pivotal PKS          | 1.10               | ?     | No               |
+| Scaleway Kubernetes  | 1.10               | ?     | No               |
 | Bare metal (kubeadm) | 1.10               | Runs  | No               |
 | Minikube             | 1.10               | Runs  | Not intended     |
 | Docker for Mac Edge  | 1.10               | Runs  | Not intended     |
