@@ -6,8 +6,8 @@ clusters running in Kubernetes.
 
 ## Requirements
 
-1. This tutorial assumes that you 2 ArangoDB clusters running in 2 different Kubernetes clusters.
-1. Both Kubernetes clusters are equiped with support for `Services` of type `LoadBalancer`.
+1. This tutorial assumes that you have 2 ArangoDB clusters running in 2 different Kubernetes clusters.
+1. Both Kubernetes clusters are equipped with support for `Services` of type `LoadBalancer`.
 1. You can create (global) DNS names for configured `Services` with low propagation times. E.g. use Cloudflare.
 1. You have 4 DNS names available:
    - One for the database in the source ArangoDB cluster. E.g. `src-db.mycompany.com`
