@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.2.1](https://github.com/arangodb/kube-arangodb/tree/0.2.1) (2018-06-19)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.0...0.2.1)
+
 ## [0.2.0](https://github.com/arangodb/kube-arangodb/tree/0.2.0) (2018-06-19)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.1.0...0.2.0)
 
