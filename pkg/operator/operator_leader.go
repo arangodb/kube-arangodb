@@ -35,13 +35,16 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 // runLeaderElection performs a leader election on a lock with given name in
 // the namespace that the operator is deployed in.
 // When the leader election is won, the given callback is called.
 // When the leader election is lost (even after it was won once), the process is killed.
-func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{})) {
+// The given ready probe is set, as soon as this process became the leader, or a new leader
+// is detected.
+func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.KubeCli
 	log := o.log.With().Str("lock-name", lockName).Logger()
@@ -71,12 +74,17 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(stop <-chan struct{}) {
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
+				readyProbe.SetReady()
 				onStart(stop)
 			},
 			OnStoppedLeading: func() {
 				recordEvent("Stop Leading", fmt.Sprintf("Pod %s is stopping to run as leader", o.Config.PodName))
 				log.Info().Msg("Stop leading. Terminating process")
 				os.Exit(1)
+			},
+			OnNewLeader: func(identity string) {
+				log.Info().Str("identity", identity).Msg("New leader detected")
+				readyProbe.SetReady()
 			},
 		},
 	})
