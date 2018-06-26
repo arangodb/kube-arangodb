@@ -36,8 +36,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -271,5 +273,9 @@ func createRecorder(log zerolog.Logger, kubecli kubernetes.Interface, name, name
 		log.Info().Msgf(format, args...)
 	})
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.Core().RESTClient()).Events(namespace)})
-	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: name})
+	combinedScheme := runtime.NewScheme()
+	scheme.AddToScheme(combinedScheme)
+	v1.AddToScheme(combinedScheme)
+	appsv1beta2.AddToScheme(combinedScheme)
+	return eventBroadcaster.NewRecorder(combinedScheme, v1.EventSource{Component: name})
 }

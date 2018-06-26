@@ -23,16 +23,37 @@
 package operator
 
 import (
+	"fmt"
+	"os"
 	"time"
 
+	"github.com/rs/zerolog"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
-func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{})) {
+// runLeaderElection performs a leader election on a lock with given name in
+// the namespace that the operator is deployed in.
+// When the leader election is won, the given callback is called.
+// When the leader election is was won once, but then the leadership is lost, the process is killed.
+// The given ready probe is set, as soon as this process became the leader, or a new leader
+// is detected.
+func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.KubeCli
 	log := o.log.With().Str("lock-name", lockName).Logger()
+	eventTarget := o.getLeaderElectionEventTarget(log)
+	recordEvent := func(reason, message string) {
+		if eventTarget != nil {
+			o.Dependencies.EventRecorder.Event(eventTarget, v1.EventTypeNormal, reason, message)
+		}
+	}
 	rl, err := resourcelock.New(resourcelock.EndpointsResourceLock,
 		namespace,
 		lockName,
@@ -51,10 +72,54 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 		RenewDeadline: 10 * time.Second,
 		RetryPeriod:   2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: onStart,
+			OnStartedLeading: func(stop <-chan struct{}) {
+				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
+				readyProbe.SetReady()
+				onStart(stop)
+			},
 			OnStoppedLeading: func() {
-				log.Info().Msg("Leader election lost")
+				recordEvent("Stop Leading", fmt.Sprintf("Pod %s is stopping to run as leader", o.Config.PodName))
+				log.Info().Msg("Stop leading. Terminating process")
+				os.Exit(1)
+			},
+			OnNewLeader: func(identity string) {
+				log.Info().Str("identity", identity).Msg("New leader detected")
+				readyProbe.SetReady()
 			},
 		},
 	})
+}
+
+// getLeaderElectionEventTarget returns the object that leader election related
+// events will be added to.
+func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Object {
+	ns := o.Config.Namespace
+	kubecli := o.Dependencies.KubeCli
+	pods := kubecli.CoreV1().Pods(ns)
+	log = log.With().Str("pod-name", o.Config.PodName).Logger()
+	pod, err := pods.Get(o.Config.PodName, metav1.GetOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot find Pod containing this operator")
+		return nil
+	}
+	rSet, err := k8sutil.GetPodOwner(kubecli, pod, ns)
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot find ReplicaSet owning the Pod containing this operator")
+		return pod
+	}
+	if rSet == nil {
+		log.Error().Msg("Pod containing this operator has no ReplicaSet owner")
+		return pod
+	}
+	log = log.With().Str("replicaSet-name", rSet.Name).Logger()
+	depl, err := k8sutil.GetReplicaSetOwner(kubecli, rSet, ns)
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot find Deployment owning the ReplicataSet that owns the Pod containing this operator")
+		return rSet
+	}
+	if rSet == nil {
+		log.Error().Msg("ReplicaSet that owns the Pod containing this operator has no Deployment owner")
+		return rSet
+	}
+	return depl
 }

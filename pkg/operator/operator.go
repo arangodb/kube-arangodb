@@ -105,13 +105,13 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 // Run the operator
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
-		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment)
+		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment, o.Dependencies.DeploymentProbe)
 	}
 	if o.Config.EnableDeploymentReplication {
-		go o.runLeaderElection("arango-deployment-replication-operator", o.onStartDeploymentReplication)
+		go o.runLeaderElection("arango-deployment-replication-operator", o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 	}
 	if o.Config.EnableStorage {
-		go o.runLeaderElection("arango-storage-operator", o.onStartStorage)
+		go o.runLeaderElection("arango-storage-operator", o.onStartStorage, o.Dependencies.StorageProbe)
 	}
 	// Wait until process terminates
 	<-context.TODO().Done()

@@ -33,8 +33,8 @@ rules:
   resources: ["nodes"]
   verbs: ["get"]
 - apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["*"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get"]
 
 ---
 
