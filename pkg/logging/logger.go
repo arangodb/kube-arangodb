@@ -28,6 +28,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/golang/glog"
 	"github.com/rs/zerolog"
 )
 
@@ -47,6 +48,10 @@ type Service interface {
 	MustGetLogger(name string) zerolog.Logger
 	// MustSetLevel sets the log level for the component with given name to given level.
 	MustSetLevel(name, level string)
+	// ConfigureRootLogger calls the given callback to modify the root logger.
+	ConfigureRootLogger(cb func(rootLog zerolog.Logger) zerolog.Logger)
+	// CaptureGLog configures glog to write to the given logger
+	CaptureGLog(log zerolog.Logger)
 }
 
 // loggingService implements Service
@@ -81,6 +86,32 @@ func NewService(defaultLevel string) (Service, error) {
 		s.MustSetLevel(k, v)
 	}
 	return s, nil
+}
+
+// ConfigureRootLogger calls the given callback to modify the root logger.
+func (s *loggingService) ConfigureRootLogger(cb func(rootLog zerolog.Logger) zerolog.Logger) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.rootLog = cb(s.rootLog)
+}
+
+// CaptureGLog configures glog to write to the given logger
+func (s *loggingService) CaptureGLog(log zerolog.Logger) {
+	glog.RedirectOutput(func(level glog.LogLevel, msg string) {
+		var e *zerolog.Event
+		switch level {
+		case glog.LogLevelWarning:
+			e = log.WithLevel(zerolog.WarnLevel)
+		case glog.LogLevelError:
+			e = log.WithLevel(zerolog.ErrorLevel)
+		case glog.LogLevelFatal:
+			e = log.WithLevel(zerolog.FatalLevel)
+		default:
+			e = log.WithLevel(zerolog.InfoLevel)
+		}
+		e.Msg(msg)
+	})
 }
 
 // MustGetLogger creates a logger with given name
