@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -116,12 +117,25 @@ func cmdUsage(cmd *cobra.Command, args []string) {
 
 // Run the operator
 func cmdMainRun(cmd *cobra.Command, args []string) {
+	// Get environment
+	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	name := os.Getenv(constants.EnvOperatorPodName)
+	ip := os.Getenv(constants.EnvOperatorPodIP)
+
+	// Prepare log service
 	goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
 	logService, err = logging.NewService(logLevel)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
+	logService.ConfigureRootLogger(func(log zerolog.Logger) zerolog.Logger {
+		podNameParts := strings.Split(name, "-")
+		operatorID := podNameParts[len(podNameParts)-1]
+		cliLog = cliLog.With().Str("operator-id", operatorID).Logger()
+		return log.With().Str("operator-id", operatorID).Logger()
+	})
+	logService.CaptureGLog(logService.MustGetLogger("glog"))
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage {
@@ -129,18 +143,18 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Log version
-	cliLog.Info().Msgf("Starting arangodb-operator, version %s build %s", projectVersion, projectBuild)
+	cliLog.Info().
+		Str("pod-name", name).
+		Str("pod-namespace", namespace).
+		Msgf("Starting arangodb-operator, version %s build %s", projectVersion, projectBuild)
 
-	// Get environment
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	// Check environment
 	if len(namespace) == 0 {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
 	}
-	name := os.Getenv(constants.EnvOperatorPodName)
 	if len(name) == 0 {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
 	}
-	ip := os.Getenv(constants.EnvOperatorPodIP)
 	if len(ip) == 0 {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodIP)
 	}
