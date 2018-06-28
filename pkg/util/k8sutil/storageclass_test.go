@@ -36,6 +36,7 @@ func TestStorageClassIsDefault(t *testing.T) {
 		StorageClass v1.StorageClass
 		IsDefault    bool
 	}{
+		// final annotation
 		{v1.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{},
@@ -44,21 +45,48 @@ func TestStorageClassIsDefault(t *testing.T) {
 		{v1.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					annStorageClassIsDefault: "false",
+					annStorageClassIsDefault[0]: "false",
 				},
 			},
 		}, false},
 		{v1.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					annStorageClassIsDefault: "foo",
+					annStorageClassIsDefault[0]: "foo",
 				},
 			},
 		}, false},
 		{v1.StorageClass{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					annStorageClassIsDefault: "true",
+					annStorageClassIsDefault[0]: "true",
+				},
+			},
+		}, true},
+		// beta annotation
+		{v1.StorageClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{},
+			},
+		}, false},
+		{v1.StorageClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					annStorageClassIsDefault[1]: "false",
+				},
+			},
+		}, false},
+		{v1.StorageClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					annStorageClassIsDefault[1]: "foo",
+				},
+			},
+		}, false},
+		{v1.StorageClass{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					annStorageClassIsDefault[1]: "true",
 				},
 			},
 		}, true},
