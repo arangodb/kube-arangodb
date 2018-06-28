@@ -23,36 +23,67 @@
 package k8sutil
 
 import (
-	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/arangodb/arangosync/pkg/retry"
 	"k8s.io/api/storage/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
 )
 
-const (
-	annStorageClassIsDefault = "storageclass.kubernetes.io/is-default-class"
+var (
+	annStorageClassIsDefault = []string{
+		// Make sure first entry is the one we'll put in
+		"storageclass.kubernetes.io/is-default-class",
+		"storageclass.beta.kubernetes.io/is-default-class",
+	}
 )
 
 // StorageClassIsDefault returns true if the given storage class is marked default,
 // false otherwise.
 func StorageClassIsDefault(sc *v1.StorageClass) bool {
-	value, found := sc.GetObjectMeta().GetAnnotations()[annStorageClassIsDefault]
-	if !found {
-		return false
+	for _, key := range annStorageClassIsDefault {
+		if value, found := sc.GetObjectMeta().GetAnnotations()[key]; found {
+			if boolValue, err := strconv.ParseBool(value); err == nil && boolValue {
+				return true
+			}
+		}
 	}
-	boolValue, err := strconv.ParseBool(value)
-	if err != nil {
-		return false
-	}
-	return boolValue
+	return false
 }
 
 // PatchStorageClassIsDefault changes the default flag of the given storage class.
 func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, isDefault bool) error {
-	jsonPatch := fmt.Sprintf(`{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"%v"}}}`, isDefault)
-	if _, err := cli.StorageClasses().Patch(name, types.StrategicMergePatchType, []byte(jsonPatch)); err != nil {
+	stcs := cli.StorageClasses()
+	op := func() error {
+		// Fetch current version of StorageClass
+		current, err := stcs.Get(name, metav1.GetOptions{})
+		if IsNotFound(err) {
+			return retry.Permanent(maskAny(err))
+		} else if err != nil {
+			return maskAny(err)
+		}
+		// Tweak annotations
+		ann := current.GetAnnotations()
+		if ann == nil {
+			ann = make(map[string]string)
+		}
+		for _, key := range annStorageClassIsDefault {
+			delete(ann, key)
+		}
+		ann[annStorageClassIsDefault[0]] = strconv.FormatBool(isDefault)
+		current.SetAnnotations(ann)
+		// Save StorageClass
+		if _, err := stcs.Update(current); IsConflict(err) {
+			// StorageClass has been modified since we read it
+			return maskAny(err)
+		} else if err != nil {
+			return retry.Permanent(maskAny(err))
+		}
+		return nil
+	}
+	if err := retry.Retry(op, time.Second*15); err != nil {
 		return maskAny(err)
 	}
 	return nil
