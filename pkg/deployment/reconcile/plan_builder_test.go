@@ -37,18 +37,40 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+type testContext struct{}
+
+// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
+// the given member.
+func (c *testContext) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	return "", maskAny(fmt.Errorf("Not implemented"))
+}
+
+// GetTLSCA returns the TLS CA certificate in the secret with given name.
+// Returns: publicKey, privateKey, ownerByDeployment, error
+func (c *testContext) GetTLSCA(secretName string) (string, string, bool, error) {
+	return "", "", false, maskAny(fmt.Errorf("Not implemented"))
+}
+
+// CreateEvent creates a given event.
+// On error, the error is logged.
+func (c *testContext) CreateEvent(evt *k8sutil.Event) {
+	// not implemented
+}
+
+// GetPvc gets a PVC by the given name, in the samespace of the deployment.
+func (c *testContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
+	return nil, maskAny(fmt.Errorf("Not implemented"))
+}
+
+// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
+func (c *testContext) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+	agents api.MemberStatusList, id string) []string {
+	return nil // not implemented
+}
+
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
-	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
-		return "", maskAny(fmt.Errorf("Not implemented"))
-	}
-	getTLSCA := func(string) (string, string, bool, error) {
-		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
-	}
-	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
-		return nil, maskAny(fmt.Errorf("Not implemented"))
-	}
-	createEvent := func(evt *k8sutil.Event) {}
+	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeSingle),
@@ -64,7 +86,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -75,7 +97,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -90,23 +112,14 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
 
 // TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
 func TestCreatePlanActiveFailoverScale(t *testing.T) {
-	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
-		return "", maskAny(fmt.Errorf("Not implemented"))
-	}
-	getTLSCA := func(string) (string, string, bool, error) {
-		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
-	}
-	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
-		return nil, maskAny(fmt.Errorf("Not implemented"))
-	}
-	createEvent := func(evt *k8sutil.Event) {}
+	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeActiveFailover),
@@ -123,7 +136,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -136,7 +149,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -161,7 +174,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -172,16 +185,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 
 // TestCreatePlanClusterScale creates a `cluster` deployment to test the creating of scaling plan.
 func TestCreatePlanClusterScale(t *testing.T) {
-	getTLSKeyfile := func(group api.ServerGroup, member api.MemberStatus) (string, error) {
-		return "", maskAny(fmt.Errorf("Not implemented"))
-	}
-	getTLSCA := func(string) (string, string, bool, error) {
-		return "", "", false, maskAny(fmt.Errorf("Not implemented"))
-	}
-	getPVC := func(pvcName string) (*v1.PersistentVolumeClaim, error) {
-		return nil, maskAny(fmt.Errorf("Not implemented"))
-	}
-	createEvent := func(evt *k8sutil.Event) {}
+	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
 		Mode: api.NewMode(api.DeploymentModeCluster),
@@ -197,7 +201,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -230,7 +234,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -267,7 +271,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, getTLSKeyfile, getTLSCA, getPVC, createEvent)
+	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
