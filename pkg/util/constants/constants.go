@@ -51,4 +51,7 @@ const (
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
+
+	LabelRole       = "role"
+	LabelRoleLeader = "leader"
 )
