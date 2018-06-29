@@ -34,6 +34,8 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
+	"github.com/arangodb/arangosync/pkg/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
@@ -75,6 +77,10 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 			OnStartedLeading: func(stop <-chan struct{}) {
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 				readyProbe.SetReady()
+				if err := o.setRoleLabel(log, constants.LabelRoleLeader); err != nil {
+					log.Error().Msg("Cannot set leader role on Pod. Terminating process")
+					os.Exit(2)
+				}
 				onStart(stop)
 			},
 			OnStoppedLeading: func() {
@@ -122,4 +128,39 @@ func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Obje
 		return rSet
 	}
 	return depl
+}
+
+// setRoleLabel sets a label with key `role` and given value in the pod metadata.
+func (o *Operator) setRoleLabel(log zerolog.Logger, role string) error {
+	ns := o.Config.Namespace
+	kubecli := o.Dependencies.KubeCli
+	pods := kubecli.CoreV1().Pods(ns)
+	log = log.With().Str("pod-name", o.Config.PodName).Logger()
+	op := func() error {
+		pod, err := pods.Get(o.Config.PodName, metav1.GetOptions{})
+		if k8sutil.IsNotFound(err) {
+			log.Error().Err(err).Msg("Pod not found, so we cannot set its role label")
+			return retry.Permanent(maskAny(err))
+		} else if err != nil {
+			return maskAny(err)
+		}
+		labels := pod.ObjectMeta.GetLabels()
+		if labels == nil {
+			labels = make(map[string]string)
+		}
+		labels[constants.LabelRole] = role
+		pod.ObjectMeta.SetLabels(labels)
+		if _, err := pods.Update(pod); k8sutil.IsConflict(err) {
+			// Retry it
+			return maskAny(err)
+		} else if err != nil {
+			log.Error().Err(err).Msg("Failed to update Pod wrt 'role' label")
+			return retry.Permanent(maskAny(err))
+		}
+		return nil
+	}
+	if err := retry.Retry(op, time.Second*15); err != nil {
+		return maskAny(err)
+	}
+	return nil
 }
