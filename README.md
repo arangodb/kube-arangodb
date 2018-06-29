@@ -37,12 +37,12 @@ it is intended to be.
 ## Installation of latest release
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.2/manifests/crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.2/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.2/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.1/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.2/manifests/arango-deployment-replication.yaml
 ```
 
 ## Building

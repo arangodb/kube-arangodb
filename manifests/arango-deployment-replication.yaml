@@ -33,8 +33,8 @@ rules:
   resources: ["nodes"]
   verbs: ["get"]
 - apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["*"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get"]
 
 ---
 
@@ -94,7 +94,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:1ac03c2ecd188148259e392655381b05b32b389977b53b29ddc51f9d6c39bd88
+        image: arangodb/kube-arangodb@sha256:bbf5433b2cda054835f7abf923116b43fa2e56907d2a19895cd12c74b907c056
         args:
           - --operator.deployment-replication
         env:
