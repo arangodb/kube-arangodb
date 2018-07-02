@@ -26,14 +26,12 @@ import (
 	goflag "flag"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -173,19 +171,18 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", livenessProbe.LivenessHandler)
-	mux.HandleFunc("/ready/deployment", deploymentProbe.ReadyHandler)
-	mux.HandleFunc("/ready/deployment-replication", deploymentReplicationProbe.ReadyHandler)
-	mux.HandleFunc("/ready/storage", storageProbe.ReadyHandler)
-	mux.Handle("/metrics", prometheus.Handler())
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
-	if svr, err := server.NewServer(kubecli.CoreV1(), mux, server.Config{
+	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
 		Address:            listenAddr,
 		TLSSecretName:      serverOptions.tlsSecretName,
 		TLSSecretNamespace: namespace,
 		PodName:            name,
 		PodIP:              ip,
+	}, server.Dependencies{
+		LivenessProbe:              &livenessProbe,
+		DeploymentProbe:            &deploymentProbe,
+		DeploymentReplicationProbe: &deploymentReplicationProbe,
+		StorageProbe:               &storageProbe,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {

@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.2.2](https://github.com/arangodb/kube-arangodb/tree/0.2.2) (2018-06-29)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.1...0.2.2)
+
+**Closed issues:**
+
+- Unable to unset standard storage class in GKE using kubectl [\#200](https://github.com/arangodb/kube-arangodb/issues/200)
+- Fix operators Deployment spec wrt minimum availability [\#198](https://github.com/arangodb/kube-arangodb/issues/198)
+- Rotate server when cmdline arguments change [\#189](https://github.com/arangodb/kube-arangodb/issues/189)
+
+**Merged pull requests:**
+
+- Set a `role=leader` label on the Pod who won the leader election [\#208](https://github.com/arangodb/kube-arangodb/pull/208)
+- Rotate server on changed arguments [\#206](https://github.com/arangodb/kube-arangodb/pull/206)
+- Documentation fixes [\#205](https://github.com/arangodb/kube-arangodb/pull/205)
+- Fixed get/set Default flag for StorageClasses [\#204](https://github.com/arangodb/kube-arangodb/pull/204)
+- Log improvements [\#203](https://github.com/arangodb/kube-arangodb/pull/203)
+- All operator Pods will now reach the Ready state. [\#201](https://github.com/arangodb/kube-arangodb/pull/201)
+
 ## [0.2.1](https://github.com/arangodb/kube-arangodb/tree/0.2.1) (2018-06-19)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.0...0.2.1)
 

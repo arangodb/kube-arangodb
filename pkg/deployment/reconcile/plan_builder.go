@@ -23,6 +23,8 @@
 package reconcile
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
@@ -54,7 +56,8 @@ func (d *Reconciler) CreatePlan() error {
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status, lastVersion := d.context.GetStatus()
-	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, d.context.GetTLSKeyfile, d.context.GetTLSCA, d.context.GetPvc, d.context.CreateEvent)
+	ctx := newPlanBuilderContext(d.context)
+	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, ctx)
 
 	// If not change, we're done
 	if !changed {
@@ -79,10 +82,7 @@ func (d *Reconciler) CreatePlan() error {
 func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
-	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error),
-	getTLSCA func(string) (string, string, bool, error),
-	getPVC func(pvcName string) (*v1.PersistentVolumeClaim, error),
-	createEvent func(evt *k8sutil.Event)) (api.Plan, bool) {
+	context PlanBuilderContext) (api.Plan, bool) {
 	if len(currentPlan) > 0 {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -165,7 +165,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 						if decision.UpgradeNeeded && decision.UpgradeAllowed {
 							plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
 						} else {
-							rotNeeded, reason := podNeedsRotation(*p, apiObject, spec, group, status.Members.Agents, m.ID)
+							rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context)
 							if rotNeeded {
 								plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
 							}
@@ -179,17 +179,17 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate TLS certificate of a members
 	if len(plan) == 0 {
-		plan = createRotateTLSServerCertificatePlan(log, spec, status, getTLSKeyfile)
+		plan = createRotateTLSServerCertificatePlan(log, spec, status, context.GetTLSKeyfile)
 	}
 
 	// Check for changes storage classes or requirements
 	if len(plan) == 0 {
-		plan = createRotateServerStoragePlan(log, apiObject, spec, status, getPVC, createEvent)
+		plan = createRotateServerStoragePlan(log, apiObject, spec, status, context.GetPvc, context.CreateEvent)
 	}
 
 	// Check for the need to rotate TLS CA certificate and all members
 	if len(plan) == 0 {
-		plan = createRotateTLSCAPlan(log, apiObject, spec, status, getTLSCA, createEvent)
+		plan = createRotateTLSCAPlan(log, apiObject, spec, status, context.GetTLSCA, context.CreateEvent)
 	}
 
 	// Return plan
@@ -241,12 +241,14 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
-	group api.ServerGroup, agents api.MemberStatusList, id string) (bool, string) {
+func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+	group api.ServerGroup, agents api.MemberStatusList, id string,
+	context PlanBuilderContext) (bool, string) {
 	groupSpec := spec.GetServerGroupSpec(group)
 
 	// Check image pull policy
-	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
+	c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName)
+	if found {
 		if c.ImagePullPolicy != spec.GetImagePullPolicy() {
 			return true, "Image pull policy changed"
 		}
@@ -255,15 +257,15 @@ func podNeedsRotation(p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec
 	}
 
 	// Check arguments
-	/*expectedArgs := createArangodArgs(apiObject, spec, group, agents, id)
-	if len(expectedArgs) != len(c.Args) {
+	expectedArgs := strings.Join(context.GetExpectedPodArguments(apiObject, spec, group, agents, id), " ")
+	actualArgs := strings.Join(getContainerArgs(c), " ")
+	if expectedArgs != actualArgs {
+		log.Debug().
+			Str("actual-args", actualArgs).
+			Str("expected-args", expectedArgs).
+			Msg("Arguments changed. Rotation needed.")
 		return true, "Arguments changed"
 	}
-	for i, a := range expectedArgs {
-		if c.Args[i] != a {
-			return true, "Arguments changed"
-		}
-	}*/
 
 	// Check service account
 	if normalizeServiceAccountName(p.Spec.ServiceAccountName) != normalizeServiceAccountName(groupSpec.GetServiceAccountName()) {
@@ -351,4 +353,11 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	return plan
+}
+
+func getContainerArgs(c v1.Container) []string {
+	if len(c.Command) >= 1 {
+		return c.Command[1:]
+	}
+	return c.Args
 }

@@ -29,6 +29,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -89,4 +90,7 @@ type Context interface {
 	// DeleteSecret removes the Secret with given name.
 	// If the secret does not exist, the error is ignored.
 	DeleteSecret(secretName string) error
+	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
+	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+		agents api.MemberStatusList, id string) []string
 }

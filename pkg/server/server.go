@@ -29,9 +29,13 @@ import (
 	"time"
 
 	certificates "github.com/arangodb-helper/go-certificates"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 // Config settings for the Server
@@ -43,16 +47,24 @@ type Config struct {
 	PodIP              string // IP address of the Pod we're running in
 }
 
+// Dependencies of the Server
+type Dependencies struct {
+	LivenessProbe              *probe.LivenessProbe
+	DeploymentProbe            *probe.ReadyProbe
+	DeploymentReplicationProbe *probe.ReadyProbe
+	StorageProbe               *probe.ReadyProbe
+}
+
 // Server is the HTTPS server for the operator.
 type Server struct {
+	deps       Dependencies
 	httpServer *http.Server
 }
 
 // NewServer creates a new server, fetching/preparing a TLS certificate.
-func NewServer(cli corev1.CoreV1Interface, handler http.Handler, cfg Config) (*Server, error) {
+func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Server, error) {
 	httpServer := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           handler,
 		ReadTimeout:       time.Second * 30,
 		ReadHeaderTimeout: time.Second * 15,
 		WriteTimeout:      time.Second * 30,
@@ -99,7 +111,18 @@ func NewServer(cli corev1.CoreV1Interface, handler http.Handler, cfg Config) (*S
 	tlsConfig.BuildNameToCertificate()
 	httpServer.TLSConfig = tlsConfig
 
+	// Build router
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.GET("/health", gin.WrapF(deps.LivenessProbe.LivenessHandler))
+	r.GET("/ready/deployment", gin.WrapF(deps.DeploymentProbe.ReadyHandler))
+	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
+	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
+	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
+	httpServer.Handler = r
+
 	return &Server{
+		deps:       deps,
 		httpServer: httpServer,
 	}, nil
 }
