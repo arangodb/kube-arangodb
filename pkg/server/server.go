@@ -26,16 +26,19 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
+	assets "github.com/jessevdk/go-assets"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
@@ -141,9 +144,30 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		// Deployment operator
 		api.GET("/deployment", s.handleGetDeployments)
 	}
+	// Dashboard
+	r.GET("/", rootHandler)
+	for path, file := range dashboard.Assets.Files {
+		entry := assertEntry{file}
+		localPath := "/" + strings.TrimPrefix(path, "/")
+		r.GET(localPath, gin.WrapH(http.FileServer(entry)))
+		r.HEAD(localPath, gin.WrapH(http.FileServer(entry)))
+	}
 	httpServer.Handler = r
 
 	return s, nil
+}
+
+type assertEntry struct {
+	file *assets.File
+}
+
+func (e assertEntry) Open(name string) (http.File, error) {
+	return e.file, nil
+}
+
+func rootHandler(c *gin.Context) {
+	rootEntry := dashboard.Assets.Files["index.html"]
+	http.ServeContent(c.Writer, c.Request, rootEntry.Name(), rootEntry.ModTime(), rootEntry)
 }
 
 // Run the server until the program stops.
