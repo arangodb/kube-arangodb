@@ -111,7 +111,7 @@ build: check-vars docker manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR)
+	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -191,7 +191,10 @@ update-generated: $(GOBUILDDIR)
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
-dashboard/assets.go: $(DASHBOARDSOURCES)
+$(DASHBOARDDIR)/node_modules:
+	cd $(DASHBOARDDIR) && npm install
+
+dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/node_modules
 	cd $(DASHBOARDDIR) && npm run-script build
 	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 

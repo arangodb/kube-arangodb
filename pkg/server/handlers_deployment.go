@@ -34,6 +34,8 @@ import (
 type Deployment interface {
 	Name() string
 	Mode() api.DeploymentMode
+	PodCount() int
+	ReadyPodCount() int
 }
 
 // DeploymentOperator is the API implemented by the deployment operator.
@@ -43,8 +45,10 @@ type DeploymentOperator interface {
 
 // DeploymentInfo is the information returned per deployment.
 type DeploymentInfo struct {
-	Name string             `json:"name"`
-	Mode api.DeploymentMode `json:"mode"`
+	Name          string             `json:"name"`
+	Mode          api.DeploymentMode `json:"mode"`
+	PodCount      int                `json:"pod_count"`
+	ReadyPodCount int                `json:"ready_pod_count"`
 }
 
 // Handle a GET /api/deployment request
@@ -58,8 +62,10 @@ func (s *Server) handleGetDeployments(c *gin.Context) {
 			result := make([]DeploymentInfo, len(depls))
 			for i, d := range depls {
 				result[i] = DeploymentInfo{
-					Name: d.Name(),
-					Mode: d.Mode(),
+					Name:          d.Name(),
+					Mode:          d.Mode(),
+					PodCount:      d.PodCount(),
+					ReadyPodCount: d.ReadyPodCount(),
 				}
 			}
 			c.JSON(http.StatusOK, gin.H{

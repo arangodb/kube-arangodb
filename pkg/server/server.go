@@ -44,6 +44,7 @@ import (
 
 // Config settings for the Server
 type Config struct {
+	Namespace          string
 	Address            string // Address to listen on
 	TLSSecretName      string // Name of secret containing TLS certificate
 	TLSSecretNamespace string // Namespace of secret containing TLS certificate
@@ -69,6 +70,7 @@ type Operators interface {
 
 // Server is the HTTPS server for the operator.
 type Server struct {
+	cfg        Config
 	deps       Dependencies
 	httpServer *http.Server
 }
@@ -125,6 +127,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 
 	// Builder server
 	s := &Server{
+		cfg:        cfg,
 		deps:       deps,
 		httpServer: httpServer,
 	}

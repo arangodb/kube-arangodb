@@ -29,14 +29,18 @@ import (
 )
 
 type operatorsResponse struct {
-	Deployment            bool `json:"deployment"`
-	DeploymentReplication bool `json:"deployment_replication"`
-	Storage               bool `json:"storage"`
+	PodName               string `json:"pod"`
+	Namespace             string `json:"namespace"`
+	Deployment            bool   `json:"deployment"`
+	DeploymentReplication bool   `json:"deployment_replication"`
+	Storage               bool   `json:"storage"`
 }
 
 // Handle a GET /api/operators request
 func (s *Server) handleGetOperators(c *gin.Context) {
 	c.JSON(http.StatusOK, operatorsResponse{
+		PodName:               s.cfg.PodName,
+		Namespace:             s.cfg.Namespace,
 		Deployment:            s.deps.DeploymentProbe.IsReady(),
 		DeploymentReplication: s.deps.DeploymentReplicationProbe.IsReady(),
 		Storage:               s.deps.StorageProbe.IsReady(),

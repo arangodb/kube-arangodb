@@ -183,6 +183,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
 	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
+		Namespace:          namespace,
 		Address:            listenAddr,
 		TLSSecretName:      serverOptions.tlsSecretName,
 		TLSSecretNamespace: namespace,

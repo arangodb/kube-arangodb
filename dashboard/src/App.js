@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import DeploymentOperator from './deployment/DeploymentOperator.js';
+import NoOperator from './NoOperator.js';
 import { apiGet } from './api/api.js';
-import logo from './logo.svg';
+import { Container, Segment, Message } from 'semantic-ui-react';
 import './App.css';
 
 class App extends Component {
@@ -21,19 +22,24 @@ class App extends Component {
 
   render() {
     setTimeout(this.reloadOperators.bind(this), 5000);
+    let children = [];
     if (this.state.operators.deployment) {
-      return (<DeploymentOperator/>);
+      children.push((<DeploymentOperator/>));
+    } else {
+      children.push((<NoOperator/>));
     }
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to Kube-ArangoDB</h1>
-        </header>
-        <p className="App-intro">
-          There are no operators available yet.
-        </p>
-      </div>
+      <Container>
+        {children}
+        <Segment basic>
+          <Message>
+            <Message.Header>Kube-ArangoDB</Message.Header>
+            <p>
+              Running in Pod <b>{this.state.operators.pod}</b> in namespace <b>{this.state.operators.namespace}</b>.
+            </p>
+          </Message>     
+        </Segment>
+      </Container>
     );
   }
 }

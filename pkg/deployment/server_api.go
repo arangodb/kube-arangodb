@@ -35,3 +35,36 @@ func (d *Deployment) Name() string {
 func (d *Deployment) Mode() api.DeploymentMode {
 	return d.GetSpec().GetMode()
 }
+
+// PodCount returns the number of pods for the deployment
+func (d *Deployment) PodCount() int {
+	count := 0
+	status, _ := d.GetStatus()
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
+			if m.PodName != "" {
+				count++
+			}
+		}
+		return nil
+	})
+	return count
+}
+
+// ReadyPodCount returns the number of pods for the deployment that are in ready state
+func (d *Deployment) ReadyPodCount() int {
+	count := 0
+	status, _ := d.GetStatus()
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
+			if m.PodName == "" {
+				continue
+			}
+			if m.Conditions.IsTrue(api.ConditionTypeReady) {
+				count++
+			}
+		}
+		return nil
+	})
+	return count
+}
