@@ -20,33 +20,18 @@
 // Author Ewout Prangsma
 //
 
-package probe
+package deployment
 
 import (
-	"net/http"
-	"sync/atomic"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
-// ReadyProbe wraps a readiness probe handler.
-type ReadyProbe struct {
-	ready int32
+// Name returns the name of the deployment.
+func (d *Deployment) Name() string {
+	return d.apiObject.Name
 }
 
-// SetReady marks the probe as ready.
-func (p *ReadyProbe) SetReady() {
-	atomic.StoreInt32(&p.ready, 1)
-}
-
-// IsReady returns true when the given probe has been marked ready.
-func (p *ReadyProbe) IsReady() bool {
-	return atomic.LoadInt32(&p.ready) != 0
-}
-
-// ReadyHandler writes back the HTTP status code 200 if the operator is ready, and 500 otherwise.
-func (p *ReadyProbe) ReadyHandler(w http.ResponseWriter, r *http.Request) {
-	if p.IsReady() {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+// Mode returns the mode of the deployment.
+func (d *Deployment) Mode() api.DeploymentMode {
+	return d.GetSpec().GetMode()
 }

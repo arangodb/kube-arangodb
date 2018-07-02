@@ -20,33 +20,30 @@
 // Author Ewout Prangsma
 //
 
-package probe
+package operator
 
 import (
-	"net/http"
-	"sync/atomic"
+	"sort"
+
+	"github.com/arangodb/kube-arangodb/pkg/server"
 )
 
-// ReadyProbe wraps a readiness probe handler.
-type ReadyProbe struct {
-	ready int32
+// DeploymentOperator provides access to the deployment operator.
+func (o *Operator) DeploymentOperator() server.DeploymentOperator {
+	return o
 }
 
-// SetReady marks the probe as ready.
-func (p *ReadyProbe) SetReady() {
-	atomic.StoreInt32(&p.ready, 1)
-}
+// GetDeployments returns all current deployments
+func (o *Operator) GetDeployments() ([]server.Deployment, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
 
-// IsReady returns true when the given probe has been marked ready.
-func (p *ReadyProbe) IsReady() bool {
-	return atomic.LoadInt32(&p.ready) != 0
-}
-
-// ReadyHandler writes back the HTTP status code 200 if the operator is ready, and 500 otherwise.
-func (p *ReadyProbe) ReadyHandler(w http.ResponseWriter, r *http.Request) {
-	if p.IsReady() {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
+	result := make([]server.Deployment, 0, len(o.deployments))
+	for _, d := range o.deployments {
+		result = append(result, d)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() < result[j].Name()
+	})
+	return result, nil
 }

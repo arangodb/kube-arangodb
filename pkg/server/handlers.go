@@ -20,33 +20,25 @@
 // Author Ewout Prangsma
 //
 
-package probe
+package server
 
 import (
 	"net/http"
-	"sync/atomic"
+
+	"github.com/gin-gonic/gin"
 )
 
-// ReadyProbe wraps a readiness probe handler.
-type ReadyProbe struct {
-	ready int32
+type operatorsResponse struct {
+	Deployment            bool `json:"deployment"`
+	DeploymentReplication bool `json:"deployment_replication"`
+	Storage               bool `json:"storage"`
 }
 
-// SetReady marks the probe as ready.
-func (p *ReadyProbe) SetReady() {
-	atomic.StoreInt32(&p.ready, 1)
-}
-
-// IsReady returns true when the given probe has been marked ready.
-func (p *ReadyProbe) IsReady() bool {
-	return atomic.LoadInt32(&p.ready) != 0
-}
-
-// ReadyHandler writes back the HTTP status code 200 if the operator is ready, and 500 otherwise.
-func (p *ReadyProbe) ReadyHandler(w http.ResponseWriter, r *http.Request) {
-	if p.IsReady() {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+// Handle a GET /api/operators request
+func (s *Server) handleGetOperators(c *gin.Context) {
+	c.JSON(http.StatusOK, operatorsResponse{
+		Deployment:            s.deps.DeploymentProbe.IsReady(),
+		DeploymentReplication: s.deps.DeploymentReplicationProbe.IsReady(),
+		Storage:               s.deps.StorageProbe.IsReady(),
+	})
 }

@@ -22,8 +22,22 @@
 
 package server
 
-import "github.com/pkg/errors"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+)
 
 var (
 	maskAny = errors.WithStack
 )
+
+// sendError sends an error on the given context
+func sendError(c *gin.Context, err error) {
+	// TODO proper status handling
+	code := http.StatusInternalServerError
+	c.JSON(code, gin.H{
+		"error": err.Error(),
+	})
+}

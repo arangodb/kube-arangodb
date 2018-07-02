@@ -31,6 +31,7 @@ import (
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -49,10 +50,18 @@ type Config struct {
 
 // Dependencies of the Server
 type Dependencies struct {
+	Log                        zerolog.Logger
 	LivenessProbe              *probe.LivenessProbe
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	Operators                  Operators
+}
+
+// Operators is the API provided to the server for accessing the various operators.
+type Operators interface {
+	// Return the deployment operator (if any)
+	DeploymentOperator() DeploymentOperator
 }
 
 // Server is the HTTPS server for the operator.
@@ -111,6 +120,12 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	tlsConfig.BuildNameToCertificate()
 	httpServer.TLSConfig = tlsConfig
 
+	// Builder server
+	s := &Server{
+		deps:       deps,
+		httpServer: httpServer,
+	}
+
 	// Build router
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -119,16 +134,21 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
 	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
+	api := r.Group("/api")
+	{
+		api.GET("/operators", s.handleGetOperators)
+
+		// Deployment operator
+		api.GET("/deployment", s.handleGetDeployments)
+	}
 	httpServer.Handler = r
 
-	return &Server{
-		deps:       deps,
-		httpServer: httpServer,
-	}, nil
+	return s, nil
 }
 
 // Run the server until the program stops.
 func (s *Server) Run() error {
+	s.deps.Log.Info().Msgf("Serving on %s", s.httpServer.Addr)
 	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 		return maskAny(err)
 	}

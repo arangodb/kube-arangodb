@@ -171,6 +171,16 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
 	}
 
+	// Create operator
+	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
+	}
+	o, err := operator.NewOperator(cfg, deps)
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create operator")
+	}
+
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
 	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
 		Address:            listenAddr,
@@ -179,27 +189,21 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		PodName:            name,
 		PodIP:              ip,
 	}, server.Dependencies{
+		Log:                        logService.MustGetLogger("server"),
 		LivenessProbe:              &livenessProbe,
 		DeploymentProbe:            &deploymentProbe,
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
+		Operators:                  o,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {
 		go svr.Run()
 	}
 
-	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
-	}
-
 	//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
 
-	o, err := operator.NewOperator(cfg, deps)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator")
-	}
+	// Start operator
 	o.Run()
 }
 
