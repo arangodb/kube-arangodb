@@ -145,29 +145,22 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		api.GET("/deployment", s.handleGetDeployments)
 	}
 	// Dashboard
-	r.GET("/", rootHandler)
+	r.GET("/", createAssetFileHandler(dashboard.Assets.Files["index.html"]))
 	for path, file := range dashboard.Assets.Files {
-		entry := assertEntry{file}
 		localPath := "/" + strings.TrimPrefix(path, "/")
-		r.GET(localPath, gin.WrapH(http.FileServer(entry)))
-		r.HEAD(localPath, gin.WrapH(http.FileServer(entry)))
+		r.GET(localPath, createAssetFileHandler(file))
 	}
 	httpServer.Handler = r
 
 	return s, nil
 }
 
-type assertEntry struct {
-	file *assets.File
-}
-
-func (e assertEntry) Open(name string) (http.File, error) {
-	return e.file, nil
-}
-
-func rootHandler(c *gin.Context) {
-	rootEntry := dashboard.Assets.Files["index.html"]
-	http.ServeContent(c.Writer, c.Request, rootEntry.Name(), rootEntry.ModTime(), rootEntry)
+// createAssetFileHandler creates a gin handler to serve the content
+// of the given asset file.
+func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		http.ServeContent(c.Writer, c.Request, file.Name(), file.ModTime(), file)
+	}
 }
 
 // Run the server until the program stops.
