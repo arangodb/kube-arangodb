@@ -9,7 +9,7 @@ The goal of the operator dashboard is to simplify this inspection process.
 
 The deployment operator dashboard provides:
 
-- A status overview of all `ArangoDeployment` it controls
+- A status overview of all `ArangoDeployments` it controls
 - A status overview of all resources created by the operator (for an `ArangoDeployment`)
 - Run the arangoinspector on deployments
 - Instructions for upgrading deployments to newer versions
@@ -34,7 +34,7 @@ will be included in its list of endpoints.
 
 ### Exposing the dashboard
 
-By default `Service` that selects the leading operator instance is not exposed outside the Kubernetes cluster.
+By default the `Service` that selects the leading operator instance is not exposed outside the Kubernetes cluster.
 Users must use `kubectl expose service ...` to add additional `Services` of type `LoadBalancer`
 or `NodePort` to expose the dashboard if and how they want to.
 
@@ -50,12 +50,12 @@ a secure deployment.
 
 ### Authentication
 
-The dashboard requires a username+password to gain access, unless it is started with a option to disable authentication.
-This username+password pair is stored in standard basic authentication `Secret` in the Kubernetes cluster.
+The dashboard requires a username+password to gain access, unless it is started with an option to disable authentication.
+This username+password pair is stored in a standard basic authentication `Secret` in the Kubernetes cluster.
 
 ### Frontend technology
 
-The frontend part of the dashboard will be build with React.
+The frontend part of the dashboard will be built with React.
 This aligns with future developments in the context of the web-UI of the database itself.
 
 ### Backend technology
