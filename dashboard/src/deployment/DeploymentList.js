@@ -1,48 +1,67 @@
 import React, { Component } from 'react';
 import { apiGet } from '../api/api.js';
-import DeploymentRow from './DeploymentRow.js';
-import { Table } from 'semantic-ui-react';
-//import logo from './logo.svg';
-//import './App.css';
+import { Icon, Table } from 'semantic-ui-react';
+import Loading from '../util/Loading.js';
+
+const HeaderView = () => (
+  <Table.Header>
+    <Table.Row>
+      <Table.HeaderCell>State</Table.HeaderCell>
+      <Table.HeaderCell>Name</Table.HeaderCell>
+      <Table.HeaderCell>Mode</Table.HeaderCell>
+      <Table.HeaderCell>Pods</Table.HeaderCell>
+    </Table.Row>
+  </Table.Header>
+);
+
+const RowView = ({info}) => (
+  <Table.Row>
+    <Table.Cell><Icon name="bell" color="red"/></Table.Cell>
+    <Table.Cell>{info.name}</Table.Cell>
+    <Table.Cell>{info.mode}</Table.Cell>
+    <Table.Cell>{info.ready_pod_count} / {info.pod_count}</Table.Cell>
+  </Table.Row>
+);
+
+const ListView = ({items}) => (
+  <Table striped celled>
+    <HeaderView/>
+    <Table.Body>
+      {
+        (items) ? items.map((item) => <RowView key={item.name} info={item}/>) : <p>No items</p>
+      }
+    </Table.Body>
+  </Table>
+);
+
+const EmptyView = () => (<div>No deployments</div>);
 
 class DeploymentList extends Component {
-  constructor() {
-    super();
-    this.state = {items:[]};
-  }
+  state = {};
 
-  async componentDidMount() {
+  componentDidMount() {
+    this.intervalId = setInterval(this.reloadDeployments, 5000);
     this.reloadDeployments();
   }
 
-  async reloadDeployments() {
+  componentWillUnmount() {
+    clearInterval(this.intervalId);
+  }
+
+  reloadDeployments = async() => {
     const result = await apiGet('/api/deployment');
     this.setState({items:result.deployments});
   }
 
   render() {
-    setTimeout(this.reloadDeployments.bind(this), 5000);
     const items = this.state.items;
-    if (items.length === 0) {
-      return (<div>No deployments</div>);
+    if (!items) {
+      return (<Loading/>);
     }
-    return (
-      <Table striped celled>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>State</Table.HeaderCell>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Mode</Table.HeaderCell>
-            <Table.HeaderCell>Pods</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {
-            (items) ? items.map((item) => <DeploymentRow key={item.name} info={item}/>) : <p>No items</p>
-          }
-        </Table.Body>
-      </Table>
-    );
+    if (items.length === 0) {
+      return (<EmptyView/>);
+    }
+    return (<ListView items={items}/>);
   }
 }
 
