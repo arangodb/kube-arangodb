@@ -14,12 +14,12 @@ const HeaderView = () => (
   </Table.Header>
 );
 
-const RowView = ({info}) => (
+const RowView = ({name, mode, ready_pod_count, pod_count}) => (
   <Table.Row>
     <Table.Cell><Icon name="bell" color="red"/></Table.Cell>
-    <Table.Cell>{info.name}</Table.Cell>
-    <Table.Cell>{info.mode}</Table.Cell>
-    <Table.Cell>{info.ready_pod_count} / {info.pod_count}</Table.Cell>
+    <Table.Cell>{name}</Table.Cell>
+    <Table.Cell>{mode}</Table.Cell>
+    <Table.Cell>{ready_pod_count} / {pod_count}</Table.Cell>
   </Table.Row>
 );
 
@@ -28,7 +28,14 @@ const ListView = ({items}) => (
     <HeaderView/>
     <Table.Body>
       {
-        (items) ? items.map((item) => <RowView key={item.name} info={item}/>) : <p>No items</p>
+        (items) ? items.map((item) => 
+          <RowView 
+            key={item.name} 
+            name={item.name}
+            mode={item.mode}
+            ready_pod_count={item.ready_pod_count}
+            pod_count={item.pod_count}
+          />) : <p>No items</p>
       }
     </Table.Body>
   </Table>
