@@ -146,6 +146,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 
 		// Deployment operator
 		api.GET("/deployment", s.handleGetDeployments)
+		api.GET("/deployment/:name", s.handleGetDeploymentDetails)
 	}
 	// Dashboard
 	r.GET("/", createAssetFileHandler(dashboard.Assets.Files["index.html"]))

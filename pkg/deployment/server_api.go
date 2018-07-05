@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -48,6 +49,11 @@ func (d *Deployment) Namespace() string {
 // Mode returns the mode of the deployment.
 func (d *Deployment) Mode() api.DeploymentMode {
 	return d.GetSpec().GetMode()
+}
+
+// Environment returns the environment used in the deployment.
+func (d *Deployment) Environment() api.Environment {
+	return d.GetSpec().GetEnvironment()
 }
 
 // PodCount returns the number of pods for the deployment
@@ -191,4 +197,25 @@ func (d *Deployment) DatabaseVersion() (string, string) {
 		license = "enterprise"
 	}
 	return string(info.ArangoDBVersion), license
+}
+
+// Members returns all members of the deployment by role.
+func (d *Deployment) Members() map[api.ServerGroup][]server.Member {
+	result := make(map[api.ServerGroup][]server.Member)
+	status, _ := d.GetStatus()
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		members := make([]server.Member, len(list))
+		for i, m := range list {
+			members[i] = member{
+				d:     d,
+				id:    m.ID,
+				group: group,
+			}
+		}
+		if len(members) > 0 {
+			result[group] = members
+		}
+		return nil
+	})
+	return result
 }

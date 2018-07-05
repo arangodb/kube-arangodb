@@ -13,6 +13,7 @@ class NoOperator extends Component {
           <p className="App-intro">
             There are no operators available yet.
           </p>
+          {this.props["pod-info"]}
         </div>
     );
   }

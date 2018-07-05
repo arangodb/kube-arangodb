@@ -3,6 +3,7 @@ import { apiGet } from '../api/api.js';
 import { Icon, Popup, Table } from 'semantic-ui-react';
 import Loading from '../util/Loading.js';
 import CommandInstruction from '../util/CommandInstruction.js';
+import { Link } from "react-router-dom";
 
 const HeaderView = () => (
   <Table.Header>
@@ -33,23 +34,43 @@ const NoDatabaseLinkView = () => (
   </Popup>
 );
 
-const RowView = ({name, mode, version, license, ready_pod_count, pod_count, ready_volume_count, volume_count, storage_classes, database_url, delete_command}) => (
+const RowView = ({name, mode, environment, version, license, ready_pod_count, pod_count, ready_volume_count, volume_count, storage_classes, database_url, delete_command}) => (
   <Table.Row>
-    <Table.Cell><Icon name="bell" color="red"/></Table.Cell>
-    <Table.Cell>{name}</Table.Cell>
-    <Table.Cell>{mode}</Table.Cell>
-    <Table.Cell>{version} {(license) ? `(${license})` : "" }</Table.Cell>
+    <Table.Cell>
+      <Icon name="bell" color="red"/>
+    </Table.Cell>
+    <Table.Cell>
+      <Link to={`/deployment/${name}`}>
+        {name}
+      </Link>
+    </Table.Cell>
+    <Table.Cell>
+      {mode}
+      <span style={{"float":"right"}}>
+        {(environment==="Development") ? <Popup trigger={<Icon name="laptop"/>} content="Development environment"/>: null}
+        {(environment==="Production") ? <Popup trigger={<Icon name="warehouse"/>} content="Production environment"/>: null}
+      </span>
+    </Table.Cell>
+    <Table.Cell>
+      {version}
+      <span style={{"float":"right"}}>
+        {(license==="community") ? <Popup trigger={<Icon name="users"/>} content="Community edition"/>: null}
+        {(license==="enterprise") ? <Popup trigger={<Icon name="dollar"/>} content="Enterprise edition"/>: null}
+      </span>
+    </Table.Cell>
     <Table.Cell>{ready_pod_count} / {pod_count}</Table.Cell>
     <Table.Cell>{ready_volume_count} / {volume_count}</Table.Cell>
     <Table.Cell>{storage_classes.map((item) => (item === "") ? "<default>" : item)}</Table.Cell>
     <Table.Cell>
       { database_url ? <DatabaseLinkView name={name} url={database_url}/> : <NoDatabaseLinkView/>}
-      <CommandInstruction 
-        trigger={<Icon floated="right" name="trash alternate"/>}
-        command={delete_command}
-        title="Delete deployment"
-        description="To delete this deployment, run:"
-      />
+      <span style={{"float":"right"}}>
+        <CommandInstruction 
+          trigger={<Icon link name="trash"/>}
+          command={delete_command}
+          title="Delete deployment"
+          description="To delete this deployment, run:"
+        />
+      </span>
     </Table.Cell>
   </Table.Row>
 );
@@ -65,6 +86,7 @@ const ListView = ({items}) => (
             name={item.name}
             namespace={item.namespace}
             mode={item.mode}
+            environment={item.environment}
             version={item.database_version}
             license={item.database_license}
             ready_pod_count={item.ready_pod_count}

@@ -23,6 +23,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,13 +31,21 @@ import (
 )
 
 var (
-	maskAny = errors.WithStack
+	maskAny       = errors.WithStack
+	NotFoundError = fmt.Errorf("not found")
 )
+
+func isNotFound(err error) bool {
+	return err == NotFoundError || errors.Cause(err) == NotFoundError
+}
 
 // sendError sends an error on the given context
 func sendError(c *gin.Context, err error) {
 	// TODO proper status handling
 	code := http.StatusInternalServerError
+	if isNotFound(err) {
+		code = http.StatusNotFound
+	}
 	c.JSON(code, gin.H{
 		"error": err.Error(),
 	})

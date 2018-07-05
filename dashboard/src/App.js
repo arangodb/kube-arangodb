@@ -6,16 +6,19 @@ import { apiGet } from './api/api.js';
 import { Container, Segment, Message } from 'semantic-ui-react';
 import './App.css';
 
+const PodInfoView = ({pod, namespace}) => (
+  <Segment basic>
+    <Message>
+      <Message.Header>Kube-ArangoDB</Message.Header>
+      <p>Running in Pod <b>{pod}</b> in namespace <b>{namespace}</b>.</p>
+    </Message>
+  </Segment>
+);
+
 const OperatorsView = ({deployment, pod, namespace}) => (
-  <Container>
-    {deployment ? <DeploymentOperator /> : <NoOperator />}
-    <Segment basic>
-      <Message>
-        <Message.Header>Kube-ArangoDB</Message.Header>
-        <p>Running in Pod <b>{pod}</b> in namespace <b>{namespace}</b>.</p>
-      </Message>
-    </Segment>
-  </Container>
+  <div>
+    {deployment ? <DeploymentOperator pod-info={<PodInfoView pod={pod} namespace={namespace}/>}/> : <NoOperator />}
+  </div>
 );
 
 const LoadingView = () => (

@@ -47,3 +47,16 @@ func (o *Operator) GetDeployments() ([]server.Deployment, error) {
 	})
 	return result, nil
 }
+
+// GetDeployment returns detailed information for a deployment, managed by the operator, with given name
+func (o *Operator) GetDeployment(name string) (server.Deployment, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	for _, d := range o.deployments {
+		if d.Name() == name {
+			return d, nil
+		}
+	}
+	return nil, maskAny(server.NotFoundError)
+}
