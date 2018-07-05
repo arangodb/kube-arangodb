@@ -1,17 +1,13 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react';
 
-class Loading extends Component {
-  render() {
-    return (
+const Loading = ({message}) => (
         <Segment>
         <Dimmer inverted active>
-          <Loader inverted>{this.props.message || "Loading..."}</Loader>
+          <Loader inverted>{message || "Loading..."}</Loader>
         </Dimmer>
         <div style={{"min-height":"3em"}}/>
       </Segment>
       );
-  }
-}
 
 export default Loading;
