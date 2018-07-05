@@ -11,7 +11,7 @@
   "devDependencies": {
     "react-scripts": "1.1.4"
   },
-  "proxy": "https://192.168.140.208:8528",
+  "proxy": "https://kube-arangodb-operator:8528",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
