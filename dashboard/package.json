@@ -4,14 +4,15 @@
   "private": true,
   "dependencies": {
     "react": "^16.4.1",
+    "react-copy-to-clipboard": "^5.0.1",
     "react-dom": "^16.4.1",
     "semantic-ui-less": "^2.2.12",
-    "semantic-ui-react": "^0.78.2"
+    "semantic-ui-react": "^0.81.3"
   },
   "devDependencies": {
     "react-scripts": "1.1.4"
   },
-  "proxy": "https://kube-arangodb-operator:8528",
+  "proxy": "https://192.168.140.208:8528",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

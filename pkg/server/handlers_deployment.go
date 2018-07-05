@@ -33,9 +33,15 @@ import (
 // Deployment is the API implemented by an ArangoDeployment.
 type Deployment interface {
 	Name() string
+	Namespace() string
 	Mode() api.DeploymentMode
 	PodCount() int
 	ReadyPodCount() int
+	VolumeCount() int
+	ReadyVolumeCount() int
+	StorageClasses() []string
+	DatabaseURL() string
+	DatabaseVersion() (string, string)
 }
 
 // DeploymentOperator is the API implemented by the deployment operator.
@@ -45,10 +51,17 @@ type DeploymentOperator interface {
 
 // DeploymentInfo is the information returned per deployment.
 type DeploymentInfo struct {
-	Name          string             `json:"name"`
-	Mode          api.DeploymentMode `json:"mode"`
-	PodCount      int                `json:"pod_count"`
-	ReadyPodCount int                `json:"ready_pod_count"`
+	Name             string             `json:"name"`
+	Namespace        string             `json:"namespace"`
+	Mode             api.DeploymentMode `json:"mode"`
+	PodCount         int                `json:"pod_count"`
+	ReadyPodCount    int                `json:"ready_pod_count"`
+	VolumeCount      int                `json:"volume_count"`
+	ReadyVolumeCount int                `json:"ready_volume_count"`
+	StorageClasses   []string           `json:"storage_classes"`
+	DatabaseURL      string             `json:"database_url"`
+	DatabaseVersion  string             `json:"database_version"`
+	DatabaseLicense  string             `json:"database_license"`
 }
 
 // Handle a GET /api/deployment request
@@ -61,11 +74,19 @@ func (s *Server) handleGetDeployments(c *gin.Context) {
 		} else {
 			result := make([]DeploymentInfo, len(depls))
 			for i, d := range depls {
+				version, license := d.DatabaseVersion()
 				result[i] = DeploymentInfo{
-					Name:          d.Name(),
-					Mode:          d.Mode(),
-					PodCount:      d.PodCount(),
-					ReadyPodCount: d.ReadyPodCount(),
+					Name:             d.Name(),
+					Namespace:        d.Namespace(),
+					Mode:             d.Mode(),
+					PodCount:         d.PodCount(),
+					ReadyPodCount:    d.ReadyPodCount(),
+					VolumeCount:      d.VolumeCount(),
+					ReadyVolumeCount: d.ReadyVolumeCount(),
+					StorageClasses:   d.StorageClasses(),
+					DatabaseURL:      d.DatabaseURL(),
+					DatabaseVersion:  version,
+					DatabaseLicense:  license,
 				}
 			}
 			c.JSON(http.StatusOK, gin.H{

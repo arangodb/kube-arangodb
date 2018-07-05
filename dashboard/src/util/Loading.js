@@ -6,7 +6,7 @@ const Loading = ({message}) => (
         <Dimmer inverted active>
           <Loader inverted>{message || "Loading..."}</Loader>
         </Dimmer>
-        <div style={{"min-height":"3em"}}/>
+        <div style={{minHeight:"3em"}}/>
       </Segment>
       );
 
