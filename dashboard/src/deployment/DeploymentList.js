@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { apiGet } from '../api/api.js';
+import api from '../api/api.js';
 import { Icon, Popup, Table } from 'semantic-ui-react';
 import Loading from '../util/Loading.js';
 import CommandInstruction from '../util/CommandInstruction.js';
@@ -121,7 +121,7 @@ class DeploymentList extends Component {
   }
 
   reloadDeployments = async() => {
-    const result = await apiGet('/api/deployment');
+    const result = await api.get('/api/deployment');
     this.setState({items:result.deployments});
   }
 

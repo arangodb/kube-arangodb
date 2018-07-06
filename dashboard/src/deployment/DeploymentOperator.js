@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import LogoutContext from '../auth/LogoutContext.js';
 import DeploymentDetails from './DeploymentDetails.js';
 import DeploymentList from './DeploymentList.js';
 import { Header, Menu, Segment } from 'semantic-ui-react';
@@ -42,11 +43,18 @@ class DeploymentOperator extends Component {
     return (
       <Router>
         <div>
-          <StyledMenu fixed="left" vertical>
-            <Menu.Item>
-              <Link to="/">Deployments</Link>
-            </Menu.Item>
-          </StyledMenu>
+          <LogoutContext.Consumer>
+            {doLogout => 
+              <StyledMenu fixed="left" vertical>
+                <Menu.Item>
+                  <Link to="/">Deployments</Link>
+                </Menu.Item>
+                <Menu.Item position="right" onClick={() => doLogout()}>
+                  Logout
+                </Menu.Item>
+              </StyledMenu>
+            }
+          </LogoutContext.Consumer>
           <StyledContentBox>
             <Segment basic clearing>
                 <div>

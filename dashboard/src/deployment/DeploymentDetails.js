@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { apiGet } from '../api/api.js';
+import api from '../api/api.js';
 import Loading from '../util/Loading.js';
 import MemberList from './MemberList.js';
 
 const MemberGroupsView = ({memberGroups, namespace}) => (
   <div>
     {memberGroups.map((item) => <MemberList 
+      key={`server-group-${item.group}`}
       group={item.group}
       members={item.members}
       namespace={namespace}
@@ -27,7 +28,7 @@ class DeploymentDetails extends Component {
 
   reloadDeployment = async() => {
     // TODO
-    const result = await apiGet(`/api/deployment/${this.props.name}`);
+    const result = await api.get(`/api/deployment/${this.props.name}`);
     this.setState({deployment:result});
   }
 

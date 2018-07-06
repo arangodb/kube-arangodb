@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import DeploymentOperator from './deployment/DeploymentOperator.js';
 import NoOperator from './NoOperator.js';
 import Loading from './util/Loading.js';
-import { apiGet } from './api/api.js';
+import api from './api/api.js';
 import { Container, Segment, Message } from 'semantic-ui-react';
 import './App.css';
 
@@ -40,7 +40,7 @@ class App extends Component {
   }
 
   reloadOperators = async() => {
-    const operators = await apiGet('/api/operators');
+    const operators = await api.get('/api/operators');
     this.setState({operators});
   }
 

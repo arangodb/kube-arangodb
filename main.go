@@ -55,9 +55,10 @@ import (
 )
 
 const (
-	defaultServerHost = "0.0.0.0"
-	defaultServerPort = 8528
-	defaultLogLevel   = "debug"
+	defaultServerHost      = "0.0.0.0"
+	defaultServerPort      = 8528
+	defaultLogLevel        = "debug"
+	defaultAdminSecretName = "arangodb-operator-dashboard"
 )
 
 var (
@@ -75,9 +76,11 @@ var (
 	cliLog        = logging.NewRootLogger()
 	logService    logging.Service
 	serverOptions struct {
-		host          string
-		port          int
-		tlsSecretName string
+		host            string
+		port            int
+		tlsSecretName   string
+		adminSecretName string // Name of basic authentication secret containing the admin username+password of the dashboard
+		allowAnonymous  bool   // If set, anonymous access to dashboard is allowed
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -98,6 +101,8 @@ func init() {
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
+	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
+	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
@@ -170,6 +175,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
 	}
+	secrets := kubecli.CoreV1().Secrets(namespace)
 
 	// Create operator
 	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
@@ -189,6 +195,8 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		TLSSecretNamespace: namespace,
 		PodName:            name,
 		PodIP:              ip,
+		AdminSecretName:    serverOptions.adminSecretName,
+		AllowAnonymous:     serverOptions.allowAnonymous,
 	}, server.Dependencies{
 		Log:                        logService.MustGetLogger("server"),
 		LivenessProbe:              &livenessProbe,
@@ -196,6 +204,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
 		Operators:                  o,
+		Secrets:                    secrets,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {

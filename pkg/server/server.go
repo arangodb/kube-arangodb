@@ -50,6 +50,8 @@ type Config struct {
 	TLSSecretNamespace string // Namespace of secret containing TLS certificate
 	PodName            string // Name of the Pod we're running in
 	PodIP              string // IP address of the Pod we're running in
+	AdminSecretName    string // Name of basic authentication secret containing the admin username+password of the dashboard
+	AllowAnonymous     bool   // If set, anonymous access to dashboard is allowed
 }
 
 // Dependencies of the Server
@@ -60,6 +62,7 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	Operators                  Operators
+	Secrets                    corev1.SecretInterface
 }
 
 // Operators is the API provided to the server for accessing the various operators.
@@ -73,6 +76,7 @@ type Server struct {
 	cfg        Config
 	deps       Dependencies
 	httpServer *http.Server
+	auth       *serverAuthentication
 }
 
 // NewServer creates a new server, fetching/preparing a TLS certificate.
@@ -130,6 +134,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		cfg:        cfg,
 		deps:       deps,
 		httpServer: httpServer,
+		auth:       newServerAuthentication(deps.Log, deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
 	}
 
 	// Build router
@@ -140,7 +145,8 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
 	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
-	api := r.Group("/api")
+	r.POST("/login", s.auth.handleLogin)
+	api := r.Group("/api", s.auth.checkAuthentication)
 	{
 		api.GET("/operators", s.handleGetOperators)
 

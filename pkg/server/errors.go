@@ -31,12 +31,17 @@ import (
 )
 
 var (
-	maskAny       = errors.WithStack
-	NotFoundError = fmt.Errorf("not found")
+	maskAny           = errors.WithStack
+	NotFoundError     = fmt.Errorf("not found")
+	UnauthorizedError = fmt.Errorf("unauthorized")
 )
 
 func isNotFound(err error) bool {
 	return err == NotFoundError || errors.Cause(err) == NotFoundError
+}
+
+func isUnauthorized(err error) bool {
+	return err == UnauthorizedError || errors.Cause(err) == UnauthorizedError
 }
 
 // sendError sends an error on the given context
@@ -45,6 +50,8 @@ func sendError(c *gin.Context, err error) {
 	code := http.StatusInternalServerError
 	if isNotFound(err) {
 		code = http.StatusNotFound
+	} else if isUnauthorized(err) {
+		code = http.StatusUnauthorized
 	}
 	c.JSON(code, gin.H{
 		"error": err.Error(),
