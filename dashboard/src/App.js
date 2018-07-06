@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
 import DeploymentOperator from './deployment/DeploymentOperator.js';
 import NoOperator from './NoOperator.js';
 import Loading from './util/Loading.js';
@@ -15,11 +16,13 @@ const PodInfoView = ({pod, namespace}) => (
   </Segment>
 );
 
-const OperatorsView = ({deployment, pod, namespace}) => (
-  <div>
-    {deployment ? <DeploymentOperator pod-info={<PodInfoView pod={pod} namespace={namespace}/>}/> : <NoOperator />}
-  </div>
-);
+const OperatorsView = ({error, deployment, pod, namespace}) => {
+  const podInfoView = (<PodInfoView pod={pod} namespace={namespace}/>);
+  if (deployment) {
+    return (<DeploymentOperator podInfoView={podInfoView} error={error}/>);
+  }
+  return (<NoOperator podInfoView={podInfoView} error={error}/>);
+}
 
 const LoadingView = () => (
   <Container>
@@ -28,25 +31,29 @@ const LoadingView = () => (
 );
 
 class App extends Component {
-  state = {};
+  state = {
+    operators: undefined,
+    error: undefined
+  };
 
   componentDidMount() {
-    this.intervalId = setInterval(this.reloadOperators, 5000);
     this.reloadOperators();
   }
 
-  componentWillUnmount() {
-    clearInterval(this.intervalId);
-  }
-
   reloadOperators = async() => {
-    const operators = await api.get('/api/operators');
-    this.setState({operators});
+    try {
+      const operators = await api.get('/api/operators');
+      this.setState({operators, error: undefined});
+    } catch (e) {
+      this.setState({error: e.message});
+    }
+    this.props.setTimeout(this.reloadOperators, 10000);
   }
 
   render() {
     if (this.state.operators) {
       return <OperatorsView 
+        error={this.state.error}
         deployment={this.state.operators.deployment} 
         pod={this.state.operators.pod} 
         namespace={this.state.operators.namespace} 
@@ -56,4 +63,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default ReactTimeout(App);

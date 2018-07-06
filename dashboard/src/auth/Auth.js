@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import api from '../api/api.js';
 import Login from './Login.js';
+import Loading from '../util/Loading.js';
 import LogoutContext from './LogoutContext.js';
 import { getSessionItem, setSessionItem } from "../util/Storage.js";
 
@@ -9,6 +10,7 @@ const tokenSessionKey = "auth-token";
 class Auth extends Component {
   state = {
     authenticated: false,
+    showLoading: true,
     token: getSessionItem(tokenSessionKey) || ""
   };
 
@@ -18,11 +20,13 @@ class Auth extends Component {
       await api.get('/api/operators');
       this.setState({
         authenticated: true,
+        showLoading: false,
         token: api.token
       });
     } catch (e) {
       this.setState({
         authenticated: false,
+        showLoading: false,
         token: ''
       });
     }
@@ -65,9 +69,10 @@ class Auth extends Component {
   render() {
     return (
       <LogoutContext.Provider value={this.handleLogout}>
-        {(!this.state.authenticated) ? 
-          <Login doLogin={this.handleLogin} error={this.state.error}/> :
-          this.props.children
+        {(this.state.showLoading) ? <Loading/> : 
+           (!this.state.authenticated) ? 
+            <Login doLogin={this.handleLogin} error={this.state.error}/> :
+            this.props.children
         }
       </LogoutContext.Provider>
     );

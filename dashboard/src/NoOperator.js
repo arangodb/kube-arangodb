@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { Message } from 'semantic-ui-react';
 
 class NoOperator extends Component {
   render() {
@@ -13,7 +14,8 @@ class NoOperator extends Component {
           <p className="App-intro">
             There are no operators available yet.
           </p>
-          {this.props["pod-info"]}
+          {this.props.podInfoView}
+          {(this.props.error) ? <Message error content={this.props.error}/> : null}
         </div>
     );
   }

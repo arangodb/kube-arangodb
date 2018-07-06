@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import LogoutContext from '../auth/LogoutContext.js';
 import DeploymentDetails from './DeploymentDetails.js';
 import DeploymentList from './DeploymentList.js';
-import { Header, Menu, Segment } from 'semantic-ui-react';
+import { Header, Menu, Message, Segment } from 'semantic-ui-react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import styled from 'react-emotion';
 
@@ -62,7 +62,8 @@ class DeploymentOperator extends Component {
                   <Route path="/deployment/:name" component={DetailView} />
                 </div>
             </Segment>
-            {this.props["pod-info"]}
+            {this.props.podInfoView}
+            {(this.props.error) ? <Segment basic><Message error content={this.props.error}/></Segment> : null}
           </StyledContentBox>
         </div>
       </Router>

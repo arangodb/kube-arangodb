@@ -1,11 +1,21 @@
-import React, { Component } from 'react';
-import api from '../api/api.js';
-import { Icon, Popup, Table } from 'semantic-ui-react';
-import Loading from '../util/Loading.js';
-import CommandInstruction from '../util/CommandInstruction.js';
+import { Icon, Loader, Popup, Table } from 'semantic-ui-react';
 import { Link } from "react-router-dom";
+import api from '../api/api.js';
+import CommandInstruction from '../util/CommandInstruction.js';
+import Loading from '../util/Loading.js';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
+import styled from 'react-emotion';
 
-const HeaderView = () => (
+const LoaderBox = styled('span')`
+  float: right;
+  width: 0;
+  padding-right: 1em;
+  max-width: 0;
+  display: inline-block;
+`;
+
+const HeaderView = ({loading}) => (
   <Table.Header>
     <Table.Row>
       <Table.HeaderCell>State</Table.HeaderCell>
@@ -15,7 +25,10 @@ const HeaderView = () => (
       <Table.HeaderCell><Popup trigger={<span>Pods</span>}>Ready / Total</Popup></Table.HeaderCell>
       <Table.HeaderCell><Popup trigger={<span>Volumes</span>}>Bound / Total</Popup></Table.HeaderCell>
       <Table.HeaderCell>StorageClass</Table.HeaderCell>
-      <Table.HeaderCell>Actions</Table.HeaderCell>
+      <Table.HeaderCell>
+        Actions
+        <LoaderBox><Loader size="mini" active={loading} inline/></LoaderBox>
+      </Table.HeaderCell>
     </Table.Row>
   </Table.Header>
 );
@@ -83,9 +96,9 @@ const RowView = ({name, mode, environment, stateColor, version, license, readyPo
   </Table.Row>
 );
 
-const ListView = ({items}) => (
+const ListView = ({items, loading}) => (
   <Table striped celled>
-    <HeaderView/>
+    <HeaderView loading={loading}/>
     <Table.Body>
       {
         (items) ? items.map((item) => 
@@ -138,20 +151,29 @@ function getStateColorDescription(stateColor) {
 }
 
 class DeploymentList extends Component {
-  state = {};
+  state = {
+    items: undefined,
+    error: undefined,
+    loading: true
+  };
 
   componentDidMount() {
-    this.intervalId = setInterval(this.reloadDeployments, 5000);
     this.reloadDeployments();
   }
 
-  componentWillUnmount() {
-    clearInterval(this.intervalId);
-  }
-
   reloadDeployments = async() => {
-    const result = await api.get('/api/deployment');
-    this.setState({items:result.deployments});
+    try {
+      this.setState({loading: true});
+      const result = await api.get('/api/deployment');
+      this.setState({
+        items: result.deployments,
+        loading: false,
+        error: undefined
+      });
+    } catch (e) {
+      this.setState({error: e.message, loading: false});
+    }
+    this.props.setTimeout(this.reloadDeployments, 5000);
   }
 
   render() {
@@ -162,8 +184,8 @@ class DeploymentList extends Component {
     if (items.length === 0) {
       return (<EmptyView/>);
     }
-    return (<ListView items={items}/>);
+    return (<ListView items={items} loading={this.state.loading}/>);
   }
 }
 
-export default DeploymentList;
+export default ReactTimeout(DeploymentList);
