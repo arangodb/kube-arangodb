@@ -55,6 +55,8 @@ type Member interface {
 	PodName() string
 	PVCName() string
 	PVName() string
+	MemberOfCluster() MemberOfCluster
+	Ready() bool
 }
 
 // DeploymentOperator is the API implemented by the deployment operator.
@@ -112,21 +114,33 @@ func newDeploymentInfo(d Deployment) DeploymentInfo {
 	}
 }
 
+type MemberOfCluster string
+
+const (
+	IsMemberOfCluster    MemberOfCluster = "true"
+	IsNotMemberOfCluster MemberOfCluster = "false"
+	NeverMemberOfCluster MemberOfCluster = "never"
+)
+
 // MemberInfo contains detailed info of a specific member of the deployment
 type MemberInfo struct {
-	ID      string `json:"id"`
-	PodName string `json:"pod_name"`
-	PVCName string `json:"pvc_name"`
-	PVName  string `json:"pv_name"`
+	ID              string          `json:"id"`
+	PodName         string          `json:"pod_name"`
+	PVCName         string          `json:"pvc_name"`
+	PVName          string          `json:"pv_name"`
+	MemberOfCluster MemberOfCluster `json:"member_of_cluster"`
+	Ready           bool            `json:"ready"`
 }
 
 // newMemberInfo creates a MemberInfo for the given member
 func newMemberInfo(m Member) MemberInfo {
 	return MemberInfo{
-		ID:      m.ID(),
-		PodName: m.PodName(),
-		PVCName: m.PVCName(),
-		PVName:  m.PVName(),
+		ID:              m.ID(),
+		PodName:         m.PodName(),
+		PVCName:         m.PVCName(),
+		PVName:          m.PVName(),
+		MemberOfCluster: m.MemberOfCluster(),
+		Ready:           m.Ready(),
 	}
 }
 

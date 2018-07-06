@@ -9,7 +9,7 @@ const Field = styled('div')`
 `;
 
 const FieldLabel = styled('span')`
-  width: 5rem;
+  width: 9rem;
   display: inline-block;
 `;
 
@@ -26,13 +26,26 @@ const MemberListView = ({group, activeMemberID, onClick, members, namespace}) =>
   </Segment>
 );
 
+const MemberOfClusterView = (memberOfCluster) => {
+  if (memberOfCluster === 'never') {
+    return null;
+  }
+  return (
+    <Field>
+      <FieldLabel>Cluster member:</FieldLabel> 
+      {(memberOfCluster ==='true') ? "Yes" : "No"}
+    </Field>
+  );
+}
+
 const MemberView = ({memberInfo, namespace, active, onClick}) => (
   <List.Item>
     <Accordion>
       <Accordion.Title active={active} onClick={() => onClick(memberInfo.id)}>
-        <Icon name='dropdown' /> {memberInfo.id}
+        <Icon name='dropdown' /> <Icon name={memberInfo.ready ? "check" : "bell"} /> {memberInfo.id} 
       </Accordion.Title>
       <Accordion.Content active={active}>
+        {MemberOfClusterView(memberInfo.member_of_cluster)}
         <Field>
           <FieldLabel>Pod:</FieldLabel> 
           {memberInfo.pod_name || "-"}

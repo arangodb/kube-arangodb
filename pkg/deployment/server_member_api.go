@@ -23,8 +23,10 @@
 package deployment
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/server"
 )
 
 type member struct {
@@ -65,4 +67,25 @@ func (m member) PVName() string {
 		}
 	}
 	return ""
+}
+
+func (m member) MemberOfCluster() server.MemberOfCluster {
+	switch m.group {
+	case api.ServerGroupDBServers, api.ServerGroupCoordinators:
+		if status, found := m.status(); found {
+			if status.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
+				return server.IsMemberOfCluster
+			} else {
+				return server.IsNotMemberOfCluster
+			}
+		}
+	}
+	return server.NeverMemberOfCluster
+}
+
+func (m member) Ready() bool {
+	if status, found := m.status(); found {
+		return status.Conditions.IsTrue(api.ConditionTypeReady)
+	}
+	return false
 }
