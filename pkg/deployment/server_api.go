@@ -56,6 +56,44 @@ func (d *Deployment) Environment() api.Environment {
 	return d.GetSpec().GetEnvironment()
 }
 
+// StateColor determinates the state of the deployment in color codes.
+func (d *Deployment) StateColor() server.StateColor {
+	allGood := true
+	deploymentAvailable := true
+	failed := false
+	if d.PodCount() != d.ReadyPodCount() {
+		allGood = false
+	}
+	if d.VolumeCount() != d.ReadyVolumeCount() {
+		allGood = false
+	}
+	status, _ := d.GetStatus()
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
+			switch m.Phase {
+			case api.MemberPhaseFailed:
+				failed = true
+			case api.MemberPhaseCreated:
+				// Should be ok now
+			default:
+				// Something is going on
+				allGood = true
+			}
+		}
+		return nil
+	})
+	if failed {
+		return server.StateRed
+	}
+	if !deploymentAvailable {
+		return server.StateOrange
+	}
+	if !allGood {
+		return server.StateYellow
+	}
+	return server.StateGreen
+}
+
 // PodCount returns the number of pods for the deployment
 func (d *Deployment) PodCount() int {
 	count := 0

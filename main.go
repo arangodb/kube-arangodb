@@ -59,6 +59,7 @@ const (
 	defaultServerPort      = 8528
 	defaultLogLevel        = "debug"
 	defaultAdminSecretName = "arangodb-operator-dashboard"
+	defaultAlpineImage     = "alpine:3.7"
 )
 
 var (
@@ -86,6 +87,7 @@ var (
 		enableDeployment            bool // Run deployment operator
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
+		alpineImage                 string
 	}
 	chaosOptions struct {
 		allowed bool
@@ -107,6 +109,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
+	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", defaultAlpineImage, "Docker image used for alpine containers")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 }
 
@@ -249,6 +252,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
 		AllowChaos:                  chaosOptions.allowed,
+		AlpineImage:                 operatorOptions.alpineImage,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,

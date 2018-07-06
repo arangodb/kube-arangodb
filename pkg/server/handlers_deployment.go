@@ -38,6 +38,7 @@ type Deployment interface {
 	Namespace() string
 	Mode() api.DeploymentMode
 	Environment() api.Environment
+	StateColor() StateColor
 	PodCount() int
 	ReadyPodCount() int
 	VolumeCount() int
@@ -64,12 +65,23 @@ type DeploymentOperator interface {
 	GetDeployment(name string) (Deployment, error)
 }
 
+// StateColor is a strongly typed indicator of state
+type StateColor string
+
+const (
+	StateGreen  StateColor = "green"  // Everything good
+	StateYellow StateColor = "yellow" // Something is going on, but deployment is available
+	StateOrange StateColor = "orange" // Something is going on that may make the deployment unavailable. Trying to recover automatically
+	StateRed    StateColor = "red"    // This is really bad. Intervention is very likely needed
+)
+
 // DeploymentInfo is the information returned per deployment.
 type DeploymentInfo struct {
 	Name             string             `json:"name"`
 	Namespace        string             `json:"namespace"`
 	Mode             api.DeploymentMode `json:"mode"`
 	Environment      api.Environment    `json:"environment"`
+	StateColor       StateColor         `json:"state_color"`
 	PodCount         int                `json:"pod_count"`
 	ReadyPodCount    int                `json:"ready_pod_count"`
 	VolumeCount      int                `json:"volume_count"`
@@ -88,6 +100,7 @@ func newDeploymentInfo(d Deployment) DeploymentInfo {
 		Namespace:        d.Namespace(),
 		Mode:             d.Mode(),
 		Environment:      d.Environment(),
+		StateColor:       d.StateColor(),
 		PodCount:         d.PodCount(),
 		ReadyPodCount:    d.ReadyPodCount(),
 		VolumeCount:      d.VolumeCount(),

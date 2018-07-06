@@ -52,6 +52,7 @@ type Config struct {
 	ServiceAccount string
 	AllowChaos     bool
 	LifecycleImage string
+	AlpineImage    string
 }
 
 // Dependencies holds dependent services for a Deployment

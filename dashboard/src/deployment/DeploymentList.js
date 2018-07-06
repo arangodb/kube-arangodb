@@ -15,7 +15,7 @@ const HeaderView = () => (
       <Table.HeaderCell><Popup trigger={<span>Pods</span>}>Ready / Total</Popup></Table.HeaderCell>
       <Table.HeaderCell><Popup trigger={<span>Volumes</span>}>Bound / Total</Popup></Table.HeaderCell>
       <Table.HeaderCell>StorageClass</Table.HeaderCell>
-      <Table.HeaderCell></Table.HeaderCell>
+      <Table.HeaderCell>Actions</Table.HeaderCell>
     </Table.Row>
   </Table.Header>
 );
@@ -34,10 +34,12 @@ const NoDatabaseLinkView = () => (
   </Popup>
 );
 
-const RowView = ({name, mode, environment, version, license, ready_pod_count, pod_count, ready_volume_count, volume_count, storage_classes, database_url, delete_command}) => (
+const RowView = ({name, mode, environment, stateColor, version, license, readyPodCount, podCount, readyVolumeCount, volumeCount, storageClasses, databaseURL, deleteCommand, describeCommand}) => (
   <Table.Row>
     <Table.Cell>
-      <Icon name="bell" color="red"/>
+      <Popup trigger={<Icon name={(stateColor==="green") ? "check" : "bell"} color={stateColor}/>}>
+        {getStateColorDescription(stateColor)}
+      </Popup>
     </Table.Cell>
     <Table.Cell>
       <Link to={`/deployment/${name}`}>
@@ -58,15 +60,21 @@ const RowView = ({name, mode, environment, version, license, ready_pod_count, po
         {(license==="enterprise") ? <Popup trigger={<Icon name="dollar"/>} content="Enterprise edition"/>: null}
       </span>
     </Table.Cell>
-    <Table.Cell>{ready_pod_count} / {pod_count}</Table.Cell>
-    <Table.Cell>{ready_volume_count} / {volume_count}</Table.Cell>
-    <Table.Cell>{storage_classes.map((item) => (item === "") ? "<default>" : item)}</Table.Cell>
+    <Table.Cell>{readyPodCount} / {podCount}</Table.Cell>
+    <Table.Cell>{readyVolumeCount} / {volumeCount}</Table.Cell>
+    <Table.Cell>{storageClasses.map((item) => (item === "") ? "<default>" : item)}</Table.Cell>
     <Table.Cell>
-      { database_url ? <DatabaseLinkView name={name} url={database_url}/> : <NoDatabaseLinkView/>}
+      { databaseURL ? <DatabaseLinkView name={name} url={databaseURL}/> : <NoDatabaseLinkView/>}
+      <CommandInstruction 
+          trigger={<Icon link name="zoom"/>}
+          command={describeCommand}
+          title="Describe deployment"
+          description="To get more information on the state of this deployment, run:"
+        />
       <span style={{"float":"right"}}>
         <CommandInstruction 
           trigger={<Icon link name="trash"/>}
-          command={delete_command}
+          command={deleteCommand}
           title="Delete deployment"
           description="To delete this deployment, run:"
         />
@@ -87,15 +95,17 @@ const ListView = ({items}) => (
             namespace={item.namespace}
             mode={item.mode}
             environment={item.environment}
+            stateColor={item.state_color}
             version={item.database_version}
             license={item.database_license}
-            ready_pod_count={item.ready_pod_count}
-            pod_count={item.pod_count}
-            ready_volume_count={item.ready_volume_count}
-            volume_count={item.volume_count}
-            storage_classes={item.storage_classes}
-            database_url={item.database_url}
-            delete_command={createDeleteCommand(item.name, item.namespace)}
+            readyPodCount={item.ready_pod_count}
+            podCount={item.pod_count}
+            readyVolumeCount={item.ready_volume_count}
+            volumeCount={item.volume_count}
+            storageClasses={item.storage_classes}
+            databaseURL={item.database_url}
+            deleteCommand={createDeleteCommand(item.name, item.namespace)}
+            describeCommand={createDescribeCommand(item.name, item.namespace)}
           />) : <p>No items</p>
       }
     </Table.Body>
@@ -106,6 +116,25 @@ const EmptyView = () => (<div>No deployments</div>);
 
 function createDeleteCommand(name, namespace) {
   return `kubectl delete ArangoDeployment -n ${namespace} ${name}`;
+}
+
+function createDescribeCommand(name, namespace) {
+  return `kubectl describe ArangoDeployment -n ${namespace} ${name}`;
+}
+
+function getStateColorDescription(stateColor) {
+  switch (stateColor) {
+    case "green":
+      return "Everything is running smooth.";
+    case "yellow":
+      return "There is some activity going on, but deployment is available.";
+    case "orange":
+      return "There is some activity going on, deployment may be/become unavailable. You should pay attention now!";
+    case "red":
+      return "The deployment is in a bad state and manual intervention is likely needed.";
+    default:
+      return "State is not known.";
+  }
 }
 
 class DeploymentList extends Component {
