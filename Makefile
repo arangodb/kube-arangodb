@@ -72,6 +72,7 @@ endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
+DASHBOARDBUILDIMAGE := kube-arangodb-dashboard-builder
 
 ifndef ALLOWCHAOS
 	ALLOWCHAOS := true
@@ -111,7 +112,7 @@ build: check-vars docker manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -191,11 +192,14 @@ update-generated: $(GOBUILDDIR)
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
-$(DASHBOARDDIR)/node_modules:
-	cd $(DASHBOARDDIR) && npm install
-
-dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/node_modules
-	cd $(DASHBOARDDIR) && npm run-script build
+dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
+	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
+	@mkdir -p $(DASHBOARDDIR)/build
+	docker run --rm \
+		-v $(DASHBOARDDIR)/build:/usr/code/build \
+		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
+		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
+		$(DASHBOARDBUILDIMAGE)
 	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
 $(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
