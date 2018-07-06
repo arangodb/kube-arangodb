@@ -3,7 +3,7 @@ import { Button, Modal, Segment } from 'semantic-ui-react';
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 class CommandInstruction extends Component {
-  state = {};
+  state = {open:false};
 
   close = () => { this.setState({open:false}); }
   open = () => { this.setState({open:true}); }
