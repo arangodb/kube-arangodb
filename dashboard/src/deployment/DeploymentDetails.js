@@ -1,58 +1,17 @@
 import React, { Component } from 'react';
 import { apiGet } from '../api/api.js';
-import { Accordion, Header, Icon, List, Segment } from 'semantic-ui-react';
 import Loading from '../util/Loading.js';
-//import CommandInstruction from '../util/CommandInstruction.js';
+import MemberList from './MemberList.js';
 
-const MemberGroupsView = ({member_groups}) => (
+const MemberGroupsView = ({memberGroups, namespace}) => (
   <div>
-    {member_groups.map((item) => <MemberListComponent 
+    {memberGroups.map((item) => <MemberList 
       group={item.group}
       members={item.members}
+      namespace={namespace}
     />)}
   </div>
 );
-
-const MemberListView = ({group, activeMemberID, onClick, members}) => (
-  <Segment>
-    <Header>{group}</Header>
-    <List divided>
-      {members.map((item) => <MemberView memberInfo={item} active={item.id === activeMemberID} onClick={onClick}/>)}
-    </List>
-  </Segment>
-);
-
-const MemberView = ({memberInfo, active, onClick}) => (
-  <List.Item>
-    <Accordion>
-      <Accordion.Title active={active} onClick={() => onClick(memberInfo.id)}>
-        <Icon name='dropdown' /> {memberInfo.id}
-      </Accordion.Title>
-      <Accordion.Content active={active}>
-        <div>Pod: {memberInfo.pod_name}</div>
-        <div>PVC: {memberInfo.pvc_name}</div>
-        <div>PV: {memberInfo.pv_name}</div>
-      </Accordion.Content>
-    </Accordion>
-  </List.Item>
-);
-
-class MemberListComponent extends Component {
-  state = {};
-
-  onClick = (id) => { 
-    this.setState({activeMemberID:(this.state.activeMemberID === id) ? null : id}); 
-  }
-
-  render() {
-    return (<MemberListView 
-      group={this.props.group} 
-      members={this.props.members}
-      activeMemberID={this.state.activeMemberID}
-      onClick={this.onClick}
-    />);
-  }
-}
 
 class DeploymentDetails extends Component {
   state = {};
@@ -79,7 +38,7 @@ class DeploymentDetails extends Component {
     }
     return (
       <div>
-        <MemberGroupsView member_groups={d.member_groups}/>
+        <MemberGroupsView memberGroups={d.member_groups} namespace={d.namespace}/>
       </div>
     );
   }
