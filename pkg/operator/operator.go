@@ -71,6 +71,7 @@ type Config struct {
 	PodName                     string
 	ServiceAccount              string
 	LifecycleImage              string
+	AlpineImage                 string
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool

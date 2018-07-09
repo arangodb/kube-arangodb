@@ -204,6 +204,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 	cfg := deployment.Config{
 		ServiceAccount: o.Config.ServiceAccount,
 		LifecycleImage: o.Config.LifecycleImage,
+		AlpineImage:    o.Config.AlpineImage,
 		AllowChaos:     o.Config.AllowChaos,
 	}
 	deps := deployment.Dependencies{

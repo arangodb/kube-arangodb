@@ -60,6 +60,8 @@ type Context interface {
 	GetKubeCli() kubernetes.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
+	// GetAlpineImage returns the image name containing the alpine environment
+	GetAlpineImage() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
 	// CreateEvent creates a given event.

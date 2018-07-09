@@ -448,6 +448,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 	lifecycleImage := r.context.GetLifecycleImage()
+	alpineImage := r.context.GetAlpineImage()
 	terminationGracePeriod := group.DefaultTerminationGracePeriod()
 	tolerations := r.createPodTolerations(group, groupSpec)
 	serviceAccountName := groupSpec.GetServiceAccountName()
@@ -514,7 +515,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(),
+		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
 			return maskAny(err)
 		}

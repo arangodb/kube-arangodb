@@ -29,7 +29,7 @@ rules:
   verbs: ["*"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get"]
+  verbs: ["get", "update"]
 - apiGroups: ["apps"]
   resources: ["daemonsets"]
   verbs: ["*"]

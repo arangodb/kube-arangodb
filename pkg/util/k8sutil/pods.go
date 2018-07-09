@@ -40,7 +40,6 @@ const (
 	InitDataContainerName           = "init-data"
 	InitLifecycleContainerName      = "init-lifecycle"
 	ServerContainerName             = "server"
-	alpineImage                     = "alpine"
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	lifecycleVolumeName             = "lifecycle"
@@ -233,7 +232,7 @@ func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 
 // arangodInitContainer creates a container configured to
 // initalize a UUID file.
-func arangodInitContainer(name, id, engine string, requireUUID bool) v1.Container {
+func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool) v1.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
 	var command string
@@ -413,7 +412,7 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, podName, pvcName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
+	role, id, podName, pvcName, image, lifecycleImage, alpineImage string, imagePullPolicy v1.PullPolicy,
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
@@ -450,7 +449,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add UUID init container
-	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, requireUUID))
+	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
 
 	// Add volume
 	if pvcName != "" {

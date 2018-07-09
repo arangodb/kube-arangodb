@@ -63,6 +63,11 @@ func (d *Deployment) GetLifecycleImage() string {
 	return d.config.LifecycleImage
 }
 
+// GetAlpineImage returns the image name containing the alpine environment
+func (d *Deployment) GetAlpineImage() string {
+	return d.config.AlpineImage
+}
+
 // GetNamespace returns the kubernetes namespace that contains
 // this deployment.
 func (d *Deployment) GetNamespace() string {

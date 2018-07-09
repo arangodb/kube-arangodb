@@ -1,0 +1,26 @@
+{
+  "name": "dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "emotion": "^9.2.4",
+    "react": "^16.4.1",
+    "react-copy-to-clipboard": "^5.0.1",
+    "react-dom": "^16.4.1",
+    "react-emotion": "^9.2.4",
+    "react-router-dom": "^4.3.1",
+    "react-timeout": "^1.1.1",
+    "semantic-ui-less": "^2.2.12",
+    "semantic-ui-react": "^0.81.3"
+  },
+  "devDependencies": {
+    "react-scripts": "1.1.4"
+  },
+  "proxy": "https://192.168.140.208:8528",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

@@ -54,6 +54,7 @@ var (
 	deploymentTemplateNames = []string{
 		"rbac.yaml",
 		"deployment.yaml",
+		"service.yaml",
 	}
 	deploymentReplicationTemplateNames = []string{
 		"rbac.yaml",
@@ -99,6 +100,7 @@ type CommonOptions struct {
 	RoleName           string
 	RoleBindingName    string
 	ServiceAccountName string
+	ServiceType        string
 }
 
 type ResourceOptions struct {
@@ -158,6 +160,7 @@ func main() {
 				RoleName:           "arango-deployment-operator",
 				RoleBindingName:    "arango-deployment-operator",
 				ServiceAccountName: "default",
+				ServiceType:        "ClusterIP",
 			},
 			OperatorDeploymentName: "arango-deployment-operator",
 			AllowChaos:             options.AllowChaos,
@@ -174,6 +177,7 @@ func main() {
 				RoleName:           "arango-deployment-replication-operator",
 				RoleBindingName:    "arango-deployment-replication-operator",
 				ServiceAccountName: "default",
+				ServiceType:        "ClusterIP",
 			},
 			OperatorDeploymentName: "arango-deployment-replication-operator",
 		},
@@ -189,6 +193,7 @@ func main() {
 				RoleName:           "arango-storage-operator",
 				RoleBindingName:    "arango-storage-operator",
 				ServiceAccountName: "arango-storage-operator",
+				ServiceType:        "ClusterIP",
 			},
 			OperatorDeploymentName: "arango-storage-operator",
 		},

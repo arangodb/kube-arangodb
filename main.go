@@ -55,9 +55,11 @@ import (
 )
 
 const (
-	defaultServerHost = "0.0.0.0"
-	defaultServerPort = 8528
-	defaultLogLevel   = "debug"
+	defaultServerHost      = "0.0.0.0"
+	defaultServerPort      = 8528
+	defaultLogLevel        = "debug"
+	defaultAdminSecretName = "arangodb-operator-dashboard"
+	defaultAlpineImage     = "alpine:3.7"
 )
 
 var (
@@ -75,14 +77,17 @@ var (
 	cliLog        = logging.NewRootLogger()
 	logService    logging.Service
 	serverOptions struct {
-		host          string
-		port          int
-		tlsSecretName string
+		host            string
+		port            int
+		tlsSecretName   string
+		adminSecretName string // Name of basic authentication secret containing the admin username+password of the dashboard
+		allowAnonymous  bool   // If set, anonymous access to dashboard is allowed
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
+		alpineImage                 string
 	}
 	chaosOptions struct {
 		allowed bool
@@ -98,10 +103,13 @@ func init() {
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
+	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
+	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
 	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
+	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", defaultAlpineImage, "Docker image used for alpine containers")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 }
 
@@ -170,36 +178,45 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
 	}
+	secrets := kubecli.CoreV1().Secrets(namespace)
+
+	// Create operator
+	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
+	}
+	o, err := operator.NewOperator(cfg, deps)
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create operator")
+	}
 
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
 	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
+		Namespace:          namespace,
 		Address:            listenAddr,
 		TLSSecretName:      serverOptions.tlsSecretName,
 		TLSSecretNamespace: namespace,
 		PodName:            name,
 		PodIP:              ip,
+		AdminSecretName:    serverOptions.adminSecretName,
+		AllowAnonymous:     serverOptions.allowAnonymous,
 	}, server.Dependencies{
+		Log:                        logService.MustGetLogger("server"),
 		LivenessProbe:              &livenessProbe,
 		DeploymentProbe:            &deploymentProbe,
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
+		Operators:                  o,
+		Secrets:                    secrets,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {
 		go svr.Run()
 	}
 
-	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
-	}
-
 	//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
 
-	o, err := operator.NewOperator(cfg, deps)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator")
-	}
+	// Start operator
 	o.Run()
 }
 
@@ -235,6 +252,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
 		AllowChaos:                  chaosOptions.allowed,
+		AlpineImage:                 operatorOptions.alpineImage,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,

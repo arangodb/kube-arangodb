@@ -13,6 +13,7 @@ SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
 VENDORDIR := $(ROOTDIR)/deps
+DASHBOARDDIR := $(ROOTDIR)/dashboard
 
 ORGPATH := github.com/arangodb
 ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
@@ -24,6 +25,7 @@ GOPATH := $(GOBUILDDIR)
 GOVERSION := 1.10.0-alpine
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
+GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile 
 DOCKERTESTFILE := Dockerfile.test
@@ -70,6 +72,7 @@ endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
+DASHBOARDBUILDIMAGE := kube-arangodb-dashboard-builder
 
 ifndef ALLOWCHAOS
 	ALLOWCHAOS := true
@@ -95,6 +98,7 @@ ifdef VERBOSE
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
+DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*')
 
 .PHONY: all
 all: verify-generated build
@@ -108,7 +112,7 @@ build: check-vars docker manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR)
+	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -123,10 +127,11 @@ deps:
 	@${MAKE} -B -s $(GOBUILDDIR)
 
 $(GOBUILDDIR):
-	# Build pulsar from vendor
+	# Build pulsar & go-assets-builder from vendor
 	@mkdir -p $(GOBUILDDIR)
 	@ln -sf $(VENDORDIR) $(GOBUILDDIR)/src
 	@GOPATH=$(GOBUILDDIR) go install github.com/pulcy/pulsar
+	@GOPATH=$(GOBUILDDIR) go install github.com/jessevdk/go-assets-builder
 	@rm -Rf $(GOBUILDDIR)/src
 	# Prepare .gobuild directory
 	@mkdir -p $(ORGDIR)
@@ -187,7 +192,17 @@ update-generated: $(GOBUILDDIR)
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
-$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES)
+dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
+	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
+	@mkdir -p $(DASHBOARDDIR)/build
+	docker run --rm \
+		-v $(DASHBOARDDIR)/build:/usr/code/build \
+		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
+		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
+		$(DASHBOARDBUILDIMAGE)
+	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+
+$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
 	@mkdir -p $(BINDIR)
 	docker run \
 		--rm \
@@ -201,6 +216,8 @@ $(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES)
 		-w /usr/code/ \
 		golang:$(GOVERSION) \
 		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
+
+
 
 .PHONY: docker
 docker: check-vars $(BIN)
