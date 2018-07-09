@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Container, Form, Icon, Message, Modal } from 'semantic-ui-react';
+import { css } from 'react-emotion';
 
 const LoginView = ({username, password, usernameChanged, passwordChanged, doLogin, error}) => (
   <Container>
@@ -12,6 +13,7 @@ const LoginView = ({username, password, usernameChanged, passwordChanged, doLogi
         <label>Password</label>
         <input type="password" value={password} onChange={(e) => passwordChanged(e.target.value)}/>
       </Form.Field>
+      <Form.Button className={css`display:none`} type="submit" />
     </Form>
     {(error) ? <Message error content={error}/> : null}
   </Container>
