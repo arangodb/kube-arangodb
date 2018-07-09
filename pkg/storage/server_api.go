@@ -1,0 +1,70 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Ewout Prangsma
+//
+
+package storage
+
+import (
+	"github.com/arangodb/kube-arangodb/pkg/server"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// Name returns the name of the local storage resource
+func (ls *LocalStorage) Name() string {
+	return ls.apiObject.Name
+}
+
+// LocalPaths returns the local paths (on nodes) of the local storage resource
+func (ls *LocalStorage) LocalPaths() []string {
+	return ls.apiObject.Spec.LocalPath
+}
+
+// StateColor returns a color describing the state of the local storage resource
+func (ls *LocalStorage) StateColor() server.StateColor {
+	// TODO
+	return server.StateYellow
+}
+
+// StorageClass returns the name of the StorageClass specified in the local storage resource
+func (ls *LocalStorage) StorageClass() string {
+	return ls.apiObject.Spec.StorageClass.Name
+}
+
+// StorageClassIsDefault returns true if the StorageClass used by this local storage resource is supposed to be default
+func (ls *LocalStorage) StorageClassIsDefault() bool {
+	return ls.apiObject.Spec.StorageClass.IsDefault
+}
+
+// Volumes returns all volumes created by the local storage resource
+func (ls *LocalStorage) Volumes() []server.Volume {
+	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+	if err != nil {
+		ls.deps.Log.Error().Err(err).Msg("Failed to list persistent volumes")
+		return nil
+	}
+	result := make([]server.Volume, 0, len(list.Items))
+	for _, pv := range list.Items {
+		if ls.isOwnerOf(&pv) {
+			result = append(result, serverVolume(pv))
+		}
+	}
+	return result
+}

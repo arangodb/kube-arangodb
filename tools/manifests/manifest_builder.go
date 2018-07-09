@@ -63,6 +63,7 @@ var (
 	storageTemplateNames = []string{
 		"rbac.yaml",
 		"deployment.yaml",
+		"service.yaml",
 	}
 	testTemplateNames = []string{
 		"rbac.yaml",

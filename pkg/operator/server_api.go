@@ -60,3 +60,36 @@ func (o *Operator) GetDeployment(name string) (server.Deployment, error) {
 	}
 	return nil, maskAny(server.NotFoundError)
 }
+
+// StorageOperator provides the local storage operator (if any)
+func (o *Operator) StorageOperator() server.StorageOperator {
+	return o
+}
+
+// GetLocalStorages returns basic information for all local storages managed by the operator
+func (o *Operator) GetLocalStorages() ([]server.LocalStorage, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	result := make([]server.LocalStorage, 0, len(o.localStorages))
+	for _, ls := range o.localStorages {
+		result = append(result, ls)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() < result[j].Name()
+	})
+	return result, nil
+}
+
+// GetLocalStorage returns detailed information for a local, managed by the operator, with given name
+func (o *Operator) GetLocalStorage(name string) (server.LocalStorage, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	for _, ls := range o.localStorages {
+		if ls.Name() == name {
+			return ls, nil
+		}
+	}
+	return nil, maskAny(server.NotFoundError)
+}
