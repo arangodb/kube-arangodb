@@ -1,11 +1,12 @@
 import { Accordion, Header, Icon, Loader, Popup, Table } from 'semantic-ui-react';
-import api from '../api/api.js';
+import api, { IsUnauthorized } from '../api/api.js';
 import CommandInstruction from '../util/CommandInstruction.js';
 import VolumeList from './VolumeList.js';
 import Loading from '../util/Loading.js';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
 import styled from 'react-emotion';
+import { withAuth } from '../auth/Auth.js';
 
 const LoaderBox = styled('span')`
   float: right;
@@ -170,7 +171,9 @@ class StorageList extends Component {
 
   reloadStorages = async() => {
     try {
-      this.setState({loading: true});
+      this.setState({
+        loading: true
+      });
       const result = await api.get('/api/storage');
       this.setState({
         items: result.storages,
@@ -178,7 +181,14 @@ class StorageList extends Component {
         error: undefined
       });
     } catch (e) {
-      this.setState({error: e.message, loading: false});
+      this.setState({
+        error: e.message,
+        loading: false
+      });
+      if (IsUnauthorized(e)) {
+        this.props.doLogout();
+        return;
+      }
     }
     this.props.setTimeout(this.reloadStorages, 5000);
   }
@@ -186,13 +196,13 @@ class StorageList extends Component {
   render() {
     const items = this.state.items;
     if (!items) {
-      return (<Loading/>);
+      return (<Loading />);
     }
     if (items.length === 0) {
-      return (<EmptyView/>);
+      return (<EmptyView />);
     }
-    return (<ListView items={items} loading={this.state.loading}/>);
+    return (<ListView items={items} loading={this.state.loading} />);
   }
 }
 
-export default ReactTimeout(StorageList);
+export default ReactTimeout(withAuth(StorageList));
