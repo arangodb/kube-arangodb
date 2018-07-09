@@ -34,6 +34,7 @@ func (v serverVolume) Name() string {
 	return v.ObjectMeta.GetName()
 }
 
+// StateColor returns a color representing the state of the volume
 func (v serverVolume) StateColor() server.StateColor {
 	switch v.Status.Phase {
 	default:
@@ -43,4 +44,18 @@ func (v serverVolume) StateColor() server.StateColor {
 	case v1.VolumeFailed:
 		return server.StateRed
 	}
+}
+
+// NodeName returns the name of the node the volume is created on volume
+func (v serverVolume) NodeName() string {
+	return v.GetAnnotations()[nodeNameAnnotation]
+}
+
+// Capacity returns the capacity of the volume in human readable form
+func (v serverVolume) Capacity() string {
+	c, found := v.Spec.Capacity[v1.ResourceStorage]
+	if found {
+		return c.String()
+	}
+	return "?"
 }

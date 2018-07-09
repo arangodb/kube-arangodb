@@ -21,7 +21,7 @@ const StyledContentBox = styled('div')`
 const ListView = () => (
   <div>
     <Header dividing>
-      ArangoLocalStorages
+      ArangoLocalStorage resources
     </Header>
     <StorageList/>
   </div>

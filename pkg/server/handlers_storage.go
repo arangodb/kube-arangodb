@@ -89,12 +89,16 @@ func newLocalStorageInfoDetails(ls LocalStorage) LocalStorageInfoDetails {
 type Volume interface {
 	Name() string
 	StateColor() StateColor
+	NodeName() string
+	Capacity() string
 }
 
 // VolumeInfo contained the information returned per volume that is created on behalf of a local storage.
 type VolumeInfo struct {
 	Name       string     `json:"name"`
 	StateColor StateColor `json:"state_color"`
+	NodeName   string     `json:"node_name"`
+	Capacity   string     `json:"capacity"`
 }
 
 // newVolumeInfo creates a VolumeInfo for the given volume
@@ -102,6 +106,8 @@ func newVolumeInfo(v Volume) VolumeInfo {
 	return VolumeInfo{
 		Name:       v.Name(),
 		StateColor: v.StateColor(),
+		NodeName:   v.NodeName(),
+		Capacity:   v.Capacity(),
 	}
 }
 

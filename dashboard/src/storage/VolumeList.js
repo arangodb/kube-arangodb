@@ -19,6 +19,8 @@ const HeaderView = ({loading}) => (
     <Table.Row>
       <Table.HeaderCell>State</Table.HeaderCell>
       <Table.HeaderCell>Name</Table.HeaderCell>
+      <Table.HeaderCell>Capacity</Table.HeaderCell>
+      <Table.HeaderCell>Node</Table.HeaderCell>
       <Table.HeaderCell>
         Actions
         <LoaderBox><Loader size="mini" active={loading} inline/></LoaderBox>
@@ -27,7 +29,7 @@ const HeaderView = ({loading}) => (
   </Table.Header>
 );
 
-const RowView = ({name, stateColor, describeCommand, deleteCommand}) => (
+const RowView = ({name, stateColor, nodeName, capacity, describeCommand, deleteCommand}) => (
   <Table.Row>
     <Table.Cell>
       <Popup trigger={<Icon name={(stateColor==="green") ? "check" : "bell"} color={stateColor}/>}>
@@ -36,6 +38,12 @@ const RowView = ({name, stateColor, describeCommand, deleteCommand}) => (
     </Table.Cell>
     <Table.Cell>
       {name}
+    </Table.Cell>
+    <Table.Cell>
+      {capacity}
+    </Table.Cell>
+    <Table.Cell>
+      {nodeName}
     </Table.Cell>
     <Table.Cell>
       <CommandInstruction 
@@ -66,6 +74,8 @@ const ListView = ({items, loading}) => (
             key={item.name} 
             name={item.name}
             stateColor={item.state_color}
+            nodeName={item.node_name}
+            capacity={item.capacity}
             deleteCommand={createDeleteCommand(item.name)}
             describeCommand={createDescribeCommand(item.name)}
           />

@@ -23,6 +23,9 @@
 package storage
 
 import (
+	"sort"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,8 +42,14 @@ func (ls *LocalStorage) LocalPaths() []string {
 
 // StateColor returns a color describing the state of the local storage resource
 func (ls *LocalStorage) StateColor() server.StateColor {
-	// TODO
-	return server.StateYellow
+	switch ls.status.State {
+	case api.LocalStorageStateRunning:
+		return server.StateGreen
+	case api.LocalStorageStateFailed:
+		return server.StateRed
+	default:
+		return server.StateYellow
+	}
 }
 
 // StorageClass returns the name of the StorageClass specified in the local storage resource
@@ -66,5 +75,8 @@ func (ls *LocalStorage) Volumes() []server.Volume {
 			result = append(result, serverVolume(pv))
 		}
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() < result[j].Name()
+	})
 	return result
 }
