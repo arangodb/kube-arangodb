@@ -1,5 +1,5 @@
-class Api {
-    token = '';
+export default {
+    token: '',
 
     async decodeResults(result) {
         const decoded = await result.json();
@@ -10,7 +10,7 @@ class Api {
             throw Error(`Unexpected status ${result.status}`);
         }
         return decoded;
-    }
+    },
     
     // apiGet performs a GET request on the API with given local URL.
     // The result is decoded from JSON and returned.
@@ -23,7 +23,7 @@ class Api {
         }
         const result = await fetch(localURL, {headers});
         return this.decodeResults(result);
-    }
+    },
     
     // apiPost performs a POST request on the API with given local URL and given data.
     // The result is decoded from JSON and returned.
@@ -42,8 +42,4 @@ class Api {
         });
         return this.decodeResults(result);
     }
-}
-
-var api = new Api();
-
-export default api;
+};

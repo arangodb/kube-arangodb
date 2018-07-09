@@ -152,8 +152,8 @@ function getStateColorDescription(stateColor) {
 
 class DeploymentList extends Component {
   state = {
-    items: undefined,
-    error: undefined,
+    items: null,
+    error: null,
     loading: true
   };
 
@@ -168,7 +168,7 @@ class DeploymentList extends Component {
       this.setState({
         items: result.deployments,
         loading: false,
-        error: undefined
+        error: null
       });
     } catch (e) {
       this.setState({error: e.message, loading: false});

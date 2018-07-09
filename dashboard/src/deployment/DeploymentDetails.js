@@ -19,7 +19,7 @@ const LoaderBox = styled('span')`
 const MemberGroupsView = ({memberGroups, namespace}) => (
   <div>
     {memberGroups.map((item) => <MemberList 
-      key={`server-group-${item.group}`}
+      key={item.group}
       group={item.group}
       members={item.members}
       namespace={namespace}

@@ -2,16 +2,16 @@ import React, { Component } from 'react';
 import { Button, Container, Form, Icon, Message, Modal } from 'semantic-ui-react';
 import { css } from 'react-emotion';
 
-const LoginView = ({username, password, usernameChanged, passwordChanged, doLogin, error}) => (
+const LoginView = ({username, password, onUsernameChanged, onPasswordChanged, doLogin, error}) => (
   <Container>
     <Form onSubmit={doLogin}>
       <Form.Field>
         <label>Name</label>
-        <input focus="true" value={username} onChange={(e) => usernameChanged(e.target.value)}/>
+        <input focus="true" value={username} onChange={(e) => onUsernameChanged(e.target.value)}/>
       </Form.Field>
       <Form.Field>
         <label>Password</label>
-        <input type="password" value={password} onChange={(e) => passwordChanged(e.target.value)}/>
+        <input type="password" value={password} onChange={(e) => onPasswordChanged(e.target.value)}/>
       </Form.Field>
       <Form.Button className={css`display:none`} type="submit" />
     </Form>
@@ -38,8 +38,8 @@ class Login extends Component {
             error={this.props.error}
             username={this.state.username}
             password={this.state.password}
-            usernameChanged={(v) => this.setState({username:v})}
-            passwordChanged={(v) => this.setState({password:v})}
+            onUsernameChanged={(v) => this.setState({username:v})}
+            onPasswordChanged={(v) => this.setState({password:v})}
             doLogin={this.handleLogin}
           />
         </Modal.Content>
