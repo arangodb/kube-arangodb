@@ -46,7 +46,7 @@ const RowView = ({name, stateColor,localPaths, storageClass, storageClassIsDefau
       </Accordion>
     </Table.Cell>
     <Table.Cell>
-      {localPaths.map((item) => <code>{item}</code>)}
+      {localPaths.map((item, index) => <code key={index}>{item}</code>)}
     </Table.Cell>
     <Table.Cell>
       {storageClass}
@@ -75,7 +75,7 @@ const RowView = ({name, stateColor,localPaths, storageClass, storageClassIsDefau
 
 const VolumesRowView = ({name}) => (
   <Table.Row>
-    <Table.Cell colspan="5">
+    <Table.Cell colSpan="5">
       <Header sub>Volumes</Header>
       <VolumeList storageName={name}/>
     </Table.Cell>
@@ -111,7 +111,7 @@ class RowComponent extends Component {
 
   render() {
     return [<RowView 
-      key={this.props.name} 
+      key="datarow"
       name={this.props.name}
       localPaths={this.props.localPaths}
       stateColor={this.props.stateColor}
@@ -123,7 +123,7 @@ class RowComponent extends Component {
       expanded={this.state.expanded}
     />,
     this.state.expanded && <VolumesRowView
-      key={`${this.props.name}-vol`} 
+      key="volrow"
       name={this.props.name}
       expanded={this.state.expanded}
       toggleExpand={this.onToggleExpand}
