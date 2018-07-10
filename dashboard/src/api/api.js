@@ -1,4 +1,4 @@
-export function IsUnauthorized(e) { 
+export function isUnauthorized(e) { 
     return (e.status === 401);
 }
 

@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
-import ReactTimeout from 'react-timeout';
-import DeploymentOperator from './deployment/DeploymentOperator';
-import DeploymentReplicationOperator from './replication/DeploymentReplicationOperator';
-import StorageOperator from './storage/StorageOperator';
-import NoOperator from './NoOperator';
-import Loading from './util/Loading';
-import api, { IsUnauthorized } from './api/api';
 import { Container, Segment, Message } from 'semantic-ui-react';
 import { withAuth } from './auth/Auth';
+import api, { isUnauthorized } from './api/api.js';
+import DeploymentOperator from './deployment/DeploymentOperator';
+import DeploymentReplicationOperator from './replication/DeploymentReplicationOperator';
+import Loading from './util/Loading';
+import NoOperator from './NoOperator';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
+import StorageOperator from './storage/StorageOperator';
 
 const PodInfoView = ({pod, namespace}) => (
   <Segment basic>
@@ -19,17 +19,19 @@ const PodInfoView = ({pod, namespace}) => (
 );
 
 const OperatorsView = ({error, deployment, deploymentReplication, storage, pod, namespace}) => {
-  const podInfoView = (<PodInfoView pod={pod} namespace={namespace}/>);
-  if (deployment) {
-    return (<DeploymentOperator podInfoView={podInfoView} error={error}/>);
-  }
-  if (deploymentReplication) {
-    return (<DeploymentReplicationOperator podInfoView={podInfoView} error={error}/>);
-  }
-  if (storage) {
-    return (<StorageOperator podInfoView={podInfoView} error={error}/>);
-  }
-  return (<NoOperator podInfoView={podInfoView} error={error}/>);
+  let Operator = NoOperator;
+  if (deployment)
+    Operator = DeploymentOperator;
+  else if (deploymentReplication) 
+    Operator = DeploymentReplicationOperator;
+  else if (storage)
+    Operator = StorageOperator;
+  return (
+    <Operator
+      podInfoView={<PodInfoView pod={pod} namespace={namespace} />}
+      error={error}
+    />
+  );
 }
 
 const LoadingView = () => (
@@ -59,7 +61,7 @@ class App extends Component {
       this.setState({
         error: e.message
       });
-      if (IsUnauthorized(e)) {
+      if (isUnauthorized(e)) {
         this.props.doLogout();
       }
     }

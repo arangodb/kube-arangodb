@@ -1,5 +1,5 @@
 import { Icon, Loader, Popup, Table } from 'semantic-ui-react';
-import api, { IsUnauthorized } from '../api/api.js';
+import api, { isUnauthorized } from '../api/api.js';
 import CommandInstruction from '../util/CommandInstruction.js';
 import Loading from '../util/Loading.js';
 import React, { Component } from 'react';
@@ -138,7 +138,7 @@ class VolumeList extends Component {
         error: e.message,
         loading: false
       });
-      if (IsUnauthorized(e)) {
+      if (isUnauthorized(e)) {
         this.props.doLogout();
         return;
       }
