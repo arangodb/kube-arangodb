@@ -4,7 +4,7 @@ import DeploymentOperator from './deployment/DeploymentOperator.js';
 import StorageOperator from './storage/StorageOperator.js';
 import NoOperator from './NoOperator.js';
 import Loading from './util/Loading.js';
-import api, { IsUnauthorized } from './api/api.js';
+import api, { isUnauthorized } from './api/api.js';
 import { Container, Segment, Message } from 'semantic-ui-react';
 import { withAuth } from './auth/Auth.js';
 
@@ -55,7 +55,7 @@ class App extends Component {
       this.setState({
         error: e.message
       });
-      if (IsUnauthorized(e)) {
+      if (sUnauthorized(e)) {
         this.props.doLogout();
       }
     }

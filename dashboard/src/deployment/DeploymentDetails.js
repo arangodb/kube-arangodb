@@ -1,6 +1,6 @@
 import ReactTimeout from 'react-timeout';
 import React, { Component } from 'react';
-import api, { IsUnauthorized } from '../api/api.js';
+import api, { isUnauthorized } from '../api/api.js';
 import Loading from '../util/Loading.js';
 import MemberList from './MemberList.js';
 import styled from 'react-emotion';
@@ -54,7 +54,7 @@ class DeploymentDetails extends Component {
         loading: false,
         error: e.message
       });
-      if (IsUnauthorized(e)) {
+      if (isUnauthorized(e)) {
         this.props.doLogout();
         return;
       }
