@@ -48,3 +48,19 @@ func (dr *DeploymentReplication) StateColor() server.StateColor {
 	}
 	return server.StateYellow
 }
+
+// Source provides info on the source of the replication
+func (dr *DeploymentReplication) Source() server.Endpoint {
+	return serverEndpoint{
+		dr:      dr,
+		getSpec: func() api.EndpointSpec { return dr.apiObject.Spec.Source },
+	}
+}
+
+// Destination provides info on the destination of the replication
+func (dr *DeploymentReplication) Destination() server.Endpoint {
+	return serverEndpoint{
+		dr:      dr,
+		getSpec: func() api.EndpointSpec { return dr.apiObject.Spec.Destination },
+	}
+}

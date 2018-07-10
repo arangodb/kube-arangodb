@@ -33,6 +33,8 @@ type DeploymentReplication interface {
 	Name() string
 	Namespace() string
 	StateColor() StateColor
+	Source() Endpoint
+	Destination() Endpoint
 }
 
 // DeploymentReplicationOperator is the API implemented by the deployment operator.
@@ -45,17 +47,53 @@ type DeploymentReplicationOperator interface {
 
 // DeploymentReplicationInfo is the information returned per deployment replication.
 type DeploymentReplicationInfo struct {
-	Name       string     `json:"name"`
-	Namespace  string     `json:"namespace"`
-	StateColor StateColor `json:"state_color"`
+	Name        string       `json:"name"`
+	Namespace   string       `json:"namespace"`
+	StateColor  StateColor   `json:"state_color"`
+	Source      EndpointInfo `json:"source"`
+	Destination EndpointInfo `json:"destination"`
 }
 
 // newDeploymentReplicationInfo initializes a DeploymentReplicationInfo for the given deployment replication.
 func newDeploymentReplicationInfo(dr DeploymentReplication) DeploymentReplicationInfo {
 	return DeploymentReplicationInfo{
-		Name:       dr.Name(),
-		Namespace:  dr.Namespace(),
-		StateColor: dr.StateColor(),
+		Name:        dr.Name(),
+		Namespace:   dr.Namespace(),
+		StateColor:  dr.StateColor(),
+		Source:      newEndpointInfo(dr.Source()),
+		Destination: newEndpointInfo(dr.Destination()),
+	}
+}
+
+// Endpoint is the API implemented by source&destination of the replication
+type Endpoint interface {
+	DeploymentName() string
+	MasterEndpoint() []string
+	AuthKeyfileSecretName() string
+	AuthUserSecretName() string
+	TLSCACert() string
+	TLSCACertSecretName() string
+}
+
+// EndpointInfo is the information returned per source/destination endpoint of the replication.
+type EndpointInfo struct {
+	DeploymentName        string   `json:"deployment_name"`
+	MasterEndpoint        []string `json:"master_endpoint"`
+	AuthKeyfileSecretName string   `json:"auth_keyfile_secret_name"`
+	AuthUserSecretName    string   `json:"auth_user_secret_name"`
+	TLSCACert             string   `json:"tls_ca_cert"`
+	TLSCACertSecretName   string   `json:"tls_ca_cert_secret_name"`
+}
+
+// newEndpointInfo initializes an EndpointInfo for the given Endpoint.
+func newEndpointInfo(ep Endpoint) EndpointInfo {
+	return EndpointInfo{
+		DeploymentName:        ep.DeploymentName(),
+		MasterEndpoint:        ep.MasterEndpoint(),
+		AuthKeyfileSecretName: ep.AuthKeyfileSecretName(),
+		AuthUserSecretName:    ep.AuthUserSecretName(),
+		TLSCACert:             ep.TLSCACert(),
+		TLSCACertSecretName:   ep.TLSCACertSecretName(),
 	}
 }
 

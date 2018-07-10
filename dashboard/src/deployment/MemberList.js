@@ -1,21 +1,7 @@
 import React, { Component } from 'react';
-import styled from 'react-emotion';
 import { Accordion, Header, Icon, List, Segment } from 'semantic-ui-react';
 import CommandInstruction from '../util/CommandInstruction.js';
-
-const Field = styled('div')`
-  padding-top: 0.3em;
-  padding-bottom: 0.3em;
-`;
-
-const FieldLabel = styled('span')`
-  width: 9rem;
-  display: inline-block;
-`;
-
-const FieldIcons = styled('div')`
-  float: right;
-`;
+import { Field, FieldLabel, FieldIcons } from '../style/style';
 
 const MemberListView = ({group, activeMemberID, onClick, members, namespace}) => (
   <Segment>

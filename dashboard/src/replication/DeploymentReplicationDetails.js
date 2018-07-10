@@ -3,8 +3,9 @@ import React, { Component } from 'react';
 import api, { IsUnauthorized } from '../api/api.js';
 import Loading from '../util/Loading.js';
 import styled from 'react-emotion';
-import { Loader } from 'semantic-ui-react';
+import { Header, Loader, Segment } from 'semantic-ui-react';
 import { withAuth } from '../auth/Auth.js';
+import { Field, FieldContent as FC, FieldLabel as FL } from '../style/style';
 
 const LoaderBox = styled('span')`
   float: right;
@@ -15,6 +16,61 @@ const LoaderBox = styled('span')`
   max-width: 0;
   display: inline-block;
 `;
+
+const EndpointView = ({title, deploymentName, masterEndpoint, authKeyfileSecretName, authUserSecretName, tlsCACert, tlsCACertSecretName}) => (
+  <Segment>
+    <Header>{title}</Header>
+    <Field>
+      <FL>Deployment</FL>
+      <FC>{deploymentName || "-"}</FC>
+    </Field>
+    <Field>
+      <FL>Master endpoint</FL>
+      <FC>{masterEndpoint || "-"}</FC>
+    </Field>
+    <Field>
+      <FL>TLS CA Certificate</FL>
+      <FC><code>{tlsCACert}</code></FC>
+    </Field>
+    <Header sub>Secret names</Header>
+    <Field>
+      <FL>Authentication keyfile</FL>
+      <FC><code>{authKeyfileSecretName || "-"}</code></FC>
+    </Field>
+    <Field>
+      <FL>Authentication user</FL>
+      <FC><code>{authUserSecretName || "-"}</code></FC>
+    </Field>
+    <Field>
+      <FL>TLS CA Certificate</FL>
+      <FC><code>{tlsCACertSecretName || "-"}</code></FC>
+    </Field>
+  </Segment>
+);
+
+const DetailsView = ({replication, loading}) => (
+  <div>
+    <LoaderBox><Loader size="mini" active={loading} inline/></LoaderBox>
+    <EndpointView
+      title="Source"
+      deploymentName={replication.source.deployment_name}
+      masterEndpoint={replication.source.master_endpoint}
+      authKeyfileSecretName={replication.source.auth_keyfile_secret_name}
+      authUserSecretName={replication.source.auth_user_secret_name}
+      tlsCACert={replication.source.tls_ca_cert}
+      tlsCACertSecretName={replication.source.tls_ca_cert_secret_name}
+    />
+    <EndpointView
+      title="Destination"
+      deploymentName={replication.destination.deployment_name}
+      masterEndpoint={replication.destination.master_endpoint}
+      authKeyfileSecretName={replication.destination.auth_keyfile_secret_name}
+      authUserSecretName={replication.destination.auth_user_secret_name}
+      tlsCACert={replication.destination.tls_ca_cert}
+      tlsCACertSecretName={replication.destination.tls_ca_cert_secret_name}
+    />
+  </div>
+);
 
 class DeploymentReplicationDetails extends Component {
   state = {
@@ -55,12 +111,7 @@ class DeploymentReplicationDetails extends Component {
     if (!dr) {
       return (<Loading/>);
     }
-    return (
-      <div>
-        <LoaderBox><Loader size="mini" active={this.state.loading} inline/></LoaderBox>
-        <div>TODO</div>
-      </div>
-      );
+    return (<DetailsView replication={dr} loading={this.state.loading}/>);
   }
 }
 

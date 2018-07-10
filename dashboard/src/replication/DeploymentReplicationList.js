@@ -21,6 +21,8 @@ const HeaderView = ({loading}) => (
     <Table.Row>
       <Table.HeaderCell>State</Table.HeaderCell>
       <Table.HeaderCell>Name</Table.HeaderCell>
+      <Table.HeaderCell>Source</Table.HeaderCell>
+      <Table.HeaderCell>Destination</Table.HeaderCell>
       <Table.HeaderCell>
         Actions
         <LoaderBox><Loader size="mini" active={loading} inline/></LoaderBox>
@@ -29,7 +31,7 @@ const HeaderView = ({loading}) => (
   </Table.Header>
 );
 
-const RowView = ({name, mode, stateColor, deleteCommand, describeCommand}) => (
+const RowView = ({name, mode, stateColor, source, destination, deleteCommand, describeCommand}) => (
   <Table.Row>
     <Table.Cell>
       <Popup trigger={<Icon name={(stateColor==="green") ? "check" : "bell"} color={stateColor}/>}>
@@ -40,6 +42,12 @@ const RowView = ({name, mode, stateColor, deleteCommand, describeCommand}) => (
       <Link to={`/deployment-replication/${name}`}>
         {name}
       </Link>
+    </Table.Cell>
+    <Table.Cell>
+      {source}
+    </Table.Cell>
+    <Table.Cell>
+      {destination}
     </Table.Cell>
     <Table.Cell>
       <CommandInstruction 
@@ -71,6 +79,8 @@ const ListView = ({items, loading}) => (
             name={item.name}
             namespace={item.namespace}
             stateColor={item.state_color}
+            source={item.source.deployment_name || item.source.master_endpoint}
+            destination={item.destination.deployment_name || item.destination.master_endpoint}
             deleteCommand={createDeleteCommand(item.name, item.namespace)}
             describeCommand={createDescribeCommand(item.name, item.namespace)}
           />) : <p>No items</p>
