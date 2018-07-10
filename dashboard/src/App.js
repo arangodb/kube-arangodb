@@ -1,12 +1,14 @@
+import { Container, Segment, Message } from 'semantic-ui-react';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
-import DeploymentOperator from './deployment/DeploymentOperator.js';
-import StorageOperator from './storage/StorageOperator.js';
-import NoOperator from './NoOperator.js';
-import Loading from './util/Loading.js';
-import api, { isUnauthorized } from './api/api.js';
-import { Container, Segment, Message } from 'semantic-ui-react';
-import { withAuth } from './auth/Auth.js';
+
+import { withAuth } from './auth/Auth';
+import api, { isUnauthorized } from './api/api';
+import DeploymentOperator from './deployment/DeploymentOperator';
+import DeploymentReplicationOperator from './replication/DeploymentReplicationOperator';
+import Loading from './util/Loading';
+import NoOperator from './NoOperator';
+import StorageOperator from './storage/StorageOperator';
 
 const PodInfoView = ({pod, namespace}) => (
   <Segment basic>
@@ -17,10 +19,12 @@ const PodInfoView = ({pod, namespace}) => (
   </Segment>
 );
 
-const OperatorsView = ({error, deployment, storage, pod, namespace}) => {
+const OperatorsView = ({error, deployment, deploymentReplication, storage, pod, namespace}) => {
   let Operator = NoOperator;
   if (deployment)
     Operator = DeploymentOperator;
+  else if (deploymentReplication) 
+    Operator = DeploymentReplicationOperator;
   else if (storage)
     Operator = StorageOperator;
   return (
@@ -70,6 +74,7 @@ class App extends Component {
       return <OperatorsView
         error={this.state.error}
         deployment={this.state.operators.deployment}
+        deploymentReplication={this.state.operators.deployment_replication}
         storage={this.state.operators.storage}
         pod={this.state.operators.pod}
         namespace={this.state.operators.namespace}

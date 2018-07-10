@@ -1,11 +1,12 @@
 import { Icon, Loader, Popup, Table } from 'semantic-ui-react';
-import api, { isUnauthorized } from '../api/api.js';
-import CommandInstruction from '../util/CommandInstruction.js';
-import Loading from '../util/Loading.js';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
 import styled from 'react-emotion';
-import { withAuth } from '../auth/Auth.js';
+
+import { withAuth } from '../auth/Auth';
+import api, { isUnauthorized } from '../api/api';
+import CommandInstruction from '../util/CommandInstruction';
+import Loading from '../util/Loading';
 
 const LoaderBox = styled('span')`
   float: right;

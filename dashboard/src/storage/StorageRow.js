@@ -1,7 +1,8 @@
 import { Accordion, Header, Icon, Popup, Table } from 'semantic-ui-react';
-import CommandInstruction from '../util/CommandInstruction.js';
-import VolumeList from './VolumeList.js';
 import React, { Component } from 'react';
+
+import CommandInstruction from '../util/CommandInstruction';
+import VolumeList from './VolumeList';
 
 const RowView = ({name, stateColor,localPaths, storageClass, storageClassIsDefault, deleteCommand, describeCommand, expanded, toggleExpand}) => (
   <Table.Row>

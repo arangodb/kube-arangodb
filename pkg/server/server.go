@@ -69,6 +69,8 @@ type Dependencies struct {
 type Operators interface {
 	// Return the deployment operator (if any)
 	DeploymentOperator() DeploymentOperator
+	// Return the deployment replication operator (if any)
+	DeploymentReplicationOperator() DeploymentReplicationOperator
 	// Return the local storage operator (if any)
 	StorageOperator() StorageOperator
 }
@@ -155,6 +157,10 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		// Deployment operator
 		api.GET("/deployment", s.handleGetDeployments)
 		api.GET("/deployment/:name", s.handleGetDeploymentDetails)
+
+		// Deployment replication operator
+		api.GET("/deployment-replication", s.handleGetDeploymentReplications)
+		api.GET("/deployment-replication/:name", s.handleGetDeploymentReplicationDetails)
 
 		// Local storage operator
 		api.GET("/storage", s.handleGetLocalStorages)

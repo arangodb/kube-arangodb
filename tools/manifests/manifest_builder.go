@@ -59,6 +59,7 @@ var (
 	deploymentReplicationTemplateNames = []string{
 		"rbac.yaml",
 		"deployment-replication.yaml",
+		"service.yaml",
 	}
 	storageTemplateNames = []string{
 		"rbac.yaml",

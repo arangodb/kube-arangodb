@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
-import LogoutContext from '../auth/LogoutContext.js';
-import DeploymentDetails from './DeploymentDetails.js';
-import DeploymentList from './DeploymentList.js';
-import { Header, Menu, Message, Segment } from 'semantic-ui-react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { Header, Menu, Message, Segment } from 'semantic-ui-react';
+import React, { Component } from 'react';
 import styled from 'react-emotion';
+
+import DeploymentDetails from './DeploymentDetails';
+import DeploymentList from './DeploymentList';
+import LogoutContext from '../auth/LogoutContext';
 
 const StyledMenu = styled(Menu)`
   width: 15rem !important;
