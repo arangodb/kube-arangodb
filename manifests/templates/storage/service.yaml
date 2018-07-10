@@ -1,4 +1,4 @@
-apiVersion: ""
+apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Storage.OperatorDeploymentName }}
