@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .DeploymentReplication.OperatorDeploymentName }}
+  namespace: {{ .DeploymentReplication.Operator.Namespace }}
+  labels:
+    name: {{ .DeploymentReplication.OperatorDeploymentName }}
+    app: arango-deployment-replication-operator
+spec:
+  ports:
+  - name: server
+    port: 8528
+    protocol: TCP
+    targetPort: 8528
+  selector:
+    name: {{ .DeploymentReplication.OperatorDeploymentName }}
+    app: arango-deployment-replication-operator
+    role: leader
+  type: {{ .DeploymentReplication.Operator.ServiceType }}
