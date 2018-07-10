@@ -449,7 +449,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add UUID init container
-	p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
+	if alpineImage != "" {
+		p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
+	}
 
 	// Add volume
 	if pvcName != "" {

@@ -41,6 +41,7 @@ import (
 // TestChangeArgsAgents tests the creating of an active failover deployment
 // with default settings and once ready changes the arguments of the agents.
 func TestChangeArgsAgents(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -119,6 +120,7 @@ func TestChangeArgsAgents(t *testing.T) {
 // TestChangeArgsDBServer tests the creating of a cluster deployment
 // with default settings and once ready changes the arguments of the dbservers.
 func TestChangeArgsDBServer(t *testing.T) {
+	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
