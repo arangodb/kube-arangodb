@@ -18,14 +18,17 @@ const PodInfoView = ({pod, namespace}) => (
 );
 
 const OperatorsView = ({error, deployment, storage, pod, namespace}) => {
-  const podInfoView = (<PodInfoView pod={pod} namespace={namespace}/>);
-  if (deployment) {
-    return (<DeploymentOperator podInfoView={podInfoView} error={error}/>);
-  }
-  if (storage) {
-    return (<StorageOperator podInfoView={podInfoView} error={error}/>);
-  }
-  return (<NoOperator podInfoView={podInfoView} error={error}/>);
+  let Operator = NoOperator;
+  if (deployment)
+    Operator = DeploymentOperator;
+  else if (storage)
+    Operator = StorageOperator;
+  return (
+    <Operator
+      podInfoView={<PodInfoView pod={pod} namespace={namespace} />}
+      error={error}
+    />
+  );
 }
 
 const LoadingView = () => (
@@ -55,7 +58,7 @@ class App extends Component {
       this.setState({
         error: e.message
       });
-      if (sUnauthorized(e)) {
+      if (isUnauthorized(e)) {
         this.props.doLogout();
       }
     }
