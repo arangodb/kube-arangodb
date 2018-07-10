@@ -1,20 +1,12 @@
 import { Loader, Table } from 'semantic-ui-react';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
-import styled from 'react-emotion';
 
+import { LoaderBoxForTable as LoaderBox } from '../style/style';
 import { withAuth } from '../auth/Auth';
 import api, { isUnauthorized } from '../api/api';
 import Loading from '../util/Loading';
 import StorageRow from './StorageRow';
-
-const LoaderBox = styled('span')`
-  float: right;
-  width: 0;
-  padding-right: 1em;
-  max-width: 0;
-  display: inline-block;
-`;
 
 const HeaderView = ({loading}) => (
   <Table.Header>

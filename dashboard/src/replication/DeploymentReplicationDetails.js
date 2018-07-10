@@ -1,22 +1,12 @@
 import { Header, Loader, Segment } from 'semantic-ui-react';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
-import styled from 'react-emotion';
 
 import { Field, FieldContent as FC, FieldLabel as FL } from '../style/style';
+import { LoaderBox } from '../style/style';
 import { withAuth } from '../auth/Auth';
 import api, { isUnauthorized } from '../api/api';
 import Loading from '../util/Loading';
-
-const LoaderBox = styled('span')`
-  float: right;
-  width: 0;
-  padding-right: 1em;
-  margin-right: 1em;
-  margin-top: 1em;
-  max-width: 0;
-  display: inline-block;
-`;
 
 const EndpointView = ({title, deploymentName, masterEndpoint, authKeyfileSecretName, authUserSecretName, tlsCACert, tlsCACertSecretName}) => (
   <Segment>

@@ -1,25 +1,11 @@
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import { Header, Menu, Message, Segment } from 'semantic-ui-react';
 import React, { Component } from 'react';
-import styled from 'react-emotion';
 
+import { StyledMenu, StyledContentBox } from '../style/style';
 import DeploymentReplicationDetails from './DeploymentReplicationDetails';
 import DeploymentReplicationList from './DeploymentReplicationList';
 import LogoutContext from '../auth/LogoutContext';
-
-const StyledMenu = styled(Menu)`
-  width: 15rem !important;
-  @media (max-width: 768px) {
-    width: 10rem !important;
-  }
-`;
-
-const StyledContentBox = styled('div')`
-  margin-left: 15rem;
-  @media (max-width: 768px) {
-    margin-left: 10rem;
-  }
-`;
 
 const ListView = () => (
   <div>
