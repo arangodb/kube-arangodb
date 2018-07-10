@@ -196,6 +196,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
 	@mkdir -p $(DASHBOARDDIR)/build
 	docker run --rm \
+		-u $(shell id -u):$(shell id -g) \
 		-v $(DASHBOARDDIR)/build:/usr/code/build \
 		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
