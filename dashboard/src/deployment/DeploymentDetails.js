@@ -1,11 +1,12 @@
-import ReactTimeout from 'react-timeout';
-import React, { Component } from 'react';
-import api, { isUnauthorized } from '../api/api.js';
-import Loading from '../util/Loading.js';
-import MemberList from './MemberList.js';
-import styled from 'react-emotion';
 import { Loader } from 'semantic-ui-react';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
+import styled from 'react-emotion';
+
 import { withAuth } from '../auth/Auth.js';
+import api, { isUnauthorized } from '../api/api';
+import Loading from '../util/Loading';
+import MemberList from './MemberList';
 
 const LoaderBox = styled('span')`
   float: right;

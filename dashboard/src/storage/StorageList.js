@@ -1,10 +1,11 @@
 import { Loader, Table } from 'semantic-ui-react';
-import api, { isUnauthorized } from '../api/api.js';
-import Loading from '../util/Loading.js';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
 import styled from 'react-emotion';
-import { withAuth } from '../auth/Auth.js';
+
+import { withAuth } from '../auth/Auth';
+import api, { isUnauthorized } from '../api/api';
+import Loading from '../util/Loading';
 import StorageRow from './StorageRow';
 
 const LoaderBox = styled('span')`

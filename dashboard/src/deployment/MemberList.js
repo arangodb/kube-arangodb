@@ -1,7 +1,8 @@
-import React, { Component } from 'react';
 import { Accordion, Header, Icon, List, Segment } from 'semantic-ui-react';
-import CommandInstruction from '../util/CommandInstruction.js';
+import React, { Component } from 'react';
+
 import { Field, FieldLabel, FieldIcons } from '../style/style';
+import CommandInstruction from '../util/CommandInstruction';
 
 const MemberListView = ({group, activeMemberID, onClick, members, namespace}) => (
   <Segment>

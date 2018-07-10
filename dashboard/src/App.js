@@ -1,12 +1,13 @@
 import { Container, Segment, Message } from 'semantic-ui-react';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
+
 import { withAuth } from './auth/Auth';
-import api, { isUnauthorized } from './api/api.js';
+import api, { isUnauthorized } from './api/api';
 import DeploymentOperator from './deployment/DeploymentOperator';
 import DeploymentReplicationOperator from './replication/DeploymentReplicationOperator';
 import Loading from './util/Loading';
 import NoOperator from './NoOperator';
-import React, { Component } from 'react';
-import ReactTimeout from 'react-timeout';
 import StorageOperator from './storage/StorageOperator';
 
 const PodInfoView = ({pod, namespace}) => (

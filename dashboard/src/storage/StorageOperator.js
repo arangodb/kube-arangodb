@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
-import LogoutContext from '../auth/LogoutContext.js';
-import StorageList from './StorageList.js';
 import { Header, Menu, Message, Segment } from 'semantic-ui-react';
+import React, { Component } from 'react';
 import styled from 'react-emotion';
+
+import LogoutContext from '../auth/LogoutContext';
+import StorageList from './StorageList';
 
 const StyledMenu = styled(Menu)`
   width: 15rem !important;

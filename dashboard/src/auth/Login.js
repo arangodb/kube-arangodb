@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
 import { Button, Container, Form, Icon, Message, Modal } from 'semantic-ui-react';
 import { css } from 'react-emotion';
+import React, { Component } from 'react';
 
 const LoginView = ({username, password, onUsernameChanged, onPasswordChanged, doLogin, error}) => (
   <Container>

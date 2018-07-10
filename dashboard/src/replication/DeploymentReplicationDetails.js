@@ -1,11 +1,12 @@
-import ReactTimeout from 'react-timeout';
-import React, { Component } from 'react';
-import api, { isUnauthorized } from '../api/api.js';
-import Loading from '../util/Loading.js';
-import styled from 'react-emotion';
 import { Header, Loader, Segment } from 'semantic-ui-react';
-import { withAuth } from '../auth/Auth.js';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
+import styled from 'react-emotion';
+
 import { Field, FieldContent as FC, FieldLabel as FL } from '../style/style';
+import { withAuth } from '../auth/Auth';
+import api, { isUnauthorized } from '../api/api';
+import Loading from '../util/Loading';
 
 const LoaderBox = styled('span')`
   float: right;
