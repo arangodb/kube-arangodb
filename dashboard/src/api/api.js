@@ -1,13 +1,22 @@
+export function isUnauthorized(e) { 
+    return (e.status === 401);
+}
+
 export default {
     token: '',
 
     async decodeResults(result) {
         const decoded = await result.json();
-        if (result.status === 401) {
-            throw Error(decoded.error || "Unauthorized")
-        }
         if (result.status !== 200) {
-            throw Error(`Unexpected status ${result.status}`);
+            let message = decoded.error;
+            if (!message) {
+                if (result.status === 401) {
+                    message = "Unauthorized";
+                } else {
+                    message = `Unexpected status ${result.status}`;
+                }
+            }
+            throw Object.assign(new Error(message), { status: result.status });
         }
         return decoded;
     },

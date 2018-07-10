@@ -69,6 +69,8 @@ type Dependencies struct {
 type Operators interface {
 	// Return the deployment operator (if any)
 	DeploymentOperator() DeploymentOperator
+	// Return the local storage operator (if any)
+	StorageOperator() StorageOperator
 }
 
 // Server is the HTTPS server for the operator.
@@ -153,6 +155,10 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		// Deployment operator
 		api.GET("/deployment", s.handleGetDeployments)
 		api.GET("/deployment/:name", s.handleGetDeploymentDetails)
+
+		// Local storage operator
+		api.GET("/storage", s.handleGetLocalStorages)
+		api.GET("/storage/:name", s.handleGetLocalStorageDetails)
 	}
 	// Dashboard
 	r.GET("/", createAssetFileHandler(dashboard.Assets.Files["index.html"]))

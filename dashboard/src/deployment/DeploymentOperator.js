@@ -23,7 +23,7 @@ const StyledContentBox = styled('div')`
 const ListView = () => (
   <div>
     <Header dividing>
-      ArangoDeployments
+      ArangoDeployment resources
     </Header>
     <DeploymentList/>
   </div>

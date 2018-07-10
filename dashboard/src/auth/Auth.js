@@ -7,6 +7,18 @@ import { getSessionItem, setSessionItem } from "../util/Storage.js";
 
 const tokenSessionKey = "auth-token";
 
+
+// withAuth adds a doLogout property to the given component.
+export function withAuth(WrappedComponent) {
+  return function AuthAwareComponent(props) {
+      return (
+        <LogoutContext.Consumer>
+          {doLogout => <WrappedComponent {...props} doLogout={doLogout} />}
+        </LogoutContext.Consumer>
+      );
+  }
+}
+
 class Auth extends Component {
   state = {
     authenticated: false,

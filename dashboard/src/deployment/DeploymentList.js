@@ -1,11 +1,12 @@
 import { Icon, Loader, Popup, Table } from 'semantic-ui-react';
 import { Link } from "react-router-dom";
-import api from '../api/api.js';
+import api, { isUnauthorized } from '../api/api.js';
 import CommandInstruction from '../util/CommandInstruction.js';
 import Loading from '../util/Loading.js';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
 import styled from 'react-emotion';
+import { withAuth } from '../auth/Auth.js';
 
 const LoaderBox = styled('span')`
   float: right;
@@ -172,6 +173,10 @@ class DeploymentList extends Component {
       });
     } catch (e) {
       this.setState({error: e.message, loading: false});
+      if (isUnauthorized(e)) {
+        this.props.doLogout();
+        return;
+      }
     }
     this.props.setTimeout(this.reloadDeployments, 5000);
   }
@@ -188,4 +193,4 @@ class DeploymentList extends Component {
   }
 }
 
-export default ReactTimeout(DeploymentList);
+export default ReactTimeout(withAuth(DeploymentList));
