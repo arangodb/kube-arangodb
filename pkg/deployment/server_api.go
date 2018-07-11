@@ -23,10 +23,7 @@
 package deployment
 
 import (
-	"fmt"
-	"net"
 	"sort"
-	"strconv"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -197,28 +194,25 @@ func (d *Deployment) DatabaseURL() string {
 	if err != nil {
 		return ""
 	}
-	host := ""
-	switch svc.Spec.Type {
-	case v1.ServiceTypeLoadBalancer:
-		for _, i := range svc.Status.LoadBalancer.Ingress {
-			if i.Hostname != "" {
-				host = i.Hostname
-			} else {
-				host = i.IP
-			}
-			break
-		}
-	case v1.ServiceTypeNodePort:
-		// TODO
-	}
-	if host == "" {
-		return ""
-	}
 	scheme := "https"
 	if !d.GetSpec().IsSecure() {
 		scheme = "http"
 	}
-	return fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(host, strconv.Itoa(k8sutil.ArangoPort)))
+	nodeFetcher := func() (v1.NodeList, error) {
+		result, err := d.deps.KubeCli.CoreV1().Nodes().List(metav1.ListOptions{})
+		if err != nil {
+			return v1.NodeList{}, maskAny(err)
+		}
+		return *result, nil
+	}
+	portPredicate := func(p v1.ServicePort) bool {
+		return p.TargetPort.IntValue() == k8sutil.ArangoPort
+	}
+	url, err := k8sutil.CreateServiceURL(*svc, scheme, portPredicate, nodeFetcher)
+	if err != nil {
+		return ""
+	}
+	return url
 }
 
 // DatabaseVersion returns the version used by the deployment

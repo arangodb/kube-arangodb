@@ -73,6 +73,8 @@ type Operators interface {
 	DeploymentReplicationOperator() DeploymentReplicationOperator
 	// Return the local storage operator (if any)
 	StorageOperator() StorageOperator
+	// FindOtherOperators looks up references to other operators in the same Kubernetes cluster.
+	FindOtherOperators() []OperatorReference
 }
 
 // Server is the HTTPS server for the operator.
