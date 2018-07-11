@@ -97,7 +97,7 @@ class App extends Component {
         deployment={this.state.operators.deployment}
         deploymentReplication={this.state.operators.deployment_replication}
         storage={this.state.operators.storage}
-        otherOperators={this.state.operators.other}
+        otherOperators={this.state.operators.other || []}
         pod={this.state.operators.pod}
         namespace={this.state.operators.namespace}
         />;
