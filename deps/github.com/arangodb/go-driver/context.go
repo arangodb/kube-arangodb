@@ -52,11 +52,12 @@ const (
 	keyIsSystem                 ContextKey = "arangodb-isSystem"
 	keyIgnoreRevs               ContextKey = "arangodb-ignoreRevs"
 	keyEnforceReplicationFactor ContextKey = "arangodb-enforceReplicationFactor"
-	keyConfigured               ContextKey = "arangodb-configured"
+	keyConfigured  	             ContextKey = "arangodb-configured"
 	keyFollowLeaderRedirect     ContextKey = "arangodb-followLeaderRedirect"
 	keyDBServerID               ContextKey = "arangodb-dbserverID"
 	keyBatchID                  ContextKey = "arangodb-batchID"
 	keyJobIDResponse            ContextKey = "arangodb-jobIDResponse"
+	keyUseVST 		              ContextKey = "arangodb-useVST"
 )
 
 // WithRevision is used to configure a context to make document
@@ -219,6 +220,11 @@ func WithBatchID(parent context.Context, id string) context.Context {
 // This is used in cluster functions.
 func WithJobIDResponse(parent context.Context, jobID *string) context.Context {
 	return context.WithValue(contextOrBackground(parent), keyJobIDResponse, jobID)
+}
+
+// WithJobIDResponse is used to configure a client that will use VST for comm.
+func WithUseVST(parent context.Context, value bool) context.Context {
+	return context.WithValue(contextOrBackground(parent), keyUseVST, value)
 }
 
 type contextSettings struct {
@@ -414,4 +420,13 @@ func withDocumentAt(ctx context.Context, index int) (context.Context, error) {
 	}
 
 	return ctx, nil
+}
+
+// determines whether the context is configured to use VST for communications
+func mustUseVST(ctx context.Context) bool {
+	if ctx == nil { return false }
+	if v := ctx.Value(keyUseVST); v != nil {
+		return reflect.ValueOf(v)
+	}
+	return false
 }

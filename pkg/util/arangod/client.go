@@ -156,20 +156,38 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
-	if err != nil {
-		return nil, maskAny(err)
-	}
-	// TODO deal with TLS with proper CA checking
-	conn, err := http.NewConnection(connConfig)
-	if err != nil {
-		return nil, maskAny(err)
+	config := driver.ClientConfig{}
+	vst := driver.mustUseVST(context)
+	if vst {
+		connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		// TODO deal with TLS with proper CA checking
+		conn, err := vst.NewConnection(connConfig)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		// Create client
+		config := driver.ClientConfig{
+			Connection: conn,
+		}
+	} else {
+		connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		// TODO deal with TLS with proper CA checking
+		conn, err := http.NewConnection(connConfig)
+		if err != nil {
+			return nil, maskAny(err)
+		}
+		// Create client
+		config := driver.ClientConfig{
+			Connection: conn,
+		}
 	}
 
-	// Create client
-	config := driver.ClientConfig{
-		Connection: conn,
-	}
 	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
 	if err != nil {
 		return nil, maskAny(err)
@@ -186,13 +204,29 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
 	scheme := "http"
 	transport := sharedHTTPTransport
-	if apiObject != nil && apiObject.Spec.IsSecure() {
+  if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
 	}
 	connConfig := http.ConnectionConfig{
 		Transport:          transport,
 		DontFollowRedirect: true,
+	}
+	for _, dnsName := range dnsNames {
+		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
+	}
+	return connConfig, nil
+}
+
+// createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
+func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
+	scheme := "vst"
+	if apiObject != nil && apiObject.Spec.IsSecure() {
+		// TODO set security for transport
+	}
+	transport := vst.NewTransport(/* TODO configure transport */)
+	connConfig := vst.ConnectionConfig{
+		Transport: transport,
 	}
 	for _, dnsName := range dnsNames {
 		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
