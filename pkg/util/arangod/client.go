@@ -201,7 +201,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
 	scheme := "http"
 	transport := sharedHTTPTransport
-  if apiObject != nil && apiObject.Spec.IsSecure() {
+	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
 	}
@@ -218,7 +218,7 @@ func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1In
 // createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
 func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
 	scheme := "http"
-	transport := vst.NewTransport(/* TODO configure transport */)
+	transport := vst.NewTransport( /* TODO configure transport */ )
 	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
