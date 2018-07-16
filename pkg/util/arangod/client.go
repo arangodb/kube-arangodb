@@ -32,6 +32,8 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
+	vst "github.com/arangodb/go-driver/vst"
+	vstProtocol "github.com/arangodb/go-driver/vst/protocol"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"
@@ -100,10 +102,10 @@ func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObj
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, vst ...bool) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, useVst ...bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, vst)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, useVst...)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -155,10 +157,10 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, vst ...bool) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, useVst ...bool) (driver.Client, error) {
 	config := driver.ClientConfig{}
 	var conn driver.Connection
-	if len(vst) > 0 && vst[0] {
+	if len(useVst) > 0 && useVst[0] {
 		connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
 		if err != nil {
 			return nil, maskAny(err)
@@ -181,7 +183,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 	}
 
 	// Create client
-	config := driver.ClientConfig{
+	config = driver.ClientConfig{
 		Connection: conn,
 	}
 
@@ -216,15 +218,15 @@ func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1In
 }
 
 // createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
-func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
+func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (vst.ConnectionConfig, error) {
 	scheme := "http"
-	tlsConfig := vst.config.TLSConfig
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		tlsConfig = &tls.Config{}
 	}
-	transport := protocol.TransportConfig{
-		Version: vst.protocol.Version1_1,
+	transport := vstProtocol.TransportConfig{
+		Version: vstProtocol.Version1_1,
 	}
 	connConfig := vst.ConnectionConfig{
 		TLSConfig: tlsConfig,

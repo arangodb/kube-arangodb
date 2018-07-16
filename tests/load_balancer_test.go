@@ -29,15 +29,13 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/stretchr/testify/assert"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type queryTest struct {
+/*type queryTest struct {
 	Query             string
 	BindVars          map[string]interface{}
 	ExpectSuccess     bool
@@ -45,23 +43,23 @@ type queryTest struct {
 	DocumentType      reflect.Type
 }
 
-type queryTestContext struct {
+type ueryTestContext struct {
 	Context     context.Context
 	ExpectCount bool
-}
+}*/
 
 func TestLoadBalancingCursorVST(t *testing.T) {
 	// run with VST
-	TestLoadBalancingCursorSubtest(t, true)
+	LoadBalancingCursorSubtest(t, true)
 }
 
 func TestLoadBalancingCursorHTTP(t *testing.T) {
 	// run with HTTP
-	TestCursorLoadBalancingTestSubtest(t, false)
+	LoadBalancingCursorSubtest(t, false)
 }
 
 // TestLoadBalancerCursorVST tests cursor forwarding with load-balanced conn.
-func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
+func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -126,10 +124,12 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			UserDoc{Name: "Zz", Age: 12},
 		},
 	}
+
+	db := ensureDatabase(ctx, client, "lb_cursor_test", nil, t)
 	for colName, colDocs := range collectionData {
 		col := ensureCollection(ctx, db, colName, nil, t)
 		if _, _, err := col.CreateDocuments(ctx, colDocs); err != nil {
-			t.Fatalf("Expected success, got %s", describe(err))
+			t.Fatalf("Expected success, got %s", err)
 		}
 	}
 
@@ -193,7 +193,7 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	// Setup context alternatives
 	contexts := []queryTestContext{
-		queryTestContext{nil, true), false},
+		queryTestContext{nil, false},
 		queryTestContext{context.Background(), false},
 		queryTestContext{driver.WithQueryCount(nil), true},
 		queryTestContext{driver.WithQueryCount(nil, true), true},
@@ -219,7 +219,7 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			}
 			if test.ExpectSuccess {
 				if err != nil {
-					t.Errorf("Expected success in query %d (%s), got '%s'", i, test.Query, describe(err))
+					t.Errorf("Expected success in query %d (%s), got '%s'", i, test.Query, err)
 					continue
 				}
 				count := cursor.Count()
@@ -242,7 +242,7 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 						}
 						break
 					} else if err != nil {
-						t.Errorf("Failed to result document %d: %s", len(result), describe(err))
+						t.Errorf("Failed to result document %d: %s", len(result), err)
 					}
 					if !hasMore {
 						t.Error("HasMore returned false, but ReadDocument returns a document")
@@ -260,11 +260,11 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 				}
 				// Close anyway (this tests calling Close more than once)
 				if err := cursor.Close(); err != nil {
-					t.Errorf("Expected success in Close of cursor from query %d (%s), got '%s'", i, test.Query, describe(err))
+					t.Errorf("Expected success in Close of cursor from query %d (%s), got '%s'", i, test.Query, err)
 				}
 			} else {
 				if err == nil {
-					t.Errorf("Expected error in query %d (%s), got '%s'", i, test.Query, describe(err))
+					t.Errorf("Expected error in query %d (%s), got '%s'", i, test.Query, err)
 					continue
 				}
 			}
