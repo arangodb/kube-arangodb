@@ -218,12 +218,16 @@ func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1In
 // createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
 func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
 	scheme := "http"
-	transport := vst.NewTransport( /* TODO configure transport */ )
+	tlsConfig := vst.config.TLSConfig
 	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
-		transport = sharedHTTPSTransport
+		tlsConfig = &tls.Config{}
+	}
+	transport := protocol.TransportConfig{
+		Version: vst.protocol.Version1_1,
 	}
 	connConfig := vst.ConnectionConfig{
+		TLSConfig: tlsConfig,
 		Transport: transport,
 	}
 	for _, dnsName := range dnsNames {
