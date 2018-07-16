@@ -193,19 +193,19 @@ func TestLoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	// Setup context alternatives
 	contexts := []queryTestContext{
-		queryTestContext{driver.WithUseVST(nil, true), false},
-		queryTestContext{driver.WithUseVST(context.Background(), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCount(nil), true), true},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCount(nil, true), true), true},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCount(nil, false), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryBatchSize(nil, 1), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCache(nil), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCache(nil, true), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCache(nil, false), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryMemoryLimit(nil, 60000), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryTTL(nil, time.Minute), true), false},
-		queryTestContext{driver.WithUseVST(driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true), true},
-		queryTestContext{driver.WithUseVST(driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true), true},
+		queryTestContext{nil, true), false},
+		queryTestContext{context.Background(), false},
+		queryTestContext{driver.WithQueryCount(nil), true},
+		queryTestContext{driver.WithQueryCount(nil, true), true},
+		queryTestContext{driver.WithQueryCount(nil, false), false},
+		queryTestContext{driver.WithQueryBatchSize(nil, 1), false},
+		queryTestContext{driver.WithQueryCache(nil), false},
+		queryTestContext{driver.WithQueryCache(nil, true), false},
+		queryTestContext{driver.WithQueryCache(nil, false), false},
+		queryTestContext{driver.WithQueryMemoryLimit(nil, 60000), false},
+		queryTestContext{driver.WithQueryTTL(nil, time.Minute), false},
+		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true},
+		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true},
 	}
 
 	// Run tests for every context alternative
