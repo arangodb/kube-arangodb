@@ -34,10 +34,16 @@ class DeploymentOperator extends Component {
             {doLogout => 
               <StyledMenu fixed="left" vertical>
                 <Menu.Item>
-                  <Link to="/">Deployments</Link>
-                </Menu.Item>
-                <Menu.Item position="right" onClick={() => doLogout()}>
-                  Logout
+                  <Menu.Header>Deployment Operator</Menu.Header>
+                    <Menu.Menu>
+                      <Menu.Item>
+                        <Link to="/">Deployments</Link>
+                      </Menu.Item>
+                      <Menu.Item position="right" onClick={() => doLogout()}>
+                        Logout
+                      </Menu.Item>
+                    </Menu.Menu>
+                  {this.props.commonMenuItems}
                 </Menu.Item>
               </StyledMenu>
             }

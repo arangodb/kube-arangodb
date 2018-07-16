@@ -20,14 +20,20 @@ class StorageOperator extends Component {
     <div>
         <LogoutContext.Consumer>
         {doLogout => 
-            <StyledMenu fixed="left" vertical>
+          <StyledMenu fixed="left" vertical>
             <Menu.Item>
-                Local storages
+              <Menu.Header>Deployment Operator</Menu.Header>
+              <Menu.Menu>
+                <Menu.Item>
+                    Local storages
+                </Menu.Item>
+                <Menu.Item position="right" onClick={() => doLogout()}>
+                    Logout
+                </Menu.Item>
+              </Menu.Menu>
+              {this.props.commonMenuItems}
             </Menu.Item>
-            <Menu.Item position="right" onClick={() => doLogout()}>
-                Logout
-            </Menu.Item>
-            </StyledMenu>
+          </StyledMenu>
         }
         </LogoutContext.Consumer>
         <StyledContentBox>

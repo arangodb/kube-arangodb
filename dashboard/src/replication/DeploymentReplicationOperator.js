@@ -34,11 +34,17 @@ class DeploymentReplicationOperator extends Component {
             {doLogout => 
               <StyledMenu fixed="left" vertical>
                 <Menu.Item>
-                  <Link to="/">Deployment replications</Link>
+                  <Menu.Header>Deployment Replication Operator</Menu.Header>
+                  <Menu.Menu>
+                    <Menu.Item>
+                      <Link to="/">Deployment replications</Link>
+                    </Menu.Item>
+                    <Menu.Item position="right" onClick={() => doLogout()}>
+                      Logout
+                    </Menu.Item>
+                  </Menu.Menu>
                 </Menu.Item>
-                <Menu.Item position="right" onClick={() => doLogout()}>
-                  Logout
-                </Menu.Item>
+                {this.props.commonMenuItems}
               </StyledMenu>
             }
           </LogoutContext.Consumer>

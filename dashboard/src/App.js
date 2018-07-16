@@ -1,4 +1,4 @@
-import { Container, Segment, Message } from 'semantic-ui-react';
+import { Container, Segment, Menu, Message } from 'semantic-ui-react';
 import React, { Component } from 'react';
 import ReactTimeout from 'react-timeout';
 
@@ -19,7 +19,14 @@ const PodInfoView = ({pod, namespace}) => (
   </Segment>
 );
 
-const OperatorsView = ({error, deployment, deploymentReplication, storage, pod, namespace}) => {
+const OperatorsView = ({error, deployment, deploymentReplication, storage, pod, namespace, otherOperators}) => {
+  let commonMenuItems = otherOperators.map((item) => <Menu.Item><a href={item.url}>{operatorType2Name(item.type)}</a></Menu.Item>);
+  if (commonMenuItems.length > 0) {
+    commonMenuItems = (<Menu.Item>
+      <Menu.Header>Other operators</Menu.Header>
+      <Menu.Menu>{commonMenuItems}</Menu.Menu>
+    </Menu.Item>);
+  }
   let Operator = NoOperator;
   if (deployment)
     Operator = DeploymentOperator;
@@ -30,10 +37,24 @@ const OperatorsView = ({error, deployment, deploymentReplication, storage, pod, 
   return (
     <Operator
       podInfoView={<PodInfoView pod={pod} namespace={namespace} />}
+      commonMenuItems={commonMenuItems}
       error={error}
     />
   );
 }
+
+const operatorType2Name = (oType) => {
+  switch (oType) {
+    case "deployment":
+      return "Deployments";
+    case "deployment_replication":
+      return "Deployment replications";
+    case "storage":
+      return "Storage";
+    default:
+      return "";
+  }
+};
 
 const LoadingView = () => (
   <Container>
@@ -76,6 +97,7 @@ class App extends Component {
         deployment={this.state.operators.deployment}
         deploymentReplication={this.state.operators.deployment_replication}
         storage={this.state.operators.storage}
+        otherOperators={this.state.operators.other || []}
         pod={this.state.operators.pod}
         namespace={this.state.operators.namespace}
         />;

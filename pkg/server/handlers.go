@@ -29,20 +29,39 @@ import (
 )
 
 type operatorsResponse struct {
-	PodName               string `json:"pod"`
-	Namespace             string `json:"namespace"`
-	Deployment            bool   `json:"deployment"`
-	DeploymentReplication bool   `json:"deployment_replication"`
-	Storage               bool   `json:"storage"`
+	PodName               string              `json:"pod"`
+	Namespace             string              `json:"namespace"`
+	Deployment            bool                `json:"deployment"`
+	DeploymentReplication bool                `json:"deployment_replication"`
+	Storage               bool                `json:"storage"`
+	Other                 []OperatorReference `json:"other"`
+}
+
+type OperatorType string
+
+const (
+	OperatorTypeDeployment            OperatorType = "deployment"
+	OperatorTypeDeploymentReplication OperatorType = "deployment_replication"
+	OperatorTypeStorage               OperatorType = "storage"
+)
+
+// OperatorReference contains a reference to another operator
+type OperatorReference struct {
+	Namespace string       `json:"namespace"`
+	Type      OperatorType `json:"type"`
+	URL       string       `json:"url"`
 }
 
 // Handle a GET /api/operators request
 func (s *Server) handleGetOperators(c *gin.Context) {
-	c.JSON(http.StatusOK, operatorsResponse{
+	result := operatorsResponse{
 		PodName:               s.cfg.PodName,
 		Namespace:             s.cfg.Namespace,
 		Deployment:            s.deps.DeploymentProbe.IsReady(),
 		DeploymentReplication: s.deps.DeploymentReplicationProbe.IsReady(),
 		Storage:               s.deps.StorageProbe.IsReady(),
-	})
+		Other:                 s.deps.Operators.FindOtherOperators(),
+	}
+	s.deps.Log.Info().Interface("result", result).Msg("handleGetOperators")
+	c.JSON(http.StatusOK, result)
 }
