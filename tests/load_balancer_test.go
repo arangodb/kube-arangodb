@@ -197,7 +197,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	// keep track of whether at least one request was forwarded internally to the
 	// correct coordinator behind the load balancer
-	someRequestForwarded = false
+	someRequestForwarded := false
 
 	// Run tests for every context alternative
 	for _, qctx := range contexts {
@@ -239,6 +239,8 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 						t.Error("HasMore returned false, but ReadDocument returns a document")
 					}
 					result = append(result, doc.Elem().Interface())
+					// TODO extract `x-arango-request-served-by` header
+					// if header exists, set someRequestForwarded = true
 				}
 				if len(result) != len(test.ExpectedDocuments) {
 					t.Errorf("Expected %d documents, got %d in query %d (%s)", len(test.ExpectedDocuments), len(result), i, test.Query)
@@ -260,5 +262,9 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 				}
 			}
 		}
+	}
+
+	if !someRequestForwarded {
+		t.Error("Did not detect any request being forwarded behind load balancer!")
 	}
 }
