@@ -35,19 +35,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/client"
 )
 
-/*type queryTest struct {
-	Query             string
-	BindVars          map[string]interface{}
-	ExpectSuccess     bool
-	ExpectedDocuments []interface{}
-	DocumentType      reflect.Type
-}
-
-type ueryTestContext struct {
-	Context     context.Context
-	ExpectCount bool
-}*/
-
 func TestLoadBalancingCursorVST(t *testing.T) {
 	// run with VST
 	LoadBalancingCursorSubtest(t, true)
@@ -207,6 +194,10 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true},
 		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true},
 	}
+
+	// keep track of whether at least one request was forwarded internally to the
+	// correct coordinator behind the load balancer
+	someRequestForwarded = false
 
 	// Run tests for every context alternative
 	for _, qctx := range contexts {
