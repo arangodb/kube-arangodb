@@ -26,7 +26,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
-	"time"
+	//"time"
 
 	"github.com/dchest/uniuri"
 
@@ -45,7 +45,12 @@ func TestLoadBalancingCursorHTTP(t *testing.T) {
 	LoadBalancingCursorSubtest(t, false)
 }
 
-// TestLoadBalancerCursorVST tests cursor forwarding with load-balanced conn.
+func wasForwarded(r *driver.Response) bool {
+	h := (*r).Header("x-arango-request-served-by")
+	return h != ""
+}
+
+// tests cursor forwarding with load-balanced conn.
 func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
@@ -54,6 +59,8 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	// Prepare deployment config
 	depl := newDeployment("test-lb-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	image := "dhly/arangodb:3.3.11-local"
+	depl.Spec.Image = &image
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -128,7 +135,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			ExpectedDocuments: collectionData["books"],
 			DocumentType:      reflect.TypeOf(Book{}),
 		},
-		queryTest{
+/*		queryTest{
 			Query:             "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
 			BindVars:          map[string]interface{}{"title": "Book 02"},
 			ExpectSuccess:     true,
@@ -175,24 +182,25 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			ExpectedDocuments: []interface{}{"Blair", "Clair", "Jake", "John", "Johnny", "Zz"},
 			DocumentType:      reflect.TypeOf("foo"),
 			ExpectSuccess:     true,
-		},
+		},*/
 	}
 
+	var r driver.Response
 	// Setup context alternatives
 	contexts := []queryTestContext{
-		queryTestContext{nil, false},
-		queryTestContext{context.Background(), false},
-		queryTestContext{driver.WithQueryCount(nil), true},
-		queryTestContext{driver.WithQueryCount(nil, true), true},
-		queryTestContext{driver.WithQueryCount(nil, false), false},
-		queryTestContext{driver.WithQueryBatchSize(nil, 1), false},
-		queryTestContext{driver.WithQueryCache(nil), false},
-		queryTestContext{driver.WithQueryCache(nil, true), false},
-		queryTestContext{driver.WithQueryCache(nil, false), false},
-		queryTestContext{driver.WithQueryMemoryLimit(nil, 60000), false},
-		queryTestContext{driver.WithQueryTTL(nil, time.Minute), false},
-		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true},
-		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true},
+		/*queryTestContext{driver.WithResponse(nil, &r), false},
+		queryTestContext{driver.WithResponse(context.Background(), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil), &r), true},
+		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil, true), &r), true},
+		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil, false), &r), false},*/
+		queryTestContext{driver.WithResponse(driver.WithQueryBatchSize(nil, 1), &r), false},
+		/*queryTestContext{driver.WithResponse(driver.WithQueryCache(nil), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryCache(nil, true), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryCache(nil, false), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryMemoryLimit(nil, 60000), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryTTL(nil, time.Minute), &r), false},
+		queryTestContext{driver.WithResponse(driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), &r), true},
+		queryTestContext{driver.WithResponse(driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), &r), true},*/
 	}
 
 	// keep track of whether at least one request was forwarded internally to the
@@ -239,8 +247,9 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 						t.Error("HasMore returned false, but ReadDocument returns a document")
 					}
 					result = append(result, doc.Elem().Interface())
-					// TODO extract `x-arango-request-served-by` header
-					// if header exists, set someRequestForwarded = true
+					if (wasForwarded(&r)) {
+						someRequestForwarded = true
+					}
 				}
 				if len(result) != len(test.ExpectedDocuments) {
 					t.Errorf("Expected %d documents, got %d in query %d (%s)", len(test.ExpectedDocuments), len(result), i, test.Query)
