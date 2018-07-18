@@ -26,7 +26,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
-	//"time"
+	"time"
 
 	"github.com/dchest/uniuri"
 
@@ -250,6 +250,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 					if (wasForwarded(&r)) {
 						someRequestForwarded = true
 					}
+					time.Sleep(200 * time.Millisecond)
 				}
 				if len(result) != len(test.ExpectedDocuments) {
 					t.Errorf("Expected %d documents, got %d in query %d (%s)", len(test.ExpectedDocuments), len(result), i, test.Query)
