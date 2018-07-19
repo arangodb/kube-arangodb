@@ -103,8 +103,8 @@ func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Int
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	transport := vstProtocol.TransportConfig{
-		IdleConnTimeout:	100 * time.Millisecond,
-		Version: 					vstProtocol.Version1_1,
+		IdleConnTimeout: 100 * time.Millisecond,
+		Version:         vstProtocol.Version1_1,
 	}
 	connConfig := vst.ConnectionConfig{
 		TLSConfig: tlsConfig,

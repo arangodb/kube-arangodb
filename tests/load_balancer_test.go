@@ -135,54 +135,54 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			ExpectedDocuments: collectionData["books"],
 			DocumentType:      reflect.TypeOf(Book{}),
 		},
-/*		queryTest{
-			Query:             "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
-			BindVars:          map[string]interface{}{"title": "Book 02"},
-			ExpectSuccess:     true,
-			ExpectedDocuments: []interface{}{collectionData["books"][1]},
-			DocumentType:      reflect.TypeOf(Book{}),
-		},
-		queryTest{
-			Query:         "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
-			BindVars:      map[string]interface{}{"somethingelse": "Book 02"},
-			ExpectSuccess: false, // Unknown `@title`
-		},
-		queryTest{
-			Query:             "FOR u IN users FILTER u.age>100 SORT u.name RETURN u",
-			ExpectSuccess:     true,
-			ExpectedDocuments: []interface{}{},
-			DocumentType:      reflect.TypeOf(UserDoc{}),
-		},
-		queryTest{
-			Query:             "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
-			BindVars:          map[string]interface{}{"maxAge": 20},
-			ExpectSuccess:     true,
-			ExpectedDocuments: []interface{}{collectionData["users"][2], collectionData["users"][0], collectionData["users"][5]},
-			DocumentType:      reflect.TypeOf(UserDoc{}),
-		},
-		queryTest{
-			Query:         "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
-			BindVars:      map[string]interface{}{"maxage": 20},
-			ExpectSuccess: false, // `@maxage` versus `@maxAge`
-		},
-		queryTest{
-			Query:             "FOR u IN users SORT u.age RETURN u.age",
-			ExpectedDocuments: []interface{}{12, 12, 13, 25, 42, 67},
-			DocumentType:      reflect.TypeOf(12),
-			ExpectSuccess:     true,
-		},
-		queryTest{
-			Query:             "FOR p IN users COLLECT a = p.age WITH COUNT INTO c SORT a RETURN [a, c]",
-			ExpectedDocuments: []interface{}{[]int{12, 2}, []int{13, 1}, []int{25, 1}, []int{42, 1}, []int{67, 1}},
-			DocumentType:      reflect.TypeOf([]int{}),
-			ExpectSuccess:     true,
-		},
-		queryTest{
-			Query:             "FOR u IN users SORT u.name RETURN u.name",
-			ExpectedDocuments: []interface{}{"Blair", "Clair", "Jake", "John", "Johnny", "Zz"},
-			DocumentType:      reflect.TypeOf("foo"),
-			ExpectSuccess:     true,
-		},*/
+		/*		queryTest{
+					Query:             "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
+					BindVars:          map[string]interface{}{"title": "Book 02"},
+					ExpectSuccess:     true,
+					ExpectedDocuments: []interface{}{collectionData["books"][1]},
+					DocumentType:      reflect.TypeOf(Book{}),
+				},
+				queryTest{
+					Query:         "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
+					BindVars:      map[string]interface{}{"somethingelse": "Book 02"},
+					ExpectSuccess: false, // Unknown `@title`
+				},
+				queryTest{
+					Query:             "FOR u IN users FILTER u.age>100 SORT u.name RETURN u",
+					ExpectSuccess:     true,
+					ExpectedDocuments: []interface{}{},
+					DocumentType:      reflect.TypeOf(UserDoc{}),
+				},
+				queryTest{
+					Query:             "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
+					BindVars:          map[string]interface{}{"maxAge": 20},
+					ExpectSuccess:     true,
+					ExpectedDocuments: []interface{}{collectionData["users"][2], collectionData["users"][0], collectionData["users"][5]},
+					DocumentType:      reflect.TypeOf(UserDoc{}),
+				},
+				queryTest{
+					Query:         "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
+					BindVars:      map[string]interface{}{"maxage": 20},
+					ExpectSuccess: false, // `@maxage` versus `@maxAge`
+				},
+				queryTest{
+					Query:             "FOR u IN users SORT u.age RETURN u.age",
+					ExpectedDocuments: []interface{}{12, 12, 13, 25, 42, 67},
+					DocumentType:      reflect.TypeOf(12),
+					ExpectSuccess:     true,
+				},
+				queryTest{
+					Query:             "FOR p IN users COLLECT a = p.age WITH COUNT INTO c SORT a RETURN [a, c]",
+					ExpectedDocuments: []interface{}{[]int{12, 2}, []int{13, 1}, []int{25, 1}, []int{42, 1}, []int{67, 1}},
+					DocumentType:      reflect.TypeOf([]int{}),
+					ExpectSuccess:     true,
+				},
+				queryTest{
+					Query:             "FOR u IN users SORT u.name RETURN u.name",
+					ExpectedDocuments: []interface{}{"Blair", "Clair", "Jake", "John", "Johnny", "Zz"},
+					DocumentType:      reflect.TypeOf("foo"),
+					ExpectSuccess:     true,
+				},*/
 	}
 
 	var r driver.Response
@@ -247,7 +247,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 						t.Error("HasMore returned false, but ReadDocument returns a document")
 					}
 					result = append(result, doc.Elem().Interface())
-					if (wasForwarded(&r)) {
+					if wasForwarded(&r) {
 						someRequestForwarded = true
 					}
 					time.Sleep(200 * time.Millisecond)
