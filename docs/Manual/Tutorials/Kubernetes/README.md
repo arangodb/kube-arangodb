@@ -34,7 +34,7 @@ at cluster level.
 
 For now, any recent Kubernetes cluster will do (e.g. `minikube`).
 
-Then run (replace `<version>` with the version of the operator that you want to install):
+Then run (replace `<version>` with the version of the operator that you want to install, they all follow releases of this repositories):
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/crd.yaml
