@@ -472,3 +472,62 @@ Remove the collections with the replication factor of 1
 
 - [ ] The remaining `Pods` running on the `Node` must be restarted on another `Node`
 - [ ] After the `Pods` have restarted, the server must have the same data, except for the removed collections, and be responsive again
+
+### Test 7a: Test DC2DC on 2 clusters, running in the same Kubernetes cluster
+
+This test requires the use of the enterprise image.
+
+Create 2 `ArangoDeployment` of mode `Cluster` and dc2dc enabled.
+
+Hint: Derive from `tests/acceptance/cluster-sync.yaml`, name the deployments `cluster1` and `cluster2`.
+
+Make sure to include a name ('cluster1-to-2`) for an external access package.
+
+```yaml
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "cluster1"
+spec:
+  mode: Cluster
+  image: ewoutp/arangodb:3.3.10
+  sync:
+    enabled: true
+    externalAccess:
+      accessPackageSecretNames: ["cluster1-to-2"]
+```
+
+- [ ] The deployments must start
+- [ ] The deployments must yield 15 `Pods`
+- [ ] The deployments must yield a `Service` named `cluster[1|2]`
+- [ ] The deployments must yield a `Service` named `cluster[1|2]-ea`
+- [ ] The deployments must yield a `Service` named `cluster[1|2]-sync`
+- [ ] The `Services` named `cluster[1|2]-ea` must be accessible from outside (LoadBalancer or NodePort) and show WebUI
+
+Create an `ArangoDeploymentReplication` from `tests/acceptance/cluster12-replication.yaml`.
+
+It will take some time until the synchronization (from `cluster1` to `cluster2`) is configured.
+
+- [ ] The status of the `cluster12-replication` resource shows ....
+- [ ] The webUI of `cluster1` shows that you can create a new collection there.
+- [ ] The webUI of `cluster2` shows that you cannot create a new collection there.
+
+Create a collection named `testcol` with a replication factor 2 and 3 shards (using the webUI of `cluster1`).
+
+- [ ] The webUI of `cluster2` shows collection `testcol` with the given replication factor and number of shards.
+
+Create multiple documents in the collection named `testcol` (using the webUI of `cluster1`).
+
+- [ ] The documents are visible in webUI of `cluster2`.
+
+Modify multiple documents in the collection named `testcol` (using the webUI of `cluster1`).
+
+- [ ] The modified documents are visible in webUI of `cluster2`.
+
+Remove one or more documents from the collection named `testcol` (using the webUI of `cluster1`).
+
+- [ ] The documents are no longer visible in webUI of `cluster2`.
+
+Create a new database called `db2` (using the webUI of `cluster1`).
+
+- [ ] The webUI of `cluster2` shows database `db2`.
