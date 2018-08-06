@@ -63,7 +63,7 @@ func TestImmutableFields(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server to be completely ready
 	if err := waitUntilVersionUp(client, nil); err != nil {

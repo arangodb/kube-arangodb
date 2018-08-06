@@ -69,7 +69,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithRequireAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -118,7 +118,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithRequireAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -165,7 +165,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithSkipAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -208,7 +208,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithRequireAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -257,7 +257,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithRequireAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -304,7 +304,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 
 	// Create a database client
 	ctx := arangod.WithSkipAuthentication(context.Background())
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {

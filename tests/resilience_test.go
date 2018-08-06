@@ -68,7 +68,7 @@ func TestResiliencePod(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
@@ -149,7 +149,7 @@ func TestResiliencePVC(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
@@ -239,7 +239,7 @@ func TestResiliencePVDBServer(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
@@ -343,7 +343,7 @@ func TestResilienceService(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {

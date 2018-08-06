@@ -24,6 +24,7 @@ package tests
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"os"
@@ -39,9 +40,12 @@ import (
 	"github.com/arangodb/arangosync/client"
 	"github.com/arangodb/arangosync/tasks"
 	driver "github.com/arangodb/go-driver"
+	vst "github.com/arangodb/go-driver/vst"
+	vstProtocol "github.com/arangodb/go-driver/vst/protocol"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -59,6 +63,73 @@ var (
 	syncClientCache         client.ClientCache
 	showEnterpriseImageOnce sync.Once
 )
+
+// CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
+func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
+	config := driver.ClientConfig{}
+	connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName}, shortTimeout)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	// TODO deal with TLS with proper CA checking
+	conn, err := vst.NewConnection(connConfig)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+
+	// Create client
+	config = driver.ClientConfig{
+		Connection: conn,
+	}
+
+	auth := driver.BasicAuthentication("root", "")
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	config.Authentication = auth
+	c, err := driver.NewClient(config)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
+// createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
+func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (vst.ConnectionConfig, error) {
+	scheme := "http"
+	tlsConfig := &tls.Config{}
+	timeout := 90 * time.Second
+	if shortTimeout {
+		timeout = 100 * time.Millisecond
+	}
+	if apiObject != nil && apiObject.Spec.IsSecure() {
+		scheme = "https"
+		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	transport := vstProtocol.TransportConfig{
+		IdleConnTimeout: timeout,
+		Version:         vstProtocol.Version1_1,
+	}
+	connConfig := vst.ConnectionConfig{
+		TLSConfig: tlsConfig,
+		Transport: transport,
+	}
+	for _, dnsName := range dnsNames {
+		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
+	}
+	return connConfig, nil
+}
+
+// CreateArangodDatabaseVSTClient creates a go-driver client for accessing the entire cluster (or single server) via VST
+func createArangodDatabaseVSTClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
+	// Create connection
+	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
+	c, err := createArangodVSTClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
 
 // longOrSkip checks the short test flag.
 // If short is set, the current test is skipped.
@@ -99,10 +170,24 @@ func mustNewKubeClient(t *testing.T) kubernetes.Interface {
 	return c
 }
 
+// DatabaseClientOptions contains options for creating an ArangoDB database client.
+type DatabaseClientOptions struct {
+	ShortTimeout bool // If set, the connection timeout is set very short
+	UseVST       bool // If set, a VST connection is created instead of an HTTP connection
+}
+
 // mustNewArangodDatabaseClient creates a new database client,
 // failing the test on errors.
-func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) driver.Client {
-	c, err := arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject)
+func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T, options *DatabaseClientOptions) driver.Client {
+	var c driver.Client
+	var err error
+	shortTimeout := options != nil && options.ShortTimeout
+	useVST := options != nil && options.UseVST
+	if useVST {
+		c, err = createArangodDatabaseVSTClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
+	} else {
+		c, err = arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
+	}
 	if err != nil {
 		t.Fatalf("Failed to create arango database client: %v", err)
 	}

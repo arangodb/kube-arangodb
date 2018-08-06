@@ -63,7 +63,7 @@ func TestCursorSingle(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -107,7 +107,7 @@ func TestCursorActiveFailover(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -151,7 +151,7 @@ func TestCursorCluster(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
