@@ -155,7 +155,8 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	// keep track of whether at least one request was forwarded internally to the
 	// correct coordinator behind the load balancer
-	someRequestForwarded := false
+	someRequestsForwarded := false
+	someRequestsNotForwarded := false
 
 	// Run tests for every context alternative
 	for i, test := range tests {
@@ -189,7 +190,9 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 				}
 				result = append(result, doc.Elem().Interface())
 				if wasForwarded(r) {
-					someRequestForwarded = true
+					someRequestsForwarded = true
+				} else {
+					someRequestsNotForwarded = true
 				}
 				time.Sleep(200 * time.Millisecond)
 			}
@@ -214,7 +217,10 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 		}
 	}
 
-	if !someRequestForwarded {
+	if !someRequestsForwarded {
 		t.Error("Did not detect any request being forwarded behind load balancer!")
+	}
+	if !someRequestsNotForwarded {
+		t.Error("Did not detect any request NOT being forwarded behind load balancer!")
 	}
 }
