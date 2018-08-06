@@ -92,7 +92,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 
 	// Create a database client
 	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t)
+	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t, nil)
 	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Cleanup
@@ -142,9 +142,9 @@ func TestMultiDeployment(t *testing.T) {
 
 	// Create a database clients
 	ctx := context.Background()
-	DBClient1 := mustNewArangodDatabaseClient(ctx, kubecli, deployment1, t)
+	DBClient1 := mustNewArangodDatabaseClient(ctx, kubecli, deployment1, t, nil)
 	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
-	DBClient2 := mustNewArangodDatabaseClient(ctx, kubecli, deployment2, t)
+	DBClient2 := mustNewArangodDatabaseClient(ctx, kubecli, deployment2, t, nil)
 	require.NoError(t, waitUntilArangoDeploymentHealthy(deployment1, DBClient1, kubecli, ""), fmt.Sprintf("Deployment not healthy in time: %v", err))
 
 	// Test if we are able to create a collections in both deployments.

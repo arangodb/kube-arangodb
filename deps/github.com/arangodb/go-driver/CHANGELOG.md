@@ -39,7 +39,6 @@
 
 - Added Collection.ReadDocuments [\#133](https://github.com/arangodb/go-driver/pull/133)
 - Added support for fetching job ID in CleanoutServer [\#131](https://github.com/arangodb/go-driver/pull/131)
-- Exclude high load test on VST+3.2 [\#129](https://github.com/arangodb/go-driver/pull/129)
 - Test/prevent concurrent vst read write [\#128](https://github.com/arangodb/go-driver/pull/128)
 - Added single+ssl tests. All tests now use starter [\#127](https://github.com/arangodb/go-driver/pull/127)
 - Bugfix/read chunk loop [\#126](https://github.com/arangodb/go-driver/pull/126)

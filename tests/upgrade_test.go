@@ -109,7 +109,7 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 
 	// Create a database client
 	ctx := context.Background()
-	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t)
+	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t, nil)
 
 	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, ""); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)

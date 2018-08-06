@@ -142,7 +142,8 @@ func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, 
 		dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), m.ID)
 		dnsNames = append(dnsNames, dnsName)
 	}
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, dnsNames)
+	shortTimeout := false
+	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, dnsNames, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}

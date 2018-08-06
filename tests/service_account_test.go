@@ -73,7 +73,7 @@ func TestServiceAccountSingle(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -122,7 +122,7 @@ func TestServiceAccountActiveFailover(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -173,7 +173,7 @@ func TestServiceAccountCluster(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -230,7 +230,7 @@ func TestServiceAccountClusterWithSync(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be available
 	if err := waitUntilVersionUp(client, nil); err != nil {

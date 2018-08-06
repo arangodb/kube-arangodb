@@ -23,7 +23,11 @@
 package k8sutil
 
 import (
+	"fmt"
+	"math/rand"
+	"net"
 	"strconv"
+	"strings"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,4 +167,67 @@ func createService(kubecli kubernetes.Interface, svcName, deploymentName, ns, cl
 		return false, maskAny(err)
 	}
 	return true, nil
+}
+
+// CreateServiceURL creates a URL used to reach the given service.
+func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.ServicePort) bool, nodeFetcher func() (v1.NodeList, error)) (string, error) {
+	var port int32
+	var nodePort int32
+	portFound := false
+	for _, p := range svc.Spec.Ports {
+		if portPredicate == nil || portPredicate(p) {
+			port = p.Port
+			nodePort = p.NodePort
+			portFound = true
+			break
+		}
+	}
+	if !portFound {
+		return "", maskAny(fmt.Errorf("Cannot find port in service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+	}
+
+	var host string
+	switch svc.Spec.Type {
+	case v1.ServiceTypeLoadBalancer:
+		for _, x := range svc.Status.LoadBalancer.Ingress {
+			if x.IP != "" {
+				host = x.IP
+				break
+			} else if x.Hostname != "" {
+				host = x.Hostname
+				break
+			}
+		}
+		if host == "" {
+			host = svc.Spec.LoadBalancerIP
+		}
+	case v1.ServiceTypeNodePort:
+		if nodePort > 0 {
+			port = nodePort
+		}
+		nodeList, err := nodeFetcher()
+		if err != nil {
+			return "", maskAny(err)
+		}
+		if len(nodeList.Items) == 0 {
+			return "", maskAny(fmt.Errorf("No nodes found"))
+		}
+		node := nodeList.Items[rand.Intn(len(nodeList.Items))]
+		if len(node.Status.Addresses) > 0 {
+			host = node.Status.Addresses[0].Address
+		}
+	case v1.ServiceTypeClusterIP:
+		if svc.Spec.ClusterIP != "None" {
+			host = svc.Spec.ClusterIP
+		}
+	default:
+		return "", maskAny(fmt.Errorf("Unknown service type '%s' in service '%s.%s'", svc.Spec.Type, svc.GetName(), svc.GetNamespace()))
+	}
+	if host == "" {
+		return "", maskAny(fmt.Errorf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+	}
+	if !strings.HasSuffix(scheme, "://") {
+		scheme = scheme + "://"
+	}
+	return scheme + net.JoinHostPort(host, strconv.Itoa(int(port))), nil
 }

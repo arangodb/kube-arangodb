@@ -1,11 +1,23 @@
 import React, { Component } from 'react';
-import api from '../api/api.js';
-import Login from './Login.js';
-import Loading from '../util/Loading.js';
-import LogoutContext from './LogoutContext.js';
-import { getSessionItem, setSessionItem } from "../util/Storage.js";
+
+import { getSessionItem, setSessionItem } from '../util/Storage';
+import api from '../api/api';
+import Loading from '../util/Loading';
+import Login from './Login';
+import LogoutContext from './LogoutContext';
 
 const tokenSessionKey = "auth-token";
+
+// withAuth adds a doLogout property to the given component.
+export function withAuth(WrappedComponent) {
+  return function AuthAwareComponent(props) {
+      return (
+        <LogoutContext.Consumer>
+          {doLogout => <WrappedComponent {...props} doLogout={doLogout} />}
+        </LogoutContext.Consumer>
+      );
+  }
+}
 
 class Auth extends Component {
   state = {

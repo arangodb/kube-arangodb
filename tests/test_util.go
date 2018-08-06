@@ -65,9 +65,9 @@ var (
 )
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
+func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
 	config := driver.ClientConfig{}
-	connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
+	connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName}, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -107,8 +107,8 @@ func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Int
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	transport := vstProtocol.TransportConfig{
-		IdleConnTimeout:	timeout,
-		Version: 					vstProtocol.Version1_1,
+		IdleConnTimeout: timeout,
+		Version:         vstProtocol.Version1_1,
 	}
 	connConfig := vst.ConnectionConfig{
 		TLSConfig: tlsConfig,
@@ -170,13 +170,20 @@ func mustNewKubeClient(t *testing.T) kubernetes.Interface {
 	return c
 }
 
+// DatabaseClientOptions contains options for creating an ArangoDB database client.
+type DatabaseClientOptions struct {
+	ShortTimeout bool // If set, the connection timeout is set very short
+	UseVST       bool // If set, a VST connection is created instead of an HTTP connection
+}
+
 // mustNewArangodDatabaseClient creates a new database client,
 // failing the test on errors.
-func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T, flags ...bool) driver.Client {
+func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T, options *DatabaseClientOptions) driver.Client {
 	var c driver.Client
 	var err error
-	bool shortTimeout = len(flags) > 0 && flags[0]
-	if len(flags) > 1 && flags[1] {
+	shortTimeout := options != nil && options.ShortTimeout
+	useVST := options != nil && options.UseVST
+	if useVST {
 		c, err = createArangodDatabaseVSTClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
 	} else {
 		c, err = arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)

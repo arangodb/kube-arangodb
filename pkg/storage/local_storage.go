@@ -174,6 +174,14 @@ func (ls *LocalStorage) run() {
 	ls.image = image
 	ls.imagePullPolicy = pullPolicy
 
+	// Set state
+	if ls.status.State == api.LocalStorageStateNone {
+		ls.status.State = api.LocalStorageStateCreating
+		if err := ls.updateCRStatus(); err != nil {
+			ls.createEvent(k8sutil.NewErrorEvent("Failed to update LocalStorage state", err, ls.apiObject))
+		}
+	}
+
 	// Create StorageClass
 	if err := ls.ensureStorageClass(ls.apiObject); err != nil {
 		ls.failOnError(err, "Failed to create storage class")
@@ -260,6 +268,13 @@ func (ls *LocalStorage) run() {
 					recentInspectionErrors++
 				}
 			} else {
+				if ls.status.State == api.LocalStorageStateCreating || ls.status.State == api.LocalStorageStateNone {
+					ls.status.State = api.LocalStorageStateRunning
+					if err := ls.updateCRStatus(); err != nil {
+						hasError = true
+						ls.createEvent(k8sutil.NewErrorEvent("Failed to update LocalStorage state", err, ls.apiObject))
+					}
+				}
 				recentInspectionErrors = 0
 			}
 

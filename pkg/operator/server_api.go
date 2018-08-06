@@ -60,3 +60,69 @@ func (o *Operator) GetDeployment(name string) (server.Deployment, error) {
 	}
 	return nil, maskAny(server.NotFoundError)
 }
+
+// DeploymentReplicationOperator provides access to the deployment replication operator.
+func (o *Operator) DeploymentReplicationOperator() server.DeploymentReplicationOperator {
+	return o
+}
+
+// GetDeploymentReplications returns all current deployments
+func (o *Operator) GetDeploymentReplications() ([]server.DeploymentReplication, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	result := make([]server.DeploymentReplication, 0, len(o.deploymentReplications))
+	for _, d := range o.deploymentReplications {
+		result = append(result, d)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() < result[j].Name()
+	})
+	return result, nil
+}
+
+// GetDeploymentReplication returns detailed information for a deployment replication, managed by the operator, with given name
+func (o *Operator) GetDeploymentReplication(name string) (server.DeploymentReplication, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	for _, d := range o.deploymentReplications {
+		if d.Name() == name {
+			return d, nil
+		}
+	}
+	return nil, maskAny(server.NotFoundError)
+}
+
+// StorageOperator provides the local storage operator (if any)
+func (o *Operator) StorageOperator() server.StorageOperator {
+	return o
+}
+
+// GetLocalStorages returns basic information for all local storages managed by the operator
+func (o *Operator) GetLocalStorages() ([]server.LocalStorage, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	result := make([]server.LocalStorage, 0, len(o.localStorages))
+	for _, ls := range o.localStorages {
+		result = append(result, ls)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() < result[j].Name()
+	})
+	return result, nil
+}
+
+// GetLocalStorage returns detailed information for a local, managed by the operator, with given name
+func (o *Operator) GetLocalStorage(name string) (server.LocalStorage, error) {
+	o.Dependencies.LivenessProbe.Lock()
+	defer o.Dependencies.LivenessProbe.Unlock()
+
+	for _, ls := range o.localStorages {
+		if ls.Name() == name {
+			return ls, nil
+		}
+	}
+	return nil, maskAny(server.NotFoundError)
+}

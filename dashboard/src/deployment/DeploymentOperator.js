@@ -1,29 +1,16 @@
-import React, { Component } from 'react';
-import LogoutContext from '../auth/LogoutContext.js';
-import DeploymentDetails from './DeploymentDetails.js';
-import DeploymentList from './DeploymentList.js';
-import { Header, Menu, Message, Segment } from 'semantic-ui-react';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
-import styled from 'react-emotion';
+import { Header, Menu, Message, Segment } from 'semantic-ui-react';
+import React, { Component } from 'react';
 
-const StyledMenu = styled(Menu)`
-  width: 15rem !important;
-  @media (max-width: 768px) {
-    width: 10rem !important;
-  }
-`;
-
-const StyledContentBox = styled('div')`
-  margin-left: 15rem;
-  @media (max-width: 768px) {
-    margin-left: 10rem;
-  }
-`;
+import { StyledMenu, StyledContentBox } from '../style/style';
+import DeploymentDetails from './DeploymentDetails';
+import DeploymentList from './DeploymentList';
+import LogoutContext from '../auth/LogoutContext';
 
 const ListView = () => (
   <div>
     <Header dividing>
-      ArangoDeployments
+      ArangoDeployment resources
     </Header>
     <DeploymentList/>
   </div>
@@ -47,10 +34,16 @@ class DeploymentOperator extends Component {
             {doLogout => 
               <StyledMenu fixed="left" vertical>
                 <Menu.Item>
-                  <Link to="/">Deployments</Link>
-                </Menu.Item>
-                <Menu.Item position="right" onClick={() => doLogout()}>
-                  Logout
+                  <Menu.Header>Deployment Operator</Menu.Header>
+                    <Menu.Menu>
+                      <Menu.Item>
+                        <Link to="/">Deployments</Link>
+                      </Menu.Item>
+                      <Menu.Item position="right" onClick={() => doLogout()}>
+                        Logout
+                      </Menu.Item>
+                    </Menu.Menu>
+                  {this.props.commonMenuItems}
                 </Menu.Item>
               </StyledMenu>
             }

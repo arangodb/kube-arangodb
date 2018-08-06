@@ -1,20 +1,12 @@
-import ReactTimeout from 'react-timeout';
-import React, { Component } from 'react';
-import api from '../api/api.js';
-import Loading from '../util/Loading.js';
-import MemberList from './MemberList.js';
-import styled from 'react-emotion';
 import { Loader } from 'semantic-ui-react';
+import React, { Component } from 'react';
+import ReactTimeout from 'react-timeout';
 
-const LoaderBox = styled('span')`
-  float: right;
-  width: 0;
-  padding-right: 1em;
-  margin-right: 1em;
-  margin-top: 1em;
-  max-width: 0;
-  display: inline-block;
-`;
+import { LoaderBox } from '../style/style';
+import { withAuth } from '../auth/Auth.js';
+import api, { isUnauthorized } from '../api/api';
+import Loading from '../util/Loading';
+import MemberList from './MemberList';
 
 const MemberGroupsView = ({memberGroups, namespace}) => (
   <div>
@@ -39,7 +31,9 @@ class DeploymentDetails extends Component {
 
   reloadDeployment = async() => {
     try {
-      this.setState({loading:true});
+      this.setState({
+        loading: true
+      });
       const result = await api.get(`/api/deployment/${this.props.name}`);
       this.setState({
         deployment: result,
@@ -51,6 +45,10 @@ class DeploymentDetails extends Component {
         loading: false,
         error: e.message
       });
+      if (isUnauthorized(e)) {
+        this.props.doLogout();
+        return;
+      }
     }
     this.props.setTimeout(this.reloadDeployment, 5000);
   }
@@ -65,8 +63,8 @@ class DeploymentDetails extends Component {
         <LoaderBox><Loader size="mini" active={this.state.loading} inline/></LoaderBox>
         <MemberGroupsView memberGroups={d.member_groups} namespace={d.namespace}/>
       </div>
-    );
+      );
   }
 }
 
-export default ReactTimeout(DeploymentDetails);
+export default ReactTimeout(withAuth(DeploymentDetails));

@@ -33,14 +33,17 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestLoadBalancingCursorVST(t *testing.T) {
+	longOrSkip(t)
 	// run with VST
 	loadBalancingCursorSubtest(t, true)
 }
 
 func TestLoadBalancingCursorHTTP(t *testing.T) {
+	longOrSkip(t)
 	// run with HTTP
 	loadBalancingCursorSubtest(t, false)
 }
@@ -57,9 +60,15 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-lb-" + uniuri.NewLen(4))
+	namePrefix := "test-lb-"
+	if useVst {
+		namePrefix += "vst-"
+	} else {
+		namePrefix += "http-"
+	}
+	depl := newDeployment(namePrefix + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
-	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.13")
+	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.13") // Note: 3.3.13 is the first version supporting the cursor forwarding feature.
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -77,7 +86,11 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, useVst)
+	clOpts := &DatabaseClientOptions{
+		UseVST:       useVst,
+		ShortTimeout: true,
+	}
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, clOpts)
 
 	// Wait for cluster to be available
 	if err := waitUntilVersionUp(client, nil); err != nil {
@@ -137,78 +150,66 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	}
 
 	var r driver.Response
-	// Setup context alternatives
-	contexts := []queryTestContext{
-		queryTestContext{driver.WithResponse(driver.WithQueryBatchSize(nil, 1), &r), false},
-	}
+	// Setup context
+	ctx = driver.WithResponse(driver.WithQueryBatchSize(nil, 1), &r)
 
 	// keep track of whether at least one request was forwarded internally to the
 	// correct coordinator behind the load balancer
 	someRequestForwarded := false
 
 	// Run tests for every context alternative
-	for _, qctx := range contexts {
-		ctx := qctx.Context
-		for i, test := range tests {
-			cursor, err := db.Query(ctx, test.Query, test.BindVars)
-			if err == nil {
-				// Close upon exit of the function
-				defer cursor.Close()
+	for i, test := range tests {
+		cursor, err := db.Query(ctx, test.Query, test.BindVars)
+		if err == nil {
+			// Close upon exit of the function
+			defer cursor.Close()
+		}
+		if test.ExpectSuccess {
+			if err != nil {
+				t.Errorf("Expected success in query %d (%s), got '%s'", i, test.Query, err)
+				continue
 			}
-			if test.ExpectSuccess {
-				if err != nil {
-					t.Errorf("Expected success in query %d (%s), got '%s'", i, test.Query, err)
-					continue
+			if count := cursor.Count(); count != 0 {
+				t.Errorf("Expected count of 0, got %d in query %d (%s)", count, i, test.Query)
+			}
+			var result []interface{}
+			for {
+				hasMore := cursor.HasMore()
+				doc := reflect.New(test.DocumentType)
+				if _, err := cursor.ReadDocument(ctx, doc.Interface()); driver.IsNoMoreDocuments(err) {
+					if hasMore {
+						t.Error("HasMore returned true, but ReadDocument returns a IsNoMoreDocuments error")
+					}
+					break
+				} else if err != nil {
+					t.Errorf("Failed to result document %d: %s", len(result), err)
 				}
-				count := cursor.Count()
-				if qctx.ExpectCount {
-					if count != int64(len(test.ExpectedDocuments)) {
-						t.Errorf("Expected count of %d, got %d in query %d (%s)", len(test.ExpectedDocuments), count, i, test.Query)
-					}
-				} else {
-					if count != 0 {
-						t.Errorf("Expected count of 0, got %d in query %d (%s)", count, i, test.Query)
-					}
+				if !hasMore {
+					t.Error("HasMore returned false, but ReadDocument returns a document")
 				}
-				var result []interface{}
-				for {
-					hasMore := cursor.HasMore()
-					doc := reflect.New(test.DocumentType)
-					if _, err := cursor.ReadDocument(ctx, doc.Interface()); driver.IsNoMoreDocuments(err) {
-						if hasMore {
-							t.Error("HasMore returned true, but ReadDocument returns a IsNoMoreDocuments error")
-						}
-						break
-					} else if err != nil {
-						t.Errorf("Failed to result document %d: %s", len(result), err)
-					}
-					if !hasMore {
-						t.Error("HasMore returned false, but ReadDocument returns a document")
-					}
-					result = append(result, doc.Elem().Interface())
-					if (wasForwarded(r)) {
-						someRequestForwarded = true
-					}
-					time.Sleep(200 * time.Millisecond)
+				result = append(result, doc.Elem().Interface())
+				if wasForwarded(r) {
+					someRequestForwarded = true
 				}
-				if len(result) != len(test.ExpectedDocuments) {
-					t.Errorf("Expected %d documents, got %d in query %d (%s)", len(test.ExpectedDocuments), len(result), i, test.Query)
-				} else {
-					for resultIdx, resultDoc := range result {
-						if !reflect.DeepEqual(resultDoc, test.ExpectedDocuments[resultIdx]) {
-							t.Errorf("Unexpected document in query %d (%s) at index %d: got %+v, expected %+v", i, test.Query, resultIdx, resultDoc, test.ExpectedDocuments[resultIdx])
-						}
-					}
-				}
-				// Close anyway (this tests calling Close more than once)
-				if err := cursor.Close(); err != nil {
-					t.Errorf("Expected success in Close of cursor from query %d (%s), got '%s'", i, test.Query, err)
-				}
+				time.Sleep(200 * time.Millisecond)
+			}
+			if len(result) != len(test.ExpectedDocuments) {
+				t.Errorf("Expected %d documents, got %d in query %d (%s)", len(test.ExpectedDocuments), len(result), i, test.Query)
 			} else {
-				if err == nil {
-					t.Errorf("Expected error in query %d (%s), got '%s'", i, test.Query, err)
-					continue
+				for resultIdx, resultDoc := range result {
+					if !reflect.DeepEqual(resultDoc, test.ExpectedDocuments[resultIdx]) {
+						t.Errorf("Unexpected document in query %d (%s) at index %d: got %+v, expected %+v", i, test.Query, resultIdx, resultDoc, test.ExpectedDocuments[resultIdx])
+					}
 				}
+			}
+			// Close anyway (this tests calling Close more than once)
+			if err := cursor.Close(); err != nil {
+				t.Errorf("Expected success in Close of cursor from query %d (%s), got '%s'", i, test.Query, err)
+			}
+		} else {
+			if err == nil {
+				t.Errorf("Expected error in query %d (%s), got '%s'", i, test.Query, err)
+				continue
 			}
 		}
 	}
