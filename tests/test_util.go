@@ -95,16 +95,20 @@ func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Inte
 }
 
 // createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
-func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (vst.ConnectionConfig, error) {
+func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (vst.ConnectionConfig, error) {
 	scheme := "http"
 	tlsConfig := &tls.Config{}
+	timeout := 90 * time.Second
+	if shortTimeout {
+		timeout = 100 * time.Millisecond
+	}
 	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		tlsConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	transport := vstProtocol.TransportConfig{
-		IdleConnTimeout: 100 * time.Millisecond,
-		Version:         vstProtocol.Version1_1,
+		IdleConnTimeout:	timeout,
+		Version: 					vstProtocol.Version1_1,
 	}
 	connConfig := vst.ConnectionConfig{
 		TLSConfig: tlsConfig,
@@ -117,10 +121,10 @@ func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Int
 }
 
 // CreateArangodDatabaseVSTClient creates a go-driver client for accessing the entire cluster (or single server) via VST
-func CreateArangodDatabaseVSTClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
+func createArangodDatabaseVSTClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodVSTClientForDNSName(ctx, cli, apiObject, dnsName)
+	c, err := createArangodVSTClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -168,13 +172,14 @@ func mustNewKubeClient(t *testing.T) kubernetes.Interface {
 
 // mustNewArangodDatabaseClient creates a new database client,
 // failing the test on errors.
-func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T, useVst ...bool) driver.Client {
+func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T, flags ...bool) driver.Client {
 	var c driver.Client
 	var err error
-	if len(useVst) > 0 && useVst[0] {
-		c, err = CreateArangodDatabaseVSTClient(ctx, kubecli.CoreV1(), apiObject)
+	bool shortTimeout = len(flags) > 0 && flags[0]
+	if len(flags) > 1 && flags[1] {
+		c, err = createArangodDatabaseVSTClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
 	} else {
-		c, err = arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject)
+		c, err = arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
 	}
 	if err != nil {
 		t.Fatalf("Failed to create arango database client: %v", err)

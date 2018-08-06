@@ -37,21 +37,21 @@ import (
 
 func TestLoadBalancingCursorVST(t *testing.T) {
 	// run with VST
-	LoadBalancingCursorSubtest(t, true)
+	loadBalancingCursorSubtest(t, true)
 }
 
 func TestLoadBalancingCursorHTTP(t *testing.T) {
 	// run with HTTP
-	LoadBalancingCursorSubtest(t, false)
+	loadBalancingCursorSubtest(t, false)
 }
 
-func wasForwarded(r *driver.Response) bool {
-	h := (*r).Header("x-arango-request-served-by")
+func wasForwarded(r driver.Response) bool {
+	h := r.Header("x-arango-request-forwarded-to")
 	return h != ""
 }
 
 // tests cursor forwarding with load-balanced conn.
-func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
+func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
@@ -59,8 +59,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	// Prepare deployment config
 	depl := newDeployment("test-lb-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
-	image := "dhly/arangodb:3.3.11-local"
-	depl.Spec.Image = &image
+	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.13")
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -135,72 +134,12 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 			ExpectedDocuments: collectionData["books"],
 			DocumentType:      reflect.TypeOf(Book{}),
 		},
-		/*		queryTest{
-					Query:             "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
-					BindVars:          map[string]interface{}{"title": "Book 02"},
-					ExpectSuccess:     true,
-					ExpectedDocuments: []interface{}{collectionData["books"][1]},
-					DocumentType:      reflect.TypeOf(Book{}),
-				},
-				queryTest{
-					Query:         "FOR d IN books FILTER d.Title==@title SORT d.Title RETURN d",
-					BindVars:      map[string]interface{}{"somethingelse": "Book 02"},
-					ExpectSuccess: false, // Unknown `@title`
-				},
-				queryTest{
-					Query:             "FOR u IN users FILTER u.age>100 SORT u.name RETURN u",
-					ExpectSuccess:     true,
-					ExpectedDocuments: []interface{}{},
-					DocumentType:      reflect.TypeOf(UserDoc{}),
-				},
-				queryTest{
-					Query:             "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
-					BindVars:          map[string]interface{}{"maxAge": 20},
-					ExpectSuccess:     true,
-					ExpectedDocuments: []interface{}{collectionData["users"][2], collectionData["users"][0], collectionData["users"][5]},
-					DocumentType:      reflect.TypeOf(UserDoc{}),
-				},
-				queryTest{
-					Query:         "FOR u IN users FILTER u.age<@maxAge SORT u.name RETURN u",
-					BindVars:      map[string]interface{}{"maxage": 20},
-					ExpectSuccess: false, // `@maxage` versus `@maxAge`
-				},
-				queryTest{
-					Query:             "FOR u IN users SORT u.age RETURN u.age",
-					ExpectedDocuments: []interface{}{12, 12, 13, 25, 42, 67},
-					DocumentType:      reflect.TypeOf(12),
-					ExpectSuccess:     true,
-				},
-				queryTest{
-					Query:             "FOR p IN users COLLECT a = p.age WITH COUNT INTO c SORT a RETURN [a, c]",
-					ExpectedDocuments: []interface{}{[]int{12, 2}, []int{13, 1}, []int{25, 1}, []int{42, 1}, []int{67, 1}},
-					DocumentType:      reflect.TypeOf([]int{}),
-					ExpectSuccess:     true,
-				},
-				queryTest{
-					Query:             "FOR u IN users SORT u.name RETURN u.name",
-					ExpectedDocuments: []interface{}{"Blair", "Clair", "Jake", "John", "Johnny", "Zz"},
-					DocumentType:      reflect.TypeOf("foo"),
-					ExpectSuccess:     true,
-				},*/
 	}
 
 	var r driver.Response
 	// Setup context alternatives
 	contexts := []queryTestContext{
-		/*queryTestContext{driver.WithResponse(nil, &r), false},
-		queryTestContext{driver.WithResponse(context.Background(), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil), &r), true},
-		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil, true), &r), true},
-		queryTestContext{driver.WithResponse(driver.WithQueryCount(nil, false), &r), false},*/
 		queryTestContext{driver.WithResponse(driver.WithQueryBatchSize(nil, 1), &r), false},
-		/*queryTestContext{driver.WithResponse(driver.WithQueryCache(nil), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryCache(nil, true), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryCache(nil, false), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryMemoryLimit(nil, 60000), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryTTL(nil, time.Minute), &r), false},
-		queryTestContext{driver.WithResponse(driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), &r), true},
-		queryTestContext{driver.WithResponse(driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), &r), true},*/
 	}
 
 	// keep track of whether at least one request was forwarded internally to the
@@ -247,7 +186,7 @@ func LoadBalancingCursorSubtest(t *testing.T, useVst bool) {
 						t.Error("HasMore returned false, but ReadDocument returns a document")
 					}
 					result = append(result, doc.Elem().Interface())
-					if wasForwarded(&r) {
+					if (wasForwarded(r)) {
 						someRequestForwarded = true
 					}
 					time.Sleep(200 * time.Millisecond)

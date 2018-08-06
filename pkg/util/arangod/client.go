@@ -65,6 +65,31 @@ var (
 		Proxy: nhttp.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
+			KeepAlive: 90 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	sharedHTTPSTransport = &nhttp.Transport{
+		Proxy: nhttp.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 90 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
+	sharedHTTPTransportShortTimeout = &nhttp.Transport{
+		Proxy: nhttp.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
 			KeepAlive: 100 * time.Millisecond,
 			DualStack: true,
 		}).DialContext,
@@ -73,7 +98,7 @@ var (
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
-	sharedHTTPSTransport = &nhttp.Transport{
+	sharedHTTPSTransportShortTimeout = &nhttp.Transport{
 		Proxy: nhttp.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
@@ -92,7 +117,7 @@ var (
 func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -100,10 +125,10 @@ func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObj
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName)
+	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -147,7 +172,7 @@ func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, 
 func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSName(deployment, role, id)
-	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName)
+	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName, false)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -155,8 +180,8 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string) (driver.Client, error) {
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, []string{dnsName})
+func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
+	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, []string{dnsName}, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -183,12 +208,18 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 }
 
 // createArangodHTTPConfigForDNSNames creates a go-driver HTTP connection config for a given DNS names.
-func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string) (http.ConnectionConfig, error) {
+func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (http.ConnectionConfig, error) {
 	scheme := "http"
 	transport := sharedHTTPTransport
+	if shortTimeout {
+		transport = sharedHTTPTransportShortTimeout
+	}
 	if apiObject != nil && apiObject.Spec.IsSecure() {
 		scheme = "https"
 		transport = sharedHTTPSTransport
+		if shortTimeout {
+			transport = sharedHTTPSTransportShortTimeout
+		}
 	}
 	connConfig := http.ConnectionConfig{
 		Transport:          transport,
