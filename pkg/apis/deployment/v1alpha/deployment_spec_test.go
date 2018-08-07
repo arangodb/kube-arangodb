@@ -45,22 +45,39 @@ func TestDeploymentSpecSetDefaults(t *testing.T) {
 
 func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 	tests := []struct {
-		Original DeploymentSpec
-		Target   DeploymentSpec
-		Expected DeploymentSpec
-		Result   []string
+		Original      DeploymentSpec
+		Target        DeploymentSpec
+		Expected      DeploymentSpec
+		ApplyDefaults bool
+		Result        []string
 	}{
 		// Valid "changes"
 		{
 			DeploymentSpec{Image: util.NewString("foo")},
 			DeploymentSpec{Image: util.NewString("foo2")},
 			DeploymentSpec{Image: util.NewString("foo2")},
+			false,
+			nil,
+		},
+		{
+			DeploymentSpec{Image: util.NewString("foo")},
+			DeploymentSpec{Image: util.NewString("foo2")},
+			DeploymentSpec{Image: util.NewString("foo2")},
+			true,
 			nil,
 		},
 		{
 			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
 			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
 			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			false,
+			nil,
+		},
+		{
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullAlways)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			DeploymentSpec{ImagePullPolicy: util.NewPullPolicy(v1.PullNever)},
+			true,
 			nil,
 		},
 
@@ -69,12 +86,31 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
 			DeploymentSpec{Mode: NewMode(DeploymentModeCluster)},
 			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
+			false,
 			[]string{"mode"},
+		},
+		{
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeCluster)},
+			DeploymentSpec{Mode: NewMode(DeploymentModeSingle)},
+			true,
+			[]string{"mode", "agents.count"},
 		},
 	}
 
 	for _, test := range tests {
+		if test.ApplyDefaults {
+			test.Original.SetDefaults("foo")
+			test.Expected.SetDefaults("foo")
+			test.Target.SetDefaultsFrom(test.Original)
+			test.Target.SetDefaults("foo")
+		}
 		result := test.Original.ResetImmutableFields(&test.Target)
+		if test.ApplyDefaults {
+			if len(result) > 0 {
+				test.Target.SetDefaults("foo")
+			}
+		}
 		assert.Equal(t, test.Result, result)
 		assert.Equal(t, test.Expected, test.Target)
 	}
