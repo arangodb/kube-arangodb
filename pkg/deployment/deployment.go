@@ -292,6 +292,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
+		newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
 	}
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
