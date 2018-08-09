@@ -29,6 +29,7 @@ def fetchParamsFromGitLog() {
     // Is this a LONG test?
     if ("${env.JOB_NAME}" == "kube-arangodb-long") {
         myParams["LONG"] = true;
+        myParams["KUBECONFIGS"] = "gke-jenkins-1";
     }
 
     // Fetch params configured in git commit messages 
