@@ -22,7 +22,7 @@ it is intended to be.
 ### Production readiness state
 
 | Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks |
-|----------------------|--------------------|------------------|-------|------------------|
+|----------------------|--------------------|------------------|-------|------------------|-|
 | Google GKE           | 1.10               | >= 3.3.13        | Runs  | No               | Don't use micro nodes |
 | Amazon EKS           | 1.10               | >= 3.3.13        | Runs  | No               |
 | Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |
