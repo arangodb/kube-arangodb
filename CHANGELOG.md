@@ -1,5 +1,36 @@
 # Change Log
 
+## [Unreleased](https://github.com/arangodb/kube-arangodb/tree/HEAD)
+
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.2...HEAD)
+
+**Closed issues:**
+
+- Use go-upgrade-rules [\#234](https://github.com/arangodb/kube-arangodb/issues/234)
+- Spot the difference [\#225](https://github.com/arangodb/kube-arangodb/issues/225)
+- How to Delete ArangoDeployment [\#224](https://github.com/arangodb/kube-arangodb/issues/224)
+- Unable to delete pods, stuck in terminating state [\#220](https://github.com/arangodb/kube-arangodb/issues/220)
+
+**Merged pull requests:**
+
+- Include license in upgrade check [\#237](https://github.com/arangodb/kube-arangodb/pull/237)
+- Use new CurrentImage field to prevent unintended upgrades. [\#236](https://github.com/arangodb/kube-arangodb/pull/236)
+- Use go-upgrade-rules to make "is upgrade allowed" decision fixes \#234 [\#235](https://github.com/arangodb/kube-arangodb/pull/235)
+- Updated versions to known "proper" versions [\#233](https://github.com/arangodb/kube-arangodb/pull/233)
+- Applying defaults after immutable fields have been reset [\#232](https://github.com/arangodb/kube-arangodb/pull/232)
+- Updated go-driver to latest version [\#231](https://github.com/arangodb/kube-arangodb/pull/231)
+- EE note for Kubernetes DC2DC [\#222](https://github.com/arangodb/kube-arangodb/pull/222)
+- Load balancing tests [\#218](https://github.com/arangodb/kube-arangodb/pull/218)
+- Add links to other operators in dashboard menu [\#217](https://github.com/arangodb/kube-arangodb/pull/217)
+- Grouping style elements in 1 place [\#216](https://github.com/arangodb/kube-arangodb/pull/216)
+- Adding ArangoDeploymentReplication dashboard. [\#215](https://github.com/arangodb/kube-arangodb/pull/215)
+- Do not build initcontainer for imageid pod [\#214](https://github.com/arangodb/kube-arangodb/pull/214)
+- Dashboard for ArangoLocalStorage operator [\#213](https://github.com/arangodb/kube-arangodb/pull/213)
+- Adjust documentation based on new load balancer support. [\#212](https://github.com/arangodb/kube-arangodb/pull/212)
+- Feature/dashboard [\#211](https://github.com/arangodb/kube-arangodb/pull/211)
+- Use gin as HTTP server framework [\#210](https://github.com/arangodb/kube-arangodb/pull/210)
+- Dashboard design concept [\#209](https://github.com/arangodb/kube-arangodb/pull/209)
+
 ## [0.2.2](https://github.com/arangodb/kube-arangodb/tree/0.2.2) (2018-06-29)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.1...0.2.2)
 

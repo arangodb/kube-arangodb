@@ -83,7 +83,8 @@ func (cc *clientCache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli.CoreV1(), cc.apiObject)
+	shortTimeout := false
+	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli.CoreV1(), cc.apiObject, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}

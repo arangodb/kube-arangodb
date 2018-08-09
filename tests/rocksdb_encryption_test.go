@@ -79,7 +79,7 @@ func TestRocksDBEncryptionSingle(t *testing.T) {
 
 	// Create database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for single server available
 	if err := waitUntilVersionUp(client, nil); err != nil {

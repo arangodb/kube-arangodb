@@ -49,6 +49,8 @@ const (
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
+	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
+	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
 )
 
 const (
@@ -73,6 +75,8 @@ type Action struct {
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
+	// Image used in can of a SetCurrentImage action.
+	Image string `json:"image,omitempty"`
 }
 
 // NewAction instantiates a new Action.
@@ -87,6 +91,13 @@ func NewAction(actionType ActionType, group ServerGroup, memberID string, reason
 	if len(reason) != 0 {
 		a.Reason = reason[0]
 	}
+	return a
+}
+
+// SetImage sets the Image field to the given value and returns the modified
+// action.
+func (a Action) SetImage(image string) Action {
+	a.Image = image
 	return a
 }
 

@@ -91,7 +91,7 @@ TESTLENGTHOPTIONS := -test.short
 TESTTIMEOUT := 20m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
-	TESTTIMEOUT := 120m
+	TESTTIMEOUT := 180m
 endif
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v 
@@ -137,6 +137,8 @@ $(GOBUILDDIR):
 	@mkdir -p $(ORGDIR)
 	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
 	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
+	# Note: Next library is not vendored, since we always want the latest version
+	GOPATH=$(GOBUILDDIR) go get github.com/arangodb/go-upgrade-rules
 
 $(CACHEVOL):
 	@docker volume create $(CACHEVOL)
@@ -326,6 +328,8 @@ endif
 
 .PHONY: cleanup-tests
 cleanup-tests:
+	kubectl delete ArangoDeployment -n $(DEPLOYMENTNAMESPACE) --all
+	sleep 10
 ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 endif

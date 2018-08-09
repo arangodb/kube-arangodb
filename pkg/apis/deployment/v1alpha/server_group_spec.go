@@ -135,7 +135,7 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 			s.Count = util.NewInt(3)
 		}
 	} else if s.GetCount() > 0 && !used {
-		s.Count = util.NewInt(0)
+		s.Count = nil
 	}
 	if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
 		switch group {

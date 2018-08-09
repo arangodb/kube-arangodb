@@ -65,7 +65,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
@@ -166,7 +166,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
@@ -263,7 +263,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 
 	// Create a database client
 	ctx := context.Background()
-	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t)
+	client := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
 	// Wait for cluster to be completely ready
 	if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
