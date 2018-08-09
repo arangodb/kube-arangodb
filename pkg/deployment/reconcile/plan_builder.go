@@ -25,6 +25,7 @@ package reconcile
 import (
 	"strings"
 
+	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/api/core/v1"
@@ -215,11 +216,11 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		// Image changed, check if change is allowed
 		specVersion := specImageInfo.ArangoDBVersion
 		podVersion := podImageInfo.ArangoDBVersion
-		if specVersion.Major() != podVersion.Major() {
+		if err := upgraderules.CheckUpgradeRules(podVersion, specVersion); err != nil {
 			// E.g. 3.x -> 4.x, we cannot allow automatically
 			return upgradeDecision{UpgradeNeeded: true, UpgradeAllowed: false}
 		}
-		if specVersion.Minor() != podVersion.Minor() {
+		if specVersion.Major() != podVersion.Major() || specVersion.Minor() != podVersion.Minor() {
 			// Is allowed, with `--database.auto-upgrade`
 			return upgradeDecision{
 				UpgradeNeeded:     true,
