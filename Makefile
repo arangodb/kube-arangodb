@@ -137,6 +137,8 @@ $(GOBUILDDIR):
 	@mkdir -p $(ORGDIR)
 	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
 	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
+	# Note: Next library is not vendored, since we always want the latest version
+	GOPATH=$(GOBUILDDIR) go get github.com/arangodb/go-upgrade-rules
 
 $(CACHEVOL):
 	@docker volume create $(CACHEVOL)
