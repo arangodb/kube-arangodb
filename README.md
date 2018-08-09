@@ -21,18 +21,18 @@ it is intended to be.
 
 ### Production readiness state
 
-| Platform             | Kubernetes version | State | Production ready | Remarks |
-|----------------------|--------------------|-------|------------------|---------|
-| Google GKE           | 1.10               | Runs  | No               | Don't use micro nodes |
-| Amazon EKS           | 1.10               | ?     | No               |
-| Amazon & Kops        | 1.10               | Runs  | No               |
-| Azure AKS            | 1.10               | ?     | No               |
-| OpenShift            | 1.10               | Runs  | No               |
-| Pivotal PKS          | 1.10               | ?     | No               |
-| Scaleway Kubernetes  | 1.10               | ?     | No               |
-| Bare metal (kubeadm) | 1.10               | Runs  | No               |
-| Minikube             | 1.10               | Runs  | Not intended     |
-| Docker for Mac Edge  | 1.10               | Runs  | Not intended     |
+| Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks |
+|----------------------|--------------------|------------------|------------------|---------|
+| Google GKE           | 1.10               | >= 3.3.13        | Runs  | No               | Don't use micro nodes |
+| Amazon EKS           | 1.10               | >= 3.3.13        | Runs  | No               |
+| Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |
+| Azure AKS            | 1.10               | >= 3.3.13        | ?     | No               |
+| OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |
+| Pivotal PKS          | 1.10               | >= 3.3.13        | ?     | No               |
+| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |
+| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | No               |
+| Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |
+| Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |
 
 ## Installation of latest release
 
