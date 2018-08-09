@@ -39,7 +39,9 @@ import (
 // upgradeDecision is the result of an upgrade check.
 type upgradeDecision struct {
 	FromVersion       driver.Version
+	FromLicense       upgraderules.License
 	ToVersion         driver.Version
+	ToLicense         upgraderules.License
 	UpgradeNeeded     bool // If set, the image version has changed
 	UpgradeAllowed    bool // If set, it is an allowed version change
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
@@ -156,10 +158,11 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		// is needed. If an upgrade is needed but not allowed, the second return value
 		// will be true.
 		// Returns: (newPlan, upgradeNotAllowed)
-		createRotateOrUpgradePlan := func() (api.Plan, bool, driver.Version, driver.Version) {
+		createRotateOrUpgradePlan := func() (api.Plan, bool, driver.Version, driver.Version, upgraderules.License, upgraderules.License) {
 			var newPlan api.Plan
 			upgradeNotAllowed := false
 			var fromVersion, toVersion driver.Version
+			var fromLicense, toLicense upgraderules.License
 			status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 				for _, m := range members {
 					if m.Phase != api.MemberPhaseCreated {
@@ -174,7 +177,9 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 								// Oops, upgrade is not allowed
 								upgradeNotAllowed = true
 								fromVersion = decision.FromVersion
+								fromLicense = decision.FromLicense
 								toVersion = decision.ToVersion
+								toLicense = decision.ToLicense
 								return nil
 							} else if len(newPlan) == 0 {
 								// Only rotate/upgrade 1 pod at a time
@@ -193,11 +198,11 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 				}
 				return nil
 			})
-			return newPlan, upgradeNotAllowed, fromVersion, toVersion
+			return newPlan, upgradeNotAllowed, fromVersion, toVersion, fromLicense, toLicense
 		}
-		if newPlan, upgradeNotAllowed, fromVersion, toVersion := createRotateOrUpgradePlan(); upgradeNotAllowed {
+		if newPlan, upgradeNotAllowed, fromVersion, toVersion, fromLicense, toLicense := createRotateOrUpgradePlan(); upgradeNotAllowed {
 			// Upgrade is needed, but not allowed
-			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion))
+			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion, fromLicense, toLicense))
 		} else {
 			// Use the new plan
 			plan = newPlan
@@ -242,11 +247,21 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		// Image changed, check if change is allowed
 		specVersion := specImageInfo.ArangoDBVersion
 		podVersion := podImageInfo.ArangoDBVersion
-		if err := upgraderules.CheckUpgradeRules(podVersion, specVersion); err != nil {
+		asLicense := func(info api.ImageInfo) upgraderules.License {
+			if info.Enterprise {
+				return upgraderules.LicenseEnterprise
+			}
+			return upgraderules.LicenseCommunity
+		}
+		specLicense := asLicense(specImageInfo)
+		podLicense := asLicense(podImageInfo)
+		if err := upgraderules.CheckUpgradeRulesWithLicense(podVersion, specVersion, podLicense, specLicense); err != nil {
 			// E.g. 3.x -> 4.x, we cannot allow automatically
 			return upgradeDecision{
 				FromVersion:    podVersion,
+				FromLicense:    podLicense,
 				ToVersion:      specVersion,
+				ToLicense:      specLicense,
 				UpgradeNeeded:  true,
 				UpgradeAllowed: false,
 			}
@@ -255,7 +270,9 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 			// Is allowed, with `--database.auto-upgrade`
 			return upgradeDecision{
 				FromVersion:       podVersion,
+				FromLicense:       podLicense,
 				ToVersion:         specVersion,
+				ToLicense:         specLicense,
 				UpgradeNeeded:     true,
 				UpgradeAllowed:    true,
 				AutoUpgradeNeeded: true,
@@ -264,7 +281,9 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		// Patch version change, rotate only
 		return upgradeDecision{
 			FromVersion:       podVersion,
+			FromLicense:       podLicense,
 			ToVersion:         specVersion,
+			ToLicense:         specLicense,
 			UpgradeNeeded:     true,
 			UpgradeAllowed:    true,
 			AutoUpgradeNeeded: false,

@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	driver "github.com/arangodb/go-driver"
+	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -193,15 +194,31 @@ func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
 }
 
 // NewUpgradeNotAllowedEvent creates an event indicating that an upgrade (or downgrade) is not allowed.
-func NewUpgradeNotAllowedEvent(apiObject APIObject, fromVersion, toVersion driver.Version) *Event {
+func NewUpgradeNotAllowedEvent(apiObject APIObject,
+	fromVersion, toVersion driver.Version,
+	fromLicense, toLicense upgraderules.License) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
+	formatLicense := func(l upgraderules.License) string {
+		if l == upgraderules.LicenseCommunity {
+			return "Community Edition"
+		}
+		return "Enterprise Edition"
+	}
+	var verb string
 	if fromVersion.CompareTo(toVersion) < 0 {
 		event.Reason = "Upgrade not allowed"
-		event.Message = fmt.Sprintf("Upgrading ArangoDB from version %s to %s is not allowed", fromVersion, toVersion)
+		verb = "Upgrading"
 	} else {
 		event.Reason = "Downgrade not allowed"
-		event.Message = fmt.Sprintf("Downgrading ArangoDB from version %s to %s is not allowed", fromVersion, toVersion)
+		verb = "Downgrading"
+	}
+	if fromLicense == toLicense {
+		event.Message = fmt.Sprintf("%s ArangoDB %s from version %s to version %s is not allowed",
+			verb, formatLicense(fromLicense), fromVersion, toVersion)
+	} else {
+		event.Message = fmt.Sprintf("%s ArangoDB from %s version %s to %s version %s is not allowed",
+			verb, formatLicense(fromLicense), fromVersion, formatLicense(toLicense), toVersion)
 	}
 	return event
 }
