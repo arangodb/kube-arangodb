@@ -25,6 +25,7 @@ package reconcile
 import (
 	"strings"
 
+	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,8 @@ import (
 
 // upgradeDecision is the result of an upgrade check.
 type upgradeDecision struct {
+	FromVersion       driver.Version
+	ToVersion         driver.Version
 	UpgradeNeeded     bool // If set, the image version has changed
 	UpgradeAllowed    bool // If set, it is an allowed version change
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
@@ -153,9 +156,10 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		// is needed. If an upgrade is needed but not allowed, the second return value
 		// will be true.
 		// Returns: (newPlan, upgradeNotAllowed)
-		createRotateOrUpgradePlan := func() (api.Plan, bool) {
+		createRotateOrUpgradePlan := func() (api.Plan, bool, driver.Version, driver.Version) {
 			var newPlan api.Plan
 			upgradeNotAllowed := false
+			var fromVersion, toVersion driver.Version
 			status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 				for _, m := range members {
 					if m.Phase != api.MemberPhaseCreated {
@@ -169,14 +173,17 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 							if decision.UpgradeNeeded && !decision.UpgradeAllowed {
 								// Oops, upgrade is not allowed
 								upgradeNotAllowed = true
+								fromVersion = decision.FromVersion
+								toVersion = decision.ToVersion
 								return nil
 							} else if len(newPlan) == 0 {
 								// Only rotate/upgrade 1 pod at a time
-								if decision.UpgradeNeeded && decision.UpgradeAllowed {
+								if decision.UpgradeNeeded {
+									// Yes, upgrade is needed (and allowed)
 									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status)
 								} else {
-									rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context)
-									if rotNeeded {
+									// Upgrade is not needed, see if rotation is needed
+									if rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context); rotNeeded {
 										newPlan = createRotateMemberPlan(log, m, group, reason)
 									}
 								}
@@ -186,10 +193,11 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 				}
 				return nil
 			})
-			return newPlan, upgradeNotAllowed
+			return newPlan, upgradeNotAllowed, fromVersion, toVersion
 		}
-		if newPlan, upgradeNotAllowed := createRotateOrUpgradePlan(); upgradeNotAllowed {
-			// TODO create event
+		if newPlan, upgradeNotAllowed, fromVersion, toVersion := createRotateOrUpgradePlan(); upgradeNotAllowed {
+			// Upgrade is needed, but not allowed
+			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion))
 		} else {
 			// Use the new plan
 			plan = newPlan
@@ -236,11 +244,18 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		podVersion := podImageInfo.ArangoDBVersion
 		if err := upgraderules.CheckUpgradeRules(podVersion, specVersion); err != nil {
 			// E.g. 3.x -> 4.x, we cannot allow automatically
-			return upgradeDecision{UpgradeNeeded: true, UpgradeAllowed: false}
+			return upgradeDecision{
+				FromVersion:    podVersion,
+				ToVersion:      specVersion,
+				UpgradeNeeded:  true,
+				UpgradeAllowed: false,
+			}
 		}
 		if specVersion.Major() != podVersion.Major() || specVersion.Minor() != podVersion.Minor() {
 			// Is allowed, with `--database.auto-upgrade`
 			return upgradeDecision{
+				FromVersion:       podVersion,
+				ToVersion:         specVersion,
 				UpgradeNeeded:     true,
 				UpgradeAllowed:    true,
 				AutoUpgradeNeeded: true,
@@ -248,6 +263,8 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		}
 		// Patch version change, rotate only
 		return upgradeDecision{
+			FromVersion:       podVersion,
+			ToVersion:         specVersion,
 			UpgradeNeeded:     true,
 			UpgradeAllowed:    true,
 			AutoUpgradeNeeded: false,
