@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"strings"
 
+	driver "github.com/arangodb/go-driver"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -188,6 +189,20 @@ func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Downtime Operation Postponed"
 	event.Message = fmt.Sprintf("The '%s' operation is postponed because downtime it not allowed. Set `spec.downtimeAllowed` to true to execute this operation", operation)
+	return event
+}
+
+// NewUpgradeNotAllowedEvent creates an event indicating that an upgrade (or downgrade) is not allowed.
+func NewUpgradeNotAllowedEvent(apiObject APIObject, fromVersion, toVersion driver.Version) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	if fromVersion.CompareTo(toVersion) < 0 {
+		event.Reason = "Upgrade not allowed"
+		event.Message = fmt.Sprintf("Upgrading ArangoDB from version %s to %s is not allowed", fromVersion, toVersion)
+	} else {
+		event.Reason = "Downgrade not allowed"
+		event.Message = fmt.Sprintf("Downgrading ArangoDB from version %s to %s is not allowed", fromVersion, toVersion)
+	}
 	return event
 }
 

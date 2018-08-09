@@ -25,6 +25,7 @@ package reconcile
 import (
 	"strings"
 
+	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,8 @@ import (
 
 // upgradeDecision is the result of an upgrade check.
 type upgradeDecision struct {
+	FromVersion       driver.Version
+	ToVersion         driver.Version
 	UpgradeNeeded     bool // If set, the image version has changed
 	UpgradeAllowed    bool // If set, it is an allowed version change
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
@@ -149,33 +152,56 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 			}
 			return nil
 		}
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-			for _, m := range members {
-				if len(plan) > 0 {
-					// Only 1 change at a time
-					continue
-				}
-				if m.Phase != api.MemberPhaseCreated {
-					// Only rotate when phase is created
-					continue
-				}
-				if podName := m.PodName; podName != "" {
-					if p := getPod(podName); p != nil {
-						// Got pod, compare it with what it should be
-						decision := podNeedsUpgrading(*p, spec, status.Images)
-						if decision.UpgradeNeeded && decision.UpgradeAllowed {
-							plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
-						} else {
-							rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context)
-							if rotNeeded {
-								plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
+		// createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate
+		// is needed. If an upgrade is needed but not allowed, the second return value
+		// will be true.
+		// Returns: (newPlan, upgradeNotAllowed)
+		createRotateOrUpgradePlan := func() (api.Plan, bool, driver.Version, driver.Version) {
+			var newPlan api.Plan
+			upgradeNotAllowed := false
+			var fromVersion, toVersion driver.Version
+			status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+				for _, m := range members {
+					if m.Phase != api.MemberPhaseCreated {
+						// Only rotate when phase is created
+						continue
+					}
+					if podName := m.PodName; podName != "" {
+						if p := getPod(podName); p != nil {
+							// Got pod, compare it with what it should be
+							decision := podNeedsUpgrading(*p, spec, status.Images)
+							if decision.UpgradeNeeded && !decision.UpgradeAllowed {
+								// Oops, upgrade is not allowed
+								upgradeNotAllowed = true
+								fromVersion = decision.FromVersion
+								toVersion = decision.ToVersion
+								return nil
+							} else if len(newPlan) == 0 {
+								// Only rotate/upgrade 1 pod at a time
+								if decision.UpgradeNeeded {
+									// Yes, upgrade is needed (and allowed)
+									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status)
+								} else {
+									// Upgrade is not needed, see if rotation is needed
+									if rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context); rotNeeded {
+										newPlan = createRotateMemberPlan(log, m, group, reason)
+									}
+								}
 							}
 						}
 					}
 				}
-			}
-			return nil
-		})
+				return nil
+			})
+			return newPlan, upgradeNotAllowed, fromVersion, toVersion
+		}
+		if newPlan, upgradeNotAllowed, fromVersion, toVersion := createRotateOrUpgradePlan(); upgradeNotAllowed {
+			// Upgrade is needed, but not allowed
+			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion))
+		} else {
+			// Use the new plan
+			plan = newPlan
+		}
 	}
 
 	// Check for the need to rotate TLS certificate of a members
@@ -218,11 +244,18 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		podVersion := podImageInfo.ArangoDBVersion
 		if err := upgraderules.CheckUpgradeRules(podVersion, specVersion); err != nil {
 			// E.g. 3.x -> 4.x, we cannot allow automatically
-			return upgradeDecision{UpgradeNeeded: true, UpgradeAllowed: false}
+			return upgradeDecision{
+				FromVersion:    podVersion,
+				ToVersion:      specVersion,
+				UpgradeNeeded:  true,
+				UpgradeAllowed: false,
+			}
 		}
 		if specVersion.Major() != podVersion.Major() || specVersion.Minor() != podVersion.Minor() {
 			// Is allowed, with `--database.auto-upgrade`
 			return upgradeDecision{
+				FromVersion:       podVersion,
+				ToVersion:         specVersion,
 				UpgradeNeeded:     true,
 				UpgradeAllowed:    true,
 				AutoUpgradeNeeded: true,
@@ -230,6 +263,8 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		}
 		// Patch version change, rotate only
 		return upgradeDecision{
+			FromVersion:       podVersion,
+			ToVersion:         specVersion,
 			UpgradeNeeded:     true,
 			UpgradeAllowed:    true,
 			AutoUpgradeNeeded: false,
@@ -343,7 +378,7 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string) api.Plan {
+	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
@@ -352,6 +387,11 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
+	}
+	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
+		plan = append(api.Plan{
+			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
+		}, plan...)
 	}
 	return plan
 }

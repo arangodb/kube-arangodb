@@ -295,6 +295,15 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 		*out = make(ImageInfoList, len(*in))
 		copy(*out, *in)
 	}
+	if in.CurrentImage != nil {
+		in, out := &in.CurrentImage, &out.CurrentImage
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ImageInfo)
+			**out = **in
+		}
+	}
 	in.Members.DeepCopyInto(&out.Members)
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions

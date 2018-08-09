@@ -218,17 +218,15 @@ func (d *Deployment) DatabaseURL() string {
 // DatabaseVersion returns the version used by the deployment
 // Returns versionNumber, licenseType
 func (d *Deployment) DatabaseVersion() (string, string) {
-	image := d.GetSpec().GetImage()
 	status, _ := d.GetStatus()
-	info, found := status.Images.GetByImage(image)
-	if !found {
-		return "", ""
+	if current := status.CurrentImage; current != nil {
+		license := "community"
+		if current.Enterprise {
+			license = "enterprise"
+		}
+		return string(current.ArangoDBVersion), license
 	}
-	license := "community"
-	if info.Enterprise {
-		license = "enterprise"
-	}
-	return string(info.ArangoDBVersion), license
+	return "", ""
 }
 
 // Members returns all members of the deployment by role.
