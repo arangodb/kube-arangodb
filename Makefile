@@ -328,6 +328,8 @@ endif
 
 .PHONY: cleanup-tests
 cleanup-tests:
+	kubectl delete ArangoDeployment -n $(DEPLOYMENTNAMESPACE) --all
+	sleep 10
 ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 endif
