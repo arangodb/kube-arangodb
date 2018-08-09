@@ -459,13 +459,23 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	podSuffix := createPodSuffix(spec)
 	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
 	newPhase := api.MemberPhaseCreated
-	// Find image ID
-	imageInfo, imageFound := status.Images.GetByImage(spec.GetImage())
-	if !imageFound {
-		imageNotFoundOnce.Do(func() {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
-		})
-		return nil
+	// Select image
+	var imageInfo api.ImageInfo
+	if current := status.CurrentImage; current != nil {
+		// Use current image
+		imageInfo = *current
+	} else {
+		// Find image ID
+		info, imageFound := status.Images.GetByImage(spec.GetImage())
+		if !imageFound {
+			imageNotFoundOnce.Do(func() {
+				log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
+			})
+			return nil
+		}
+		imageInfo = info
+		// Save image as current image
+		status.CurrentImage = &info
 	}
 	// Create pod
 	if group.IsArangod() {

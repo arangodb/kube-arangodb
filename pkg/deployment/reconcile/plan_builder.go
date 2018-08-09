@@ -149,33 +149,51 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 			}
 			return nil
 		}
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-			for _, m := range members {
-				if len(plan) > 0 {
-					// Only 1 change at a time
-					continue
-				}
-				if m.Phase != api.MemberPhaseCreated {
-					// Only rotate when phase is created
-					continue
-				}
-				if podName := m.PodName; podName != "" {
-					if p := getPod(podName); p != nil {
-						// Got pod, compare it with what it should be
-						decision := podNeedsUpgrading(*p, spec, status.Images)
-						if decision.UpgradeNeeded && decision.UpgradeAllowed {
-							plan = append(plan, createUpgradeMemberPlan(log, m, group, "Version upgrade")...)
-						} else {
-							rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context)
-							if rotNeeded {
-								plan = append(plan, createRotateMemberPlan(log, m, group, reason)...)
+		// createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate
+		// is needed. If an upgrade is needed but not allowed, the second return value
+		// will be true.
+		// Returns: (newPlan, upgradeNotAllowed)
+		createRotateOrUpgradePlan := func() (api.Plan, bool) {
+			var newPlan api.Plan
+			upgradeNotAllowed := false
+			status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+				for _, m := range members {
+					if m.Phase != api.MemberPhaseCreated {
+						// Only rotate when phase is created
+						continue
+					}
+					if podName := m.PodName; podName != "" {
+						if p := getPod(podName); p != nil {
+							// Got pod, compare it with what it should be
+							decision := podNeedsUpgrading(*p, spec, status.Images)
+							if decision.UpgradeNeeded && !decision.UpgradeAllowed {
+								// Oops, upgrade is not allowed
+								upgradeNotAllowed = true
+								return nil
+							} else if len(newPlan) == 0 {
+								// Only rotate/upgrade 1 pod at a time
+								if decision.UpgradeNeeded && decision.UpgradeAllowed {
+									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status)
+								} else {
+									rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context)
+									if rotNeeded {
+										newPlan = createRotateMemberPlan(log, m, group, reason)
+									}
+								}
 							}
 						}
 					}
 				}
-			}
-			return nil
-		})
+				return nil
+			})
+			return newPlan, upgradeNotAllowed
+		}
+		if newPlan, upgradeNotAllowed := createRotateOrUpgradePlan(); upgradeNotAllowed {
+			// TODO create event
+		} else {
+			// Use the new plan
+			plan = newPlan
+		}
 	}
 
 	// Check for the need to rotate TLS certificate of a members
@@ -343,7 +361,7 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string) api.Plan {
+	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
@@ -352,6 +370,11 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
+	}
+	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
+		plan = append(api.Plan{
+			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
+		}, plan...)
 	}
 	return plan
 }

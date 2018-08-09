@@ -38,6 +38,8 @@ type DeploymentStatus struct {
 
 	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
 	Images ImageInfoList `json:"arangodb-images,omitempty"`
+	// Image that is currently being used when new pods are created
+	CurrentImage *ImageInfo `json:"current-image,omitempty"`
 
 	// Members holds the status for all members in all server groups
 	Members DeploymentStatusMembers `json:"members"`

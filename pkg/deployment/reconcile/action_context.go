@@ -78,6 +78,12 @@ type ActionContext interface {
 	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
 	// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
 	DeleteTLSCASecret() error
+	// GetImageInfo returns the image info for an image with given name.
+	// Returns: (info, infoFound)
+	GetImageInfo(imageName string) (api.ImageInfo, bool)
+	// SetCurrentImage changes the CurrentImage field in the deployment
+	// status to the given image.
+	SetCurrentImage(imageInfo api.ImageInfo) error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -256,6 +262,24 @@ func (ac *actionContext) DeleteTLSCASecret() error {
 	}
 	// Do delete the secret
 	if err := ac.context.DeleteSecret(secretName); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// GetImageInfo returns the image info for an image with given name.
+// Returns: (info, infoFound)
+func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
+	status, _ := ac.context.GetStatus()
+	return status.Images.GetByImage(imageName)
+}
+
+// SetCurrentImage changes the CurrentImage field in the deployment
+// status to the given image.
+func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
+	status, lastVersion := ac.context.GetStatus()
+	status.CurrentImage = &imageInfo
+	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err)
 	}
 	return nil
