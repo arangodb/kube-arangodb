@@ -116,10 +116,10 @@ follow-up request.
 
 ArangoDB will transparently forward any mismatched requests to the correct
 coordinator, so the requests can be answered correctly without any additional
-configuration. However, this incurs a small performance penalty due to the extra
+configuration. However, this incurs a small latency penalty due to the extra
 request across the internal network.
 
-To resolve this uncertainty client-side, make sure to run your client
+To prevent this uncertainty client-side, make sure to run your client
 application in the same Kubernetes cluster and synchronize your endpoints before
 making the initial query request. This will result in the use (by the driver) of
 internal DNS names of all coordinators. A follow-up request can then be sent to
