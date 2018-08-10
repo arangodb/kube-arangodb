@@ -23,12 +23,15 @@
 package main
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -148,6 +151,19 @@ Storage:
 `
 )
 
+var (
+	chartTemplateGroups = map[string]chartTemplates{
+		"kube-arangodb": chartTemplates{
+			"Chart.yaml":  kubeArangoDBChartTemplate,
+			"values.yaml": kubeArangoDBValuesTemplate,
+		},
+		"kube-arangodb-storage": chartTemplates{
+			"Chart.yaml":  kubeArangoDBStorageChartTemplate,
+			"values.yaml": kubeArangoDBStorageValuesTemplate,
+		},
+	}
+)
+
 func init() {
 	pflag.StringVar(&options.OutputSuffix, "output-suffix", "", "Suffix of the generated manifest files")
 	pflag.StringVar(&options.TemplatesDir, "templates-dir", "manifests/templates", "Directory containing manifest templates")
@@ -232,6 +248,15 @@ func main() {
 	version, err := ioutil.ReadFile("VERSION")
 	if err != nil {
 		log.Fatalf("Failed to read VERSION file: %v", err)
+	}
+
+	// Prepare chart tars
+	chartTarBufs := make(map[string]*bytes.Buffer)
+	chartTars := make(map[string]*tar.Writer)
+	for groupName := range chartTemplateGroups {
+		buf := &bytes.Buffer{}
+		chartTarBufs[groupName] = buf
+		chartTars[groupName] = tar.NewWriter(buf)
 	}
 
 	// Process templates
@@ -420,32 +445,24 @@ func main() {
 
 			// Save output
 			if output.Len() > 0 {
-				outputDir, err := filepath.Abs(filepath.Join("bin", "charts", templateGroup.ChartName, "templates"))
-				if err != nil {
-					log.Fatalf("Failed to get absolute output dir: %v\n", err)
+				tarPath := path.Join(templateGroup.ChartName, "templates", group+".yaml")
+				hdr := &tar.Header{
+					Name: tarPath,
+					Mode: 0644,
+					Size: int64(output.Len()),
 				}
-				outputPath := filepath.Join(outputDir, group+".yaml")
-				if err := os.MkdirAll(outputDir, 0755); err != nil {
-					log.Fatalf("Failed to create output directory: %v\n", err)
+				tw := chartTars[templateGroup.ChartName]
+				if err := tw.WriteHeader(hdr); err != nil {
+					log.Fatal(err)
 				}
-				if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
-					log.Fatalf("Failed to write output file: %v\n", err)
+				if _, err := tw.Write(output.Bytes()); err != nil {
+					log.Fatal(err)
 				}
 			}
 		}
 	}
 
 	// Build Chart files
-	chartTemplateGroups := map[string]chartTemplates{
-		"kube-arangodb": chartTemplates{
-			"Chart.yaml":  kubeArangoDBChartTemplate,
-			"values.yaml": kubeArangoDBValuesTemplate,
-		},
-		"kube-arangodb-storage": chartTemplates{
-			"Chart.yaml":  kubeArangoDBStorageChartTemplate,
-			"values.yaml": kubeArangoDBStorageValuesTemplate,
-		},
-	}
 	for groupName, chartTemplates := range chartTemplateGroups {
 		for name, templateSource := range chartTemplates {
 			output := &bytes.Buffer{}
@@ -456,17 +473,45 @@ func main() {
 			t.Execute(output, templateOptions)
 
 			// Save output
-			outputDir, err := filepath.Abs(filepath.Join("bin", "charts", groupName))
-			if err != nil {
-				log.Fatalf("Failed to get absolute output dir: %v\n", err)
+			tarPath := path.Join(groupName, name)
+			hdr := &tar.Header{
+				Name: tarPath,
+				Mode: 0644,
+				Size: int64(output.Len()),
 			}
-			outputPath := filepath.Join(outputDir, name)
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
-				log.Fatalf("Failed to create output directory: %v\n", err)
+			tw := chartTars[groupName]
+			if err := tw.WriteHeader(hdr); err != nil {
+				log.Fatal(err)
 			}
-			if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
-				log.Fatalf("Failed to write output file: %v\n", err)
+			if _, err := tw.Write(output.Bytes()); err != nil {
+				log.Fatal(err)
 			}
+		}
+	}
+
+	// Save charts
+	for groupName, tw := range chartTars {
+		if err := tw.Close(); err != nil {
+			log.Fatal(err)
+		}
+		// Gzip tarball
+		tarBytes := chartTarBufs[groupName].Bytes()
+		output := &bytes.Buffer{}
+		gw := gzip.NewWriter(output)
+		if _, err := gw.Write(tarBytes); err != nil {
+			log.Fatal(err)
+		}
+		gw.Close()
+		outputDir, err := filepath.Abs("bin/charts")
+		if err != nil {
+			log.Fatalf("Failed to get absolute output dir: %v\n", err)
+		}
+		outputPath := filepath.Join(outputDir, groupName+".tgz")
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			log.Fatalf("Failed to create output directory: %v\n", err)
+		}
+		if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
+			log.Fatalf("Failed to write output file: %v\n", err)
 		}
 	}
 }
