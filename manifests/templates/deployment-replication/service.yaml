@@ -1,3 +1,5 @@
+{{ .DeploymentReplication.FilterStart }}
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,3 +19,5 @@ spec:
     app: arango-deployment-replication-operator
     role: leader
   type: {{ .DeploymentReplication.Operator.ServiceType }}
+
+{{ .DeploymentReplication.FilterEnd }}

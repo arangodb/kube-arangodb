@@ -1,4 +1,4 @@
-{{- if .RBAC -}}
+{{ .RBACFilterStart }}
 
 ## Cluster role granting access to resources needed by the integration tests.
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -34,4 +34,4 @@ subjects:
   name: {{ .Test.ServiceAccountName }}
   namespace: {{ .Test.Namespace }}
 
-{{- end -}}
+{{ .RBACFilterEnd }}

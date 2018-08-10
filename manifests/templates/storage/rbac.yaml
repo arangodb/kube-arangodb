@@ -1,5 +1,6 @@
+{{ .Storage.FilterStart }}
+{{ .RBACFilterStart }}
 
-{{- if .RBAC -}}
 ## Cluster role granting access to ArangoLocalStorage resources.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -81,4 +82,6 @@ subjects:
 - kind: ServiceAccount
   name: {{ .Storage.Operator.ServiceAccountName }}
   namespace: {{ .Storage.Operator.Namespace }}
-{{- end -}}
+
+{{ .RBACFilterEnd }}
+{{ .Storage.FilterEnd }}

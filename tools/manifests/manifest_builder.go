@@ -30,6 +30,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -51,24 +52,100 @@ var (
 		RBAC                              bool
 		AllowChaos                        bool
 	}
-	deploymentTemplateNames = []string{
-		"rbac.yaml",
-		"deployment.yaml",
-		"service.yaml",
+	deploymentTemplateNames = []Template{
+		Template{Name: "rbac.yaml", Predicate: hasRBAC},
+		Template{Name: "deployment.yaml"},
+		Template{Name: "service.yaml"},
 	}
-	deploymentReplicationTemplateNames = []string{
-		"rbac.yaml",
-		"deployment-replication.yaml",
-		"service.yaml",
+	deploymentReplicationTemplateNames = []Template{
+		Template{Name: "rbac.yaml", Predicate: hasRBAC},
+		Template{Name: "deployment-replication.yaml"},
+		Template{Name: "service.yaml"},
 	}
-	storageTemplateNames = []string{
-		"rbac.yaml",
-		"deployment.yaml",
-		"service.yaml",
+	storageTemplateNames = []Template{
+		Template{Name: "rbac.yaml", Predicate: hasRBAC},
+		Template{Name: "deployment.yaml"},
+		Template{Name: "service.yaml"},
 	}
-	testTemplateNames = []string{
-		"rbac.yaml",
+	testTemplateNames = []Template{
+		Template{Name: "rbac.yaml", Predicate: func(o TemplateOptions, isHelm bool) bool { return o.RBAC && !isHelm }},
 	}
+)
+
+type Template struct {
+	Name      string
+	Predicate func(o TemplateOptions, isHelm bool) bool
+}
+
+type TemplateGroup struct {
+	ChartName string
+	Templates []Template
+}
+
+func hasRBAC(o TemplateOptions, isHelm bool) bool {
+	return o.RBAC || isHelm
+}
+
+var (
+	tmplFuncs = template.FuncMap{
+		"quote": func(x string) string { return strconv.Quote(x) },
+	}
+)
+
+type (
+	chartTemplates map[string]string
+)
+
+const (
+	kubeArangoDBChartTemplate = `
+apiVersion: v1
+name: kube-arangodb
+version: "{{ .Version }}"
+description: |
+  Kube-ArangoDB is a set of operators to easily deploy ArangoDB deployments on Kubernetes
+home: https://arangodb.com
+`
+	kubeArangoDBStorageChartTemplate = `
+apiVersion: v1
+name: kube-arangodb-storage
+version: "{{ .Version }}"
+description: |
+  Kube-ArangoDB-Storage is a cluster-wide operator used to provision PersistentVolumes on disks attached locally to Nodes
+home: https://arangodb.com
+`
+	kubeArangoDBValuesTemplate = `
+Image: {{ .Image | quote }}
+ImagePullPolicy: {{ .ImagePullPolicy | quote }}
+RBAC:
+  Create: {{ .RBAC }}
+Deployment:
+  Create: {{ .Deployment.Create }}
+  User:
+    ServiceAccountName: {{ .Deployment.User.ServiceAccountName | quote }}
+  Operator:
+    ServiceAccountName: {{ .Deployment.Operator.ServiceAccountName | quote }}
+    ServiceType: {{ .Deployment.Operator.ServiceType | quote }}
+  AllowChaos: {{ .Deployment.AllowChaos }}
+DeploymentReplication:
+  Create: {{ .DeploymentReplication.Create }}
+  User:
+    ServiceAccountName: {{ .DeploymentReplication.User.ServiceAccountName | quote }}
+  Operator:
+    ServiceAccountName: {{ .DeploymentReplication.Operator.ServiceAccountName | quote }}
+    ServiceType: {{ .DeploymentReplication.Operator.ServiceType | quote }}
+`
+	kubeArangoDBStorageValuesTemplate = `
+Image: {{ .Image | quote }}
+ImagePullPolicy: {{ .ImagePullPolicy | quote }}
+RBAC:
+  Create: {{ .RBAC }}
+Storage:
+  User:
+    ServiceAccountName: {{ .Storage.User.ServiceAccountName | quote }}
+  Operator:
+    ServiceAccountName: {{ .Storage.Operator.ServiceAccountName | quote }}
+    ServiceType: {{ .Storage.Operator.ServiceType | quote }}
+`
 )
 
 func init() {
@@ -88,9 +165,12 @@ func init() {
 }
 
 type TemplateOptions struct {
+	Version               string
 	Image                 string
 	ImagePullPolicy       string
 	RBAC                  bool
+	RBACFilterStart       string
+	RBACFilterEnd         string
 	Deployment            ResourceOptions
 	DeploymentReplication ResourceOptions
 	Storage               ResourceOptions
@@ -106,10 +186,13 @@ type CommonOptions struct {
 }
 
 type ResourceOptions struct {
+	Create                 string
+	FilterStart            string
+	FilterEnd              string
 	User                   CommonOptions
 	Operator               CommonOptions
 	OperatorDeploymentName string
-	AllowChaos             bool
+	AllowChaos             string
 }
 
 func main() {
@@ -138,19 +221,27 @@ func main() {
 	}
 
 	// Prepare templates to include
-	templateNameSet := map[string][]string{
-		"deployment":             deploymentTemplateNames,
-		"deployment-replication": deploymentReplicationTemplateNames,
-		"storage":                storageTemplateNames,
-		"test":                   testTemplateNames,
+	templateInfoSet := map[string]TemplateGroup{
+		"deployment":             TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentTemplateNames},
+		"deployment-replication": TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentReplicationTemplateNames},
+		"storage":                TemplateGroup{ChartName: "kube-arangodb-storage", Templates: storageTemplateNames},
+		"test":                   TemplateGroup{ChartName: "", Templates: testTemplateNames},
+	}
+
+	// Read VERSION
+	version, err := ioutil.ReadFile("VERSION")
+	if err != nil {
+		log.Fatalf("Failed to read VERSION file: %v", err)
 	}
 
 	// Process templates
 	templateOptions := TemplateOptions{
+		Version:         strings.TrimSpace(string(version)),
 		Image:           options.Image,
 		ImagePullPolicy: options.ImagePullPolicy,
 		RBAC:            options.RBAC,
 		Deployment: ResourceOptions{
+			Create: "true",
 			User: CommonOptions{
 				Namespace:          options.Namespace,
 				RoleName:           "arango-deployments",
@@ -165,9 +256,10 @@ func main() {
 				ServiceType:        "ClusterIP",
 			},
 			OperatorDeploymentName: "arango-deployment-operator",
-			AllowChaos:             options.AllowChaos,
+			AllowChaos:             strconv.FormatBool(options.AllowChaos),
 		},
 		DeploymentReplication: ResourceOptions{
+			Create: "true",
 			User: CommonOptions{
 				Namespace:          options.Namespace,
 				RoleName:           "arango-deployment-replications",
@@ -184,6 +276,7 @@ func main() {
 			OperatorDeploymentName: "arango-deployment-replication-operator",
 		},
 		Storage: ResourceOptions{
+			Create: "true",
 			User: CommonOptions{
 				Namespace:          options.Namespace,
 				RoleName:           "arango-storages",
@@ -206,32 +299,174 @@ func main() {
 			ServiceAccountName: "default",
 		},
 	}
-	for group, templateNames := range templateNameSet {
-		output := &bytes.Buffer{}
-		for i, name := range templateNames {
-			t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
+	chartTemplateOptions := TemplateOptions{
+		Version:         strings.TrimSpace(string(version)),
+		RBACFilterStart: "{{- if .Values.RBAC.Create }}",
+		RBACFilterEnd:   "{{- end }}",
+		Image:           "{{ .Values.Image }}",
+		ImagePullPolicy: "{{ .Values.ImagePullPolicy }}",
+		Deployment: ResourceOptions{
+			Create:      "{{ .Values.Deployment.Create }}",
+			FilterStart: "{{- if .Values.Deployment.Create }}",
+			FilterEnd:   "{{- end }}",
+			User: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "deployments" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "deployments" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Deployment.User.ServiceAccountName }}",
+			},
+			Operator: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "deployment-operator" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "deployment-operator" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Deployment.Operator.ServiceAccountName }}",
+				ServiceType:        "{{ .Values.Deployment.Operator.ServiceType }}",
+			},
+			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "deployment-operator" | trunc 63 | trimSuffix "-" }}`,
+			AllowChaos:             "{{ .Values.Deployment.AllowChaos }}",
+		},
+		DeploymentReplication: ResourceOptions{
+			Create:      "{{ .Values.DeploymentReplication.Create }}",
+			FilterStart: "{{- if .Values.DeploymentReplication.Create }}",
+			FilterEnd:   "{{- end }}",
+			User: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "deployment-replications" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "deployment-replications" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.DeploymentReplication.User.ServiceAccountName }}",
+			},
+			Operator: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "deployment-replication-operator" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "deployment-replication-operator" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.DeploymentReplication.Operator.ServiceAccountName }}",
+				ServiceType:        "{{ .Values.DeploymentReplication.Operator.ServiceType }}",
+			},
+			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "deployment-replication-operator" | trunc 63 | trimSuffix "-" }}`,
+		},
+		Storage: ResourceOptions{
+			Create: "{{ .Values.Storage.Create }}",
+			User: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "storages" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "storages" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Storage.User.ServiceAccountName }}",
+			},
+			Operator: CommonOptions{
+				Namespace:          "kube-system",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "storage-operator" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "storage-operator" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Storage.Operator.ServiceAccountName }}",
+				ServiceType:        "{{ .Values.Storage.Operator.ServiceType }}",
+			},
+			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "storage-operator" | trunc 63 | trimSuffix "-" }}`,
+		},
+	}
+
+	for group, templateGroup := range templateInfoSet {
+		// Build standalone yaml file for this group
+		{
+			output := &bytes.Buffer{}
+			for i, tempInfo := range templateGroup.Templates {
+				if tempInfo.Predicate == nil || tempInfo.Predicate(templateOptions, false) {
+					name := tempInfo.Name
+					t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
+					if err != nil {
+						log.Fatalf("Failed to parse template %s: %v", name, err)
+					}
+					if i > 0 {
+						output.WriteString("\n---\n\n")
+					}
+					output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
+					t.Execute(output, templateOptions)
+					output.WriteString("\n")
+				}
+			}
+
+			// Save output
+			if output.Len() > 0 {
+				outputDir, err := filepath.Abs("manifests")
+				if err != nil {
+					log.Fatalf("Failed to get absolute output dir: %v\n", err)
+				}
+				outputPath := filepath.Join(outputDir, "arango-"+group+options.OutputSuffix+".yaml")
+				if err := os.MkdirAll(outputDir, 0755); err != nil {
+					log.Fatalf("Failed to create output directory: %v\n", err)
+				}
+				if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
+					log.Fatalf("Failed to write output file: %v\n", err)
+				}
+			}
+		}
+
+		// Build helm template file for this group
+		{
+			output := &bytes.Buffer{}
+			for i, tempInfo := range templateGroup.Templates {
+				if tempInfo.Predicate == nil || tempInfo.Predicate(chartTemplateOptions, true) {
+					name := tempInfo.Name
+					t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
+					if err != nil {
+						log.Fatalf("Failed to parse template %s: %v", name, err)
+					}
+					if i > 0 {
+						output.WriteString("\n---\n\n")
+					}
+					output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
+					t.Execute(output, chartTemplateOptions)
+					output.WriteString("\n")
+				}
+			}
+
+			// Save output
+			if output.Len() > 0 {
+				outputDir, err := filepath.Abs(filepath.Join("bin", "charts", templateGroup.ChartName, "templates"))
+				if err != nil {
+					log.Fatalf("Failed to get absolute output dir: %v\n", err)
+				}
+				outputPath := filepath.Join(outputDir, group+".yaml")
+				if err := os.MkdirAll(outputDir, 0755); err != nil {
+					log.Fatalf("Failed to create output directory: %v\n", err)
+				}
+				if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
+					log.Fatalf("Failed to write output file: %v\n", err)
+				}
+			}
+		}
+	}
+
+	// Build Chart files
+	chartTemplateGroups := map[string]chartTemplates{
+		"kube-arangodb": chartTemplates{
+			"Chart.yaml":  kubeArangoDBChartTemplate,
+			"values.yaml": kubeArangoDBValuesTemplate,
+		},
+		"kube-arangodb-storage": chartTemplates{
+			"Chart.yaml":  kubeArangoDBStorageChartTemplate,
+			"values.yaml": kubeArangoDBStorageValuesTemplate,
+		},
+	}
+	for groupName, chartTemplates := range chartTemplateGroups {
+		for name, templateSource := range chartTemplates {
+			output := &bytes.Buffer{}
+			t, err := template.New(name).Funcs(tmplFuncs).Parse(templateSource)
 			if err != nil {
 				log.Fatalf("Failed to parse template %s: %v", name, err)
 			}
-			if i > 0 {
-				output.WriteString("\n---\n\n")
-			}
-			output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
 			t.Execute(output, templateOptions)
-			output.WriteString("\n")
-		}
 
-		// Save output
-		outputDir, err := filepath.Abs("manifests")
-		if err != nil {
-			log.Fatalf("Failed to get absolute output dir: %v\n", err)
-		}
-		outputPath := filepath.Join(outputDir, "arango-"+group+options.OutputSuffix+".yaml")
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
-			log.Fatalf("Failed to create output directory: %v\n", err)
-		}
-		if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
-			log.Fatalf("Failed to write output file: %v\n", err)
+			// Save output
+			outputDir, err := filepath.Abs(filepath.Join("bin", "charts", groupName))
+			if err != nil {
+				log.Fatalf("Failed to get absolute output dir: %v\n", err)
+			}
+			outputPath := filepath.Join(outputDir, name)
+			if err := os.MkdirAll(outputDir, 0755); err != nil {
+				log.Fatalf("Failed to create output directory: %v\n", err)
+			}
+			if err := ioutil.WriteFile(outputPath, output.Bytes(), 0644); err != nil {
+				log.Fatalf("Failed to write output file: %v\n", err)
+			}
 		}
 	}
 }

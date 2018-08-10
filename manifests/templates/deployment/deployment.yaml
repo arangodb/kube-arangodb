@@ -1,3 +1,4 @@
+{{ .Deployment.FilterStart }}
 
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -14,6 +15,7 @@ spec:
         name: {{ .Deployment.OperatorDeploymentName }}
         app: arango-deployment-operator
     spec:
+      serviceAccountName: {{ .Deployment.Operator.ServiceAccountName }}
       containers:
       - name: operator
         imagePullPolicy: {{ .ImagePullPolicy }}
@@ -60,3 +62,5 @@ spec:
         operator: "Exists"
         effect: "NoExecute"
         tolerationSeconds: 5
+
+{{ .Deployment.FilterEnd }}
