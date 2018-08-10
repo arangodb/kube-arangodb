@@ -117,7 +117,9 @@ description: |
 home: https://arangodb.com
 `
 	kubeArangoDBValuesTemplate = `
+# Image containing the kube-arangodb operators
 Image: {{ .Image | quote }}
+# Image pull policy for Image
 ImagePullPolicy: {{ .ImagePullPolicy | quote }}
 RBAC:
   Create: {{ .RBAC }}
@@ -149,22 +151,26 @@ Storage:
     ServiceAccountName: {{ .Storage.Operator.ServiceAccountName | quote }}
     ServiceType: {{ .Storage.Operator.ServiceType | quote }}
 `
-	kubeArangoDBNotesTemplate = `
+	kubeArangoDBNotesText = `
 kube-arangodb has been deployed successfully!
 
-{{ if (and .Deployment.Create .DeploymentReplication.Create) -}}
+Your release is named '{{ .Release.Name }}'.
+
+{{ if and .Values.Deployment.Create .Values.DeploymentReplication.Create -}}
 You can now deploy ArangoDeployment & ArangoDeploymentReplication resources.
-{{- else if (and .Deployment.Create (not .DeploymentReplication.Create)) -}}
+{{- else if and .Values.Deployment.Create (not .Values.DeploymentReplication.Create) -}}
 You can now deploy ArangoDeployment resources.
-{{- else if (and (not .Deployment.Create) .DeploymentReplication.Create) -}}
+{{- else if and (not .Values.Deployment.Create) .Values.DeploymentReplication.Create -}}
 You can now deploy ArangoDeploymentReplication resources.
 {{- end }}
 
 See https://docs.arangodb.com/devel/Manual/Tutorials/Kubernetes/
 for how to get started.
 `
-	kubeArangoDBStorageNotesTemplate = `
+	kubeArangoDBStorageNotesText = `
 kube-arangodb-storage has been deployed successfully!
+
+Your release is named '{{ .Release.Name }}'.
 
 You can now deploy an ArangoLocalStorage resource.
 
@@ -178,12 +184,12 @@ var (
 		"kube-arangodb": chartTemplates{
 			"Chart.yaml":          kubeArangoDBChartTemplate,
 			"values.yaml":         kubeArangoDBValuesTemplate,
-			"templates/NOTES.txt": kubeArangoDBNotesTemplate,
+			"templates/NOTES.txt": kubeArangoDBNotesText,
 		},
 		"kube-arangodb-storage": chartTemplates{
 			"Chart.yaml":          kubeArangoDBStorageChartTemplate,
 			"values.yaml":         kubeArangoDBStorageValuesTemplate,
-			"templates/NOTES.txt": kubeArangoDBStorageNotesTemplate,
+			"templates/NOTES.txt": kubeArangoDBStorageNotesText,
 		},
 	}
 )
@@ -490,11 +496,17 @@ func main() {
 	for groupName, chartTemplates := range chartTemplateGroups {
 		for name, templateSource := range chartTemplates {
 			output := &bytes.Buffer{}
-			t, err := template.New(name).Funcs(tmplFuncs).Parse(templateSource)
-			if err != nil {
-				log.Fatalf("Failed to parse template %s: %v", name, err)
+			if strings.HasSuffix(name, ".txt") {
+				// Plain text
+				output.WriteString(templateSource)
+			} else {
+				// Template
+				t, err := template.New(name).Funcs(tmplFuncs).Parse(templateSource)
+				if err != nil {
+					log.Fatalf("Failed to parse template %s: %v", name, err)
+				}
+				t.Execute(output, templateOptions)
 			}
-			t.Execute(output, templateOptions)
 
 			// Save output
 			tarPath := path.Join(groupName, name)
