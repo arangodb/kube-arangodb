@@ -149,17 +149,41 @@ Storage:
     ServiceAccountName: {{ .Storage.Operator.ServiceAccountName | quote }}
     ServiceType: {{ .Storage.Operator.ServiceType | quote }}
 `
+	kubeArangoDBNotesTemplate = `
+kube-arangodb has been deployed successfully!
+
+{{ if (and .Deployment.Create .DeploymentReplication.Create) -}}
+You can now deploy ArangoDeployment & ArangoDeploymentReplication resources.
+{{- else if (and .Deployment.Create (not .DeploymentReplication.Create)) -}}
+You can now deploy ArangoDeployment resources.
+{{- else if (and (not .Deployment.Create) .DeploymentReplication.Create) -}}
+You can now deploy ArangoDeploymentReplication resources.
+{{- end }}
+
+See https://docs.arangodb.com/devel/Manual/Tutorials/Kubernetes/
+for how to get started.
+`
+	kubeArangoDBStorageNotesTemplate = `
+kube-arangodb-storage has been deployed successfully!
+
+You can now deploy an ArangoLocalStorage resource.
+
+See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
+for further instructions.
+`
 )
 
 var (
 	chartTemplateGroups = map[string]chartTemplates{
 		"kube-arangodb": chartTemplates{
-			"Chart.yaml":  kubeArangoDBChartTemplate,
-			"values.yaml": kubeArangoDBValuesTemplate,
+			"Chart.yaml":          kubeArangoDBChartTemplate,
+			"values.yaml":         kubeArangoDBValuesTemplate,
+			"templates/NOTES.txt": kubeArangoDBNotesTemplate,
 		},
 		"kube-arangodb-storage": chartTemplates{
-			"Chart.yaml":  kubeArangoDBStorageChartTemplate,
-			"values.yaml": kubeArangoDBStorageValuesTemplate,
+			"Chart.yaml":          kubeArangoDBStorageChartTemplate,
+			"values.yaml":         kubeArangoDBStorageValuesTemplate,
+			"templates/NOTES.txt": kubeArangoDBStorageNotesTemplate,
 		},
 	}
 )
@@ -347,7 +371,7 @@ func main() {
 				ServiceAccountName: "{{ .Values.Deployment.Operator.ServiceAccountName }}",
 				ServiceType:        "{{ .Values.Deployment.Operator.ServiceType }}",
 			},
-			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "deployment-operator" | trunc 63 | trimSuffix "-" }}`,
+			OperatorDeploymentName: "arango-deployment-operator", // Fixed name because only 1 is allowed per namespace
 			AllowChaos:             "{{ .Values.Deployment.AllowChaos }}",
 		},
 		DeploymentReplication: ResourceOptions{
@@ -367,7 +391,7 @@ func main() {
 				ServiceAccountName: "{{ .Values.DeploymentReplication.Operator.ServiceAccountName }}",
 				ServiceType:        "{{ .Values.DeploymentReplication.Operator.ServiceType }}",
 			},
-			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "deployment-replication-operator" | trunc 63 | trimSuffix "-" }}`,
+			OperatorDeploymentName: "arango-deployment-replication-operator", // Fixed name because only 1 is allowed per namespace
 		},
 		Storage: ResourceOptions{
 			Create: "{{ .Values.Storage.Create }}",
@@ -384,7 +408,7 @@ func main() {
 				ServiceAccountName: "{{ .Values.Storage.Operator.ServiceAccountName }}",
 				ServiceType:        "{{ .Values.Storage.Operator.ServiceType }}",
 			},
-			OperatorDeploymentName: `{{ printf "%s-%s" .Release.Name "storage-operator" | trunc 63 | trimSuffix "-" }}`,
+			OperatorDeploymentName: "arango-storage-operator", // Fixed name because only 1 is allowed per namespace
 		},
 	}
 
