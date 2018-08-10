@@ -422,19 +422,25 @@ func main() {
 		// Build standalone yaml file for this group
 		{
 			output := &bytes.Buffer{}
-			for i, tempInfo := range templateGroup.Templates {
+			for _, tempInfo := range templateGroup.Templates {
 				if tempInfo.Predicate == nil || tempInfo.Predicate(templateOptions, false) {
 					name := tempInfo.Name
 					t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
 					if err != nil {
 						log.Fatalf("Failed to parse template %s: %v", name, err)
 					}
-					if i > 0 {
-						output.WriteString("\n---\n\n")
+					// Execute to tmp buffer
+					tmpBuf := &bytes.Buffer{}
+					t.Execute(tmpBuf, templateOptions)
+					// Add tmp buffer to output, unless empty
+					if strings.TrimSpace(tmpBuf.String()) != "" {
+						if output.Len() > 0 {
+							output.WriteString("\n---\n\n")
+						}
+						output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
+						tmpBuf.WriteTo(output)
+						output.WriteString("\n")
 					}
-					output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
-					t.Execute(output, templateOptions)
-					output.WriteString("\n")
 				}
 			}
 
@@ -457,19 +463,25 @@ func main() {
 		// Build helm template file for this group
 		{
 			output := &bytes.Buffer{}
-			for i, tempInfo := range templateGroup.Templates {
+			for _, tempInfo := range templateGroup.Templates {
 				if tempInfo.Predicate == nil || tempInfo.Predicate(chartTemplateOptions, true) {
 					name := tempInfo.Name
 					t, err := template.New(name).ParseFiles(filepath.Join(options.TemplatesDir, group, name))
 					if err != nil {
 						log.Fatalf("Failed to parse template %s: %v", name, err)
 					}
-					if i > 0 {
-						output.WriteString("\n---\n\n")
+					// Execute to tmp buffer
+					tmpBuf := &bytes.Buffer{}
+					t.Execute(tmpBuf, templateOptions)
+					// Add tmp buffer to output, unless empty
+					if strings.TrimSpace(tmpBuf.String()) != "" {
+						if output.Len() > 0 {
+							output.WriteString("\n---\n\n")
+						}
+						output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
+						tmpBuf.WriteTo(output)
+						output.WriteString("\n")
 					}
-					output.WriteString(fmt.Sprintf("## %s/%s\n", group, name))
-					t.Execute(output, chartTemplateOptions)
-					output.WriteString("\n")
 				}
 			}
 
