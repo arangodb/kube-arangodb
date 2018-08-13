@@ -278,7 +278,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
-	// Pick a coordinator to be deleted 5 times
+	// Pick a dbserver to be deleted 5 times
 	targetServer := apiObject.Status.Members.DBServers[0]
 	for i := 0; i < 5; i++ {
 		// Get current pod so we can compare UID later
@@ -301,8 +301,8 @@ func TestMemberResilienceDBServers(t *testing.T) {
 				}
 				return nil
 			}
-			if err := retry.Retry(op, time.Minute); err != nil {
-				t.Fatalf("Pod did not restart: %v", err)
+			if err := retry.Retry(op, time.Minute*2); err != nil {
+				t.Fatalf("Pod %d did not restart: %v", i, err)
 			}
 		} else {
 			// Wait for member to be replaced
@@ -316,7 +316,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 				}
 				return nil
 			}
-			if err := retry.Retry(op, time.Minute); err != nil {
+			if err := retry.Retry(op, time.Minute*2); err != nil {
 				t.Fatalf("Member failure did not succeed: %v", err)
 			}
 		}
