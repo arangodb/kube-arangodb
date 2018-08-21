@@ -11,12 +11,25 @@ For example you can install the operator in a namespace other than
 
 ## Charts
 
+The ArangoDB Kubernetes Operator is contained in two `helm` charts:
+
+- `kube-arangodb` which contains the operator for the `ArangoDeployment`
+  and `ArangoDeploymentReplication` resource types.
+- `kube-arangodb-storage` which contains the operator for the `ArangoLocalStorage`
+  resource type.
+
+The `kube-arangodb-storage` only has to be installed if your Kubernetes cluster
+does not already provide `StorageClasses` that use locally attached SSDs.
+
 ## Configurable values for ArangoDB Kubernetes Operator
 
 The following values can be configured when installing the
 ArangoDB Kubernetes Operator with `helm`.
 
-### Both charts
+Values are passed to `helm` using an `--set=<key>=<value>` argument passed
+to the `helm install` or `helm upgrade` command.
+
+### Values applicable to both charts
 
 | Key               | Type   | Description
 |-------------------|--------|-----|
@@ -24,7 +37,7 @@ ArangoDB Kubernetes Operator with `helm`.
 | ImagePullPolicy   | string | Override the image pull policy used by the operators. See [Updating Images](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for details.
 | RBAC.Create       | bool   | Set to `true` (default) to create roles & role bindings.
 
-### `kube-arangodb` chart
+### Values applicable to the `kube-arangodb` chart
 
 | Key               | Type   | Description
 |-------------------|--------|-----|
@@ -38,10 +51,41 @@ ArangoDB Kubernetes Operator with `helm`.
 | DeploymentReplication.Operator.ServiceAccountName | string | Name of the `ServiceAccount` used to run the `ArangoDeploymentReplication` operator
 | DeploymentReplication.Operator.ServiceType | string | Type of `Service` created for the dashboard of the `ArangoDeploymentReplication` operator
 
-### `kube-arangodb-storage` chart
+### Values applicable to the `kube-arangodb-storage` chart
 
 | Key               | Type   | Description
 |-------------------|--------|-----|
 | Storage.User.ServiceAccountName | string | Name of the `ServiceAccount` that is the subject of the `RoleBinding` of users of the `ArangoLocalStorage` operator
 | Storage.Operator.ServiceAccountName | string | Name of the `ServiceAccount` used to run the `ArangoLocalStorage` operator
 | Storage.Operator.ServiceType | string | Type of `Service` created for the dashboard of the `ArangoLocalStorage` operator
+
+## Alternate namespaces
+
+The `kube-arangodb` chart supports deployment into a non-default namespace.
+
+To install the `kube-arangodb` chart is a non-default namespace, use the `--namespace`
+argument like this.
+
+```bash
+helm install --namespace=mynamespace kube-arangodb.tgz
+```
+
+Note that since the operators claim exclusive access to a namespace, you can
+install the `kube-arangodb` chart in a namespace once.
+You can install the `kube-arangodb` chart in multiple namespaces. To do so, run:
+
+```bash
+helm install --namespace=namespace1 kube-arangodb.tgz
+helm install --namespace=namespace2 kube-arangodb.tgz
+```
+
+The `kube-arangodb-storage` chart is always installed in the `kube-system` namespace.
+
+## Common problems
+
+### Error: no available release name found
+
+This error is given by `helm install ...` in some cases where it has
+insufficient permissions to install charts.
+
+For various ways to work around this problem go to [this Stackoverflow article](https://stackoverflow.com/questions/43499971/helm-error-no-available-release-name-found).
