@@ -122,16 +122,28 @@ func TestResiliencePod(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 }
 
-// TestResiliencePVC
-// Tests handling of individual pod deletions
-func TestResiliencePVC(t *testing.T) {
+// TestResiliencePVCAgents
+// Tests handling of individual PVCs of agents being deleted
+func TestResiliencePVCAgents(t *testing.T) {
+	testResiliencePVC(api.ServerGroupAgents, t)
+}
+
+// TestResiliencePVCDBServers
+// Tests handling of individual PVCs of dbservers being deleted
+func TestResiliencePVCDBServers(t *testing.T) {
+	testResiliencePVC(api.ServerGroupDBServers, t)
+}
+
+// testResiliencePVC
+// Tests handling of individual PVCs of given group being deleted
+func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Prepare deployment config
-	depl := newDeployment("test-pvc-resilience-" + uniuri.NewLen(4))
+	depl := newDeployment(fmt.Sprintf("test-pvc-resilience-%s-%s", testGroup.AsRoleAbbreviated(), uniuri.NewLen(4)))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
@@ -166,9 +178,8 @@ func TestResiliencePVC(t *testing.T) {
 
 	// Delete one pvc after the other
 	apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-		if group != api.ServerGroupAgents {
-			// Coordinators have no PVC
-			// DBServers will be cleaned out and create a new member
+		if group != testGroup {
+			// We only test a specific group here
 			return nil
 		}
 		for _, m := range *status {
@@ -195,8 +206,12 @@ func TestResiliencePVC(t *testing.T) {
 				}
 				return nil
 			}
-			if err := retry.Retry(op, time.Minute); err != nil {
+			if err := retry.Retry(op, time.Minute*2); err != nil {
 				t.Fatalf("PVC did not restart: %v", err)
+			}
+			// Wait for deployment to be ready
+			if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
+				t.Fatalf("Deployment not running in time: %v", err)
 			}
 			// Wait for cluster to be completely ready
 			if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {

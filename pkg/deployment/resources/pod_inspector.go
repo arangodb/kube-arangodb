@@ -31,6 +31,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -39,19 +40,22 @@ var (
 )
 
 const (
-	podScheduleTimeout = time.Minute // How long we allow the schedule to take scheduling a pod.
+	podScheduleTimeout      = time.Minute // How long we allow the schedule to take scheduling a pod.
+	maxPodInspectorInterval = time.Hour
 )
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPods(ctx context.Context) error {
+// Returns: Interval_till_next_inspection, error
+func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 	log := r.log
 	var events []*k8sutil.Event
+	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 
 	pods, err := r.context.GetOwnedPods()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned pods")
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Update member status from all pods found
@@ -80,7 +84,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 				ignoreNotFound := false
 				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
-					return maskAny(err)
+					return 0, maskAny(err)
 				}
 			}
 			continue
@@ -136,18 +140,20 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 		}
 		if k8sutil.IsPodMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
+			if x, err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true
 				memberStatus = m
 				return nil
 			}); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run pod finalizers")
+			} else {
+				nextInterval = util.MinDuration(nextInterval, x)
 			}
 		}
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return maskAny(err)
+				return 0, maskAny(err)
 			}
 		}
 	}
@@ -238,14 +244,14 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 
 	// Save status
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Create events
 	for _, evt := range events {
 		r.context.CreateEvent(evt)
 	}
-	return nil
+	return nextInterval, nil
 }
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.

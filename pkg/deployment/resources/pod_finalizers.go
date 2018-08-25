@@ -37,8 +37,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+const (
+	recheckPodFinalizerInterval = time.Second * 10
+)
+
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
-func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+// Returns: Interval_till_next_inspection, error
+func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (time.Duration, error) {
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
@@ -55,7 +60,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus, updateMember); err == nil {
 				removalList = append(removalList, f)
 			} else {
-				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
+				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
 			}
 		}
 	}
@@ -65,10 +70,15 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 		ignoreNotFound := false
 		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
-			return maskAny(err)
+			return 0, maskAny(err)
+		} else {
+			log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from Pod")
 		}
+	} else {
+		// Check again at given interval
+		return recheckPodFinalizerInterval, nil
 	}
-	return nil
+	return maxPodInspectorInterval, nil
 }
 
 // inspectFinalizerPodAgencyServing checks the finalizer condition for agency-serving.
@@ -131,14 +141,16 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 		return maskAny(fmt.Errorf("No more remaining agents"))
 	}
 	if err := agency.AreAgentsHealthy(ctx, agencyConns); err != nil {
-		log.Debug().Err(err).Msg("Remaining agents are not health")
+		log.Debug().Err(err).Msg("Remaining agents are not healthy")
 		return maskAny(err)
 	}
 
 	// Remaining agents are healthy, we can remove this one and trigger a delete of the PVC
-	if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
+	if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Warn().Err(err).Msg("Failed to delete PVC for member")
 		return maskAny(err)
+	} else {
+		log.Debug().Str("pvc-name", memberStatus.PersistentVolumeClaimName).Msg("Removed PVC of member so agency can be completely replaced")
 	}
 
 	return nil

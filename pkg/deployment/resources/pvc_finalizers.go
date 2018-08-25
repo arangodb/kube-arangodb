@@ -46,7 +46,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, group, memberStatus); err == nil {
 				removalList = append(removalList, f)
 			} else {
-				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
+				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove PVC finalizer yet")
 			}
 		}
 	}
@@ -57,6 +57,8 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 		if err := k8sutil.RemovePVCFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
 			return maskAny(err)
+		} else {
+			log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from PVC")
 		}
 	}
 	return nil

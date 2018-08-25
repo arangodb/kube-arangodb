@@ -27,6 +27,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -87,9 +88,11 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// Inspection of generated resources needed
-		if err := d.resources.InspectPods(ctx); err != nil {
+		if x, err := d.resources.InspectPods(ctx); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+		} else {
+			nextInterval = util.MinDuration(nextInterval, x)
 		}
 		if err := d.resources.InspectPVCs(ctx); err != nil {
 			hasError = true
