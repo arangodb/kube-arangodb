@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"log"
 
-	openapiv3 "github.com/googleapis/gnostic/OpenAPIv3"
 	"strings"
+
+	openapiv3 "github.com/googleapis/gnostic/OpenAPIv3"
 )
 
 // NewModelFromOpenAPIv3 builds a model of an API service for use in code generation.
@@ -63,8 +64,10 @@ func (b *OpenAPI3Builder) build(document *openapiv3.Document) (err error) {
 		}
 	}
 	// Collect service method descriptions from each PathItem.
-	for _, pair := range document.Paths.Path {
-		b.buildMethodFromPathItem(pair.Name, pair.Value)
+	if document.Paths != nil {
+		for _, pair := range document.Paths.Path {
+			b.buildMethodFromPathItem(pair.Name, pair.Value)
+		}
 	}
 	return err
 }
@@ -270,13 +273,14 @@ func (b *OpenAPI3Builder) typeForSchema(schema *openapiv3.Schema) (kind FieldKin
 		case "array":
 			if schema.Items != nil {
 				// we have an array.., but of what?
-				items := schema.Items.SchemaOrReference
-				if len(items) == 1 {
-					if items[0].GetReference().GetXRef() != "" {
-						return FieldKind_ARRAY,  typeForRef(items[0].GetReference().GetXRef()), format
-					} else if items[0].GetSchema().Type == "string" {
+				items := schema.Items
+				if items != nil {
+					a := items.GetSchemaOrReference()
+					if a[0].GetReference().GetXRef() != "" {
+						return FieldKind_ARRAY, typeForRef(a[0].GetReference().GetXRef()), format
+					} else if a[0].GetSchema().Type == "string" {
 						return FieldKind_ARRAY, "string", format
-					} else if items[0].GetSchema().Type == "object" {
+					} else if a[0].GetSchema().Type == "object" {
 						return FieldKind_ARRAY, "interface{}", format
 					}
 				}

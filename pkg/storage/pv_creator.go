@@ -25,7 +25,6 @@ package storage
 import (
 	"context"
 	"crypto/sha1"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net"
@@ -145,17 +144,13 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			// Create a volume
 			pvName := strings.ToLower(apiObject.GetName() + "-" + shortHash(info.NodeName) + "-" + name)
 			volumeMode := v1.PersistentVolumeFilesystem
-			nodeAff, err := createNodeAffinity(info.NodeName)
-			if err != nil {
-				return maskAny(err) // No continue here, since this should just not happen
-			}
+			nodeSel := createNodeSelector(info.NodeName)
 			pv := &v1.PersistentVolume{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: pvName,
 					Annotations: map[string]string{
-						AnnProvisionedBy:                      storageClassProvisioner,
-						v1.AlphaStorageNodeAffinityAnnotation: nodeAff,
-						nodeNameAnnotation:                    info.NodeName,
+						AnnProvisionedBy:   storageClassProvisioner,
+						nodeNameAnnotation: info.NodeName,
 					},
 					Labels: map[string]string{
 						k8sutil.LabelKeyArangoDeployment: deploymentName,
@@ -183,6 +178,9 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 						Name:       claim.GetName(),
 						Namespace:  claim.GetNamespace(),
 						UID:        claim.GetUID(),
+					},
+					NodeAffinity: &v1.VolumeNodeAffinity{
+						Required: nodeSel,
 					},
 				},
 			}
@@ -229,27 +227,20 @@ func createValidEndpointList(list *v1.EndpointsList) []string {
 }
 
 // createNodeAffinity creates a node affinity serialized to string.
-func createNodeAffinity(nodeName string) (string, error) {
-	aff := v1.NodeAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-			NodeSelectorTerms: []v1.NodeSelectorTerm{
-				v1.NodeSelectorTerm{
-					MatchExpressions: []v1.NodeSelectorRequirement{
-						v1.NodeSelectorRequirement{
-							Key:      "kubernetes.io/hostname",
-							Operator: v1.NodeSelectorOpIn,
-							Values:   []string{nodeName},
-						},
+func createNodeSelector(nodeName string) *v1.NodeSelector {
+	return &v1.NodeSelector{
+		NodeSelectorTerms: []v1.NodeSelectorTerm{
+			v1.NodeSelectorTerm{
+				MatchExpressions: []v1.NodeSelectorRequirement{
+					v1.NodeSelectorRequirement{
+						Key:      "kubernetes.io/hostname",
+						Operator: v1.NodeSelectorOpIn,
+						Values:   []string{nodeName},
 					},
 				},
 			},
 		},
 	}
-	encoded, err := json.Marshal(aff)
-	if err != nil {
-		return "", maskAny(err)
-	}
-	return string(encoded), nil
 }
 
 // createNodeClientMap creates a map from node name to API.

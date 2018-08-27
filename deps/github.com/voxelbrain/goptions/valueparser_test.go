@@ -87,3 +87,26 @@ func TestParse_Duration(t *testing.T) {
 		t.Fatalf("Unexpected value: %#v", options.Cache)
 	}
 }
+
+func TestParse_Time(t *testing.T) {
+	var args []string
+	var err error
+	var fs *FlagSet
+	var options struct {
+		DefaultFormat time.Time `goptions:"-d"`
+		AltFormat     time.Time `goptions:"-a, format='02-Jan-06-15:04--0700'"`
+	}
+
+	args = []string{"-d", "2006-01-02T17:04:05Z", "-a", "02-Jan-06-15:04--0700"}
+	fs = NewFlagSet("goptions", &options)
+	err = fs.Parse(args)
+	if err != nil {
+		t.Fatalf("Parsing failed: %s", err)
+	}
+	if got := options.DefaultFormat.Format(time.RFC3339); got != "2006-01-02T17:04:05Z" {
+		t.Fatalf("Unexpected value: %#v", got)
+	}
+	if got := options.AltFormat.Format(time.RFC3339); got != "2006-01-02T15:04:00-07:00" {
+		t.Fatalf("Unexpected value: %#v", got)
+	}
+}
