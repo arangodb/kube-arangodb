@@ -24,7 +24,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -103,90 +102,19 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 // inspectFinalizerPodDrainDBServer checks the finalizer condition for drain-dbserver.
 // It returns nil if the finalizer can be removed.
 func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
-	// Inspect member phase
-	if memberStatus.Phase.IsFailed() {
-		log.Debug().Msg("Pod is already failed, safe to remove drain dbserver finalizer")
-		return nil
-	}
-	// Inspect deployment deletion state
-	apiObject := r.context.GetAPIObject()
-	if apiObject.GetDeletionTimestamp() != nil {
-		log.Debug().Msg("Entire deployment is being deleted, safe to remove drain dbserver finalizer")
-		return nil
-	}
-
-	// Check node the pod is scheduled on
-	dbserverDataWillBeGone := false
-	if p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to get node for member")
-			return maskAny(err)
-		}
-		if node.Spec.Unschedulable {
-			dbserverDataWillBeGone = true
-		}
-	}
-
-	// Check PVC
-	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get PVC for member")
+	if err := r.prepareDBServerPodTermination(ctx, log, p, memberStatus, updateMember); err != nil {
+		// Pod cannot be terminated yet
 		return maskAny(err)
 	}
-	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
-		dbserverDataWillBeGone = true
+
+	// Remaining agents are healthy, we can remove this one and trigger a delete of the PVC
+	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
+	if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		log.Warn().Err(err).Msg("Failed to delete PVC for member")
+		return maskAny(err)
+	} else {
+		log.Debug().Str("pvc-name", memberStatus.PersistentVolumeClaimName).Msg("Removed PVC of member")
 	}
 
-	// Is this a simple pod restart?
-	if !dbserverDataWillBeGone {
-		log.Debug().Msg("Pod is just being restarted, safe to remove drain dbserver finalizer")
-		return nil
-	}
-
-	// Inspect cleaned out state
-	log.Debug().Msg("DBServer data is being deleted, so we will cleanout the dbserver first")
-	c, err := r.context.GetDatabaseClient(ctx)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member client")
-		return maskAny(err)
-	}
-	cluster, err := c.Cluster(ctx)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to access cluster")
-		return maskAny(err)
-	}
-	cleanedOut, err := cluster.IsCleanedOut(ctx, memberStatus.ID)
-	if err != nil {
-		return maskAny(err)
-	}
-	if cleanedOut {
-		// Cleanout completed
-		if memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
-			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
-			}
-		}
-		// Trigger PVC removal
-		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
-			log.Warn().Err(err).Msg("Failed to delete PVC for member")
-			return maskAny(err)
-		}
-
-		log.Debug().Msg("Server is cleaned out. Save to remove drain dbserver finalizer")
-		return nil
-	}
-	// Not cleaned out yet, check member status
-	if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		log.Warn().Msg("Member is already terminated before it could be cleaned out. Not good, but removing drain dbserver finalizer because we cannot do anything further")
-		return nil
-	}
-	// Ensure the cleanout is triggered
-	log.Debug().Msg("Server is not yet clean out. Triggering a clean out now")
-	if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
-		log.Debug().Err(err).Msg("Failed to clean out server")
-		return maskAny(err)
-	}
-	return maskAny(fmt.Errorf("Server is not yet cleaned out"))
+	return nil
 }

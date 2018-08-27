@@ -189,13 +189,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 				return maskAny(err)
 			}
 		}
-		// Trigger PVC removal
-		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
-			log.Warn().Err(err).Msg("Failed to delete PVC for member")
-			return maskAny(err)
-		}
-
-		log.Debug().Msg("Server is cleaned out. Save to remove drain dbserver finalizer")
+		log.Debug().Msg("DBServer is cleaned out.")
 		return nil
 	}
 	// Not cleaned out yet, check member status
