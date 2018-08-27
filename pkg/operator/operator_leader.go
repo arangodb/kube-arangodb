@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -68,20 +69,21 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 		log.Fatal().Err(err).Msg("Failed to create resource lock")
 	}
 
-	leaderelection.RunOrDie(leaderelection.LeaderElectionConfig{
+	ctx := context.Background()
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock:          rl,
 		LeaseDuration: 15 * time.Second,
 		RenewDeadline: 10 * time.Second,
 		RetryPeriod:   2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(stop <-chan struct{}) {
+			OnStartedLeading: func(ctx context.Context) {
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 				readyProbe.SetReady()
 				if err := o.setRoleLabel(log, constants.LabelRoleLeader); err != nil {
 					log.Error().Msg("Cannot set leader role on Pod. Terminating process")
 					os.Exit(2)
 				}
-				onStart(stop)
+				onStart(ctx.Done())
 			},
 			OnStoppedLeading: func() {
 				recordEvent("Stop Leading", fmt.Sprintf("Pod %s is stopping to run as leader", o.Config.PodName))
