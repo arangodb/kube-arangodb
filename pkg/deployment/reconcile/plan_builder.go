@@ -101,6 +101,10 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
+				log.Debug().
+					Str("id", m.ID).
+					Str("role", group.AsRole()).
+					Msg("Creating member replacement plan because member has failed")
 				newID := ""
 				if group == api.ServerGroupAgents {
 					newID = m.ID // Agents cannot (yet) be replaced with new IDs
@@ -117,6 +121,10 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
 		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+			log.Debug().
+				Str("id", m.ID).
+				Str("role", api.ServerGroupDBServers.AsRole()).
+				Msg("Creating dbserver replacement plan because server is cleanout in created phase")
 			plan = append(plan,
 				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
 				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),

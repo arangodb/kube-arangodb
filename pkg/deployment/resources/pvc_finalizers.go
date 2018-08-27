@@ -36,14 +36,14 @@ import (
 )
 
 // runPVCFinalizers goes through the list of PVC finalizers to see if they can be removed.
-func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
+func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.With().Str("pvc-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
 		case constants.FinalizerPVCMemberExists:
 			log.Debug().Msg("Inspecting member exists finalizer")
-			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, group, memberStatus); err == nil {
+			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, group, memberStatus, updateMember); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove PVC finalizer yet")
@@ -66,7 +66,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 
 // inspectFinalizerPVCMemberExists checks the finalizer condition for member-exists.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
+func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Member is already failed, safe to remove member-exists finalizer")
@@ -93,10 +93,22 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 		}
 	}
 
-	// Member still exists, let's trigger a delete of it
+	// Member still exists, let's trigger a delete of it, if we're allowed to do so
 	if memberStatus.PodName != "" {
-		log.Info().Msg("Removing Pod of member, because PVC is being removed")
 		pods := r.context.GetKubeCli().CoreV1().Pods(apiObject.GetNamespace())
+		log.Info().Msg("Checking in Pod of member can be removed, because PVC is being removed")
+		if pod, err := pods.Get(memberStatus.PodName, metav1.GetOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+			log.Debug().Err(err).Msg("Failed to get pod for PVC")
+			return maskAny(err)
+		} else if err == nil {
+			// We've got the pod, check & prepare its termination
+			if err := r.preparePodTermination(ctx, log, pod, group, memberStatus, updateMember); err != nil {
+				log.Debug().Err(err).Msg("Not allowed to remove pod yet")
+				return maskAny(err)
+			}
+		}
+
+		log.Info().Msg("Removing Pod of member, because PVC is being removed")
 		if err := pods.Delete(memberStatus.PodName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Failed to delete pod")
 			return maskAny(err)

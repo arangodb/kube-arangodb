@@ -36,6 +36,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
@@ -191,14 +192,14 @@ func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 			if err := kubecli.CoreV1().PersistentVolumeClaims(ns).Delete(m.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil {
 				t.Fatalf("Failed to delete pvc %s: %v", m.PersistentVolumeClaimName, err)
 			}
-			// Now delete the pod as well, otherwise the PVC will only have a deletion timestamp but its finalizers will stay on.
-			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
-				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
-			}
 			// Wait for pvc to return with different UID
 			op := func() error {
 				pvc, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
 				if err != nil {
+					if k8sutil.IsNotFound(err) && group == api.ServerGroupDBServers {
+						// DBServer member is completely replaced when cleaned out, so the PVC will have a different name also
+						return nil
+					}
 					return maskAny(err)
 				}
 				if pvc.GetUID() == originalPVC.GetUID() {
@@ -298,9 +299,9 @@ func TestResiliencePVDBServer(t *testing.T) {
 				t.Fatalf("Failed to delete pvc %s: %v", m.PersistentVolumeClaimName, err)
 			}
 			// Delete Pod
-			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
+			/*if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
 				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
-			}
+			}*/
 			// Wait for cluster to be healthy again with the same number of
 			// dbservers, but the current dbserver being replaced.
 			expectedDBServerCount := apiObject.Spec.DBServers.GetCount()

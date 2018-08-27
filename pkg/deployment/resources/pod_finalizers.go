@@ -31,7 +31,6 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -84,68 +83,13 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 // inspectFinalizerPodAgencyServing checks the finalizer condition for agency-serving.
 // It returns nil if the finalizer can be removed.
 func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus) error {
-	// Inspect member phase
-	if memberStatus.Phase.IsFailed() {
-		log.Debug().Msg("Pod is already failed, safe to remove agency serving finalizer")
-		return nil
-	}
-	// Inspect deployment deletion state
-	apiObject := r.context.GetAPIObject()
-	if apiObject.GetDeletionTimestamp() != nil {
-		log.Debug().Msg("Entire deployment is being deleted, safe to remove agency serving finalizer")
-		return nil
-	}
-
-	// Check node the pod is scheduled on
-	agentDataWillBeGone := false
-	if p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to get node for member")
-			return maskAny(err)
-		}
-		if node.Spec.Unschedulable {
-			agentDataWillBeGone = true
-		}
-	}
-
-	// Check PVC
-	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get PVC for member")
-		return maskAny(err)
-	}
-	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
-		agentDataWillBeGone = true
-	}
-
-	// Is this a simple pod restart?
-	if !agentDataWillBeGone {
-		log.Debug().Msg("Pod is just being restarted, safe to remove agency serving finalizer")
-		return nil
-	}
-
-	// Inspect agency state
-	log.Debug().Msg("Agent data will be gone, so we will check agency serving status first")
-	ctx = agency.WithAllowNoLeader(ctx)                     // The ID we're checking may be the leader, so ignore situations where all other agents are followers
-	ctx, cancel := context.WithTimeout(ctx, time.Second*15) // Force a quick check
-	defer cancel()
-	agencyConns, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != memberStatus.ID })
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create member client")
-		return maskAny(err)
-	}
-	if len(agencyConns) == 0 {
-		log.Debug().Err(err).Msg("No more remaining agents, we cannot delete this one")
-		return maskAny(fmt.Errorf("No more remaining agents"))
-	}
-	if err := agency.AreAgentsHealthy(ctx, agencyConns); err != nil {
-		log.Debug().Err(err).Msg("Remaining agents are not healthy")
+	if err := r.prepareAgencyPodTermination(ctx, log, p, memberStatus); err != nil {
+		// Pod cannot be terminated yet
 		return maskAny(err)
 	}
 
 	// Remaining agents are healthy, we can remove this one and trigger a delete of the PVC
+	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
 	if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Warn().Err(err).Msg("Failed to delete PVC for member")
 		return maskAny(err)
