@@ -24,25 +24,29 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
-	inspectedPVCCounter = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
+	inspectedPVCCounter     = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
+	maxPVCInspectorInterval = time.Hour // Maximum time between PVC inspection (if nothing else happens)
 )
 
 // InspectPVCs lists all PVCs that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPVCs(ctx context.Context) error {
+func (r *Resources) InspectPVCs(ctx context.Context) (time.Duration, error) {
 	log := r.log
+	nextInterval := maxPVCInspectorInterval
 
 	pvcs, err := r.context.GetOwnedPVCs()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned PVCs")
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Update member status from all pods found
@@ -63,7 +67,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 				ignoreNotFound := false
 				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
-					return maskAny(err)
+					return 0, maskAny(err)
 				}
 			}
 			continue
@@ -72,21 +76,23 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 		updateMemberStatusNeeded := false
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPVCFinalizers(ctx, &p, group, memberStatus, func(m api.MemberStatus) error {
+			if x, err := r.runPVCFinalizers(ctx, &p, group, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true
 				memberStatus = m
 				return nil
 			}); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
+			} else {
+				nextInterval = util.MinDuration(nextInterval, x)
 			}
 		}
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return maskAny(err)
+				return 0, maskAny(err)
 			}
 		}
 	}
 
-	return nil
+	return nextInterval, nil
 }

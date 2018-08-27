@@ -41,7 +41,7 @@ var (
 
 const (
 	podScheduleTimeout      = time.Minute // How long we allow the schedule to take scheduling a pod.
-	maxPodInspectorInterval = time.Hour
+	maxPodInspectorInterval = time.Hour   // Maximum time between Pod inspection (if nothing else happens)
 )
 
 // InspectPods lists all pods that belong to the given deployment and updates

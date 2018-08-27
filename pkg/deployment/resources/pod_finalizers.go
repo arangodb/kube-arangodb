@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	recheckPodFinalizerInterval = time.Second * 10
+	recheckPodFinalizerInterval = time.Second * 10 // Interval used when Pod finalizers need to be rechecked soon
 )
 
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
@@ -69,9 +69,8 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
 			return 0, maskAny(err)
-		} else {
-			log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from Pod")
 		}
+		log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from Pod")
 	} else {
 		// Check again at given interval
 		return recheckPodFinalizerInterval, nil

@@ -94,9 +94,11 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		} else {
 			nextInterval = util.MinDuration(nextInterval, x)
 		}
-		if err := d.resources.InspectPVCs(ctx); err != nil {
+		if x, err := d.resources.InspectPVCs(ctx); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
+		} else {
+			nextInterval = util.MinDuration(nextInterval, x)
 		}
 
 		// Check members for resilience
