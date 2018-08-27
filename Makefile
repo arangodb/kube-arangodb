@@ -162,6 +162,8 @@ update-vendor:
 		github.com/coreos/go-semver/semver \
 		github.com/dchest/uniuri \
 		github.com/dgrijalva/jwt-go \
+		github.com/gin-gonic/gin \
+		github.com/jessevdk/go-assets-builder \
 		github.com/julienschmidt/httprouter \
 		github.com/pkg/errors \
 		github.com/prometheus/client_golang/prometheus \
@@ -171,6 +173,7 @@ update-vendor:
 		github.com/stretchr/testify
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
+	# Manually restore arangosync vendor with: git checkout deps/github.com/arangodb/arangosync
 
 .PHONY: update-generated
 update-generated: $(GOBUILDDIR) 
