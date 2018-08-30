@@ -109,6 +109,10 @@ func TestResiliencePod(t *testing.T) {
 			if err := retry.Retry(op, time.Minute); err != nil {
 				t.Fatalf("Pod did not restart: %v", err)
 			}
+			// Wait for deployment to be ready
+			if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {
+				t.Fatalf("Deployment not running in time: %v", err)
+			}
 			// Wait for cluster to be completely ready
 			if err := waitUntilClusterHealth(client, func(h driver.ClusterHealth) error {
 				return clusterHealthEqualsSpec(h, apiObject.Spec)
