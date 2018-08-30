@@ -118,7 +118,7 @@ func TestResiliencePod(t *testing.T) {
 				}
 				return nil
 			}
-			if err := retry.Retry(op, time.Minute); err != nil {
+			if err := retry.Retry(op, time.Minute*2); err != nil {
 				t.Fatalf("Pod did not restart: %v", err)
 			}
 			// Now that the Pod has been replaced, check that the PVC has NOT been replaced (if any)
