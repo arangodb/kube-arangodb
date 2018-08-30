@@ -406,13 +406,18 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 // member.
 func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus) api.Plan {
+	upgradeAction := api.ActionTypeUpgradeMember
+	if group.IsStateless() {
+		upgradeAction = api.ActionTypeRotateMember
+	}
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Str("reason", reason).
+		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
 	plan := api.Plan{
-		api.NewAction(api.ActionTypeUpgradeMember, group, member.ID, reason),
+		api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
