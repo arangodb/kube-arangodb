@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/profiler"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,7 +40,7 @@ import (
 // - any of the underlying resources has changed
 // - once in a while
 // Returns the delay until this function should be called again.
-func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration {
+func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
 	log := d.deps.Log
 
 	nextInterval := lastInterval
@@ -92,13 +93,13 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
 		} else {
-			nextInterval = util.MinDuration(nextInterval, x)
+			nextInterval = nextInterval.ReduceTo(x)
 		}
 		if x, err := d.resources.InspectPVCs(ctx); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
 		} else {
-			nextInterval = util.MinDuration(nextInterval, x)
+			nextInterval = nextInterval.ReduceTo(x)
 		}
 
 		// Check members for resilience
@@ -108,43 +109,67 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// Create scale/update plan
-		if err := d.reconciler.CreatePlan(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
-		}
+		{
+			ps := profiler.Start()
+			if err := d.reconciler.CreatePlan(); err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+			}
 
-		// Execute current step of scale/update plan
-		retrySoon, err := d.reconciler.ExecutePlan(ctx)
-		if err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
-		}
-		if retrySoon {
-			nextInterval = minInspectionInterval
+			// Execute current step of scale/update plan
+			retrySoon, err := d.reconciler.ExecutePlan(ctx)
+			if err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+			}
+			if retrySoon {
+				nextInterval = minInspectionInterval
+			}
+			ps.Done(log, "plan")
 		}
 
 		// Ensure all resources are created
-		if err := d.resources.EnsureSecrets(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsureServices(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsurePVCs(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsurePods(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+		{
+			ps := profiler.Start()
+			{
+				ps := profiler.Start()
+				if err := d.resources.EnsureSecrets(); err != nil {
+					hasError = true
+					d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
+				}
+				ps.LogIf(log, time.Millisecond*10, "EnsureSecrets")
+			}
+			{
+				ps := profiler.Start()
+				if err := d.resources.EnsureServices(); err != nil {
+					hasError = true
+					d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
+				}
+				ps.LogIf(log, time.Millisecond*10, "EnsureServices")
+			}
+			if err := d.resources.EnsurePVCs(); err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+			}
+			{
+				ps := profiler.Start()
+				if err := d.resources.EnsurePods(); err != nil {
+					hasError = true
+					d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
+				}
+				ps.LogIf(log, time.Millisecond*10, "EnsurePods")
+			}
+			ps.Done(log, "ensure resources")
 		}
 
 		// Create access packages
-		if err := d.createAccessPackages(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
+		{
+			ps := profiler.Start()
+			if err := d.createAccessPackages(); err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
+			}
+			ps.Done(log, "createAccessPackages")
 		}
 
 		// Inspect deployment for obsolete members
@@ -154,9 +179,11 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// At the end of the inspect, we cleanup terminated pods.
-		if err := d.resources.CleanupTerminatedPods(); err != nil {
+		if x, err := d.resources.CleanupTerminatedPods(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
+		} else {
+			nextInterval = nextInterval.ReduceTo(x)
 		}
 	}
 
@@ -169,10 +196,7 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	} else {
 		d.recentInspectionErrors = 0
 	}
-	if nextInterval > maxInspectionInterval {
-		nextInterval = maxInspectionInterval
-	}
-	return nextInterval
+	return nextInterval.ReduceTo(maxInspectionInterval)
 }
 
 // triggerInspection ensures that an inspection is run soon.

@@ -27,7 +27,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
@@ -46,7 +46,7 @@ func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(pvcs corev1.PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{
@@ -70,7 +70,7 @@ func CreatePersistentVolumeClaim(kubecli kubernetes.Interface, pvcName, deployme
 		pvc.Spec.StorageClassName = &storageClassName
 	}
 	addOwnerRefToObject(pvc.GetObjectMeta(), &owner)
-	if _, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Create(pvc); err != nil && !IsAlreadyExists(err) {
+	if _, err := pvcs.Create(pvc); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}
 	return nil

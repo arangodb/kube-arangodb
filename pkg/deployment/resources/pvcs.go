@@ -24,6 +24,7 @@ package resources
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -45,15 +46,30 @@ func (r *Resources) EnsurePVCs() error {
 	status, _ := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
+	pvcs := kubecli.CoreV1().PersistentVolumeClaims(ns)
+	list, err := pvcs.List(metav1.ListOptions{})
+	if err != nil {
+		return maskAny(err)
+	}
+	pvcExists := func(name string) bool {
+		for _, pvc := range list.Items {
+			if pvc.GetName() == name {
+				return true
+			}
+		}
+		return false
+	}
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName != "" {
-				storageClassName := spec.GetStorageClassName()
-				role := group.AsRole()
-				resources := spec.Resources
-				finalizers := r.createPVCFinalizers(group)
-				if err := k8sutil.CreatePersistentVolumeClaim(kubecli, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, finalizers, owner); err != nil {
-					return maskAny(err)
+				if !pvcExists(m.PersistentVolumeClaimName) {
+					storageClassName := spec.GetStorageClassName()
+					role := group.AsRole()
+					resources := spec.Resources
+					finalizers := r.createPVCFinalizers(group)
+					if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, finalizers, owner); err != nil {
+						return maskAny(err)
+					}
 				}
 			}
 		}

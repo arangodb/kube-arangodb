@@ -31,17 +31,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
-	recheckPodFinalizerInterval = time.Second * 10 // Interval used when Pod finalizers need to be rechecked soon
+	podFinalizerRemovedInterval = util.Interval(time.Second / 2)  // Interval used (until new inspection) when Pod finalizers have been removed
+	recheckPodFinalizerInterval = util.Interval(time.Second * 10) // Interval used when Pod finalizers need to be rechecked soon
 )
 
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (time.Duration, error) {
+func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (util.Interval, error) {
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
@@ -71,11 +73,11 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			return 0, maskAny(err)
 		}
 		log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from Pod")
-	} else {
-		// Check again at given interval
-		return recheckPodFinalizerInterval, nil
+		// Let's do the next inspection quickly, since things may have changed now.
+		return podFinalizerRemovedInterval, nil
 	}
-	return maxPodInspectorInterval, nil
+	// Check again at given interval
+	return recheckPodFinalizerInterval, nil
 }
 
 // inspectFinalizerPodAgencyServing checks the finalizer condition for agency-serving.

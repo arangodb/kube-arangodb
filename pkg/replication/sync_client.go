@@ -46,6 +46,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	}
 
 	// Authentication
+	secrets := dr.deps.KubeCli.CoreV1().Secrets(dr.apiObject.GetNamespace())
 	insecureSkipVerify := true
 	tlsAuth := tasks.TLSAuthentication{}
 	clientAuthKeyfileSecretName, userSecretName, authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
@@ -57,18 +58,18 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	jwtSecret := ""
 	if userSecretName != "" {
 		var err error
-		username, password, err = k8sutil.GetBasicAuthSecret(dr.deps.KubeCli.CoreV1(), userSecretName, dr.apiObject.GetNamespace())
+		username, password, err = k8sutil.GetBasicAuthSecret(secrets, userSecretName)
 		if err != nil {
 			return nil, maskAny(err)
 		}
 	} else if authJWTSecretName != "" {
 		var err error
-		jwtSecret, err = k8sutil.GetTokenSecret(dr.deps.KubeCli.CoreV1(), authJWTSecretName, dr.apiObject.GetNamespace())
+		jwtSecret, err = k8sutil.GetTokenSecret(secrets, authJWTSecretName)
 		if err != nil {
 			return nil, maskAny(err)
 		}
 	} else if clientAuthKeyfileSecretName != "" {
-		keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), clientAuthKeyfileSecretName, dr.apiObject.GetNamespace())
+		keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 		if err != nil {
 			return nil, maskAny(err)
 		}
@@ -82,7 +83,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		}
 	}
 	if tlsCASecretName != "" {
-		caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), tlsCASecretName, dr.apiObject.GetNamespace())
+		caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
 		if err != nil {
 			return nil, maskAny(err)
 		}
@@ -126,7 +127,8 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch keyfile
-	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(dr.deps.KubeCli.CoreV1(), clientAuthKeyfileSecretName, dr.apiObject.GetNamespace())
+	secrets := dr.deps.KubeCli.CoreV1().Secrets(dr.apiObject.GetNamespace())
+	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}
@@ -136,7 +138,7 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch TLS CA certificate for source
-	caCert, err := k8sutil.GetCACertficateSecret(dr.deps.KubeCli.CoreV1(), tlsCASecretName, dr.apiObject.GetNamespace())
+	caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
 	if err != nil {
 		return client.TLSAuthentication{}, maskAny(err)
 	}

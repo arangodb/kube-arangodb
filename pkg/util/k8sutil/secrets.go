@@ -27,15 +27,20 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
+// SecretInterface has methods to work with Secret resources.
+type SecretInterface interface {
+	Create(*v1.Secret) (*v1.Secret, error)
+	Get(name string, options metav1.GetOptions) (*v1.Secret, error)
+}
+
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace
 // exists and it contains a 'key' data field of exactly 32 bytes.
-func ValidateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func ValidateEncryptionKeySecret(secrets SecretInterface, secretName string) error {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
@@ -51,7 +56,7 @@ func ValidateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespa
 }
 
 // CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
-func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace string, key []byte) error {
+func CreateEncryptionKeySecret(secrets SecretInterface, secretName string, key []byte) error {
 	if len(key) != 32 {
 		return maskAny(fmt.Errorf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
 	}
@@ -64,7 +69,7 @@ func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace
 			constants.SecretEncryptionKey: key,
 		},
 	}
-	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
+	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
@@ -73,8 +78,8 @@ func CreateEncryptionKeySecret(cli corev1.CoreV1Interface, secretName, namespace
 
 // ValidateCACertificateSecret checks that a secret with given name in given namespace
 // exists and it contains a 'ca.crt' data field.
-func ValidateCACertificateSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func ValidateCACertificateSecret(secrets SecretInterface, secretName string) error {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
@@ -91,8 +96,8 @@ func ValidateCACertificateSecret(cli corev1.CoreV1Interface, secretName, namespa
 // If the secret does not exists the field is missing,
 // an error is returned.
 // Returns: certificate, error
-func GetCACertficateSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetCACertficateSecret(secrets SecretInterface, secretName string) (string, error) {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
@@ -109,8 +114,8 @@ func GetCACertficateSecret(cli corev1.CoreV1Interface, secretName, namespace str
 // If the secret does not exists or one of the fields is missing,
 // an error is returned.
 // Returns: certificate, private-key, isOwnedByDeployment, error
-func GetCASecret(cli corev1.CoreV1Interface, secretName, namespace string, ownerRef *metav1.OwnerReference) (string, string, bool, error) {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetCASecret(secrets SecretInterface, secretName string, ownerRef *metav1.OwnerReference) (string, string, bool, error) {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", "", false, maskAny(err)
 	}
@@ -136,7 +141,7 @@ func GetCASecret(cli corev1.CoreV1Interface, secretName, namespace string, owner
 }
 
 // CreateCASecret creates a secret used to store a PEM encoded CA certificate & private key.
-func CreateCASecret(cli corev1.CoreV1Interface, secretName, namespace string, certificate, key string, ownerRef *metav1.OwnerReference) error {
+func CreateCASecret(secrets SecretInterface, secretName string, certificate, key string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -149,7 +154,7 @@ func CreateCASecret(cli corev1.CoreV1Interface, secretName, namespace string, ce
 	}
 	// Attach secret to owner
 	addOwnerRefToObject(secret, ownerRef)
-	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
+	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
@@ -159,8 +164,8 @@ func CreateCASecret(cli corev1.CoreV1Interface, secretName, namespace string, ce
 // GetTLSKeyfileSecret loads a secret used to store a PEM encoded keyfile
 // in the format ArangoDB accepts it for its `--ssl.keyfile` option.
 // Returns: keyfile (pem encoded), error
-func GetTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetTLSKeyfileSecret(secrets SecretInterface, secretName string) (string, error) {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
@@ -174,7 +179,7 @@ func GetTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace strin
 
 // CreateTLSKeyfileSecret creates a secret used to store a PEM encoded keyfile
 // in the format ArangoDB accepts it for its `--ssl.keyfile` option.
-func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace string, keyfile string, ownerRef *metav1.OwnerReference) error {
+func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -186,7 +191,7 @@ func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace st
 	}
 	// Attach secret to owner
 	addOwnerRefToObject(secret, ownerRef)
-	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
+	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
@@ -195,8 +200,8 @@ func CreateTLSKeyfileSecret(cli corev1.CoreV1Interface, secretName, namespace st
 
 // ValidateTokenSecret checks that a secret with given name in given namespace
 // exists and it contains a 'token' data field.
-func ValidateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) error {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func ValidateTokenSecret(secrets SecretInterface, secretName string) error {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
 	}
@@ -209,8 +214,8 @@ func ValidateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace strin
 }
 
 // GetTokenSecret loads the token secret from a Secret with given name.
-func GetTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, error) {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetTokenSecret(secrets SecretInterface, secretName string) (string, error) {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", maskAny(err)
 	}
@@ -224,7 +229,7 @@ func GetTokenSecret(cli corev1.CoreV1Interface, secretName, namespace string) (s
 
 // CreateTokenSecret creates a secret with given name in given namespace
 // with a given token as value.
-func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token string, ownerRef *metav1.OwnerReference) error {
+func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerRef *metav1.OwnerReference) error {
 	// Create secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -236,7 +241,7 @@ func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token 
 	}
 	// Attach secret to owner
 	addOwnerRefToObject(secret, ownerRef)
-	if _, err := cli.Secrets(namespace).Create(secret); err != nil {
+	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
@@ -248,8 +253,8 @@ func CreateTokenSecret(cli corev1.CoreV1Interface, secretName, namespace, token 
 // If the secret does not exists or one of the fields is missing,
 // an error is returned.
 // Returns: username, password, error
-func GetBasicAuthSecret(cli corev1.CoreV1Interface, secretName, namespace string) (string, string, error) {
-	s, err := cli.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+func GetBasicAuthSecret(secrets SecretInterface, secretName string) (string, string, error) {
+	s, err := secrets.Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", "", maskAny(err)
 	}

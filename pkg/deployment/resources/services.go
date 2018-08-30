@@ -40,42 +40,63 @@ func (r *Resources) EnsureServices() error {
 	log := r.log
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
 
-	// Headless service
-	svcName, newlyCreated, err := k8sutil.CreateHeadlessService(kubecli, apiObject, owner)
+	// Fetch existing services
+	svcs := kubecli.CoreV1().Services(ns)
+	list, err := svcs.List(metav1.ListOptions{})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create headless service")
+		log.Debug().Err(err).Msg("Failed to list existing services")
 		return maskAny(err)
 	}
-	if newlyCreated {
-		log.Debug().Str("service", svcName).Msg("Created headless service")
+	svcExists := func(name string) bool {
+		for _, svc := range list.Items {
+			if svc.GetName() == name {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Headless service
+	if !svcExists(k8sutil.CreateHeadlessServiceName(deploymentName)) {
+		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(svcs, apiObject, owner)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to create headless service")
+			return maskAny(err)
+		}
+		if newlyCreated {
+			log.Debug().Str("service", svcName).Msg("Created headless service")
+		}
 	}
 
 	// Internal database client service
 	single := spec.GetMode().HasSingleServers()
-	svcName, newlyCreated, err = k8sutil.CreateDatabaseClientService(kubecli, apiObject, single, owner)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client service")
-		return maskAny(err)
-	}
-	if newlyCreated {
-		log.Debug().Str("service", svcName).Msg("Created database client service")
-	}
-	{
-		status, lastVersion := r.context.GetStatus()
-		if status.ServiceName != svcName {
-			status.ServiceName = svcName
-			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-				return maskAny(err)
+	if !svcExists(k8sutil.CreateDatabaseClientServiceName(deploymentName)) {
+		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(svcs, apiObject, single, owner)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to create database client service")
+			return maskAny(err)
+		}
+		if newlyCreated {
+			log.Debug().Str("service", svcName).Msg("Created database client service")
+		}
+		{
+			status, lastVersion := r.context.GetStatus()
+			if status.ServiceName != svcName {
+				status.ServiceName = svcName
+				if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+					return maskAny(err)
+				}
 			}
 		}
 	}
 
 	// Database external access service
-	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(apiObject.GetName())
+	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName)
 	role := "coordinator"
 	if single {
 		role = "single"
@@ -86,7 +107,7 @@ func (r *Resources) EnsureServices() error {
 
 	if spec.Sync.IsEnabled() {
 		// External (and internal) Sync master service
-		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
+		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
 		if err := r.ensureExternalAccessServices(eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
 			return maskAny(err)
@@ -108,8 +129,8 @@ func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, tit
 	createExternalAccessService := false
 	deleteExternalAccessService := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
-	svcCli := kubecli.CoreV1().Services(ns)
-	if existing, err := svcCli.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+	svcs := kubecli.CoreV1().Services(ns)
+	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
 		// External access service exists
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		nodePort := spec.GetNodePort()
@@ -161,7 +182,7 @@ func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, tit
 	}
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		if err := svcCli.Delete(eaServiceName, &metav1.DeleteOptions{}); err != nil {
+		if err := svcs.Delete(eaServiceName, &metav1.DeleteOptions{}); err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)
 			return maskAny(err)
 		}
@@ -170,7 +191,7 @@ func (r *Resources) ensureExternalAccessServices(eaServiceName, ns, svcRole, tit
 		// Let's create or update the database external access service
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(kubecli, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, apiObject.AsOwner())
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return maskAny(err)

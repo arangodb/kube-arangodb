@@ -33,12 +33,12 @@ import (
 
 var (
 	inspectedPVCCounter     = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
-	maxPVCInspectorInterval = time.Hour // Maximum time between PVC inspection (if nothing else happens)
+	maxPVCInspectorInterval = util.Interval(time.Hour) // Maximum time between PVC inspection (if nothing else happens)
 )
 
 // InspectPVCs lists all PVCs that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPVCs(ctx context.Context) (time.Duration, error) {
+func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	log := r.log
 	nextInterval := maxPVCInspectorInterval
 
@@ -79,7 +79,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) (time.Duration, error) {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
 			} else {
-				nextInterval = util.MinDuration(nextInterval, x)
+				nextInterval = nextInterval.ReduceTo(x)
 			}
 		}
 		if updateMemberStatusNeeded {

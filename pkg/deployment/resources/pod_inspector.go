@@ -40,14 +40,15 @@ var (
 )
 
 const (
-	podScheduleTimeout      = time.Minute // How long we allow the schedule to take scheduling a pod.
-	maxPodInspectorInterval = time.Hour   // Maximum time between Pod inspection (if nothing else happens)
+	podScheduleTimeout              = time.Minute                // How long we allow the schedule to take scheduling a pod.
+	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
+	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
 )
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
+func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	log := r.log
 	var events []*k8sutil.Event
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
@@ -98,6 +99,7 @@ func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
 					now := metav1.Now()
@@ -110,6 +112,7 @@ func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
 					now := metav1.Now()
@@ -123,12 +126,14 @@ func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to true")
 				memberStatus.IsInitialized = true // Require future pods for this member to have an existing UUID (in case of dbserver).
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		} else {
 			// Pod is not ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to false")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		}
 		if k8sutil.IsPodNotScheduledFor(&p, podScheduleTimeout) {
@@ -148,7 +153,7 @@ func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run pod finalizers")
 			} else {
-				nextInterval = util.MinDuration(nextInterval, x)
+				nextInterval = nextInterval.ReduceTo(x)
 			}
 		}
 		if updateMemberStatusNeeded {
@@ -194,6 +199,7 @@ func (r *Resources) InspectPods(ctx context.Context) (time.Duration, error) {
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
 						// Create event
+						nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 						updateMemberNeeded := false
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {

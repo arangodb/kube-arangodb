@@ -198,8 +198,9 @@ func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interf
 // as endpoint. It is failing the test on errors.
 func mustNewArangoSyncClient(ctx context.Context, kubecli kubernetes.Interface, apiObject *api.ArangoDeployment, t *testing.T) client.API {
 	ns := apiObject.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := apiObject.Spec.Sync.Authentication.GetJWTSecretName()
-	jwtToken, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	jwtToken, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		t.Fatalf("Failed to get sync jwt secret '%s': %s", secretName, err)
 	}

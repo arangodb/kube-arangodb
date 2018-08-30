@@ -20,24 +20,32 @@
 // Author Ewout Prangsma
 //
 
-package util
+package profiler
 
 import (
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
-// MaxDuration returns the largest of the given durations
-func MaxDuration(a, b time.Duration) time.Duration {
-	if a > b {
-		return a
-	}
-	return b
+// Session is a single timed action
+type Session time.Time
+
+// Start a profiling session
+func Start() Session {
+	return Session(time.Now())
 }
 
-// MinDuration returns the smallest of the given durations
-func MinDuration(a, b time.Duration) time.Duration {
-	if a < b {
-		return a
+// Done with a profiling session, log when time is "long"
+func (t Session) Done(log zerolog.Logger, msg string) {
+	t.LogIf(log, time.Second/4, msg)
+}
+
+// LogIf logs the time taken since the start of the session, if that is longer
+// than the given minimum duration.
+func (t Session) LogIf(log zerolog.Logger, minLen time.Duration, msg string) {
+	interval := time.Since(time.Time(t))
+	if interval > minLen {
+		log.Debug().Str("time-taken", interval.String()).Msg("profiler: " + msg)
 	}
-	return b
 }
