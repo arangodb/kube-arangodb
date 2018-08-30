@@ -26,7 +26,6 @@ import (
 	"context"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -76,11 +75,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) (time.Duration, error) {
 		updateMemberStatusNeeded := false
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
 			// Process finalizers
-			if x, err := r.runPVCFinalizers(ctx, &p, group, memberStatus, func(m api.MemberStatus) error {
-				updateMemberStatusNeeded = true
-				memberStatus = m
-				return nil
-			}); err != nil {
+			if x, err := r.runPVCFinalizers(ctx, &p, group, memberStatus); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
 			} else {

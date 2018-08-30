@@ -32,6 +32,7 @@ import (
 
 	"github.com/dchest/uniuri"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -92,6 +93,17 @@ func TestResiliencePod(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to get pod %s: %v", m.PodName, err)
 			}
+			// Get current PVC so we can compare UID later
+			var originalPVCUID types.UID
+			if m.PersistentVolumeClaimName != "" {
+				originalPVC, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+				if err != nil {
+					t.Fatalf("Failed to get PVC %s: %v", m.PersistentVolumeClaimName, err)
+				} else {
+					originalPVCUID = originalPVC.GetUID()
+				}
+			}
+			// Now delete the pod
 			if err := kubecli.CoreV1().Pods(ns).Delete(m.PodName, &metav1.DeleteOptions{}); err != nil {
 				t.Fatalf("Failed to delete pod %s: %v", m.PodName, err)
 			}
@@ -108,6 +120,15 @@ func TestResiliencePod(t *testing.T) {
 			}
 			if err := retry.Retry(op, time.Minute); err != nil {
 				t.Fatalf("Pod did not restart: %v", err)
+			}
+			// Now that the Pod has been replaced, check that the PVC has NOT been replaced (if any)
+			if m.PersistentVolumeClaimName != "" {
+				pvc, err := kubecli.CoreV1().PersistentVolumeClaims(ns).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+				if err != nil {
+					t.Fatalf("Failed to get PVC %s: %v", m.PersistentVolumeClaimName, err)
+				} else if originalPVCUID != pvc.GetUID() {
+					t.Errorf("PVC for member %s has been replaced", m.ID)
+				}
 			}
 			// Wait for deployment to be ready
 			if _, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady()); err != nil {

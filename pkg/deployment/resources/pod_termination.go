@@ -36,26 +36,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// preparePodTermination checks if the given pod is allowed to terminate and if so,
-// prepares it for termination.
-// It returns nil if the pod is allowed to terminate yet, an error otherwise.
-func (r *Resources) preparePodTermination(ctx context.Context, log zerolog.Logger, p *v1.Pod, group api.ServerGroup, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
-	var err error
-	switch group {
-	case api.ServerGroupAgents:
-		err = r.prepareAgencyPodTermination(ctx, log, p, memberStatus)
-	case api.ServerGroupDBServers:
-		err = r.prepareDBServerPodTermination(ctx, log, p, memberStatus, updateMember)
-	default:
-		err = nil
-	}
-	return maskAny(err)
-}
-
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus) error {
+func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Pod is already failed, safe to remove agency serving finalizer")
@@ -116,6 +100,14 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 		log.Debug().Err(err).Msg("Remaining agents are not healthy")
 		return maskAny(err)
 	}
+
+	// Complete agent recovery is needed, since data is already gone or not accessible
+	if memberStatus.Conditions.Update(api.ConditionTypeAgentRecoveryNeeded, true, "Data Gone", "") {
+		if err := updateMember(memberStatus); err != nil {
+			return maskAny(err)
+		}
+	}
+	log.Debug().Msg("Agent is ready to be completely recovered.")
 
 	return nil
 }
