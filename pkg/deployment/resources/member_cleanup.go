@@ -23,18 +23,23 @@
 package resources
 
 import (
-	"context"
 	"time"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
 	// minMemberAge is the minimum duration we expect a member to be created before we remove it because
 	// it is not part of a deployment.
-	minMemberAge = time.Minute * 10
+	minMemberAge        = time.Minute * 10
+	maxClusterHealthAge = time.Second * 20
+)
+
+var (
+	cleanupRemovedMembersCounters = metrics.MustRegisterCounterVec("deployment_resources", "cleanupRemovedMembers", "Number of cleanup-removed-members actions", "deployment", "result")
 )
 
 // CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
@@ -43,8 +48,10 @@ func (r *Resources) CleanupRemovedMembers() error {
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
 		if err := r.cleanupRemovedClusterMembers(); err != nil {
+			cleanupRemovedMembersCounters.WithLabelValues(r.context.GetAPIObject().GetName(), "failed").Inc()
 			return maskAny(err)
 		}
+		cleanupRemovedMembersCounters.WithLabelValues(r.context.GetAPIObject().GetName(), "success").Inc()
 		return nil
 	default:
 		// Other mode have no concept of cluster in which members can be removed
@@ -55,20 +62,16 @@ func (r *Resources) CleanupRemovedMembers() error {
 // cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
 func (r *Resources) cleanupRemovedClusterMembers() error {
 	log := r.log
-	ctx := context.Background()
 
-	// Ask cluster for its health
-	client, err := r.context.GetDatabaseClient(ctx)
-	if err != nil {
-		return maskAny(err)
-	}
-	c, err := client.Cluster(ctx)
-	if err != nil {
-		return maskAny(err)
-	}
-	h, err := c.Health(ctx)
-	if err != nil {
-		return maskAny(err)
+	// Fetch recent cluster health
+	r.health.mutex.Lock()
+	h := r.health.clusterHealth
+	ts := r.health.timestamp
+	r.health.mutex.Unlock()
+
+	// Only accept recent cluster health values
+	if time.Since(ts) > maxClusterHealthAge {
+		return nil
 	}
 
 	serverFound := func(id string) bool {

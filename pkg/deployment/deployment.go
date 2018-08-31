@@ -141,6 +141,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
 		go ci.ListenForClusterEvents(d.stopCh)
+		go d.resources.RunDeploymentHealthLoop(d.stopCh)
 	}
 	if config.AllowChaos {
 		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)

@@ -22,13 +22,24 @@
 
 package resources
 
-import "github.com/rs/zerolog"
+import (
+	"sync"
+	"time"
+
+	driver "github.com/arangodb/go-driver"
+	"github.com/rs/zerolog"
+)
 
 // Resources is a service that creates low level resources for members
 // and inspects low level resources, put the inspection result in members.
 type Resources struct {
 	log     zerolog.Logger
 	context Context
+	health  struct {
+		clusterHealth driver.ClusterHealth // Last fetched cluster health
+		timestamp     time.Time            // Timestamp of last fetch of cluster health
+		mutex         sync.Mutex           // Mutex guarding fields in this struct
+	}
 }
 
 // NewResources creates a new Resources service, used to
