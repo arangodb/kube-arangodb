@@ -46,23 +46,11 @@ func (r *Resources) EnsurePVCs() error {
 	status, _ := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
 
-	pvcs := kubecli.CoreV1().PersistentVolumeClaims(ns)
-	list, err := pvcs.List(metav1.ListOptions{})
-	if err != nil {
-		return maskAny(err)
-	}
-	pvcExists := func(name string) bool {
-		for _, pvc := range list.Items {
-			if pvc.GetName() == name {
-				return true
-			}
-		}
-		return false
-	}
+	pvcs := k8sutil.NewPersistentVolumeClaimCache(kubecli.CoreV1().PersistentVolumeClaims(ns))
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName != "" {
-				if !pvcExists(m.PersistentVolumeClaimName) {
+				if _, err := pvcs.Get(m.PersistentVolumeClaimName, metav1.GetOptions{}); err != nil {
 					storageClassName := spec.GetStorageClassName()
 					role := group.AsRole()
 					resources := spec.Resources
