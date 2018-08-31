@@ -36,7 +36,8 @@ import (
 )
 
 var (
-	inspectedPodCounter = metrics.MustRegisterCounter("deployment", "inspected_pods", "Number of pod inspections")
+	inspectedPodsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_pods", "Number of pod inspections per deployment", metrics.DeploymentName)
+	inspectPodsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_pods_duration", "Amount of time taken by a single inspection of all pods for a deployment (in sec)", metrics.DeploymentName)
 )
 
 const (
@@ -50,8 +51,12 @@ const (
 // Returns: Interval_till_next_inspection, error
 func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	log := r.log
+	start := time.Now()
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
 	var events []*k8sutil.Event
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
+	defer metrics.SetDuration(inspectPodsDurationGauges.WithLabelValues(deploymentName), start)
 
 	pods, err := r.context.GetOwnedPods()
 	if err != nil {
@@ -61,7 +66,6 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 
 	// Update member status from all pods found
 	status, lastVersion := r.context.GetStatus()
-	apiObject := r.context.GetAPIObject()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
 	for _, p := range pods {
@@ -71,7 +75,7 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 		}
 
 		// Pod belongs to this deployment, update metric
-		inspectedPodCounter.Inc()
+		inspectedPodsCounters.WithLabelValues(deploymentName).Inc()
 
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())

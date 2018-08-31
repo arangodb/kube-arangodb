@@ -32,7 +32,11 @@ import (
 )
 
 var (
-	inspectedPVCCounter     = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
+	inspectedPVCsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_pvcs", "Number of PVC inspections per deployment", metrics.DeploymentName)
+	inspectPVCsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_pvcs_duration", "Amount of time taken by a single inspection of all PVCs for a deployment (in sec)", metrics.DeploymentName)
+)
+
+const (
 	maxPVCInspectorInterval = util.Interval(time.Hour) // Maximum time between PVC inspection (if nothing else happens)
 )
 
@@ -40,7 +44,10 @@ var (
 // the member status of the deployment accordingly.
 func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	log := r.log
+	start := time.Now()
 	nextInterval := maxPVCInspectorInterval
+	deploymentName := r.context.GetAPIObject().GetName()
+	defer metrics.SetDuration(inspectPVCsDurationGauges.WithLabelValues(deploymentName), start)
 
 	pvcs, err := r.context.GetOwnedPVCs()
 	if err != nil {
@@ -52,7 +59,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	status, _ := r.context.GetStatus()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
-		inspectedPVCCounter.Inc()
+		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
 
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPVCName(p.GetName())

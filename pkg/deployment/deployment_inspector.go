@@ -27,10 +27,15 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/profiler"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	inspectDeploymentDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_deployment_duration", "Amount of time taken by a single inspection of a deployment (in sec)", metrics.DeploymentName)
 )
 
 // inspectDeployment inspects the entire deployment, creates
@@ -42,13 +47,16 @@ import (
 // Returns the delay until this function should be called again.
 func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
 	log := d.deps.Log
+	start := time.Now()
 
 	nextInterval := lastInterval
 	hasError := false
 	ctx := context.Background()
+	deploymentName := d.apiObject.GetName()
+	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
 	// Check deployment still exists
-	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(deploymentName, metav1.GetOptions{})
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
@@ -129,47 +137,27 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		}
 
 		// Ensure all resources are created
-		{
-			ps := profiler.Start()
-			{
-				ps := profiler.Start()
-				if err := d.resources.EnsureSecrets(); err != nil {
-					hasError = true
-					d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
-				}
-				ps.LogIf(log, time.Millisecond*10, "EnsureSecrets")
-			}
-			{
-				ps := profiler.Start()
-				if err := d.resources.EnsureServices(); err != nil {
-					hasError = true
-					d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
-				}
-				ps.LogIf(log, time.Millisecond*10, "EnsureServices")
-			}
-			if err := d.resources.EnsurePVCs(); err != nil {
-				hasError = true
-				d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
-			}
-			{
-				ps := profiler.Start()
-				if err := d.resources.EnsurePods(); err != nil {
-					hasError = true
-					d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
-				}
-				ps.LogIf(log, time.Millisecond*10, "EnsurePods")
-			}
-			ps.Done(log, "ensure resources")
+		if err := d.resources.EnsureSecrets(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsureServices(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsurePVCs(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
+		}
+		if err := d.resources.EnsurePods(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
 		}
 
 		// Create access packages
-		{
-			ps := profiler.Start()
-			if err := d.createAccessPackages(); err != nil {
-				hasError = true
-				d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
-			}
-			ps.Done(log, "createAccessPackages")
+		if err := d.createAccessPackages(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
 		}
 
 		// Inspect deployment for obsolete members

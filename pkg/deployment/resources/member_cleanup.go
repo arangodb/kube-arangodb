@@ -39,7 +39,7 @@ const (
 )
 
 var (
-	cleanupRemovedMembersCounters = metrics.MustRegisterCounterVec("deployment_resources", "cleanupRemovedMembers", "Number of cleanup-removed-members actions", "deployment", "result")
+	cleanupRemovedMembersCounters = metrics.MustRegisterCounterVec(metricsComponent, "cleanup_removed_members", "Number of cleanup-removed-members actions", metrics.DeploymentName, metrics.Result)
 )
 
 // CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
@@ -47,11 +47,12 @@ func (r *Resources) CleanupRemovedMembers() error {
 	// Decide what to do depending on cluster mode
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
+		deploymentName := r.context.GetAPIObject().GetName()
 		if err := r.cleanupRemovedClusterMembers(); err != nil {
-			cleanupRemovedMembersCounters.WithLabelValues(r.context.GetAPIObject().GetName(), "failed").Inc()
+			cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
 			return maskAny(err)
 		}
-		cleanupRemovedMembersCounters.WithLabelValues(r.context.GetAPIObject().GetName(), "success").Inc()
+		cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Success).Inc()
 		return nil
 	default:
 		// Other mode have no concept of cluster in which members can be removed

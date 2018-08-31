@@ -25,39 +25,57 @@ package resources
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+var (
+	inspectedSecretsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_secrets", "Number of Secret inspections per deployment", metrics.DeploymentName)
+	inspectSecretsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_secrets_duration", "Amount of time taken by a single inspection of all Secrets for a deployment (in sec)", metrics.DeploymentName)
 )
 
 // EnsureSecrets creates all secrets needed to run the given deployment
 func (r *Resources) EnsureSecrets() error {
+	start := time.Now()
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
 	spec := r.context.GetSpec()
+	deploymentName := r.context.GetAPIObject().GetName()
+	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
+	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
+
 	if spec.IsAuthenticated() {
+		counterMetric.Inc()
 		if err := r.ensureTokenSecret(secrets, spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 	}
 	if spec.IsSecure() {
+		counterMetric.Inc()
 		if err := r.ensureTLSCACertificateSecret(secrets, spec.TLS); err != nil {
 			return maskAny(err)
 		}
 	}
 	if spec.Sync.IsEnabled() {
+		counterMetric.Inc()
 		if err := r.ensureTokenSecret(secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
+		counterMetric.Inc()
 		if err := r.ensureTokenSecret(secrets, spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
 			return maskAny(err)
 		}
+		counterMetric.Inc()
 		if err := r.ensureTLSCACertificateSecret(secrets, spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}
+		counterMetric.Inc()
 		if err := r.ensureClientAuthCACertificateSecret(secrets, spec.Sync.Authentication); err != nil {
 			return maskAny(err)
 		}

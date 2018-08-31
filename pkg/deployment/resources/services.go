@@ -25,29 +25,38 @@ package resources
 import (
 	"time"
 
-	"k8s.io/client-go/kubernetes"
-
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+)
+
+var (
+	inspectedServicesCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_services", "Number of Service inspections per deployment", metrics.DeploymentName)
+	inspectServicesDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_services_duration", "Amount of time taken by a single inspection of all Services for a deployment (in sec)", metrics.DeploymentName)
 )
 
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) EnsureServices() error {
 	log := r.log
+	start := time.Now()
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
+	defer metrics.SetDuration(inspectServicesDurationGauges.WithLabelValues(deploymentName), start)
+	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
 	// Fetch existing services
 	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
 	// Headless service
+	counterMetric.Inc()
 	if _, err := svcs.Get(k8sutil.CreateHeadlessServiceName(deploymentName), metav1.GetOptions{}); err != nil {
 		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(svcs, apiObject, owner)
 		if err != nil {
@@ -61,6 +70,7 @@ func (r *Resources) EnsureServices() error {
 
 	// Internal database client service
 	single := spec.GetMode().HasSingleServers()
+	counterMetric.Inc()
 	if _, err := svcs.Get(k8sutil.CreateDatabaseClientServiceName(deploymentName), metav1.GetOptions{}); err != nil {
 		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(svcs, apiObject, single, owner)
 		if err != nil {
@@ -87,15 +97,16 @@ func (r *Resources) EnsureServices() error {
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, kubecli); err != nil {
+	if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
 		return maskAny(err)
 	}
 
 	if spec.Sync.IsEnabled() {
 		// External (and internal) Sync master service
+		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, kubecli); err != nil {
+		if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
 			return maskAny(err)
 		}
 		status, lastVersion := r.context.GetStatus()
@@ -110,7 +121,7 @@ func (r *Resources) EnsureServices() error {
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, kubecli kubernetes.Interface) error {
+func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false

@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	fetchDeploymentHealthCounters = metrics.MustRegisterCounterVec("deployment_resources", "fetchDeploymentHealth", "Number of times the health of the deployment was fetched", "deployment", "result")
+	deploymentHealthFetchesCounters = metrics.MustRegisterCounterVec(metricsComponent, "deployment_health_fetches", "Number of times the health of the deployment was fetched", metrics.DeploymentName, metrics.Result)
 )
 
 // RunDeploymentHealthLoop creates a loop to fetch the health of the deployment.
@@ -48,9 +48,9 @@ func (r *Resources) RunDeploymentHealthLoop(stopCh <-chan struct{}) {
 	for {
 		if err := r.fetchDeploymentHealth(); err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch deployment health")
-			fetchDeploymentHealthCounters.WithLabelValues(deploymentName, "failed").Inc()
+			deploymentHealthFetchesCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
 		} else {
-			fetchDeploymentHealthCounters.WithLabelValues(deploymentName, "success").Inc()
+			deploymentHealthFetchesCounters.WithLabelValues(deploymentName, metrics.Success).Inc()
 		}
 		select {
 		case <-time.After(time.Second * 5):
