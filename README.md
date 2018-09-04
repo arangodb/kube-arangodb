@@ -34,7 +34,17 @@ it is intended to be.
 | Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |
 
-## Installation of latest release
+## Installation of latest release using Helm
+
+```bash
+# The following will install the operator for `ArangoDeployment` &
+# `ArangoDeplomentReplication` resources.
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.2.2/kube-arangodb.tgz
+# To use `ArangoLocalStorage`, also run
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.2.2/kube-arangodb-storage.tgz
+```
+
+## Installation of latest release using Kubectl
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.2.2/manifests/crd.yaml

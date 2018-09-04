@@ -1,3 +1,5 @@
+{{ .Storage.FilterStart }}
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,3 +19,5 @@ spec:
     app: arango-storage-operator
     role: leader
   type: {{ .Storage.Operator.ServiceType }}
+
+{{ .Storage.FilterEnd }}
