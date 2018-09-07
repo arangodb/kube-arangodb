@@ -26,10 +26,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arangodb/arangosync/pkg/retry"
 	"k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 var (
