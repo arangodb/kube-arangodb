@@ -30,7 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/profiler"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -117,23 +116,19 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		}
 
 		// Create scale/update plan
-		{
-			ps := profiler.Start()
-			if err := d.reconciler.CreatePlan(); err != nil {
-				hasError = true
-				d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
-			}
+		if err := d.reconciler.CreatePlan(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
+		}
 
-			// Execute current step of scale/update plan
-			retrySoon, err := d.reconciler.ExecutePlan(ctx)
-			if err != nil {
-				hasError = true
-				d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
-			}
-			if retrySoon {
-				nextInterval = minInspectionInterval
-			}
-			ps.Done(log, "plan")
+		// Execute current step of scale/update plan
+		retrySoon, err := d.reconciler.ExecutePlan(ctx)
+		if err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
+		}
+		if retrySoon {
+			nextInterval = minInspectionInterval
 		}
 
 		// Ensure all resources are created
