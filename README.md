@@ -23,7 +23,7 @@ it is intended to be.
 
 | Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks |
 |----------------------|--------------------|------------------|-------|------------------|-|
-| Google GKE           | 1.10               | >= 3.3.13        | Runs  | No               | Don't use micro nodes |
+| Google GKE           | 1.10               | >= 3.3.13        | Runs  | Yes              | Don't use micro nodes |
 | Amazon EKS           | 1.10               | >= 3.3.13        | Runs  | No               |
 | Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |
 | Azure AKS            | 1.10               | >= 3.3.13        | ?     | No               |
