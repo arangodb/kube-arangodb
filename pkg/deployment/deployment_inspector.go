@@ -27,8 +27,14 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	inspectDeploymentDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_deployment_duration", "Amount of time taken by a single inspection of a deployment (in sec)", metrics.DeploymentName)
 )
 
 // inspectDeployment inspects the entire deployment, creates
@@ -38,15 +44,18 @@ import (
 // - any of the underlying resources has changed
 // - once in a while
 // Returns the delay until this function should be called again.
-func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration {
+func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval {
 	log := d.deps.Log
+	start := time.Now()
 
 	nextInterval := lastInterval
 	hasError := false
 	ctx := context.Background()
+	deploymentName := d.apiObject.GetName()
+	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
 	// Check deployment still exists
-	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(deploymentName, metav1.GetOptions{})
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
@@ -87,13 +96,17 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// Inspection of generated resources needed
-		if err := d.resources.InspectPods(ctx); err != nil {
+		if x, err := d.resources.InspectPods(ctx); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
+		} else {
+			nextInterval = nextInterval.ReduceTo(x)
 		}
-		if err := d.resources.InspectPVCs(ctx); err != nil {
+		if x, err := d.resources.InspectPVCs(ctx); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
+		} else {
+			nextInterval = nextInterval.ReduceTo(x)
 		}
 
 		// Check members for resilience
@@ -149,9 +162,11 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 		}
 
 		// At the end of the inspect, we cleanup terminated pods.
-		if err := d.resources.CleanupTerminatedPods(); err != nil {
+		if x, err := d.resources.CleanupTerminatedPods(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
+		} else {
+			nextInterval = nextInterval.ReduceTo(x)
 		}
 	}
 
@@ -164,10 +179,7 @@ func (d *Deployment) inspectDeployment(lastInterval time.Duration) time.Duration
 	} else {
 		d.recentInspectionErrors = 0
 	}
-	if nextInterval > maxInspectionInterval {
-		nextInterval = maxInspectionInterval
-	}
-	return nextInterval
+	return nextInterval.ReduceTo(maxInspectionInterval)
 }
 
 // triggerInspection ensures that an inspection is run soon.

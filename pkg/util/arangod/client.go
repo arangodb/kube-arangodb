@@ -238,7 +238,8 @@ func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Int
 		// Authentication is enabled.
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
-			s, err := k8sutil.GetTokenSecret(cli, apiObject.Spec.Authentication.GetJWTSecretName(), apiObject.GetNamespace())
+			secrets := cli.Secrets(apiObject.GetNamespace())
+			s, err := k8sutil.GetTokenSecret(secrets, apiObject.Spec.Authentication.GetJWTSecretName())
 			if err != nil {
 				return nil, maskAny(err)
 			}

@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
@@ -78,8 +79,8 @@ type deploymentEvent struct {
 
 const (
 	deploymentEventQueueSize = 256
-	minInspectionInterval    = time.Second // Ensure we inspect the generated resources no less than with this interval
-	maxInspectionInterval    = time.Minute // Ensure we inspect the generated resources no less than with this interval
+	minInspectionInterval    = util.Interval(time.Second) // Ensure we inspect the generated resources no less than with this interval
+	maxInspectionInterval    = util.Interval(time.Minute) // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.
@@ -140,6 +141,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
 		go ci.ListenForClusterEvents(d.stopCh)
+		go d.resources.RunDeploymentHealthLoop(d.stopCh)
 	}
 	if config.AllowChaos {
 		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
@@ -247,21 +249,21 @@ func (d *Deployment) run() {
 			}
 
 		case <-d.inspectTrigger.Done():
+			log.Debug().Msg("Inspect deployment...")
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
+			log.Debug().Str("interval", inspectionInterval.String()).Msg("...inspected deployment")
 
 		case <-d.updateDeploymentTrigger.Done():
+			inspectionInterval = minInspectionInterval
 			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
 				d.CreateEvent(k8sutil.NewErrorEvent("Failed to handle deployment update", err, d.GetAPIObject()))
 			}
 
-		case <-time.After(inspectionInterval):
+		case <-inspectionInterval.After():
 			// Trigger inspection
 			d.inspectTrigger.Trigger()
 			// Backoff with next interval
-			inspectionInterval = time.Duration(float64(inspectionInterval) * 1.5)
-			if inspectionInterval > maxInspectionInterval {
-				inspectionInterval = maxInspectionInterval
-			}
+			inspectionInterval = inspectionInterval.Backoff(1.5, maxInspectionInterval)
 		}
 	}
 }

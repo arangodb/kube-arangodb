@@ -25,37 +25,58 @@ package resources
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+var (
+	inspectedSecretsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_secrets", "Number of Secret inspections per deployment", metrics.DeploymentName)
+	inspectSecretsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_secrets_duration", "Amount of time taken by a single inspection of all Secrets for a deployment (in sec)", metrics.DeploymentName)
 )
 
 // EnsureSecrets creates all secrets needed to run the given deployment
 func (r *Resources) EnsureSecrets() error {
+	start := time.Now()
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
 	spec := r.context.GetSpec()
+	deploymentName := r.context.GetAPIObject().GetName()
+	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
+	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
+
 	if spec.IsAuthenticated() {
-		if err := r.ensureTokenSecret(spec.Authentication.GetJWTSecretName()); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureTokenSecret(secrets, spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 	}
 	if spec.IsSecure() {
-		if err := r.ensureTLSCACertificateSecret(spec.TLS); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureTLSCACertificateSecret(secrets, spec.TLS); err != nil {
 			return maskAny(err)
 		}
 	}
 	if spec.Sync.IsEnabled() {
-		if err := r.ensureTokenSecret(spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureTokenSecret(secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
-		if err := r.ensureTokenSecret(spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureTokenSecret(secrets, spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
 			return maskAny(err)
 		}
-		if err := r.ensureTLSCACertificateSecret(spec.Sync.TLS); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureTLSCACertificateSecret(secrets, spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}
-		if err := r.ensureClientAuthCACertificateSecret(spec.Sync.Authentication); err != nil {
+		counterMetric.Inc()
+		if err := r.ensureClientAuthCACertificateSecret(secrets, spec.Sync.Authentication); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -65,10 +86,8 @@ func (r *Resources) EnsureSecrets() error {
 // ensureTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a random
 // token.
-func (r *Resources) ensureTokenSecret(secretName string) error {
-	kubecli := r.context.GetKubeCli()
-	ns := r.context.GetNamespace()
-	if _, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {
+	if _, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		// Create token
 		tokenData := make([]byte, 32)
@@ -77,7 +96,7 @@ func (r *Resources) ensureTokenSecret(secretName string) error {
 
 		// Create secret
 		owner := r.context.GetAPIObject().AsOwner()
-		if err := k8sutil.CreateTokenSecret(kubecli.CoreV1(), secretName, ns, token, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := k8sutil.CreateTokenSecret(secrets, secretName, token, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -93,15 +112,13 @@ func (r *Resources) ensureTokenSecret(secretName string) error {
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCACertificateSecret(spec api.TLSSpec) error {
-	kubecli := r.context.GetKubeCli()
-	ns := r.context.GetNamespace()
-	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureTLSCACertificateSecret(secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
+	if _, err := secrets.Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		if err := createTLSCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := createTLSCACertificate(r.log, secrets, spec, deploymentName, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -117,15 +134,13 @@ func (r *Resources) ensureTLSCACertificateSecret(spec api.TLSSpec) error {
 
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureClientAuthCACertificateSecret(spec api.SyncAuthenticationSpec) error {
-	kubecli := r.context.GetKubeCli()
-	ns := r.context.GetNamespace()
-	if _, err := kubecli.CoreV1().Secrets(ns).Get(spec.GetClientCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureClientAuthCACertificateSecret(secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
+	if _, err := secrets.Get(spec.GetClientCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		if err := createClientAuthCACertificate(r.log, kubecli.CoreV1(), spec, deploymentName, ns, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := createClientAuthCACertificate(r.log, secrets, spec, deploymentName, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
@@ -146,8 +161,9 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	}
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", maskAny(err)
@@ -159,8 +175,9 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", maskAny(err)
@@ -172,8 +189,9 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return "", maskAny(err)

@@ -147,4 +147,6 @@ func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
 	if err := os.Chmod(targetPath, 0755); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to chmod")
 	}
+
+	cliLog.Info().Msgf("Executable copied to %s", targetPath)
 }

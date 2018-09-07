@@ -24,31 +24,42 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
-	inspectedPVCCounter = metrics.MustRegisterCounter("deployment", "inspected_ppvcs", "Number of PVCs inspections")
+	inspectedPVCsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_pvcs", "Number of PVC inspections per deployment", metrics.DeploymentName)
+	inspectPVCsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_pvcs_duration", "Amount of time taken by a single inspection of all PVCs for a deployment (in sec)", metrics.DeploymentName)
+)
+
+const (
+	maxPVCInspectorInterval = util.Interval(time.Hour) // Maximum time between PVC inspection (if nothing else happens)
 )
 
 // InspectPVCs lists all PVCs that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPVCs(ctx context.Context) error {
+func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	log := r.log
+	start := time.Now()
+	nextInterval := maxPVCInspectorInterval
+	deploymentName := r.context.GetAPIObject().GetName()
+	defer metrics.SetDuration(inspectPVCsDurationGauges.WithLabelValues(deploymentName), start)
 
 	pvcs, err := r.context.GetOwnedPVCs()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned PVCs")
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
-		inspectedPVCCounter.Inc()
+		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
 
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPVCName(p.GetName())
@@ -62,7 +73,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 				ignoreNotFound := false
 				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
-					return maskAny(err)
+					return 0, maskAny(err)
 				}
 			}
 			continue
@@ -70,12 +81,14 @@ func (r *Resources) InspectPVCs(ctx context.Context) error {
 
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPVCFinalizers(ctx, &p, group, memberStatus); err != nil {
+			if x, err := r.runPVCFinalizers(ctx, &p, group, memberStatus); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
+			} else {
+				nextInterval = nextInterval.ReduceTo(x)
 			}
 		}
 	}
 
-	return nil
+	return nextInterval, nil
 }
