@@ -1,4 +1,7 @@
 ## deployment/rbac.yaml
+
+
+
 ## Cluster role granting access to ArangoDeployment resources.
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -27,8 +30,8 @@ rules:
   resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
   verbs: ["*"]
 - apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["get"]
+  resources: ["namespaces", "nodes"]
+  verbs: ["get", "list"]
 - apiGroups: ["apps"]
   resources: ["deployments", "replicasets"]
   verbs: ["get"]
@@ -72,9 +75,14 @@ subjects:
   name: default
   namespace: default
 
+
+
+
+
 ---
 
 ## deployment/deployment.yaml
+
 
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -91,10 +99,11 @@ spec:
         name: arango-deployment-operator
         app: arango-deployment-operator
     spec:
+      serviceAccountName: default
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:bbf5433b2cda054835f7abf923116b43fa2e56907d2a19895cd12c74b907c056
+        image: arangodb/kube-arangodb@sha256:46053f371917445a52cbde69a9acc72bb065fa4a80f3fafa3fb98ab84911c570
         args:
           - --operator.deployment
           - --chaos.allowed=false
@@ -137,4 +146,34 @@ spec:
         operator: "Exists"
         effect: "NoExecute"
         tolerationSeconds: 5
+
+
+
+
+---
+
+## deployment/service.yaml
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: arango-deployment-operator
+  namespace: default
+  labels:
+    name: arango-deployment-operator
+    app: arango-deployment-operator
+spec:
+  ports:
+  - name: server
+    port: 8528
+    protocol: TCP
+    targetPort: 8528
+  selector:
+    name: arango-deployment-operator
+    app: arango-deployment-operator
+    role: leader
+  type: ClusterIP
+
+
 
