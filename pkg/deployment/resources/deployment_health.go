@@ -62,7 +62,8 @@ func (r *Resources) RunDeploymentHealthLoop(stopCh <-chan struct{}) {
 	}
 }
 
-// cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
+// fetchDeploymentHealth performs a single fetch of cluster-health
+// and stores it in-memory.
 func (r *Resources) fetchDeploymentHealth() error {
 	// Ask cluster for its health
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
