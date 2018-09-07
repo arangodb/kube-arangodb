@@ -79,7 +79,6 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 			continue
 		}
 
-		updateMemberStatusNeeded := false
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {
 			// Process finalizers
 			if x, err := r.runPVCFinalizers(ctx, &p, group, memberStatus); err != nil {
@@ -87,11 +86,6 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 				log.Warn().Err(err).Msg("Failed to run PVC finalizers")
 			} else {
 				nextInterval = nextInterval.ReduceTo(x)
-			}
-		}
-		if updateMemberStatusNeeded {
-			if err := status.Members.Update(memberStatus, group); err != nil {
-				return 0, maskAny(err)
 			}
 		}
 	}
