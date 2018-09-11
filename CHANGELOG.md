@@ -1,18 +1,26 @@
 # Change Log
 
-## [Unreleased](https://github.com/arangodb/kube-arangodb/tree/HEAD)
-
-[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.2...HEAD)
+## [0.3.0](https://github.com/arangodb/kube-arangodb/tree/0.3.0) (2018-09-07)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.2...0.3.0)
 
 **Closed issues:**
 
+- Provide an option to add SubjectAltName or option to disable SSL [\#239](https://github.com/arangodb/kube-arangodb/issues/239)
 - Use go-upgrade-rules [\#234](https://github.com/arangodb/kube-arangodb/issues/234)
 - Spot the difference [\#225](https://github.com/arangodb/kube-arangodb/issues/225)
 - How to Delete ArangoDeployment [\#224](https://github.com/arangodb/kube-arangodb/issues/224)
 - Unable to delete pods, stuck in terminating state [\#220](https://github.com/arangodb/kube-arangodb/issues/220)
+- Do not allow "critical" cmdline arguments to be overwritten [\#207](https://github.com/arangodb/kube-arangodb/issues/207)
 
 **Merged pull requests:**
 
+- Avoid use of arangosync packages [\#250](https://github.com/arangodb/kube-arangodb/pull/250)
+- Fixed PV creation on kubernetes 1.11 [\#247](https://github.com/arangodb/kube-arangodb/pull/247)
+- Resilience improvements [\#246](https://github.com/arangodb/kube-arangodb/pull/246)
+- Adding GKE tutorial [\#245](https://github.com/arangodb/kube-arangodb/pull/245)
+- Reject critical options during validation fixes \#207 [\#243](https://github.com/arangodb/kube-arangodb/pull/243)
+- Trying to stabalize resilience tests [\#242](https://github.com/arangodb/kube-arangodb/pull/242)
+- Adding helm charts for deploying the operators [\#238](https://github.com/arangodb/kube-arangodb/pull/238)
 - Include license in upgrade check [\#237](https://github.com/arangodb/kube-arangodb/pull/237)
 - Use new CurrentImage field to prevent unintended upgrades. [\#236](https://github.com/arangodb/kube-arangodb/pull/236)
 - Use go-upgrade-rules to make "is upgrade allowed" decision fixes \#234 [\#235](https://github.com/arangodb/kube-arangodb/pull/235)
@@ -20,6 +28,7 @@
 - Applying defaults after immutable fields have been reset [\#232](https://github.com/arangodb/kube-arangodb/pull/232)
 - Updated go-driver to latest version [\#231](https://github.com/arangodb/kube-arangodb/pull/231)
 - EE note for Kubernetes DC2DC [\#222](https://github.com/arangodb/kube-arangodb/pull/222)
+- Documented dashboard usage [\#219](https://github.com/arangodb/kube-arangodb/pull/219)
 - Load balancing tests [\#218](https://github.com/arangodb/kube-arangodb/pull/218)
 - Add links to other operators in dashboard menu [\#217](https://github.com/arangodb/kube-arangodb/pull/217)
 - Grouping style elements in 1 place [\#216](https://github.com/arangodb/kube-arangodb/pull/216)

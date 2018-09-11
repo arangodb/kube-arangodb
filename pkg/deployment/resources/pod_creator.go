@@ -441,6 +441,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	ns := r.context.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	status, lastVersion := r.context.GetStatus()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
@@ -505,14 +506,14 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				serverNames = append(serverNames, ip)
 			}
 			owner := apiObject.AsOwner()
-			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
 		rocksdbEncryptionSecretName := ""
 		if spec.RocksDB.IsEncrypted() {
 			rocksdbEncryptionSecretName = spec.RocksDB.Encryption.GetKeySecretName()
-			if err := k8sutil.ValidateEncryptionKeySecret(kubecli.CoreV1(), rocksdbEncryptionSecretName, ns); err != nil {
+			if err := k8sutil.ValidateEncryptionKeySecret(secrets, rocksdbEncryptionSecretName); err != nil {
 				return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
 			}
 		}
@@ -539,12 +540,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
-		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), masterJWTSecretName, ns); err != nil {
+		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
 			return maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
 		}
 		// Check monitoring token secret
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
-		if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), monitoringTokenSecretName, ns); err != nil {
+		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
 			return maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 		if group == api.ServerGroupSyncMasters {
@@ -562,19 +563,19 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				}
 			}
 			owner := apiObject.AsOwner()
-			if err := createTLSServerCertificate(log, kubecli.CoreV1(), serverNames, spec.Sync.TLS, tlsKeyfileSecretName, ns, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			if err := createTLSServerCertificate(log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateTokenSecret(kubecli.CoreV1(), clusterJWTSecretName, ns); err != nil {
+				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
 					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
-			if err := k8sutil.ValidateCACertificateSecret(kubecli.CoreV1(), clientAuthCASecretName, ns); err != nil {
+			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
 				return maskAny(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
 		}
@@ -606,6 +607,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	m.Phase = newPhase
 	m.Conditions.Remove(api.ConditionTypeReady)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
+	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
 	if err := status.Members.Update(m, group); err != nil {
 		return maskAny(err)

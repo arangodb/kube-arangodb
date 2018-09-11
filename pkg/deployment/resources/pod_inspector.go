@@ -31,32 +31,41 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
-	inspectedPodCounter = metrics.MustRegisterCounter("deployment", "inspected_pods", "Number of pod inspections")
+	inspectedPodsCounters     = metrics.MustRegisterCounterVec(metricsComponent, "inspected_pods", "Number of pod inspections per deployment", metrics.DeploymentName)
+	inspectPodsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_pods_duration", "Amount of time taken by a single inspection of all pods for a deployment (in sec)", metrics.DeploymentName)
 )
 
 const (
-	podScheduleTimeout = time.Minute // How long we allow the schedule to take scheduling a pod.
+	podScheduleTimeout              = time.Minute                // How long we allow the schedule to take scheduling a pod.
+	recheckSoonPodInspectorInterval = util.Interval(time.Second) // Time between Pod inspection if we think something will change soon
+	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
 )
 
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPods(ctx context.Context) error {
+// Returns: Interval_till_next_inspection, error
+func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	log := r.log
+	start := time.Now()
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
 	var events []*k8sutil.Event
+	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
+	defer metrics.SetDuration(inspectPodsDurationGauges.WithLabelValues(deploymentName), start)
 
 	pods, err := r.context.GetOwnedPods()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned pods")
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Update member status from all pods found
 	status, lastVersion := r.context.GetStatus()
-	apiObject := r.context.GetAPIObject()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
 	for _, p := range pods {
@@ -66,7 +75,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 		}
 
 		// Pod belongs to this deployment, update metric
-		inspectedPodCounter.Inc()
+		inspectedPodsCounters.WithLabelValues(deploymentName).Inc()
 
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())
@@ -80,7 +89,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 				ignoreNotFound := false
 				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
-					return maskAny(err)
+					return 0, maskAny(err)
 				}
 			}
 			continue
@@ -94,6 +103,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
 					now := metav1.Now()
@@ -106,6 +116,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
 					// Record termination time
 					now := metav1.Now()
@@ -119,12 +130,14 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to true")
 				memberStatus.IsInitialized = true // Require future pods for this member to have an existing UUID (in case of dbserver).
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		} else {
 			// Pod is not ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", "") {
 				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to false")
 				updateMemberStatusNeeded = true
+				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		}
 		if k8sutil.IsPodNotScheduledFor(&p, podScheduleTimeout) {
@@ -136,18 +149,20 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 		}
 		if k8sutil.IsPodMarkedForDeletion(&p) {
 			// Process finalizers
-			if err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
+			if x, err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true
 				memberStatus = m
 				return nil
 			}); err != nil {
 				// Only log here, since we'll be called to try again.
 				log.Warn().Err(err).Msg("Failed to run pod finalizers")
+			} else {
+				nextInterval = nextInterval.ReduceTo(x)
 			}
 		}
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return maskAny(err)
+				return 0, maskAny(err)
 			}
 		}
 	}
@@ -188,6 +203,7 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
 						// Create event
+						nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 						events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 						updateMemberNeeded := false
 						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
@@ -238,14 +254,14 @@ func (r *Resources) InspectPods(ctx context.Context) error {
 
 	// Save status
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Create events
 	for _, evt := range events {
 		r.context.CreateEvent(evt)
 	}
-	return nil
+	return nextInterval, nil
 }
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.

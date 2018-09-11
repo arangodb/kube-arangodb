@@ -1,3 +1,5 @@
+{{ .Storage.FilterStart }}
+
 ## Service accounts
 apiVersion: v1
 kind: ServiceAccount
@@ -68,3 +70,5 @@ spec:
         operator: "Exists"
         effect: "NoExecute"
         tolerationSeconds: 5
+
+{{ .Storage.FilterEnd }}

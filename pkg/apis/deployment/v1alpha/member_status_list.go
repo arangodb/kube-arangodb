@@ -24,6 +24,7 @@ package v1alpha
 
 import (
 	"math/rand"
+	"sort"
 
 	"github.com/pkg/errors"
 )
@@ -83,7 +84,9 @@ func (l *MemberStatusList) add(m MemberStatus) error {
 			return maskAny(errors.Wrapf(AlreadyExistsError, "Member '%s' already exists", m.ID))
 		}
 	}
-	*l = append(src, m)
+	newList := append(src, m)
+	sort.Slice(newList, func(i, j int) bool { return newList[i].ID < newList[j].ID })
+	*l = newList
 	return nil
 }
 

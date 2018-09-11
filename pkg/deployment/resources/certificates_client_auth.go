@@ -42,7 +42,7 @@ const (
 
 // createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createClientAuthCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, spec api.SyncAuthenticationSpec, deploymentName, namespace string, ownerRef *metav1.OwnerReference) error {
+func createClientAuthCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetClientCASecretName()).Logger()
 	options := certificates.CreateCertificateOptions{
 		CommonName:   fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName),
@@ -57,7 +57,7 @@ func createClientAuthCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, s
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
 		return maskAny(err)
 	}
-	if err := k8sutil.CreateCASecret(cli, spec.GetClientCASecretName(), namespace, cert, priv, ownerRef); err != nil {
+	if err := k8sutil.CreateCASecret(secrets, spec.GetClientCASecretName(), cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("CA Secret already exists")
 		} else {
@@ -71,10 +71,10 @@ func createClientAuthCACertificate(log zerolog.Logger, cli v1.CoreV1Interface, s
 
 // createClientAuthCertificateKeyfile creates a client authentication certificate for a specific user and stores
 // it in a secret with the given name.
-func createClientAuthCertificateKeyfile(log zerolog.Logger, cli v1.CoreV1Interface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName, namespace string, ownerRef *metav1.OwnerReference) error {
+func createClientAuthCertificateKeyfile(log zerolog.Logger, secrets v1.SecretInterface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
-	caCert, caKey, _, err := k8sutil.GetCASecret(cli, spec.GetClientCASecretName(), namespace, nil)
+	caCert, caKey, _, err := k8sutil.GetCASecret(secrets, spec.GetClientCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return maskAny(err)
@@ -100,7 +100,7 @@ func createClientAuthCertificateKeyfile(log zerolog.Logger, cli v1.CoreV1Interfa
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
-	if err := k8sutil.CreateTLSKeyfileSecret(cli, secretName, namespace, keyfile, ownerRef); err != nil {
+	if err := k8sutil.CreateTLSKeyfileSecret(secrets, secretName, keyfile, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("Server Secret already exists")
 		} else {

@@ -171,8 +171,9 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	log := d.deps.Log
 	kubecli := d.deps.KubeCli
 	ns := d.apiObject.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecret(kubecli.CoreV1(), secretName, ns)
+	monitoringToken, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return nil, maskAny(err)
@@ -331,7 +332,8 @@ func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
 func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
-	result, err := k8sutil.GetTLSKeyfileSecret(d.deps.KubeCli.CoreV1(), secretName, ns)
+	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
+	result, err := k8sutil.GetTLSKeyfileSecret(secrets, secretName)
 	if err != nil {
 		return "", maskAny(err)
 	}
@@ -353,8 +355,9 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 // Returns: publicKey, privateKey, ownerByDeployment, error
 func (d *Deployment) GetTLSCA(secretName string) (string, string, bool, error) {
 	ns := d.apiObject.GetNamespace()
+	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
 	owner := d.apiObject.AsOwner()
-	cert, priv, isOwned, err := k8sutil.GetCASecret(d.deps.KubeCli.CoreV1(), secretName, ns, &owner)
+	cert, priv, isOwned, err := k8sutil.GetCASecret(secrets, secretName, &owner)
 	if err != nil {
 		return "", "", false, maskAny(err)
 	}

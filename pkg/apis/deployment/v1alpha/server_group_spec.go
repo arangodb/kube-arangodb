@@ -23,11 +23,15 @@
 package v1alpha
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	arangod_options "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
+	arangosync_options "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -113,6 +117,19 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 		if name := s.GetStorageClassName(); name != "" {
 			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
 				return maskAny(errors.Wrapf(ValidationError, "Invalid storageClassName: %s", err))
+			}
+		}
+		for _, arg := range s.Args {
+			parts := strings.Split(arg, "=")
+			optionKey := strings.TrimSpace(parts[0])
+			if group.IsArangod() {
+				if arangod_options.IsCriticalOption(optionKey) {
+					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
+				}
+			} else if group.IsArangosync() {
+				if arangosync_options.IsCriticalOption(optionKey) {
+					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
+				}
 			}
 		}
 	} else if s.GetCount() != 0 {

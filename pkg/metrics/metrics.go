@@ -22,10 +22,23 @@
 
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 const (
 	namespace = "arangodb_operator"
+
+	// DeploymentName is a label key used for the name of a deployment
+	DeploymentName = "deployment"
+	// Result is a label key used for the result of an action (Success|Failed)
+	Result = "result"
+	// Success is a label value used for successful actions
+	Success = "success"
+	// Failed is a label value used for failed actions
+	Failed = "failed"
 )
 
 // MustRegisterCounter creates and registers a counter.
@@ -95,4 +108,10 @@ func MustRegisterSummary(component, name, help string, objectives map[float64]fl
 	})
 	prometheus.MustRegister(m)
 	return m
+}
+
+// SetDuration sets a gauge value for the duration since the given start time
+// in seconds.
+func SetDuration(g prometheus.Gauge, startTime time.Time) {
+	g.Set(time.Since(startTime).Seconds())
 }

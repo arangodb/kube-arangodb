@@ -40,6 +40,10 @@ const (
 	// ConditionTypeCleanedOut indicates that the member (dbserver) has been cleaned out.
 	// Always check in combination with ConditionTypeTerminated.
 	ConditionTypeCleanedOut ConditionType = "CleanedOut"
+	// ConditionTypeAgentRecoveryNeeded indicates that the member (agent) will no
+	// longer recover from its current volume and there has to be rebuild
+	// using the recovery procedure.
+	ConditionTypeAgentRecoveryNeeded ConditionType = "AgentRecoveryNeeded"
 	// ConditionTypePodSchedulingFailure indicates that one or more pods belonging to the deployment cannot be schedule.
 	ConditionTypePodSchedulingFailure ConditionType = "PodSchedulingFailure"
 	// ConditionTypeSecretsChanged indicates that the value of one of more secrets used by

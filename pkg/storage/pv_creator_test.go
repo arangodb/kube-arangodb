@@ -24,6 +24,7 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -83,16 +84,17 @@ func TestCreateValidEndpointList(t *testing.T) {
 	}
 }
 
-// TestCreateNodeAffinity tests createNodeAffinity.
-func TestCreateNodeAffinity(t *testing.T) {
+// TestCreateNodeSelector tests createNodeSelector.
+func TestCreateNodeSelector(t *testing.T) {
 	tests := map[string]string{
-		"foo": "{\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.io/hostname\",\"operator\":\"In\",\"values\":[\"foo\"]}]}]}}",
-		"bar": "{\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.io/hostname\",\"operator\":\"In\",\"values\":[\"bar\"]}]}]}}",
+		"foo": "{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.io/hostname\",\"operator\":\"In\",\"values\":[\"foo\"]}]}]}",
+		"bar": "{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"kubernetes.io/hostname\",\"operator\":\"In\",\"values\":[\"bar\"]}]}]}",
 	}
 	for input, expected := range tests {
-		output, err := createNodeAffinity(input)
+		sel := createNodeSelector(input)
+		output, err := json.Marshal(sel)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, output, "Input: '%s'", input)
+		assert.Equal(t, expected, string(output), "Input: '%s'", input)
 	}
 }
 

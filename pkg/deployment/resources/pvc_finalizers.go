@@ -25,18 +25,24 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+const (
+	recheckPVCFinalizerInterval = util.Interval(time.Second * 5) // Interval used when PVC finalizers need to be rechecked soon
+)
+
 // runPVCFinalizers goes through the list of PVC finalizers to see if they can be removed.
-func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
+func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) (util.Interval, error) {
 	log := r.log.With().Str("pvc-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
@@ -56,10 +62,13 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 		ignoreNotFound := false
 		if err := k8sutil.RemovePVCFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
-			return maskAny(err)
+			return 0, maskAny(err)
 		}
+	} else {
+		// Check again at given interval
+		return recheckPVCFinalizerInterval, nil
 	}
-	return nil
+	return maxPVCInspectorInterval, nil
 }
 
 // inspectFinalizerPVCMemberExists checks the finalizer condition for member-exists.

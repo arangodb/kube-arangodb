@@ -25,23 +25,27 @@ package resources
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
 const (
-	statelessTerminationPeriod = time.Minute // We wait this long for a stateless server to terminate on it's own. Afterwards we kill it.
+	statelessTerminationPeriod         = time.Minute                    // We wait this long for a stateless server to terminate on it's own. Afterwards we kill it.
+	recheckStatefullPodCleanupInterval = util.Interval(time.Second * 2) // Interval used when Pod finalizers need to be rechecked soon
 )
 
 // CleanupTerminatedPods removes all pods in Terminated state that belong to a member in Created state.
-func (r *Resources) CleanupTerminatedPods() error {
+// Returns: Interval_till_next_inspection, error
+func (r *Resources) CleanupTerminatedPods() (util.Interval, error) {
 	log := r.log
+	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 
 	pods, err := r.context.GetOwnedPods()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get owned pods")
-		return maskAny(err)
+		return 0, maskAny(err)
 	}
 
 	// Update member status from all pods found
@@ -66,12 +70,15 @@ func (r *Resources) CleanupTerminatedPods() error {
 			if !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
 				if !group.IsStateless() {
 					// For statefull members, we have to wait for confirmed termination
+					log.Debug().Str("pod", p.GetName()).Msg("Cannot cleanup pod yet, waiting for it to reach terminated state")
+					nextInterval = nextInterval.ReduceTo(recheckStatefullPodCleanupInterval)
 					continue
 				} else {
 					// If a stateless server does not terminate within a reasonable amount or time, we kill it.
 					t := p.GetDeletionTimestamp()
 					if t == nil || t.Add(statelessTerminationPeriod).After(time.Now()) {
 						// Either delete timestamp is not set, or not yet waiting long enough
+						nextInterval = nextInterval.ReduceTo(util.Interval(statelessTerminationPeriod))
 						continue
 					}
 				}
@@ -84,5 +91,5 @@ func (r *Resources) CleanupTerminatedPods() error {
 			log.Warn().Err(err).Str("pod-name", p.GetName()).Msg("Failed to cleanup pod")
 		}
 	}
-	return nil
+	return nextInterval, nil
 }

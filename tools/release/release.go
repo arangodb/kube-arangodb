@@ -23,6 +23,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +43,12 @@ var (
 	ghRelease   string // Full path of github-release tool
 	ghUser      string // Github account name to create release in
 	ghRepo      string // Github repository name to create release in
+	binFolder   string // Folder containing binaries
+
+	binaries = map[string]string{
+		"kube-arangodb.tgz":         "charts/kube-arangodb.tgz",
+		"kube-arangodb-storage.tgz": "charts/kube-arangodb-storage.tgz",
+	}
 )
 
 func init() {
@@ -49,6 +57,7 @@ func init() {
 	flag.StringVar(&ghRelease, "github-release", ".gobuild/bin/github-release", "Full path of github-release tool")
 	flag.StringVar(&ghUser, "github-user", "arangodb", "Github account name to create release in")
 	flag.StringVar(&ghRepo, "github-repo", "kube-arangodb", "Github repository name to create release in")
+	flag.StringVar(&binFolder, "bin-folder", "./bin", "Folder containing binaries")
 }
 
 func main() {
@@ -65,6 +74,7 @@ func main() {
 	})
 	make("patch-readme", nil)
 	make("build-ghrelease", nil)
+	createSHA256Sums()
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest
 	gitTag(version)
 	make("changelog", nil)
@@ -155,6 +165,23 @@ func gitTag(version string) {
 	}
 }
 
+func createSHA256Sums() {
+	sums := []string{}
+	for name, p := range binaries {
+		blob, err := ioutil.ReadFile(filepath.Join(binFolder, p))
+		if err != nil {
+			log.Fatalf("Failed to read binary '%s': %#v\n", name, err)
+		}
+		bytes := sha256.Sum256(blob)
+		sha := hex.EncodeToString(bytes[:])
+		sums = append(sums, sha+"  "+name)
+	}
+	sumsPath := filepath.Join(binFolder, "SHA256SUMS")
+	if err := ioutil.WriteFile(sumsPath, []byte(strings.Join(sums, "\n")+"\n"), 0644); err != nil {
+		log.Fatalf("Failed to write '%s': %#v\n", sumsPath, err)
+	}
+}
+
 func githubCreateRelease(version string) {
 	// Create draft release
 	args := []string{
@@ -166,6 +193,26 @@ func githubCreateRelease(version string) {
 	}
 	if err := run(ghRelease, args, nil); err != nil {
 		log.Fatalf("Failed to create github release: %v\n", err)
+	}
+	// Upload binaries
+	assets := map[string]string{
+		"SHA256SUMS": "SHA256SUMS",
+	}
+	for k, v := range binaries {
+		assets[k] = v
+	}
+	for name, file := range assets {
+		args := []string{
+			"upload",
+			"--user", ghUser,
+			"--repo", ghRepo,
+			"--tag", version,
+			"--name", name,
+			"--file", filepath.Join(binFolder, file),
+		}
+		if err := run(ghRelease, args, nil); err != nil {
+			log.Fatalf("Failed to upload asset '%s': %v\n", name, err)
+		}
 	}
 	// Finalize release
 	args = []string{

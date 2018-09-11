@@ -107,3 +107,16 @@ func TestServerGroupSpecDefault(t *testing.T) {
 		assert.Equal(t, "", def(ServerGroupSpec{}, g, true, DeploymentModeSingle).GetStorageClassName())
 	}
 }
+
+func TestServerGroupSpecValidateArgs(t *testing.T) {
+	// Valid
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{}}.Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--master.endpoint"}}.Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{}}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--server.authentication=true"}}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	// Invalid
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--server.authentication=true"}}.Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--server.authentication", "true"}}.Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--master.endpoint=http://something"}}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1), Args: []string{"--mq.type=strange"}}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentDevelopment))
+}

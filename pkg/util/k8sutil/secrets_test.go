@@ -39,9 +39,10 @@ import (
 // TestValidateEncryptionKeySecret tests ValidateEncryptionKeySecret.
 func TestValidateEncryptionKeySecret(t *testing.T) {
 	cli := mocks.NewCore()
+	secrets := cli.Secrets("ns")
 
 	// Prepare mock
-	m := mocks.AsMock(cli.Secrets("ns"))
+	m := mocks.AsMock(secrets)
 	m.On("Get", "good", mock.Anything).Return(&v1.Secret{
 		Data: map[string][]byte{
 			"key": make([]byte, 32),
@@ -59,15 +60,16 @@ func TestValidateEncryptionKeySecret(t *testing.T) {
 	}, nil)
 	m.On("Get", "notfound", mock.Anything).Return(nil, apierrors.NewNotFound(schema.GroupResource{}, "notfound"))
 
-	assert.NoError(t, ValidateEncryptionKeySecret(cli, "good", "ns"))
-	assert.Error(t, ValidateEncryptionKeySecret(cli, "no-key", "ns"))
-	assert.Error(t, ValidateEncryptionKeySecret(cli, "short-key", "ns"))
-	assert.True(t, IsNotFound(ValidateEncryptionKeySecret(cli, "notfound", "ns")))
+	assert.NoError(t, ValidateEncryptionKeySecret(secrets, "good"))
+	assert.Error(t, ValidateEncryptionKeySecret(secrets, "no-key"))
+	assert.Error(t, ValidateEncryptionKeySecret(secrets, "short-key"))
+	assert.True(t, IsNotFound(ValidateEncryptionKeySecret(secrets, "notfound")))
 }
 
 // TestCreateEncryptionKeySecret tests CreateEncryptionKeySecret
 func TestCreateEncryptionKeySecret(t *testing.T) {
 	cli := mocks.NewCore()
+	secrets := cli.Secrets("ns")
 
 	// Prepare mock
 	m := mocks.AsMock(cli.Secrets("ns"))
@@ -81,14 +83,15 @@ func TestCreateEncryptionKeySecret(t *testing.T) {
 	}).Return(nil, nil)
 
 	key := make([]byte, 32)
-	assert.NoError(t, CreateEncryptionKeySecret(cli, "good", "ns", key))
+	assert.NoError(t, CreateEncryptionKeySecret(secrets, "good", key))
 	key = make([]byte, 31)
-	assert.Error(t, CreateEncryptionKeySecret(cli, "short-key", "ns", key))
+	assert.Error(t, CreateEncryptionKeySecret(secrets, "short-key", key))
 }
 
 // TestGetTokenSecret tests GetTokenSecret.
 func TestGetTokenSecret(t *testing.T) {
 	cli := mocks.NewCore()
+	secrets := cli.Secrets("ns")
 
 	// Prepare mock
 	m := mocks.AsMock(cli.Secrets("ns"))
@@ -104,18 +107,19 @@ func TestGetTokenSecret(t *testing.T) {
 	}, nil)
 	m.On("Get", "notfound", mock.Anything).Return(nil, apierrors.NewNotFound(schema.GroupResource{}, "notfound"))
 
-	token, err := GetTokenSecret(cli, "good", "ns")
+	token, err := GetTokenSecret(secrets, "good")
 	assert.NoError(t, err)
 	assert.Equal(t, token, "foo")
-	_, err = GetTokenSecret(cli, "no-token", "ns")
+	_, err = GetTokenSecret(secrets, "no-token")
 	assert.Error(t, err)
-	_, err = GetTokenSecret(cli, "notfound", "ns")
+	_, err = GetTokenSecret(secrets, "notfound")
 	assert.True(t, IsNotFound(err))
 }
 
 // TestCreateTokenSecret tests CreateTokenSecret
 func TestCreateTokenSecret(t *testing.T) {
 	cli := mocks.NewCore()
+	secrets := cli.Secrets("ns")
 
 	// Prepare mock
 	m := mocks.AsMock(cli.Secrets("ns"))
@@ -130,6 +134,6 @@ func TestCreateTokenSecret(t *testing.T) {
 		}
 	}).Return(nil, nil)
 
-	assert.NoError(t, CreateTokenSecret(cli, "good", "ns", "token", nil))
-	assert.NoError(t, CreateTokenSecret(cli, "with-owner", "ns", "token", &metav1.OwnerReference{}))
+	assert.NoError(t, CreateTokenSecret(secrets, "good", "token", nil))
+	assert.NoError(t, CreateTokenSecret(secrets, "with-owner", "token", &metav1.OwnerReference{}))
 }
