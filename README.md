@@ -1,5 +1,7 @@
 # ArangoDB Kubernetes Operator
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/arangodb/kube-arangodb.svg)](https://hub.docker.com/r/arangodb/kube-arangodb/)
+
 ArangoDB Kubernetes Operator helps do run ArangoDB deployments
 on Kubernetes clusters.
 
