@@ -490,7 +490,7 @@ metadata:
   name: "cluster1"
 spec:
   mode: Cluster
-  image: ewoutp/arangodb:3.3.10
+  image: ewoutp/arangodb:3.3.14
   sync:
     enabled: true
     externalAccess:
