@@ -45,12 +45,13 @@ func validatePullPolicy(v v1.PullPolicy) error {
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	Mode            *DeploymentMode `json:"mode,omitempty"`
-	Environment     *Environment    `json:"environment,omitempty"`
-	StorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
-	Image           *string         `json:"image,omitempty"`
-	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
-	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
+	Mode             *DeploymentMode `json:"mode,omitempty"`
+	Environment      *Environment    `json:"environment,omitempty"`
+	StorageEngine    *StorageEngine  `json:"storageEngine,omitempty"`
+	Image            *string         `json:"image,omitempty"`
+	ImagePullPolicy  *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
+	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
+	EnableFinalizers *bool           `json:"enableFinalizers,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -96,6 +97,11 @@ func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 // IsDowntimeAllowed returns the value of downtimeAllowed.
 func (s DeploymentSpec) IsDowntimeAllowed() bool {
 	return util.BoolOrDefault(s.DowntimeAllowed)
+}
+
+// IsEnableFinalizers returns the value of enableFinalizers.
+func (s DeploymentSpec) IsEnableFinalizers() bool {
+	return util.BoolOrDefault(s.EnableFinalizers)
 }
 
 // IsAuthenticated returns true when authentication is enabled
@@ -146,6 +152,9 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)
 	}
+	if s.EnableFinalizers == nil {
+		s.EnableFinalizers = util.NewBool(true)
+	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()
 	s.Authentication.SetDefaults(deploymentName + "-jwt")
@@ -179,6 +188,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	}
 	if s.DowntimeAllowed == nil {
 		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
+	}
+	if s.EnableFinalizers == nil {
+		s.EnableFinalizers = util.NewBoolOrNil(source.EnableFinalizers)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)

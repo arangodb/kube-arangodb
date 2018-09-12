@@ -239,6 +239,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableFinalizers != nil {
+		in, out := &in.EnableFinalizers, &out.EnableFinalizers
+		*out = new(bool)
+		**out = **in
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)
