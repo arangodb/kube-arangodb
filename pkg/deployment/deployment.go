@@ -126,7 +126,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	d.resilience = resilience.NewResilience(deps.Log, d)
-	d.resources = resources.NewResources(deps.Log, d)
+	d.resources = resources.NewResources(deps.Log, d, apiObject.Spec.IsEnableFinalizers())
 	if d.status.last.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
@@ -356,11 +356,12 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 	ns := d.apiObject.GetNamespace()
 	depls := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns)
 	update := d.apiObject.DeepCopy()
+	enableFinalizers := d.apiObject.Spec.IsEnableFinalizers()
 	attempt := 0
 	for {
 		attempt++
 		update.Status = d.status.last
-		if update.GetDeletionTimestamp() == nil {
+		if update.GetDeletionTimestamp() == nil && enableFinalizers {
 			ensureFinalizers(update)
 		}
 		newAPIObject, err := depls.Update(update)

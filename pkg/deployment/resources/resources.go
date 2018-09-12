@@ -40,13 +40,15 @@ type Resources struct {
 		timestamp     time.Time            // Timestamp of last fetch of cluster health
 		mutex         sync.Mutex           // Mutex guarding fields in this struct
 	}
+	enableFinalizers bool
 }
 
 // NewResources creates a new Resources service, used to
 // create and inspect low level resources such as pods and services.
-func NewResources(log zerolog.Logger, context Context) *Resources {
+func NewResources(log zerolog.Logger, context Context, finalizers bool) *Resources {
 	return &Resources{
-		log:     log,
-		context: context,
+		log:              log,
+		context:          context,
+		enableFinalizers: finalizers,
 	}
 }

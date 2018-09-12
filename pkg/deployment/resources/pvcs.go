@@ -32,7 +32,10 @@ import (
 
 // createPVCFinalizers creates a list of finalizers for a PVC created for the given group.
 func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
-	return []string{constants.FinalizerPVCMemberExists}
+	if r.enableFinalizers {
+		return []string{constants.FinalizerPVCMemberExists}
+	}
+	return nil
 }
 
 // EnsurePVCs creates all PVC's listed in member status
