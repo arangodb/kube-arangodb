@@ -37,7 +37,6 @@ For now, any recent Kubernetes cluster will do (e.g. `minikube`).
 Then run (replace `<version>` with the version of the operator that you want to install):
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/crd.yaml
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/arango-deployment.yaml
 # Optional
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/arango-storage.yaml

@@ -56,16 +56,19 @@ var (
 		AllowChaos                        bool
 	}
 	deploymentTemplateNames = []Template{
+		Template{Name: "crd.yaml"},
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment.yaml"},
 		Template{Name: "service.yaml"},
 	}
 	deploymentReplicationTemplateNames = []Template{
+		Template{Name: "crd.yaml"},
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment-replication.yaml"},
 		Template{Name: "service.yaml"},
 	}
 	storageTemplateNames = []Template{
+		Template{Name: "crd.yaml"},
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment.yaml"},
 		Template{Name: "service.yaml"},

@@ -61,7 +61,6 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.0/
 
 ```bash
 DOCKERNAMESPACE=<your dockerhub account> make
-kubectl apply -f manifests/crd.yaml
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml

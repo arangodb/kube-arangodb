@@ -299,7 +299,6 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
@@ -407,7 +406,6 @@ delete-operator:
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
-	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
