@@ -475,7 +475,7 @@ func main() {
 					}
 					// Execute to tmp buffer
 					tmpBuf := &bytes.Buffer{}
-					t.Execute(tmpBuf, templateOptions)
+					t.Execute(tmpBuf, chartTemplateOptions)
 					// Add tmp buffer to output, unless empty
 					if strings.TrimSpace(tmpBuf.String()) != "" {
 						if output.Len() > 0 {
