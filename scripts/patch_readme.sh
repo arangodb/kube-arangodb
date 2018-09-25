@@ -15,7 +15,7 @@ function replaceInFile {
     local FILE=$2
     case $(uname) in
         Darwin)
-            sed -e ${EXPR} -i "" ${FILE}
+            sed -e "${EXPR}" -i "" ${FILE}
             ;;
         *)
             sed -i --expression=${EXPR} ${FILE}
