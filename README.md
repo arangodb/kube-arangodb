@@ -49,7 +49,6 @@ helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.0/k
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.0/manifests/crd.yaml
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.0/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.0/manifests/arango-storage.yaml
