@@ -18,7 +18,7 @@ function replaceInFile {
             sed -e "${EXPR}" -i "" ${FILE}
             ;;
         *)
-            sed -i --expression=${EXPR} ${FILE}
+            sed -i --expression "${EXPR}" ${FILE}
             ;;
     esac
 }
