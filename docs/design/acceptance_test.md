@@ -13,7 +13,7 @@ Before the test, record the following parameters for the platform the test is ex
 - Upstream Kubernetes version used by the platform (run `kubctrl version`)
 - Number of nodes used by the Kubernetes cluster (run `kubectrl get node`)
 - `StorageClasses` provided by the platform (run `kubectl get storageclass`)
-- Does the platform use RBAC?
+- Does the platform use RBAC? (run `kubectl describe clusterrolebinding`)
 - Does the platform support services of type `LoadBalancer`?
 
 If one of the above questions can have multiple answers (e.g. different Kubernetes versions)
