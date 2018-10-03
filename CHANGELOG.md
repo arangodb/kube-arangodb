@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.3.1](https://github.com/arangodb/kube-arangodb/tree/0.3.1) (2018-09-25)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.0...0.3.1)
+
+**Closed issues:**
+
+- Helm chart not deploying custom resource definitions [\#254](https://github.com/arangodb/kube-arangodb/issues/254)
+- `go get` failing due to nonexistent arangodb/arangosync repo [\#249](https://github.com/arangodb/kube-arangodb/issues/249)
+- Helm chart download links broken \(404\) [\#248](https://github.com/arangodb/kube-arangodb/issues/248)
+- Make it easy to deploy in another namespace [\#230](https://github.com/arangodb/kube-arangodb/issues/230)
+- Deployment Failed to Start in different Namespace other than Default [\#223](https://github.com/arangodb/kube-arangodb/issues/223)
+
+**Merged pull requests:**
+
+- Bugfix/sed on linux [\#259](https://github.com/arangodb/kube-arangodb/pull/259)
+- README updates, removing `kubectl apply -f crd.yaml` [\#256](https://github.com/arangodb/kube-arangodb/pull/256)
+- Include CRD in helm chart [\#255](https://github.com/arangodb/kube-arangodb/pull/255)
+
 ## [0.3.0](https://github.com/arangodb/kube-arangodb/tree/0.3.0) (2018-09-07)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.2.2...0.3.0)
 

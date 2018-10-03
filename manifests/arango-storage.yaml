@@ -1,3 +1,23 @@
+## storage/crd.yaml
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: arangolocalstorages.storage.arangodb.com
+spec:
+  group: storage.arangodb.com
+  names:
+    kind: ArangoLocalStorage
+    listKind: ArangoLocalStorageList
+    plural: arangolocalstorages
+    shortNames:
+    - arangostorage
+    singular: arangolocalstorage
+  scope: Cluster
+  version: v1alpha
+
+
+---
+
 ## storage/rbac.yaml
 
 
@@ -121,7 +141,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:46053f371917445a52cbde69a9acc72bb065fa4a80f3fafa3fb98ab84911c570
+        image: arangodb/kube-arangodb@sha256:f1c0806031ca85e489a1abcd3cb6b80a7972e47ccf59826b0f8a86c38e443fbc
         args:
         - --operator.storage
         env:
