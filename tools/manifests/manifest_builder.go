@@ -148,6 +148,7 @@ ImagePullPolicy: {{ .ImagePullPolicy | quote }}
 RBAC:
   Create: {{ .RBAC }}
 Storage:
+  Create: {{ .Storage.Create }}
   User:
     ServiceAccountName: {{ .Storage.User.ServiceAccountName | quote }}
   Operator:
