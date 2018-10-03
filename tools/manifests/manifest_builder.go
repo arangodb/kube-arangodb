@@ -403,7 +403,9 @@ func main() {
 			OperatorDeploymentName: "arango-deployment-replication-operator", // Fixed name because only 1 is allowed per namespace
 		},
 		Storage: ResourceOptions{
-			Create: "{{ .Values.Storage.Create }}",
+			Create:      "{{ .Values.Storage.Create }}",
+			FilterStart: "{{- if .Values.Storage.Create }}",
+			FilterEnd:   "{{- end }}",
 			User: CommonOptions{
 				Namespace:          "{{ .Release.Namespace }}",
 				RoleName:           `{{ printf "%s-%s" .Release.Name "storages" | trunc 63 | trimSuffix "-" }}`,
