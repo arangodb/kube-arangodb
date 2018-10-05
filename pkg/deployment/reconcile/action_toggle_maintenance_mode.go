@@ -77,14 +77,11 @@ func (a *actionToggleMaintenanceMode) Start(ctx context.Context) (bool, error) {
 		return true, nil // nothing to do
 	}
 	switch a.actionCtx.GetMode() {
-
 	case api.DeploymentModeCluster:
 	case api.DeploymentModeActiveFailover:
-		if a.action.Group == api.ServerGroupAgents {
-			return true, nil // nothing to do
+		if a.action.Group == api.ServerGroupSingle || a.action.Group == api.ServerGroupDBServers {
+			return a.toggleMaintenanceMode(ctx)
 		}
-		return a.toggleMaintenanceMode(ctx)
-	case api.DeploymentModeSingle:
 	default:
 	}
 	return true, nil // nothing to do
