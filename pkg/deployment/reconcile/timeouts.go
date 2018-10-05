@@ -34,4 +34,5 @@ const (
 	shutdownMemberTimeout        = time.Minute * 30
 	upgradeMemberTimeout         = time.Hour * 6
 	waitForMemberUpTimeout       = time.Minute * 15
+	toggleMaintenanceModeTimeout = time.Hour
 )

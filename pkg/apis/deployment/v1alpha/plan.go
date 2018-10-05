@@ -51,6 +51,10 @@ const (
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
+	// ActionTypeEnableMaintenanceMode causes the cluster supervision to be pause
+	ActionTypeEnableMaintenanceMode ActionType = "EnableMaintenanceMode"
+	// ActionTypeDisableMaintenanceMode causes the cluster supervision to resume
+	ActionTypeDisableMaintenanceMode ActionType = "DisableMaintenanceMode"
 )
 
 const (
@@ -75,7 +79,7 @@ type Action struct {
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
-	// Image used in can of a SetCurrentImage action.
+	// Image used in case of a SetCurrentImage action.
 	Image string `json:"image,omitempty"`
 }
 

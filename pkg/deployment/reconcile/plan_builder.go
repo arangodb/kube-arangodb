@@ -416,15 +416,19 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
+	// maintenance mode actions are noops on servers that do not need it
 	plan := api.Plan{
+		api.NewAction(api.ActionTypeEnableMaintenanceMode, group, member.ID, reason),
 		api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
+		api.NewAction(api.ActionTypeDisableMaintenanceMode, group, member.ID, reason),
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
 		plan = append(api.Plan{
 			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
 		}, plan...)
 	}
+
 	return plan
 }
 
