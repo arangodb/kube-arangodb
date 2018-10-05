@@ -80,7 +80,10 @@ func (a *actionToggleMaintenanceMode) Start(ctx context.Context) (bool, error) {
 	case api.DeploymentModeCluster:
 	case api.DeploymentModeActiveFailover:
 		if a.action.Group == api.ServerGroupSingle || a.action.Group == api.ServerGroupDBServers {
-			return a.toggleMaintenanceMode(ctx)
+			_, err := a.toggleMaintenanceMode(ctx)
+			if err != nil {
+				return false, maskAny(err)
+			}
 		}
 	default:
 	}
@@ -93,6 +96,7 @@ func (a *actionToggleMaintenanceMode) CheckProgress(ctx context.Context) (bool, 
 	return true, false, nil
 }
 
+// will return true if it was possible to toggle
 func (a *actionToggleMaintenanceMode) toggleMaintenanceMode(ctx context.Context) (bool, error) {
 	supported, err := a.isSuperVisionMaintenanceSupported(ctx)
 	if err != nil {
