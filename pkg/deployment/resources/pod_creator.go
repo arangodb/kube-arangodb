@@ -380,10 +380,6 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
 	}
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		probeCfg.LocalPath = "/_admin/echo"
-	}
 	return probeCfg, nil
 }
 
