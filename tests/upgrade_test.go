@@ -39,6 +39,11 @@ func TestUpgradeSingleMMFiles32to33(t *testing.T) {
 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.2.16", "3.3.13")
 }
 
+// test upgrade single server mmfiles 3.3.16 -> 3.3.17
+func TestUpgradeSingleMMFiles32to33(t *testing.T) {
+	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.3.16", "3.3.17")
+}
+
 // // test upgrade single server rocksdb 3.3 -> 3.4
 // func TestUpgradeSingleRocksDB33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineRocksDB, "3.3.13", "3.4.0")
