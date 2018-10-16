@@ -183,6 +183,12 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewRenewTLSCACertificateAction(log, action, actionCtx)
 	case api.ActionTypeSetCurrentImage:
 		return NewSetCurrentImageAction(log, action, actionCtx)
+	case api.ActionTypeEnableMaintenanceMode:
+		return NewToggleMaintenanceModeAction(log, action, actionCtx,
+			MaintenanceModeStateOn)
+	case api.ActionTypeDisableMaintenanceMode:
+		return NewToggleMaintenanceModeAction(log, action, actionCtx,
+			MaintenanceModeStateOff)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}
