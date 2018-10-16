@@ -4,4 +4,4 @@ metadata:
   name: "example-simple-cluster"
 spec:
   mode: Cluster
-  image: arangodb/arangodb:3.3.16.1
+  image: arangodb/arangodb:3.3.17
