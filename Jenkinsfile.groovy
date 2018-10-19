@@ -87,6 +87,7 @@ def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
                     "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                     "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
+                    "ARANGODIMAGE=${myParams.ARANGODIMAGE}",
                     "IMAGETAG=jenkins-test",
                     "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
                     "LONG=${myParams.LONG ? 1 : 0}",
@@ -129,7 +130,8 @@ pipeline {
       string(name: 'DOCKERNAMESPACE', defaultValue: 'arangodb', description: 'DOCKERNAMESPACE sets the docker registry namespace in which the operator docker image will be pushed', )
       string(name: 'KUBECONFIGS', defaultValue: 'kube-ams1,scw-183a3b', description: 'KUBECONFIGS is a comma separated list of Kubernetes configuration files (relative to /home/jenkins/.kube) on which the tests are run', )
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
-      string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests)', )
+      string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests', )
+      string(name: 'ARANGODIMAGE', defaultValue: '', description: 'ARANGODIMAGE sets the docker image used for tests (except enterprise and update tests)', )
       string(name: 'TESTOPTIONS', defaultValue: '', description: 'TESTOPTIONS is used to pass additional test options to the integration test', )
     }
     stages {
