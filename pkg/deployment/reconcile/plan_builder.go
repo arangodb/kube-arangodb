@@ -142,6 +142,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 			plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 		case api.DeploymentModeCluster:
 			// Scale dbservers, coordinators
+			log.Debug().Msg("Consider up or down scaling")
 			plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
 			plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
 		}
@@ -362,17 +363,27 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 			Str("role", group.AsRole()).
 			Msg("Creating scale-up plan")
 	} else if len(members) > count {
+		log.Debug().Msg("Have to scale down")
 		// Note, we scale down 1 member at a time
 		if m, err := members.SelectMemberToRemove(); err != nil {
 			log.Warn().Err(err).Str("role", group.AsRole()).Msg("Failed to select member to remove")
 		} else {
-			if group == api.ServerGroupDBServers {
+
+			log.Debug().
+				Str("member-id", m.ID).
+				Str("phase", string(m.Phase)).
+				Msg("Found member to remove")
+			if m.Conditions.IsTrue(api.ConditionTypeReady) {
+				if group == api.ServerGroupDBServers {
+					plan = append(plan,
+						api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
+					)
+				}
 				plan = append(plan,
-					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
+					api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
 				)
 			}
 			plan = append(plan,
-				api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
 				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 			)
 			log.Debug().
