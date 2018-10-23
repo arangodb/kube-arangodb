@@ -84,6 +84,9 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
+	// check if the deployment got a load balancer, otherwise skip this test
+	isEaLoadBalancerOrSkip(depl.GetName(), t)
+
 	// Create a database client
 	ctx := context.Background()
 	clOpts := &DatabaseClientOptions{

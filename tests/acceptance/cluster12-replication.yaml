@@ -1,0 +1,13 @@
+apiVersion: "replication.database.arangodb.com/v1alpha"
+kind: "ArangoDeploymentReplication"
+metadata:
+  name: "cluster12-replication"
+spec:
+  source:
+    deploymentName: cluster1
+    auth:
+      keyfileSecretName: cluster1-to-2-auth
+    tls:
+      caSecretName: cluster1-to-2-ca
+  destination:
+    deploymentName: cluster2
