@@ -51,6 +51,7 @@ type DeploymentSpec struct {
 	Image           *string         `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
+	DisableIPV6     *bool           `json:"disableIPV6,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -96,6 +97,19 @@ func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 // IsDowntimeAllowed returns the value of downtimeAllowed.
 func (s DeploymentSpec) IsDowntimeAllowed() bool {
 	return util.BoolOrDefault(s.DowntimeAllowed)
+}
+
+// IsDisableIPV6 returns the value of disableIPV6.
+func (s DeploymentSpec) IsDisableIPV6() bool {
+	return util.BoolOrDefault(s.DisableIPV6)
+}
+
+// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPV6
+func (s DeploymentSpec) GetListenAddr() string {
+	if s.IsDisableIPV6() {
+		return "0.0.0.0"
+	}
+	return "[::]"
 }
 
 // IsAuthenticated returns true when authentication is enabled
@@ -179,6 +193,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	}
 	if s.DowntimeAllowed == nil {
 		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
+	}
+	if s.DisableIPV6 == nil {
+		s.DisableIPV6 = util.NewBoolOrNil(source.DisableIPV6)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
@@ -268,6 +285,10 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if s.GetStorageEngine() != target.GetStorageEngine() {
 		target.StorageEngine = NewStorageEngineOrNil(s.StorageEngine)
 		resetFields = append(resetFields, "storageEngine")
+	}
+	if s.IsDisableIPV6() != target.IsDisableIPV6() {
+		target.DisableIPV6 = util.NewBoolOrNil(s.DisableIPV6)
+		resetFields = append(resetFields, "disableIPV6")
 	}
 	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
 		resetFields = append(resetFields, l...)

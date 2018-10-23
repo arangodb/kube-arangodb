@@ -27,20 +27,20 @@ GOVERSION := 1.10.0-alpine
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
-DOCKERFILE := Dockerfile 
+DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
-ifndef LOCALONLY 
+ifndef LOCALONLY
 	PUSHIMAGES := 1
 	IMAGESHA256 := true
 else
 	IMAGESHA256 := false
 endif
 
-ifdef IMAGETAG 
+ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
-else 
+else
 	IMAGESUFFIX := :dev
 endif
 
@@ -84,8 +84,8 @@ TESTBINNAME := $(PROJECT)_test
 TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
-RELEASE := $(GOBUILDDIR)/bin/release 
-GHRELEASE := $(GOBUILDDIR)/bin/github-release 
+RELEASE := $(GOBUILDDIR)/bin/release
+GHRELEASE := $(GOBUILDDIR)/bin/github-release
 
 TESTLENGTHOPTIONS := -test.short
 TESTTIMEOUT := 20m
@@ -94,7 +94,7 @@ ifeq ($(LONG), 1)
 	TESTTIMEOUT := 180m
 endif
 ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v 
+	TESTVERBOSEOPTIONS := -v
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
@@ -176,7 +176,7 @@ update-vendor:
 	# Manually restore arangosync vendor with: git checkout deps/github.com/arangodb/arangosync
 
 .PHONY: update-generated
-update-generated: $(GOBUILDDIR) 
+update-generated: $(GOBUILDDIR)
 	@docker build $(SRCDIR)/tools/codegen --build-arg GOVERSION=$(GOVERSION) -t k8s-codegen
 	docker run \
 		--rm \
@@ -232,7 +232,7 @@ ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
 
-# Manifests 
+# Manifests
 
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
@@ -268,7 +268,7 @@ run-unit-tests: $(GOBUILDDIR) $(SOURCES)
 			$(REPOPATH)/pkg/util/k8sutil \
 			$(REPOPATH)/pkg/util/k8sutil/test \
 			$(REPOPATH)/pkg/util/probe \
-			$(REPOPATH)/pkg/util/validation 
+			$(REPOPATH)/pkg/util/validation
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
@@ -299,13 +299,12 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
@@ -377,12 +376,12 @@ $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 .PHONY: build-ghrelease
 build-ghrelease: $(GHRELEASE)
 
-$(GHRELEASE): $(GOBUILDDIR) 
+$(GHRELEASE): $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
 
 .PHONY: release-patch
 release-patch: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch
 
 .PHONY: release-minor
 release-minor: $(RELEASE)
@@ -390,7 +389,7 @@ release-minor: $(RELEASE)
 
 .PHONY: release-major
 release-major: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major
 
 ## Kubernetes utilities
 
@@ -407,9 +406,8 @@ delete-operator:
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
-	kubectl apply -f manifests/crd.yaml
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
-	kubectl get pods 
+	kubectl get pods

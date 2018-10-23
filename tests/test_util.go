@@ -52,6 +52,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
@@ -154,6 +155,21 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
+// isEaLoadBalancerOrSkip checks it the deployment
+func isEaLoadBalancerOrSkip(deploymentName string, t *testing.T) {
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName)
+	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
+	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+		if existing.Spec.Type == v1.ServiceTypeLoadBalancer {
+			return
+		}
+	}
+
+	t.Skip("No load balancer deployed")
+}
+
 // shouldCleanDeployments returns true when deployments created
 // by tests should be removed, even when the test fails.
 func shouldCleanDeployments() bool {
@@ -231,9 +247,9 @@ func getNamespace(t *testing.T) string {
 }
 
 // newDeployment creates a basic ArangoDeployment with configured
-// type & name.
+// type, name and image.
 func newDeployment(name string) *api.ArangoDeployment {
-	return &api.ArangoDeployment{
+	depl := &api.ArangoDeployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: api.SchemeGroupVersion.String(),
 			Kind:       api.ArangoDeploymentResourceKind,
@@ -242,6 +258,17 @@ func newDeployment(name string) *api.ArangoDeployment {
 			Name: strings.ToLower(name),
 		},
 	}
+
+	// set default image to the value given in env
+	// some tests will override this value if they need a specific version
+	// like update tests
+	// if no value is given, use the operator default, which is arangodb/arangodb:latest
+	image := strings.TrimSpace(os.Getenv("ARANGODIMAGE"))
+	if image != "" {
+		depl.Spec.Image = util.NewString(image)
+	}
+
+	return depl
 }
 
 // waitUntilDeployment waits until a deployment with given name in given namespace

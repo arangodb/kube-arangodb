@@ -239,6 +239,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.DisableIPV6 != nil {
+		in, out := &in.DisableIPV6, &out.DisableIPV6
+		*out = new(bool)
+		**out = **in
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)

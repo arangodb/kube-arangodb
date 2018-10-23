@@ -40,7 +40,6 @@ run (replace `<version>` with the version of the operator that you want to insta
 
 ```bash
 export URLPREFIX=https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests
-kubectl apply -f $URLPREFIX/crd.yaml
 kubectl apply -f $URLPREFIX/arango-deployment.yaml
 ```
 

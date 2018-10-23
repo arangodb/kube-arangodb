@@ -1,0 +1,14 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "acceptance-cluster"
+spec:
+  environment: @ENVIRONMENT@
+  image: @IMAGE@
+  externalAccess:
+    type: LoadBalancer
+  mode: Cluster
+  dbservers:
+    count: 5
+  coordinators:
+    count: 4
