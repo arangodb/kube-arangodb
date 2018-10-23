@@ -4,4 +4,4 @@ metadata:
   name: "acceptance-single"
 spec:
   mode: Single
-  image: arangodb/arangodb:3.3.16.1
+  image: arangodb/arangodb:3.3.17
