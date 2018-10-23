@@ -192,11 +192,19 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	}
 	coordinatorCount := spec.Coordinators.GetCount()
 	dbserverCount := spec.DBServers.GetCount()
-	if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
-		if expectSuccess {
-			log.Debug().Err(err).Msg("Failed to set number of servers")
+
+	ci.lastNumberOfServers.mutex.Lock()
+	lastNumberOfServers := ci.lastNumberOfServers.NumberOfServers
+	ci.lastNumberOfServers.mutex.Unlock()
+
+	// This is to prevent unneseccary updates that may override some values written by the WebUI (in the case of a update loop)
+	if coordinatorCount != lastNumberOfServers.GetCoordinators() && dbserverCount != lastNumberOfServers.GetDBServers() {
+		if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
+			if expectSuccess {
+				log.Debug().Err(err).Msg("Failed to set number of servers")
+			}
+			return false, maskAny(err)
 		}
-		return false, maskAny(err)
 	}
 
 	// Success, now update internal state
