@@ -369,7 +369,7 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_api/version",
+		LocalPath:           "/_admin/server/availability",
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
