@@ -343,11 +343,12 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 }
 
 // Update the status of the API object from the internal status
-func (d *Deployment) updateCRStatus() error {
-
-	if d.apiObject.Status.Equal(d.status.last) {
-		// Nothing has changed
-		return nil
+func (d *Deployment) updateCRStatus(force ...bool) error {
+	if len(force) == 0 || !force[0] {
+		if d.apiObject.Status.Equal(d.status.last) {
+			// Nothing has changed
+			return nil
+		}
 	}
 
 	// Send update to API server

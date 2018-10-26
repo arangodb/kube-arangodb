@@ -112,7 +112,7 @@ func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32
 	}
 	d.status.version++
 	d.status.last = *status.DeepCopy()
-	if err := d.updateCRStatus(); err != nil {
+	if err := d.updateCRStatus(force); err != nil {
 		return maskAny(err)
 	}
 	return nil
