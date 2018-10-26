@@ -257,6 +257,9 @@ func newDeployment(name string) *api.ArangoDeployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
 		},
+		Spec: api.DeploymentSpec{
+			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
+		},
 	}
 
 	// set default image to the value given in env
