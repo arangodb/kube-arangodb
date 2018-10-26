@@ -122,7 +122,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 	if len(l) > 0 {
 		// Try to find a not ready member
 		for _, m := range l {
-			if m.Phase == MemberPhaseNone {
+			if m.Phase == MemberPhaseNone || !m.Conditions.IsTrue(ConditionTypeReady) {
 				return m, nil
 			}
 		}

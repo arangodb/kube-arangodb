@@ -38,7 +38,7 @@ import (
 // ValidateSecretHashes checks the hash of used secrets
 // against the stored ones.
 // If a hash is different, the deployment is marked
-// with a SecretChangedCondition and the operator will no
+// with a SecretChangedCondition and the operator will not
 // touch it until this is resolved.
 func (r *Resources) ValidateSecretHashes() error {
 	// validate performs a secret hash comparison for a single secret.
