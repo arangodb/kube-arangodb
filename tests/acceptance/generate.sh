@@ -2,7 +2,7 @@
 set -u
 
 version="arangodb-preview:3.4.0-rc.3"
-enterprise_secret="9c169fe900ff79790395784287bfa82f0dc0059375a34a2881b9b745c8efd42e"
+enterprise_secret="$ARANGO_EP_SECRET" #only the number
 community="arangodb/$version"
 enterprise="registry.arangodb.com/arangodb/$version-$enterprise_secret"
 
