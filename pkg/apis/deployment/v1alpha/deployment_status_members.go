@@ -36,6 +36,16 @@ type DeploymentStatusMembers struct {
 	SyncWorkers  MemberStatusList `json:"syncworkers,omitempty"`
 }
 
+// Equal checks for equality
+func (ds DeploymentStatusMembers) Equal(other DeploymentStatusMembers) bool {
+	return ds.Single.Equal(other.Single) &&
+		ds.Agents.Equal(other.Agents) &&
+		ds.DBServers.Equal(other.DBServers) &&
+		ds.Coordinators.Equal(other.Coordinators) &&
+		ds.SyncMasters.Equal(other.SyncMasters) &&
+		ds.SyncWorkers.Equal(other.SyncWorkers)
+}
+
 // ContainsID returns true if the given set of members contains a member with given ID.
 func (ds DeploymentStatusMembers) ContainsID(id string) bool {
 	return ds.Single.ContainsID(id) ||

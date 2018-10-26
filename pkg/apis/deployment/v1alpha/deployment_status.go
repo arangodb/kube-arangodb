@@ -22,6 +22,10 @@
 
 package v1alpha
 
+import (
+	"reflect"
+)
+
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
 	// Phase holds the current lifetime phase of the deployment
@@ -56,4 +60,19 @@ type DeploymentStatus struct {
 	// SecretHashes keeps a sha256 hash of secret values, so we can
 	// detect changes in secret values.
 	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
+}
+
+// Equal checks for equality
+func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
+	return ds.Phase == other.Phase &&
+		ds.Reason == other.Reason &&
+		ds.ServiceName == other.ServiceName &&
+		ds.SyncServiceName == other.SyncServiceName &&
+		reflect.DeepEqual(ds.Images, other.Images) &&
+		reflect.DeepEqual(ds.CurrentImage, other.CurrentImage) &&
+		ds.Members.Equal(other.Members) &&
+		ds.Conditions.Equal(other.Conditions) &&
+		reflect.DeepEqual(ds.Plan, other.Plan) &&
+		reflect.DeepEqual(ds.AcceptedSpec, other.AcceptedSpec) &&
+		reflect.DeepEqual(ds.SecretHashes, other.SecretHashes)
 }

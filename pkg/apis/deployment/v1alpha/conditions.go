@@ -76,6 +76,31 @@ type Condition struct {
 // Each type is allowed only once.
 type ConditionList []Condition
 
+// Equal checks for equality
+func (cl ConditionList) Equal(other ConditionList) bool {
+	if len(cl) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(cl); i++ {
+		if !cl[i].Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Equal checks for equality
+func (c Condition) Equal(other Condition) bool {
+	return c.Type == other.Type &&
+		c.Status == other.Status &&
+		c.LastUpdateTime.Time.Sub(other.LastUpdateTime.Time).Seconds() < 2 &&
+		c.LastTransitionTime.Time.Sub(other.LastTransitionTime.Time).Seconds() < 2 &&
+		c.Reason == other.Reason &&
+		c.Message == other.Message
+}
+
 // IsTrue return true when a condition with given type exists and its status is `True`.
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	c, found := list.Get(conditionType)

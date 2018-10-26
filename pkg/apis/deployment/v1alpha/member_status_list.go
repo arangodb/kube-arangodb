@@ -32,6 +32,21 @@ import (
 // MemberStatusList is a list of MemberStatus entries
 type MemberStatusList []MemberStatus
 
+// Equal checks for equality
+func (msl MemberStatusList) Equal(other MemberStatusList) bool {
+	if len(msl) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(msl); i++ {
+		if !msl[i].Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // ContainsID returns true if the given list contains a member with given ID.
 func (l MemberStatusList) ContainsID(id string) bool {
 	for _, x := range l {

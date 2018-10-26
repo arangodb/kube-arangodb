@@ -54,6 +54,18 @@ type MemberStatus struct {
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
 }
 
+// Equal checks for equality
+func (s MemberStatus) Equal(other MemberStatus) bool {
+	return s.ID == other.ID &&
+		s.Phase == other.Phase &&
+		s.CreatedAt.Time.Sub(other.CreatedAt.Time).Seconds() < 2 &&
+		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
+		s.PodName == other.PodName &&
+		s.Conditions.Equal(other.Conditions) &&
+		s.IsInitialized == other.IsInitialized &&
+		s.CleanoutJobID == other.CleanoutJobID
+}
+
 // Age returns the duration since the creation timestamp of this member.
 func (s MemberStatus) Age() time.Duration {
 	return time.Since(s.CreatedAt.Time)
