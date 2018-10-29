@@ -2,19 +2,23 @@
 
 source helper.fish
 
-set -g TESTNAME test1c
-set -g TESTDESC "Deployment of mode cluster (enterprise)"
-set -g YAMLFILE generated/cluster-enterprise-dev.yaml
+set -g TESTNAME test1d
+set -g TESTDESC "Deployment of mode cluster with sync (enterprise)"
+set -g YAMLFILE generated/cluster-sync-enterprise-dev.yaml
 set -g DEPLOYMENT acceptance-cluster
 printheader
 
 # Deploy and check
 kubectl apply -f $YAMLFILE
+and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 15 120
 and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 120
+and waitForKubectl "get pod" "$DEPLOYMENT-syma" "1/1 *Running" 3 120
+and waitForKubectl "get pod" "$DEPLOYMENT-sywo" "1/1 *Running" 3 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
 and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 120
+and waitForKubectl "get service" "$DEPLOYMENT-sync *LoadBalancer" "-v;pending" 1 120
 or fail "Deployment did not get ready."
 
 # Automatic check
