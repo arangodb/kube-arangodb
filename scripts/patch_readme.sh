@@ -21,13 +21,15 @@ function replaceInFile {
             sed -i --expression "${EXPR}" ${FILE}
             ;;
     esac
-}
+}arango-deployment-operator-5bbc447b4c
 
 
 f=README.md
+replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-crd.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-crd.yaml@g" ${f}
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-deployment.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-deployment.yaml@g" ${f}
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-deployment-replication.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-deployment-replication.yaml@g" ${f}
 replaceInFile "s@^kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/.*/manifests/arango-storage.yaml\$@kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/${VERSION}/manifests/arango-storage.yaml@g" ${f}
 
+replaceInFile "s@^helm install https://github.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb-crd.tgz\$@helm install https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb-crd.tgz@g" ${f}
 replaceInFile "s@^helm install https://github.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb.tgz\$@helm install https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb.tgz@g" ${f}
 replaceInFile "s@^helm install https://github.com/arangodb/kube-arangodb/releases/download/.*/kube-arangodb-storage.tgz\$@helm install https://github.com/arangodb/kube-arangodb/releases/download/${VERSION}/kube-arangodb-storage.tgz@g" ${f}
