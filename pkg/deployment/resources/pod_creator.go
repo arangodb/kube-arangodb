@@ -35,6 +35,7 @@ import (
 	"sync"
 	"time"
 
+	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -353,7 +354,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 }
 
 // createReadinessProbe creates configuration for a readiness probe of a server in the given group.
-func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
 	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators {
 		return nil, nil
 	}
@@ -369,12 +370,22 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_admin/server/availability",
+		LocalPath:           "/_api/version",
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
 	}
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		probeCfg.LocalPath = "/_admin/echo"
+	}
+
+	// /_admin/server/availability is the way to go, it is available since 3.3.9
+	if version.CompareTo("3.3.9") >= 0 {
+		probeCfg.LocalPath = "/_admin/server/availability"
+	}
+
 	return probeCfg, nil
 }
 
@@ -482,7 +493,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if err != nil {
 			return maskAny(err)
 		}
-		readinessProbe, err := r.createReadinessProbe(spec, group)
+		readinessProbe, err := r.createReadinessProbe(spec, group, imageInfo.ArangoDBVersion)
 		if err != nil {
 			return maskAny(err)
 		}
