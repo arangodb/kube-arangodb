@@ -2,23 +2,19 @@
 
 source helper.fish
 
-set -g TESTNAME test1d
-set -g TESTDESC "Deployment of mode cluster with sync (development, enterprise)"
-set -g YAMLFILE generated/cluster-sync-enterprise-dev.yaml
-set -g DEPLOYMENT acceptance-cluster
+set -g TESTNAME test3b
+set -g TESTDESC "Deployment of mode active/failover (production)"
+set -g YAMLFILE generated/activefailover-community-pro.yaml
+set -g DEPLOYMENT acceptance-activefailover
 printheader
 
 # Deploy and check
 kubectl apply -f $YAMLFILE
-and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 15 120
-and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-syma" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-sywo" "1/1 *Running" 3 120
+and waitForKubectl "get pod" $DEPLOYMENT "1 *Running" 5 120
+and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*1/1 *Running" "" 1 120
+and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*0/1 *Running" "" 1 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
 and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
-and waitForKubectl "get service" "$DEPLOYMENT-sync *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
 
 # Automatic check

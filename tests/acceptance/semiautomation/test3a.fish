@@ -2,17 +2,15 @@
 
 source helper.fish
 
-set -g TESTNAME test1b
-set -g TESTDESC "Deployment of mode active/failover (development)"
-set -g YAMLFILE generated/activefailover-community-dev.yaml
-set -g DEPLOYMENT acceptance-activefailover
+set -g TESTNAME test3a
+set -g TESTDESC "Deployment of mode single (production)"
+set -g YAMLFILE generated/single-enterprise-pro.yaml
+set -g DEPLOYMENT acceptance-single
 printheader
 
 # Deploy and check
 kubectl apply -f $YAMLFILE
-and waitForKubectl "get pod" $DEPLOYMENT "1 *Running" 5 120
-and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*1/1 *Running" "" 1 120
-and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*0/1 *Running" "" 1 120
+and waitForKubectl "get pod" "$DEPLOYMENT-sngl" "1/1 *Running" 1 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
 and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
@@ -28,7 +26,7 @@ inputAndLogResult
 
 # Cleanup
 kubectl delete -f $YAMLFILE
-waitForKubectl "get pod" $DEPLOYMENT "" 0 120
+waitForKubectl "get pod" $DEPLOYMENT-sngl "" 0 120
 or fail "Could not delete deployment."
 
 output "Ready" ""

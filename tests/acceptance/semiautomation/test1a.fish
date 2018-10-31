@@ -3,7 +3,7 @@
 source helper.fish
 
 set -g TESTNAME test1a
-set -g TESTDESC "Deployment of mode single"
+set -g TESTDESC "Deployment of mode single (development)"
 set -g YAMLFILE generated/single-community-dev.yaml
 set -g DEPLOYMENT acceptance-single
 printheader
@@ -12,12 +12,12 @@ printheader
 kubectl apply -f $YAMLFILE
 and waitForKubectl "get pod" "$DEPLOYMENT-sngl" "1/1 *Running" 1 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
-and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 120
+and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
 
 # Automatic check
 set ip (getLoadBalancerIP "$DEPLOYMENT-ea")
-testArangoDB $ip 60
+testArangoDB $ip 120
 or fail "ArangoDB was not reachable."
 
 # Manual check

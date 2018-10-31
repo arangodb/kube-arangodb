@@ -3,7 +3,7 @@
 source helper.fish
 
 set -g TESTNAME test1c
-set -g TESTDESC "Deployment of mode cluster (enterprise)"
+set -g TESTDESC "Deployment of mode cluster (development, enterprise)"
 set -g YAMLFILE generated/cluster-enterprise-dev.yaml
 set -g DEPLOYMENT acceptance-cluster
 printheader
@@ -14,12 +14,12 @@ and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
-and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 120
+and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
 
 # Automatic check
 set ip (getLoadBalancerIP "$DEPLOYMENT-ea")
-testArangoDB $ip 60
+testArangoDB $ip 120
 or fail "ArangoDB was not reachable."
 
 # Manual check

@@ -10,3 +10,5 @@ spec:
   mode: Cluster
   sync:
     enabled: true
+    externalAccess:
+      type: LoadBalancer

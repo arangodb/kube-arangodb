@@ -45,6 +45,7 @@ function output
   if which say > /dev/null
     say $argv[1] > /dev/null ^ /dev/null
   end
+  echo
   for l in $argv[2..-1] ; echo $l ; end
 end
 
@@ -55,6 +56,7 @@ end
 function inputAndLogResult
   read -P "Test result: " result
   log $result
+  echo
 end
 
 function waitForUser
@@ -81,9 +83,11 @@ function testArangoDB
       return 1
     end
     echo Waiting "$n($timeout)"...
+    sleep 1
   end
 end
 
 function fail
   output "Failed" $argv
+  exit 1
 end
