@@ -5,4 +5,3 @@ metadata:
 spec:
   mode: Cluster
   image: arangodb/arangodb:3.3.17
-
