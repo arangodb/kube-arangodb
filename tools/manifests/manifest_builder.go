@@ -148,6 +148,7 @@ ImagePullPolicy: {{ .ImagePullPolicy | quote }}
 RBAC:
   Create: {{ .RBAC }}
 Storage:
+  Create: {{ .Storage.Create }}
   User:
     ServiceAccountName: {{ .Storage.User.ServiceAccountName | quote }}
   Operator:
@@ -403,7 +404,9 @@ func main() {
 			OperatorDeploymentName: "arango-deployment-replication-operator", // Fixed name because only 1 is allowed per namespace
 		},
 		Storage: ResourceOptions{
-			Create: "{{ .Values.Storage.Create }}",
+			Create:      "{{ .Values.Storage.Create }}",
+			FilterStart: "{{- if .Values.Storage.Create }}",
+			FilterEnd:   "{{- end }}",
 			User: CommonOptions{
 				Namespace:          "{{ .Release.Namespace }}",
 				RoleName:           `{{ printf "%s-%s" .Release.Name "storages" | trunc 63 | trimSuffix "-" }}`,
@@ -475,7 +478,7 @@ func main() {
 					}
 					// Execute to tmp buffer
 					tmpBuf := &bytes.Buffer{}
-					t.Execute(tmpBuf, templateOptions)
+					t.Execute(tmpBuf, chartTemplateOptions)
 					// Add tmp buffer to output, unless empty
 					if strings.TrimSpace(tmpBuf.String()) != "" {
 						if output.Len() > 0 {

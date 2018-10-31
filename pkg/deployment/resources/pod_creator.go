@@ -66,18 +66,13 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	options := make([]optionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
 
-	// Endpoint
-	listenAddr := "[::]"
-	/*	if apiObject.Spec.Di.DisableIPv6 {
-		listenAddr = "0.0.0.0"
-	}*/
 	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
 	scheme := "tcp"
 	if deplSpec.IsSecure() {
 		scheme = "ssl"
 	}
 	options = append(options,
-		optionPair{"--server.endpoint", fmt.Sprintf("%s://%s:%d", scheme, listenAddr, k8sutil.ArangoPort)},
+		optionPair{"--server.endpoint", fmt.Sprintf("%s://%s:%d", scheme, deplSpec.GetListenAddr(), k8sutil.ArangoPort)},
 	)
 
 	// Authentication
@@ -374,15 +369,11 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_api/version",
+		LocalPath:           "/_admin/server/availability",
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
-	}
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		probeCfg.LocalPath = "/_admin/echo"
 	}
 	return probeCfg, nil
 }
