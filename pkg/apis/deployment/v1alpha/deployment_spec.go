@@ -99,7 +99,7 @@ func (s DeploymentSpec) IsDowntimeAllowed() bool {
 	return util.BoolOrDefault(s.DowntimeAllowed)
 }
 
-// IsDisableIPv6 returns the value of disableIPV6.
+// IsDisableIPv6 returns the value of disableIPv6.
 func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
 }
