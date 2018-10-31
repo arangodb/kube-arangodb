@@ -155,21 +155,6 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
-// isEaLoadBalancerOrSkip checks it the deployment
-func isEaLoadBalancerOrSkip(deploymentName string, t *testing.T) {
-	kubecli := mustNewKubeClient(t)
-	ns := getNamespace(t)
-	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName)
-	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
-	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
-		if existing.Spec.Type == v1.ServiceTypeLoadBalancer {
-			return
-		}
-	}
-
-	t.Skip("No load balancer deployed")
-}
-
 // shouldCleanDeployments returns true when deployments created
 // by tests should be removed, even when the test fails.
 func shouldCleanDeployments() bool {
