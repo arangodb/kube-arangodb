@@ -49,10 +49,10 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
@@ -155,21 +155,6 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
-// isEaLoadBalancerOrSkip checks it the deployment
-func isEaLoadBalancerOrSkip(deploymentName string, t *testing.T) {
-	kubecli := mustNewKubeClient(t)
-	ns := getNamespace(t)
-	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(deploymentName)
-	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
-	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
-		if existing.Spec.Type == v1.ServiceTypeLoadBalancer {
-			return
-		}
-	}
-
-	t.Skip("No load balancer deployed")
-}
-
 // shouldCleanDeployments returns true when deployments created
 // by tests should be removed, even when the test fails.
 func shouldCleanDeployments() bool {
@@ -257,6 +242,9 @@ func newDeployment(name string) *api.ArangoDeployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
 		},
+		Spec: api.DeploymentSpec{
+			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
+		},
 	}
 
 	// set default image to the value given in env
@@ -266,6 +254,11 @@ func newDeployment(name string) *api.ArangoDeployment {
 	image := strings.TrimSpace(os.Getenv("ARANGODIMAGE"))
 	if image != "" {
 		depl.Spec.Image = util.NewString(image)
+	}
+
+	disableIPv6 := strings.TrimSpace(os.Getenv("TESTDISABLEIPV6"))
+	if disableIPv6 != "" && disableIPv6 != "0" {
+		depl.Spec.DisableIPv6 = util.NewBool(true)
 	}
 
 	return depl

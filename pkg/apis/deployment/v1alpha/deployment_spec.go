@@ -53,7 +53,7 @@ type DeploymentSpec struct {
 	Image           *string         `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
-	DisableIPV6     *bool           `json:"disableIPV6,omitempty"`
+	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -106,14 +106,14 @@ func (s DeploymentSpec) IsDowntimeAllowed() bool {
 	return util.BoolOrDefault(s.DowntimeAllowed)
 }
 
-// IsDisableIPV6 returns the value of disableIPV6.
-func (s DeploymentSpec) IsDisableIPV6() bool {
-	return util.BoolOrDefault(s.DisableIPV6)
+// IsDisableIPv6 returns the value of disableIPv6.
+func (s DeploymentSpec) IsDisableIPv6() bool {
+	return util.BoolOrDefault(s.DisableIPv6)
 }
 
-// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPV6
+// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
 func (s DeploymentSpec) GetListenAddr() string {
-	if s.IsDisableIPV6() {
+	if s.IsDisableIPv6() {
 		return "0.0.0.0"
 	}
 	return "[::]"
@@ -201,8 +201,8 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	if s.DowntimeAllowed == nil {
 		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
 	}
-	if s.DisableIPV6 == nil {
-		s.DisableIPV6 = util.NewBoolOrNil(source.DisableIPV6)
+	if s.DisableIPv6 == nil {
+		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
@@ -293,9 +293,9 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 		target.StorageEngine = NewStorageEngineOrNil(s.StorageEngine)
 		resetFields = append(resetFields, "storageEngine")
 	}
-	if s.IsDisableIPV6() != target.IsDisableIPV6() {
-		target.DisableIPV6 = util.NewBoolOrNil(s.DisableIPV6)
-		resetFields = append(resetFields, "disableIPV6")
+	if s.IsDisableIPv6() != target.IsDisableIPv6() {
+		target.DisableIPv6 = util.NewBoolOrNil(s.DisableIPv6)
+		resetFields = append(resetFields, "disableIPv6")
 	}
 	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
 		resetFields = append(resetFields, l...)
