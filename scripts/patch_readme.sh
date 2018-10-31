@@ -21,7 +21,7 @@ function replaceInFile {
             sed -i --expression "${EXPR}" ${FILE}
             ;;
     esac
-}arango-deployment-operator-5bbc447b4c
+}
 
 
 f=README.md
