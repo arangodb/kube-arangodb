@@ -104,7 +104,7 @@ func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
 }
 
-// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPV6
+// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
 func (s DeploymentSpec) GetListenAddr() string {
 	if s.IsDisableIPv6() {
 		return "0.0.0.0"
@@ -288,7 +288,7 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	}
 	if s.IsDisableIPv6() != target.IsDisableIPv6() {
 		target.DisableIPv6 = util.NewBoolOrNil(s.DisableIPv6)
-		resetFields = append(resetFields, "disableIPV6")
+		resetFields = append(resetFields, "disableIPv6")
 	}
 	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
 		resetFields = append(resetFields, l...)
