@@ -71,3 +71,38 @@ func (l *ImageInfoList) AddOrUpdate(info ImageInfo) {
 	// No existing entry found, add it
 	*l = append(*l, info)
 }
+
+// Equal compares to ImageInfo
+func (i *ImageInfo) Equal(other *ImageInfo) bool {
+	if i == other {
+		return true
+	} else if i == nil {
+		return false
+	}
+
+	return i.ArangoDBVersion == other.ArangoDBVersion &&
+		i.Enterprise == other.Enterprise &&
+		i.Image == other.Image &&
+		i.ImageID == other.ImageID
+}
+
+// Equal compares to ImageInfoList
+func (l ImageInfoList) Equal(other ImageInfoList) bool {
+	if len(l) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(l); i++ {
+		ii, found := l.GetByImageID(l[i].ImageID)
+
+		if !found {
+			return false
+		}
+
+		if !l[i].Equal(&ii) {
+			return false
+		}
+	}
+
+	return true
+}

@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,7 +59,7 @@ type MemberStatus struct {
 func (s MemberStatus) Equal(other MemberStatus) bool {
 	return s.ID == other.ID &&
 		s.Phase == other.Phase &&
-		s.CreatedAt.Time.Sub(other.CreatedAt.Time).Seconds() < 2 &&
+		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
 		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
 		s.PodName == other.PodName &&
 		s.Conditions.Equal(other.Conditions) &&

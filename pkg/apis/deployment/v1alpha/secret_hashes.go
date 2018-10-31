@@ -35,3 +35,17 @@ type SecretHashes struct {
 	// SyncTLSCA contains the hash of the sync.tls.caSecretName secret
 	SyncTLSCA string `json:"sync-tls-ca,omitempty"`
 }
+
+// Equal compares two SecretHashes
+func (sh *SecretHashes) Equal(other *SecretHashes) bool {
+	if sh == other {
+		return true
+	} else if sh == nil {
+		return false
+	}
+
+	return sh.AuthJWT == other.AuthJWT &&
+		sh.RocksDBEncryptionKey == other.RocksDBEncryptionKey &&
+		sh.TLSCA == other.TLSCA &&
+		sh.SyncTLSCA == other.SyncTLSCA
+}

@@ -24,7 +24,6 @@ package deployment
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -390,7 +389,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 // On success, d.apiObject is updated.
 func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
 
-	if reflect.DeepEqual(d.apiObject.Spec, newSpec) {
+	if d.apiObject.Spec.Equal(&newSpec) {
 		// Nothing to update
 		return nil
 	}

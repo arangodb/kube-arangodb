@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -77,13 +78,18 @@ type Condition struct {
 type ConditionList []Condition
 
 // Equal checks for equality
-func (cl ConditionList) Equal(other ConditionList) bool {
-	if len(cl) != len(other) {
+func (list ConditionList) Equal(other ConditionList) bool {
+	if len(list) != len(other) {
 		return false
 	}
 
-	for i := 0; i < len(cl); i++ {
-		if !cl[i].Equal(other[i]) {
+	for i := 0; i < len(list); i++ {
+		c, found := other.Get(list[i].Type)
+		if !found {
+			return false
+		}
+
+		if !list[i].Equal(c) {
 			return false
 		}
 	}
@@ -95,8 +101,8 @@ func (cl ConditionList) Equal(other ConditionList) bool {
 func (c Condition) Equal(other Condition) bool {
 	return c.Type == other.Type &&
 		c.Status == other.Status &&
-		c.LastUpdateTime.Time.Sub(other.LastUpdateTime.Time).Seconds() < 2 &&
-		c.LastTransitionTime.Time.Sub(other.LastTransitionTime.Time).Seconds() < 2 &&
+		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
+		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
 		c.Reason == other.Reason &&
 		c.Message == other.Message
 }
