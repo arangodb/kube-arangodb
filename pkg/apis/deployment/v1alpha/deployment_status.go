@@ -57,3 +57,18 @@ type DeploymentStatus struct {
 	// detect changes in secret values.
 	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
 }
+
+// Equal checks for equality
+func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
+	return ds.Phase == other.Phase &&
+		ds.Reason == other.Reason &&
+		ds.ServiceName == other.ServiceName &&
+		ds.SyncServiceName == other.SyncServiceName &&
+		ds.Images.Equal(other.Images) &&
+		ds.CurrentImage.Equal(other.CurrentImage) &&
+		ds.Members.Equal(other.Members) &&
+		ds.Conditions.Equal(other.Conditions) &&
+		ds.Plan.Equal(other.Plan) &&
+		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
+		ds.SecretHashes.Equal(other.SecretHashes)
+}

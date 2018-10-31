@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -79,6 +80,18 @@ type Action struct {
 	Image string `json:"image,omitempty"`
 }
 
+// Equal compares two Actions
+func (a Action) Equal(other Action) bool {
+	return a.ID == other.ID &&
+		a.Type == other.Type &&
+		a.MemberID == other.MemberID &&
+		a.Group == other.Group &&
+		util.TimeCompareEqual(a.CreationTime, other.CreationTime) &&
+		util.TimeCompareEqualPointer(a.StartTime, other.StartTime) &&
+		a.Reason == other.Reason &&
+		a.Image == other.Image
+}
+
 // NewAction instantiates a new Action.
 func NewAction(actionType ActionType, group ServerGroup, memberID string, reason ...string) Action {
 	a := Action{
@@ -105,3 +118,19 @@ func (a Action) SetImage(image string) Action {
 // Only 1 action is in progress at a time. The operator will wait for that
 // action to be completely and then remove the action.
 type Plan []Action
+
+// Equal compares two Plan
+func (p Plan) Equal(other Plan) bool {
+	// For plan the order is relevant!
+	if len(p) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(p); i++ {
+		if !p[i].Equal(other[i]) {
+			return false
+		}
+	}
+
+	return true
+}

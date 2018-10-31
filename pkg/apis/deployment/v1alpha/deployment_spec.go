@@ -23,6 +23,8 @@
 package v1alpha
 
 import (
+	"reflect"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
@@ -67,6 +69,11 @@ type DeploymentSpec struct {
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
 	Chaos ChaosSpec `json:"chaos"`
+}
+
+// Equal compares two DeploymentSpec
+func (s *DeploymentSpec) Equal(other *DeploymentSpec) bool {
+	return reflect.DeepEqual(s, other)
 }
 
 // GetMode returns the value of mode.

@@ -24,7 +24,6 @@ package deployment
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -344,9 +343,8 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 
 // Update the status of the API object from the internal status
 func (d *Deployment) updateCRStatus(force ...bool) error {
-	// TODO Remove force....
 	if len(force) == 0 || !force[0] {
-		if reflect.DeepEqual(d.apiObject.Status, d.status) {
+		if d.apiObject.Status.Equal(d.status.last) {
 			// Nothing has changed
 			return nil
 		}
@@ -390,6 +388,12 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 // to the given object, while preserving the status.
 // On success, d.apiObject is updated.
 func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
+
+	if d.apiObject.Spec.Equal(&newSpec) {
+		// Nothing to update
+		return nil
+	}
+
 	// Send update to API server
 	update := d.apiObject.DeepCopy()
 	attempt := 0
