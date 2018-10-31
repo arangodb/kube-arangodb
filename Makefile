@@ -52,6 +52,7 @@ ifndef MANIFESTSUFFIX
 	MANIFESTSUFFIX := -dev
 endif
 endif
+MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
@@ -236,6 +237,7 @@ endif
 
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
+	echo Building manifests
 	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
 		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
@@ -299,6 +301,7 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
+	kubectl apply -f $(MANIFESTPATHCRD)
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
@@ -403,9 +406,11 @@ delete-operator:
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
+	kubectl apply -f $(MANIFESTPATHCRD)
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)

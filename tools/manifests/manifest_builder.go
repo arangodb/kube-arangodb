@@ -55,14 +55,16 @@ var (
 		RBAC                              bool
 		AllowChaos                        bool
 	}
+	crdTemplateNames = []Template{
+		Template{Name: "deployment.yaml"},
+		Template{Name: "deployment-replication.yaml"},
+	}
 	deploymentTemplateNames = []Template{
-		Template{Name: "crd.yaml"},
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment.yaml"},
 		Template{Name: "service.yaml"},
 	}
 	deploymentReplicationTemplateNames = []Template{
-		Template{Name: "crd.yaml"},
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment-replication.yaml"},
 		Template{Name: "service.yaml"},
@@ -119,6 +121,15 @@ description: |
   Kube-ArangoDB-Storage is a cluster-wide operator used to provision PersistentVolumes on disks attached locally to Nodes
 home: https://arangodb.com
 `
+	kubeArangoDBCRDChartTemplate = `
+apiVersion: v1
+name: kube-arangodb-crd
+version: "{{ .Version }}"
+description: |
+  Kube-ArangoDB-crd contains the custom resource definitions for ArangoDeployment and ArangoDeploymentReplication resources.
+home: https://arangodb.com
+`
+
 	kubeArangoDBValuesTemplate = `
 # Image containing the kube-arangodb operators
 Image: {{ .Image | quote }}
@@ -155,6 +166,8 @@ Storage:
     ServiceAccountName: {{ .Storage.Operator.ServiceAccountName | quote }}
     ServiceType: {{ .Storage.Operator.ServiceType | quote }}
 `
+	kubeArangoDBCRDValuesTemplate = ``
+
 	kubeArangoDBNotesText = `
 kube-arangodb has been deployed successfully!
 
@@ -181,10 +194,22 @@ You can now deploy an ArangoLocalStorage resource.
 See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
 for further instructions.
 `
+	kubeArangoDBCRDNotesText = `
+kube-arangodb-crd has been deployed successfully!
+
+Your release is named '{{ .Release.Name }}'.
+
+You can now continue install kube-arangodb chart.
+`
 )
 
 var (
 	chartTemplateGroups = map[string]chartTemplates{
+		"kube-arangodb-crd": chartTemplates{
+			"Chart.yaml":          kubeArangoDBCRDChartTemplate,
+			"values.yaml":         kubeArangoDBCRDValuesTemplate,
+			"templates/NOTES.txt": kubeArangoDBCRDNotesText,
+		},
 		"kube-arangodb": chartTemplates{
 			"Chart.yaml":          kubeArangoDBChartTemplate,
 			"values.yaml":         kubeArangoDBValuesTemplate,
@@ -272,6 +297,7 @@ func main() {
 
 	// Prepare templates to include
 	templateInfoSet := map[string]TemplateGroup{
+		"crd":                    TemplateGroup{ChartName: "kube-arangodb-crd", Templates: crdTemplateNames},
 		"deployment":             TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentTemplateNames},
 		"deployment-replication": TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentReplicationTemplateNames},
 		"storage":                TemplateGroup{ChartName: "kube-arangodb-storage", Templates: storageTemplateNames},
