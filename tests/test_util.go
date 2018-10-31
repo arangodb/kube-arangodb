@@ -49,10 +49,10 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const (
@@ -269,6 +269,11 @@ func newDeployment(name string) *api.ArangoDeployment {
 	image := strings.TrimSpace(os.Getenv("ARANGODIMAGE"))
 	if image != "" {
 		depl.Spec.Image = util.NewString(image)
+	}
+
+	disableIPv6 := strings.TrimSpace(os.Getenv("TESTDISABLEIPV6"))
+	if disableIPv6 != "" && disableIPv6 != "0" {
+		depl.Spec.DisableIPv6 = util.NewBool(true)
 	}
 
 	return depl

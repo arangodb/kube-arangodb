@@ -97,11 +97,11 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 			[]string{"mode", "agents.count"},
 		},
 		{
-			DeploymentSpec{DisableIPV6: util.NewBool(false)},
-			DeploymentSpec{DisableIPV6: util.NewBool(true)},
-			DeploymentSpec{DisableIPV6: util.NewBool(false)},
+			DeploymentSpec{DisableIPv6: util.NewBool(false)},
+			DeploymentSpec{DisableIPv6: util.NewBool(true)},
+			DeploymentSpec{DisableIPv6: util.NewBool(false)},
 			false,
-			[]string{"disableIPV6"},
+			[]string{"disableIPv6"},
 		},
 	}
 
