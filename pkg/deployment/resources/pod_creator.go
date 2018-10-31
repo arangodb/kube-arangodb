@@ -369,12 +369,28 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_admin/server/availability",
+		LocalPath:           "/_api/version",
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
 	}
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		probeCfg.LocalPath = "/_admin/echo"
+	}
+
+	status, _ := r.context.GetStatus()
+	currentImage := status.CurrentImage
+	if currentImage == nil {
+		return nil, fmt.Errorf("CurrentImage is nil when creating a pod")
+	}
+
+	// /_admin/server/availability is the way to go, it is available since 3.3.9
+	if currentImage.ArangoDBVersion.CompareTo("3.3.9") >= 0 {
+		probeCfg.LocalPath = "/_admin/server/availability"
+	}
+
 	return probeCfg, nil
 }
 
