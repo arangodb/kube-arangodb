@@ -38,10 +38,10 @@ type SecretHashes struct {
 
 // Equal compares two SecretHashes
 func (sh *SecretHashes) Equal(other *SecretHashes) bool {
-	if sh == other {
-		return true
-	} else if sh == nil {
+	if sh == nil || other == nil {
 		return false
+	} else if sh == other {
+		return true
 	}
 
 	return sh.AuthJWT == other.AuthJWT &&

@@ -35,10 +35,10 @@ func TimeCompareEqual(a, b metav1.Time) bool {
 
 // TimeCompareEqualPointer compares two times, allowing an error of 1s
 func TimeCompareEqualPointer(a, b *metav1.Time) bool {
-	if a == b {
-		return true
-	} else if a == nil {
+	if a == nil || b == nil {
 		return false
+	} else if a == b {
+		return true
 	}
 
 	return TimeCompareEqual(*a, *b)
