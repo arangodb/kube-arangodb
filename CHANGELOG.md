@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.3.3](https://github.com/arangodb/kube-arangodb/tree/0.3.3) (2018-11-02)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.2...0.3.3)
+
+**Closed issues:**
+
+- `manifests/arango-crd.yaml` not in repository [\#292](https://github.com/arangodb/kube-arangodb/issues/292)
+
+
+**Merged pull requests:**
+
+- Make semiautomation files self-contained. [\#291](https://github.com/arangodb/kube-arangodb/pull/291)
+
 ## [0.3.2](https://github.com/arangodb/kube-arangodb/tree/0.3.2) (2018-11-02)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.1...0.3.2)
 
