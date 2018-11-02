@@ -132,11 +132,11 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	ci.lastNumberOfServers.mutex.Lock()
 	defer ci.lastNumberOfServers.mutex.Unlock()
 	desired := ci.lastNumberOfServers.NumberOfServers
-	if req.Coordinators != nil && desired.Coordinators != nil && req.GetCoordinators() != desired.GetCoordinators() {
+	if req.Coordinators != nil && req.GetCoordinators() != desired.GetCoordinators() {
 		// #Coordinator has changed
 		coordinatorsChanged = true
 	}
-	if req.DBServers != nil && desired.DBServers != nil && req.GetDBServers() != desired.GetDBServers() {
+	if req.DBServers != nil && req.GetDBServers() != desired.GetDBServers() {
 		// #DBServers has changed
 		dbserversChanged = true
 	}
