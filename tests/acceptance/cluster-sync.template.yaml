@@ -12,3 +12,4 @@ spec:
     enabled: true
     externalAccess:
       type: LoadBalancer
+      accessPackageSecretNames: ["src-accesspackage"]
