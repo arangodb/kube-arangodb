@@ -99,7 +99,7 @@ function patchYamlFile
   set -l RESULT $argv[4]
   cp "$YAMLFILE" "$RESULT"
   sed -i "s|@IMAGE@|$IMAGE|" "$RESULT"
-  sed -i "s|@ENVIRONMENT|$ENVIRONMENT|" "$RESULT"
+  sed -i "s|@ENVIRONMENT@|$ENVIRONMENT|" "$RESULT"
 end
 
 function checkImages

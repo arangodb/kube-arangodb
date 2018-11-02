@@ -4,9 +4,9 @@ source helper.fish
 
 set -g TESTNAME test7a
 set -g TESTDESC "Deployment of 2 clusters with sync with DC2DC (production, enterprise)"
-set -g YAMLFILE cluster-sync.yaml
+set -g YAMLFILE cluster-sync1.yaml
 set -g YAMLFILE2 cluster-sync2.yaml
-set -g DEPLOYMENT acceptance-cluster
+set -g DEPLOYMENT acceptance-cluster1
 set -g DEPLOYMENT2 acceptance-cluster2
 printheader
 
