@@ -1,5 +1,36 @@
 # Change Log
 
+## [0.3.2](https://github.com/arangodb/kube-arangodb/tree/0.3.2) (2018-11-02)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.1...0.3.2)
+
+**Closed issues:**
+
+- scaling down in production starts pending pods to terminate them immediately [\#267](https://github.com/arangodb/kube-arangodb/issues/267)
+- Operator redeployed not fully functional [\#273](https://github.com/arangodb/kube-arangodb/issues/273)
+- Busy Update Loop on PKS [\#272](https://github.com/arangodb/kube-arangodb/issues/272)
+- crd inclusion in helm chart prevents subsequent deployments to alternate namespaces [\#261](https://github.com/arangodb/kube-arangodb/issues/261)
+
+**Merged pull requests:**
+
+- Unified Readiness Test [\#264](https://github.com/arangodb/kube-arangodb/pull/264)
+- Skip LoadBalancer Test [\#269](https://github.com/arangodb/kube-arangodb/pull/269)
+- Test Image Option [\#270](https://github.com/arangodb/kube-arangodb/pull/270)
+- Added `disableIPV6` Spec entry. [\#271](https://github.com/arangodb/kube-arangodb/pull/271)
+- Bug fix/scale up error [\#275](https://github.com/arangodb/kube-arangodb/pull/275)
+- Fixed readiness route. [\#276](https://github.com/arangodb/kube-arangodb/pull/276)
+- Break PKS Loop [\#277](https://github.com/arangodb/kube-arangodb/pull/277)
+- When doing tests, always pull the image. [\#279](https://github.com/arangodb/kube-arangodb/pull/279)
+- First stab at semiautomation. [\#280](https://github.com/arangodb/kube-arangodb/pull/280)
+- Updated node modules to fix vulnerabilities [\#281](https://github.com/arangodb/kube-arangodb/pull/281)
+- Revert "Skip LoadBalancer Test" [\#282](https://github.com/arangodb/kube-arangodb/pull/282)
+- Bug fix/readiness upgrade fix [\#283](https://github.com/arangodb/kube-arangodb/pull/283)
+- IPv6 revisited [\#285](https://github.com/arangodb/kube-arangodb/pull/285)
+- Documentation/add aks tutorial [\#286](https://github.com/arangodb/kube-arangodb/pull/286)
+- Bug fix/extra crd yaml [\#287](https://github.com/arangodb/kube-arangodb/pull/287)
+- Revisited scale up and scale down. [\#288](https://github.com/arangodb/kube-arangodb/pull/288)
+- adding EKS tutorial [\#289](https://github.com/arangodb/kube-arangodb/pull/289)
+- UI Fix [\#290](https://github.com/arangodb/kube-arangodb/pull/290)
+
 ## [0.3.1](https://github.com/arangodb/kube-arangodb/tree/0.3.1) (2018-09-25)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.0...0.3.1)
 
