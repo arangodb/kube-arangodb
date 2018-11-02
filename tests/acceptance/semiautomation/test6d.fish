@@ -4,12 +4,14 @@ source helper.fish
 
 set -g TESTNAME test6d
 set -g TESTDESC "Node resilience in mode single (production)"
-set -g YAMLFILE generated/single-community-pro.yaml
+set -g YAMLFILE single.yaml
 set -g DEPLOYMENT acceptance-single
 printheader
 
+patchYamlFile $YAMLFILE $ARANGODB_COMMUNITY Production work.yaml
+
 # Deploy and check
-kubectl apply -f $YAMLFILE
+kubectl apply -f work.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT-sngl" "1/1 *Running" 1 120
 and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
 and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
@@ -25,7 +27,7 @@ output "Work" "Now please check external access on this URL with your browser:" 
 inputAndLogResult
 
 # Cleanup
-kubectl delete -f $YAMLFILE
+kubectl delete -f work.yaml
 waitForKubectl "get pod" $DEPLOYMENT-sngl "" 0 120
 or fail "Could not delete deployment."
 

@@ -4,12 +4,14 @@ source helper.fish
 
 set -g TESTNAME test2b
 set -g TESTDESC "Scale a cluster deployment (development, enterprise)"
-set -g YAMLFILE generated/cluster-enterprise-dev.yaml
+set -g YAMLFILE cluster.yaml
 set -g DEPLOYMENT acceptance-cluster
 printheader
 
+patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Development work.yaml
+
 # Deploy and check
-kubectl apply -f $YAMLFILE
+kubectl apply -f work.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 9 120
 and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
@@ -64,7 +66,7 @@ output "Work" "Now please check external access on this URL with your browser:" 
 inputAndLogResult
 
 # Cleanup
-kubectl delete -f $YAMLFILE
+kubectl delete -f work.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 0 120
 or fail "Could not delete deployment."
 

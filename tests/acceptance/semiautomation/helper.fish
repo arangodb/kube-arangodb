@@ -91,3 +91,22 @@ function fail
   output "Failed" $argv
   exit 1
 end
+
+function patchYamlFile
+  set -l YAMLFILE $argv[1]
+  set -l IMAGE $argv[2]
+  set -l ENVIRONMENT $argv[3]
+  set -l RESULT $argv[4]
+  cp "$YAMLFILE" "$RESULT"
+  sed -i "s|@IMAGE@|$IMAGE|" "$RESULT"
+  sed -i "s|@ENVIRONMENT|$ENVIRONMENT|" "$RESULT"
+end
+
+function checkImages
+  if test -z "$ARANGODB_COMMUNITY" -o -z "$ARANGODB_ENTERPRISE"
+    echo "Need ARANGODB_COMMUNITY and ARANGODB_ENTERPRISE."
+    exit 1
+  end
+end
+
+checkImages
