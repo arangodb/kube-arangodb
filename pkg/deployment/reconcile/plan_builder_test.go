@@ -176,9 +176,11 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	}
 	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
-	require.Len(t, newPlan, 1) // Note: Downscaling is only down 1 at a time
-	assert.Equal(t, api.ActionTypeRemoveMember, newPlan[0].Type)
+	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
+	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
+	assert.Equal(t, api.ActionTypeRemoveMember, newPlan[1].Type)
 	assert.Equal(t, api.ServerGroupSingle, newPlan[0].Group)
+	assert.Equal(t, api.ServerGroupSingle, newPlan[1].Group)
 }
 
 // TestCreatePlanClusterScale creates a `cluster` deployment to test the creating of scaling plan.
@@ -261,12 +263,6 @@ func TestCreatePlanClusterScale(t *testing.T) {
 		api.MemberStatus{
 			ID:      "cr1",
 			PodName: "coordinator1",
-			Conditions: api.ConditionList{
-				api.Condition{
-					Type: api.ConditionTypeReady,
-					Status: v1.ConditionTrue,
-				},
-			},
 		},
 		api.MemberStatus{
 			ID:      "cr2",
@@ -277,14 +273,15 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	spec.Coordinators.Count = util.NewInt(1)
 	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
-
-	fmt.Printf("%v", newPlan)
-
-	require.Len(t, newPlan, 3) // Note: Downscaling is done 1 at a time
-	assert.Equal(t, api.ActionTypeRemoveMember, newPlan[0].Type)
+	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
+	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[1].Type)
 	assert.Equal(t, api.ActionTypeRemoveMember, newPlan[2].Type)
+	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[3].Type)
+	assert.Equal(t, api.ActionTypeRemoveMember, newPlan[4].Type)
 	assert.Equal(t, api.ServerGroupDBServers, newPlan[0].Group)
-	assert.Equal(t, api.ServerGroupCoordinators, newPlan[1].Group)
-	assert.Equal(t, api.ServerGroupCoordinators, newPlan[2].Group)
+	assert.Equal(t, api.ServerGroupDBServers, newPlan[1].Group)
+	assert.Equal(t, api.ServerGroupDBServers, newPlan[2].Group)
+	assert.Equal(t, api.ServerGroupCoordinators, newPlan[3].Group)
+	assert.Equal(t, api.ServerGroupCoordinators, newPlan[4].Group)
 }
