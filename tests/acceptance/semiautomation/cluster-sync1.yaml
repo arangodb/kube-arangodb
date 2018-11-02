@@ -1,0 +1,15 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "acceptance-cluster1"
+spec:
+  environment: @ENVIRONMENT@
+  image: @IMAGE@
+  externalAccess:
+    type: LoadBalancer
+  mode: Cluster
+  sync:
+    enabled: true
+    externalAccess:
+      type: LoadBalancer
+      accessPackageSecretNames: ["src-accesspackage"]
