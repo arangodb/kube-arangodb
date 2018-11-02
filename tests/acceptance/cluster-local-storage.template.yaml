@@ -8,4 +8,7 @@ spec:
   externalAccess:
     type: LoadBalancer
   mode: Cluster
-  storageClassName: acceptance
+  agents:
+    storageClassName: acceptance
+  dbservers:
+    storageClassName: acceptance
