@@ -23,7 +23,7 @@ testArangoDB $ip 120
 or fail "ArangoDB was not reachable."
 
 # Manual check
-output "Work" "Now please check external access on this URL with your browser:" "  https://$ip:8529/" "then type the outcome followed by ENTER." "Furthermore, put some data in, use replication factor 1 for one collection." "Then, remove the node on which the dbserver pod with the shard resides." "The node and pod should come back (on a different machine)." "The service should be uninterrupted." "All data must still be there." "This can only work for network attached persistent volumes."
+output "Work" "Now please check external access on this URL with your browser:" "  https://$ip:8529/" "then type the outcome followed by ENTER." "Furthermore, put some data in, use replication factor 1 for one collection." "Then, remove the node on which the dbserver pod with the shard resides." "The lost pods should come back (on a different machine), except the one." "The service should be uninterrupted, except for the one collection." "All data except the one must still be there." "This is only for locally attached persistent volumes."
 inputAndLogResult
 
 # Cleanup
