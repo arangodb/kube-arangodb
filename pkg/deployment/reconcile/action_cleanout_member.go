@@ -95,8 +95,8 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		// We wanted to remove and it is already gone. All ok
 		return true, false, nil
 	}
-	// do not try to clean out a pod that is not ready
-	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
+	// do not try to clean out a pod that was not initialized
+	if !m.IsInitialized {
 		return false, true, nil
 	}
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
