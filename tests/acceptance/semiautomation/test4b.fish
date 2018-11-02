@@ -4,10 +4,12 @@ source helper.fish
 
 set -g TESTNAME test4a
 set -g TESTDESC "Deployment of mode cluster (development, enterprise, local storage)"
-set -g YAMLFILE generated/cluster-enterprise-dev.yaml
-set -g YAMLFILESTORAGE generated/local-storage-community-dev.yaml
+set -g YAMLFILE cluster.yaml
+set -g YAMLFILESTORAGE local-storage.yaml
 set -g DEPLOYMENT acceptance-cluster
 printheader
+
+patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Development work.yaml
 
 # Deploy local storage:
 kubectl apply -f $YAMLFILESTORAGE
@@ -15,7 +17,7 @@ and waitForKubectl "get storageclass" "acceptance.*arangodb.*localstorage" "" 1 
 or fail "Local storage could not be deployed."
 
 # Deploy and check
-kubectl apply -f $YAMLFILE
+kubectl apply -f work.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 120
@@ -34,7 +36,7 @@ output "Work" "Now please check external access on this URL with your browser:" 
 inputAndLogResult
 
 # Cleanup
-kubectl delete -f $YAMLFILE
+kubectl delete -f work.yaml
 waitForKubectl "get pod" $DEPLOYMENT "" 0 120
 or fail "Could not delete deployment."
 

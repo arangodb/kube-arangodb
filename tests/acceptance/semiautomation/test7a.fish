@@ -4,15 +4,19 @@ source helper.fish
 
 set -g TESTNAME test7a
 set -g TESTDESC "Deployment of 2 clusters with sync with DC2DC (production, enterprise)"
-set -g YAMLFILE generated/cluster-sync-enterprise-pro.yaml
-set -g YAMLFILE2 generated/cluster-sync2-enterprise-pro.yaml
+set -g YAMLFILE cluster-sync.yaml
+set -g YAMLFILE2 cluster-sync2.yaml
 set -g DEPLOYMENT acceptance-cluster
 set -g DEPLOYMENT2 acceptance-cluster2
 printheader
 
+patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Production work.yaml
+patchYamlFile $YAMLFILE2 $ARANGODB_ENTERPRISE Production work2.yaml
+cp replication.yaml work3.yaml
+
 # Deploy and check
-kubectl apply -f $YAMLFILE
-kubectl apply -f $YAMLFILE2
+kubectl apply -f work.yaml
+kubectl apply -f work2.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 15 120
 and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
 and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
@@ -42,19 +46,22 @@ set ip2 (getLoadBalancerIP "$DEPLOYMENT2-ea")
 testArangoDB $ip2 120
 or fail "ArangoDB (2) was not reachable."
 
+set ip3 (getLoadBalancerIP "$DEPLOYMENT-sync")
+sed -i "s|@ADDRESS@|$ip3|" work3.yaml
+
 # Set up replication, rest is manual:
 # run sed here on replication.yaml, find sync-ea first
-kubectl apply -f replication.yaml
+kubectl apply -f work3.yaml
 
 # Manual check
 output "Work" "Now please check external access on this URL with your browser:" "  https://$ip:8529/" "then type the outcome followed by ENTER."
 inputAndLogResult
 
 # Cleanup
-kubectl delete -f replication.yaml
+kubectl delete -f work3.yaml
 sleep 15
-kubectl delete -f $YAMLFILE
-kubectl delete -f $YAMLFILE2
+kubectl delete -f work.yaml
+kubectl delete -f work2.yaml
 waitForKubectl "get pod" $DEPLOYMENT "" 0 120
 waitForKubectl "get pod" $DEPLOYMENT2 "" 0 120
 or fail "Could not delete deployment."

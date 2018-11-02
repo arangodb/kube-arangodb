@@ -3,13 +3,15 @@
 source helper.fish
 
 set -g TESTNAME test2a
-set -g TESTDESC "Scale an active failover deployment (enterprise)"
-set -g YAMLFILE generated/activefailover-enterprise-dev.yaml
+set -g TESTDESC "Scale an active failover deployment (enterprise, development)"
+set -g YAMLFILE activefailover.yaml
 set -g DEPLOYMENT acceptance-activefailover
 printheader
 
+patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Development work.yaml
+
 # Deploy and check
-kubectl apply -f $YAMLFILE
+kubectl apply -f work.yaml
 and waitForKubectl "get pod" $DEPLOYMENT "1 *Running" 5 120
 and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*1/1 *Running" "" 1 120
 and waitForKubectl "get pod" "$DEPLOYMENT-sngl.*0/1 *Running" "" 1 120
@@ -43,7 +45,7 @@ output "Work" "Now please check external access on this URL with your browser:" 
 inputAndLogResult
 
 # Cleanup
-kubectl delete -f $YAMLFILE
+kubectl delete -f work.yaml
 waitForKubectl "get pod" $DEPLOYMENT-sngl "" 0 120
 or fail "Could not delete deployment."
 
