@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test3b
 set -g TESTDESC "Deployment of mode active/failover (production)"

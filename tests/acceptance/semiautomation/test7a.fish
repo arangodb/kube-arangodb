@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test7a
 set -g TESTDESC "Deployment of 2 clusters with sync with DC2DC (production, enterprise)"

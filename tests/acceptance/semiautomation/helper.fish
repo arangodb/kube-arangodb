@@ -108,5 +108,3 @@ function checkImages
     exit 1
   end
 end
-
-checkImages

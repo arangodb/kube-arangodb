@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test1d
 set -g TESTDESC "Deployment of mode cluster with sync (development, enterprise)"
