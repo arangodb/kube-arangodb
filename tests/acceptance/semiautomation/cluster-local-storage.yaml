@@ -5,6 +5,7 @@ metadata:
 spec:
   environment: @ENVIRONMENT@
   image: @IMAGE@
+  disableIPv6: @DISABLEIPV6@
   externalAccess:
     type: LoadBalancer
   mode: Cluster

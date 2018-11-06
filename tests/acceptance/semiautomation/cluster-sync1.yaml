@@ -5,6 +5,7 @@ metadata:
 spec:
   environment: @ENVIRONMENT@
   image: @IMAGE@
+  disableIPv6: @DISABLEIPV6@
   externalAccess:
     type: LoadBalancer
   mode: Cluster
@@ -13,3 +14,4 @@ spec:
     externalAccess:
       type: LoadBalancer
       accessPackageSecretNames: ["src-accesspackage"]
+      masterEndpoint: ["https://src-sync.9hoeffer.de:8629"]

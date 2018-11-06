@@ -100,6 +100,11 @@ function patchYamlFile
   cp "$YAMLFILE" "$RESULT"
   sed -i "s|@IMAGE@|$IMAGE|" "$RESULT"
   sed -i "s|@ENVIRONMENT@|$ENVIRONMENT|" "$RESULT"
+  if test -z "$DISABLEIPV6"
+    sed -i "s|@DISABLEIPV6@|false|" "$RESULT"
+  else
+    sed -i "s|@DISABLEIPV6@|true|" "$RESULT"
+  end
 end
 
 function checkImages
