@@ -134,8 +134,12 @@ Once stack is ready, navigate at the bottom to the Outputs pane and note down th
 ```
 $ curl -O   https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-08-30/aws-auth-cm.yaml
 ```
-* Modify `data|mapRoles|rolearn` to match   
-  equal to the `NoteInstanceRole`, you acquired after your node stack was finished
+* Modify `data|mapRoles|rolearn` to match the `NoteInstanceRole`, you acquired after your node stack was finished
+
+* Deploy node integration
+```
+$ kubectl apply -f aws-auth-cm.yaml
+```
 
 ### Wait for nodes to join the cluster and get ready
 Monitor `kubectl get nodes` and watch your nodes to be ready
@@ -147,6 +151,25 @@ $ kubectl get nodes
   ip-172-31-45-199.us-west-2.compute.internal   Ready    <none>   1d    v1.10.3
 ```
 
+### Create a storage class for persistent data
+
+* Edit a new file `gp2-storage-class.yaml`
+```
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+    name: gp2
+provisioner: kubernetes.io/aws-ebs
+parameters:
+    type: gp2
+reclaimPolicy: Retain
+mountOptions:
+    - debug
+```
+* Apply the storage class 
+```
+$ kubectl apply -f gp2-storage-class.yaml
+```
 
 ### Setup `helm`
 * Create service account for `tiller`
