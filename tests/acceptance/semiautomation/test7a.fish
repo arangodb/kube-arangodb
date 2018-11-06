@@ -38,6 +38,11 @@ and waitForKubectl "get service" "$DEPLOYMENT2-ea *LoadBalancer" "-v;pending" 1 
 and waitForKubectl "get service" "$DEPLOYMENT2-sync *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
 
+# Deploy secrets separately for sync to pick them up:
+kubectl get secret src-accesspackage --template='{{index .data "accessPackage.yaml"}}' | base64 -d > accessPackage.yaml
+and kubectl apply -f accessPackage.yaml
+or fail "Could not redeploy secrets for replication auth."
+
 # Automatic check
 set ip (getLoadBalancerIP "$DEPLOYMENT-ea")
 testArangoDB $ip 120
