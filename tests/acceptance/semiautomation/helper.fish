@@ -64,8 +64,9 @@ function waitForUser
 end
 
 function getLoadBalancerIP
-  string trim -c '"' (kubectl get service $argv[1] -o=json | \
-                      jq .status.loadBalancer.ingress[0].ip)
+  set var (kubectl get service $argv[1] -o=json | jq .status.loadBalancer.ingress[0])
+  set key (echo $var | jq -r keys[0])
+  echo $var | jq -r .$key
 end
 
 function testArangoDB
