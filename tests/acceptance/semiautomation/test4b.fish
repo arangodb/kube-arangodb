@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test4a
 set -g TESTDESC "Deployment of mode cluster (development, enterprise, local storage)"

@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test1a
 set -g TESTDESC "Deployment of mode single (development)"

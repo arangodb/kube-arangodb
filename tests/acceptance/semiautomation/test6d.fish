@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test6d
 set -g TESTDESC "Node resilience in mode single (production)"

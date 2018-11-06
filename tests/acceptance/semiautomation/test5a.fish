@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test5a
 set -g TESTDESC "Pod resilience in mode single (production)"

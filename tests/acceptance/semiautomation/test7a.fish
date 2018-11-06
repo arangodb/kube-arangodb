@@ -1,12 +1,13 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test7a
 set -g TESTDESC "Deployment of 2 clusters with sync with DC2DC (production, enterprise)"
-set -g YAMLFILE cluster-sync.yaml
+set -g YAMLFILE cluster-sync1.yaml
 set -g YAMLFILE2 cluster-sync2.yaml
-set -g DEPLOYMENT acceptance-cluster
+set -g DEPLOYMENT acceptance-cluster1
 set -g DEPLOYMENT2 acceptance-cluster2
 printheader
 
@@ -36,6 +37,11 @@ and waitForKubectl "get service" "$DEPLOYMENT2 *ClusterIP" 8529 1 120
 and waitForKubectl "get service" "$DEPLOYMENT2-ea *LoadBalancer" "-v;pending" 1 180
 and waitForKubectl "get service" "$DEPLOYMENT2-sync *LoadBalancer" "-v;pending" 1 180
 or fail "Deployment did not get ready."
+
+# Deploy secrets separately for sync to pick them up:
+kubectl get secret src-accesspackage --template='{{index .data "accessPackage.yaml"}}' | base64 -d > accessPackage.yaml
+and kubectl apply -f accessPackage.yaml
+or fail "Could not redeploy secrets for replication auth."
 
 # Automatic check
 set ip (getLoadBalancerIP "$DEPLOYMENT-ea")

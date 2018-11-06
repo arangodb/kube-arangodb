@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test2a
 set -g TESTDESC "Scale an active failover deployment (enterprise, development)"

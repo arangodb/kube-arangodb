@@ -4,7 +4,7 @@ metadata:
   name: "replication-internal"
 spec:
   source:
-    masterEndpoint: ["https://@ADDRESS@:8629"]
+    masterEndpoint: ["https://src-sync.9hoeffer.de:8629"]
     auth:
       keyfileSecretName: src-accesspackage-auth
     tls:

@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test5b
 set -g TESTDESC "Pod resilience in active/failover (production)"

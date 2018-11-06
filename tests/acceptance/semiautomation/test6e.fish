@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test6e
 set -g TESTDESC "Node resilience in active/failover (production)"

@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test3d
 set -g TESTDESC "Scale a cluster deployment (production, enterprise)"

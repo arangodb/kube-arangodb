@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test6c
 set -g TESTDESC "Node resilience in mode cluster (production, enterprise)"

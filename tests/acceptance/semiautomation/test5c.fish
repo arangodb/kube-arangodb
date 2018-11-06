@@ -1,6 +1,7 @@
 #!/usr/bin/fish
 
 source helper.fish
+checkImages
 
 set -g TESTNAME test5c
 set -g TESTDESC "Pod resilience in mode cluster (production, enterprise)"

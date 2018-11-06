@@ -1,7 +1,7 @@
 apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoDeployment"
 metadata:
-  name: "acceptance-cluster"
+  name: "acceptance-cluster1"
 spec:
   environment: @ENVIRONMENT@
   image: @IMAGE@
@@ -14,3 +14,4 @@ spec:
     externalAccess:
       type: LoadBalancer
       accessPackageSecretNames: ["src-accesspackage"]
+      masterEndpoint: ["https://src-sync.9hoeffer.de:8629"]
