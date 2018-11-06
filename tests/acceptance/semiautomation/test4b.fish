@@ -3,7 +3,7 @@
 source helper.fish
 checkImages
 
-set -g TESTNAME test4a
+set -g TESTNAME test4b
 set -g TESTDESC "Deployment of mode cluster (development, enterprise, local storage)"
 set -g YAMLFILE cluster.yaml
 set -g YAMLFILESTORAGE local-storage.yaml
