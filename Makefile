@@ -350,7 +350,7 @@ changelog:
 	docker run --rm \
 		-e CHANGELOG_GITHUB_TOKEN=$(shell cat ~/.arangodb/github-token) \
 		-v "$(ROOTDIR)":/usr/local/src/your-app \
-		ferrarimarco/github-changelog-generator \
+		ferrarimarco/github-changelog-generator:1.14.3 \
 		--user arangodb \
 		--project kube-arangodb \
 		--no-author

@@ -78,8 +78,8 @@ func main() {
 	createSHA256Sums()
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest
 	gitTag(version)
-	//make("changelog", nil)
-	//gitCommitAll(fmt.Sprintf("Updated changelog for %s", version)) // Commit CHANGELOG.md
+	make("changelog", nil)
+	gitCommitAll(fmt.Sprintf("Updated changelog for %s", version)) // Commit CHANGELOG.md
 	githubCreateRelease(version)
 	bumpVersion("devel")
 }
