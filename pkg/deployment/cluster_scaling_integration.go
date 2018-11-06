@@ -132,15 +132,28 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	ci.lastNumberOfServers.mutex.Lock()
 	defer ci.lastNumberOfServers.mutex.Unlock()
 	desired := ci.lastNumberOfServers.NumberOfServers
-	if req.Coordinators != nil && req.GetCoordinators() != desired.GetCoordinators() {
+	if req.Coordinators != nil && desired.Coordinators != nil && req.GetCoordinators() != desired.GetCoordinators() {
 		// #Coordinator has changed
 		coordinatorsChanged = true
 	}
-	if req.DBServers != nil && req.GetDBServers() != desired.GetDBServers() {
+	if req.DBServers != nil && desired.DBServers != nil && req.GetDBServers() != desired.GetDBServers() {
 		// #DBServers has changed
 		dbserversChanged = true
 	}
 	if !coordinatorsChanged && !dbserversChanged {
+		// if there is nothing to change, check if we never have asked the cluster before
+		// if so, fill in the values for the first time.
+		// This happens, when the operator is redeployed and there has not been any
+		// update events yet.
+		if desired.Coordinators == nil || desired.DBServers == nil {
+			if req.Coordinators != nil {
+				ci.lastNumberOfServers.NumberOfServers.Coordinators = req.Coordinators
+			}
+			if req.DBServers != nil {
+				ci.lastNumberOfServers.NumberOfServers.DBServers = req.DBServers
+			}
+		}
+
 		// Nothing has changed
 		return nil
 	}
@@ -148,7 +161,6 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	apiObject := ci.depl.apiObject
 	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(apiObject.Namespace).Get(apiObject.Name, metav1.GetOptions{})
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get current deployment")
 		return maskAny(err)
 	}
 	newSpec := current.Spec.DeepCopy()
@@ -198,7 +210,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	ci.lastNumberOfServers.mutex.Unlock()
 
 	// This is to prevent unneseccary updates that may override some values written by the WebUI (in the case of a update loop)
-	if coordinatorCount != lastNumberOfServers.GetCoordinators() && dbserverCount != lastNumberOfServers.GetDBServers() {
+	if coordinatorCount != lastNumberOfServers.GetCoordinators() || dbserverCount != lastNumberOfServers.GetDBServers() {
 		if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCount, dbserverCount); err != nil {
 			if expectSuccess {
 				log.Debug().Err(err).Msg("Failed to set number of servers")
