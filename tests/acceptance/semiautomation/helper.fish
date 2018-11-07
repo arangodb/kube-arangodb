@@ -14,7 +14,7 @@ function waitForKubectl
   set -l select $argv[2]
   set -l good (string split -- ";" "$argv[3]")
   set -l expected $argv[4]
-  set -l timeout $argv[5]
+  set -l timeout (math "$argv[5]" \* "$TIMEOUT")
    
   echo
   echo "Testing `kubectl $op`"
@@ -42,8 +42,8 @@ function waitForKubectl
 end
 
 function output
-  if which say > /dev/null
-    say $argv[1] > /dev/null ^ /dev/null
+  if test -n "$SAY"
+    eval $SAY $argv[1] > /dev/null ^ /dev/null
   end
   echo
   for l in $argv[2..-1] ; echo $l ; end
@@ -71,7 +71,7 @@ end
 
 function testArangoDB
   set -l ip $argv[1]
-  set -l timeout $argv[2]
+  set -l timeout (math "$argv[2]" \* "$TIMEOUT")
   set -l n 0
   echo Waiting for ArangoDB to be ready...
   while true
@@ -114,3 +114,14 @@ function checkImages
     exit 1
   end
 end
+
+if test -z "$TIMEOUT"
+  set -xg TIMEOUT 60
+end
+
+if test -z "$SAY"
+  if which say > /dev/null
+    set -xg SAY say
+  end
+end
+
