@@ -18,24 +18,24 @@ cp replication.yaml work3.yaml
 # Deploy and check
 kubectl apply -f work.yaml
 kubectl apply -f work2.yaml
-and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 15 120
-and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-syma" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT-sywo" "1/1 *Running" 3 120
-and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 120
-and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 180
-and waitForKubectl "get service" "$DEPLOYMENT-sync *LoadBalancer" "-v;pending" 1 180
-and waitForKubectl "get pod" "$DEPLOYMENT2" "1/1 *Running" 15 120
-and waitForKubectl "get pod" "$DEPLOYMENT2-prmr" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT2-agnt" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT2-crdn" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT2-syma" "1/1 *Running" 3 120
-and waitForKubectl "get pod" "$DEPLOYMENT2-sywo" "1/1 *Running" 3 120
-and waitForKubectl "get service" "$DEPLOYMENT2 *ClusterIP" 8529 1 120
-and waitForKubectl "get service" "$DEPLOYMENT2-ea *LoadBalancer" "-v;pending" 1 180
-and waitForKubectl "get service" "$DEPLOYMENT2-sync *LoadBalancer" "-v;pending" 1 180
+and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 15 2
+and waitForKubectl "get pod" "$DEPLOYMENT-prmr" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT-agnt" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT-crdn" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT-syma" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT-sywo" "1/1 *Running" 3 2
+and waitForKubectl "get service" "$DEPLOYMENT *ClusterIP" 8529 1 2
+and waitForKubectl "get service" "$DEPLOYMENT-ea *LoadBalancer" "-v;pending" 1 3
+and waitForKubectl "get service" "$DEPLOYMENT-sync *LoadBalancer" "-v;pending" 1 3
+and waitForKubectl "get pod" "$DEPLOYMENT2" "1/1 *Running" 15 2
+and waitForKubectl "get pod" "$DEPLOYMENT2-prmr" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT2-agnt" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT2-crdn" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT2-syma" "1/1 *Running" 3 2
+and waitForKubectl "get pod" "$DEPLOYMENT2-sywo" "1/1 *Running" 3 2
+and waitForKubectl "get service" "$DEPLOYMENT2 *ClusterIP" 8529 1 2
+and waitForKubectl "get service" "$DEPLOYMENT2-ea *LoadBalancer" "-v;pending" 1 3
+and waitForKubectl "get service" "$DEPLOYMENT2-sync *LoadBalancer" "-v;pending" 1 3
 or fail "Deployment did not get ready."
 
 # Deploy secrets separately for sync to pick them up:
@@ -45,11 +45,11 @@ or fail "Could not redeploy secrets for replication auth."
 
 # Automatic check
 set ip (getLoadBalancerIP "$DEPLOYMENT-ea")
-testArangoDB $ip 120
+testArangoDB $ip 2
 or fail "ArangoDB (1) was not reachable."
 
 set ip2 (getLoadBalancerIP "$DEPLOYMENT2-ea")
-testArangoDB $ip2 120
+testArangoDB $ip2 2
 or fail "ArangoDB (2) was not reachable."
 
 set ip3 (getLoadBalancerIP "$DEPLOYMENT-sync")
@@ -68,8 +68,8 @@ kubectl delete -f work3.yaml
 sleep 15
 kubectl delete -f work.yaml
 kubectl delete -f work2.yaml
-waitForKubectl "get pod" $DEPLOYMENT "" 0 120
-waitForKubectl "get pod" $DEPLOYMENT2 "" 0 120
+waitForKubectl "get pod" $DEPLOYMENT "" 0 2
+waitForKubectl "get pod" $DEPLOYMENT2 "" 0 2
 or fail "Could not delete deployment."
 
 output "Ready" ""
