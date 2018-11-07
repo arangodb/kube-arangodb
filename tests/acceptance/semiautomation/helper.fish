@@ -42,8 +42,8 @@ function waitForKubectl
 end
 
 function output
-  if which say > /dev/null
-    say $argv[1] > /dev/null ^ /dev/null
+  if test -n "$SAY"
+    eval $SAY $argv[1] > /dev/null ^ /dev/null
   end
   echo
   for l in $argv[2..-1] ; echo $l ; end
@@ -117,5 +117,11 @@ end
 
 if test -z "$TIMEOUT"
   set -xg TIMEOUT 60
-  echo Base timeout set to 60 seconds, adjust TIMEOUT to change.
 end
+
+if test -z "$SAY"
+  if which say > /dev/null
+    set -xg SAY say
+  end
+end
+
