@@ -396,6 +396,11 @@ func (in *ExternalAccessSpec) DeepCopyInto(out *ExternalAccessSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.AdvertisedEndpoint != nil {
+		in, out := &in.AdvertisedEndpoint, &out.AdvertisedEndpoint
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
