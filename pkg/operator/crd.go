@@ -39,6 +39,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
 			return maskAny(err)
 		}
+		log.Debug().Msg("ArangoDeployment CRD ready")
 	}
 
 	if enableDeploymentReplication {
@@ -46,6 +47,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if err := crd.WaitCRDReady(o.KubeExtCli, replapi.ArangoDeploymentReplicationCRDName); err != nil {
 			return maskAny(err)
 		}
+		log.Debug().Msg("ArangoDeploymentReplication CRD ready")
 	}
 
 	if enableStorage {
@@ -53,6 +55,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
 			return maskAny(err)
 		}
+		log.Debug().Msg("ArangoLocalStorage CRD ready")
 	}
 
 	return nil
