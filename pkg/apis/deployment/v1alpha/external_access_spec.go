@@ -23,9 +23,6 @@
 package v1alpha
 
 import (
-	"fmt"
-	"net/url"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -37,8 +34,6 @@ type ExternalAccessSpec struct {
 	NodePort *int `json:"nodePort,omitempty"`
 	// Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 	LoadBalancerIP *string `json:"loadBalancerIP,omitempty"`
-	// Advertised Endpoint is passed to the coordinators/single servers for advertising a specific endpoint
-	AdvertisedEndpoint *string `json:"advertisedEndpoint,omitempty"`
 }
 
 // GetType returns the value of type.
@@ -56,26 +51,10 @@ func (s ExternalAccessSpec) GetLoadBalancerIP() string {
 	return util.StringOrDefault(s.LoadBalancerIP)
 }
 
-// GetAdvertisedEndpoint returns the advertised endpoint or empty string if none was specified
-func (s ExternalAccessSpec) GetAdvertisedEndpoint() string {
-	return util.StringOrDefault(s.AdvertisedEndpoint)
-}
-
-// HasAdvertisedEndpoint return whether an advertised endpoint was specified or not
-func (s ExternalAccessSpec) HasAdvertisedEndpoint() bool {
-	return s.AdvertisedEndpoint != nil
-}
-
 // Validate the given spec
 func (s ExternalAccessSpec) Validate() error {
 	if err := s.GetType().Validate(); err != nil {
 		return maskAny(err)
-	}
-	if s.AdvertisedEndpoint != nil {
-		ep := s.GetAdvertisedEndpoint()
-		if _, err := url.Parse(ep); err != nil {
-			return maskAny(fmt.Errorf("Failed to parse advertised endpoint '%s': %s", ep, err))
-		}
 	}
 	return nil
 }
@@ -95,21 +74,11 @@ func (s *ExternalAccessSpec) SetDefaultsFrom(source ExternalAccessSpec) {
 	if s.LoadBalancerIP == nil {
 		s.LoadBalancerIP = util.NewStringOrNil(source.LoadBalancerIP)
 	}
-	if s.AdvertisedEndpoint == nil {
-		s.AdvertisedEndpoint = source.AdvertisedEndpoint
-	}
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to given field prefix.
 func (s ExternalAccessSpec) ResetImmutableFields(fieldPrefix string, target *ExternalAccessSpec) []string {
-	var resetFields []string
-
-	// THIS SHOULD NOT BE IMMUTABLE!
-	if s.GetAdvertisedEndpoint() != target.GetAdvertisedEndpoint() {
-		target.AdvertisedEndpoint = util.NewStringOrNil(s.AdvertisedEndpoint)
-		resetFields = append(resetFields, fieldPrefix+".advertisedEndpoint")
-	}
 	return nil
 }

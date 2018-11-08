@@ -180,11 +180,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
-			options = append(options,
-				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
-			)
-		}
 	case api.ServerGroupSingle:
 		options = append(options,
 			optionPair{"--foxx.queues", "true"},
@@ -197,11 +192,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
-			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
-				options = append(options,
-					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
-				)
-			}
 		}
 	}
 	if addAgentEndpoints {
