@@ -61,9 +61,13 @@ func (o optionPair) CompareTo(other optionPair) int {
 	return strings.Compare(o.Value, other.Value)
 }
 
+func versionHasAdvertisedEndpoint(v driver.Version) bool {
+	return v.CompareTo("3.4.0") >= 0
+}
+
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string, autoUpgrade bool) []string {
+	agents api.MemberStatusList, id string, autoUpgrade, advertisedEndpoint bool) []string {
 	options := make([]optionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
 
@@ -180,7 +184,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
+		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && advertisedEndpoint {
 			options = append(options,
 				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 			)
@@ -197,7 +201,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
-			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
+			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && advertisedEndpoint {
 				options = append(options,
 					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 				)
@@ -497,7 +501,11 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
 		}
-		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, autoUpgrade)
+		advertisedEndpoint := versionHasAdvertisedEndpoint(imageInfo.ArangoDBVersion)
+		if !advertisedEndpoint && spec.ExternalAccess.HasAdvertisedEndpoint() {
+			return fmt.Errorf("Version %s does not support advertised endpoints", imageInfo.ArangoDBVersion)
+		}
+		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, autoUpgrade, advertisedEndpoint)
 		env := make(map[string]k8sutil.EnvValue)
 		livenessProbe, err := r.createLivenessProbe(spec, group)
 		if err != nil {
