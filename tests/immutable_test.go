@@ -81,7 +81,6 @@ func TestImmutableFields(t *testing.T) {
 	// Wait for StorageEngine parameter to be back to RocksDB
 	if _, err := waitUntilDeployment(c, depl.GetName(), ns,
 		func(depl *api.ArangoDeployment) error {
-			fmt.Printf("Checking storage engine: %s", api.StorageEngineOrDefault(depl.Spec.StorageEngine))
 			if api.StorageEngineOrDefault(depl.Spec.StorageEngine) == api.StorageEngineRocksDB {
 				return nil
 			}
