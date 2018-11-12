@@ -33,14 +33,14 @@ import (
 	"github.com/dchest/uniuri"
 )
 
-func TestUpgradeClusterRocksDB33pto34p(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb-preview:3.3", "arangodb/arangodb-preview:3.4")
-}
+// func TestUpgradeClusterRocksDB33pto34p(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb-preview:3.3", "arangodb/arangodb-preview:3.4")
+// }
 
 // test upgrade single server mmfiles 3.2 -> 3.3
-func TestUpgradeSingleMMFiles32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.2.16", "arangodb/arangodb:3.3.13")
-}
+// func TestUpgradeSingleMMFiles32to33(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.2.16", "arangodb/arangodb:3.3.13")
+// }
 
 // // test upgrade single server rocksdb 3.3 -> 3.4
 // func TestUpgradeSingleRocksDB33to34(t *testing.T) {
@@ -58,29 +58,29 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 // }
 
 // test upgrade cluster rocksdb 3.2 -> 3.3
-func TestUpgradeClusterRocksDB32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.16", "3.3.13")
-}
+// func TestUpgradeClusterRocksDB32to33(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.16", "3.3.13")
+// }
 
 // // test upgrade cluster mmfiles 3.3 -> 3.4
 // func TestUpgradeClusterMMFiles33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.13", "3.4.0")
 // }
 
-// test downgrade single server mmfiles 3.3.17 -> 3.3.16
-func TestDowngradeSingleMMFiles3317to3316(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
-}
+// // test downgrade single server mmfiles 3.3.17 -> 3.3.16
+// func TestDowngradeSingleMMFiles3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
-// test downgrade ActiveFailover server rocksdb 3.3.17 -> 3.3.16
-func TestDowngradeActiveFailoverRocksDB3317to3316(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
-}
+// // test downgrade ActiveFailover server rocksdb 3.3.17 -> 3.3.16
+// func TestDowngradeActiveFailoverRocksDB3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
-// test downgrade cluster rocksdb 3.3.17 -> 3.3.16
-func TestDowngradeClusterRocksDB3317to3316(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
-}
+// // test downgrade cluster rocksdb 3.3.17 -> 3.3.16
+// func TestDowngradeClusterRocksDB3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
 func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromImage, toImage string) error {
 	// check environment
