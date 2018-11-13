@@ -119,7 +119,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
 		}
-		imageID := k8sutil.ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID)
+		imageID := k8sutil.GetArangoDBImageIDFromPod(pod)
 		if imageID == "" {
 			// Fall back to specified image
 			imageID = image
