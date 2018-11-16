@@ -42,7 +42,7 @@ it is intended to be.
 # The following will install the custom resources required by the operators.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb-crd.tgz
 # The following will install the operator for `ArangoDeployment` &
-# `ArangoDeplomentReplication` resources.
+# `ArangoDeploymentReplication` resources.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb.tgz
 # To use `ArangoLocalStorage`, also run
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb-storage.tgz
