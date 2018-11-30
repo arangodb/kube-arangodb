@@ -16,6 +16,7 @@
   "devDependencies": {
     "react-scripts": "^2.1.1"
   },
+  "browserslist":"",
   "proxy": "https://192.168.140.212:8528",
   "scripts": {
     "start": "react-scripts start",
