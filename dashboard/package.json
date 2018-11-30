@@ -14,7 +14,7 @@
     "semantic-ui-react": "^0.81.3"
   },
   "devDependencies": {
-    "react-scripts": "1.1.4"
+    "react-scripts": "^2.1.1"
   },
   "proxy": "https://192.168.140.212:8528",
   "scripts": {
