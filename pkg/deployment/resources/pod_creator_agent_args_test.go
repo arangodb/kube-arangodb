@@ -51,7 +51,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -94,7 +94,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", true)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", true)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -141,7 +141,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -184,7 +184,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -227,7 +227,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", false)
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
