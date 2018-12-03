@@ -1,8 +1,7 @@
 #!/bin/sh
 
 if [ -z $ENTERPRISELICENSE ]; then
-    echo "Please specify ENTERPRISELICENSE"
-    exit 1
+    exit 0
 fi
 
 LICENSE=$(echo "${ENTERPRISELICENSE}" | base64 )
