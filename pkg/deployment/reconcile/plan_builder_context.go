@@ -23,6 +23,7 @@
 package reconcile
 
 import (
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
@@ -44,7 +45,7 @@ type PlanBuilderContext interface {
 	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
 	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-		agents api.MemberStatusList, id string) []string
+		agents api.MemberStatusList, id string, version driver.Version) []string
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

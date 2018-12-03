@@ -63,7 +63,7 @@ func (o optionPair) CompareTo(other optionPair) int {
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string, autoUpgrade bool) []string {
+	agents api.MemberStatusList, id string, version driver.Version, autoUpgrade bool) []string {
 	options := make([]optionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
 
@@ -487,7 +487,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
 		}
-		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, autoUpgrade)
+		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, imageInfo.ArangoDBVersion, autoUpgrade)
 		env := make(map[string]k8sutil.EnvValue)
 		livenessProbe, err := r.createLivenessProbe(spec, group)
 		if err != nil {
@@ -525,6 +525,14 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}
+
+		if spec.HasLicenseKey() {
+			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
+				SecretName: spec.GetLicenseKey(),
+				SecretKey:  constants.SecretKeyToken,
+			}
+		}
+
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
@@ -588,6 +596,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 			env[constants.EnvArangoSyncMonitoringToken] = k8sutil.EnvValue{
 				SecretName: spec.Sync.Monitoring.GetTokenSecretName(),
+				SecretKey:  constants.SecretKeyToken,
+			}
+		}
+		if spec.HasLicenseKey() {
+			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
+				SecretName: spec.GetLicenseKey(),
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}

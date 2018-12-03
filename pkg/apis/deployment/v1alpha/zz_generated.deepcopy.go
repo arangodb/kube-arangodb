@@ -244,6 +244,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.LicenseKey != nil {
+		in, out := &in.LicenseKey, &out.LicenseKey
+		*out = new(string)
+		**out = **in
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)

@@ -97,7 +97,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// do not try to clean out a pod that was not initialized
 	if !m.IsInitialized {
-		return false, true, nil
+		return true, false, nil
 	}
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
