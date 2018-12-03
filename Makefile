@@ -310,7 +310,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh
+	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)"
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
