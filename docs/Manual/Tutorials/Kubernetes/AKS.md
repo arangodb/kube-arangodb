@@ -62,7 +62,7 @@
         --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     clusterrolebinding.rbac.authorization.k8s.io/tiller-cluster-rule created
 ```
-```    
+```
   $ helm init --service-account tiller
     $HELM_HOME has been configured at /home/kaveh/.helm.
     ...
