@@ -112,10 +112,22 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	// Check if pod exists
 	if pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{}); err == nil {
 		// Pod found
+		if k8sutil.IsPodFailed(pod) {
+			// Wait some time before deleting the pod
+			log.Debug().Msgf("now: %v, then: %v", time.Now(), pod.GetCreationTimestamp())
+			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
+				if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
+					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
+					return false, nil
+				}
+			}
+			return false, nil
+		}
 		if !k8sutil.IsPodReady(pod) {
 			log.Debug().Msg("Image ID Pod is not yet ready")
 			return true, nil
 		}
+
 		if len(pod.Status.ContainerStatuses) == 0 {
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
