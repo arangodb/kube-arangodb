@@ -5,7 +5,7 @@ if [ -z $2 ]; then
     exit 0
 fi
 
-LICENSE=$(echo "${2}" | base64 )
+LICENSE=$(echo "${2}" | base64 -w 0 )
 NS=$1
 
 if [ -z $NS ]; then
