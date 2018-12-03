@@ -1,10 +1,11 @@
 #!/bin/sh
 
-if [ -z $ENTERPRISELICENSE ]; then
+if [ -z $2 ]; then
+    echo "No enterprise license set"
     exit 0
 fi
 
-LICENSE=$(echo "${ENTERPRISELICENSE}" | base64 )
+LICENSE=$(echo "${2}" | base64 )
 NS=$1
 
 if [ -z $NS ]; then
