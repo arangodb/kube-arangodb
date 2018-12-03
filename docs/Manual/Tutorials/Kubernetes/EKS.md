@@ -121,9 +121,6 @@ Pay good attention to details here. If your input is not complete, your worker n
 ### Wait for stack to get ready
 ![eks-stack](eks-stack.png)
 
-### Wait for stack to get ready
-![eks-stack](eks-stack.png)
-
 ### Note down `NodeInstanceRole`
 Once stack is ready, navigate at the bottom to the Outputs pane and note down the `NodeInstanceRole`
 ![eks-stack](eks-stack-ready.png)
