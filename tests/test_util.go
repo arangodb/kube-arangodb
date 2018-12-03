@@ -155,6 +155,12 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
+const TestEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+
+func getEnterpriseLicenseKey() string {
+	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
+}
+
 // shouldCleanDeployments returns true when deployments created
 // by tests should be removed, even when the test fails.
 func shouldCleanDeployments() bool {
@@ -244,6 +250,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 		},
 		Spec: api.DeploymentSpec{
 			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
+			LicenseKey:      util.NewString(TestEnterpriseLicenseKeySecretName),
 		},
 	}
 

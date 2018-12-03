@@ -104,6 +104,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	if err := k8sutil.CreateTokenSecret(secrets, depl.Spec.Authentication.GetJWTSecretName(), "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
+	defer removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
 
 	// Create deployment
 	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
@@ -133,9 +134,6 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
-
-	// Cleanup secret
-	removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
 }
 
 // TestAuthenticationNoneSingle creating a single server

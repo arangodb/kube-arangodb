@@ -81,12 +81,16 @@ def buildTestSteps(Map myParams, String kubeConfigRoot, String kubeconfig) {
     return {
         timestamps {
             timeout(time: myParams.LONG ? 180 : 30) {
-                withCredentials([string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE')]) { 
+                withCredentials([
+                    string(credentialsId: 'ENTERPRISEIMAGE', variable: 'DEFAULTENTERPRISEIMAGE'),
+                    string(credentialsId: 'ENTERPRISELICENSE', variable: 'DEFAULTENTERPRISELICENSE'),
+                ]) { 
                     withEnv([
                     "CLEANDEPLOYMENTS=1",
                     "DEPLOYMENTNAMESPACE=${myParams.TESTNAMESPACE}-${env.GIT_COMMIT}",
                     "DOCKERNAMESPACE=${myParams.DOCKERNAMESPACE}",
                     "ENTERPRISEIMAGE=${myParams.ENTERPRISEIMAGE}",
+                    "ENTERPRISELICENSE=${myParams.ENTERPRISELICENSE}",
                     "ARANGODIMAGE=${myParams.ARANGODIMAGE}",
                     "IMAGETAG=jenkins-test",
                     "KUBECONFIG=${kubeConfigRoot}/${kubeconfig}",
@@ -132,6 +136,7 @@ pipeline {
       string(name: 'TESTNAMESPACE', defaultValue: 'jenkins', description: 'TESTNAMESPACE sets the kubernetes namespace to ru tests in (this must be short!!)', )
       string(name: 'ENTERPRISEIMAGE', defaultValue: '', description: 'ENTERPRISEIMAGE sets the docker image used for enterprise tests', )
       string(name: 'ARANGODIMAGE', defaultValue: '', description: 'ARANGODIMAGE sets the docker image used for tests (except enterprise and update tests)', )
+      string(name: 'ENTERPRISELICENSE', defaultValue: '', description: 'ENTERPRISELICENSE sets the enterprise license key for enterprise tests', )
       string(name: 'TESTOPTIONS', defaultValue: '', description: 'TESTOPTIONS is used to pass additional test options to the integration test', )
     }
     stages {
