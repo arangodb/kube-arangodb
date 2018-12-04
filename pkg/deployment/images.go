@@ -119,7 +119,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
 		}
-		imageID := k8sutil.ConvertImageID2Image(pod.Status.ContainerStatuses[0].ImageID)
+		imageID := k8sutil.GetArangoDBImageIDFromPod(pod)
 		if imageID == "" {
 			// Fall back to specified image
 			imageID = image
@@ -166,7 +166,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	// Pod cannot be fetched, ensure it is created
 	args := []string{
 		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
+		fmt.Sprintf("--server.endpoint=tcp://%s:%d", ib.Spec.GetListenAddr(), k8sutil.ArangoPort),
 		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
 		"--log.output=+",
 	}

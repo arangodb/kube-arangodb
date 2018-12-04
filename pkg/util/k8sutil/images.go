@@ -22,7 +22,11 @@
 
 package k8sutil
 
-import "strings"
+import (
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	dockerPullableImageIDPrefix = "docker-pullable://"
@@ -35,4 +39,17 @@ func ConvertImageID2Image(imageID string) string {
 		return imageID[len(dockerPullableImageIDPrefix):]
 	}
 	return imageID
+}
+
+// GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod
+func GetArangoDBImageIDFromPod(pod *corev1.Pod) string {
+	rawImageID := pod.Status.ContainerStatuses[0].ImageID
+	if len(pod.Status.ContainerStatuses) > 1 {
+		for _, containerStatus := range pod.Status.ContainerStatuses {
+			if strings.Contains(containerStatus.ImageID, "arango") {
+				rawImageID = containerStatus.ImageID
+			}
+		}
+	}
+	return ConvertImageID2Image(rawImageID)
 }

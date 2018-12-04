@@ -366,6 +366,11 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 		if m, err := members.SelectMemberToRemove(); err != nil {
 			log.Warn().Err(err).Str("role", group.AsRole()).Msg("Failed to select member to remove")
 		} else {
+
+			log.Debug().
+				Str("member-id", m.ID).
+				Str("phase", string(m.Phase)).
+				Msg("Found member to remove")
 			if group == api.ServerGroupDBServers {
 				plan = append(plan,
 					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),

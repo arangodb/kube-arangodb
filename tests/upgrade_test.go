@@ -27,17 +27,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dchest/uniuri"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/dchest/uniuri"
 )
 
+// func TestUpgradeClusterRocksDB33pto34p(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb-preview:3.3", "arangodb/arangodb-preview:3.4")
+// }
+
 // test upgrade single server mmfiles 3.2 -> 3.3
-func TestUpgradeSingleMMFiles32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.2.16", "3.3.13")
-}
+// func TestUpgradeSingleMMFiles32to33(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.2.16", "arangodb/arangodb:3.3.13")
+// }
 
 // test upgrade single server mmfiles 3.3.16 -> 3.3.17
 func TestUpgradeSingleMMFiles32to33(t *testing.T) {
@@ -60,31 +63,31 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 // }
 
 // test upgrade cluster rocksdb 3.2 -> 3.3
-func TestUpgradeClusterRocksDB32to33(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.16", "3.3.13")
-}
+// func TestUpgradeClusterRocksDB32to33(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.2.16", "3.3.13")
+// }
 
 // // test upgrade cluster mmfiles 3.3 -> 3.4
 // func TestUpgradeClusterMMFiles33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.13", "3.4.0")
 // }
 
-// test downgrade single server mmfiles 3.3.13 -> 3.3.12
-func TestDowngradeSingleMMFiles333to332(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "3.3.13", "3.3.12")
-}
+// // test downgrade single server mmfiles 3.3.17 -> 3.3.16
+// func TestDowngradeSingleMMFiles3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeSingle, api.StorageEngineMMFiles, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
-// test downgrade ActiveFailover server rocksdb 3.3.13 -> 3.3.12
-func TestDowngradeActiveFailoverRocksDB333to332(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "3.3.13", "3.3.12")
-}
+// // test downgrade ActiveFailover server rocksdb 3.3.17 -> 3.3.16
+// func TestDowngradeActiveFailoverRocksDB3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeActiveFailover, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
-// test downgrade cluster rocksdb 3.3.13 -> 3.3.12
-func TestDowngradeClusterRocksDB332to332(t *testing.T) {
-	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "3.3.13", "3.3.12")
-}
+// // test downgrade cluster rocksdb 3.3.17 -> 3.3.16
+// func TestDowngradeClusterRocksDB3317to3316(t *testing.T) {
+// 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
+// }
 
-func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromVersion, toVersion string) error {
+func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromImage, toImage string) error {
 	// check environment
 	longOrSkip(t)
 
@@ -92,11 +95,11 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	kubecli := mustNewKubeClient(t)
 	c := kubeArangoClient.MustNewInCluster()
 
-	depl := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%st%s-%s", mode[:2], engine[:2], fromVersion, toVersion, uniuri.NewLen(4)), ".", "", -1))
+	depl := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	depl.Spec.Mode = api.NewMode(mode)
 	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
 	depl.Spec.TLS = api.TLSSpec{} // should auto-generate cert
-	depl.Spec.Image = util.NewString("arangodb/arangodb:" + fromVersion)
+	depl.Spec.Image = util.NewString(fromImage)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -123,19 +126,25 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	// Try to change image version
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(spec *api.DeploymentSpec) {
-			spec.Image = util.NewString("arangodb/arangodb:" + toVersion)
+			spec.Image = util.NewString(toImage)
 		})
 	if err != nil {
-		t.Fatalf("Failed to upgrade the Image from version : " + fromVersion + " to version: " + toVersion)
+		t.Fatalf("Failed to upgrade the Image from version : " + fromImage + " to version: " + toImage)
+	} else {
+		t.Log("Updated deployment")
 	}
 
 	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
+	} else {
+		t.Log("Deployment running")
 	}
 
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, toVersion); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, toImage); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
+	} else {
+		t.Log("Deployment healthy")
 	}
 
 	// Cleanup

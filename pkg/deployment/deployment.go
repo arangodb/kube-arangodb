@@ -24,7 +24,6 @@ package deployment
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -299,7 +298,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
-		if err := d.updateCRSpec(d.apiObject.Spec); err != nil {
+		if err := d.updateCRSpec(d.apiObject.Spec, true); err != nil {
 			log.Error().Err(err).Msg("Restore original spec failed")
 			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
@@ -313,7 +312,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	}
 
 	// Save updated spec
-	if err := d.updateCRSpec(newAPIObject.Spec); err != nil {
+	if err := d.updateCRSpec(newAPIObject.Spec, true); err != nil {
 		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
@@ -344,9 +343,8 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 
 // Update the status of the API object from the internal status
 func (d *Deployment) updateCRStatus(force ...bool) error {
-	// TODO Remove force....
 	if len(force) == 0 || !force[0] {
-		if reflect.DeepEqual(d.apiObject.Status, d.status) {
+		if d.apiObject.Status.Equal(d.status.last) {
 			// Nothing has changed
 			return nil
 		}
@@ -389,7 +387,16 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 // Update the spec part of the API object (d.apiObject)
 // to the given object, while preserving the status.
 // On success, d.apiObject is updated.
-func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec) error {
+func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) error {
+
+	if len(force) == 0 || !force[0] {
+		if d.apiObject.Spec.Equal(&newSpec) {
+			d.deps.Log.Debug().Msg("Nothing to update in updateCRSpec")
+			// Nothing to update
+			return nil
+		}
+	}
+
 	// Send update to API server
 	update := d.apiObject.DeepCopy()
 	attempt := 0

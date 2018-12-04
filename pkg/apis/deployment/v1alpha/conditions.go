@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -75,6 +76,36 @@ type Condition struct {
 // ConditionList is a list of conditions.
 // Each type is allowed only once.
 type ConditionList []Condition
+
+// Equal checks for equality
+func (list ConditionList) Equal(other ConditionList) bool {
+	if len(list) != len(other) {
+		return false
+	}
+
+	for i := 0; i < len(list); i++ {
+		c, found := other.Get(list[i].Type)
+		if !found {
+			return false
+		}
+
+		if !list[i].Equal(c) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Equal checks for equality
+func (c Condition) Equal(other Condition) bool {
+	return c.Type == other.Type &&
+		c.Status == other.Status &&
+		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
+		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
+		c.Reason == other.Reason &&
+		c.Message == other.Message
+}
 
 // IsTrue return true when a condition with given type exists and its status is `True`.
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {

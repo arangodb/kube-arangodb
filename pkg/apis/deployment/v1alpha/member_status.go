@@ -25,6 +25,7 @@ package v1alpha
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -52,6 +53,18 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
+}
+
+// Equal checks for equality
+func (s MemberStatus) Equal(other MemberStatus) bool {
+	return s.ID == other.ID &&
+		s.Phase == other.Phase &&
+		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
+		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
+		s.PodName == other.PodName &&
+		s.Conditions.Equal(other.Conditions) &&
+		s.IsInitialized == other.IsInitialized &&
+		s.CleanoutJobID == other.CleanoutJobID
 }
 
 // Age returns the duration since the creation timestamp of this member.

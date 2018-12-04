@@ -3,19 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "emotion": "^9.2.4",
-    "react": "^16.4.1",
+    "emotion": "^9.2.12",
+    "react": "^16.6.0",
     "react-copy-to-clipboard": "^5.0.1",
-    "react-dom": "^16.4.1",
-    "react-emotion": "^9.2.4",
+    "react-dom": "^16.6.0",
+    "react-emotion": "^9.2.12",
     "react-router-dom": "^4.3.1",
-    "react-timeout": "^1.1.1",
-    "semantic-ui-less": "^2.2.12",
+    "react-timeout": "^1.1.2",
+    "semantic-ui-less": "^2.4.1",
     "semantic-ui-react": "^0.81.3"
   },
   "devDependencies": {
-    "react-scripts": "1.1.4"
+    "react-scripts": "^2.1.1"
   },
+  "browserslist":"",
   "proxy": "https://192.168.140.212:8528",
   "scripts": {
     "start": "react-scripts start",

@@ -1,0 +1,17 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "acceptance-cluster1"
+spec:
+  environment: @ENVIRONMENT@
+  image: @IMAGE@
+  disableIPv6: @DISABLEIPV6@
+  externalAccess:
+    type: LoadBalancer
+  mode: Cluster
+  sync:
+    enabled: true
+    externalAccess:
+      type: LoadBalancer
+      accessPackageSecretNames: ["src-accesspackage"]
+      masterEndpoint: ["https://src-sync.9hoeffer.de:8629"]

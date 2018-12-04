@@ -63,6 +63,10 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 	if group.IsArangod() {
+		// do not try to shut down a pod that is not ready
+		if !m.Conditions.IsTrue(api.ConditionTypeReady) {
+			return true, nil
+		}
 		// Invoke shutdown endpoint
 		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
 		if err != nil {

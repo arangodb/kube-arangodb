@@ -86,7 +86,7 @@ func TestImmutableFields(t *testing.T) {
 			}
 			return fmt.Errorf("StorageEngine not back to %s", api.StorageEngineRocksDB)
 		}, revertTimeout); err != nil {
-		t.Errorf("StorageEngine parameter is immutable: %v", err)
+		t.Errorf("StorageEngine parameter is mutable: %v", err)
 	}
 
 	/*

@@ -48,6 +48,7 @@ var (
 	binaries = map[string]string{
 		"kube-arangodb.tgz":         "charts/kube-arangodb.tgz",
 		"kube-arangodb-storage.tgz": "charts/kube-arangodb-storage.tgz",
+		"kube-arangodb-crd.tgz":     "charts/kube-arangodb-crd.tgz",
 	}
 )
 

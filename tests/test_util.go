@@ -49,6 +49,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -231,9 +232,9 @@ func getNamespace(t *testing.T) string {
 }
 
 // newDeployment creates a basic ArangoDeployment with configured
-// type & name.
+// type, name and image.
 func newDeployment(name string) *api.ArangoDeployment {
-	return &api.ArangoDeployment{
+	depl := &api.ArangoDeployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: api.SchemeGroupVersion.String(),
 			Kind:       api.ArangoDeploymentResourceKind,
@@ -241,7 +242,26 @@ func newDeployment(name string) *api.ArangoDeployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
 		},
+		Spec: api.DeploymentSpec{
+			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
+		},
 	}
+
+	// set default image to the value given in env
+	// some tests will override this value if they need a specific version
+	// like update tests
+	// if no value is given, use the operator default, which is arangodb/arangodb:latest
+	image := strings.TrimSpace(os.Getenv("ARANGODIMAGE"))
+	if image != "" {
+		depl.Spec.Image = util.NewString(image)
+	}
+
+	disableIPv6 := strings.TrimSpace(os.Getenv("TESTDISABLEIPV6"))
+	if disableIPv6 != "" && disableIPv6 != "0" {
+		depl.Spec.DisableIPv6 = util.NewBool(true)
+	}
+
+	return depl
 }
 
 // waitUntilDeployment waits until a deployment with given name in given namespace

@@ -23,6 +23,8 @@
 package v1alpha
 
 import (
+	"reflect"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
@@ -51,6 +53,7 @@ type DeploymentSpec struct {
 	Image           *string         `json:"image,omitempty"`
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
+	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -66,6 +69,11 @@ type DeploymentSpec struct {
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
 	Chaos ChaosSpec `json:"chaos"`
+}
+
+// Equal compares two DeploymentSpec
+func (s *DeploymentSpec) Equal(other *DeploymentSpec) bool {
+	return reflect.DeepEqual(s, other)
 }
 
 // GetMode returns the value of mode.
@@ -96,6 +104,19 @@ func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 // IsDowntimeAllowed returns the value of downtimeAllowed.
 func (s DeploymentSpec) IsDowntimeAllowed() bool {
 	return util.BoolOrDefault(s.DowntimeAllowed)
+}
+
+// IsDisableIPv6 returns the value of disableIPv6.
+func (s DeploymentSpec) IsDisableIPv6() bool {
+	return util.BoolOrDefault(s.DisableIPv6)
+}
+
+// GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
+func (s DeploymentSpec) GetListenAddr() string {
+	if s.IsDisableIPv6() {
+		return "0.0.0.0"
+	}
+	return "[::]"
 }
 
 // IsAuthenticated returns true when authentication is enabled
@@ -179,6 +200,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	}
 	if s.DowntimeAllowed == nil {
 		s.DowntimeAllowed = util.NewBoolOrNil(source.DowntimeAllowed)
+	}
+	if s.DisableIPv6 == nil {
+		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
 	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
@@ -268,6 +292,10 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if s.GetStorageEngine() != target.GetStorageEngine() {
 		target.StorageEngine = NewStorageEngineOrNil(s.StorageEngine)
 		resetFields = append(resetFields, "storageEngine")
+	}
+	if s.IsDisableIPv6() != target.IsDisableIPv6() {
+		target.DisableIPv6 = util.NewBoolOrNil(s.DisableIPv6)
+		resetFields = append(resetFields, "disableIPv6")
 	}
 	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
 		resetFields = append(resetFields, l...)
