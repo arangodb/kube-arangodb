@@ -311,8 +311,8 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	# Nobdy knows how this jenkins credentials logic works, but yes, somehow it replaces the text ENTERPRISELICENSE with the secret
-	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh ${DEPLOYMENTNAMESPACE} "ENTERPRISELICENSE"
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" "ENTERPRISEIMAGE" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
