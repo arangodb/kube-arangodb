@@ -1,12 +1,12 @@
 #!/bin/sh
 
-if [ -z $2 ]; then
+LICENSE=$2
+NS=$1
+
+if [ -z $LICENSE ]; then
     echo "No enterprise license set"
     exit 0
 fi
-
-LICENSE=$(echo "${2}" | base64 -w 0 )
-NS=$1
 
 if [ -z $NS ]; then
     echo "Specify a namespace argument"

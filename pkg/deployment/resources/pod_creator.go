@@ -526,9 +526,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
-		if spec.HasLicenseKey() {
+		if spec.License.HasSecretName() {
 			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-				SecretName: spec.GetLicenseKey(),
+				SecretName: spec.License.GetSecretName(),
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}
@@ -599,9 +599,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}
-		if spec.HasLicenseKey() {
+		if spec.License.HasSecretName() {
 			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-				SecretName: spec.GetLicenseKey(),
+				SecretName: spec.License.GetSecretName(),
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}

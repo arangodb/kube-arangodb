@@ -26,7 +26,6 @@ import (
 	"reflect"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 )
@@ -55,13 +54,13 @@ type DeploymentSpec struct {
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
 	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
-	LicenseKey      *string         `json:"licenseKey,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
 	Authentication AuthenticationSpec `json:"auth"`
 	TLS            TLSSpec            `json:"tls"`
 	Sync           SyncSpec           `json:"sync"`
+	License        LicenseSpec        `json:"license"`
 
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`
@@ -124,20 +123,6 @@ func (s DeploymentSpec) GetListenAddr() string {
 // IsAuthenticated returns true when authentication is enabled
 func (s DeploymentSpec) IsAuthenticated() bool {
 	return s.Authentication.IsAuthenticated()
-}
-
-// HasLicenseKey returns true if a license key secret name was set
-func (s DeploymentSpec) HasLicenseKey() bool {
-	return s.LicenseKey != nil
-}
-
-// GetLicenseKey returns the license key if set. Empty string otherwise.
-func (s DeploymentSpec) GetLicenseKey() string {
-	if s.HasLicenseKey() {
-		return *s.LicenseKey
-	}
-
-	return ""
 }
 
 // IsSecure returns true when SSL is enabled
@@ -220,9 +205,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	if s.DisableIPv6 == nil {
 		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
 	}
-	if s.LicenseKey == nil {
-		s.LicenseKey = util.NewStringOrNil(source.LicenseKey)
-	}
+	s.License.SetDefaultsFrom(source.License)
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
@@ -291,10 +274,8 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.Chaos.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.chaos"))
 	}
-	if s.HasLicenseKey() {
-		if err := k8sutil.ValidateResourceName(s.GetLicenseKey()); err != nil {
-			return maskAny(errors.Wrap(err, "spec.licenseKey"))
-		}
+	if err := s.License.Validate(); err != nil {
+		return maskAny(errors.Wrap(err, "spec.licenseKey"))
 	}
 	return nil
 }

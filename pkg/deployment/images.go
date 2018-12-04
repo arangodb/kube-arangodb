@@ -114,7 +114,6 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		// Pod found
 		if k8sutil.IsPodFailed(pod) {
 			// Wait some time before deleting the pod
-			log.Debug().Msgf("now: %v, then: %v", time.Now(), pod.GetCreationTimestamp())
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
 				if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
 					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
@@ -192,9 +191,9 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	serviceAccountName := ""
 
 	env := make(map[string]k8sutil.EnvValue)
-	if ib.Spec.HasLicenseKey() {
+	if ib.Spec.License.HasSecretName() {
 		env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-			SecretName: ib.Spec.GetLicenseKey(),
+			SecretName: ib.Spec.License.GetSecretName(),
 			SecretKey:  constants.SecretKeyToken,
 		}
 	}

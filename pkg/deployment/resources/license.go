@@ -29,10 +29,10 @@ import (
 
 // ValidateLicenseKeySecret checks if the licens key secret exists and is valid
 func (r *Resources) ValidateLicenseKeySecret() error {
-	spec := r.context.GetSpec()
+	spec := r.context.GetSpec().License
 
-	if spec.HasLicenseKey() {
-		secretName := spec.GetLicenseKey()
+	if spec.HasSecretName() {
+		secretName := spec.GetSecretName()
 
 		kubecli := r.context.GetKubeCli()
 		ns := r.context.GetNamespace()
