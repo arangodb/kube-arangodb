@@ -342,7 +342,7 @@ for `spec.mode: Single` and `2` for `spec.mode: ActiveFailover`).
 For the `syncworkers` group, it is highly recommended to use the same number
 as for the `dbservers` group.
 
-### `spec.<group>.args: [string]`
+### `spec.<group>.args: []string`
 
 This setting specifies additional commandline arguments passed to all servers of this group.
 The default value is an empty array.
@@ -383,7 +383,7 @@ for each server of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
 
-### `spec.<group>.tolerations: [Toleration]`
+### `spec.<group>.tolerations: []Toleration`
 
 This setting specifies the `tolerations` for the `Pod`s created
 for each server of this group.
@@ -395,3 +395,9 @@ By default, suitable tolerations are set for the following keys with the `NoExec
 - `node.alpha.kubernetes.io/unreachable` (will be removed in future version)
 
 For more information on tolerations, consult the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/).
+
+### `spec.<group>.nodeSelector: map[string]string`
+
+This setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
+
+For more information on node selectors, consult the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/).
