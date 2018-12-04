@@ -250,7 +250,9 @@ func newDeployment(name string) *api.ArangoDeployment {
 		},
 		Spec: api.DeploymentSpec{
 			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
-			LicenseKey:      util.NewString(TestEnterpriseLicenseKeySecretName),
+			License: api.LicenseSpec{
+				SecretName: util.NewString(TestEnterpriseLicenseKeySecretName),
+			},
 		},
 	}
 
