@@ -15,9 +15,9 @@ Click on `CREATE CLUSTER`.
 
 In the form that follows, enter information as seen in the screenshot below.
 
-![create a cluser](./gke-create-cluster.png)
+![create a cluster](./gke-create-cluster.png)
 
-We've succesfully ran clusters with 4 `1 vCPU` nodes or 3 `2 vCPU` nodes.
+We have successfully ran clusters with 4 `1 vCPU` nodes or 3 `2 vCPU` nodes.
 Smaller node configurations will likely lead to unschedulable `Pods`.
 
 Once you click `Create`, you'll return to the list of clusters and your
