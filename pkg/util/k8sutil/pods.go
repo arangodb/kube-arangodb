@@ -389,7 +389,7 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string) v1.Pod {
+func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string, nodeSelector map[string]string) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -403,6 +403,7 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 			RestartPolicy:      v1.RestartPolicyNever,
 			Tolerations:        tolerations,
 			ServiceAccountName: serviceAccountName,
+			NodeSelector:       nodeSelector,
 		},
 	}
 	return p
@@ -416,9 +417,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, nodeSelector map[string]string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
@@ -519,9 +520,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string) error {
+	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 

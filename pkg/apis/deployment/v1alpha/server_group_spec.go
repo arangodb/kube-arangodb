@@ -49,11 +49,18 @@ type ServerGroupSpec struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+	// NodeSelector speficies a set of selectors for nodes
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // GetCount returns the value of count.
 func (s ServerGroupSpec) GetCount() int {
 	return util.IntOrDefault(s.Count)
+}
+
+// GetNodeSelector returns the selectors for nodes of this group
+func (s ServerGroupSpec) GetNodeSelector() map[string]string {
+	return s.NodeSelector
 }
 
 // GetArgs returns the value of args.
@@ -193,6 +200,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	}
 	if s.ServiceAccountName == nil {
 		s.ServiceAccountName = util.NewStringOrNil(source.ServiceAccountName)
+	}
+	if s.NodeSelector == nil {
+		s.NodeSelector = source.NodeSelector
 	}
 	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
