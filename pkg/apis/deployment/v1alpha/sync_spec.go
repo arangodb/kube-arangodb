@@ -89,9 +89,6 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 // Field names are relative to given field prefix.
 func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []string {
 	var resetFields []string
-	if list := s.ExternalAccess.ResetImmutableFields(fieldPrefix+".externalAccess", &target.ExternalAccess); len(list) > 0 {
-		resetFields = append(resetFields, list...)
-	}
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
 	}

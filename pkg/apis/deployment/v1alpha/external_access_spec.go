@@ -99,17 +99,3 @@ func (s *ExternalAccessSpec) SetDefaultsFrom(source ExternalAccessSpec) {
 		s.AdvertisedEndpoint = source.AdvertisedEndpoint
 	}
 }
-
-// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
-// It returns a list of fields that have been reset.
-// Field names are relative to given field prefix.
-func (s ExternalAccessSpec) ResetImmutableFields(fieldPrefix string, target *ExternalAccessSpec) []string {
-	var resetFields []string
-
-	// THIS SHOULD NOT BE IMMUTABLE!
-	if s.GetAdvertisedEndpoint() != target.GetAdvertisedEndpoint() {
-		target.AdvertisedEndpoint = util.NewStringOrNil(s.AdvertisedEndpoint)
-		resetFields = append(resetFields, fieldPrefix+".advertisedEndpoint")
-	}
-	return nil
-}

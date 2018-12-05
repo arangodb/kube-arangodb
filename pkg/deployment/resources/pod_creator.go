@@ -139,7 +139,10 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		)
 	}
 
-	hasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
+	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
+	if !versionHasAdvertisedEndpoint && deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
+		fmt.Printf("Advertised endpoint is not supported by version %s\n", version)
+	}
 
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
@@ -186,7 +189,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && hasAdvertisedEndpoint {
+		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
 			options = append(options,
 				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 			)
@@ -203,7 +206,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
-			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && hasAdvertisedEndpoint {
+			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
 				options = append(options,
 					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 				)

@@ -92,11 +92,3 @@ func (s *SyncExternalAccessSpec) SetDefaultsFrom(source SyncExternalAccessSpec) 
 		s.AccessPackageSecretNames = append([]string{}, source.AccessPackageSecretNames...)
 	}
 }
-
-// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
-// It returns a list of fields that have been reset.
-// Field names are relative to given field prefix.
-func (s SyncExternalAccessSpec) ResetImmutableFields(fieldPrefix string, target *SyncExternalAccessSpec) []string {
-	result := s.ExternalAccessSpec.ResetImmutableFields(fieldPrefix, &s.ExternalAccessSpec)
-	return result
-}
