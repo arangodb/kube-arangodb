@@ -302,10 +302,16 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 		target.DisableIPv6 = util.NewBoolOrNil(s.DisableIPv6)
 		resetFields = append(resetFields, "disableIPv6")
 	}
+	if l := s.ExternalAccess.ResetImmutableFields("externalAccess", &target.ExternalAccess); l != nil {
+		resetFields = append(resetFields, l...)
+	}
 	if l := s.RocksDB.ResetImmutableFields("rocksdb", &target.RocksDB); l != nil {
 		resetFields = append(resetFields, l...)
 	}
 	if l := s.Authentication.ResetImmutableFields("auth", &target.Authentication); l != nil {
+		resetFields = append(resetFields, l...)
+	}
+	if l := s.Sync.ResetImmutableFields("sync", &target.Sync); l != nil {
 		resetFields = append(resetFields, l...)
 	}
 	if l := s.Single.ResetImmutableFields(ServerGroupSingle, "single", &target.Single); l != nil {
