@@ -32,6 +32,7 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -64,7 +65,7 @@ func (c *testContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) 
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 func (c *testContext) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string) []string {
+	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return nil // not implemented
 }
 

@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.3.5](https://github.com/arangodb/kube-arangodb/tree/0.3.5) (2018-11-20)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.4...0.3.5)
+
+**Closed issues:**
+
+- Istio compatibility issue [\#260](https://github.com/arangodb/kube-arangodb/issues/260)
+
+**Merged pull requests:**
+
+- Fixing imageID retrieval issue when sidecars are injected. [\#302](https://github.com/arangodb/kube-arangodb/pull/302)
+- Bug fix/fix immutable reset [\#301](https://github.com/arangodb/kube-arangodb/pull/301)
+- Fixing small type in readme [\#300](https://github.com/arangodb/kube-arangodb/pull/300)
+- Make timeout configurable. [\#298](https://github.com/arangodb/kube-arangodb/pull/298)
+- fixed getLoadBalancerIP to also handle hostnames [\#297](https://github.com/arangodb/kube-arangodb/pull/297)
+
 ## [0.3.4](https://github.com/arangodb/kube-arangodb/tree/0.3.4) (2018-11-06)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.3...0.3.4)
 

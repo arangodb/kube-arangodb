@@ -58,5 +58,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		log.Debug().Msg("ArangoLocalStorage CRD ready")
 	}
 
+	log.Debug().Msg("CRDs ready")
+
 	return nil
 }

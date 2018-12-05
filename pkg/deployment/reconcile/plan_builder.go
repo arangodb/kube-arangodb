@@ -196,7 +196,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status)
 								} else {
 									// Upgrade is not needed, see if rotation is needed
-									if rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status.Members.Agents, m.ID, context); rotNeeded {
+									if rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status, m.ID, context); rotNeeded {
 										newPlan = createRotateMemberPlan(log, m, group, reason)
 									}
 								}
@@ -305,7 +305,7 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
 func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
-	group api.ServerGroup, agents api.MemberStatusList, id string,
+	group api.ServerGroup, status api.DeploymentStatus, id string,
 	context PlanBuilderContext) (bool, string) {
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -319,8 +319,13 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "Server container not found"
 	}
 
+	podImageInfo, found := status.Images.GetByImageID(c.Image)
+	if !found {
+		return false, "Server Image not found"
+	}
+
 	// Check arguments
-	expectedArgs := strings.Join(context.GetExpectedPodArguments(apiObject, spec, group, agents, id), " ")
+	expectedArgs := strings.Join(context.GetExpectedPodArguments(apiObject, spec, group, status.Members.Agents, id, podImageInfo.ArangoDBVersion), " ")
 	actualArgs := strings.Join(getContainerArgs(c), " ")
 	if expectedArgs != actualArgs {
 		log.Debug().

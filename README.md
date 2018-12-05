@@ -23,40 +23,41 @@ it is intended to be.
 
 ### Production readiness state
 
-| Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks |
-|----------------------|--------------------|------------------|-------|------------------|-|
+| Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks               |
+|----------------------|--------------------|------------------|-------|------------------|-----------------------|
 | Google GKE           | 1.10               | >= 3.3.13        | Runs  | Yes              | Don't use micro nodes |
-| Amazon EKS           | 1.10               | >= 3.3.13        | Runs  | No               |
-| Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |
-| Azure AKS            | 1.10               | >= 3.3.13        | ?     | No               |
-| OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |
-| Pivotal PKS          | 1.10               | >= 3.3.13        | ?     | No               |
-| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |
-| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | No               |
-| Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |
-| Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |
+| Google GKE           | 1.11               | >= 3.3.13        | Runs  | Yes              | Don't use micro nodes |
+| Amazon EKS           | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
+| Pivotal PKS          | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
+| Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |                       |
+| Azure AKS            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
+| OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | No               |                       |
+| Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
+| Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
+| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |                       |
 
 ## Installation of latest release using Helm
 
 ```bash
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb-crd.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.5/kube-arangodb-crd.tgz
 # The following will install the operator for `ArangoDeployment` &
-# `ArangoDeplomentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb.tgz
+# `ArangoDeploymentReplication` resources.
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.5/kube-arangodb.tgz
 # To use `ArangoLocalStorage`, also run
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.4/kube-arangodb-storage.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.5/kube-arangodb-storage.tgz
 ```
 
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.4/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.4/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.5/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.5/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.4/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.5/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.4/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.5/manifests/arango-deployment-replication.yaml
 ```
 
 ## Building

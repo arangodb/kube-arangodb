@@ -73,6 +73,9 @@ endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
+ifndef ENTERPRISELICENSE
+	ENTERPRISELICENSE := $(DEFAULTENTERPRISELICENSE)
+endif
 DASHBOARDBUILDIMAGE := kube-arangodb-dashboard-builder
 
 ifndef ALLOWCHAOS
@@ -99,7 +102,7 @@ ifdef VERBOSE
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
-DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*')
+DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
 
 .PHONY: all
 all: verify-generated build
@@ -307,7 +310,8 @@ endif
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" "$(ENTERPRISEIMAGE)" $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)

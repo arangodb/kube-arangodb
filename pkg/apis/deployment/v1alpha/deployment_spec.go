@@ -60,6 +60,7 @@ type DeploymentSpec struct {
 	Authentication AuthenticationSpec `json:"auth"`
 	TLS            TLSSpec            `json:"tls"`
 	Sync           SyncSpec           `json:"sync"`
+	License        LicenseSpec        `json:"license"`
 
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`
@@ -204,6 +205,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	if s.DisableIPv6 == nil {
 		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
 	}
+	s.License.SetDefaultsFrom(source.License)
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
@@ -271,6 +273,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.Chaos.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.chaos"))
+	}
+	if err := s.License.Validate(); err != nil {
+		return maskAny(errors.Wrap(err, "spec.licenseKey"))
 	}
 	return nil
 }

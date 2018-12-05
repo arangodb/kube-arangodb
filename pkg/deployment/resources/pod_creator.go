@@ -67,7 +67,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string, autoUpgrade, advertisedEndpoint bool) []string {
+	agents api.MemberStatusList, id string, version driver.Version, autoUpgrade bool) []string {
 	options := make([]optionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
 
@@ -139,6 +139,8 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		)
 	}
 
+	hasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
+
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
 			optionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
@@ -184,7 +186,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
-		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && advertisedEndpoint {
+		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && hasAdvertisedEndpoint {
 			options = append(options,
 				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 			)
@@ -201,7 +203,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
-			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && advertisedEndpoint {
+			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && hasAdvertisedEndpoint {
 				options = append(options,
 					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 				)
@@ -501,11 +503,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
 		}
-		advertisedEndpoint := versionHasAdvertisedEndpoint(imageInfo.ArangoDBVersion)
-		if !advertisedEndpoint && spec.ExternalAccess.HasAdvertisedEndpoint() {
-			return fmt.Errorf("Version %s does not support advertised endpoints", imageInfo.ArangoDBVersion)
-		}
-		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, autoUpgrade, advertisedEndpoint)
+		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, imageInfo.ArangoDBVersion, autoUpgrade)
 		env := make(map[string]k8sutil.EnvValue)
 		livenessProbe, err := r.createLivenessProbe(spec, group)
 		if err != nil {
@@ -543,11 +541,20 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}
+
+		if spec.License.HasSecretName() {
+			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
+				SecretName: spec.License.GetSecretName(),
+				SecretKey:  constants.SecretKeyToken,
+			}
+		}
+
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
-			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName); err != nil {
+			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
+			groupSpec.GetNodeSelector()); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -609,6 +616,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				SecretKey:  constants.SecretKeyToken,
 			}
 		}
+		if spec.License.HasSecretName() {
+			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
+				SecretName: spec.License.GetSecretName(),
+				SecretKey:  constants.SecretKeyToken,
+			}
+		}
 		livenessProbe, err := r.createLivenessProbe(spec, group)
 		if err != nil {
 			return maskAny(err)
@@ -618,7 +631,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
 		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
-			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole); err != nil {
+			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole, groupSpec.GetNodeSelector()); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
