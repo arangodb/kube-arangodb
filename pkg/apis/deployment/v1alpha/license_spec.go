@@ -37,11 +37,7 @@ func (s LicenseSpec) HasSecretName() bool {
 
 // GetSecretName returns the license key if set. Empty string otherwise.
 func (s LicenseSpec) GetSecretName() string {
-	if s.HasSecretName() {
-		return *s.SecretName
-	}
-
-	return ""
+	return util.StringOrDefault(s.SecretName)
 }
 
 // Validate validates the LicenseSpec

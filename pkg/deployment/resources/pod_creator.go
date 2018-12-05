@@ -61,6 +61,10 @@ func (o optionPair) CompareTo(other optionPair) int {
 	return strings.Compare(o.Value, other.Value)
 }
 
+func versionHasAdvertisedEndpoint(v driver.Version) bool {
+	return v.CompareTo("3.4.0") >= 0
+}
+
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version, autoUpgrade bool) []string {
@@ -135,6 +139,8 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		)
 	}
 
+	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
+
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
 			optionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
@@ -180,6 +186,11 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--foxx.queues", "true"},
 			optionPair{"--server.statistics", "true"},
 		)
+		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+			options = append(options,
+				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
+			)
+		}
 	case api.ServerGroupSingle:
 		options = append(options,
 			optionPair{"--foxx.queues", "true"},
@@ -192,6 +203,11 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 				optionPair{"--cluster.my-address", myTCPURL},
 				optionPair{"--cluster.my-role", "SINGLE"},
 			)
+			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+				options = append(options,
+					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
+				)
+			}
 		}
 	}
 	if addAgentEndpoints {
