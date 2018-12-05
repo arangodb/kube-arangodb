@@ -1,4 +1,4 @@
-# Run AranngoDB cluster on Azure Kubernetes Service (AKS)
+# Start ArangoDB on Azure Kubernetes Service (AKS)
 
 ## Requirements
 

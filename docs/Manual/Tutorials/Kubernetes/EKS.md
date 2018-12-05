@@ -1,4 +1,4 @@
-# Start ArangoDB cluster on Amazon EKS
+# Start ArangoDB on Amazon Elastic Kubernetes Service (EKS)
 
 ## Requirements:
 

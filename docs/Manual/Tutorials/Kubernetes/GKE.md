@@ -1,4 +1,4 @@
-# Start ArangoDB on Google Kubernetes Engine in 5 minutes
+# Start ArangoDB on Google Kubernetes Engine (GKE)
 
 In this guide you'll learn how to run ArangoDB on Google Kubernetes Engine (GKE).
 
