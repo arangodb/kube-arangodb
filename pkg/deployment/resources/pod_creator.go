@@ -140,9 +140,6 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	}
 
 	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
-	if !versionHasAdvertisedEndpoint && deplSpec.ExternalAccess.HasAdvertisedEndpoint() {
-		fmt.Printf("Advertised endpoint is not supported by version %s\n", version)
-	}
 
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
