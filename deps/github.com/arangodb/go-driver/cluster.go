@@ -75,6 +75,8 @@ type ServerHealth struct {
 	Status              ServerStatus `json:"Status"`
 	CanBeDeleted        bool         `json:"CanBeDeleted"`
 	HostID              string       `json:"Host,omitempty"`
+	Version             Version      `json:"Version,omitempty"`
+	Engine              EngineType   `json:"Engine,omitempty"`
 }
 
 // ServerStatus describes the health status of a server
@@ -93,6 +95,8 @@ const (
 type DatabaseInventory struct {
 	// Details of all collections
 	Collections []InventoryCollection `json:"collections,omitempty"`
+	// Details of all views
+	Views []InventoryView `json:"views,omitempty"`
 }
 
 // IsReady returns true if the IsReady flag of all collections is set.
@@ -122,6 +126,17 @@ func (i DatabaseInventory) CollectionByName(name string) (InventoryCollection, b
 		}
 	}
 	return InventoryCollection{}, false
+}
+
+// ViewByName returns the InventoryView with given name.
+// Return false if not found.
+func (i DatabaseInventory) ViewByName(name string) (InventoryView, bool) {
+	for _, v := range i.Views {
+		if v.Name == name {
+			return v, true
+		}
+	}
+	return InventoryView{}, false
 }
 
 // InventoryCollection is a single element of a DatabaseInventory, containing all information
@@ -194,6 +209,19 @@ type InventoryIndex struct {
 // The order of fields is irrelevant.
 func (i InventoryIndex) FieldsEqual(fields []string) bool {
 	return stringSliceEqualsIgnoreOrder(i.Fields, fields)
+}
+
+// InventoryView is a single element of a DatabaseInventory, containing all information
+// of a specific view.
+type InventoryView struct {
+	Name     string   `json:"name,omitempty"`
+	Deleted  bool     `json:"deleted,omitempty"`
+	ID       string   `json:"id,omitempty"`
+	IsSystem bool     `json:"isSystem,omitempty"`
+	PlanID   string   `json:"planId,omitempty"`
+	Type     ViewType `json:"type,omitempty"`
+	// Include all properties from an arangosearch view.
+	ArangoSearchViewProperties
 }
 
 // stringSliceEqualsIgnoreOrder returns true when the given lists contain the same elements.
