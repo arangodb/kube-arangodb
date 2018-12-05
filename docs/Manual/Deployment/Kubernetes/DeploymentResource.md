@@ -165,6 +165,10 @@ This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Au
 
 If you do not specify this setting, a random port will be chosen automatically.
 
+### `spec.externalAccess.advertisedEndpoint: string`
+
+This setting specifies the advertised endpoint for all coordinators.
+
 ### `spec.auth.jwtSecretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
