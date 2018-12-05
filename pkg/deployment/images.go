@@ -36,6 +36,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -111,10 +112,21 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	// Check if pod exists
 	if pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{}); err == nil {
 		// Pod found
+		if k8sutil.IsPodFailed(pod) {
+			// Wait some time before deleting the pod
+			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
+				if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
+					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
+					return false, nil
+				}
+			}
+			return false, nil
+		}
 		if !k8sutil.IsPodReady(pod) {
 			log.Debug().Msg("Image ID Pod is not yet ready")
 			return true, nil
 		}
+
 		if len(pod.Status.ContainerStatuses) == 0 {
 			log.Warn().Msg("Empty list of ContainerStatuses")
 			return true, nil
@@ -178,7 +190,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
 	serviceAccountName := ""
 
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, nil, nil, nil, nil,
+	env := make(map[string]k8sutil.EnvValue)
+	if ib.Spec.License.HasSecretName() {
+		env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
+			SecretName: ib.Spec.License.GetSecretName(),
+			SecretKey:  constants.SecretKeyToken,
+		}
+	}
+	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, env, nil, nil, nil,
 		tolerations, serviceAccountName, "", "", nil); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)

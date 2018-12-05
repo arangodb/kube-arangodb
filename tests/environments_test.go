@@ -60,7 +60,6 @@ func TestEnvironmentProduction(t *testing.T) {
 	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
 	depl.Spec.TLS = api.TLSSpec{}
 	depl.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
-	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.4")
 	depl.Spec.DBServers.Count = util.NewInt(numNodes + 1)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 	assert.NoError(t, depl.Spec.Validate())

@@ -80,6 +80,12 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			d.CreateEvent(k8sutil.NewErrorEvent("Secret hash validation failed", err, d.apiObject))
 		}
 
+		// Check for LicenseKeySecret
+		if err := d.resources.ValidateLicenseKeySecret(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("License Key Secret invalid", err, d.apiObject))
+		}
+
 		// Is the deployment in a good state?
 		status, _ := d.GetStatus()
 		if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {

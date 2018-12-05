@@ -332,6 +332,12 @@ The default is `false`.
 
 This setting cannot be changed after the deployment has been created.
 
+### `spec.license.secretName: string`
+
+This setting specifies the name of a kubernetes `Secret` that contains
+the license key token used for enterprise images. This value is not used for
+the community edition.
+
 ### `spec.<group>.count: number`
 
 This setting specifies the number of servers to start for the given group.

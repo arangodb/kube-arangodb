@@ -51,6 +51,7 @@ func TestUpdateUserPasswordMyself(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
 	}
+	ensureSynchronizedEndpoints(authClient, "", t)
 
 	if isVST1_0 && !isv32p {
 		t.Skip("Cannot update my own password using VST in 3.1")
@@ -89,6 +90,7 @@ func TestUpdateUserPasswordOtherUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
 	}
+	ensureSynchronizedEndpoints(authClient, "", t)
 
 	if isVST1_0 && !isv32p {
 		t.Skip("Cannot update other password using VST in 3.1")
@@ -146,12 +148,10 @@ func TestGrantUserDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
 	}
+	ensureSynchronizedEndpoints(authClient, "grant_user_test", t)
+	authDb := waitForDatabaseAccess(authClient, "grant_user_test", t)
 
 	// Try to create a collection in the db
-	authDb, err := authClient.Database(nil, "grant_user_test")
-	if err != nil {
-		t.Fatalf("Expected success, got %s", describe(err))
-	}
 	if _, err := authDb.CreateCollection(nil, "some_collection", nil); err != nil {
 		t.Errorf("Expected success, got %s", describe(err))
 	}
@@ -230,12 +230,10 @@ func TestGrantUserDefaultDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
 	}
+	ensureSynchronizedEndpoints(authClient, "grant_user_def_test", t)
 
 	// Try to create a collection in the db, should succeed
-	authDb, err := authClient.Database(nil, db.Name())
-	if err != nil {
-		t.Fatalf("Expected success, got %s", describe(err))
-	}
+	authDb := waitForDatabaseAccess(authClient, "grant_user_def_test", t)
 
 	authCol, err := authDb.CreateCollection(nil, "books_def_db", nil)
 	if err != nil {
@@ -348,11 +346,26 @@ func TestGrantUserCollection(t *testing.T) {
 	if err := u.SetCollectionAccess(nil, col, driver.GrantReadWrite); err != nil {
 		t.Fatalf("SetCollectionAccess failed: %s", describe(err))
 	}
-	// Read back collection access
-	if grant, err := u.GetCollectionAccess(nil, col); err != nil {
-		t.Fatalf("GetCollectionAccess failed: %s", describe(err))
-	} else if grant != driver.GrantReadWrite {
-		t.Errorf("Collection access invalid, expected 'rw', got '%s'", grant)
+
+	// wait for change to propagate
+	{
+		deadline := time.Now().Add(time.Minute)
+		for {
+			// Read back collection access
+			if grant, err := u.GetCollectionAccess(nil, col); err == nil {
+				if grant == driver.GrantReadWrite {
+					break
+				}
+				if time.Now().Before(deadline) {
+					t.Logf("Expected failure, got %s, trying again...", describe(err))
+					time.Sleep(time.Second * 2)
+					continue
+				}
+				t.Errorf("Collection access invalid, expected 'rw', got '%s'", grant)
+			} else {
+				t.Fatalf("GetCollectionAccess failed: %s", describe(err))
+			}
+		}
 	}
 
 	authClient, err := driver.NewClient(driver.ClientConfig{
@@ -362,12 +375,10 @@ func TestGrantUserCollection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
 	}
+	ensureSynchronizedEndpoints(authClient, "grant_user_col_test", t)
+	authDb := waitForDatabaseAccess(authClient, "grant_user_col_test", t)
 
 	// Try to create a document in the col
-	authDb, err := authClient.Database(nil, db.Name())
-	if err != nil {
-		t.Fatalf("Expected success, got %s", describe(err))
-	}
 	authCol, err := authDb.Collection(nil, col.Name())
 	if err != nil {
 		t.Fatalf("Expected success, got %s", describe(err))
@@ -600,5 +611,30 @@ func TestUserAccessibleDatabases(t *testing.T) {
 
 	} else {
 		t.Logf("Last part of test fails on version < 3.2 (got version %s)", version.Version)
+	}
+}
+
+func waitForDatabaseAccess(authClient driver.Client, dbname string, t *testing.T) driver.Database {
+	deadline := time.Now().Add(time.Minute)
+	for {
+		// Try to select the database
+		authDb, err := authClient.Database(nil, dbname)
+		if err == nil {
+			return authDb
+		}
+		if time.Now().Before(deadline) {
+			t.Logf("Expected success, got %s, trying again...", describe(err))
+			time.Sleep(time.Second * 2)
+			continue
+		}
+		t.Fatalf("Failed to select database, got %s", describe(err))
+		return nil
+	}
+}
+
+func ensureSynchronizedEndpoints(authClient driver.Client, dbname string, t *testing.T) {
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+	if err := waitUntilEndpointSynchronized(ctx, authClient, dbname, t); err != nil {
+		t.Fatalf("Failed to synchronize endpoint: %s", describe(err))
 	}
 }
