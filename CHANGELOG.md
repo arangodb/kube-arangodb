@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.3.6](https://github.com/arangodb/kube-arangodb/tree/0.3.6) (2018-12-06)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.5...0.3.6)
+
+**Closed issues:**
+
+- Dashboards not aware of kube-proxy [\#278](https://github.com/arangodb/kube-arangodb/issues/278)
+
+**Merged pull requests:**
+
+- Link to k8s platform tutorials. [\#313](https://github.com/arangodb/kube-arangodb/pull/313)
+- Updated Go-Driver to latest version. [\#312](https://github.com/arangodb/kube-arangodb/pull/312)
+- NodeSelector [\#311](https://github.com/arangodb/kube-arangodb/pull/311)
+- Docs: Formatting [\#310](https://github.com/arangodb/kube-arangodb/pull/310)
+- Doc: remove duplicate chapter [\#309](https://github.com/arangodb/kube-arangodb/pull/309)
+- Doc: remove blanks after tripple tics [\#308](https://github.com/arangodb/kube-arangodb/pull/308)
+- License Key [\#307](https://github.com/arangodb/kube-arangodb/pull/307)
+- Updated packages containing vulnerabilities [\#306](https://github.com/arangodb/kube-arangodb/pull/306)
+- Advertised Endpoints [\#299](https://github.com/arangodb/kube-arangodb/pull/299)
+
 ## [0.3.5](https://github.com/arangodb/kube-arangodb/tree/0.3.5) (2018-11-20)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.4...0.3.5)
 
