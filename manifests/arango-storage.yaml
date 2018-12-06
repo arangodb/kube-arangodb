@@ -141,7 +141,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:f42b9fc1ef2da1f2cbc3444c5dbe9611865ca214f8c820998d96eaae73b4ee0b
+        image: arangodb/kube-arangodb@sha256:974d6d7ca1df07d070625d6d2609a6eec42d5fd6d78584c762db432b2f573b67
         args:
         - --operator.storage
         env:
