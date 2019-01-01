@@ -54,7 +54,7 @@ func (ls *LocalStorage) listenForPvcEvents() {
 			AddFunc: func(obj interface{}) {
 				if pvc, ok := getPvc(obj); ok {
 					ls.send(&localStorageEvent{
-						Type: eventPVCAdded,
+						Type:                  eventPVCAdded,
 						PersistentVolumeClaim: pvc,
 					})
 				}
@@ -62,7 +62,7 @@ func (ls *LocalStorage) listenForPvcEvents() {
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				if pvc, ok := getPvc(newObj); ok {
 					ls.send(&localStorageEvent{
-						Type: eventPVCUpdated,
+						Type:                  eventPVCUpdated,
 						PersistentVolumeClaim: pvc,
 					})
 				}

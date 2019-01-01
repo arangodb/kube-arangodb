@@ -90,9 +90,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupSingle:
 		log.Debug().Str("id", id).Msg("Adding single server")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}, group); err != nil {
@@ -101,9 +101,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}, group); err != nil {
@@ -112,9 +112,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 		}, group); err != nil {
@@ -123,9 +123,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}, group); err != nil {
@@ -134,9 +134,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}, group); err != nil {
@@ -145,9 +145,9 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
 		if err := status.Members.Add(api.MemberStatus{
-			ID:        id,
-			CreatedAt: metav1.Now(),
-			Phase:     api.MemberPhaseNone,
+			ID:                        id,
+			CreatedAt:                 metav1.Now(),
+			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 		}, group); err != nil {

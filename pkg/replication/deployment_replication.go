@@ -112,7 +112,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeploymentReplic
 // This sends an update event in the event queue.
 func (dr *DeploymentReplication) Update(apiObject *api.ArangoDeploymentReplication) {
 	dr.send(&deploymentReplicationEvent{
-		Type: eventArangoDeploymentReplicationUpdated,
+		Type:                  eventArangoDeploymentReplicationUpdated,
 		DeploymentReplication: apiObject,
 	})
 }
