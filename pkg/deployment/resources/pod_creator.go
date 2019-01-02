@@ -65,6 +65,9 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
+// versionHasJWTSecretKeyfile derives from the version number of arangod has
+// the option --auth.jwt-secret-keyfile which can take the JWT secret from
+// a file in the file system.
 func versionHasJWTSecretKeyfile(v driver.Version) bool {
 	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
 		return true
