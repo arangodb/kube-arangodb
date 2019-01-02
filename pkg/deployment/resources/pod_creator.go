@@ -101,7 +101,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 			optionPair{"--server.authentication", "true"},
 		)
 		if versionHasJWTSecretKeyfile(version) {
-			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeName, constants.SecretKeyToken)
+			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options = append(options,
 				optionPair{"--server.jwt-secret-keyfile", keyPath},
 			)
