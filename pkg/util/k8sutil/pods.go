@@ -44,7 +44,7 @@ const (
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	lifecycleVolumeName             = "lifecycle"
 	clientAuthCAVolumeName          = "client-auth-ca"
-	ClusterJWTSecretVolumeName      = "cluster-jwt"
+	clusterJWTSecretVolumeName      = "cluster-jwt"
 	masterJWTSecretVolumeName       = "master-jwt"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ArangodVolumeMountDir           = "/data"
@@ -215,7 +215,7 @@ func masterJWTVolumeMounts() []v1.VolumeMount {
 func clusterJWTVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
 		{
-			Name:      ClusterJWTSecretVolumeName,
+			Name:      clusterJWTSecretVolumeName,
 			MountPath: ClusterJWTSecretVolumeMountDir,
 		},
 	}
@@ -448,7 +448,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	if rocksdbEncryptionSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
 	}
-	if ClusterJWTSecretVolumeName != "" {
+	if clusterJWTSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
@@ -510,7 +510,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	// Cluster JWT secret mount (if any)
 	if clusterJWTSecretName != "" {
 		vol := v1.Volume{
-			Name: ClusterJWTSecretVolumeName,
+			Name: clusterJWTSecretVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: clusterJWTSecretName,
@@ -620,7 +620,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	// Cluster JWT secret mount (if any)
 	if clusterJWTSecretName != "" {
 		vol := v1.Volume{
-			Name: ClusterJWTSecretVolumeName,
+			Name: clusterJWTSecretVolumeName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: clusterJWTSecretName,
