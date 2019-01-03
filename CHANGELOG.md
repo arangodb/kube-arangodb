@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.3.7](https://github.com/arangodb/kube-arangodb/tree/0.3.7) (2019-01-03)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
+
+**Merged pull requests:**
+
+- Use jwt-keyfile option if available. [\#318](https://github.com/arangodb/kube-arangodb/pull/318)
+- StorageOperator Volume Size Fix [\#316](https://github.com/arangodb/kube-arangodb/pull/316)
+
 ## [0.3.6](https://github.com/arangodb/kube-arangodb/tree/0.3.6) (2018-12-06)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.5...0.3.6)
 
