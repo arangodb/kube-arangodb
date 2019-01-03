@@ -109,7 +109,7 @@ func (o *Operator) onDeleteArangoDeploymentReplication(obj interface{}) {
 		Str("name", apiObject.GetObjectMeta().GetName()).
 		Msg("ArangoDeploymentReplication deleted")
 	ev := &Event{
-		Type: kwatch.Deleted,
+		Type:                  kwatch.Deleted,
 		DeploymentReplication: apiObject,
 	}
 
@@ -124,7 +124,7 @@ func (o *Operator) onDeleteArangoDeploymentReplication(obj interface{}) {
 // syncArangoDeploymentReplication synchronized the given deployment replication.
 func (o *Operator) syncArangoDeploymentReplication(apiObject *api.ArangoDeploymentReplication) {
 	ev := &Event{
-		Type: kwatch.Added,
+		Type:                  kwatch.Added,
 		DeploymentReplication: apiObject,
 	}
 	// re-watch or restart could give ADD event.

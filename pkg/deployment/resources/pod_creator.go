@@ -65,6 +65,20 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
+// versionHasJWTSecretKeyfile derives from the version number of arangod has
+// the option --auth.jwt-secret-keyfile which can take the JWT secret from
+// a file in the file system.
+func versionHasJWTSecretKeyfile(v driver.Version) bool {
+	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
+		return true
+	}
+	if v.CompareTo("3.4.2") >= 0 {
+		return true
+	}
+
+	return false
+}
+
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version, autoUpgrade bool) []string {
@@ -85,8 +99,17 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		// With authentication
 		options = append(options,
 			optionPair{"--server.authentication", "true"},
-			optionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
 		)
+		if versionHasJWTSecretKeyfile(version) {
+			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+			options = append(options,
+				optionPair{"--server.jwt-secret-keyfile", keyPath},
+			)
+		} else {
+			options = append(options,
+				optionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
+			)
+		}
 	} else {
 		// Without authentication
 		options = append(options,
@@ -499,17 +522,18 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	// Create pod
 	if group.IsArangod() {
 		// Prepare arguments
+		version := imageInfo.ArangoDBVersion
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
 		}
-		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, imageInfo.ArangoDBVersion, autoUpgrade)
+		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, version, autoUpgrade)
 		env := make(map[string]k8sutil.EnvValue)
 		livenessProbe, err := r.createLivenessProbe(spec, group)
 		if err != nil {
 			return maskAny(err)
 		}
-		readinessProbe, err := r.createReadinessProbe(spec, group, imageInfo.ArangoDBVersion)
+		readinessProbe, err := r.createReadinessProbe(spec, group, version)
 		if err != nil {
 			return maskAny(err)
 		}
@@ -535,11 +559,21 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
 			}
 		}
+		// Check cluster JWT secret
+		var clusterJWTSecretName string
 		if spec.IsAuthenticated() {
-			env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
-				SecretName: spec.Authentication.GetJWTSecretName(),
-				SecretKey:  constants.SecretKeyToken,
+			if versionHasJWTSecretKeyfile(version) {
+				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
+				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
+					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
+				}
+			} else {
+				env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
+					SecretName: spec.Authentication.GetJWTSecretName(),
+					SecretKey:  constants.SecretKeyToken,
+				}
 			}
+
 		}
 
 		if spec.License.HasSecretName() {
@@ -554,7 +588,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			groupSpec.GetNodeSelector()); err != nil {
+			clusterJWTSecretName, groupSpec.GetNodeSelector()); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

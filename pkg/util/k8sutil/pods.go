@@ -49,6 +49,7 @@ const (
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
+	JWTSecretFileVolumeMountDir     = "/secrets/jwt"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
 	LifecycleVolumeMountDir         = "/lifecycle/tools"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
@@ -417,7 +418,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -446,6 +447,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 	if rocksdbEncryptionSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
+	}
+	if clusterJWTSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
@@ -497,6 +501,19 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: rocksdbEncryptionSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// Cluster JWT secret mount (if any)
+	if clusterJWTSecretName != "" {
+		vol := v1.Volume{
+			Name: clusterJWTSecretVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: clusterJWTSecretName,
 				},
 			},
 		}

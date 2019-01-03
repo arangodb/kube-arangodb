@@ -135,7 +135,7 @@ func TestGetDeploymentInfo(t *testing.T) {
 		ExpectedEnforceAntiAffinity bool
 	}{
 		{
-			Input: v1.PersistentVolumeClaim{},
+			Input:                       v1.PersistentVolumeClaim{},
 			ExpectedDeploymentName:      "",
 			ExpectedRole:                "",
 			ExpectedEnforceAntiAffinity: false,
