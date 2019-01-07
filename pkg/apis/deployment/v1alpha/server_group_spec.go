@@ -39,6 +39,10 @@ import (
 type ServerGroupSpec struct {
 	// Count holds the requested number of servers
 	Count *int `json:"count,omitempty"`
+	// MinCount specifies a lower limit for count
+	MinCount *int `json:"minCount,omitempty"`
+	// MaxCount specifies a upper limit for count
+	MaxCount *int `json:"maxCount,omitempty"`
 	// Args holds additional commandline arguments
 	Args []string `json:"args,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
@@ -110,8 +114,27 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 				minCount = 2
 			}
 		}
+		var specMinCount int
+		if s.MinCount != nil {
+			specMinCount = *s.MinCount
+			if specMinCount < 1 {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid minCount: %d < 1", specMinCount))
+			}
+			if s.GetCount() < specMinCount {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), specMinCount))
+			}
+		}
+		if s.MaxCount != nil {
+			specMaxCount := *s.MaxCount
+			if specMaxCount < specMinCount {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid maxCount: (maxCount) %d < %d (minCount)", specMaxCount, specMinCount))
+			}
+			if s.GetCount() > specMaxCount {
+				return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected <= %d", s.GetCount(), specMaxCount))
+			}
+		}
 		if s.GetCount() < minCount {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), minCount))
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d (implicit minimum; by deployment mode)", s.GetCount(), minCount))
 		}
 		if s.GetCount() > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
@@ -160,6 +183,8 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		}
 	} else if s.GetCount() > 0 && !used {
 		s.Count = nil
+		s.MinCount = nil
+		s.MaxCount = nil
 	}
 	if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
 		switch group {
@@ -188,6 +213,12 @@ func setDefaultsFromResourceList(s *v1.ResourceList, source v1.ResourceList) {
 func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	if s.Count == nil {
 		s.Count = util.NewIntOrNil(source.Count)
+	}
+	if s.MinCount == nil {
+		s.MinCount = util.NewIntOrNil(source.MinCount)
+	}
+	if s.MaxCount == nil {
+		s.MaxCount = util.NewIntOrNil(source.MaxCount)
 	}
 	if s.Args == nil {
 		s.Args = source.Args
