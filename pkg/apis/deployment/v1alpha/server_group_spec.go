@@ -65,18 +65,12 @@ func (s ServerGroupSpec) GetCount() int {
 
 // GetMinCount returns MinCount or 1 if not set
 func (s ServerGroupSpec) GetMinCount() int {
-	if s.MinCount != nil {
-		return *s.MinCount
-	}
-	return 1
+	return util.IntOrDefault(s.MinCount, 1)
 }
 
 // GetMaxCount returns MaxCount or
 func (s ServerGroupSpec) GetMaxCount() int {
-	if s.MaxCount != nil {
-		return *s.MaxCount
-	}
-	return math.MaxInt32
+	return util.IntOrDefault(s.MaxCount, math.MaxInt32)
 }
 
 // GetNodeSelector returns the selectors for nodes of this group
@@ -130,6 +124,9 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			case ServerGroupDBServers:
 				minCount = 2
 			}
+		}
+		if s.GetMinCount() > s.GetMaxCount() {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid min/maxCount. Min (%d) bigger than Max (%d)", s.GetMinCount(), s.GetMaxCount()))
 		}
 		if s.GetCount() < s.GetMinCount() {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), s.GetMinCount()))
