@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"math"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -60,6 +61,22 @@ type ServerGroupSpec struct {
 // GetCount returns the value of count.
 func (s ServerGroupSpec) GetCount() int {
 	return util.IntOrDefault(s.Count)
+}
+
+// GetMinCount returns MinCount or 1 if not set
+func (s ServerGroupSpec) GetMinCount() int {
+	if s.MinCount != nil {
+		return *s.MinCount
+	}
+	return 1
+}
+
+// GetMaxCount returns MaxCount or
+func (s ServerGroupSpec) GetMaxCount() int {
+	if s.MaxCount != nil {
+		return *s.MaxCount
+	}
+	return math.MaxInt32
 }
 
 // GetNodeSelector returns the selectors for nodes of this group
@@ -114,24 +131,11 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 				minCount = 2
 			}
 		}
-		var specMinCount int
-		if s.MinCount != nil {
-			specMinCount = *s.MinCount
-			if specMinCount < 1 {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid minCount: %d < 1", specMinCount))
-			}
-			if s.GetCount() < specMinCount {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), specMinCount))
-			}
+		if s.GetCount() < s.GetMinCount() {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), s.GetMinCount()))
 		}
-		if s.MaxCount != nil {
-			specMaxCount := *s.MaxCount
-			if specMaxCount < specMinCount {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid maxCount: (maxCount) %d < %d (minCount)", specMaxCount, specMinCount))
-			}
-			if s.GetCount() > specMaxCount {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected <= %d", s.GetCount(), specMaxCount))
-			}
+		if s.GetCount() > s.GetMaxCount() {
+			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected <= %d", s.GetCount(), s.GetMaxCount()))
 		}
 		if s.GetCount() < minCount {
 			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d (implicit minimum; by deployment mode)", s.GetCount(), minCount))
