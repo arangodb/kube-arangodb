@@ -336,7 +336,7 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 	c := v1.Container{
 		Command:         append([]string{"/app/arangodb-exporter"}, args...),
 		Name:            ExporterContainerName,
-		Image:           "arangodb/arangodb-exporter:0.1.3",
+		Image:           image,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Ports: []v1.ContainerPort{
 			{
@@ -352,7 +352,6 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 	if livenessProbe != nil {
 		c.LivenessProbe = livenessProbe.Create()
 	}
-
 	return c
 }
 
@@ -442,6 +441,7 @@ type ArangodbExporterContainerConf struct {
 	Args          []string
 	Env           map[string]EnvValue
 	LivenessProbe *HTTPProbeConfig
+	Image         string
 }
 
 // CreateArangodPod creates a Pod that runs `arangod`.
@@ -490,7 +490,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 
 	// Add arangodb exporter container
 	if exporter != nil {
-		c = arangodbexporterContainer(image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
+		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
 		p.Spec.Containers = append(p.Spec.Containers, c)
 	}
 

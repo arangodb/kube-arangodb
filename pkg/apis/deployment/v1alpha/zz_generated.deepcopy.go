@@ -534,6 +534,11 @@ func (in *MetricsSpec) DeepCopyInto(out *MetricsSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

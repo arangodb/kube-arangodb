@@ -619,10 +619,15 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 					SecretName: spec.Authentication.GetJWTSecretName(),
 					SecretKey:  constants.SecretKeyToken,
 				}
+				image := spec.GetImage()
+				if spec.Metrics.HasImage() {
+					image = spec.Metrics.GetImage()
+				}
 				exporter = &k8sutil.ArangodbExporterContainerConf{
 					Args:          createExporterArgs(),
 					Env:           env,
 					LivenessProbe: createExporterLivenessProbe(),
+					Image:         image,
 				}
 			}
 		}
