@@ -97,13 +97,42 @@ func IsPodReady(pod *v1.Pod) bool {
 // IsPodSucceeded returns true if all containers of the pod
 // have terminated with exit code 0.
 func IsPodSucceeded(pod *v1.Pod) bool {
-	return pod.Status.Phase == v1.PodSucceeded
+	if pod.Status.Phase == v1.PodSucceeded {
+		return true
+	} else {
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.Name != "server" {
+				continue
+			}
+
+			t := c.State.Terminated
+			if t != nil {
+				return t.ExitCode == 0
+			}
+		}
+		return false
+	}
 }
 
 // IsPodFailed returns true if all containers of the pod
 // have terminated and at least one of them wih a non-zero exit code.
 func IsPodFailed(pod *v1.Pod) bool {
-	return pod.Status.Phase == v1.PodFailed
+	if pod.Status.Phase == v1.PodFailed {
+		return true
+	} else {
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.Name != "server" {
+				continue
+			}
+
+			t := c.State.Terminated
+			if t != nil {
+				return t.ExitCode != 0
+			}
+		}
+
+		return false
+	}
 }
 
 // IsPodScheduled returns true if the pod has been scheduled.
