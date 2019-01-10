@@ -48,6 +48,7 @@ const (
 	clusterJWTSecretVolumeName      = "cluster-jwt"
 	masterJWTSecretVolumeName       = "master-jwt"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
+	exporterJWTVolumeName           = "exporter-jwt"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	JWTSecretFileVolumeMountDir     = "/secrets/jwt"
@@ -55,6 +56,7 @@ const (
 	LifecycleVolumeMountDir         = "/lifecycle/tools"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
+	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
 
@@ -222,6 +224,15 @@ func clusterJWTVolumeMounts() []v1.VolumeMount {
 	}
 }
 
+func exporterJWTVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      exporterJWTVolumeName,
+			MountPath: ExporterJWTVolumeMountDir,
+		},
+	}
+}
+
 // rocksdbEncryptionVolumeMounts creates a volume mount structure for a RocksDB encryption key.
 func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
@@ -331,8 +342,6 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 }
 
 func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
-	// THIS IS WORK IN PROGRESS
-	// IN THE END THE ARANGO DOCKERIMAGE WILL CONTAIN THE EXPORTER
 	c := v1.Container{
 		Command:         append([]string{"/app/arangodb-exporter"}, args...),
 		Name:            ExporterContainerName,
@@ -438,10 +447,11 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 
 // ArangodbExporterContainerConf contains configuration of the exporter container
 type ArangodbExporterContainerConf struct {
-	Args          []string
-	Env           map[string]EnvValue
-	LivenessProbe *HTTPProbeConfig
-	Image         string
+	Args               []string
+	Env                map[string]EnvValue
+	JWTTokenSecretName string
+	LivenessProbe      *HTTPProbeConfig
+	Image              string
 }
 
 // CreateArangodPod creates a Pod that runs `arangod`.
@@ -486,11 +496,15 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	if clusterJWTSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
+
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
 	// Add arangodb exporter container
 	if exporter != nil {
 		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
+		if exporter.JWTTokenSecretName != "" {
+			c.VolumeMounts = append(c.VolumeMounts, exporterJWTVolumeMounts()...)
+		}
 		p.Spec.Containers = append(p.Spec.Containers, c)
 	}
 
@@ -542,6 +556,19 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: rocksdbEncryptionSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
+	// Exporter Token Mount
+	if exporter != nil && exporter.JWTTokenSecretName != "" {
+		vol := v1.Volume{
+			Name: exporterJWTVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: exporter.JWTTokenSecretName,
 				},
 			},
 		}

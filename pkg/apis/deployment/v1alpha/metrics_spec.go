@@ -21,16 +21,22 @@
 
 package v1alpha
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+// MetricsAuthenticationSpec contains spec for authentication with arangodb
+type MetricsAuthenticationSpec struct {
+	// JWTTokenSecretName contains the name of the JWT kubernetes secret used for authentication
+	JWTTokenSecretName *string `json:"jwtTokenSecretName,omitempty"`
+}
 
 // MetricsSpec contains spec for arangodb exporter
 type MetricsSpec struct {
-	Enabled *bool   `json:"enabled,omitempty"`
-	Image   *string `json:"image,omitempty"`
-	//Authentication struct {
-	//	// JWTSecretName contains the name of the JWT kubernetes secret used for authentication
-	//	JWTSecretName *string `json:"JWTSecretName,omitempty"`
-	//} `json:"authentication,omitempty"`
+	Enabled        *bool                     `json:"enabled,omitempty"`
+	Image          *string                   `json:"image,omitempty"`
+	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 }
 
 // IsEnabled returns whether metrics are enabled or not
@@ -49,10 +55,23 @@ func (s *MetricsSpec) GetImage() string {
 }
 
 // SetDefaults sets default values
-func (s *MetricsSpec) SetDefaults() {
+func (s *MetricsSpec) SetDefaults(defaultTokenName string, isAuthenticated bool) {
 	if s.Enabled == nil {
 		s.Enabled = util.NewBool(false)
 	}
+	if s.GetJWTTokenSecretName() == "" {
+		s.Authentication.JWTTokenSecretName = util.NewString(defaultTokenName)
+	}
+}
+
+// GetJWTTokenSecretName returns the token secret name or empty string
+func (s *MetricsSpec) GetJWTTokenSecretName() string {
+	return util.StringOrDefault(s.Authentication.JWTTokenSecretName)
+}
+
+// HasJWTTokenSecretName returns true if a secret name was specified
+func (s *MetricsSpec) HasJWTTokenSecretName() bool {
+	return s.Authentication.JWTTokenSecretName != nil
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -63,10 +82,20 @@ func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 	if s.Image == nil {
 		s.Image = util.NewStringOrNil(source.Image)
 	}
+	if s.Authentication.JWTTokenSecretName == nil {
+		s.Authentication.JWTTokenSecretName = util.NewStringOrNil(source.Authentication.JWTTokenSecretName)
+	}
 }
 
 // Validate the given spec
 func (s *MetricsSpec) Validate() error {
+
+	if s.HasJWTTokenSecretName() {
+		if err := k8sutil.ValidateResourceName(s.GetJWTTokenSecretName()); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

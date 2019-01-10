@@ -55,6 +55,12 @@ func (r *Resources) EnsureSecrets() error {
 		if err := r.ensureTokenSecret(secrets, spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
+
+		if spec.Metrics.IsEnabled() {
+			if err := r.ensureExporterTokenSecret(secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName()); err != nil {
+				return maskAny(err)
+			}
+		}
 	}
 	if spec.IsSecure() {
 		counterMetric.Inc()
@@ -97,6 +103,31 @@ func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretNam
 		// Create secret
 		owner := r.context.GetAPIObject().AsOwner()
 		if err := k8sutil.CreateTokenSecret(secrets, secretName, token, &owner); k8sutil.IsAlreadyExists(err) {
+			// Secret added while we tried it also
+			return nil
+		} else if err != nil {
+			// Failed to create secret
+			return maskAny(err)
+		}
+	} else if err != nil {
+		// Failed to get secret for other reasons
+		return maskAny(err)
+	}
+	return nil
+}
+
+// ensureExporterTokenSecret checks if a secret with given name exists in the namespace
+// of the deployment. If not, it will add such a secret with correct access.
+func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
+	if _, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		// Secret not found, create it
+		claims := map[string]interface{}{
+			"iss":       "arangodb",
+			"server_id": "exporter",
+		}
+		// Create secret
+		owner := r.context.GetAPIObject().AsOwner()
+		if err := k8sutil.CreateJWTFromSecret(secrets, tokenSecretName, secretSecretName, claims, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {

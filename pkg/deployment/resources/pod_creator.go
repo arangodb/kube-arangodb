@@ -330,10 +330,11 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 }
 
 func createExporterArgs() []string {
+	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := make([]optionPair, 0, 64)
 	options = append(options,
-		optionPair{"--arangodb.jwtsecret", "$(" + constants.EnvArangodJWTSecret + ")"},
-		optionPair{"--arangodb.endpoint=http://localhost:", strconv.Itoa(k8sutil.ArangoPort)},
+		optionPair{"--arangodb.jwt-file", tokenpath},
+		optionPair{"--arangodb.endpoint", "http://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	args := make([]string, 0, 2+len(options))
 	sort.Slice(options, func(i, j int) bool {
@@ -614,20 +615,15 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		if spec.Metrics.IsEnabled() {
 			if group.IsExportMetrics() {
-				env := make(map[string]k8sutil.EnvValue)
-				env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
-					SecretName: spec.Authentication.GetJWTSecretName(),
-					SecretKey:  constants.SecretKeyToken,
-				}
 				image := spec.GetImage()
 				if spec.Metrics.HasImage() {
 					image = spec.Metrics.GetImage()
 				}
 				exporter = &k8sutil.ArangodbExporterContainerConf{
-					Args:          createExporterArgs(),
-					Env:           env,
-					LivenessProbe: createExporterLivenessProbe(),
-					Image:         image,
+					Args:               createExporterArgs(),
+					JWTTokenSecretName: spec.Metrics.GetJWTTokenSecretName(),
+					LivenessProbe:      createExporterLivenessProbe(),
+					Image:              image,
 				}
 			}
 		}
