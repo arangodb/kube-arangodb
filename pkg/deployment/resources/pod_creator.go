@@ -496,10 +496,8 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 
 func createExporterLivenessProbe() *k8sutil.HTTPProbeConfig {
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/",
-		InitialDelaySeconds: 5,
-		PeriodSeconds:       30,
-		TimeoutSeconds:      5,
+		LocalPath: "/",
+		Port:      k8sutil.ArangoExporterPort,
 	}
 
 	return probeCfg
