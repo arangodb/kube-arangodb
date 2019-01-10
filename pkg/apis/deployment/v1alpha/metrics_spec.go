@@ -17,23 +17,18 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
 //
 
-package k8sutil
+package v1alpha
 
-const (
-	// Arango constants
-	ArangoPort           = 8529
-	ArangoSyncMasterPort = 8629
-	ArangoSyncWorkerPort = 8729
-	ArangoExporterPort   = 9101
+import "github.com/arangodb/kube-arangodb/pkg/util"
 
-	// K8s constants
-	ClusterIPNone                      = "None"
-	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
-	TopologyKeyHostname                = "kubernetes.io/hostname"
+// MetricsSpec contains spec for arangodb exporter
+type MetricsSpec struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
 
-	// Internal constants
-	ImageIDAndVersionRole = "id" // Role use by identification pods
-)
+// IsEnabled returns whether metrics are enabled or not
+func (s *MetricsSpec) IsEnabled() bool {
+	return util.BoolOrDefault(s.Enabled, false)
+}

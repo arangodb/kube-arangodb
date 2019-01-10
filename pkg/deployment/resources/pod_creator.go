@@ -329,6 +329,23 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
+func createExporterArgs() []string {
+	options := make([]optionPair, 0, 64)
+	options = append(options,
+		optionPair{"--arangodb.jwtsecret", "$(" + constants.EnvArangodJWTSecret + ")"},
+		optionPair{"--arangodb.endpoint=http://localhost:", strconv.Itoa(k8sutil.ArangoPort)},
+	)
+	args := make([]string, 0, 2+len(options))
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].CompareTo(options[j]) < 0
+	})
+	for _, o := range options {
+		args = append(args, o.Key+"="+o.Value)
+	}
+
+	return args
+}
+
 // createLivenessProbe creates configuration for a liveness probe of a server in the given group.
 func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
 	switch group {
@@ -476,6 +493,16 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
+func createExporterLivenessProbe() *k8sutil.HTTPProbeConfig {
+	probeCfg := &k8sutil.HTTPProbeConfig{
+		LocalPath:           "/",
+		InitialDelaySeconds: 2,
+		PeriodSeconds:       2,
+	}
+
+	return probeCfg
+}
+
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once) error {
 	kubecli := r.context.GetKubeCli()
@@ -583,12 +610,29 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
+		var exporter *k8sutil.ArangodbExporterContainerConf
+
+		if spec.Metrics.IsEnabled() {
+			if group == api.ServerGroupDBServers || group == api.ServerGroupCoordinators {
+				env := make(map[string]k8sutil.EnvValue)
+				env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
+					SecretName: spec.Authentication.GetJWTSecretName(),
+					SecretKey:  constants.SecretKeyToken,
+				}
+				exporter = &k8sutil.ArangodbExporterContainerConf{
+					Args:          createExporterArgs(),
+					Env:           env,
+					LivenessProbe: createExporterLivenessProbe(),
+				}
+			}
+		}
+
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			clusterJWTSecretName, groupSpec.GetNodeSelector()); err != nil {
+			clusterJWTSecretName, groupSpec.GetNodeSelector(), exporter); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

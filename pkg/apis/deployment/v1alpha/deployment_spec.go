@@ -61,6 +61,7 @@ type DeploymentSpec struct {
 	TLS            TLSSpec            `json:"tls"`
 	Sync           SyncSpec           `json:"sync"`
 	License        LicenseSpec        `json:"license"`
+	Metrics        MetricsSpec        `json:"metrics"`
 
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`

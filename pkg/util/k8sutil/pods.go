@@ -40,6 +40,7 @@ const (
 	InitDataContainerName           = "init-data"
 	InitLifecycleContainerName      = "init-lifecycle"
 	ServerContainerName             = "server"
+	ExporterContainerName           = "exporter"
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	lifecycleVolumeName             = "lifecycle"
@@ -329,6 +330,32 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 	return c
 }
 
+func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+	// THIS IS WORK IN PROGRESS
+	// IN THE END THE ARANGO DOCKERIMAGE WILL CONTAIN THE EXPORTER
+	c := v1.Container{
+		Command:         append([]string{"/app/arangodb-exporter"}, args...),
+		Name:            ExporterContainerName,
+		Image:           "arangodb/arangodb-exporter:0.1.3",
+		ImagePullPolicy: v1.PullIfNotPresent,
+		Ports: []v1.ContainerPort{
+			{
+				Name:          "exporter",
+				ContainerPort: int32(ArangoExporterPort),
+				Protocol:      v1.ProtocolTCP,
+			},
+		},
+	}
+	for k, v := range env {
+		c.Env = append(c.Env, v.CreateEnvVar(k))
+	}
+	if livenessProbe != nil {
+		c.LivenessProbe = livenessProbe.Create()
+	}
+
+	return c
+}
+
 // newLifecycle creates a lifecycle structure with preStop handler.
 func newLifecycle() (*v1.Lifecycle, []v1.EnvVar, []v1.Volume, error) {
 	binaryPath, err := os.Executable()
@@ -410,6 +437,13 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 	return p
 }
 
+// ArangodbExporterContainerConf contains configuration of the exporter container
+type ArangodbExporterContainerConf struct {
+	Args          []string
+	Env           map[string]EnvValue
+	LivenessProbe *HTTPProbeConfig
+}
+
 // CreateArangodPod creates a Pod that runs `arangod`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
@@ -418,7 +452,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
+	exporter *ArangodbExporterContainerConf) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -452,6 +487,12 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add arangodb exporter container
+	if exporter != nil {
+		c = arangodbexporterContainer(image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
+		p.Spec.Containers = append(p.Spec.Containers, c)
+	}
 
 	// Add UUID init container
 	if alpineImage != "" {
