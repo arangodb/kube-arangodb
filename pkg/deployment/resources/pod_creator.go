@@ -613,7 +613,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		var exporter *k8sutil.ArangodbExporterContainerConf
 
 		if spec.Metrics.IsEnabled() {
-			if group == api.ServerGroupDBServers || group == api.ServerGroupCoordinators {
+			if group.IsExportMetrics() {
 				env := make(map[string]k8sutil.EnvValue)
 				env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
 					SecretName: spec.Authentication.GetJWTSecretName(),

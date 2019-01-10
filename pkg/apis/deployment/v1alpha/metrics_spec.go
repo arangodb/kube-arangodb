@@ -50,7 +50,9 @@ func (s *MetricsSpec) GetImage() string {
 
 // SetDefaults sets default values
 func (s *MetricsSpec) SetDefaults() {
-	s.Enabled = util.NewBool(false)
+	if s.Enabled == nil {
+		s.Enabled = util.NewBool(false)
+	}
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -69,6 +71,6 @@ func (s *MetricsSpec) Validate() error {
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
-func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []string {
+func (s MetricsSpec) ResetImmutableFields(fieldPrefix string, target *MetricsSpec) []string {
 	return nil
 }
