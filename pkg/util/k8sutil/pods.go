@@ -101,7 +101,7 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 		return true
 	} else {
 		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != "server" {
+			if c.Name != ServerContainerName {
 				continue
 			}
 
@@ -121,7 +121,7 @@ func IsPodFailed(pod *v1.Pod) bool {
 		return true
 	} else {
 		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != "server" {
+			if c.Name != ServerContainerName {
 				continue
 			}
 
@@ -533,6 +533,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
 		if exporter.JWTTokenSecretName != "" {
 			c.VolumeMounts = append(c.VolumeMounts, exporterJWTVolumeMounts()...)
+		}
+		if tlsKeyfileSecretName != "" {
+			c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 		}
 		p.Spec.Containers = append(p.Spec.Containers, c)
 	}

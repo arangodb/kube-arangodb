@@ -329,13 +329,19 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
-func createExporterArgs() []string {
+func createExporterArgs(isSecure bool) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := make([]optionPair, 0, 64)
 	options = append(options,
 		optionPair{"--arangodb.jwt-file", tokenpath},
 		optionPair{"--arangodb.endpoint", "http://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
+	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	if isSecure {
+		options = append(options,
+			optionPair{"--ssl.keyfile", keyPath},
+		)
+	}
 	args := make([]string, 0, 2+len(options))
 	sort.Slice(options, func(i, j int) bool {
 		return options[i].CompareTo(options[j]) < 0
@@ -494,10 +500,11 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func createExporterLivenessProbe() *k8sutil.HTTPProbeConfig {
+func createExporterLivenessProbe(isSecure bool) *k8sutil.HTTPProbeConfig {
 	probeCfg := &k8sutil.HTTPProbeConfig{
 		LocalPath: "/",
 		Port:      k8sutil.ArangoExporterPort,
+		Secure:    isSecure,
 	}
 
 	return probeCfg
@@ -619,9 +626,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 					image = spec.Metrics.GetImage()
 				}
 				exporter = &k8sutil.ArangodbExporterContainerConf{
-					Args:               createExporterArgs(),
+					Args:               createExporterArgs(spec.IsSecure()),
 					JWTTokenSecretName: spec.Metrics.GetJWTTokenSecretName(),
-					LivenessProbe:      createExporterLivenessProbe(),
+					LivenessProbe:      createExporterLivenessProbe(spec.IsSecure()),
 					Image:              image,
 				}
 			}
