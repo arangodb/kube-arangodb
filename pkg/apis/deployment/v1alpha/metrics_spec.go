@@ -157,7 +157,10 @@ func (p *MetricsPrometheusSpec) SetDefaultsFrom(source MetricsPrometheusSpec) {
 
 // Validate the given spec
 func (p *MetricsPrometheusSpec) Validate() error {
-	return p.MonitorResource.Validate()
+	if p.MonitorResource != nil {
+		return p.MonitorResource.Validate()
+	}
+	return nil
 }
 
 // Validate the given spec

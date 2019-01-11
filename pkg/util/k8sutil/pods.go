@@ -538,6 +538,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 			c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 		}
 		p.Spec.Containers = append(p.Spec.Containers, c)
+		p.Labels[LabelKeyArangoExporter] = "yes"
 	}
 
 	// Add UUID init container
