@@ -9,6 +9,12 @@ This guide is a walk through for, again in lack of a better word,
 a reasonable and flexibel setup to get to an ArangoDB cluster setup on
 a baremetal kubernetes setup.
 
+## BEWARE: Do not use this setup for production!
+
+This guide does not involve setting up dedicated master nodes or high availability for Kubernetes, but uses for sake of simplicity a single untainted master. This is the very definition of a test environment.
+
+If you are interested in running a high available Kubernetes setup, please refer to: [Creating Highly Available Clusters with kubeadm](https://kubernetes.io/docs/setup/independent/high-availability/)
+
 ## Requirements
 
 Let there be 3 Linux boxes, `kube01`, `kube02` and `kube03`, with `kubeadm` and `kubectl` installed and off we go:
@@ -146,6 +152,17 @@ This node has joined the cluster:
 * The Kubelet was informed of the new secure connection details.
 
 Run 'kubectl get nodes' on the master to see this node join the cluster.
+```
+
+## Untaint master node
+
+```
+kubectl taint nodes --all node-role.kubernetes.io/master-
+```
+```
+  node/kube01 untainted
+  taint "node-role.kubernetes.io/master:" not found
+  taint "node-role.kubernetes.io/master:" not found
 ```
 
 ## Wait for nodes to get ready and sanity checking
