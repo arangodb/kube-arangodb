@@ -17,7 +17,7 @@ If you are interested in running a high available Kubernetes setup, please refer
 
 ## Requirements
 
-Let there be 3 Linux boxes, `kube01`, `kube02` and `kube03`, with `kubeadm` and `kubectl` installed and off we go:
+Let there be 3 Linux boxes, `kube01 (192.168.10.61)`, `kube02 (192.168.10.62)` and `kube03 (192.168.10.3)`, with `kubeadm` and `kubectl` installed and off we go:
 
 * `kubeadm`, `kubectl` version `>=1.10` 
 
