@@ -7,7 +7,7 @@ comes great complexity. There are inifinite ways of hitting barriers.
 
 This guide is a walk through for, again in lack of a better word,
 a reasonable and flexibel setup to get to an ArangoDB cluster setup on
-a baremetal setup.
+a baremetal kubernetes setup.
 
 ## Requirements
 
