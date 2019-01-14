@@ -19,7 +19,9 @@ Let there be 3 Linux boxes, `kube01`, `kube02` and `kube03`, with `kubeadm` and 
 
 The master node is outstanding in that it handles the API server and some other vital infrastructure 
 
-    kube01 > sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+```
+kube01:~ > sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+```
 
 You should see an output like below:
 
@@ -93,9 +95,9 @@ kubeadm join 192.168.10.61:6443 --token blcr1y.49wloegyaugice8a --discovery-toke
 Go ahead and do as above instructed and see into getting kubectl to work on the master:
 
 ```
-kube01 > mkdir -p $HOME/.kube
-kube01 > sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-kube01 > sudo chown $(id -u):$(id -g) $HOME/.kube/config
+kube01:~ > mkdir -p $HOME/.kube
+kube01:~ > sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+kube01:~ > sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 ## Deploy a pod network
@@ -103,7 +105,7 @@ kube01 > sudo chown $(id -u):$(id -g) $HOME/.kube/config
 For this guide, we go with **flannel**, as it is an easy way of setting up a layer 3 network, which uses the Kubernetes API and just works anywhere, where a network between the involved machines works:
 
 ```
-kube01 > kubectl apply -f \ 
+kube01:~ > kubectl apply -f \ 
    https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 
   clusterrole.rbac.authorization.k8s.io/flannel created
