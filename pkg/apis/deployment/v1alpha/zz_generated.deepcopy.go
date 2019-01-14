@@ -257,6 +257,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	in.SyncMasters.DeepCopyInto(&out.SyncMasters)
 	in.SyncWorkers.DeepCopyInto(&out.SyncWorkers)
 	in.Chaos.DeepCopyInto(&out.Chaos)
+	if in.RootUserAccessSecretName != nil {
+		in, out := &in.RootUserAccessSecretName, &out.RootUserAccessSecretName
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
