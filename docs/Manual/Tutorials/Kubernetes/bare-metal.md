@@ -20,84 +20,82 @@ Let there be 3 Linux boxes, `kube01`, `kube02` and `kube03`, with `kubeadm` and 
 The master node is outstanding in that it handles the API server and some other vital infrastructure 
 
 ```
-kube01:~ > sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
 
-You should see an output like below:
+```
+  [init] Using Kubernetes version: v1.13.2
+  [preflight] Running pre-flight checks
+  [preflight] Pulling images required for setting up a Kubernetes cluster
+  [preflight] This might take a minute or two, depending on the speed of your internet connection
+  [preflight] You can also perform this action in beforehand using 'kubeadm config images pull'
+  [kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+  [kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+  [kubelet-start] Activating the kubelet service
+  [certs] Using certificateDir folder "/etc/kubernetes/pki"
+  [certs] Generating "ca" certificate and key
+  [certs] Generating "apiserver" certificate and key
+  [certs] apiserver serving cert is signed for DNS names [kube01 kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.10.61]
+  [certs] Generating "apiserver-kubelet-client" certificate and key
+  [certs] Generating "front-proxy-ca" certificate and key
+  [certs] Generating "front-proxy-client" certificate and key
+  [certs] Generating "etcd/ca" certificate and key
+  [certs] Generating "apiserver-etcd-client" certificate and key
+  [certs] Generating "etcd/server" certificate and key
+  [certs] etcd/server serving cert is signed for DNS names [kube01 localhost] and IPs [192.168.10.61 127.0.0.1 ::1]
+  [certs] Generating "etcd/peer" certificate and key
+  [certs] etcd/peer serving cert is signed for DNS names [kube01 localhost] and IPs [192.168.10.61 127.0.0.1 ::1]
+  [certs] Generating "etcd/healthcheck-client" certificate and key
+  [certs] Generating "sa" key and public key
+  [kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+  [kubeconfig] Writing "admin.conf" kubeconfig file
+  [kubeconfig] Writing "kubelet.conf" kubeconfig file
+  [kubeconfig] Writing "controller-manager.conf" kubeconfig file
+  [kubeconfig] Writing "scheduler.conf" kubeconfig file
+  [control-plane] Using manifest folder "/etc/kubernetes/manifests"
+  [control-plane] Creating static Pod manifest for "kube-apiserver"
+  [control-plane] Creating static Pod manifest for "kube-controller-manager"
+  [control-plane] Creating static Pod manifest for "kube-scheduler"
+  [etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+  [wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+  [apiclient] All control plane components are healthy after 23.512869 seconds
+  [uploadconfig] storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+  [kubelet] Creating a ConfigMap "kubelet-config-1.13" in namespace kube-system with the configuration for the kubelets in the cluster
+  [patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "kube01" as an annotation
+  [mark-control-plane] Marking the node kube01 as control-plane by adding the label "node-role.kubernetes.io/master=''"
+  [mark-control-plane] Marking the node kube01 as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+  [bootstrap-token] Using token: blcr1y.49wloegyaugice8a
+  [bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+  [bootstraptoken] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+  [bootstraptoken] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+  [bootstraptoken] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+  [bootstraptoken] creating the "cluster-info" ConfigMap in the "kube-public" namespace
+  [addons] Applied essential addon: CoreDNS
+  [addons] Applied essential addon: kube-proxy
 
-```[init] Using Kubernetes version: v1.13.2
-[preflight] Running pre-flight checks
-[preflight] Pulling images required for setting up a Kubernetes cluster
-[preflight] This might take a minute or two, depending on the speed of your internet connection
-[preflight] You can also perform this action in beforehand using 'kubeadm config images pull'
-[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
-[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
-[kubelet-start] Activating the kubelet service
-[certs] Using certificateDir folder "/etc/kubernetes/pki"
-[certs] Generating "ca" certificate and key
-[certs] Generating "apiserver" certificate and key
-[certs] apiserver serving cert is signed for DNS names [kube01 kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.10.61]
-[certs] Generating "apiserver-kubelet-client" certificate and key
-[certs] Generating "front-proxy-ca" certificate and key
-[certs] Generating "front-proxy-client" certificate and key
-[certs] Generating "etcd/ca" certificate and key
-[certs] Generating "apiserver-etcd-client" certificate and key
-[certs] Generating "etcd/server" certificate and key
-[certs] etcd/server serving cert is signed for DNS names [kube01 localhost] and IPs [192.168.10.61 127.0.0.1 ::1]
-[certs] Generating "etcd/peer" certificate and key
-[certs] etcd/peer serving cert is signed for DNS names [kube01 localhost] and IPs [192.168.10.61 127.0.0.1 ::1]
-[certs] Generating "etcd/healthcheck-client" certificate and key
-[certs] Generating "sa" key and public key
-[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
-[kubeconfig] Writing "admin.conf" kubeconfig file
-[kubeconfig] Writing "kubelet.conf" kubeconfig file
-[kubeconfig] Writing "controller-manager.conf" kubeconfig file
-[kubeconfig] Writing "scheduler.conf" kubeconfig file
-[control-plane] Using manifest folder "/etc/kubernetes/manifests"
-[control-plane] Creating static Pod manifest for "kube-apiserver"
-[control-plane] Creating static Pod manifest for "kube-controller-manager"
-[control-plane] Creating static Pod manifest for "kube-scheduler"
-[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
-[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
-[apiclient] All control plane components are healthy after 23.512869 seconds
-[uploadconfig] storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
-[kubelet] Creating a ConfigMap "kubelet-config-1.13" in namespace kube-system with the configuration for the kubelets in the cluster
-[patchnode] Uploading the CRI Socket information "/var/run/dockershim.sock" to the Node API object "kube01" as an annotation
-[mark-control-plane] Marking the node kube01 as control-plane by adding the label "node-role.kubernetes.io/master=''"
-[mark-control-plane] Marking the node kube01 as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
-[bootstrap-token] Using token: blcr1y.49wloegyaugice8a
-[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
-[bootstraptoken] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
-[bootstraptoken] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
-[bootstraptoken] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
-[bootstraptoken] creating the "cluster-info" ConfigMap in the "kube-public" namespace
-[addons] Applied essential addon: CoreDNS
-[addons] Applied essential addon: kube-proxy
+  Your Kubernetes master has initialized successfully!
 
-Your Kubernetes master has initialized successfully!
+  To start using your cluster, you need to run the following as a regular user:
 
-To start using your cluster, you need to run the following as a regular user:
+    mkdir -p $HOME/.kube
+    sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  You should now deploy a pod network to the cluster.
+  Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+    https://kubernetes.io/docs/concepts/cluster-administration/addons/
 
-You should now deploy a pod network to the cluster.
-Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
-  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+  You can now join any number of machines by running the following on each node as root:
 
-You can now join any number of machines by running the following on each node
-as root:
-
-kubeadm join 192.168.10.61:6443 --token blcr1y.49wloegyaugice8a --discovery-token-ca-cert-hash sha256:0505933664d28054a62298c68dc91e9b2b5cf01ecfa2228f3c8fa2412b7a78c8
+  kubeadm join 192.168.10.61:6443 --token blcr1y.49wloegyaugice8a --discovery-token-ca-cert-hash sha256:0505933664d28054a62298c68dc91e9b2b5cf01ecfa2228f3c8fa2412b7a78c8
 ```
 
 Go ahead and do as above instructed and see into getting kubectl to work on the master:
 
 ```
-kube01:~ > mkdir -p $HOME/.kube
-kube01:~ > sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-kube01:~ > sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 ## Deploy a pod network
@@ -105,9 +103,10 @@ kube01:~ > sudo chown $(id -u):$(id -g) $HOME/.kube/config
 For this guide, we go with **flannel**, as it is an easy way of setting up a layer 3 network, which uses the Kubernetes API and just works anywhere, where a network between the involved machines works:
 
 ```
-kube01:~ > kubectl apply -f \ 
+kubectl apply -f \ 
    https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
-
+```
+```
   clusterrole.rbac.authorization.k8s.io/flannel created
   clusterrolebinding.rbac.authorization.k8s.io/flannel created
   serviceaccount/flannel created
@@ -124,7 +123,9 @@ kube01:~ > kubectl apply -f \
 Run the above join commands on the nodes `kube02` and `kube03`. Below is the output on `kube02` for the setup for this guide:
 
 ```
-kube02:~ > sudo kubeadm join 192.168.10.61:6443 --token blcr1y.49wloegyaugice8a --discovery-token-ca-cert-hash sha256:0505933664d28054a62298c68dc91e9b2b5cf01ecfa2228f3c8fa2412b7a78c8
+sudo kubeadm join 192.168.10.61:6443 --token blcr1y.49wloegyaugice8a --discovery-token-ca-cert-hash sha256:0505933664d28054a62298c68dc91e9b2b5cf01ecfa2228f3c8fa2412b7a78c8
+```
+```
   [preflight] Running pre-flight checks
   [discovery] Trying to connect to API Server "192.168.10.61:6443"
   [discovery] Created cluster-info discovery client, requesting info from "https:// 192.168.10.61:6443"
@@ -152,7 +153,9 @@ Run 'kubectl get nodes' on the master to see this node join the cluster.
 After some brief period, you should see that your nodes are good to go:
 
 ```
-kube01:~ > kubectl get nodes
+kubectl get nodes
+```
+```
   NAME     STATUS   ROLES    AGE   VERSION
   kube01   Ready    master   38m   v1.13.2
   kube02   Ready    <none>   13m   v1.13.2
@@ -162,7 +165,9 @@ kube01:~ > kubectl get nodes
 Just a quick sanity check to see, that your cluster is up and running:
 
 ```
-kube01:~ > kubectl get all --all-namespaces
+kubectl get all --all-namespaces
+```
+```
   NAMESPACE     NAME                                 READY   STATUS    RESTARTS   AGE
   kube-system   pod/coredns-86c58d9df4-r9l5c         1/1     Running   2          41m
   kube-system   pod/coredns-86c58d9df4-swzpx         1/1     Running   2          41m
@@ -186,21 +191,31 @@ kube01:~ > kubectl get all --all-namespaces
 
 - Obtain current [helm release](https://github.com/helm/helm/releases) for your architecture
 
-- Initialize `helm`
+- Create tiller user
 
   ```
-  kube01:~ > kubectl create serviceaccount --namespace kube-system tiller 
+  kubectl create serviceaccount --namespace kube-system tiller
+  ```
+  ```
     serviceaccount/tiller created
   ```
 
+- Attach `tiller` to proper role
+
   ```
-  kube01:~ > kubectl create clusterrolebinding tiller-cluster-rule \
-        --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  kubectl create clusterrolebinding tiller-cluster-rule \
+    --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  ```
+  ```
     clusterrolebinding.rbac.authorization.k8s.io/tiller-cluster-rule created
   ```
 
+- Initialise helm
+
   ```
-  kube01:~ > helm init --service-account tiller
+  helm init --service-account tiller
+  ```
+  ```
     $HELM_HOME has been configured at /home/xxx/.helm.
     ...
     Happy Helming!
@@ -214,7 +229,9 @@ kube01:~ > kubectl get all --all-namespaces
 - Deploy ArangoDB custom resource definition chart
 
 ```
-kube01:~ > helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-crd.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-crd.tgz
+```
+```
   NAME:   hoping-gorilla
   LAST DEPLOYED: Mon Jan 14 06:10:27 2019
   NAMESPACE: default
@@ -238,7 +255,9 @@ kube01:~ > helm install https://github.com/arangodb/kube-arangodb/releases/downl
 - Deploy ArangoDB operator chart
 
 ```
-kube01:~ > helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb.tgz
+```
+```
   NAME:   illocutionary-whippet
   LAST DEPLOYED: Mon Jan 14 06:11:58 2019
   NAMESPACE: default
@@ -294,59 +313,61 @@ for how to get started.
 - As unlike cloud k8s offerings no file volume infrastructure exists, we need to still deploy the storage operator chart:
 
 ```
-kube01:~ > helm install \ 
+helm install \ 
 	https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-storage.tgz
-NAME:   sad-newt
-LAST DEPLOYED: Mon Jan 14 06:14:15 2019
-NAMESPACE: default
-STATUS: DEPLOYED
+```
+```
+  NAME:   sad-newt
+  LAST DEPLOYED: Mon Jan 14 06:14:15 2019
+  NAMESPACE: default
+  STATUS: DEPLOYED
 
-RESOURCES:
-==> v1/ServiceAccount
-NAME                     SECRETS  AGE
-arango-storage-operator  1        1s
+  RESOURCES:
+  ==> v1/ServiceAccount
+  NAME                     SECRETS  AGE
+  arango-storage-operator  1        1s
 
-==> v1beta1/CustomResourceDefinition
-NAME                                      AGE
-arangolocalstorages.storage.arangodb.com  1s
+  ==> v1beta1/CustomResourceDefinition
+  NAME                                      AGE
+  arangolocalstorages.storage.arangodb.com  1s
 
-==> v1beta1/ClusterRole
-NAME                       AGE
-sad-newt-storages          1s
-sad-newt-storage-operator  1s
+  ==> v1beta1/ClusterRole
+  NAME                       AGE
+  sad-newt-storages          1s
+  sad-newt-storage-operator  1s
 
-==> v1beta1/ClusterRoleBinding
-NAME                       AGE
-sad-newt-storage-operator  1s
+  ==> v1beta1/ClusterRoleBinding
+  NAME                       AGE
+  sad-newt-storage-operator  1s
 
-==> v1beta1/RoleBinding
-NAME               AGE
-sad-newt-storages  1s
+  ==> v1beta1/RoleBinding
+  NAME               AGE
+  sad-newt-storages  1s
 
-==> v1/Service
-NAME                     TYPE       CLUSTER-IP      EXTERNAL-IP  PORT(S)   AGE
-arango-storage-operator  ClusterIP  10.104.172.100  <none>       8528/TCP  1s
+  ==> v1/Service
+  NAME                     TYPE       CLUSTER-IP      EXTERNAL-IP  PORT(S)   AGE
+  arango-storage-operator  ClusterIP  10.104.172.100  <none>       8528/TCP  1s
 
-==> v1beta1/Deployment
-NAME                     DESIRED  CURRENT  UP-TO-DATE  AVAILABLE  AGE
-arango-storage-operator  2        2        2           0          1s
+  ==> v1beta1/Deployment
+  NAME                     DESIRED  CURRENT  UP-TO-DATE  AVAILABLE  AGE
+  arango-storage-operator  2        2        2           0          1s
 
-==> v1/Pod(related)
-NAME                                      READY  STATUS             RESTARTS  AGE
-arango-storage-operator-6bc64ccdfb-tzllq  0/1    ContainerCreating  0         0s
-arango-storage-operator-6bc64ccdfb-zdlxk  0/1    Pending            0         0s
+  ==> v1/Pod(related)
+  NAME                                      READY  STATUS             RESTARTS  AGE
+  arango-storage-operator-6bc64ccdfb-tzllq  0/1    ContainerCreating  0         0s
+  arango-storage-operator-6bc64ccdfb-zdlxk  0/1    Pending            0         0s
 
 
-NOTES:
+  NOTES:
 
-kube-arangodb-storage has been deployed successfully!
+  kube-arangodb-storage has been deployed successfully!
 
-Your release is named 'sad-newt'.
+  Your release is named 'sad-newt'.
 
-You can now deploy an ArangoLocalStorage resource.
+  You can now deploy an ArangoLocalStorage resource.
 
-See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
-for further instructions.
+  See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
+  for further instructions.
 
 ```
 ## Deploy ArangoDB cluster
@@ -354,14 +375,18 @@ for further instructions.
 - Deploy local storage
 
 ```
-kube01:~ > kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/master/examples/arango-local-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/master/examples/arango-local-storage.yaml
+```
+```  
   arangolocalstorage.storage.arangodb.com/arangodb-local-storage created
 ``` 
 
 - Deploy simple cluster
 
 ```
-kube01:~ > kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/master/examples/simple-cluster.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/master/examples/simple-cluster.yaml
+```
+```
   arangodeployment.database.arangodb.com/example-simple-cluster created
 ```
 
@@ -370,14 +395,16 @@ kube01:~ > kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-aran
 - Find your cluster's network address:
 
 ```
-kube01:~ > kubectl get services
-NAME                                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-arango-deployment-operator               ClusterIP   10.104.189.81   <none>        8528/TCP         14m
-arango-deployment-replication-operator   ClusterIP   10.107.2.133    <none>        8528/TCP         14m
-example-simple-cluster                   ClusterIP   10.109.170.64   <none>        8529/TCP         5m18s
-example-simple-cluster-ea                NodePort    10.98.198.7     <none>        8529:30551/TCP   4m8s
-example-simple-cluster-int               ClusterIP   None            <none>        8529/TCP         5m19s
-kubernetes                               ClusterIP   10.96.0.1       <none>        443/TCP          69m
+kubectl get services
+```
+```
+  NAME                                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+  arango-deployment-operator               ClusterIP   10.104.189.81   <none>        8528/TCP         14m
+  arango-deployment-replication-operator   ClusterIP   10.107.2.133    <none>        8528/TCP         14m
+  example-simple-cluster                   ClusterIP   10.109.170.64   <none>        8529/TCP         5m18s
+  example-simple-cluster-ea                NodePort    10.98.198.7     <none>        8529:30551/TCP   4m8s
+  example-simple-cluster-int               ClusterIP   None            <none>        8529/TCP         5m19s
+  kubernetes                               ClusterIP   10.96.0.1       <none>        443/TCP          69m
 ```
 
 - In this case, according to the access service, `example-simple-cluster-ea`, the cluster's coordinators are reachable here:
@@ -391,8 +418,10 @@ For this guide we like to use the `metallb` load balancer, which can be easiy in
 - install the `metalllb` controller: 
 
 ```
-kube01:~ > kubectl apply -f \
+kubectl apply -f \
 	https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb.yaml
+```
+```
   namespace/metallb-system created
   serviceaccount/controller created
   serviceaccount/speaker created
@@ -409,10 +438,10 @@ kube01:~ > kubectl apply -f \
 - Deploy network range configurator. Assuming that the range for the IP addresses, which are granted to `metalllb` for load balancing is 192.168.10.224/28, download the [exmample layer2 configurator](https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/example-layer2-config.yaml).
 
 ```
-kube01:~ > wget https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/example-layer2-config.yaml
+wget https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/example-layer2-config.yaml
 ```
 
-- Edit the `example-layer2-config.yaml` file to use the according addresses:
+- Edit the `example-layer2-config.yaml` file to use the according addresses. Do this with great care, as YAML files are indention sensitive.  
 
 ```
 apiVersion: v1
@@ -432,22 +461,27 @@ data:
 - deploy the configuration map:
 
 ```
-kube01:~ > kubectl apply -f example-layer2-config.yaml
-configmap/config created
+kubectl apply -f example-layer2-config.yaml
+```
+```
+  configmap/config created
 ```
 
 - restart ArangoDB's endpoint access service:
 
 ```
-kube01:~ > kubectl delete service example-simple-cluster-ea
+kubectl delete service example-simple-cluster-ea
+```
+```
   service "example-simple-cluster-ea" deleted
 ```
 
 - watch, how the service goes from `Nodeport` to `LoadBalancer` the output above 
 
 ```
-kube01:~ > kubectl get services
-  NAME                                     TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
+kubectl get services
+```
+```  NAME                                     TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
   arango-deployment-operator               ClusterIP      10.104.189.81   <none>           8528/TCP         34m
   arango-deployment-replication-operator   ClusterIP      10.107.2.133    <none>           8528/TCP         34m
   example-simple-cluster                   ClusterIP      10.109.170.64   <none>           8529/TCP         24m
