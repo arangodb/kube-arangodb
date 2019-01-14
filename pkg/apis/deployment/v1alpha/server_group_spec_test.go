@@ -48,6 +48,12 @@ func TestServerGroupSpecValidateCount(t *testing.T) {
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
 	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
 
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2), MinCount: util.NewInt(2), MaxCount: util.NewInt(5)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(1), MaxCount: util.NewInt(5)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(6), MinCount: util.NewInt(2)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(5), MinCount: util.NewInt(5), MaxCount: util.NewInt(5)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Nil(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+
 	// Invalid
 	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupSingle, false, DeploymentModeCluster, EnvironmentDevelopment))
 	assert.Error(t, ServerGroupSpec{Count: util.NewInt(2)}.Validate(ServerGroupSingle, true, DeploymentModeSingle, EnvironmentDevelopment))
@@ -70,6 +76,11 @@ func TestServerGroupSpecValidateCount(t *testing.T) {
 	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentProduction))
 	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupSyncMasters, true, DeploymentModeCluster, EnvironmentProduction))
 	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1)}.Validate(ServerGroupSyncWorkers, true, DeploymentModeCluster, EnvironmentProduction))
+
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(2), MinCount: util.NewInt(5), MaxCount: util.NewInt(1)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(6), MaxCount: util.NewInt(5)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+	assert.Error(t, ServerGroupSpec{Count: util.NewInt(1), MinCount: util.NewInt(2)}.Validate(ServerGroupCoordinators, true, DeploymentModeCluster, EnvironmentDevelopment))
+
 }
 
 func TestServerGroupSpecDefault(t *testing.T) {

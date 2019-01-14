@@ -630,6 +630,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.MinCount != nil {
+		in, out := &in.MinCount, &out.MinCount
+		*out = new(int)
+		**out = **in
+	}
+	if in.MaxCount != nil {
+		in, out := &in.MaxCount, &out.MaxCount
+		*out = new(int)
+		**out = **in
+	}
 	if in.Args != nil {
 		in, out := &in.Args, &out.Args
 		*out = make([]string, len(*in))
