@@ -101,6 +101,7 @@ func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, u
 	}
 }
 
+// bootstrapUserPassword loads the password for the given user and updates the password stored in the database
 func (d *Deployment) bootstrapUserPassword(client driver.Client, secrets k8sutil.SecretInterface, username, secretname string) error {
 
 	d.deps.Log.Debug().Msgf("Bootstrapping user %s, secret %s", username, secretname)
@@ -111,16 +112,16 @@ func (d *Deployment) bootstrapUserPassword(client driver.Client, secrets k8sutil
 	}
 
 	// Obtain the user
-	user, err := client.User(nil, username)
-	if driver.IsNotFound(err) {
+	if user, err := client.User(nil, username); driver.IsNotFound(err) {
 		_, err := client.CreateUser(nil, username, &driver.UserOptions{Password: password})
 		return maskAny(err)
 	} else if err == nil {
 		return maskAny(user.Update(nil, driver.UserOptions{
 			Password: password,
 		}))
+	} else {
+		return err
 	}
-	return err
 }
 
 // runBootstrap is run for a deployment once
