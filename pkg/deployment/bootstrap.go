@@ -46,6 +46,10 @@ func (d *Deployment) EnsureBootstrap() error {
 	status, version := d.GetStatus()
 
 	if status.Conditions.IsTrue(api.ConditionTypeReady) {
+		if _, hasBootstrap := status.Conditions.Get(api.ConditionTypeBoostrapCompleted); !hasBootstrap {
+			return nil // The cluster was not initialised with ConditionTypeBoostrapCompleted == false
+		}
+
 		if status.Conditions.IsTrue(api.ConditionTypeBoostrapCompleted) {
 			return nil // Nothing to do, already bootstrapped
 		}
@@ -68,6 +72,7 @@ func (d *Deployment) EnsureBootstrap() error {
 	return nil
 }
 
+// ensureRootUserPassword ensures the root user secret and returns the password specified or generated
 func (d *Deployment) ensureRootUserPassword() (string, error) {
 
 	spec := d.GetSpec()
@@ -98,6 +103,7 @@ func (d *Deployment) ensureRootUserPassword() (string, error) {
 	}
 }
 
+// runBootstrap is run for a deployment once
 func (d *Deployment) runBootstrap() error {
 
 	// execute the boostrap code
@@ -118,10 +124,9 @@ func (d *Deployment) runBootstrap() error {
 		return maskAny(err)
 	}
 
-	err = root.Update(nil, driver.UserOptions{
+	if err = root.Update(nil, driver.UserOptions{
 		Password: password,
-	})
-	if err != nil {
+	}); err != nil {
 		return maskAny(err)
 	}
 
