@@ -73,34 +73,54 @@ func (d *Deployment) EnsureBootstrap() error {
 }
 
 // ensureRootUserPassword ensures the root user secret and returns the password specified or generated
-func (d *Deployment) ensureRootUserPassword() (string, error) {
+func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, username, secretName string) (string, error) {
 
-	spec := d.GetSpec()
-	secrets := d.GetKubeCli().CoreV1().Secrets(d.Namespace())
-	if auth, err := secrets.Get(spec.GetRootUserAccessSecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	if auth, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Create new one
 		tokenData := make([]byte, 32)
 		rand.Read(tokenData)
 		token := hex.EncodeToString(tokenData)
 		owner := d.GetAPIObject().AsOwner()
 
-		if err := k8sutil.CreateBasicAuthSecret(secrets, spec.GetRootUserAccessSecretName(), rootUserName, token, &owner); err != nil {
+		if err := k8sutil.CreateBasicAuthSecret(secrets, secretName, username, token, &owner); err != nil {
 			return "", err
 		}
 
 		return token, nil
 	} else if err == nil {
 		user, ok := auth.Data[constants.SecretUsername]
-		if ok && string(user) == rootUserName {
+		if ok && string(user) == username {
 			pass, ok := auth.Data[constants.SecretPassword]
 			if ok {
 				return string(pass), nil
 			}
 		}
-		return "", fmt.Errorf("invalid secret format")
+		return "", fmt.Errorf("invalid secret format in secret %s", secretName)
 	} else {
 		return "", err
 	}
+}
+
+func (d *Deployment) bootstrapUserPassword(client driver.Client, secrets k8sutil.SecretInterface, username, secretname string) error {
+
+	d.deps.Log.Debug().Msgf("Bootstrapping user %s, secret %s", username, secretname)
+
+	password, err := d.ensureUserPasswordSecret(secrets, username, secretname)
+	if err != nil {
+		return maskAny(err)
+	}
+
+	// Obtain the user
+	user, err := client.User(nil, username)
+	if driver.IsNotFound(err) {
+		_, err := client.CreateUser(nil, username, &driver.UserOptions{Password: password})
+		return maskAny(err)
+	} else if err == nil {
+		return maskAny(user.Update(nil, driver.UserOptions{
+			Password: password,
+		}))
+	}
+	return err
 }
 
 // runBootstrap is run for a deployment once
@@ -113,21 +133,16 @@ func (d *Deployment) runBootstrap() error {
 		return maskAny(err)
 	}
 
-	password, err := d.ensureRootUserPassword()
-	if err != nil {
-		return maskAny(err)
-	}
+	spec := d.GetSpec()
+	secrets := d.GetKubeCli().CoreV1().Secrets(d.Namespace())
 
-	// Obtain the root user
-	root, err := client.User(nil, rootUserName)
-	if err != nil {
-		return maskAny(err)
-	}
-
-	if err = root.Update(nil, driver.UserOptions{
-		Password: password,
-	}); err != nil {
-		return maskAny(err)
+	for user, secret := range spec.Bootstrap.PasswordSecretNames {
+		if secret == api.PasswordSecretNameNone {
+			continue
+		}
+		if err := d.bootstrapUserPassword(client, secrets, user, secret); err != nil {
+			return maskAny(err)
+		}
 	}
 
 	return nil

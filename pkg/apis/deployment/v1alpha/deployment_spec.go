@@ -26,7 +26,6 @@ import (
 	"reflect"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	"k8s.io/api/core/v1"
 )
@@ -72,7 +71,7 @@ type DeploymentSpec struct {
 
 	Chaos ChaosSpec `json:"chaos"`
 
-	RootUserAccessSecretName *string `json:"rootUserAccessSecretName,omitempty"`
+	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
 }
 
 // Equal compares two DeploymentSpec
@@ -133,10 +132,6 @@ func (s DeploymentSpec) IsSecure() bool {
 	return s.TLS.IsSecure()
 }
 
-func (s DeploymentSpec) GetRootUserAccessSecretName() string {
-	return util.StringOrDefault(s.RootUserAccessSecretName)
-}
-
 // GetServerGroupSpec returns the server group spec (from this
 // deployment spec) for the given group.
 func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
@@ -187,9 +182,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode())
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
 	s.Chaos.SetDefaults()
-	if s.GetRootUserAccessSecretName() == "" {
-		s.RootUserAccessSecretName = util.NewString(deploymentName + "-root-access")
-	}
+	s.Bootstrap.SetDefaults(deploymentName)
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -215,9 +208,6 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	if s.DisableIPv6 == nil {
 		s.DisableIPv6 = util.NewBoolOrNil(source.DisableIPv6)
 	}
-	if s.RootUserAccessSecretName == nil {
-		s.RootUserAccessSecretName = util.NewStringOrNil(source.RootUserAccessSecretName)
-	}
 	s.License.SetDefaultsFrom(source.License)
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.RocksDB.SetDefaultsFrom(source.RocksDB)
@@ -231,6 +221,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
 	s.Chaos.SetDefaultsFrom(source.Chaos)
+	s.Bootstrap.SetDefaultsFrom(source.Bootstrap)
 }
 
 // Validate the specification.
@@ -290,7 +281,7 @@ func (s *DeploymentSpec) Validate() error {
 	if err := s.License.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.licenseKey"))
 	}
-	if err := k8sutil.ValidateResourceName(s.GetRootUserAccessSecretName()); err != nil {
+	if err := s.Bootstrap.Validate(); err != nil {
 		return maskAny(err)
 	}
 	return nil
