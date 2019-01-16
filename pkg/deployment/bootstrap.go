@@ -138,10 +138,10 @@ func (d *Deployment) runBootstrap() error {
 	secrets := d.GetKubeCli().CoreV1().Secrets(d.Namespace())
 
 	for user, secret := range spec.Bootstrap.PasswordSecretNames {
-		if secret == api.PasswordSecretNameNone {
+		if secret.IsNone() {
 			continue
 		}
-		if err := d.bootstrapUserPassword(client, secrets, user, secret); err != nil {
+		if err := d.bootstrapUserPassword(client, secrets, user, string(secret)); err != nil {
 			return maskAny(err)
 		}
 	}
