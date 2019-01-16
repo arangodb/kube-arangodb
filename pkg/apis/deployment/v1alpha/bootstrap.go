@@ -50,12 +50,12 @@ type BootstrapSpec struct {
 
 // IsNone returns ture if p is empty or None
 func (p PasswordSecretName) IsNone() bool {
-	return p == PasswordSecretNameNone || p == ""
+	return p == PasswordSecretNameNone
 }
 
 // IsAuto returns ture if p is Auto
 func (p PasswordSecretName) IsAuto() bool {
-	return p == PasswordSecretNameAuto
+	return p == PasswordSecretNameAuto || p == ""
 }
 
 // Validate validates the password secret name
