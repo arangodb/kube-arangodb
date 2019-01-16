@@ -342,6 +342,46 @@ This setting specifies the name of a kubernetes `Secret` that contains
 the license key token used for enterprise images. This value is not used for
 the community edition.
 
+### `spec.bootstrap.passwordSecretNames.root: string`
+
+This setting specifies a secret name for the credentials of the root user.
+
+When a deployment is created the operator will setup the root user account 
+according to the credentials given by the secret. If the secret doesn't exist
+the operator creates a secret with a random password.
+
+There are two magic values for the secret name:
+- `None` specifies no action. This disables root password randomization. (Thus the root password is empty - not recommended)
+- `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`. This is the default value. 
+
+<!--
+### `spec.bootstrap.passwordSecretNames: map[string]string`
+
+This setting specifies a map of usernames and secretnames. When a deployment is created
+the operator will setup user accounts accoring to the credentials given by the secrets.
+If the secret does not exists, the operator will create a secret with a random password.
+
+There are two magic values for the secret name: 
+`Auto` specifies automatic name generation for the secret, which is `<deploymentname>-<username>-password`.
+`None` specifies no action. This is used to disable randomizing the root password.
+
+The default value is `root: Auto`. If `root` is not specified in `passwordSecretNames` it defaults to `Auto`.
+
+Examples:
+```yaml
+  # to disable randomizing the root password
+  bootstrap:
+    passwordSecretNames:
+      root: None
+
+----
+
+  # randomize root password, create user account `somebody` and store its credentials in `my-password-for-arangodb`.
+  bootstrap:
+    passwordSecretNames:
+      somebody: my-password-for-arangodb
+```
+-->
 ### `spec.<group>.count: number`
 
 This setting specifies the number of servers to start for the given group.

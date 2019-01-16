@@ -21,6 +21,8 @@
 package v1alpha
 
 import (
+	"fmt"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -48,23 +50,18 @@ type BootstrapSpec struct {
 	PasswordSecretNames PasswordSecretNameList `json:"passwordSecretNames,omitempty"`
 }
 
-// IsNone returns ture if p is empty or None
+// IsNone returns true if p is None
 func (p PasswordSecretName) IsNone() bool {
 	return p == PasswordSecretNameNone
 }
 
-// IsAuto returns ture if p is Auto
+// IsAuto returns true if p is Auto or p is empty
 func (p PasswordSecretName) IsAuto() bool {
 	return p == PasswordSecretNameAuto || p == ""
 }
 
 // Validate validates the password secret name
 func (p PasswordSecretName) Validate() error {
-	if !p.IsNone() {
-		if err := k8sutil.ValidateResourceName(string(p)); err != nil {
-			return maskAny(err)
-		}
-	}
 
 	return nil
 }
@@ -86,7 +83,21 @@ func getSecretNameForUserPassword(deploymentname, username string) PasswordSecre
 
 // Validate the specification.
 func (b *BootstrapSpec) Validate() error {
-	for _, secretname := range b.PasswordSecretNames {
+	for username, secretname := range b.PasswordSecretNames {
+		// Remove this restriction as soon as we can bootstrap databases
+		if username != UserNameRoot {
+			return fmt.Errorf("only username `root` allowed in passwordSecretNames")
+		}
+
+		if secretname.IsNone() {
+			if username != UserNameRoot {
+				return fmt.Errorf("magic value None not allowed for %s", username)
+			}
+		} else {
+			if err := k8sutil.ValidateResourceName(string(secretname)); err != nil {
+				return maskAny(err)
+			}
+		}
 		if err := secretname.Validate(); err != nil {
 			return err
 		}
@@ -98,27 +109,18 @@ func (b *BootstrapSpec) Validate() error {
 // SetDefaults fills in default values when a field is not specified.
 func (b *BootstrapSpec) SetDefaults(deploymentname string) {
 	if b.PasswordSecretNames == nil {
-		b.PasswordSecretNames = PasswordSecretNameList{
-			UserNameRoot: getSecretNameForUserPassword(deploymentname, UserNameRoot),
-		}
-	} else {
-		// Check if root is specified
-		if secretname, ok := b.PasswordSecretNames[UserNameRoot]; ok {
-			if secretname.IsAuto() {
-				b.PasswordSecretNames[UserNameRoot] = getSecretNameForUserPassword(deploymentname, UserNameRoot)
-			}
-		} else {
-			// implicit default
-			b.PasswordSecretNames[UserNameRoot] = getSecretNameForUserPassword(deploymentname, UserNameRoot)
-		}
+		b.PasswordSecretNames = make(map[string]PasswordSecretName)
+	}
 
-		// Now fill in values for all users
-		for user, secretname := range b.PasswordSecretNames {
-			if user != UserNameRoot {
-				if secretname.IsAuto() {
-					b.PasswordSecretNames[user] = getSecretNameForUserPassword(deploymentname, user)
-				}
-			}
+	// If root is not set init with Auto
+	if _, ok := b.PasswordSecretNames[UserNameRoot]; !ok {
+		b.PasswordSecretNames[UserNameRoot] = PasswordSecretNameAuto
+	}
+
+	// Replace Auto with generated secret name
+	for user, secretname := range b.PasswordSecretNames {
+		if secretname.IsAuto() {
+			b.PasswordSecretNames[user] = getSecretNameForUserPassword(deploymentname, user)
 		}
 	}
 }
