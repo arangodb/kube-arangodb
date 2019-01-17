@@ -17,7 +17,6 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"strings"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/build/autocertcache"
@@ -43,7 +42,7 @@ func certInitAutocert() {
 	}
 	autocertManager = &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(strings.Split(*autoCertDomain, ",")...),
+		HostPolicy: autocert.HostWhitelist(*autoCertDomain),
 		Cache:      cache,
 	}
 }

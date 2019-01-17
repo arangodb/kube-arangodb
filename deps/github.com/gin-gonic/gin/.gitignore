@@ -3,5 +3,3 @@ vendor/*
 coverage.out
 count.out
 test
-profile.out
-tmp.out

@@ -3,7 +3,6 @@ package flags
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -27,8 +26,6 @@ type helpOptions struct {
 	OptionWithChoices string            `long:"opt-with-choices" value-name:"choice" choice:"dog" choice:"cat" description:"Option with choices"`
 	Hidden            string            `long:"hidden" description:"Hidden option" hidden:"yes"`
 
-	HiddenOptionWithVeryLongName bool `long:"this-hidden-option-has-a-ridiculously-long-name" hidden:"yes"`
-
 	OnlyIni string `ini-name:"only-ini" description:"Option only available in ini"`
 
 	Other struct {
@@ -38,12 +35,7 @@ type helpOptions struct {
 
 	HiddenGroup struct {
 		InsideHiddenGroup string `long:"inside-hidden-group" description:"Inside hidden group"`
-		Padder            bool   `long:"this-option-in-a-hidden-group-has-a-ridiculously-long-name"`
 	} `group:"Hidden group" hidden:"yes"`
-
-	GroupWithOnlyHiddenOptions struct {
-		SecretFlag bool `long:"secret" description:"Hidden flag in a non-hidden group" hidden:"yes"`
-	} `group:"Non-hidden group with only hidden options"`
 
 	Group struct {
 		Opt                  string `long:"opt" description:"This is a subgroup option"`
@@ -54,10 +46,6 @@ type helpOptions struct {
 			Opt string `long:"opt" description:"This is a subsubgroup option"`
 		} `group:"Subsubgroup" namespace:"sap"`
 	} `group:"Subgroup" namespace:"sip"`
-
-	Bommand struct {
-		Hidden bool `long:"hidden" description:"A hidden option" hidden:"yes"`
-	} `command:"bommand" description:"A command with only hidden options"`
 
 	Command struct {
 		ExtraVerbose []bool `long:"extra-verbose" description:"Use for extra verbosity"`
@@ -100,7 +88,7 @@ func TestHelp(t *testing.T) {
 
 		if runtime.GOOS == "windows" {
 			expected = `Usage:
-  TestHelp [OPTIONS] [filename] [num] [hidden-in-help] <bommand | command>
+  TestHelp [OPTIONS] [filename] [num] [hidden-in-help] <command>
 
 Application Options:
   /v, /verbose                              Show verbose debug information
@@ -143,12 +131,11 @@ Arguments:
   num:                                      A number
 
 Available commands:
-  bommand  A command with only hidden options
   command  A command (aliases: cm, cmd)
 `
 		} else {
 			expected = `Usage:
-  TestHelp [OPTIONS] [filename] [num] [hidden-in-help] <bommand | command>
+  TestHelp [OPTIONS] [filename] [num] [hidden-in-help] <command>
 
 Application Options:
   -v, --verbose                             Show verbose debug information
@@ -190,7 +177,6 @@ Arguments:
   num:                                      A number
 
 Available commands:
-  bommand  A command with only hidden options
   command  A command (aliases: cm, cmd)
 `
 		}
@@ -210,9 +196,7 @@ func TestMan(t *testing.T) {
 	p.LongDescription = "This is a somewhat `longer' description of what this does"
 	p.AddGroup("Application Options", "The application options", &opts)
 
-	for _, cmd := range p.Commands() {
-		cmd.LongDescription = fmt.Sprintf("Longer `%s' description", cmd.Name)
-	}
+	p.Commands()[0].LongDescription = "Longer `command' description"
 
 	var buf bytes.Buffer
 	p.WriteManPage(&buf)
@@ -290,10 +274,6 @@ Not hidden inside group
 \fB\fB\-\-sip.sap.opt\fR\fP
 This is a subsubgroup option
 .SH COMMANDS
-.SS bommand
-A command with only hidden options
-
-Longer \fBbommand\fP description
 .SS command
 A command
 
@@ -554,27 +534,5 @@ func TestHelpDefaultMask(t *testing.T) {
 		if strings.Index(h.String(), test.present) < 0 {
 			t.Errorf("Not present %q\n%s", test.present, h.String())
 		}
-	}
-}
-
-func TestWroteHelp(t *testing.T) {
-	type testInfo struct {
-		value  error
-		isHelp bool
-	}
-	tests := map[string]testInfo{
-		"No error":    testInfo{value: nil, isHelp: false},
-		"Plain error": testInfo{value: errors.New("an error"), isHelp: false},
-		"ErrUnknown":  testInfo{value: newError(ErrUnknown, "an error"), isHelp: false},
-		"ErrHelp":     testInfo{value: newError(ErrHelp, "an error"), isHelp: true},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			res := WroteHelp(test.value)
-			if test.isHelp != res {
-				t.Errorf("Expected %t, got %t", test.isHelp, res)
-			}
-		})
 	}
 }

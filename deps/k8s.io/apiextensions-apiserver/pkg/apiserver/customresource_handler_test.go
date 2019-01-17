@@ -79,24 +79,14 @@ func TestConvertFieldLabel(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			crd := apiextensions.CustomResourceDefinition{
-				Spec: apiextensions.CustomResourceDefinitionSpec{
-					Conversion: &apiextensions.CustomResourceConversion{
-						Strategy: "None",
-					},
-				},
-			}
+			crd := apiextensions.CustomResourceDefinition{}
 
 			if test.clusterScoped {
 				crd.Spec.Scope = apiextensions.ClusterScoped
 			} else {
 				crd.Spec.Scope = apiextensions.NamespaceScoped
 			}
-			f, err := conversion.NewCRConverterFactory(nil, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			_, c, err := f.NewConverter(&crd)
+			_, c := conversion.NewCRDConverter(&crd)
 
 			label, value, err := c.ConvertFieldLabel(schema.GroupVersionKind{}, test.label, "value")
 			if e, a := test.expectError, err != nil; e != a {

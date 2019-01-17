@@ -186,11 +186,11 @@ update-vendor:
 		github.com/spf13/cobra \
 		github.com/mitchellh/gox \
 		github.com/estesp/manifest-tool \
-		github.com/arangodb-helper/glog \
 		github.com/stretchr/testify
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
 	# Manually restore arangosync vendor with: git checkout deps/github.com/arangodb/arangosync
+	# Manually restore glog vendor with: git checkout deps/github.com/golang/glog
 
 .PHONY: update-generated
 update-generated: $(GOBUILDDIR) 

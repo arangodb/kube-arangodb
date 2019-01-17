@@ -18,8 +18,9 @@ package filters
 
 import (
 	"net/http"
+	"runtime/debug"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apiserver/pkg/server/httplog"
@@ -27,16 +28,10 @@ import (
 
 // WithPanicRecovery wraps an http Handler to recover and log panics.
 func WithPanicRecovery(handler http.Handler) http.Handler {
-	return withPanicRecovery(handler, func(w http.ResponseWriter, req *http.Request, err interface{}) {
-		http.Error(w, "This request caused apiserver to panic. Look in the logs for details.", http.StatusInternalServerError)
-		klog.Errorf("apiserver panic'd on %v %v", req.Method, req.RequestURI)
-	})
-}
-
-func withPanicRecovery(handler http.Handler, crashHandler func(http.ResponseWriter, *http.Request, interface{})) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer runtime.HandleCrash(func(err interface{}) {
-			crashHandler(w, req, err)
+			http.Error(w, "This request caused apiserver to panic. Look in the logs for details.", http.StatusInternalServerError)
+			glog.Errorf("apiserver panic'd on %v %v: %v\n%s\n", req.Method, req.RequestURI, err, debug.Stack())
 		})
 
 		logger := httplog.NewLogged(req, &w)

@@ -28,7 +28,7 @@ import (
 	"k8s.io/apiserver/pkg/apis/audit/validation"
 	"k8s.io/apiserver/pkg/audit"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 var (
@@ -55,26 +55,17 @@ func LoadPolicyFromFile(filePath string) (*auditinternal.Policy, error) {
 		return nil, fmt.Errorf("failed to read file path %q: %+v", filePath, err)
 	}
 
-	ret, err := LoadPolicyFromBytes(policyDef)
-	if err != nil {
-		return nil, fmt.Errorf("%v: from file %v", err.Error(), filePath)
-	}
-
-	return ret, nil
-}
-
-func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 	policy := &auditinternal.Policy{}
 	decoder := audit.Codecs.UniversalDecoder(apiGroupVersions...)
 
 	_, gvk, err := decoder.Decode(policyDef, nil, policy)
 	if err != nil {
-		return nil, fmt.Errorf("failed decoding: %v", err)
+		return nil, fmt.Errorf("failed decoding file %q: %v", filePath, err)
 	}
 
 	// Ensure the policy file contained an apiVersion and kind.
 	if !apiGroupVersionSet[schema.GroupVersion{Group: gvk.Group, Version: gvk.Version}] {
-		return nil, fmt.Errorf("unknown group version field %v in policy", gvk)
+		return nil, fmt.Errorf("unknown group version field %v in policy file %s", gvk, filePath)
 	}
 
 	if err := validation.ValidatePolicy(policy); err != nil {
@@ -83,8 +74,8 @@ func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 
 	policyCnt := len(policy.Rules)
 	if policyCnt == 0 {
-		return nil, fmt.Errorf("loaded illegal policy with 0 rules")
+		return nil, fmt.Errorf("loaded illegal policy with 0 rules from file %s", filePath)
 	}
-	klog.V(4).Infof("Loaded %d audit policy rules", policyCnt)
+	glog.V(4).Infof("Loaded %d audit policy rules from file %s", policyCnt, filePath)
 	return policy, nil
 }

@@ -129,12 +129,7 @@ func IDFromRequest(r *http.Request) (id xid.ID, ok bool) {
 	if r == nil {
 		return
 	}
-	return IDFromCtx(r.Context())
-}
-
-// IDFromCtx returns the unique id associated to the context if any.
-func IDFromCtx(ctx context.Context) (id xid.ID, ok bool) {
-	id, ok = ctx.Value(idKey{}).(xid.ID)
+	id, ok = r.Context().Value(idKey{}).(xid.ID)
 	return
 }
 

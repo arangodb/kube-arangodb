@@ -22,25 +22,24 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	"k8s.io/api/admissionregistration/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	admissionmetrics "k8s.io/apiserver/pkg/admission/metrics"
+	"k8s.io/apiserver/pkg/admission/plugin/webhook/config"
 	webhookerrors "k8s.io/apiserver/pkg/admission/plugin/webhook/errors"
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/generic"
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/request"
-	"k8s.io/apiserver/pkg/admission/plugin/webhook/util"
-	"k8s.io/apiserver/pkg/util/webhook"
 )
 
 type validatingDispatcher struct {
-	cm *webhook.ClientManager
+	cm *config.ClientManager
 }
 
-func newValidatingDispatcher(cm *webhook.ClientManager) generic.Dispatcher {
+func newValidatingDispatcher(cm *config.ClientManager) generic.Dispatcher {
 	return &validatingDispatcher{cm}
 }
 
@@ -62,19 +61,19 @@ func (d *validatingDispatcher) Dispatch(ctx context.Context, attr *generic.Versi
 			}
 
 			ignoreClientCallFailures := hook.FailurePolicy != nil && *hook.FailurePolicy == v1beta1.Ignore
-			if callErr, ok := err.(*webhook.ErrCallingWebhook); ok {
+			if callErr, ok := err.(*webhookerrors.ErrCallingWebhook); ok {
 				if ignoreClientCallFailures {
-					klog.Warningf("Failed calling webhook, failing open %v: %v", hook.Name, callErr)
+					glog.Warningf("Failed calling webhook, failing open %v: %v", hook.Name, callErr)
 					utilruntime.HandleError(callErr)
 					return
 				}
 
-				klog.Warningf("Failed calling webhook, failing closed %v: %v", hook.Name, err)
+				glog.Warningf("Failed calling webhook, failing closed %v: %v", hook.Name, err)
 				errCh <- apierrors.NewInternalError(err)
 				return
 			}
 
-			klog.Warningf("rejected by webhook %q: %#v", hook.Name, err)
+			glog.Warningf("rejected by webhook %q: %#v", hook.Name, err)
 			errCh <- err
 		}(relevantHooks[i])
 	}
@@ -100,7 +99,7 @@ func (d *validatingDispatcher) Dispatch(ctx context.Context, attr *generic.Versi
 func (d *validatingDispatcher) callHook(ctx context.Context, h *v1beta1.Webhook, attr *generic.VersionedAttributes) error {
 	if attr.IsDryRun() {
 		if h.SideEffects == nil {
-			return &webhook.ErrCallingWebhook{WebhookName: h.Name, Reason: fmt.Errorf("Webhook SideEffects is nil")}
+			return &webhookerrors.ErrCallingWebhook{WebhookName: h.Name, Reason: fmt.Errorf("Webhook SideEffects is nil")}
 		}
 		if !(*h.SideEffects == v1beta1.SideEffectClassNone || *h.SideEffects == v1beta1.SideEffectClassNoneOnDryRun) {
 			return webhookerrors.NewDryRunUnsupportedErr(h.Name)
@@ -109,22 +108,22 @@ func (d *validatingDispatcher) callHook(ctx context.Context, h *v1beta1.Webhook,
 
 	// Make the webhook request
 	request := request.CreateAdmissionReview(attr)
-	client, err := d.cm.HookClient(util.HookClientConfigForWebhook(h))
+	client, err := d.cm.HookClient(h)
 	if err != nil {
-		return &webhook.ErrCallingWebhook{WebhookName: h.Name, Reason: err}
+		return &webhookerrors.ErrCallingWebhook{WebhookName: h.Name, Reason: err}
 	}
 	response := &admissionv1beta1.AdmissionReview{}
 	if err := client.Post().Context(ctx).Body(&request).Do().Into(response); err != nil {
-		return &webhook.ErrCallingWebhook{WebhookName: h.Name, Reason: err}
+		return &webhookerrors.ErrCallingWebhook{WebhookName: h.Name, Reason: err}
 	}
 
 	if response.Response == nil {
-		return &webhook.ErrCallingWebhook{WebhookName: h.Name, Reason: fmt.Errorf("Webhook response was absent")}
+		return &webhookerrors.ErrCallingWebhook{WebhookName: h.Name, Reason: fmt.Errorf("Webhook response was absent")}
 	}
 	for k, v := range response.Response.AuditAnnotations {
 		key := h.Name + "/" + k
 		if err := attr.AddAnnotation(key, v); err != nil {
-			klog.Warningf("Failed to set admission audit annotation %s to %s for validating webhook %s: %v", key, v, h.Name, err)
+			glog.Warningf("Failed to set admission audit annotation %s to %s for validating webhook %s: %v", key, v, h.Name, err)
 		}
 	}
 	if response.Response.Allowed {

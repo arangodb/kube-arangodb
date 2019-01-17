@@ -27,7 +27,7 @@ import (
 	"golang.org/x/tools/refactor/importgraph"
 )
 
-// The referrers function reports all identifiers that resolve to the same object
+// Referrers reports all identifiers that resolve to the same object
 // as the queried identifier, within any package in the workspace.
 func referrers(q *Query) error {
 	fset := token.NewFileSet()

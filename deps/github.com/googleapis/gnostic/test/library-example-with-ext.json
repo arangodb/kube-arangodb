@@ -91,13 +91,6 @@
                     "type": "string"
                 }
             }
-        },
-        "SimpleDefWithBoolean": {
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                }
-            }
         }
     }
 }

@@ -28,7 +28,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/arangodb-helper/glog"
+	"github.com/golang/glog"
 	"github.com/rs/zerolog"
 )
 

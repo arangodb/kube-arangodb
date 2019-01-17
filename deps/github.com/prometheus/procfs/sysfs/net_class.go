@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !windows
-
 package sysfs
 
 import (
@@ -22,8 +20,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/prometheus/procfs/internal/util"
+	"syscall"
 )
 
 // NetClassIface contains info from files in /sys/class/net/<iface>
@@ -112,7 +109,7 @@ func (nc NetClass) parseNetClassIface(devicePath string) (*NetClassIface, error)
 			panic(fmt.Errorf("field %s does not have a filename tag", fieldType.Name))
 		}
 
-		value, err := util.SysReadFile(devicePath + "/" + fieldType.Tag.Get("fileName"))
+		fileContents, err := sysReadFile(devicePath + "/" + fieldType.Tag.Get("fileName"))
 
 		if err != nil {
 			if os.IsNotExist(err) || err.Error() == "operation not supported" || err.Error() == "invalid argument" {
@@ -120,6 +117,7 @@ func (nc NetClass) parseNetClassIface(devicePath string) (*NetClassIface, error)
 			}
 			return nil, fmt.Errorf("could not access file %s: %s", fieldType.Tag.Get("fileName"), err)
 		}
+		value := strings.TrimSpace(string(fileContents))
 
 		switch fieldValue.Kind() {
 		case reflect.String:
@@ -150,4 +148,27 @@ func (nc NetClass) parseNetClassIface(devicePath string) (*NetClassIface, error)
 	}
 
 	return &interfaceClass, nil
+}
+
+// sysReadFile is a simplified ioutil.ReadFile that invokes syscall.Read directly.
+// https://github.com/prometheus/node_exporter/pull/728/files
+func sysReadFile(file string) ([]byte, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	// On some machines, hwmon drivers are broken and return EAGAIN.  This causes
+	// Go's ioutil.ReadFile implementation to poll forever.
+	//
+	// Since we either want to read data or bail immediately, do the simplest
+	// possible read using syscall directly.
+	b := make([]byte, 128)
+	n, err := syscall.Read(int(f.Fd()), b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b[:n], nil
 }

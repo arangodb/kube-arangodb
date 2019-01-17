@@ -18,6 +18,11 @@ var eventPool = &sync.Pool{
 	},
 }
 
+// ErrorMarshalFunc allows customization of global error marshaling
+var ErrorMarshalFunc = func(err error) interface{} {
+	return err
+}
+
 // Event represents a log event. It is instanced by one of the level method of
 // Logger and finalized by the Msg or Msgf method.
 type Event struct {
@@ -25,22 +30,8 @@ type Event struct {
 	w     LevelWriter
 	level Level
 	done  func(msg string)
-	stack bool   // enable error stack trace
 	ch    []Hook // hooks from context
-}
-
-func putEvent(e *Event) {
-	// Proper usage of a sync.Pool requires each entry to have approximately
-	// the same memory cost. To obtain this property when the stored type
-	// contains a variably-sized buffer, we add a hard limit on the maximum buffer
-	// to place back in the pool.
-	//
-	// See https://golang.org/issue/23199
-	const maxSize = 1 << 16 // 64KiB
-	if cap(e.buf) > maxSize {
-		return
-	}
-	eventPool.Put(e)
+	h     []Hook
 }
 
 // LogObjectMarshaler provides a strongly-typed and encoding-agnostic interface
@@ -58,7 +49,7 @@ type LogArrayMarshaler interface {
 func newEvent(w LevelWriter, level Level) *Event {
 	e := eventPool.Get().(*Event)
 	e.buf = e.buf[:0]
-	e.ch = nil
+	e.h = e.h[:0]
 	e.buf = enc.AppendBeginMarker(e.buf)
 	e.w = w
 	e.level = level
@@ -76,7 +67,7 @@ func (e *Event) write() (err error) {
 			_, err = e.w.WriteLevel(e.level, e.buf)
 		}
 	}
-	putEvent(e)
+	eventPool.Put(e)
 	return
 }
 
@@ -88,9 +79,6 @@ func (e *Event) Enabled() bool {
 
 // Discard disables the event so Msg(f) won't print it.
 func (e *Event) Discard() *Event {
-	if e == nil {
-		return e
-	}
 	e.level = Disabled
 	return nil
 }
@@ -126,6 +114,14 @@ func (e *Event) msg(msg string) {
 			}
 		}
 	}
+	if len(e.h) > 0 {
+		e.h[0].Run(e, e.level, msg)
+		if len(e.h) > 1 {
+			for _, hook := range e.h[1:] {
+				hook.Run(e, e.level, msg)
+			}
+		}
+	}
 	if msg != "" {
 		e.buf = enc.AppendString(enc.AppendKey(e.buf, MessageFieldName), msg)
 	}
@@ -133,11 +129,7 @@ func (e *Event) msg(msg string) {
 		defer e.done(msg)
 	}
 	if err := e.write(); err != nil {
-		if ErrorHandler != nil {
-			ErrorHandler(err)
-		} else {
-			fmt.Fprintf(os.Stderr, "zerolog: could not write event: %v\n", err)
-		}
+		fmt.Fprintf(os.Stderr, "zerolog: could not write event: %v", err)
 	}
 }
 
@@ -158,7 +150,7 @@ func (e *Event) Dict(key string, dict *Event) *Event {
 	}
 	dict.buf = enc.AppendEndMarker(dict.buf)
 	e.buf = append(enc.AppendKey(e.buf, key), dict.buf...)
-	putEvent(dict)
+	eventPool.Put(dict)
 	return e
 }
 
@@ -267,10 +259,8 @@ func (e *Event) RawJSON(key string, b []byte) *Event {
 // AnErr adds the field key with serialized err to the *Event context.
 // If err is nil, no field is added.
 func (e *Event) AnErr(key string, err error) *Event {
-	if e == nil {
-		return e
-	}
-	switch m := ErrorMarshalFunc(err).(type) {
+	marshaled := ErrorMarshalFunc(err)
+	switch m := marshaled.(type) {
 	case nil:
 		return e
 	case LogObjectMarshaler:
@@ -290,9 +280,11 @@ func (e *Event) Errs(key string, errs []error) *Event {
 	if e == nil {
 		return e
 	}
+
 	arr := Arr()
 	for _, err := range errs {
-		switch m := ErrorMarshalFunc(err).(type) {
+		marshaled := ErrorMarshalFunc(err)
+		switch m := marshaled.(type) {
 		case LogObjectMarshaler:
 			arr = arr.Object(m)
 		case error:
@@ -310,40 +302,8 @@ func (e *Event) Errs(key string, errs []error) *Event {
 // Err adds the field "error" with serialized err to the *Event context.
 // If err is nil, no field is added.
 // To customize the key name, change zerolog.ErrorFieldName.
-//
-// To customize the key name, change zerolog.ErrorFieldName.
-//
-// If Stack() has been called before and zerolog.ErrorStackMarshaler is defined,
-// the err is passed to ErrorStackMarshaler and the result is appended to the
-// zerolog.ErrorStackFieldName.
 func (e *Event) Err(err error) *Event {
-	if e == nil {
-		return e
-	}
-	if e.stack && ErrorStackMarshaler != nil {
-		switch m := ErrorStackMarshaler(err).(type) {
-		case nil:
-		case LogObjectMarshaler:
-			e.Object(ErrorStackFieldName, m)
-		case error:
-			e.Str(ErrorStackFieldName, m.Error())
-		case string:
-			e.Str(ErrorStackFieldName, m)
-		default:
-			e.Interface(ErrorStackFieldName, m)
-		}
-	}
 	return e.AnErr(ErrorFieldName, err)
-}
-
-// Stack enables stack trace printing for the error passed to Err().
-//
-// ErrorStackMarshaler must be set for this method to do something.
-func (e *Event) Stack() *Event {
-	if e != nil {
-		e.stack = true
-	}
-	return e
 }
 
 // Bool adds the field key with val as a bool to the *Event context.

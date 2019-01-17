@@ -63,7 +63,8 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 	}
 
 	if !opt.FormatOnly {
-		if err := fixImports(fileSet, file, filename); err != nil {
+		_, err = fixImports(fileSet, file, filename)
+		if err != nil {
 			return nil, err
 		}
 	}

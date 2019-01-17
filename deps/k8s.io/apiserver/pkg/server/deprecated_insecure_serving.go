@@ -21,10 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 
-	"k8s.io/apiserver/pkg/authentication/authenticator"
-	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/rest"
 )
 
@@ -46,9 +44,9 @@ func (s *DeprecatedInsecureServingInfo) Serve(handler http.Handler, shutdownTime
 	}
 
 	if len(s.Name) > 0 {
-		klog.Infof("Serving %s insecurely on %s", s.Name, s.Listener.Addr())
+		glog.Infof("Serving %s insecurely on %s", s.Name, s.Listener.Addr())
 	} else {
-		klog.Infof("Serving insecurely on %s", s.Listener.Addr())
+		glog.Infof("Serving insecurely on %s", s.Listener.Addr())
 	}
 	return RunServer(insecureServer, s.Listener, shutdownTimeout, stopCh)
 }
@@ -71,20 +69,4 @@ func (s *DeprecatedInsecureServingInfo) NewLoopbackClientConfig() (*rest.Config,
 		QPS:   50,
 		Burst: 100,
 	}, nil
-}
-
-// InsecureSuperuser implements authenticator.Request to always return a superuser.
-// This is functionally equivalent to skipping authentication and authorization,
-// but allows apiserver code to stop special-casing a nil user to skip authorization checks.
-type InsecureSuperuser struct{}
-
-func (InsecureSuperuser) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
-	auds, _ := authenticator.AudiencesFrom(req.Context())
-	return &authenticator.Response{
-		User: &user.DefaultInfo{
-			Name:   "system:unsecured",
-			Groups: []string{user.SystemPrivilegedGroup, user.AllAuthenticated},
-		},
-		Audiences: auds,
-	}, true, nil
 }

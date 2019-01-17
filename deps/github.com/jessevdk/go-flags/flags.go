@@ -109,8 +109,7 @@ The following is a list of tags for struct fields supported by go-flags:
     value-name:     the name of the argument value (to be shown in the help)
                     (optional)
     choice:         limits the values for an option to a set of values.
-                    Repeat this tag once for each allowable value.
-                    e.g. `long:"animal" choice:"cat" choice:"dog"`
+                    This tag can be specified multiple times (optional)
     hidden:         if non-empty, the option is not visible in the help or man page.
 
     base: a base (radix) used to convert strings to integer values, the

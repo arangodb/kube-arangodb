@@ -45,8 +45,8 @@ import (
 	"k8s.io/gengo/args"
 	"k8s.io/gengo/examples/defaulter-gen/generators"
 
+	"github.com/golang/glog"
 	"github.com/spf13/pflag"
-	"k8s.io/klog"
 )
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 		generators.DefaultNameSystem(),
 		generators.Packages,
 	); err != nil {
-		klog.Fatalf("Error: %v", err)
+		glog.Fatalf("Error: %v", err)
 	}
-	klog.V(2).Info("Completed successfully.")
+	glog.V(2).Info("Completed successfully.")
 }

@@ -15,9 +15,10 @@
 package validate
 
 import (
-	"fmt"
+	"log"
 	"reflect"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 )
@@ -43,15 +44,15 @@ func (s *schemaPropsValidator) SetPath(path string) {
 }
 
 func newSchemaPropsValidator(path string, in string, allOf, oneOf, anyOf []spec.Schema, not *spec.Schema, deps spec.Dependencies, root interface{}, formats strfmt.Registry) *schemaPropsValidator {
-	anyValidators := make([]SchemaValidator, 0, len(anyOf))
+	var anyValidators []SchemaValidator
 	for _, v := range anyOf {
 		anyValidators = append(anyValidators, *NewSchemaValidator(&v, root, path, formats))
 	}
-	allValidators := make([]SchemaValidator, 0, len(allOf))
+	var allValidators []SchemaValidator
 	for _, v := range allOf {
 		allValidators = append(allValidators, *NewSchemaValidator(&v, root, path, formats))
 	}
-	oneValidators := make([]SchemaValidator, 0, len(oneOf))
+	var oneValidators []SchemaValidator
 	for _, v := range oneOf {
 		oneValidators = append(oneValidators, *NewSchemaValidator(&v, root, path, formats))
 	}
@@ -80,46 +81,35 @@ func newSchemaPropsValidator(path string, in string, allOf, oneOf, anyOf []spec.
 
 func (s *schemaPropsValidator) Applies(source interface{}, kind reflect.Kind) bool {
 	r := reflect.TypeOf(source) == specSchemaType
-	debugLog("schema props validator for %q applies %t for %T (kind: %v)\n", s.Path, r, source, kind)
+	if Debug {
+		log.Printf("schema props validator for %q applies %t for %T (kind: %v)\n", s.Path, r, source, kind)
+	}
 	return r
 }
 
 func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 	mainResult := new(Result)
-
-	// Intermediary error results
-
-	// IMPORTANT! messages from underlying validators
-	keepResultAnyOf := new(Result)
-	keepResultOneOf := new(Result)
-	keepResultAllOf := new(Result)
-
-	// Validates at least one in anyOf schemas
 	var firstSuccess *Result
 	if len(s.anyOfValidators) > 0 {
 		var bestFailures *Result
 		succeededOnce := false
 		for _, anyOfSchema := range s.anyOfValidators {
 			result := anyOfSchema.Validate(data)
-			// We keep inner IMPORTANT! errors no matter what MatchCount tells us
-			keepResultAnyOf.Merge(result.keepRelevantErrors())
 			if result.IsValid() {
 				bestFailures = nil
 				succeededOnce = true
 				if firstSuccess == nil {
 					firstSuccess = result
 				}
-				keepResultAnyOf = new(Result)
 				break
 			}
-			// MatchCount is used to select errors from the schema with most positive checks
 			if bestFailures == nil || result.MatchCount > bestFailures.MatchCount {
 				bestFailures = result
 			}
 		}
 
 		if !succeededOnce {
-			mainResult.AddErrors(mustValidateAtLeastOneSchemaMsg(s.Path))
+			mainResult.AddErrors(errors.New(422, "must validate at least one schema (anyOf)"))
 		}
 		if bestFailures != nil {
 			mainResult.Merge(bestFailures)
@@ -128,7 +118,6 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 		}
 	}
 
-	// Validates exactly one in oneOf schemas
 	if len(s.oneOfValidators) > 0 {
 		var bestFailures *Result
 		var firstSuccess *Result
@@ -136,32 +125,21 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 
 		for _, oneOfSchema := range s.oneOfValidators {
 			result := oneOfSchema.Validate(data)
-			// We keep inner IMPORTANT! errors no matter what MatchCount tells us
-			keepResultOneOf.Merge(result.keepRelevantErrors())
 			if result.IsValid() {
 				validated++
 				bestFailures = nil
 				if firstSuccess == nil {
 					firstSuccess = result
 				}
-				keepResultOneOf = new(Result)
 				continue
 			}
-			// MatchCount is used to select errors from the schema with most positive checks
 			if validated == 0 && (bestFailures == nil || result.MatchCount > bestFailures.MatchCount) {
 				bestFailures = result
 			}
 		}
 
 		if validated != 1 {
-			additionalMsg := ""
-			if validated == 0 {
-				additionalMsg = "Found none valid"
-			} else {
-				additionalMsg = fmt.Sprintf("Found %d valid alternatives", validated)
-			}
-
-			mainResult.AddErrors(mustValidateOnlyOneSchemaMsg(s.Path, additionalMsg))
+			mainResult.AddErrors(errors.New(422, "must validate one and only one schema (oneOf)"))
 			if bestFailures != nil {
 				mainResult.Merge(bestFailures)
 			}
@@ -170,15 +148,11 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 		}
 	}
 
-	// Validates all of allOf schemas
 	if len(s.allOfValidators) > 0 {
 		validated := 0
 
 		for _, allOfSchema := range s.allOfValidators {
 			result := allOfSchema.Validate(data)
-			// We keep inner IMPORTANT! errors no matter what MatchCount tells us
-			keepResultAllOf.Merge(result.keepRelevantErrors())
-			//keepResultAllOf.Merge(result)
 			if result.IsValid() {
 				validated++
 			}
@@ -186,20 +160,14 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 		}
 
 		if validated != len(s.allOfValidators) {
-			additionalMsg := ""
-			if validated == 0 {
-				additionalMsg = ". None validated"
-			}
-
-			mainResult.AddErrors(mustValidateAllSchemasMsg(s.Path, additionalMsg))
+			mainResult.AddErrors(errors.New(422, "must validate all the schemas (allOf)"))
 		}
 	}
 
 	if s.notValidator != nil {
 		result := s.notValidator.Validate(data)
-		// We keep inner IMPORTANT! errors no matter what MatchCount tells us
 		if result.IsValid() {
-			mainResult.AddErrors(mustNotValidatechemaMsg(s.Path))
+			mainResult.AddErrors(errors.New(422, "must not validate the schema (not)"))
 		}
 	}
 
@@ -216,7 +184,7 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 				if len(dep.Property) > 0 {
 					for _, depKey := range dep.Property {
 						if _, ok := val[depKey]; !ok {
-							mainResult.AddErrors(hasADependencyMsg(s.Path, depKey))
+							mainResult.AddErrors(errors.New(422, "has a dependency on %s", depKey))
 						}
 					}
 				}
@@ -225,7 +193,5 @@ func (s *schemaPropsValidator) Validate(data interface{}) *Result {
 	}
 
 	mainResult.Inc()
-	// In the end we retain best failures for schema validation
-	// plus, if any, composite errors which may explain special cases (tagged as IMPORTANT!).
-	return mainResult.Merge(keepResultAllOf, keepResultOneOf, keepResultAnyOf)
+	return mainResult
 }

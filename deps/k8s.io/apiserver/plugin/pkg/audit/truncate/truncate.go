@@ -71,12 +71,11 @@ func NewBackend(delegateBackend audit.Backend, config Config, groupVersion schem
 	}
 }
 
-func (b *backend) ProcessEvents(events ...*auditinternal.Event) bool {
+func (b *backend) ProcessEvents(events ...*auditinternal.Event) {
 	var errors []error
 	var impacted []*auditinternal.Event
 	var batch []*auditinternal.Event
 	var batchSize int64
-	success := true
 	for _, event := range events {
 		size, err := b.calcSize(event)
 		// If event was correctly serialized, but the size is more than allowed
@@ -98,7 +97,7 @@ func (b *backend) ProcessEvents(events ...*auditinternal.Event) bool {
 		}
 
 		if len(batch) > 0 && batchSize+size > b.c.MaxBatchSize {
-			success = b.delegateBackend.ProcessEvents(batch...) && success
+			b.delegateBackend.ProcessEvents(batch...)
 			batch = []*auditinternal.Event{}
 			batchSize = 0
 		}
@@ -108,13 +107,12 @@ func (b *backend) ProcessEvents(events ...*auditinternal.Event) bool {
 	}
 
 	if len(batch) > 0 {
-		success = b.delegateBackend.ProcessEvents(batch...) && success
+		b.delegateBackend.ProcessEvents(batch...)
 	}
 
 	if len(impacted) > 0 {
 		audit.HandlePluginError(PluginName, utilerrors.NewAggregate(errors), impacted...)
 	}
-	return success
 }
 
 // truncate removed request and response objects from the audit events,

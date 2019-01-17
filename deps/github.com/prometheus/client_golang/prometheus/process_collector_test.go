@@ -17,15 +17,12 @@ package prometheus
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"regexp"
 	"testing"
 
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/procfs"
-
-	dto "github.com/prometheus/client_model/go"
 )
 
 func TestProcessCollector(t *testing.T) {
@@ -34,14 +31,12 @@ func TestProcessCollector(t *testing.T) {
 	}
 
 	registry := NewRegistry()
-	if err := registry.Register(NewProcessCollector(ProcessCollectorOpts{})); err != nil {
+	if err := registry.Register(NewProcessCollector(os.Getpid(), "")); err != nil {
 		t.Fatal(err)
 	}
-	if err := registry.Register(NewProcessCollector(ProcessCollectorOpts{
-		PidFn:        func() (int, error) { return os.Getpid(), nil },
-		Namespace:    "foobar",
-		ReportErrors: true, // No errors expected, just to see if none are reported.
-	})); err != nil {
+	if err := registry.Register(NewProcessCollectorPIDFn(
+		func() (int, error) { return os.Getpid(), nil }, "foobar"),
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -76,28 +71,5 @@ func TestProcessCollector(t *testing.T) {
 		if !re.Match(buf.Bytes()) {
 			t.Errorf("want body to match %s\n%s", re, buf.String())
 		}
-	}
-
-	brokenProcessCollector := NewProcessCollector(ProcessCollectorOpts{
-		PidFn:        func() (int, error) { return 0, errors.New("boo") },
-		ReportErrors: true,
-	})
-
-	ch := make(chan Metric)
-	go func() {
-		brokenProcessCollector.Collect(ch)
-		close(ch)
-	}()
-	n := 0
-	for m := range ch {
-		n++
-		pb := &dto.Metric{}
-		err := m.Write(pb)
-		if err == nil {
-			t.Error("metric collected from broken process collector is unexpectedly valid")
-		}
-	}
-	if n != 1 {
-		t.Errorf("%d metrics collected, want 1", n)
 	}
 }

@@ -402,19 +402,13 @@ func TestVectorSort(t *testing.T) {
 			Metric: Metric{
 				MetricNameLabel: "B",
 			},
-			Timestamp: 3,
+			Timestamp: 1,
 		},
 		&Sample{
 			Metric: Metric{
 				MetricNameLabel: "B",
 			},
 			Timestamp: 2,
-		},
-		&Sample{
-			Metric: Metric{
-				MetricNameLabel: "B",
-			},
-			Timestamp: 1,
 		},
 	}
 
@@ -442,12 +436,6 @@ func TestVectorSort(t *testing.T) {
 				MetricNameLabel: "B",
 			},
 			Timestamp: 2,
-		},
-		&Sample{
-			Metric: Metric{
-				MetricNameLabel: "B",
-			},
-			Timestamp: 3,
 		},
 		&Sample{
 			Metric: Metric{

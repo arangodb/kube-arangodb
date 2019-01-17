@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 const (
@@ -51,7 +51,7 @@ func StartCompactor(ctx context.Context, client *clientv3.Client, compactInterva
 	// Currently we rely on endpoints to differentiate clusters.
 	for _, ep := range client.Endpoints() {
 		if _, ok := endpointsMap[ep]; ok {
-			klog.V(4).Infof("compactor already exists for endpoints %v", client.Endpoints())
+			glog.V(4).Infof("compactor already exists for endpoints %v", client.Endpoints())
 			return
 		}
 	}
@@ -121,7 +121,7 @@ func compactor(ctx context.Context, client *clientv3.Client, interval time.Durat
 
 		compactTime, rev, err = compact(ctx, client, compactTime, rev)
 		if err != nil {
-			klog.Errorf("etcd: endpoint (%v) compact failed: %v", client.Endpoints(), err)
+			glog.Errorf("etcd: endpoint (%v) compact failed: %v", client.Endpoints(), err)
 			continue
 		}
 	}
@@ -157,6 +157,6 @@ func compact(ctx context.Context, client *clientv3.Client, t, rev int64) (int64,
 	if _, err = client.Compact(ctx, rev); err != nil {
 		return curTime, curRev, err
 	}
-	klog.V(4).Infof("etcd: compacted rev (%d), endpoints (%v)", rev, client.Endpoints())
+	glog.V(4).Infof("etcd: compacted rev (%d), endpoints (%v)", rev, client.Endpoints())
 	return curTime, curRev, nil
 }

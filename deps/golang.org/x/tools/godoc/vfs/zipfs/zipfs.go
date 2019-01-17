@@ -86,7 +86,7 @@ func (fs *zipFS) String() string {
 func (fs *zipFS) RootType(abspath string) vfs.RootType {
 	var t vfs.RootType
 	switch {
-	case exists(path.Join(vfs.GOROOT, abspath)):
+	case abspath == vfs.GOROOT:
 		t = vfs.RootTypeGoRoot
 	case isGoPath(abspath):
 		t = vfs.RootTypeGoPath
@@ -94,18 +94,13 @@ func (fs *zipFS) RootType(abspath string) vfs.RootType {
 	return t
 }
 
-func isGoPath(abspath string) bool {
+func isGoPath(path string) bool {
 	for _, p := range filepath.SplitList(build.Default.GOPATH) {
-		if exists(path.Join(p, abspath)) {
+		if p == path {
 			return true
 		}
 	}
 	return false
-}
-
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }
 
 func (fs *zipFS) Close() error {

@@ -31,7 +31,6 @@ import (
 	unionauth "k8s.io/apiserver/pkg/authentication/request/union"
 	"k8s.io/apiserver/pkg/authentication/request/websocket"
 	"k8s.io/apiserver/pkg/authentication/request/x509"
-	"k8s.io/apiserver/pkg/authentication/token/cache"
 	webhooktoken "k8s.io/apiserver/plugin/pkg/authenticator/token/webhook"
 	authenticationclient "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
 	"k8s.io/client-go/util/cert"
@@ -42,7 +41,6 @@ import (
 type DelegatingAuthenticatorConfig struct {
 	Anonymous bool
 
-	// TokenAccessReviewClient is a client to do token review. It can be nil. Then every token is ignored.
 	TokenAccessReviewClient authenticationclient.TokenReviewInterface
 
 	// CacheTTL is the length of time that a token authentication answer will be cached.
@@ -50,8 +48,6 @@ type DelegatingAuthenticatorConfig struct {
 
 	// ClientCAFile is the CA bundle file used to authenticate client certificates
 	ClientCAFile string
-
-	APIAudiences authenticator.Audiences
 
 	RequestHeaderConfig *RequestHeaderConfig
 }
@@ -88,12 +84,11 @@ func (c DelegatingAuthenticatorConfig) New() (authenticator.Request, *spec.Secur
 	}
 
 	if c.TokenAccessReviewClient != nil {
-		tokenAuth, err := webhooktoken.NewFromInterface(c.TokenAccessReviewClient, c.APIAudiences)
+		tokenAuth, err := webhooktoken.NewFromInterface(c.TokenAccessReviewClient, c.CacheTTL)
 		if err != nil {
 			return nil, nil, err
 		}
-		cachingTokenAuth := cache.New(tokenAuth, false, c.CacheTTL, c.CacheTTL)
-		authenticators = append(authenticators, bearertoken.New(cachingTokenAuth), websocket.NewProtocolAuthenticator(cachingTokenAuth))
+		authenticators = append(authenticators, bearertoken.New(tokenAuth), websocket.NewProtocolAuthenticator(tokenAuth))
 
 		securityDefinitions["BearerToken"] = &spec.SecurityScheme{
 			SecuritySchemeProps: spec.SecuritySchemeProps{

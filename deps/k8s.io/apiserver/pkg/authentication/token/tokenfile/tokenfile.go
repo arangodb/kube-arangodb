@@ -17,16 +17,14 @@ limitations under the License.
 package tokenfile
 
 import (
-	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"k8s.io/apiserver/pkg/authentication/authenticator"
+	"github.com/golang/glog"
 	"k8s.io/apiserver/pkg/authentication/user"
-	"k8s.io/klog"
 )
 
 type TokenAuthenticator struct {
@@ -67,7 +65,7 @@ func NewCSV(path string) (*TokenAuthenticator, error) {
 
 		recordNum++
 		if record[0] == "" {
-			klog.Warningf("empty token has been found in token file '%s', record number '%d'", path, recordNum)
+			glog.Warningf("empty token has been found in token file '%s', record number '%d'", path, recordNum)
 			continue
 		}
 
@@ -76,7 +74,7 @@ func NewCSV(path string) (*TokenAuthenticator, error) {
 			UID:  record[2],
 		}
 		if _, exist := tokens[record[0]]; exist {
-			klog.Warningf("duplicate token has been found in token file '%s', record number '%d'", path, recordNum)
+			glog.Warningf("duplicate token has been found in token file '%s', record number '%d'", path, recordNum)
 		}
 		tokens[record[0]] = obj
 
@@ -90,10 +88,10 @@ func NewCSV(path string) (*TokenAuthenticator, error) {
 	}, nil
 }
 
-func (a *TokenAuthenticator) AuthenticateToken(ctx context.Context, value string) (*authenticator.Response, bool, error) {
+func (a *TokenAuthenticator) AuthenticateToken(value string) (user.Info, bool, error) {
 	user, ok := a.tokens[value]
 	if !ok {
 		return nil, false, nil
 	}
-	return &authenticator.Response{User: user}, true, nil
+	return user, true, nil
 }

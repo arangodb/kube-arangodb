@@ -53,9 +53,7 @@ func TestUntil(t *testing.T) {
 		func(event watch.Event) (bool, error) { return event.Type == watch.Modified, nil },
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 	lastEvent, err := UntilWithoutRetry(ctx, fw, conditions...)
 	if err != nil {
 		t.Fatalf("expected nil error, got %#v", err)
@@ -82,9 +80,7 @@ func TestUntilMultipleConditions(t *testing.T) {
 		func(event watch.Event) (bool, error) { return event.Type == watch.Added, nil },
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 	lastEvent, err := UntilWithoutRetry(ctx, fw, conditions...)
 	if err != nil {
 		t.Fatalf("expected nil error, got %#v", err)
@@ -112,9 +108,7 @@ func TestUntilMultipleConditionsFail(t *testing.T) {
 		func(event watch.Event) (bool, error) { return event.Type == watch.Deleted, nil },
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	lastEvent, err := UntilWithoutRetry(ctx, fw, conditions...)
 	if err != wait.ErrWaitTimeout {
 		t.Fatalf("expected ErrWaitTimeout error, got %#v", err)
@@ -175,7 +169,6 @@ func TestUntilErrorCondition(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
 	_, err := UntilWithoutRetry(ctx, fw, conditions...)
 	if err == nil {
 		t.Fatal("expected an error")

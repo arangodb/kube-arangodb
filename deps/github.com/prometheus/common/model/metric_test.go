@@ -119,10 +119,6 @@ func TestMetricNameIsValid(t *testing.T) {
 			mn:    "colon:in:the:middle",
 			valid: true,
 		},
-		{
-			mn:    "",
-			valid: false,
-		},
 	}
 
 	for _, s := range scenarios {

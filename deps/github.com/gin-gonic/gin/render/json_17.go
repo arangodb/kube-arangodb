@@ -9,15 +9,13 @@ package render
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin/internal/json"
+	"github.com/gin-gonic/gin/json"
 )
 
-// PureJSON contains the given interface object.
 type PureJSON struct {
 	Data interface{}
 }
 
-// Render (PureJSON) writes custom ContentType and encodes the given interface object.
 func (r PureJSON) Render(w http.ResponseWriter) error {
 	r.WriteContentType(w)
 	encoder := json.NewEncoder(w)
@@ -25,7 +23,6 @@ func (r PureJSON) Render(w http.ResponseWriter) error {
 	return encoder.Encode(r.Data)
 }
 
-// WriteContentType (PureJSON) writes custom ContentType.
 func (r PureJSON) WriteContentType(w http.ResponseWriter) {
 	writeContentType(w, jsonContentType)
 }

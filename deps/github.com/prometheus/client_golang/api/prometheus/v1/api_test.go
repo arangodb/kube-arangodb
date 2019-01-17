@@ -18,7 +18,6 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -31,10 +30,9 @@ import (
 )
 
 type apiTest struct {
-	do           func() (interface{}, error)
-	inErr        error
-	inStatusCode int
-	inRes        interface{}
+	do    func() (interface{}, error)
+	inErr error
+	inRes interface{}
 
 	reqPath   string
 	reqParam  url.Values
@@ -77,9 +75,7 @@ func (c *apiTestClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	}
 
 	resp := &http.Response{}
-	if test.inStatusCode != 0 {
-		resp.StatusCode = test.inStatusCode
-	} else if test.inErr != nil {
+	if test.inErr != nil {
 		resp.StatusCode = statusAPIError
 	} else {
 		resp.StatusCode = http.StatusOK
@@ -158,12 +154,6 @@ func TestAPIs(t *testing.T) {
 		}
 	}
 
-	doRules := func() func() (interface{}, error) {
-		return func() (interface{}, error) {
-			return promAPI.Rules(context.Background())
-		}
-	}
-
 	doTargets := func() func() (interface{}, error) {
 		return func() (interface{}, error) {
 			return promAPI.Targets(context.Background())
@@ -203,42 +193,6 @@ func TestAPIs(t *testing.T) {
 				"time":  []string{testTime.Format(time.RFC3339Nano)},
 			},
 			err: fmt.Errorf("some error"),
-		},
-		{
-			do:           doQuery("2", testTime),
-			inRes:        "some body",
-			inStatusCode: 500,
-			inErr: &Error{
-				Type:   ErrServer,
-				Msg:    "server error: 500",
-				Detail: "some body",
-			},
-
-			reqMethod: "GET",
-			reqPath:   "/api/v1/query",
-			reqParam: url.Values{
-				"query": []string{"2"},
-				"time":  []string{testTime.Format(time.RFC3339Nano)},
-			},
-			err: errors.New("server_error: server error: 500"),
-		},
-		{
-			do:           doQuery("2", testTime),
-			inRes:        "some body",
-			inStatusCode: 404,
-			inErr: &Error{
-				Type:   ErrClient,
-				Msg:    "client error: 404",
-				Detail: "some body",
-			},
-
-			reqMethod: "GET",
-			reqPath:   "/api/v1/query",
-			reqParam: url.Values{
-				"query": []string{"2"},
-				"time":  []string{testTime.Format(time.RFC3339Nano)},
-			},
-			err: errors.New("client_error: client error: 404"),
 		},
 
 		{
@@ -467,108 +421,6 @@ func TestAPIs(t *testing.T) {
 		},
 
 		{
-			do:        doRules(),
-			reqMethod: "GET",
-			reqPath:   "/api/v1/rules",
-			inRes: map[string]interface{}{
-				"groups": []map[string]interface{}{
-					{
-						"file":     "/rules.yaml",
-						"interval": 60,
-						"name":     "example",
-						"rules": []map[string]interface{}{
-							{
-								"alerts": []map[string]interface{}{
-									{
-										"activeAt": testTime.UTC().Format(time.RFC3339Nano),
-										"annotations": map[string]interface{}{
-											"summary": "High request latency",
-										},
-										"labels": map[string]interface{}{
-											"alertname": "HighRequestLatency",
-											"severity":  "page",
-										},
-										"state": "firing",
-										"value": 1,
-									},
-								},
-								"annotations": map[string]interface{}{
-									"summary": "High request latency",
-								},
-								"duration": 600,
-								"health":   "ok",
-								"labels": map[string]interface{}{
-									"severity": "page",
-								},
-								"name":  "HighRequestLatency",
-								"query": "job:request_latency_seconds:mean5m{job=\"myjob\"} > 0.5",
-								"type":  "alerting",
-							},
-							{
-								"health": "ok",
-								"name":   "job:http_inprogress_requests:sum",
-								"query":  "sum(http_inprogress_requests) by (job)",
-								"type":   "recording",
-							},
-						},
-					},
-				},
-			},
-			res: RulesResult{
-				Groups: []RuleGroup{
-					{
-						Name:     "example",
-						File:     "/rules.yaml",
-						Interval: 60,
-						Rules: []interface{}{
-							AlertingRule{
-								Alerts: []*Alert{
-									{
-										ActiveAt: testTime.UTC(),
-										Annotations: model.LabelSet{
-											"summary": "High request latency",
-										},
-										Labels: model.LabelSet{
-											"alertname": "HighRequestLatency",
-											"severity":  "page",
-										},
-										State: AlertStateFiring,
-										Value: 1,
-									},
-								},
-								Annotations: model.LabelSet{
-									"summary": "High request latency",
-								},
-								Labels: model.LabelSet{
-									"severity": "page",
-								},
-								Duration:  600,
-								Health:    RuleHealthGood,
-								Name:      "HighRequestLatency",
-								Query:     "job:request_latency_seconds:mean5m{job=\"myjob\"} > 0.5",
-								LastError: "",
-							},
-							RecordingRule{
-								Health:    RuleHealthGood,
-								Name:      "job:http_inprogress_requests:sum",
-								Query:     "sum(http_inprogress_requests) by (job)",
-								LastError: "",
-							},
-						},
-					},
-				},
-			},
-		},
-
-		{
-			do:        doRules(),
-			reqMethod: "GET",
-			reqPath:   "/api/v1/rules",
-			inErr:     fmt.Errorf("some error"),
-			err:       fmt.Errorf("some error"),
-		},
-
-		{
 			do:        doTargets(),
 			reqMethod: "GET",
 			reqPath:   "/api/v1/targets",
@@ -646,34 +498,29 @@ func TestAPIs(t *testing.T) {
 	var tests []apiTest
 	tests = append(tests, queryTests...)
 
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			client.curTest = test
+	for _, test := range tests {
+		client.curTest = test
 
-			res, err := test.do()
+		res, err := test.do()
 
-			if test.err != nil {
-				if err == nil {
-					t.Fatalf("expected error %q but got none", test.err)
-				}
-				if err.Error() != test.err.Error() {
-					t.Errorf("unexpected error: want %s, got %s", test.err, err)
-				}
-				if apiErr, ok := err.(*Error); ok {
-					if apiErr.Detail != test.inRes {
-						t.Errorf("%q should be %q", apiErr.Detail, test.inRes)
-					}
-				}
-				return
+		if test.err != nil {
+			if err == nil {
+				t.Errorf("expected error %q but got none", test.err)
+				continue
 			}
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			if err.Error() != test.err.Error() {
+				t.Errorf("unexpected error: want %s, got %s", test.err, err)
 			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+			continue
+		}
 
-			if !reflect.DeepEqual(res, test.res) {
-				t.Errorf("unexpected result: want %v, got %v", test.res, res)
-			}
-		})
+		if !reflect.DeepEqual(res, test.res) {
+			t.Errorf("unexpected result: want %v, got %v", test.res, res)
+		}
 	}
 }
 
@@ -685,10 +532,10 @@ type testClient struct {
 }
 
 type apiClientTest struct {
-	code         int
-	response     interface{}
-	expectedBody string
-	expectedErr  *Error
+	code     int
+	response interface{}
+	expected string
+	err      *Error
 }
 
 func (c *testClient) URL(ep string, args map[string]string) *url.URL {
@@ -728,108 +575,98 @@ func (c *testClient) Do(ctx context.Context, req *http.Request) (*http.Response,
 func TestAPIClientDo(t *testing.T) {
 	tests := []apiClientTest{
 		{
-			code: statusAPIError,
 			response: &apiResponse{
 				Status:    "error",
 				Data:      json.RawMessage(`null`),
 				ErrorType: ErrBadData,
 				Error:     "failed",
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadData,
 				Msg:  "failed",
 			},
-			expectedBody: `null`,
+			code:     statusAPIError,
+			expected: `null`,
 		},
 		{
-			code: statusAPIError,
 			response: &apiResponse{
 				Status:    "error",
 				Data:      json.RawMessage(`"test"`),
 				ErrorType: ErrTimeout,
 				Error:     "timed out",
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrTimeout,
 				Msg:  "timed out",
 			},
-			expectedBody: `test`,
+			code:     statusAPIError,
+			expected: `test`,
 		},
 		{
-			code:     http.StatusInternalServerError,
-			response: "500 error details",
-			expectedErr: &Error{
-				Type:   ErrServer,
-				Msg:    "server error: 500",
-				Detail: "500 error details",
+			response: "bad json",
+			err: &Error{
+				Type: ErrBadResponse,
+				Msg:  "bad response code 500",
 			},
+			code: http.StatusInternalServerError,
 		},
 		{
-			code:     http.StatusNotFound,
-			response: "404 error details",
-			expectedErr: &Error{
-				Type:   ErrClient,
-				Msg:    "client error: 404",
-				Detail: "404 error details",
-			},
-		},
-		{
-			code: http.StatusBadRequest,
 			response: &apiResponse{
 				Status:    "error",
 				Data:      json.RawMessage(`null`),
 				ErrorType: ErrBadData,
 				Error:     "end timestamp must not be before start time",
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadData,
 				Msg:  "end timestamp must not be before start time",
 			},
+			code: http.StatusBadRequest,
 		},
 		{
-			code:     statusAPIError,
 			response: "bad json",
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadResponse,
 				Msg:  "invalid character 'b' looking for beginning of value",
 			},
+			code: statusAPIError,
 		},
 		{
-			code: statusAPIError,
 			response: &apiResponse{
 				Status: "success",
 				Data:   json.RawMessage(`"test"`),
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadResponse,
 				Msg:  "inconsistent body for response code",
 			},
+			code: statusAPIError,
 		},
 		{
-			code: statusAPIError,
 			response: &apiResponse{
 				Status:    "success",
 				Data:      json.RawMessage(`"test"`),
 				ErrorType: ErrTimeout,
 				Error:     "timed out",
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadResponse,
 				Msg:  "inconsistent body for response code",
 			},
+			code: statusAPIError,
 		},
 		{
-			code: http.StatusOK,
 			response: &apiResponse{
 				Status:    "error",
 				Data:      json.RawMessage(`"test"`),
 				ErrorType: ErrTimeout,
 				Error:     "timed out",
 			},
-			expectedErr: &Error{
+			err: &Error{
 				Type: ErrBadResponse,
 				Msg:  "inconsistent body for response code",
 			},
+			code: http.StatusOK,
 		},
 	}
 
@@ -840,37 +677,30 @@ func TestAPIClientDo(t *testing.T) {
 	}
 	client := &apiClient{tc}
 
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+	for _, test := range tests {
 
-			tc.ch <- test
+		tc.ch <- test
 
-			_, body, err := client.Do(context.Background(), tc.req)
+		_, body, err := client.Do(context.Background(), tc.req)
 
-			if test.expectedErr != nil {
-				if err == nil {
-					t.Fatalf("expected error %q but got none", test.expectedErr)
-				}
-				if test.expectedErr.Error() != err.Error() {
-					t.Errorf("unexpected error: want %q, got %q", test.expectedErr, err)
-				}
-				if test.expectedErr.Detail != "" {
-					apiErr := err.(*Error)
-					if apiErr.Detail != test.expectedErr.Detail {
-						t.Errorf("unexpected error details: want %q, got %q", test.expectedErr.Detail, apiErr.Detail)
-					}
-				}
-				return
+		if test.err != nil {
+			if err == nil {
+				t.Errorf("expected error %q but got none", test.err)
+				continue
 			}
-			if err != nil {
-				t.Fatalf("unexpeceted error %s", err)
+			if test.err.Error() != err.Error() {
+				t.Errorf("unexpected error: want %q, got %q", test.err, err)
 			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("unexpeceted error %s", err)
+			continue
+		}
 
-			want, got := test.expectedBody, string(body)
-			if want != got {
-				t.Errorf("unexpected body: want %q, got %q", want, got)
-			}
-		})
-
+		want, got := test.expected, string(body)
+		if want != got {
+			t.Errorf("unexpected body: want %q, got %q", want, got)
+		}
 	}
 }

@@ -26,7 +26,7 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 // Factory is a function that returns an Interface for admission decisions.
@@ -75,13 +75,13 @@ func (ps *Plugins) Register(name string, plugin Factory) {
 	if ps.registry != nil {
 		_, found := ps.registry[name]
 		if found {
-			klog.Fatalf("Admission plugin %q was registered twice", name)
+			glog.Fatalf("Admission plugin %q was registered twice", name)
 		}
 	} else {
 		ps.registry = map[string]Factory{}
 	}
 
-	klog.V(1).Infof("Registered admission plugin %q", name)
+	glog.V(1).Infof("Registered admission plugin %q", name)
 	ps.registry[name] = plugin
 }
 
@@ -155,10 +155,10 @@ func (ps *Plugins) NewFromPlugins(pluginNames []string, configProvider ConfigPro
 		}
 	}
 	if len(mutationPlugins) != 0 {
-		klog.Infof("Loaded %d mutating admission controller(s) successfully in the following order: %s.", len(mutationPlugins), strings.Join(mutationPlugins, ","))
+		glog.Infof("Loaded %d mutating admission controller(s) successfully in the following order: %s.", len(mutationPlugins), strings.Join(mutationPlugins, ","))
 	}
 	if len(validationPlugins) != 0 {
-		klog.Infof("Loaded %d validating admission controller(s) successfully in the following order: %s.", len(validationPlugins), strings.Join(validationPlugins, ","))
+		glog.Infof("Loaded %d validating admission controller(s) successfully in the following order: %s.", len(validationPlugins), strings.Join(validationPlugins, ","))
 	}
 	return chainAdmissionHandler(handlers), nil
 }
@@ -166,7 +166,7 @@ func (ps *Plugins) NewFromPlugins(pluginNames []string, configProvider ConfigPro
 // InitPlugin creates an instance of the named interface.
 func (ps *Plugins) InitPlugin(name string, config io.Reader, pluginInitializer PluginInitializer) (Interface, error) {
 	if name == "" {
-		klog.Info("No admission plugin specified.")
+		glog.Info("No admission plugin specified.")
 		return nil, nil
 	}
 

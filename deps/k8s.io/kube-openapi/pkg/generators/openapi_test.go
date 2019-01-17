@@ -147,7 +147,6 @@ return common.OpenAPIDefinition{
 Schema: spec.Schema{
 SchemaProps: spec.SchemaProps{
 Description: "Blah is a test.",
-Type: []string{"object"},
 Properties: map[string]spec.Schema{
 "String": {
 SchemaProps: spec.SchemaProps{
@@ -438,7 +437,6 @@ return common.OpenAPIDefinition{
 Schema: spec.Schema{
 SchemaProps: spec.SchemaProps{
 Description: "PointerSample demonstrate pointer's properties",
-Type: []string{"object"},
 Properties: map[string]spec.Schema{
 "StringPointer": {
 SchemaProps: spec.SchemaProps{
@@ -518,7 +516,6 @@ return common.OpenAPIDefinition{
 Schema: spec.Schema{
 SchemaProps: spec.SchemaProps{
 Description: "Blah is a test.",
-Type: []string{"object"},
 Properties: map[string]spec.Schema{
 "NestedList": {
 SchemaProps: spec.SchemaProps{
@@ -586,7 +583,6 @@ return common.OpenAPIDefinition{
 Schema: spec.Schema{
 SchemaProps: spec.SchemaProps{
 Description: "Blah is a test.",
-Type: []string{"object"},
 Properties: map[string]spec.Schema{
 "WithListField": {
 VendorExtensible: spec.VendorExtensible{

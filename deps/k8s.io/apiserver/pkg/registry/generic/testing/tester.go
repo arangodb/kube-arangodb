@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"k8s.io/apiserver/pkg/registry/rest/resttest"
+	etcdstorage "k8s.io/apiserver/pkg/storage/etcd"
 	storagetesting "k8s.io/apiserver/pkg/storage/testing"
 )
 
@@ -135,7 +136,7 @@ func (t *Tester) TestWatch(valid runtime.Object, labelsPass, labelsFail []labels
 		fieldsPass,
 		fieldsFail,
 		// TODO: This should be filtered, the registry should not be aware of this level of detail
-		[]string{"create", "delete"},
+		[]string{etcdstorage.EtcdCreate, etcdstorage.EtcdDelete},
 	)
 }
 
@@ -184,9 +185,9 @@ func (t *Tester) emitObject(obj runtime.Object, action string) error {
 	var err error
 
 	switch action {
-	case "create":
+	case etcdstorage.EtcdCreate:
 		err = t.createObject(ctx, obj)
-	case "delete":
+	case etcdstorage.EtcdDelete:
 		var accessor metav1.Object
 		accessor, err = meta.Accessor(obj)
 		if err != nil {

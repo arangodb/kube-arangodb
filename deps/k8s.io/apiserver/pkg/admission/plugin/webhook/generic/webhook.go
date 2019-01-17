@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	"k8s.io/api/admissionregistration/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,7 +29,6 @@ import (
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/config"
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/namespace"
 	"k8s.io/apiserver/pkg/admission/plugin/webhook/rules"
-	"k8s.io/apiserver/pkg/util/webhook"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -42,7 +40,7 @@ type Webhook struct {
 	sourceFactory sourceFactory
 
 	hookSource       Source
-	clientManager    *webhook.ClientManager
+	clientManager    *config.ClientManager
 	convertor        *convertor
 	namespaceMatcher *namespace.Matcher
 	dispatcher       Dispatcher
@@ -54,7 +52,7 @@ var (
 )
 
 type sourceFactory func(f informers.SharedInformerFactory) Source
-type dispatcherFactory func(cm *webhook.ClientManager) Dispatcher
+type dispatcherFactory func(cm *config.ClientManager) Dispatcher
 
 // NewWebhook creates a new generic admission webhook.
 func NewWebhook(handler *admission.Handler, configFile io.Reader, sourceFactory sourceFactory, dispatcherFactory dispatcherFactory) (*Webhook, error) {
@@ -63,17 +61,17 @@ func NewWebhook(handler *admission.Handler, configFile io.Reader, sourceFactory 
 		return nil, err
 	}
 
-	cm, err := webhook.NewClientManager(admissionv1beta1.SchemeGroupVersion, admissionv1beta1.AddToScheme)
+	cm, err := config.NewClientManager()
 	if err != nil {
 		return nil, err
 	}
-	authInfoResolver, err := webhook.NewDefaultAuthenticationInfoResolver(kubeconfigFile)
+	authInfoResolver, err := config.NewDefaultAuthenticationInfoResolver(kubeconfigFile)
 	if err != nil {
 		return nil, err
 	}
 	// Set defaults which may be overridden later.
 	cm.SetAuthenticationInfoResolver(authInfoResolver)
-	cm.SetServiceResolver(webhook.NewDefaultServiceResolver())
+	cm.SetServiceResolver(config.NewDefaultServiceResolver())
 
 	return &Webhook{
 		Handler:          handler,
@@ -88,13 +86,13 @@ func NewWebhook(handler *admission.Handler, configFile io.Reader, sourceFactory 
 // SetAuthenticationInfoResolverWrapper sets the
 // AuthenticationInfoResolverWrapper.
 // TODO find a better way wire this, but keep this pull small for now.
-func (a *Webhook) SetAuthenticationInfoResolverWrapper(wrapper webhook.AuthenticationInfoResolverWrapper) {
+func (a *Webhook) SetAuthenticationInfoResolverWrapper(wrapper config.AuthenticationInfoResolverWrapper) {
 	a.clientManager.SetAuthenticationInfoResolverWrapper(wrapper)
 }
 
 // SetServiceResolver sets a service resolver for the webhook admission plugin.
 // Passing a nil resolver does not have an effect, instead a default one will be used.
-func (a *Webhook) SetServiceResolver(sr webhook.ServiceResolver) {
+func (a *Webhook) SetServiceResolver(sr config.ServiceResolver) {
 	a.clientManager.SetServiceResolver(sr)
 }
 
@@ -164,7 +162,6 @@ func (a *Webhook) Dispatch(attr admission.Attributes) error {
 		return admission.NewForbidden(attr, fmt.Errorf("not yet ready to handle request"))
 	}
 	hooks := a.hookSource.Webhooks()
-	// TODO: Figure out if adding one second timeout make sense here.
 	ctx := context.TODO()
 
 	var relevantHooks []*v1beta1.Webhook

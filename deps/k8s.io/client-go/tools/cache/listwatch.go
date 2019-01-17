@@ -18,6 +18,7 @@ package cache
 
 import (
 	"context"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -88,6 +89,13 @@ func NewFilteredListWatchFromClient(c Getter, resource string, namespace string,
 			Watch()
 	}
 	return &ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
+}
+
+func timeoutFromListOptions(options metav1.ListOptions) time.Duration {
+	if options.TimeoutSeconds != nil {
+		return time.Duration(*options.TimeoutSeconds) * time.Second
+	}
+	return 0
 }
 
 // List a set of apiserver resources

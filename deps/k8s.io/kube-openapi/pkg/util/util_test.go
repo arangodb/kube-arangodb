@@ -16,10 +16,7 @@ limitations under the License.
 
 package util
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
 func TestCanonicalName(t *testing.T) {
 
@@ -35,24 +32,6 @@ func TestCanonicalName(t *testing.T) {
 	for _, test := range tests {
 		if got := ToCanonicalName(test.input); got != test.expected {
 			t.Errorf("ToCanonicalName(%q) = %v", test.input, got)
-		}
-	}
-}
-
-type TestType struct{}
-
-func TestGetCanonicalTypeName(t *testing.T) {
-
-	var tests = []struct {
-		input    interface{}
-		expected string
-	}{
-		{TestType{}, "k8s.io/kube-openapi/pkg/util.TestType"},
-		{&TestType{}, "k8s.io/kube-openapi/pkg/util.TestType"},
-	}
-	for _, test := range tests {
-		if got := GetCanonicalTypeName(test.input); got != test.expected {
-			t.Errorf("GetCanonicalTypeName(%q) = %v", reflect.TypeOf(test.input), got)
 		}
 	}
 }

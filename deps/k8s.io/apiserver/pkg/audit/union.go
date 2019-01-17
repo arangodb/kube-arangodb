@@ -37,12 +37,10 @@ type union struct {
 	backends []Backend
 }
 
-func (u union) ProcessEvents(events ...*auditinternal.Event) bool {
-	success := true
+func (u union) ProcessEvents(events ...*auditinternal.Event) {
 	for _, backend := range u.backends {
-		success = backend.ProcessEvents(events...) && success
+		backend.ProcessEvents(events...)
 	}
-	return success
 }
 
 func (u union) Run(stopCh <-chan struct{}) error {

@@ -292,24 +292,22 @@ func (l *Logger) Error() *Event {
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
-// is called by the Msg method, which terminates the program immediately.
+// is called by the Msg method.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Fatal() *Event {
 	return l.newEvent(FatalLevel, func(msg string) { os.Exit(1) })
 }
 
-// Panic starts a new message with panic level. The panic() function
-// is called by the Msg method, which stops the ordinary flow of a goroutine.
+// Panic starts a new message with panic level. The message is also sent
+// to the panic function.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Panic() *Event {
 	return l.newEvent(PanicLevel, func(msg string) { panic(msg) })
 }
 
-// WithLevel starts a new message with level. Unlike Fatal and Panic
-// methods, WithLevel does not terminate the program or stop the ordinary
-// flow of a gourotine when used with their respective levels.
+// WithLevel starts a new message with level.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) WithLevel(level Level) *Event {
@@ -323,9 +321,9 @@ func (l *Logger) WithLevel(level Level) *Event {
 	case ErrorLevel:
 		return l.Error()
 	case FatalLevel:
-		return l.newEvent(FatalLevel, nil)
+		return l.Fatal()
 	case PanicLevel:
-		return l.newEvent(PanicLevel, nil)
+		return l.Panic()
 	case NoLevel:
 		return l.Log()
 	case Disabled:

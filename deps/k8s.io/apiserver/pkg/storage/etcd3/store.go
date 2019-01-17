@@ -29,12 +29,13 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"k8s.io/klog"
+	"github.com/golang/glog"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/etcd"
@@ -82,10 +83,16 @@ type objState struct {
 
 // New returns an etcd3 implementation of storage.Interface.
 func New(c *clientv3.Client, codec runtime.Codec, prefix string, transformer value.Transformer, pagingEnabled bool) storage.Interface {
-	return newStore(c, pagingEnabled, codec, prefix, transformer)
+	return newStore(c, true, pagingEnabled, codec, prefix, transformer)
 }
 
-func newStore(c *clientv3.Client, pagingEnabled bool, codec runtime.Codec, prefix string, transformer value.Transformer) *store {
+// NewWithNoQuorumRead returns etcd3 implementation of storage.Interface
+// where Get operations don't require quorum read.
+func NewWithNoQuorumRead(c *clientv3.Client, codec runtime.Codec, prefix string, transformer value.Transformer, pagingEnabled bool) storage.Interface {
+	return newStore(c, false, pagingEnabled, codec, prefix, transformer)
+}
+
+func newStore(c *clientv3.Client, quorumRead, pagingEnabled bool, codec runtime.Codec, prefix string, transformer value.Transformer) *store {
 	versioner := etcd.APIObjectVersioner{}
 	result := &store{
 		client:        c,
@@ -99,6 +106,11 @@ func newStore(c *clientv3.Client, pagingEnabled bool, codec runtime.Codec, prefi
 		pathPrefix:   path.Join("/", prefix),
 		watcher:      newWatcher(c, codec, versioner, transformer),
 		leaseManager: newDefaultLeaseManager(c),
+	}
+	if !quorumRead {
+		// In case of non-quorum reads, we can set WithSerializable()
+		// options for all Get operations.
+		result.getOps = append(result.getOps, clientv3.WithSerializable())
 	}
 	return result
 }
@@ -236,7 +248,7 @@ func (s *store) conditionalDelete(ctx context.Context, key string, out runtime.O
 		}
 		if !txnResp.Succeeded {
 			getResp = (*clientv3.GetResponse)(txnResp.Responses[0].GetResponseRange())
-			klog.V(4).Infof("deletion of %s failed because of a conflict, going to retry", key)
+			glog.V(4).Infof("deletion of %s failed because of a conflict, going to retry", key)
 			continue
 		}
 		return decode(s.codec, s.versioner, origState.data, out, origState.rev)
@@ -352,7 +364,7 @@ func (s *store) GuaranteedUpdate(
 		trace.Step("Transaction committed")
 		if !txnResp.Succeeded {
 			getResp := (*clientv3.GetResponse)(txnResp.Responses[0].GetResponseRange())
-			klog.V(4).Infof("GuaranteedUpdate of %s failed because of a conflict, going to retry", key)
+			glog.V(4).Infof("GuaranteedUpdate of %s failed because of a conflict, going to retry", key)
 			origState, err = s.getState(getResp, key, v, ignoreNotFound)
 			if err != nil {
 				return err
@@ -496,11 +508,10 @@ func (s *store) List(ctx context.Context, key, resourceVersion string, pred stor
 		options = append(options, clientv3.WithLimit(pred.Limit))
 	}
 
-	var returnedRV, continueRV int64
-	var continueKey string
+	var returnedRV int64
 	switch {
 	case s.pagingEnabled && len(pred.Continue) > 0:
-		continueKey, continueRV, err = decodeContinue(pred.Continue, keyPrefix)
+		continueKey, continueRV, err := decodeContinue(pred.Continue, keyPrefix)
 		if err != nil {
 			return apierrors.NewBadRequest(fmt.Sprintf("invalid continue token: %v", err))
 		}
@@ -513,13 +524,9 @@ func (s *store) List(ctx context.Context, key, resourceVersion string, pred stor
 		options = append(options, clientv3.WithRange(rangeEnd))
 		key = continueKey
 
-		// If continueRV > 0, the LIST request needs a specific resource version.
-		// continueRV==0 is invalid.
-		// If continueRV < 0, the request is for the latest resource version.
-		if continueRV > 0 {
-			options = append(options, clientv3.WithRev(continueRV))
-			returnedRV = continueRV
-		}
+		options = append(options, clientv3.WithRev(continueRV))
+		returnedRV = continueRV
+
 	case s.pagingEnabled && pred.Limit > 0:
 		if len(resourceVersion) > 0 {
 			fromRV, err := s.versioner.ParseResourceVersion(resourceVersion)
@@ -556,7 +563,7 @@ func (s *store) List(ctx context.Context, key, resourceVersion string, pred stor
 	for {
 		getResp, err := s.client.KV.Get(ctx, key, options...)
 		if err != nil {
-			return interpretListError(err, len(pred.Continue) > 0, continueKey, keyPrefix)
+			return interpretListError(err, len(pred.Continue) > 0)
 		}
 		hasMore = getResp.More
 
@@ -582,7 +589,8 @@ func (s *store) List(ctx context.Context, key, resourceVersion string, pred stor
 
 			data, _, err := s.transformer.TransformFromStorage(kv.Value, authenticatedDataString(kv.Key))
 			if err != nil {
-				return storage.NewInternalErrorf("unable to transform key %q: %v", kv.Key, err)
+				utilruntime.HandleError(fmt.Errorf("unable to transform key %q: %v", kv.Key, err))
+				continue
 			}
 
 			if err := appendListItem(v, data, uint64(kv.ModRevision), pred, s.codec, s.versioner); err != nil {

@@ -25,6 +25,7 @@ import (
 	"unicode/utf8"
 
 	"k8s.io/apiserver/pkg/authentication/authenticator"
+	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/util/wsstream"
 )
 
@@ -45,7 +46,7 @@ func NewProtocolAuthenticator(auth authenticator.Token) *ProtocolAuthenticator {
 	return &ProtocolAuthenticator{auth}
 }
 
-func (a *ProtocolAuthenticator) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
+func (a *ProtocolAuthenticator) AuthenticateRequest(req *http.Request) (user.Info, bool, error) {
 	// Only accept websocket connections
 	if !wsstream.IsWebSocketRequest(req) {
 		return nil, false, nil
@@ -90,7 +91,7 @@ func (a *ProtocolAuthenticator) AuthenticateRequest(req *http.Request) (*authent
 		return nil, false, nil
 	}
 
-	resp, ok, err := a.auth.AuthenticateToken(req.Context(), token)
+	user, ok, err := a.auth.AuthenticateToken(token)
 
 	// on success, remove the protocol with the token
 	if ok {
@@ -104,5 +105,5 @@ func (a *ProtocolAuthenticator) AuthenticateRequest(req *http.Request) (*authent
 		err = errInvalidToken
 	}
 
-	return resp, ok, err
+	return user, ok, err
 }

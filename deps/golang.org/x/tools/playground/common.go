@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const baseURL = "https://play.golang.org"
+const baseURL = "https://golang.org"
 
 func init() {
 	http.HandleFunc("/compile", bounce)

@@ -1,5 +1,2 @@
 secrets.yml
 coverage.out
-coverage.txt
-*.cov
-.idea

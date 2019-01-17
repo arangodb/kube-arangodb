@@ -30,7 +30,7 @@ import (
 	"k8s.io/gengo/args"
 	"k8s.io/gengo/examples/set-gen/generators"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 func main() {
@@ -40,8 +40,8 @@ func main() {
 		generators.DefaultNameSystem(),
 		generators.Packages,
 	); err != nil {
-		klog.Errorf("Error: %v", err)
+		glog.Errorf("Error: %v", err)
 		os.Exit(1)
 	}
-	klog.V(2).Info("Completed successfully.")
+	glog.V(2).Info("Completed successfully.")
 }

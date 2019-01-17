@@ -19,7 +19,7 @@ package registry
 import (
 	"sync"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/generic"
@@ -43,10 +43,10 @@ func StorageWithCacher(capacity int) generic.StorageDecorator {
 
 		s, d := generic.NewRawStorage(storageConfig)
 		if capacity == 0 {
-			klog.V(5).Infof("Storage caching is disabled for %T", objectType)
+			glog.V(5).Infof("Storage caching is disabled for %T", objectType)
 			return s, d
 		}
-		klog.V(5).Infof("Storage caching is enabled for %T with capacity %v", objectType, capacity)
+		glog.V(5).Infof("Storage caching is enabled for %T with capacity %v", objectType, capacity)
 
 		// TODO: we would change this later to make storage always have cacher and hide low level KV layer inside.
 		// Currently it has two layers of same storage interface -- cacher and low level kv.

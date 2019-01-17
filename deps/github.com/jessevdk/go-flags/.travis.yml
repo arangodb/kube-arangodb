@@ -6,6 +6,8 @@ os:
 
 go:
   - 1.x
+  - 1.7.x
+  - 1.8.x
   - 1.9.x
   - 1.10.x
 
@@ -15,7 +17,7 @@ install:
   - go build -v ./...
 
   # linting
-  - go get -v golang.org/x/lint/golint
+  - go get github.com/golang/lint/golint
 
   # code coverage
   - go get golang.org/x/tools/cmd/cover

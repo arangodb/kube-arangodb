@@ -15,10 +15,9 @@
 package main
 
 import (
+	surface "github.com/googleapis/gnostic/surface"
 	"strings"
 	"unicode"
-
-	surface "github.com/googleapis/gnostic/surface"
 )
 
 type GoLanguageModel struct{}
@@ -38,8 +37,6 @@ func (language *GoLanguageModel) Prepare(model *surface.Model) {
 			f.FieldName = goFieldName(f.Name)
 			f.ParameterName = goParameterName(f.Name)
 			switch f.Type {
-			case "boolean":
-				f.NativeType = "bool"
 			case "number":
 				f.NativeType = "int"
 			case "integer":

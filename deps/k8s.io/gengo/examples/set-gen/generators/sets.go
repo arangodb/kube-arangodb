@@ -25,7 +25,7 @@ import (
 	"k8s.io/gengo/namer"
 	"k8s.io/gengo/types"
 
-	"k8s.io/klog"
+	"github.com/golang/glog"
 )
 
 // NameSystems returns the name system used by the generators in this package.
@@ -47,13 +47,13 @@ func DefaultNameSystem() string {
 func Packages(_ *generator.Context, arguments *args.GeneratorArgs) generator.Packages {
 	boilerplate, err := arguments.LoadGoBoilerplate()
 	if err != nil {
-		klog.Fatalf("Failed loading boilerplate: %v", err)
+		glog.Fatalf("Failed loading boilerplate: %v", err)
 	}
 
 	return generator.Packages{&generator.DefaultPackage{
 		PackageName: "sets",
 		PackagePath: arguments.OutputPackagePath,
-		HeaderText:  boilerplate,
+		HeaderText: boilerplate,
 		PackageDocumentation: []byte(
 			`// Package sets has auto-generated set types.
 `),

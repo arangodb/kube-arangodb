@@ -10,14 +10,12 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-// ProtoBuf contains the given interface object.
 type ProtoBuf struct {
 	Data interface{}
 }
 
 var protobufContentType = []string{"application/x-protobuf"}
 
-// Render (ProtoBuf) marshals the given interface object and writes data with custom ContentType.
 func (r ProtoBuf) Render(w http.ResponseWriter) error {
 	r.WriteContentType(w)
 
@@ -30,7 +28,6 @@ func (r ProtoBuf) Render(w http.ResponseWriter) error {
 	return nil
 }
 
-// WriteContentType (ProtoBuf) writes ProtoBuf ContentType.
 func (r ProtoBuf) WriteContentType(w http.ResponseWriter) {
 	writeContentType(w, protobufContentType)
 }

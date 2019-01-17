@@ -48,8 +48,6 @@ func TestGeneratedFiles(t *testing.T) {
 			env = append(env, envVar)
 		}
 	}
-	// gorename currently requires GOPATH mode.
-	env = append(env, "GO111MODULE=off")
 
 	// Testing renaming in packages that include cgo files:
 	for iter, renameTest := range []test{

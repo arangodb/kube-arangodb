@@ -9,73 +9,117 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"go/types"
+	"log"
 	"os"
+	"runtime"
+	"runtime/pprof"
+	"runtime/trace"
 	"sort"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/tool"
 )
 
-func main() {
-	tool.Main(context.Background(), &application{Mode: "imports"}, os.Args[1:])
+// flags
+var (
+	depsFlag  = flag.Bool("deps", false, "show dependencies too")
+	testFlag  = flag.Bool("test", false, "include any tests implied by the patterns")
+	mode      = flag.String("mode", "imports", "mode (one of files, imports, types, syntax, allsyntax)")
+	private   = flag.Bool("private", false, "show non-exported declarations too")
+	printJSON = flag.Bool("json", false, "print package in JSON form")
+
+	cpuprofile = flag.String("cpuprofile", "", "write CPU profile to this file")
+	memprofile = flag.String("memprofile", "", "write memory profile to this file")
+	traceFlag  = flag.String("trace", "", "write trace log to this file")
+
+	buildFlags stringListValue
+)
+
+func init() {
+	flag.Var(&buildFlags, "buildflag", "pass argument to underlying build system (may be repeated)")
 }
 
-type application struct {
-	// Embed the basic profiling flags supported by the tool package
-	tool.Profile
+func usage() {
+	fmt.Fprintln(os.Stderr, `Usage: gopackages [-deps] [-cgo] [-mode=...] [-private] package...
 
-	Deps       bool            `flag:"deps" help:"show dependencies too"`
-	Test       bool            `flag:"test" help:"include any tests implied by the patterns"`
-	Mode       string          `flag:"mode" help:"mode (one of files, imports, types, syntax, allsyntax)"`
-	Private    bool            `flag:"private" help:"show non-exported declarations too"`
-	PrintJSON  bool            `flag:"json" help:"print package in JSON form"`
-	BuildFlags stringListValue `flag:"buildflag" help:"pass argument to underlying build system (may be repeated)"`
-}
+The gopackages command loads, parses, type-checks,
+and prints one or more Go packages.
 
-// Name implements tool.Application returning the binary name.
-func (app *application) Name() string { return "gopackages" }
-
-// Usage implements tool.Application returning empty extra argument usage.
-func (app *application) Usage() string { return "package..." }
-
-// ShortHelp implements tool.Application returning the main binary help.
-func (app *application) ShortHelp() string {
-	return "gopackages loads, parses, type-checks, and prints one or more Go packages."
-}
-
-// DetailedHelp implements tool.Application returning the main binary help.
-func (app *application) DetailedHelp(f *flag.FlagSet) {
-	fmt.Fprint(f.Output(), `
 Packages are specified using the notation of "go list",
 or other underlying build system.
 
-Flags:
-`)
-	f.PrintDefaults()
+Flags:`)
+	flag.PrintDefaults()
 }
 
-// Run takes the args after flag processing and performs the specified query.
-func (app *application) Run(ctx context.Context, args ...string) error {
-	if len(args) == 0 {
-		return tool.CommandLineErrorf("not enough arguments")
+func main() {
+	log.SetPrefix("gopackages: ")
+	log.SetFlags(0)
+	flag.Usage = usage
+	flag.Parse()
+
+	if len(flag.Args()) == 0 {
+		usage()
+		os.Exit(1)
+	}
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal(err)
+		}
+		// NB: profile won't be written in case of error.
+		defer pprof.StopCPUProfile()
+	}
+
+	if *traceFlag != "" {
+		f, err := os.Create(*traceFlag)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := trace.Start(f); err != nil {
+			log.Fatal(err)
+		}
+		// NB: trace log won't be written in case of error.
+		defer func() {
+			trace.Stop()
+			log.Printf("To view the trace, run:\n$ go tool trace view %s", *traceFlag)
+		}()
+	}
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// NB: memprofile won't be written in case of error.
+		defer func() {
+			runtime.GC() // get up-to-date statistics
+			if err := pprof.WriteHeapProfile(f); err != nil {
+				log.Fatalf("Writing memory profile: %v", err)
+			}
+			f.Close()
+		}()
 	}
 
 	// Load, parse, and type-check the packages named on the command line.
 	cfg := &packages.Config{
 		Mode:       packages.LoadSyntax,
-		Tests:      app.Test,
-		BuildFlags: app.BuildFlags,
+		Error:      func(error) {}, // we'll take responsibility for printing errors
+		Tests:      *testFlag,
+		BuildFlags: buildFlags,
 	}
 
 	// -mode flag
-	switch strings.ToLower(app.Mode) {
+	switch strings.ToLower(*mode) {
 	case "files":
 		cfg.Mode = packages.LoadFiles
 	case "imports":
@@ -87,16 +131,16 @@ func (app *application) Run(ctx context.Context, args ...string) error {
 	case "allsyntax":
 		cfg.Mode = packages.LoadAllSyntax
 	default:
-		return tool.CommandLineErrorf("invalid mode: %s", app.Mode)
+		log.Fatalf("invalid mode: %s", *mode)
 	}
 
-	lpkgs, err := packages.Load(cfg, args...)
+	lpkgs, err := packages.Load(cfg, flag.Args()...)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	// -deps: print dependencies too.
-	if app.Deps {
+	if *depsFlag {
 		// We can't use packages.All because
 		// we need an ordered traversal.
 		var all []*packages.Package // postorder
@@ -126,13 +170,12 @@ func (app *application) Run(ctx context.Context, args ...string) error {
 	}
 
 	for _, lpkg := range lpkgs {
-		app.print(lpkg)
+		print(lpkg)
 	}
-	return nil
 }
 
-func (app *application) print(lpkg *packages.Package) {
-	if app.PrintJSON {
+func print(lpkg *packages.Package) {
+	if *printJSON {
 		data, _ := json.MarshalIndent(lpkg, "", "\t")
 		os.Stdout.Write(data)
 		return
@@ -195,14 +238,14 @@ func (app *application) print(lpkg *packages.Package) {
 		scope := lpkg.Types.Scope()
 		for _, name := range scope.Names() {
 			obj := scope.Lookup(name)
-			if !obj.Exported() && !app.Private {
+			if !obj.Exported() && !*private {
 				continue // skip unexported names
 			}
 
 			fmt.Printf("\t%s\n", types.ObjectString(obj, qual))
 			if _, ok := obj.(*types.TypeName); ok {
 				for _, meth := range typeutil.IntuitiveMethodSet(obj.Type(), nil) {
-					if !meth.Obj().Exported() && !app.Private {
+					if !meth.Obj().Exported() && !*private {
 						continue // skip unexported names
 					}
 					fmt.Printf("\t%s\n", types.SelectionString(meth, qual))

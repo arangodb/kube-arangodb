@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"k8s.io/apiserver/pkg/authentication/authenticator"
+	"k8s.io/apiserver/pkg/authentication/user"
 )
 
 type Authenticator struct {
@@ -34,7 +35,7 @@ func New(auth authenticator.Token) *Authenticator {
 
 var invalidToken = errors.New("invalid bearer token")
 
-func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
+func (a *Authenticator) AuthenticateRequest(req *http.Request) (user.Info, bool, error) {
 	auth := strings.TrimSpace(req.Header.Get("Authorization"))
 	if auth == "" {
 		return nil, false, nil
@@ -51,7 +52,7 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 		return nil, false, nil
 	}
 
-	resp, ok, err := a.auth.AuthenticateToken(req.Context(), token)
+	user, ok, err := a.auth.AuthenticateToken(token)
 	// if we authenticated successfully, go ahead and remove the bearer token so that no one
 	// is ever tempted to use it inside of the API server
 	if ok {
@@ -63,5 +64,5 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 		err = invalidToken
 	}
 
-	return resp, ok, err
+	return user, ok, err
 }

@@ -13,13 +13,6 @@
 
 include Makefile.common
 
-# http.CloseNotifier is deprecated but we don't want to remove support
-# from client_golang to not break anybody still using it.
-STATICCHECK_IGNORE = \
-  github.com/prometheus/client_golang/prometheus/promhttp/delegator*.go:SA1019 \
-  github.com/prometheus/client_golang/prometheus/promhttp/instrument_server_test.go:SA1019 \
-  github.com/prometheus/client_golang/prometheus/http.go:SA1019
-
 .PHONY: get_dep
 get_dep:
 	@echo ">> getting dependencies" 
@@ -27,6 +20,3 @@ get_dep:
 
 .PHONY: test
 test: get_dep common-test
-
-.PHONY: test-short
-test-short: get_dep common-test-short

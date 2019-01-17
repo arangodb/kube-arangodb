@@ -15,14 +15,7 @@ var samplers = []struct {
 	wantMax int
 }{
 	{
-		"BasicSampler_1",
-		func() Sampler {
-			return &BasicSampler{N: 1}
-		},
-		100, 100, 100,
-	},
-	{
-		"BasicSampler_5",
+		"BasicSampler",
 		func() Sampler {
 			return &BasicSampler{N: 5}
 		},

@@ -38,7 +38,7 @@ func (renderer *Renderer) RenderClient() ([]byte, error) {
 	f.WriteLine(``)
 	f.WriteLine("package " + renderer.Package)
 
-	// imports will be automatically added by imports pkg
+	// imports will be automatically added by goimports
 
 	f.WriteLine(`// Client represents an API client.`)
 	f.WriteLine(`type Client struct {`)

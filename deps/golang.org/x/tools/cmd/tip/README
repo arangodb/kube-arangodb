@@ -23,6 +23,10 @@ New Kubernetes instructions, for tip.golang.org:
 
 Kubernetes instructions:
 
- * make deploy-prod
+ * build & push images (see Makefile for helpers)
+ * create/update resources:
+   - kubectl create -f tip-rc.yaml
+   - kubectl create -f tip-service.yaml
 
-Also: move talks.golang.org to GKE too?
+TODO(bradfitz): flesh out these instructions as I gain experience
+with updating this over time. Also: move talks.golang.org to GKE too?

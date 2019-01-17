@@ -251,7 +251,7 @@ func (b *bufferedBackend) processEvents(events []*auditinternal.Event) {
 	}
 }
 
-func (b *bufferedBackend) ProcessEvents(ev ...*auditinternal.Event) bool {
+func (b *bufferedBackend) ProcessEvents(ev ...*auditinternal.Event) {
 	// The following mechanism is in place to support the situation when audit
 	// events are still coming after the backend was stopped.
 	var sendErr error
@@ -279,10 +279,9 @@ func (b *bufferedBackend) ProcessEvents(ev ...*auditinternal.Event) bool {
 		case b.buffer <- event:
 		default:
 			sendErr = fmt.Errorf("audit buffer queue blocked")
-			return true
+			return
 		}
 	}
-	return true
 }
 
 func (b *bufferedBackend) String() string {

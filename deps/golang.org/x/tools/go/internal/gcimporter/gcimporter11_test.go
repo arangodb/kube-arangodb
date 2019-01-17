@@ -8,6 +8,7 @@ package gcimporter
 
 import (
 	"go/types"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -53,7 +54,7 @@ func TestImportedTypes(t *testing.T) {
 		importPath := s[0]
 		objName := s[1]
 
-		pkg, err := Import(make(map[string]*types.Package), importPath, ".", nil)
+		pkg, err := Import(make(map[string]*types.Package), importPath, ".")
 		if err != nil {
 			t.Error(err)
 			continue
@@ -125,5 +126,9 @@ func TestIssue25301(t *testing.T) {
 		t.Skip("avoid dealing with relative paths/drive letters on windows")
 	}
 
-	compileAndImportPkg(t, "issue25301")
+	if f := compile(t, "testdata", "issue25301.go"); f != "" {
+		defer os.Remove(f)
+	}
+
+	importPkg(t, "./testdata/issue25301")
 }

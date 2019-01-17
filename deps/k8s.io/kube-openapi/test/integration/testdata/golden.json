@@ -4,86 +4,9 @@
    "title": "Integration Test",
    "version": "1.0"
   },
-  "paths": {
-   "/test": {
-    "get": {
-     "schemes": [
-      "https"
-     ],
-     "operationId": "func1",
-     "responses": {
-      "404": {
-       "$ref": "#/responses/NotFound"
-      }
-     }
-    }
-   }
-  },
+  "paths": {},
   "definitions": {
-   "dummytype.Bar": {
-    "type": "object",
-    "required": [
-     "ViolationBehind",
-     "Violation"
-    ],
-    "properties": {
-     "Violation": {
-      "type": "boolean"
-     },
-     "ViolationBehind": {
-      "type": "boolean"
-     }
-    }
-   },
-   "dummytype.Baz": {
-    "type": "object",
-    "required": [
-     "Violation",
-     "ViolationBehind"
-    ],
-    "properties": {
-     "Violation": {
-      "type": "boolean"
-     },
-     "ViolationBehind": {
-      "type": "boolean"
-     }
-    }
-   },
-   "dummytype.Foo": {
-    "type": "object",
-    "required": [
-     "Second",
-     "First"
-    ],
-    "properties": {
-     "First": {
-      "type": "integer",
-      "format": "int32"
-     },
-     "Second": {
-      "type": "string"
-     }
-    }
-   },
-   "dummytype.Waldo": {
-    "type": "object",
-    "required": [
-     "First",
-     "Second"
-    ],
-    "properties": {
-     "First": {
-      "type": "integer",
-      "format": "int32"
-     },
-     "Second": {
-      "type": "string"
-     }
-    }
-   },
    "listtype.AtomicList": {
-    "type": "object",
     "required": [
      "Field"
     ],
@@ -98,10 +21,9 @@
     }
    },
    "listtype.Item": {
-    "type": "object",
     "required": [
-     "Protocol",
-     "Port"
+     "Port",
+     "Protocol"
     ],
     "properties": {
      "Port": {
@@ -110,23 +32,10 @@
      },
      "Protocol": {
       "type": "string"
-     },
-     "a": {
-      "type": "integer",
-      "format": "int32"
-     },
-     "b": {
-      "type": "integer",
-      "format": "int32"
-     },
-     "c": {
-      "type": "integer",
-      "format": "int32"
      }
     }
    },
    "listtype.MapList": {
-    "type": "object",
     "required": [
      "Field"
     ],
@@ -142,7 +51,6 @@
     }
    },
    "listtype.SetList": {
-    "type": "object",
     "required": [
      "Field"
     ],
@@ -155,11 +63,6 @@
       "x-kubernetes-list-type": "set"
      }
     }
-   }
-  },
-  "responses": {
-   "NotFound": {
-    "description": "Entity not found."
    }
   }
  }
