@@ -244,13 +244,16 @@ build-bin: $(GOX) $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
 docker: check-vars build-bin $(MANIFESTTOOL)
 	for arch in $(ARCHS); do \
 		docker build --build-arg=GOARCH=$$arch -t $(OPERATORIMAGE)-$$arch . ;\
+	done
+ifdef PUSHIMAGES
+	for arch in $(ARCHS); do \
 		docker push $(OPERATORIMAGE)-$$arch ;\
 	done
 	$(MANIFESTTOOL) $(MANIFESTAUTH) push from-args \
     	--platforms $(PLATFORMS) \
     	--template $(OPERATORIMAGE)-ARCH \
     	--target $(OPERATORIMAGE)
-
+endif
 
 $(GOX):  $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go build -o $(GOX) github.com/mitchellh/gox
