@@ -1,0 +1,7 @@
+FROM arm32v6/alpine:3.6
+
+RUN apk update && apk add ca-certificates \
+	&& update-ca-certificates
+
+COPY manifest-tool-linux-arm /manifest-tool
+ENTRYPOINT [ "/manifest-tool" ]

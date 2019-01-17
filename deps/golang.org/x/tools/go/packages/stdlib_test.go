@@ -30,13 +30,13 @@ func TestStdlibMetadata(t *testing.T) {
 	alloc := memstats.Alloc
 
 	// Load, parse and type-check the program.
-	cfg := &packages.Config{
-		Mode:  packages.LoadAllSyntax,
-		Error: func(error) {},
-	}
+	cfg := &packages.Config{Mode: packages.LoadAllSyntax}
 	pkgs, err := packages.Load(cfg, "std")
 	if err != nil {
 		t.Fatalf("failed to load metadata: %v", err)
+	}
+	if packages.PrintErrors(pkgs) > 0 {
+		t.Fatal("there were errors loading standard library")
 	}
 
 	t1 := time.Now()
@@ -59,7 +59,7 @@ func TestStdlibMetadata(t *testing.T) {
 
 func TestCgoOption(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping in short mode; uses tons of memory (golang.org/issue/14113)")
+		t.Skip("skipping in short mode; uses tons of memory (https://golang.org/issue/14113)")
 	}
 
 	// TODO(adonovan): see if we can get away without these old
@@ -96,13 +96,14 @@ func TestCgoOption(t *testing.T) {
 		{"net", "cgoLookupHost", "cgo_stub.go"},
 		{"os/user", "current", "lookup_stubs.go"},
 	} {
-		cfg := &packages.Config{
-			Mode:  packages.LoadSyntax,
-			Error: func(error) {},
-		}
+		cfg := &packages.Config{Mode: packages.LoadSyntax}
 		pkgs, err := packages.Load(cfg, test.pkg)
 		if err != nil {
 			t.Errorf("Load failed: %v", err)
+			continue
+		}
+		if packages.PrintErrors(pkgs) > 0 {
+			t.Error("there were errors loading standard library")
 			continue
 		}
 		pkg := pkgs[0]

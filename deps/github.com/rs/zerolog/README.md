@@ -8,7 +8,7 @@ Zerolog's API is designed to provide both a great developer experience and stunn
 
 Uber's [zap](https://godoc.org/go.uber.org/zap) library pioneered this approach. Zerolog is taking this concept to the next level with a simpler to use API and even better performance.
 
-To keep the code base and the API simple, zerolog focuses on efficient structured logging only. Pretty logging on the console is made possible using the provided (but inefficient) `zerolog.ConsoleWriter`.
+To keep the code base and the API simple, zerolog focuses on efficient structured logging only. Pretty logging on the console is made possible using the provided (but inefficient) [`zerolog.ConsoleWriter`](#pretty-logging).
 
 ![Pretty Logging Image](pretty.png)
 
@@ -60,7 +60,7 @@ func main() {
 
 // Output: {"time":1516134303,"level":"debug","message":"hello world"}
 ```
-
+> Note: By default log writes to `os.Stderr`
 > Note: The default log level for `log.Print` is *debug*
 
 ### Contextual Logging
@@ -252,14 +252,38 @@ sublogger.Info().Msg("hello world")
 
 ### Pretty logging
 
+To log a human-friendly, colorized output, use `zerolog.ConsoleWriter`:
+
 ```go
-if isConsole {
-    log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
+log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 log.Info().Str("foo", "bar").Msg("Hello world")
 
-// Output: 1494567715 |INFO| Hello world foo=bar
+// Output: 3:04PM INF Hello World foo=bar
+```
+
+To customize the configuration and formatting:
+
+```go
+output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+output.FormatLevel = func(i interface{}) string {
+    return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+}
+output.FormatMessage = func(i interface{}) string {
+    return fmt.Sprintf("***%s****", i)
+}
+output.FormatFieldName = func(i interface{}) string {
+    return fmt.Sprintf("%s:", i)
+}
+output.FormatFieldValue = func(i interface{}) string {
+    return strings.ToUpper(fmt.Sprintf("%s", i))
+}
+
+log := zerolog.New(output).With().Timestamp().Logger()
+
+log.Info().Str("foo", "bar").Msg("Hello World")
+
+// Output: 2006-01-02T15:04:05Z07:00 | INFO  | ***Hello World**** foo:BAR
 ```
 
 ### Sub dictionary
@@ -364,7 +388,7 @@ hooked.Warn().Msg("")
 ### Pass a sub-logger by context
 
 ```go
-ctx := log.With("component", "module").Logger().WithContext(ctx)
+ctx := log.With().Str("component", "module").Logger().WithContext(ctx)
 
 log.Ctx(ctx).Info().Msg("hello world")
 
@@ -455,6 +479,7 @@ Some settings can be changed and will by applied to all loggers:
     // using the Dur method.
 * `DurationFieldUnit`: Sets the unit of the fields added by `Dur` (default: `time.Millisecond`).
 * `DurationFieldInteger`: If set to true, `Dur` fields are formatted as integers instead of floats.
+* `ErrorHandler`: Called whenever zerolog fails to write an event on its output. If not set, an error is printed on the stderr. This handler must be thread safe and non-blocking.
 
 ## Field Types
 
@@ -491,6 +516,8 @@ with zerolog library is [CSD](https://github.com/toravir/csd/).
 * [grpc-zerolog](https://github.com/cheapRoc/grpc-zerolog): Implementation of `grpclog.LoggerV2` interface using `zerolog`
 
 ## Benchmarks
+
+See [logbench](http://hackemist.com/logbench/) for more comprehensive and up-to-date benchmarks.
 
 All operations are allocation free (those numbers *include* JSON encoding):
 

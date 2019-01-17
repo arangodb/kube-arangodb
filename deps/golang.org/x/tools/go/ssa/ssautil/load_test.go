@@ -58,6 +58,9 @@ func TestPackages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if packages.PrintErrors(initial) > 0 {
+		t.Fatal("there were errors")
+	}
 
 	prog, pkgs := ssautil.Packages(initial, 0)
 	bytesNewBuffer := pkgs[0].Func("NewBuffer")
@@ -100,4 +103,18 @@ func TestBuildPackage_MissingImport(t *testing.T) {
 	if err == nil || ssapkg != nil {
 		t.Fatal("BuildPackage succeeded unexpectedly")
 	}
+}
+
+func TestIssue28106(t *testing.T) {
+	// In go1.10, go/packages loads all packages from source, not
+	// export data, but does not type check function bodies of
+	// imported packages. This test ensures that we do not attempt
+	// to run the SSA builder on functions without type information.
+	cfg := &packages.Config{Mode: packages.LoadSyntax}
+	pkgs, err := packages.Load(cfg, "runtime")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prog, _ := ssautil.Packages(pkgs, 0)
+	prog.Build() // no crash
 }

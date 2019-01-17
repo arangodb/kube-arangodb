@@ -23,6 +23,8 @@
 package v1alpha
 
 import (
+	"time"
+
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,11 +82,16 @@ func (c *arangoDeployments) Get(name string, options v1.GetOptions) (result *v1a
 
 // List takes label and field selectors, and returns the list of ArangoDeployments that match those selectors.
 func (c *arangoDeployments) List(opts v1.ListOptions) (result *v1alpha.ArangoDeploymentList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1alpha.ArangoDeploymentList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("arangodeployments").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -92,11 +99,16 @@ func (c *arangoDeployments) List(opts v1.ListOptions) (result *v1alpha.ArangoDep
 
 // Watch returns a watch.Interface that watches the requested arangoDeployments.
 func (c *arangoDeployments) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("arangodeployments").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -154,10 +166,15 @@ func (c *arangoDeployments) Delete(name string, options *v1.DeleteOptions) error
 
 // DeleteCollection deletes a collection of objects.
 func (c *arangoDeployments) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("arangodeployments").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

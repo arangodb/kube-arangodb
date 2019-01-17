@@ -39,7 +39,7 @@ func TestSimple(t *testing.T) {
 func TestEmpty(t *testing.T) {
 	links := Parse("")
 	if links != nil {
-		t.Errorf("Return value should be nil, but was %s", len(links))
+		t.Errorf("Return value should be nil, but was %d", len(links))
 	}
 }
 

@@ -54,91 +54,6 @@ func buildGodoc(t *testing.T) (bin string, cleanup func()) {
 	return bin, func() { os.RemoveAll(tmp) }
 }
 
-var isGo19 bool // godoc19_test.go sets it to true.
-
-// Basic regression test for godoc command-line tool.
-func TestCLI(t *testing.T) {
-	bin, cleanup := buildGodoc(t)
-	defer cleanup()
-
-	// condStr returns s if cond is true, otherwise empty string.
-	condStr := func(cond bool, s string) string {
-		if !cond {
-			return ""
-		}
-		return s
-	}
-
-	tests := []struct {
-		args      []string
-		matches   []string // regular expressions
-		dontmatch []string // regular expressions
-	}{
-		{
-			args: []string{"fmt"},
-			matches: []string{
-				`import "fmt"`,
-				`Package fmt implements formatted I/O`,
-			},
-		},
-		{
-			args: []string{"io", "WriteString"},
-			matches: []string{
-				`func WriteString\(`,
-				`WriteString writes the contents of the string s to w`,
-			},
-		},
-		{
-			args: []string{"nonexistingpkg"},
-			matches: []string{
-				`cannot find package` +
-					// TODO: Remove this when support for Go 1.8 is dropped.
-					condStr(!isGo19,
-						// For Go 1.8 and older, because it doesn't have CL 33158 change applied to go/build.
-						// The last pattern (does not e) is for plan9:
-						// http://build.golang.org/log/2d8e5e14ed365bfa434b37ec0338cd9e6f8dd9bf
-						`|no such file or directory|does not exist|cannot find the file|(?:' does not e)`),
-			},
-		},
-		{
-			args: []string{"fmt", "NonexistentSymbol"},
-			matches: []string{
-				`No match found\.`,
-			},
-		},
-		{
-			args: []string{"-src", "syscall", "Open"},
-			matches: []string{
-				`func Open\(`,
-			},
-			dontmatch: []string{
-				`No match found\.`,
-			},
-		},
-	}
-	for _, test := range tests {
-		cmd := exec.Command(bin, test.args...)
-		cmd.Args[0] = "godoc"
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			t.Errorf("Running with args %#v: %v", test.args, err)
-			continue
-		}
-		for _, pat := range test.matches {
-			re := regexp.MustCompile(pat)
-			if !re.Match(out) {
-				t.Errorf("godoc %v =\n%s\nwanted /%v/", strings.Join(test.args, " "), out, pat)
-			}
-		}
-		for _, pat := range test.dontmatch {
-			re := regexp.MustCompile(pat)
-			if re.Match(out) {
-				t.Errorf("godoc %v =\n%s\ndid not want /%v/", strings.Join(test.args, " "), out, pat)
-			}
-		}
-	}
-}
-
 func serverAddress(t *testing.T) string {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -249,10 +164,14 @@ func testWeb(t *testing.T, withIndex bool) {
 	cmd.Stderr = os.Stderr
 	cmd.Args[0] = "godoc"
 
-	// Set GOPATH variable to non-existing path.
+	// Set GOPATH variable to non-existing path
+	// and GOPROXY=off to disable module fetches.
 	// We cannot just unset GOPATH variable because godoc would default it to ~/go.
 	// (We don't want the indexer looking at the local workspace during tests.)
-	cmd.Env = append(os.Environ(), "GOPATH=does_not_exist")
+	cmd.Env = append(os.Environ(),
+		"GOPATH=does_not_exist",
+		"GOPROXY=off",
+		"GO111MODULE=off")
 
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("failed to start godoc: %s", err)
@@ -464,6 +383,8 @@ func main() { print(lib.V) }
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOROOT=%s", filepath.Join(tmpdir, "goroot")))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOPATH=%s", filepath.Join(tmpdir, "gopath")))
+	cmd.Env = append(cmd.Env, "GO111MODULE=off")
+	cmd.Env = append(cmd.Env, "GOPROXY=off")
 	cmd.Stdout = os.Stderr
 	stderr, err := cmd.StderrPipe()
 	if err != nil {

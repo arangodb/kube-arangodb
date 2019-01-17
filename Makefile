@@ -26,6 +26,8 @@ GOVERSION := 1.10.0-alpine
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
+GOX := $(GOBUILDDIR)/bin/gox$(shell go env GOEXE)
+MANIFESTTOOL := $(GOBUILDDIR)/bin/manifest-tool$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile 
 DOCKERTESTFILE := Dockerfile.test
@@ -82,8 +84,16 @@ ifndef ALLOWCHAOS
 	ALLOWCHAOS := true
 endif
 
+# Magical rubbish to teach make what commas and spaces are.
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+COMMA := $(EMPTY),$(EMPTY)
+
+ARCHS:=amd64 arm arm64
+PLATFORMS:=$(subst $(SPACE),$(COMMA),$(foreach arch,$(ARCHS),linux/$(arch)))
+
 BINNAME := $(PROJECT)
-BIN := $(BINDIR)/$(BINNAME)
+BIN := $(foreach arch,$(ARCHS),$(BINDIR)/linux/$(arch)/$(BINNAME))
 TESTBINNAME := $(PROJECT)_test
 TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
@@ -112,7 +122,7 @@ all: verify-generated build
 #
 
 .PHONY: build
-build: check-vars docker manifests
+build: check-vars build-bin docker manifests
 
 .PHONY: clean
 clean:
@@ -174,6 +184,9 @@ update-vendor:
 		github.com/pulcy/pulsar \
 		github.com/rs/zerolog \
 		github.com/spf13/cobra \
+		github.com/mitchellh/gox \
+		github.com/estesp/manifest-tool \
+		github.com/arangodb-helper/glog \
 		github.com/stretchr/testify
 	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
 	@${MAKE} -B -s clean
@@ -212,35 +225,44 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		$(DASHBOARDBUILDIMAGE)
 	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
+.PHONY: build-bin
+build-bin: $(GOX) $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
+	CGO_ENABLED=0 GOPATH=$(GOBUILDDIR) $(GOX) \
+		-os="linux" \
+		-arch="$(ARCHS)" \
+		-osarch="!darwin/arm !darwin/arm64" \
+		-ldflags="-X main.projectVersion=${VERSION} -X main.projectBuild=${COMMIT}" \
+		-output="bin/{{.OS}}/{{.Arch}}/$(BINNAME)" \
+		-tags="netgo" \
+		github.com/arangodb/kube-arangodb
+	@ln -sf $(BINDIR)/$(shell go env GOOS)/$(shell go env GOARCH)/kube-arangodb$(shell go env GOEXE)
 
 
 
 .PHONY: docker
-docker: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
-ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
-endif
+docker: check-vars build-bin $(MANIFESTTOOL)
+	for arch in $(ARCHS); do \
+		docker build --build-arg=GOARCH=$$arch -t $(OPERATORIMAGE)-$$arch . ;\
+		docker push $(OPERATORIMAGE)-$$arch ;\
+	done
+	$(MANIFESTTOOL) $(MANIFESTAUTH) push from-args \
+    	--platforms $(PLATFORMS) \
+    	--template $(OPERATORIMAGE)-ARCH \
+    	--target $(OPERATORIMAGE)
+
+
+$(GOX):  $(GOBUILDDIR)
+	GOPATH=$(GOBUILDDIR) go build -o $(GOX) github.com/mitchellh/gox
+
+$(MANIFESTTOOL): 
+	GOPATH=$(GOBUILDDIR) go build -o $(MANIFESTTOOL) github.com/estesp/manifest-tool
 
 # Manifests 
 
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
-	echo Building manifests
+	@echo Building manifests
 	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
 		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \
@@ -379,6 +401,7 @@ docker-push-version: docker
 
 $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 	GOPATH=$(GOBUILDDIR) go build -o $(RELEASE) $(REPOPATH)/tools/release
+
 
 .PHONY: build-ghrelease
 build-ghrelease: $(GHRELEASE)

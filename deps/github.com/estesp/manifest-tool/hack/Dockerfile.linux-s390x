@@ -1,0 +1,7 @@
+FROM s390x/alpine:3.6
+
+RUN apk update && apk add ca-certificates \
+	&& update-ca-certificates
+
+COPY manifest-tool-linux-s390x /manifest-tool
+ENTRYPOINT [ "/manifest-tool" ]

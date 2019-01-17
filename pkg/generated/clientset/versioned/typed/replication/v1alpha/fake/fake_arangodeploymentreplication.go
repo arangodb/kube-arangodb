@@ -135,7 +135,7 @@ func (c *FakeArangoDeploymentReplications) DeleteCollection(options *v1.DeleteOp
 // Patch applies the patch and returns the patched arangoDeploymentReplication.
 func (c *FakeArangoDeploymentReplications) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha.ArangoDeploymentReplication, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangodeploymentreplicationsResource, c.ns, name, data, subresources...), &v1alpha.ArangoDeploymentReplication{})
+		Invokes(testing.NewPatchSubresourceAction(arangodeploymentreplicationsResource, c.ns, name, pt, data, subresources...), &v1alpha.ArangoDeploymentReplication{})
 
 	if obj == nil {
 		return nil, err

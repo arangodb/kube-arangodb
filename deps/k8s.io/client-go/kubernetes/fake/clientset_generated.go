@@ -34,6 +34,8 @@ import (
 	fakeappsv1beta1 "k8s.io/client-go/kubernetes/typed/apps/v1beta1/fake"
 	appsv1beta2 "k8s.io/client-go/kubernetes/typed/apps/v1beta2"
 	fakeappsv1beta2 "k8s.io/client-go/kubernetes/typed/apps/v1beta2/fake"
+	auditregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/auditregistration/v1alpha1"
+	fakeauditregistrationv1alpha1 "k8s.io/client-go/kubernetes/typed/auditregistration/v1alpha1/fake"
 	authenticationv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
 	fakeauthenticationv1 "k8s.io/client-go/kubernetes/typed/authentication/v1/fake"
 	authenticationv1beta1 "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
@@ -46,6 +48,8 @@ import (
 	fakeautoscalingv1 "k8s.io/client-go/kubernetes/typed/autoscaling/v1/fake"
 	autoscalingv2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1"
 	fakeautoscalingv2beta1 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1/fake"
+	autoscalingv2beta2 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2"
+	fakeautoscalingv2beta2 "k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2/fake"
 	batchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 	fakebatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1/fake"
 	batchv1beta1 "k8s.io/client-go/kubernetes/typed/batch/v1beta1"
@@ -54,6 +58,8 @@ import (
 	fakebatchv2alpha1 "k8s.io/client-go/kubernetes/typed/batch/v2alpha1/fake"
 	certificatesv1beta1 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1"
 	fakecertificatesv1beta1 "k8s.io/client-go/kubernetes/typed/certificates/v1beta1/fake"
+	coordinationv1 "k8s.io/client-go/kubernetes/typed/coordination/v1"
+	fakecoordinationv1 "k8s.io/client-go/kubernetes/typed/coordination/v1/fake"
 	coordinationv1beta1 "k8s.io/client-go/kubernetes/typed/coordination/v1beta1"
 	fakecoordinationv1beta1 "k8s.io/client-go/kubernetes/typed/coordination/v1beta1/fake"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -144,6 +150,16 @@ func (c *Clientset) Admissionregistration() admissionregistrationv1beta1.Admissi
 	return &fakeadmissionregistrationv1beta1.FakeAdmissionregistrationV1beta1{Fake: &c.Fake}
 }
 
+// AppsV1 retrieves the AppsV1Client
+func (c *Clientset) AppsV1() appsv1.AppsV1Interface {
+	return &fakeappsv1.FakeAppsV1{Fake: &c.Fake}
+}
+
+// Apps retrieves the AppsV1Client
+func (c *Clientset) Apps() appsv1.AppsV1Interface {
+	return &fakeappsv1.FakeAppsV1{Fake: &c.Fake}
+}
+
 // AppsV1beta1 retrieves the AppsV1beta1Client
 func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
 	return &fakeappsv1beta1.FakeAppsV1beta1{Fake: &c.Fake}
@@ -154,14 +170,14 @@ func (c *Clientset) AppsV1beta2() appsv1beta2.AppsV1beta2Interface {
 	return &fakeappsv1beta2.FakeAppsV1beta2{Fake: &c.Fake}
 }
 
-// AppsV1 retrieves the AppsV1Client
-func (c *Clientset) AppsV1() appsv1.AppsV1Interface {
-	return &fakeappsv1.FakeAppsV1{Fake: &c.Fake}
+// AuditregistrationV1alpha1 retrieves the AuditregistrationV1alpha1Client
+func (c *Clientset) AuditregistrationV1alpha1() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface {
+	return &fakeauditregistrationv1alpha1.FakeAuditregistrationV1alpha1{Fake: &c.Fake}
 }
 
-// Apps retrieves the AppsV1Client
-func (c *Clientset) Apps() appsv1.AppsV1Interface {
-	return &fakeappsv1.FakeAppsV1{Fake: &c.Fake}
+// Auditregistration retrieves the AuditregistrationV1alpha1Client
+func (c *Clientset) Auditregistration() auditregistrationv1alpha1.AuditregistrationV1alpha1Interface {
+	return &fakeauditregistrationv1alpha1.FakeAuditregistrationV1alpha1{Fake: &c.Fake}
 }
 
 // AuthenticationV1 retrieves the AuthenticationV1Client
@@ -209,6 +225,11 @@ func (c *Clientset) AutoscalingV2beta1() autoscalingv2beta1.AutoscalingV2beta1In
 	return &fakeautoscalingv2beta1.FakeAutoscalingV2beta1{Fake: &c.Fake}
 }
 
+// AutoscalingV2beta2 retrieves the AutoscalingV2beta2Client
+func (c *Clientset) AutoscalingV2beta2() autoscalingv2beta2.AutoscalingV2beta2Interface {
+	return &fakeautoscalingv2beta2.FakeAutoscalingV2beta2{Fake: &c.Fake}
+}
+
 // BatchV1 retrieves the BatchV1Client
 func (c *Clientset) BatchV1() batchv1.BatchV1Interface {
 	return &fakebatchv1.FakeBatchV1{Fake: &c.Fake}
@@ -244,9 +265,14 @@ func (c *Clientset) CoordinationV1beta1() coordinationv1beta1.CoordinationV1beta
 	return &fakecoordinationv1beta1.FakeCoordinationV1beta1{Fake: &c.Fake}
 }
 
-// Coordination retrieves the CoordinationV1beta1Client
-func (c *Clientset) Coordination() coordinationv1beta1.CoordinationV1beta1Interface {
-	return &fakecoordinationv1beta1.FakeCoordinationV1beta1{Fake: &c.Fake}
+// CoordinationV1 retrieves the CoordinationV1Client
+func (c *Clientset) CoordinationV1() coordinationv1.CoordinationV1Interface {
+	return &fakecoordinationv1.FakeCoordinationV1{Fake: &c.Fake}
+}
+
+// Coordination retrieves the CoordinationV1Client
+func (c *Clientset) Coordination() coordinationv1.CoordinationV1Interface {
+	return &fakecoordinationv1.FakeCoordinationV1{Fake: &c.Fake}
 }
 
 // CoreV1 retrieves the CoreV1Client

@@ -1,0 +1,7 @@
+FROM ppc64le/alpine:3.6
+
+RUN apk update && apk add ca-certificates \
+	&& update-ca-certificates
+
+COPY manifest-tool-linux-ppc64le /manifest-tool
+ENTRYPOINT [ "/manifest-tool" ]

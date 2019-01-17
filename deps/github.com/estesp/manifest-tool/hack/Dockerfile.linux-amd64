@@ -1,0 +1,7 @@
+FROM alpine:3.6
+
+RUN apk update && apk add ca-certificates \
+	&& update-ca-certificates
+
+COPY manifest-tool-linux-amd64 /manifest-tool
+ENTRYPOINT [ "/manifest-tool" ]

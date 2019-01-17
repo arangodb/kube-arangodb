@@ -136,6 +136,9 @@ func ParseMultiple(headers []string) Links {
 func parseParam(raw string) (key, val string) {
 
 	parts := strings.SplitN(raw, "=", 2)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
 	if len(parts) != 2 {
 		return "", ""
 	}

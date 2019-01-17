@@ -19,7 +19,6 @@ import (
 	"math"
 	"net/http"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
@@ -90,37 +89,6 @@ func ExampleGaugeFunc() {
 	// GaugeFunc 'goroutines_count' registered.
 }
 
-func ExampleCounter() {
-	pushCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "repository_pushes", // Note: No help string...
-	})
-	err := prometheus.Register(pushCounter) // ... so this will return an error.
-	if err != nil {
-		fmt.Println("Push counter couldn't be registered, no counting will happen:", err)
-		return
-	}
-
-	// Try it once more, this time with a help string.
-	pushCounter = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "repository_pushes",
-		Help: "Number of pushes to external repository.",
-	})
-	err = prometheus.Register(pushCounter)
-	if err != nil {
-		fmt.Println("Push counter couldn't be registered AGAIN, no counting will happen:", err)
-		return
-	}
-
-	pushComplete := make(chan struct{})
-	// TODO: Start a goroutine that performs repository pushes and reports
-	// each completion via the channel.
-	for range pushComplete {
-		pushCounter.Inc()
-	}
-	// Output:
-	// Push counter couldn't be registered, no counting will happen: descriptor Desc{fqName: "repository_pushes", help: "", constLabels: {}, variableLabels: []} is invalid: empty help string
-}
-
 func ExampleCounterVec() {
 	httpReqs := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -166,19 +134,6 @@ func ExampleInstrumentHandler() {
 	http.Handle("/metrics", prometheus.InstrumentHandler(
 		"metrics", prometheus.UninstrumentedHandler(),
 	))
-}
-
-func ExampleLabelPairSorter() {
-	labelPairs := []*dto.LabelPair{
-		{Name: proto.String("status"), Value: proto.String("404")},
-		{Name: proto.String("method"), Value: proto.String("get")},
-	}
-
-	sort.Sort(prometheus.LabelPairSorter(labelPairs))
-
-	fmt.Println(labelPairs)
-	// Output:
-	// [name:"method" value:"get"  name:"status" value:"404" ]
 }
 
 func ExampleRegister() {
@@ -327,7 +282,7 @@ func ExampleRegister() {
 	// taskCounter unregistered.
 	// taskCounterVec not registered: a previously registered descriptor with the same fully-qualified name as Desc{fqName: "worker_pool_completed_tasks_total", help: "Total number of tasks completed.", constLabels: {}, variableLabels: [worker_id]} has different label names or a different help string
 	// taskCounterVec registered.
-	// Worker initialization failed: inconsistent label cardinality
+	// Worker initialization failed: inconsistent label cardinality: expected 1 label values but got 2 in []string{"42", "spurious arg"}
 	// notMyCounter is nil.
 	// taskCounterForWorker42 registered.
 	// taskCounterForWorker2001 registered.

@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -190,6 +191,16 @@ func TestBindingDefault(t *testing.T) {
 
 	assert.Equal(t, MsgPack, Default("POST", MIMEMSGPACK))
 	assert.Equal(t, MsgPack, Default("PUT", MIMEMSGPACK2))
+
+	assert.Equal(t, YAML, Default("POST", MIMEYAML))
+	assert.Equal(t, YAML, Default("PUT", MIMEYAML))
+}
+
+func TestBindingJSONNilBody(t *testing.T) {
+	var obj FooStruct
+	req, _ := http.NewRequest(http.MethodPost, "/", nil)
+	err := JSON.Bind(req, &obj)
+	assert.Error(t, err)
 }
 
 func TestBindingJSON(t *testing.T) {
@@ -473,6 +484,20 @@ func TestBindingXMLFail(t *testing.T) {
 		"<map><foo>bar<foo></map>", "<map><bar>foo</bar></map>")
 }
 
+func TestBindingYAML(t *testing.T) {
+	testBodyBinding(t,
+		YAML, "yaml",
+		"/", "/",
+		`foo: bar`, `bar: foo`)
+}
+
+func TestBindingYAMLFail(t *testing.T) {
+	testBodyBindingFail(t,
+		YAML, "yaml",
+		"/", "/",
+		`foo:\nbar`, `bar: foo`)
+}
+
 func createFormPostRequest() *http.Request {
 	req, _ := http.NewRequest("POST", "/?foo=getfoo&bar=getbar", bytes.NewBufferString("foo=bar&bar=foo"))
 	req.Header.Set("Content-Type", MIMEPOSTForm)
@@ -643,6 +668,49 @@ func TestExistsFails(t *testing.T) {
 	req := requestWithBody("POST", "/", `{"boen": 0}`)
 	err := JSON.Bind(req, &obj)
 	assert.Error(t, err)
+}
+
+func TestUriBinding(t *testing.T) {
+	b := Uri
+	assert.Equal(t, "uri", b.Name())
+
+	type Tag struct {
+		Name string `uri:"name"`
+	}
+	var tag Tag
+	m := make(map[string][]string)
+	m["name"] = []string{"thinkerou"}
+	assert.NoError(t, b.BindUri(m, &tag))
+	assert.Equal(t, "thinkerou", tag.Name)
+
+	type NotSupportStruct struct {
+		Name map[string]interface{} `uri:"name"`
+	}
+	var not NotSupportStruct
+	assert.Error(t, b.BindUri(m, &not))
+	assert.Equal(t, map[string]interface{}(nil), not.Name)
+}
+
+func TestUriInnerBinding(t *testing.T) {
+	type Tag struct {
+		Name string `uri:"name"`
+		S    struct {
+			Age int `uri:"age"`
+		}
+	}
+
+	expectedName := "mike"
+	expectedAge := 25
+
+	m := map[string][]string{
+		"name": {expectedName},
+		"age":  {strconv.Itoa(expectedAge)},
+	}
+
+	var tag Tag
+	assert.NoError(t, Uri.BindUri(m, &tag))
+	assert.Equal(t, tag.Name, expectedName)
+	assert.Equal(t, tag.S.Age, expectedAge)
 }
 
 func testFormBinding(t *testing.T, method, path, badPath, body, badBody string) {
@@ -1214,4 +1282,13 @@ func testMsgPackBodyBinding(t *testing.T, b Binding, name, path, badPath, body, 
 func requestWithBody(method, path, body string) (req *http.Request) {
 	req, _ = http.NewRequest(method, path, bytes.NewBufferString(body))
 	return
+}
+
+func TestCanSet(t *testing.T) {
+	type CanSetStruct struct {
+		lowerStart string `form:"lower"`
+	}
+
+	var c CanSetStruct
+	assert.Nil(t, mapForm(&c, nil))
 }

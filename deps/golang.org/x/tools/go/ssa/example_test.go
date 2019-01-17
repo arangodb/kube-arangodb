@@ -49,7 +49,7 @@ func main() {
 // with similar functionality. It is located at
 // golang.org/x/tools/cmd/ssadump.
 //
-func ExampleBuildPackage() {
+func Example_buildPackage() {
 	// Parse the source files.
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, "hello.go", hello, parser.ParseComments)
@@ -117,12 +117,19 @@ func ExampleBuildPackage() {
 // This example builds SSA code for a set of packages using the
 // x/tools/go/packages API. This is what you would typically use for a
 // analysis capable of operating on a single package.
-func ExampleLoadPackages() {
+func Example_loadPackages() {
 	// Load, parse, and type-check the initial packages.
 	cfg := &packages.Config{Mode: packages.LoadSyntax}
 	initial, err := packages.Load(cfg, "fmt", "net/http")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Stop if any package had errors.
+	// This step is optional; without it, the next step
+	// will create SSA for only a subset of packages.
+	if packages.PrintErrors(initial) > 0 {
+		log.Fatalf("packages contain errors")
 	}
 
 	// Create SSA packages for all well-typed packages.
@@ -140,7 +147,7 @@ func ExampleLoadPackages() {
 // This example builds SSA code for a set of packages plus all their dependencies,
 // using the x/tools/go/packages API.
 // This is what you'd typically use for a whole-program analysis.
-func ExampleLoadWholeProgram() {
+func Example_loadWholeProgram() {
 	// Load, parse, and type-check the whole program.
 	cfg := packages.Config{Mode: packages.LoadAllSyntax}
 	initial, err := packages.Load(&cfg, "fmt", "net/http")
@@ -148,8 +155,8 @@ func ExampleLoadWholeProgram() {
 		log.Fatal(err)
 	}
 
-	// Create SSA packages for all well-typed packages.
-	prog, pkgs := ssautil.Packages(initial, ssa.PrintPackages)
+	// Create SSA packages for well-typed packages and their dependencies.
+	prog, pkgs := ssautil.AllPackages(initial, ssa.PrintPackages)
 	_ = pkgs
 
 	// Build SSA code for the whole program.
