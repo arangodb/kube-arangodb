@@ -236,9 +236,6 @@ build-bin: $(GOX) $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
 		-output="bin/{{.OS}}/{{.Arch}}/$(BINNAME)" \
 		-tags="netgo" \
 		github.com/arangodb/kube-arangodb
-	@ln -sf $(BINDIR)/$(shell go env GOOS)/$(shell go env GOARCH)/kube-arangodb$(shell go env GOEXE)
-
-
 
 .PHONY: docker
 docker: check-vars build-bin $(MANIFESTTOOL)

@@ -62,6 +62,9 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.7/
 
 ## Building
 
+If you are a MacOS user, you need to specify `MANIFESTAUTH` with your docker credentials, i.e. something like `--username=foo --password=bar`.
+Those are required by the manifest tool. See [here](https://github.com/estesp/manifest-tool#sample-usage).
+
 ```bash
 DOCKERNAMESPACE=<your dockerhub account> make
 kubectl apply -f manifests/arango-deployment-dev.yaml
