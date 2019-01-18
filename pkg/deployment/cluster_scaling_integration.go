@@ -170,6 +170,8 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	if dbserversChanged {
 		newSpec.DBServers.Count = util.NewInt(req.GetDBServers())
 	}
+	// Validate will additionally check if
+	// 		min <= count <= max holds for the given server groups
 	if err := newSpec.Validate(); err != nil {
 		// Log failure & create event
 		log.Warn().Err(err).Msg("Validation of updated spec has failed")
