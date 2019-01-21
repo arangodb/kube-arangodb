@@ -1,0 +1,78 @@
+{{ .DatabaseAdmin.FilterStart }}
+{{ .RBACFilterStart }}
+
+## Cluster role granting access to ArangoDeployment resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .DatabaseAdmin.User.RoleName }}
+rules:
+- apiGroups: ["databaseadmin.arangodb.com"]
+  resources: ["arangodatabases", "arangousers"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeployment operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .DatabaseAdmin.Operator.RoleName }}
+rules:
+- apiGroups: ["databaseadmin.arangodb.com"]
+  resources: ["arangodatabases", "arangousers"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["namespaces", "nodes"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+
+---
+
+## Bind the cluster role granting access to ArangoDeployment resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .DatabaseAdmin.User.RoleBindingName }}
+  namespace: {{ .DatabaseAdmin.User.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .DatabaseAdmin.User.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .DatabaseAdmin.User.ServiceAccountName }}
+  namespace: {{ .DatabaseAdmin.User.Namespace }}
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeployment operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .DatabaseAdmin.Operator.RoleBindingName }}-{{ .DatabaseAdmin.Operator.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .DatabaseAdmin.Operator.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .DatabaseAdmin.Operator.ServiceAccountName }}
+  namespace: {{ .DatabaseAdmin.Operator.Namespace }}
+
+{{ .RBACFilterEnd }}
+{{ .DatabaseAdmin.FilterEnd }}

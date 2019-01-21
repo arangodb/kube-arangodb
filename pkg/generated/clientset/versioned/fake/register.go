@@ -23,6 +23,7 @@
 package fake
 
 import (
+	databaseadminv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -37,6 +38,7 @@ var scheme = runtime.NewScheme()
 var codecs = serializer.NewCodecFactory(scheme)
 var parameterCodec = runtime.NewParameterCodec(scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
+	databaseadminv1alpha.AddToScheme,
 	databasev1alpha.AddToScheme,
 	replicationv1alpha.AddToScheme,
 	storagev1alpha.AddToScheme,

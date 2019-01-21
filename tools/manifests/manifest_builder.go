@@ -52,12 +52,14 @@ var (
 		DeploymentOperatorName            string
 		DeploymentReplicationOperatorName string
 		StorageOperatorName               string
+		DatabaseAdminOperatorName         string
 		RBAC                              bool
 		AllowChaos                        bool
 	}
 	crdTemplateNames = []Template{
 		Template{Name: "deployment.yaml"},
 		Template{Name: "deployment-replication.yaml"},
+		Template{Name: "database-admin.yaml"},
 	}
 	deploymentTemplateNames = []Template{
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
@@ -74,6 +76,11 @@ var (
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment.yaml"},
 		Template{Name: "service.yaml"},
+	}
+	databaseAdminTemplateNames = []Template{
+		Template{Name: "rbac.yaml", Predicate: func(o TemplateOptions, isHelm bool) bool { return o.RBAC && !isHelm }},
+		Template{Name: "deployment.yaml", Predicate: func(o TemplateOptions, isHelm bool) bool { return !isHelm }},
+		Template{Name: "service.yaml", Predicate: func(o TemplateOptions, isHelm bool) bool { return !isHelm }},
 	}
 	testTemplateNames = []Template{
 		Template{Name: "rbac.yaml", Predicate: func(o TemplateOptions, isHelm bool) bool { return o.RBAC && !isHelm }},
@@ -233,6 +240,7 @@ func init() {
 	pflag.StringVar(&options.DeploymentOperatorName, "deployment-operator-name", "arango-deployment-operator", "Name of the ArangoDeployment operator deployment")
 	pflag.StringVar(&options.DeploymentReplicationOperatorName, "deployment-replication-operator-name", "arango-deployment-replication-operator", "Name of the ArangoDeploymentReplication operator deployment")
 	pflag.StringVar(&options.StorageOperatorName, "storage-operator-name", "arango-storage-operator", "Name of the ArangoLocalStorage operator deployment")
+	pflag.StringVar(&options.DatabaseAdminOperatorName, "database-admin-operator-name", "database-admin-operator", "Name of the ArangoDatabaseAdmin operator deployment")
 	pflag.BoolVar(&options.RBAC, "rbac", true, "Use role based access control")
 	pflag.BoolVar(&options.AllowChaos, "allow-chaos", false, "If set, allows chaos in deployments")
 
@@ -249,6 +257,7 @@ type TemplateOptions struct {
 	Deployment            ResourceOptions
 	DeploymentReplication ResourceOptions
 	Storage               ResourceOptions
+	DatabaseAdmin         ResourceOptions
 	Test                  CommonOptions
 }
 
@@ -301,6 +310,7 @@ func main() {
 		"deployment":             TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentTemplateNames},
 		"deployment-replication": TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentReplicationTemplateNames},
 		"storage":                TemplateGroup{ChartName: "kube-arangodb-storage", Templates: storageTemplateNames},
+		"admin":                  TemplateGroup{ChartName: "", Templates: databaseAdminTemplateNames},
 		"test":                   TemplateGroup{ChartName: "", Templates: testTemplateNames},
 	}
 
@@ -377,6 +387,23 @@ func main() {
 			},
 			OperatorDeploymentName: "arango-storage-operator",
 		},
+		DatabaseAdmin: ResourceOptions{
+			Create: "true",
+			User: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-database-admin",
+				RoleBindingName:    "arango-database-admin",
+				ServiceAccountName: "default",
+			},
+			Operator: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-database-admin-operator",
+				RoleBindingName:    "arango-database-admin-operator",
+				ServiceAccountName: "arango-database-admin-operator",
+				ServiceType:        "ClusterIP",
+			},
+			OperatorDeploymentName: "arango-database-admin-operator",
+		},
 		Test: CommonOptions{
 			Namespace:          options.Namespace,
 			RoleName:           "arango-operator-test",
@@ -448,6 +475,25 @@ func main() {
 			},
 			OperatorDeploymentName: "arango-storage-operator", // Fixed name because only 1 is allowed per namespace
 		},
+		// DatabaseAdmin: ResourceOptions{
+		// 	Create:      "{{ .Values.DatabaseAdmin.Create }}",
+		// 	FilterStart: "{{- if .Values.DatabaseAdmin.Create }}",
+		// 	FilterEnd:   "{{- end }}",
+		// 	User: CommonOptions{
+		// 		Namespace:          "{{ .Release.Namespace }}",
+		// 		RoleName:           `{{ printf "%s-%s" .Release.Name "database-admin" | trunc 63 | trimSuffix "-" }}`,
+		// 		RoleBindingName:    `{{ printf "%s-%s" .Release.Name "database-admin" | trunc 63 | trimSuffix "-" }}`,
+		// 		ServiceAccountName: "{{ .Values.DatabaseAdmin.User.ServiceAccountName }}",
+		// 	},
+		// 	Operator: CommonOptions{
+		// 		Namespace:          "{{ .Release.Namespace }}",
+		// 		RoleName:           `{{ printf "%s-%s" .Release.Name "database-admin-operator" | trunc 63 | trimSuffix "-" }}`,
+		// 		RoleBindingName:    `{{ printf "%s-%s" .Release.Name "database-admin-operator" | trunc 63 | trimSuffix "-" }}`,
+		// 		ServiceAccountName: "{{ .Values.DatabaseAdmin.Operator.ServiceAccountName }}",
+		// 		ServiceType:        "{{ .Values.DatabaseAdmin.Operator.ServiceType }}",
+		// 	},
+		// 	OperatorDeploymentName: "arango-database-admin-operator", // Fixed name because only 1 is allowed per namespace
+		// },
 	}
 
 	for group, templateGroup := range templateInfoSet {

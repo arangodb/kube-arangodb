@@ -28,6 +28,7 @@ import (
 	time "time"
 
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	admin "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/admin"
 	deployment "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
 	replication "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/replication"
@@ -178,9 +179,14 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Databaseadmin() admin.Interface
 	Database() deployment.Interface
 	Replication() replication.Interface
 	Storage() storage.Interface
+}
+
+func (f *sharedInformerFactory) Databaseadmin() admin.Interface {
+	return admin.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Database() deployment.Interface {

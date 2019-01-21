@@ -24,6 +24,8 @@ package fake
 
 import (
 	clientset "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	databaseadminv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/admin/v1alpha"
+	fakedatabaseadminv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/admin/v1alpha/fake"
 	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
 	fakedatabasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
 	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1alpha"
@@ -78,6 +80,16 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// DatabaseadminV1alpha retrieves the DatabaseadminV1alphaClient
+func (c *Clientset) DatabaseadminV1alpha() databaseadminv1alpha.DatabaseadminV1alphaInterface {
+	return &fakedatabaseadminv1alpha.FakeDatabaseadminV1alpha{Fake: &c.Fake}
+}
+
+// Databaseadmin retrieves the DatabaseadminV1alphaClient
+func (c *Clientset) Databaseadmin() databaseadminv1alpha.DatabaseadminV1alphaInterface {
+	return &fakedatabaseadminv1alpha.FakeDatabaseadminV1alpha{Fake: &c.Fake}
+}
 
 // DatabaseV1alpha retrieves the DatabaseV1alphaClient
 func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {

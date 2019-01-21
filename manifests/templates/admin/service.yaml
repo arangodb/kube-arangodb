@@ -1,0 +1,23 @@
+{{ .DatabaseAdmin.FilterStart }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .DatabaseAdmin.OperatorDeploymentName }}
+  namespace: {{ .DatabaseAdmin.Operator.Namespace }}
+  labels:
+    name: {{ .DatabaseAdmin.OperatorDeploymentName }}
+    app: arango-deployment-operator
+spec:
+  ports:
+  - name: server
+    port: 8528
+    protocol: TCP
+    targetPort: 8528
+  selector:
+    name: {{ .DatabaseAdmin.OperatorDeploymentName }}
+    app: arango-DatabaseAdmin-operator
+    role: leader
+  type: {{ .DatabaseAdmin.Operator.ServiceType }}
+
+{{ .DatabaseAdmin.FilterEnd }}

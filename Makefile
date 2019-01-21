@@ -193,7 +193,7 @@ update-generated: $(GOBUILDDIR)
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
+		"deployment:v1alpha replication:v1alpha storage:v1alpha admin:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 

@@ -25,6 +25,7 @@ package externalversions
 import (
 	"fmt"
 
+	adminv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -61,6 +62,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=database.arangodb.com, Version=v1alpha
 	case v1alpha.SchemeGroupVersion.WithResource("arangodeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1alpha().ArangoDeployments().Informer()}, nil
+
+		// Group=databaseadmin.arangodb.com, Version=v1alpha
+	case adminv1alpha.SchemeGroupVersion.WithResource("arangodatabases"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Databaseadmin().V1alpha().ArangoDatabases().Informer()}, nil
+	case adminv1alpha.SchemeGroupVersion.WithResource("arangousers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Databaseadmin().V1alpha().ArangoUsers().Informer()}, nil
 
 		// Group=replication.database.arangodb.com, Version=v1alpha
 	case replicationv1alpha.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
