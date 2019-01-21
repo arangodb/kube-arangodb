@@ -1,7 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: databaseadmin.database.arangodb.com
+  name: arangodatabases.databaseadmin.arangodb.com
 spec:
   group: databaseadmin.arangodb.com
   names:
@@ -19,13 +19,13 @@ spec:
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: databaseadmin.database.arangodb.com
+  name: arangousers.databaseadmin.arangodb.com
 spec:
   group: databaseadmin.arangodb.com
   names:
     kind: ArangoUser
     listKind: ArangoUserList
-    plural: arangodatabases
+    plural: arangousers
     shortNames:
     singular: arangouser
   scope: Namespaced
