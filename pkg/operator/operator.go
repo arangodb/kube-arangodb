@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/arangodb/kube-arangodb/pkg/admin"
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -63,6 +64,7 @@ type Operator struct {
 	deployments            map[string]*deployment.Deployment
 	deploymentReplications map[string]*replication.DeploymentReplication
 	localStorages          map[string]*storage.LocalStorage
+	databaseAdmin          *admin.DatabaseAdmin
 }
 
 type Config struct {

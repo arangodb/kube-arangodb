@@ -21,11 +21,10 @@
 package operator
 
 import (
-	"time"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 
+	admin "github.com/arangodb/kube-arangodb/pkg/admin"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -84,12 +83,10 @@ func (o *Operator) runDatabaseAdmin(stop <-chan struct{}) {
 	o.watchDatabaseResources(stop)
 	o.DatabaseAdminProbe.SetReady()
 
-	for {
-		select {
-		case <-stop:
-			return
-		case <-time.After(5 * time.Second):
-			o.log.Debug().Msgf("This is your friendly database admin :)")
-		}
-	}
+	o.databaseAdmin = admin.NewDatabaseAdmin(o.Namespace, admin.Dependencies{
+		Log:                o.Dependencies.LogService.MustGetLogger("databaseadmin"),
+		KubeCli:            o.Dependencies.KubeCli,
+		DatabaseAdminCRCli: o.Dependencies.CRCli,
+	})
+	o.databaseAdmin.Run(stop)
 }

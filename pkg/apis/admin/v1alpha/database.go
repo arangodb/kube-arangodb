@@ -21,6 +21,8 @@ package v1alpha
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -45,9 +47,45 @@ type ArangoDatabase struct {
 	Status            DatabaseStatus `json:"status"`
 }
 
-// DatabaseSpec is
+// DatabaseSpec specifies a arangodb database
 type DatabaseSpec struct {
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
+}
+
+// GetName returns the name of the database or empty string
+func (ds *DatabaseSpec) GetName() string {
+	return util.StringOrDefault(ds.Name)
+}
+
+// Validate validates a DatabaseSpec
+func (ds *DatabaseSpec) Validate() error {
+	return nil
+}
+
+// SetDefaults sets the default values for a DatabaseSpec
+func (ds *DatabaseSpec) SetDefaults(resourceName string) {
+	if ds.Name == nil {
+		ds.Name = util.NewString(resourceName)
+	}
+}
+
+// SetDefaultsFrom fills in the values not specified with the values form source
+func (ds *DatabaseSpec) SetDefaultsFrom(source DatabaseSpec) {
+	if ds.Name == nil {
+		ds.Name = util.NewStringOrNil(source.Name)
+	}
+}
+
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+// Field names are relative to `spec.`.
+func (ds *DatabaseSpec) ResetImmutableFields(target *DatabaseSpec) []string {
+	var resetFields []string
+	if ds.Name != target.Name {
+		target.Name = util.NewStringOrNil(ds.Name)
+		resetFields = append(resetFields, "Name")
+	}
+	return resetFields
 }
 
 // DatabaseStatus is
