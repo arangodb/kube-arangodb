@@ -61,6 +61,7 @@ type Dependencies struct {
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	DatabaseAdminProbe         *probe.ReadyProbe
 	Operators                  Operators
 	Secrets                    corev1.SecretInterface
 }
@@ -150,6 +151,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	r.GET("/ready/deployment", gin.WrapF(deps.DeploymentProbe.ReadyHandler))
 	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
 	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
+	r.GET("/ready/admin", gin.WrapF(deps.DatabaseAdminProbe.ReadyHandler))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
 	r.POST("/login", s.auth.handleLogin)
 	api := r.Group("/api", s.auth.checkAuthentication)

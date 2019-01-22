@@ -1,7 +1,7 @@
 {{ .DatabaseAdmin.FilterStart }}
 
 apiVersion: extensions/v1beta1
-kind: DatabaseAdmin
+kind: Deployment
 metadata:
   name: {{ .DatabaseAdmin.OperatorDeploymentName }}
   namespace: {{ .DatabaseAdmin.Operator.Namespace }}
@@ -13,7 +13,7 @@ spec:
     metadata:
       labels:
         name: {{ .DatabaseAdmin.OperatorDeploymentName }}
-        app: arango-deployment-operator
+        app: arango-database-admin-operator
     spec:
       serviceAccountName: {{ .DatabaseAdmin.Operator.ServiceAccountName }}
       containers:
@@ -22,7 +22,6 @@ spec:
         image: {{ .Image }}
         args:
           - --operator.database-admin
-          - --chaos.allowed={{ .DatabaseAdmin.AllowChaos }}
         env:
         - name: MY_POD_NAMESPACE
           valueFrom:
@@ -48,7 +47,7 @@ spec:
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready/deployment
+            path: /ready/admin
             port: 8528
             scheme: HTTPS
           initialDelaySeconds: 5

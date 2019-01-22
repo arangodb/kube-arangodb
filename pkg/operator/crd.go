@@ -23,6 +23,7 @@
 package operator
 
 import (
+	daapi "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -31,7 +32,7 @@ import (
 
 // waitForCRD waits for the CustomResourceDefinition (created externally)
 // to be ready.
-func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage bool) error {
+func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage, enableDatabaseAdmin bool) error {
 	log := o.log
 
 	if enableDeployment {
@@ -51,6 +52,16 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 	if enableStorage {
 		log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
 		if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
+			return maskAny(err)
+		}
+	}
+
+	if enableDatabaseAdmin {
+		log.Debug().Msg("Waiting for DatabaseAdmin CRDs to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, daapi.ArangoDatabaseCRDName); err != nil {
+			return maskAny(err)
+		}
+		if err := crd.WaitCRDReady(o.KubeExtCli, daapi.ArangoUserCRDName); err != nil {
 			return maskAny(err)
 		}
 	}

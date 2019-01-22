@@ -399,7 +399,7 @@ func main() {
 				Namespace:          options.Namespace,
 				RoleName:           "arango-database-admin-operator",
 				RoleBindingName:    "arango-database-admin-operator",
-				ServiceAccountName: "arango-database-admin-operator",
+				ServiceAccountName: "default",
 				ServiceType:        "ClusterIP",
 			},
 			OperatorDeploymentName: "arango-database-admin-operator",

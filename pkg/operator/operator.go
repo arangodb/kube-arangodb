@@ -75,6 +75,7 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
+	EnableDatabaseAdmin         bool
 	AllowChaos                  bool
 }
 
@@ -88,6 +89,7 @@ type Dependencies struct {
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	DatabaseAdminProbe         *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -114,6 +116,9 @@ func (o *Operator) Run() {
 	if o.Config.EnableStorage {
 		go o.runLeaderElection("arango-storage-operator", o.onStartStorage, o.Dependencies.StorageProbe)
 	}
+	if o.Config.EnableDatabaseAdmin {
+		go o.runLeaderElection("arango-database-admin", o.onStartDatabaseAdmin, o.Dependencies.DatabaseAdminProbe)
+	}
 	// Wait until process terminates
 	<-context.TODO().Done()
 }
@@ -121,7 +126,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(true, false, false); err == nil {
+		if err := o.waitForCRD(true, false, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -135,7 +140,7 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
 func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, true, false); err == nil {
+		if err := o.waitForCRD(false, true, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -149,7 +154,7 @@ func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, false, true); err == nil {
+		if err := o.waitForCRD(false, false, true, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -158,4 +163,18 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 		}
 	}
 	o.runLocalStorages(stop)
+}
+
+// onStartDatabaseAdmin starts the database admin operator and run till given channel is closed.
+func (o *Operator) onStartDatabaseAdmin(stop <-chan struct{}) {
+	for {
+		if err := o.waitForCRD(false, false, false, true); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+	o.runDatabaseAdmin(stop)
 }
