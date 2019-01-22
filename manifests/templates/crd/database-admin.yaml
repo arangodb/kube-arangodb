@@ -5,8 +5,8 @@ metadata:
 spec:
   group: databaseadmin.arangodb.com
   names:
-    kind: ArangoDarabase
-    listKind: ArangoDarabaseList
+    kind: ArangoDatabase
+    listKind: ArangoDatabaseList
     plural: arangodatabases
     shortNames:
     - arangodbase

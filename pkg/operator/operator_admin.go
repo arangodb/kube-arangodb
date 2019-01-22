@@ -20,16 +20,76 @@
 
 package operator
 
-import "time"
+import (
+	"time"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/cache"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+)
+
+// WatchResource defines a resource to be watched
+type WatchResource struct {
+	// Name of the resource
+	Name string
+	// Type is the runtime type of the object
+	Type runtime.Object
+}
+
+var resources = []WatchResource{
+	{
+		Name: api.ArangoDatabaseResourcePlural,
+		Type: &api.ArangoDatabase{},
+	},
+	{
+		Name: api.ArangoUserResourcePlural,
+		Type: &api.ArangoUser{},
+	},
+}
+
+func (o *Operator) watchDatabaseResources(stop <-chan struct{}) {
+
+	for _, r := range resources {
+		rw := k8sutil.NewResourceWatcher(
+			o.log,
+			o.Dependencies.CRCli.DatabaseadminV1alpha().RESTClient(),
+			r.Name,
+			o.Config.Namespace,
+			r.Type,
+			cache.ResourceEventHandlerFuncs{
+				AddFunc:    o.onAddDatabaseAdminResource,
+				UpdateFunc: o.onUpdateDatabaseAdminResource,
+				DeleteFunc: o.onDeleteDatabaseAdminResource,
+			})
+		go rw.Run(stop)
+	}
+
+}
+
+func (o *Operator) onAddDatabaseAdminResource(obj interface{}) {
+	o.log.Debug().Msgf("onAddDatabaseAdminResource")
+}
+
+func (o *Operator) onUpdateDatabaseAdminResource(old, new interface{}) {
+	o.log.Debug().Msgf("onUpdateDatabaseAdminResource")
+}
+
+func (o *Operator) onDeleteDatabaseAdminResource(obj interface{}) {
+	o.log.Debug().Msgf("onDeleteDatabaseAdminResource")
+}
 
 func (o *Operator) runDatabaseAdmin(stop <-chan struct{}) {
+	o.watchDatabaseResources(stop)
 	o.DatabaseAdminProbe.SetReady()
+
 	for {
 		select {
 		case <-stop:
 			return
 		case <-time.After(5 * time.Second):
-			o.log.Debug().Msgf("This is the database admin :)")
+			o.log.Debug().Msgf("This is your friendly database admin :)")
 		}
 	}
 }
