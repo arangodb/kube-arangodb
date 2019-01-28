@@ -21,12 +21,16 @@
 package operator
 
 import (
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
 
 	admin "github.com/arangodb/kube-arangodb/pkg/admin"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	watch "k8s.io/apimachinery/pkg/watch"
 )
 
 // WatchResource defines a resource to be watched
@@ -49,7 +53,6 @@ var resources = []WatchResource{
 }
 
 func (o *Operator) watchDatabaseResources(stop <-chan struct{}) {
-
 	for _, r := range resources {
 		rw := k8sutil.NewResourceWatcher(
 			o.log,
@@ -64,29 +67,40 @@ func (o *Operator) watchDatabaseResources(stop <-chan struct{}) {
 			})
 		go rw.Run(stop)
 	}
-
 }
 
 func (o *Operator) onAddDatabaseAdminResource(obj interface{}) {
-	o.log.Debug().Msgf("onAddDatabaseAdminResource")
+	fmt.Println("onAddDatabaseAdminResource")
+	o.databaseAdmin.EventChannel <- watch.Event{
+		Type:   watch.Added,
+		Object: obj.(runtime.Object),
+	}
 }
 
 func (o *Operator) onUpdateDatabaseAdminResource(old, new interface{}) {
-	o.log.Debug().Msgf("onUpdateDatabaseAdminResource")
+	fmt.Println("onUpdateDatabaseAdminResource")
+	o.databaseAdmin.EventChannel <- watch.Event{
+		Type:   watch.Modified,
+		Object: new.(runtime.Object),
+	}
 }
 
 func (o *Operator) onDeleteDatabaseAdminResource(obj interface{}) {
-	o.log.Debug().Msgf("onDeleteDatabaseAdminResource")
+	fmt.Println("onDeleteDatabaseAdminResource")
+	o.databaseAdmin.EventChannel <- watch.Event{
+		Type:   watch.Deleted,
+		Object: obj.(runtime.Object),
+	}
 }
 
 func (o *Operator) runDatabaseAdmin(stop <-chan struct{}) {
-	o.watchDatabaseResources(stop)
-	o.DatabaseAdminProbe.SetReady()
-
 	o.databaseAdmin = admin.NewDatabaseAdmin(o.Namespace, admin.Dependencies{
 		Log:                o.Dependencies.LogService.MustGetLogger("databaseadmin"),
 		KubeCli:            o.Dependencies.KubeCli,
 		DatabaseAdminCRCli: o.Dependencies.CRCli,
 	})
+	o.watchDatabaseResources(stop)
+	o.DatabaseAdminProbe.SetReady()
+
 	o.databaseAdmin.Run(stop)
 }

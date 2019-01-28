@@ -44,7 +44,24 @@ type ArangoDatabase struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              DatabaseSpec   `json:"spec"`
-	Status            DatabaseStatus `json:"status"`
+	Status            ResourceStatus `json:"status"`
+}
+
+// GetDeploymentName returns the name of the deployment this database belongs to
+func (ds *ArangoDatabase) GetDeploymentName() string {
+	if name, ok := ds.Labels["deployment"]; ok {
+		return name
+	}
+	return ""
+}
+
+// GetStatus returns the resource status of the database
+func (ds *ArangoDatabase) GetStatus() *ResourceStatus {
+	return &ds.Status
+}
+
+func (ds *ArangoDatabase) GetMeta() *metav1.ObjectMeta {
+	return &ds.ObjectMeta
 }
 
 // DatabaseSpec specifies a arangodb database
@@ -70,7 +87,7 @@ func (ds *DatabaseSpec) SetDefaults(resourceName string) {
 }
 
 // SetDefaultsFrom fills in the values not specified with the values form source
-func (ds *DatabaseSpec) SetDefaultsFrom(source DatabaseSpec) {
+func (ds *DatabaseSpec) SetDefaultsFrom(source *DatabaseSpec) {
 	if ds.Name == nil {
 		ds.Name = util.NewStringOrNil(source.Name)
 	}
@@ -81,13 +98,9 @@ func (ds *DatabaseSpec) SetDefaultsFrom(source DatabaseSpec) {
 // Field names are relative to `spec.`.
 func (ds *DatabaseSpec) ResetImmutableFields(target *DatabaseSpec) []string {
 	var resetFields []string
-	if ds.Name != target.Name {
+	if ds.GetName() != target.GetName() {
 		target.Name = util.NewStringOrNil(ds.Name)
 		resetFields = append(resetFields, "Name")
 	}
 	return resetFields
-}
-
-// DatabaseStatus is
-type DatabaseStatus struct {
 }
