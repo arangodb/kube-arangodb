@@ -31,6 +31,7 @@ import (
 
 type DatabaseadminV1alphaInterface interface {
 	RESTClient() rest.Interface
+	ArangoCollectionsGetter
 	ArangoDatabasesGetter
 	ArangoUsersGetter
 }
@@ -38,6 +39,10 @@ type DatabaseadminV1alphaInterface interface {
 // DatabaseadminV1alphaClient is used to interact with features provided by the databaseadmin.arangodb.com group.
 type DatabaseadminV1alphaClient struct {
 	restClient rest.Interface
+}
+
+func (c *DatabaseadminV1alphaClient) ArangoCollections(namespace string) ArangoCollectionInterface {
+	return newArangoCollections(c, namespace)
 }
 
 func (c *DatabaseadminV1alphaClient) ArangoDatabases(namespace string) ArangoDatabaseInterface {

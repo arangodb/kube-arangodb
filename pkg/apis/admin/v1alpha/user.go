@@ -20,6 +20,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,18 +42,105 @@ type ArangoUserList struct {
 type ArangoUser struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              UserSpec   `json:"spec"`
-	Status            UserStatus `json:"status"`
+	Spec              UserSpec       `json:"spec"`
+	Status            ResourceStatus `json:"status"`
 }
 
 // UserSpec is
 type UserSpec struct {
 	// Name of the user in arangodb. Default is resource name
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// Secret name of the password secret, default is <deployment-name>-<user-name>-password
-	PasswordSecretName string `json:"passwordSecretName,omitempty"`
+	PasswordSecretName *string `json:"passwordSecretName,omitempty"`
+	// Name of the deployment this is user is part of
+	DeploymentName string `json:"deploymentName,omitempty"`
 }
 
-// UserStatus is
-type UserStatus struct {
+func (as *ArangoUser) GetDeploymentName() string {
+	return as.Spec.DeploymentName
+}
+
+// GetStatus returns the resource status of the database
+func (as *ArangoUser) GetStatus() *ResourceStatus {
+	return &as.Status
+}
+
+func (as *ArangoUser) GetMeta() *metav1.ObjectMeta {
+	return &as.ObjectMeta
+}
+
+func (as *ArangoUser) AsOwner() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       ArangoDatabaseResourceKind,
+		Name:       as.Name,
+		UID:        as.UID,
+	}
+}
+
+// GetName returns the name of the database or empty string
+func (us *UserSpec) GetName() string {
+	return util.StringOrDefault(us.Name)
+}
+
+// GetDeploymentName returns the name of the deployment
+func (us *UserSpec) GetDeploymentName() string {
+	return us.DeploymentName
+}
+
+// GetPasswordSecretName returns the password secret name or empty string
+func (us *UserSpec) GetPasswordSecretName() string {
+	return util.StringOrDefault(us.PasswordSecretName)
+}
+
+// Validate validates a UserSpec
+func (us *UserSpec) Validate() error {
+	return nil
+}
+
+func defaultPasswordSecretName(deploymentName, username string) string {
+	return deploymentName + "-" + username + "-password"
+}
+
+// SetDefaults sets the default values for a DatabaseSpec
+func (us *UserSpec) SetDefaults(resourceName string) {
+	if us.Name == nil {
+		us.Name = util.NewString(resourceName)
+	}
+	if us.PasswordSecretName == nil {
+		us.PasswordSecretName = util.NewString(defaultPasswordSecretName(us.DeploymentName, us.GetName()))
+	}
+}
+
+// SetDefaultsFrom fills in the values not specified with the values form source
+func (us *UserSpec) SetDefaultsFrom(source *UserSpec) {
+	if us.Name == nil {
+		us.Name = util.NewStringOrNil(source.Name)
+	}
+	if us.PasswordSecretName == nil {
+		us.PasswordSecretName = util.NewStringOrNil(source.PasswordSecretName)
+	}
+	if us.DeploymentName == "" {
+		us.DeploymentName = source.DeploymentName
+	}
+}
+
+// ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
+// It returns a list of fields that have been reset.
+// Field names are relative to `spec.`.
+func (us *UserSpec) ResetImmutableFields(target *UserSpec) []string {
+	var resetFields []string
+	if us.GetName() != target.GetName() {
+		target.Name = util.NewStringOrNil(us.Name)
+		resetFields = append(resetFields, "Name")
+	}
+	if us.GetPasswordSecretName() != target.GetPasswordSecretName() {
+		target.PasswordSecretName = util.NewStringOrNil(us.PasswordSecretName)
+		resetFields = append(resetFields, "PasswordSecretName")
+	}
+	if us.GetDeploymentName() != target.GetDeploymentName() {
+		target.DeploymentName = us.DeploymentName
+		resetFields = append(resetFields, "DeploymentName")
+	}
+	return resetFields
 }

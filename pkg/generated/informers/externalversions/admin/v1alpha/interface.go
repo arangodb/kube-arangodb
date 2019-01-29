@@ -28,6 +28,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// ArangoCollections returns a ArangoCollectionInformer.
+	ArangoCollections() ArangoCollectionInformer
 	// ArangoDatabases returns a ArangoDatabaseInformer.
 	ArangoDatabases() ArangoDatabaseInformer
 	// ArangoUsers returns a ArangoUserInformer.
@@ -43,6 +45,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// ArangoCollections returns a ArangoCollectionInformer.
+func (v *version) ArangoCollections() ArangoCollectionInformer {
+	return &arangoCollectionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoDatabases returns a ArangoDatabaseInformer.

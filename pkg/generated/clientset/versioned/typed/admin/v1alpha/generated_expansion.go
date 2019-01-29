@@ -22,6 +22,8 @@
 
 package v1alpha
 
+type ArangoCollectionExpansion interface{}
+
 type ArangoDatabaseExpansion interface{}
 
 type ArangoUserExpansion interface{}

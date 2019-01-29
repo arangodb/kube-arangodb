@@ -50,6 +50,10 @@ var resources = []WatchResource{
 		Name: api.ArangoUserResourcePlural,
 		Type: &api.ArangoUser{},
 	},
+	{
+		Name: api.ArangoCollectionResourcePlural,
+		Type: &api.ArangoCollection{},
+	},
 }
 
 func (o *Operator) watchDatabaseResources(stop <-chan struct{}) {
@@ -98,6 +102,7 @@ func (o *Operator) runDatabaseAdmin(stop <-chan struct{}) {
 		Log:                o.Dependencies.LogService.MustGetLogger("databaseadmin"),
 		KubeCli:            o.Dependencies.KubeCli,
 		DatabaseAdminCRCli: o.Dependencies.CRCli,
+		EventRecorder:      o.Dependencies.EventRecorder,
 	})
 	o.watchDatabaseResources(stop)
 	o.DatabaseAdminProbe.SetReady()

@@ -26,22 +26,26 @@ import (
 )
 
 const (
-	ArangoDatabaseResourceKind   = "ArangoDatabase"
-	ArangoDatabaseResourcePlural = "arangodatabases"
-	ArangoUserResourceKind       = "ArangoUser"
-	ArangoUserResourcePlural     = "arangousers"
-	groupName                    = "databaseadmin.arangodb.com"
+	ArangoDatabaseResourceKind     = "ArangoDatabase"
+	ArangoDatabaseResourcePlural   = "arangodatabases"
+	ArangoUserResourceKind         = "ArangoUser"
+	ArangoUserResourcePlural       = "arangousers"
+	ArangoCollectionResourceKind   = "ArangoCollection"
+	ArangoCollectionResourcePlural = "arangocollections"
+	groupName                      = "databaseadmin.arangodb.com"
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion       = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoDatabaseCRDName    = ArangoDatabaseResourcePlural + "." + groupName
-	ArangoDatabaseShortNames = []string{"arangodbase"} // deployment already has arangodb as shortname
-	ArangoUserCRDName        = ArangoUserResourcePlural + "." + groupName
-	ArangoUserShortNames     = []string{"arangouser"}
+	SchemeGroupVersion         = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
+	ArangoDatabaseCRDName      = ArangoDatabaseResourcePlural + "." + groupName
+	ArangoDatabaseShortNames   = []string{"arangodbase"} // deployment already has arangodb as shortname
+	ArangoUserCRDName          = ArangoUserResourcePlural + "." + groupName
+	ArangoUserShortNames       = []string{"arangouser"}
+	ArangoCollectionCRDName    = ArangoUserResourcePlural + "." + groupName
+	ArangoCollectionShortNames = []string{"arangocol"}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
@@ -56,6 +60,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoDatabaseList{},
 		&ArangoUser{},
 		&ArangoUserList{},
+		&ArangoCollection{},
+		&ArangoCollectionList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

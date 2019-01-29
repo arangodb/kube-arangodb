@@ -22,6 +22,14 @@
 
 package v1alpha
 
+// ArangoCollectionListerExpansion allows custom methods to be added to
+// ArangoCollectionLister.
+type ArangoCollectionListerExpansion interface{}
+
+// ArangoCollectionNamespaceListerExpansion allows custom methods to be added to
+// ArangoCollectionNamespaceLister.
+type ArangoCollectionNamespaceListerExpansion interface{}
+
 // ArangoDatabaseListerExpansion allows custom methods to be added to
 // ArangoDatabaseLister.
 type ArangoDatabaseListerExpansion interface{}

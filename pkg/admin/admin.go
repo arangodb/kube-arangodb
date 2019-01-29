@@ -22,6 +22,7 @@ package admin
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -83,15 +84,18 @@ type ReconcileContext interface {
 	AddFinalizer(obj APIObjectResource)
 	// HasFinalizer return true if the operator finalizer is set
 	HasFinalizer(obj APIObjectResource) bool
-	ReportError(obj APIObjectResource, reason, message string)
+	ReportError(obj APIObjectResource, reason string, err error)
 	ReportWarning(obj APIObjectResource, reason, message string)
+	ReportEvent(obj APIObjectResource, reason, message string)
+
 	SetCondition(obj APIObjectResource, condition api.ConditionType, status v1.ConditionStatus, reason, message string)
 	RemoveCondition(obj APIObjectResource, condition api.ConditionType)
 
 	GetCreatedAt(obj APIObjectResource) *metav1.Time
 	SetCreatedAtNow(obj APIObjectResource)
 
-	RemoveDatabase(obj *Database)
+	GetKubeSecret(obj APIObjectResource, name string) (map[string][]byte, error)
+	CreateKubeSecret(obj APIObjectResource, name string, data map[string][]byte) error
 
 	GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error)
 }
@@ -116,8 +120,6 @@ type DatabaseAdminResource interface {
 	Update(kube KubeClient) error
 	UpdateStatus(kube KubeClient) error
 	Load(kube KubeClient) (runtime.Object, error)
-
-	ModifyObject(context ModifyObjectContext, object runtime.Object)
 }
 
 type ArangoResource interface {
@@ -134,8 +136,9 @@ type ArangoResourceSpec interface {
 type APIObjectResource interface {
 	DeploymentLinkedResource
 	GetAPIObject() ArangoResource
+	AsRuntimeObject() runtime.Object
 	GetName() string
-	SetUpdateRequired()
+	AsOwner() metav1.OwnerReference
 }
 
 // NewDatabaseAdmin creates a new DatabaseAdmin
@@ -209,8 +212,10 @@ func (da *DatabaseAdmin) ReconcileResource(r DatabaseAdminResource) error {
 	//	da.onDatabaseResourceUpdate(&db.apiObject)
 	//}
 
+	helper := ReconcileContextHelper{admin: da}
+
 	//da.LoadResource(r)
-	r.Reconcile(ctx, da)
+	r.Reconcile(ctx, &helper)
 	da.UpdateResource(r)
 	// Check here if an update or updateStatus is required
 
@@ -276,9 +281,10 @@ func (da *DatabaseAdmin) ModifyObject(object runtime.Object) {
 			// This is an add now
 			da.Dependencies.Log.Debug().Msg("Unknown, redirecting")
 			da.AddObject(object)
+			return
 		} else {
 			resv := reflect.ValueOf(res)
-			old := getAPIObjectSpecValue(res)
+			old := getObjectSpecValue(res)
 			if !old.IsValid() {
 				da.Dependencies.Log.Debug().Msg("old is invalid")
 				return
@@ -325,6 +331,8 @@ func (da *DatabaseAdmin) ModifyObject(object runtime.Object) {
 				da.UpdateResource(res)
 			}
 		}
+
+		da.ReconcileResource(da.Resources[name])
 		return
 	}
 
@@ -333,6 +341,18 @@ func (da *DatabaseAdmin) ModifyObject(object runtime.Object) {
 
 type NamedResource interface {
 	GetName() string
+}
+
+// NewFromObject creates a new ArangoResource from a runtime.Object
+func NewFromObject(object runtime.Object) (DatabaseAdminResource, error) {
+	switch object.(type) {
+	case *api.ArangoDatabase:
+		return NewDatabaseFromObject(object)
+	case *api.ArangoUser:
+		return NewUserFromObject(object)
+	default:
+		return nil, fmt.Errorf("Unknown object type")
+	}
 }
 
 // AddObject adds a new object depending on the type
@@ -349,17 +369,13 @@ func (da *DatabaseAdmin) AddObject(object runtime.Object) {
 		}
 
 		// This is a new object
-		switch object.(type) {
-		case *api.ArangoDatabase:
-			log.Str("resource", "database").Msg("Added resource")
-			if db, err := NewDatabaseFromObject(object); err != nil {
-				log.Str("error", err.Error()).Msg("Failed to add resource")
-			} else {
-				da.Resources[name] = db
-				break
-			}
+		obj, err := NewFromObject(object)
+		if err != nil {
+			log.Str("error", err.Error()).Msg("Failed to add resource")
 		}
 
+		da.Resources[name] = obj
+		da.ReconcileResource(obj)
 		return
 	}
 
@@ -413,79 +429,116 @@ func (da *DatabaseAdmin) Run(stop <-chan struct{}) {
 	}
 }
 
-func (da *DatabaseAdmin) RemoveDeploymentFinalizer(obj APIObjectResource) {
+func (rch *ReconcileContextHelper) RemoveDeploymentFinalizer(obj APIObjectResource) {
 	//deploymentName := obj.GetDeploymentName(da)
-	da.Dependencies.Log.Debug().Msgf("RemoveDeploymentFinalizer(%s)", obj.GetName())
+	rch.admin.Dependencies.Log.Debug().Msgf("RemoveDeploymentFinalizer(%s)", obj.GetName())
 	// do stuff here
 }
 
-func (da *DatabaseAdmin) AddDeploymentFinalizer(obj APIObjectResource) {
+func (rch *ReconcileContextHelper) AddDeploymentFinalizer(obj APIObjectResource) {
 	//deploymentName := obj.GetDeploymentName(da)
-	da.Dependencies.Log.Debug().Msgf("AddDeploymentFinalizer(%s)", obj.GetName())
+	rch.admin.Dependencies.Log.Debug().Msgf("AddDeploymentFinalizer(%s)", obj.GetName())
 	// do stuff here
 }
 
-func (da *DatabaseAdmin) RemoveFinalizer(obj APIObjectResource) {
-	da.Dependencies.Log.Debug().Msgf("RemoveFinalizer(%s)", obj.GetName())
+type ReconcileContextHelper struct {
+	admin          *DatabaseAdmin
+	updateRequired bool
+}
+
+func (rch *ReconcileContextHelper) RemoveFinalizer(obj APIObjectResource) {
+	rch.admin.Dependencies.Log.Debug().Msgf("RemoveFinalizer(%s)", obj.GetName())
 	meta := obj.GetAPIObject().GetMeta()
 	for i, other := range meta.Finalizers {
-		if other == da.GetFinalizerName() {
+		if other == rch.GetFinalizerName() {
 			meta.Finalizers = append(meta.Finalizers[:i], meta.Finalizers[i+1:]...)
-			obj.SetUpdateRequired()
 			return
 		}
 	}
 }
 
-func (da *DatabaseAdmin) AddFinalizer(obj APIObjectResource) {
+func (rch *ReconcileContextHelper) AddFinalizer(obj APIObjectResource) {
 	meta := obj.GetAPIObject().GetMeta()
-	meta.Finalizers = append(meta.Finalizers, da.GetFinalizerName())
-	obj.SetUpdateRequired()
+	meta.Finalizers = append(meta.Finalizers, rch.GetFinalizerName())
 }
 
-func (da *DatabaseAdmin) GetFinalizerName() string {
+func (rch *ReconcileContextHelper) GetFinalizerName() string {
 	return "arango-database-admin"
 }
 
-func (da *DatabaseAdmin) HasFinalizer(obj APIObjectResource) bool {
+func (rch *ReconcileContextHelper) HasFinalizer(obj APIObjectResource) bool {
 	for _, f := range obj.GetAPIObject().GetMeta().Finalizers {
-		if f == da.GetFinalizerName() {
+		if f == rch.GetFinalizerName() {
 			return true
 		}
 	}
 	return false
 }
 
-func (da *DatabaseAdmin) ReportError(obj APIObjectResource, reason, message string) {
-	da.Dependencies.Log.Debug().Str("reason", reason).Str("message", message).Msgf("ReportError(%s)", obj.GetName())
+func (rch *ReconcileContextHelper) ReportError(obj APIObjectResource, reason string, err error) {
+	rch.admin.Dependencies.Log.Debug().Str("reason", reason).Str("message", err.Error()).Msgf("ReportError(%s)", obj.GetName())
+	rch.admin.Dependencies.EventRecorder.Event(obj.AsRuntimeObject(), v1.EventTypeWarning, reason, err.Error())
 }
 
-func (da *DatabaseAdmin) ReportWarning(obj APIObjectResource, reason, message string) {
-	da.Dependencies.Log.Debug().Str("reason", reason).Str("message", message).Msgf("ReportWarning(%s)", obj.GetName())
+func (rch *ReconcileContextHelper) ReportWarning(obj APIObjectResource, reason, message string) {
+	rch.admin.Dependencies.Log.Debug().Str("reason", reason).Str("message", message).Msgf("ReportWarning(%s)", obj.GetName())
+	rch.admin.Dependencies.EventRecorder.Event(obj.AsRuntimeObject(), v1.EventTypeWarning, reason, message)
 }
 
-func (da *DatabaseAdmin) SetCondition(obj APIObjectResource, condition api.ConditionType, status v1.ConditionStatus, reason, message string) {
-	obj.GetAPIObject().GetStatus().Conditions.SetCondition(condition, status, reason, message)
+func (rch *ReconcileContextHelper) ReportEvent(obj APIObjectResource, reason, message string) {
+	rch.admin.Dependencies.Log.Info().Str("reason", reason).Str("message", message).Msgf("ReportWarning(%s)", obj.GetName())
+	rch.admin.Dependencies.EventRecorder.Event(obj.AsRuntimeObject(), v1.EventTypeNormal, reason, message)
 }
 
-func (da *DatabaseAdmin) RemoveCondition(obj APIObjectResource, condition api.ConditionType) {
+func (rch *ReconcileContextHelper) SetCondition(obj APIObjectResource, condition api.ConditionType, status v1.ConditionStatus, reason, message string) {
+	if obj.GetAPIObject().GetStatus().Conditions.SetCondition(condition, status, reason, message) {
+		rch.updateRequired = true
+	}
+}
+
+func (rch *ReconcileContextHelper) RemoveCondition(obj APIObjectResource, condition api.ConditionType) {
 	obj.GetAPIObject().GetStatus().Conditions.RemoveCondition(condition)
+	rch.updateRequired = true
 }
 
 // GetCreatedAt returns the created timestamp
-func (da *DatabaseAdmin) GetCreatedAt(obj APIObjectResource) *metav1.Time {
+func (rch *ReconcileContextHelper) GetCreatedAt(obj APIObjectResource) *metav1.Time {
 	return obj.GetAPIObject().GetStatus().CreatedAt
 }
 
 // SetCreatedAtNow sets the created time to now
-func (da *DatabaseAdmin) SetCreatedAtNow(obj APIObjectResource) {
+func (rch *ReconcileContextHelper) SetCreatedAtNow(obj APIObjectResource) {
 	obj.GetAPIObject().GetStatus().CreatedAt = &metav1.Time{Time: time.Now()}
+	rch.updateRequired = true
 }
 
-// RemoveDatabase removes a database from the internal map
-func (da *DatabaseAdmin) RemoveDatabase(obj *Database) {
+func (rch *ReconcileContextHelper) GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error) {
+	return rch.admin.GetClient(ctx, obj.GetDeploymentName(rch.admin), rch.admin.Namespace)
 }
 
-func (da *DatabaseAdmin) GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error) {
-	return da.GetClient(ctx, obj.GetDeploymentName(da), da.Namespace)
+func (rch *ReconcileContextHelper) GetKubeSecret(obj APIObjectResource, name string) (map[string][]byte, error) {
+	secretsCli := rch.admin.Dependencies.KubeCli.CoreV1().Secrets(rch.admin.Namespace)
+	secret, err := secretsCli.Get(name, metav1.GetOptions{})
+	if err == nil {
+		return secret.Data, nil
+	}
+	return nil, err
+}
+
+func (rch *ReconcileContextHelper) CreateKubeSecret(obj APIObjectResource, name string, data map[string][]byte) error {
+	secretsCli := rch.admin.Dependencies.KubeCli.CoreV1().Secrets(rch.admin.Namespace)
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            name,
+			OwnerReferences: []metav1.OwnerReference{obj.AsOwner()},
+		},
+		Data: data,
+	}
+
+	_, err := secretsCli.Create(secret)
+	if err != nil {
+		return err
+	}
+	return err
 }

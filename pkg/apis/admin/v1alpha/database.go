@@ -64,6 +64,15 @@ func (ds *ArangoDatabase) GetMeta() *metav1.ObjectMeta {
 	return &ds.ObjectMeta
 }
 
+func (ds *ArangoDatabase) AsOwner() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       ArangoDatabaseResourceKind,
+		Name:       ds.Name,
+		UID:        ds.UID,
+	}
+}
+
 // DatabaseSpec specifies a arangodb database
 type DatabaseSpec struct {
 	Name *string `json:"name,omitempty"`

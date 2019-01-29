@@ -44,10 +44,16 @@ type Condition struct {
 
 type ConditionList map[ConditionType]Condition
 
-// SetCondition sets the condition on this condition list
-func (cl *ConditionList) SetCondition(condition ConditionType, status v1.ConditionStatus, reason, message string) {
+// SetCondition sets the condition on this condition list, return true if the condition has changed
+func (cl *ConditionList) SetCondition(condition ConditionType, status v1.ConditionStatus, reason, message string) bool {
 	if *cl == nil {
 		*cl = make(ConditionList)
+	}
+
+	if c, ok := (*cl)[condition]; ok {
+		if c.Status == status {
+			return false
+		}
 	}
 
 	(*cl)[condition] = Condition{
@@ -56,6 +62,7 @@ func (cl *ConditionList) SetCondition(condition ConditionType, status v1.Conditi
 		Reason:      reason,
 		Message:     message,
 	}
+	return true
 }
 
 // RemoveCondition removes the condition from the condition list
