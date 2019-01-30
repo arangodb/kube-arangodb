@@ -77,6 +77,13 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	}
 	if cleanedOut {
 		log.Debug().Msg("Server already cleaned out")
+		// Cleanout completed
+		if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
+			if a.actionCtx.UpdateMember(m); err != nil {
+				return false, maskAny(err)
+			}
+		}
+
 		return true, nil
 	}
 	var jobID string
