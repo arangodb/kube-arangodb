@@ -38,6 +38,14 @@ type ArangoDatabaseListerExpansion interface{}
 // ArangoDatabaseNamespaceLister.
 type ArangoDatabaseNamespaceListerExpansion interface{}
 
+// ArangoGraphListerExpansion allows custom methods to be added to
+// ArangoGraphLister.
+type ArangoGraphListerExpansion interface{}
+
+// ArangoGraphNamespaceListerExpansion allows custom methods to be added to
+// ArangoGraphNamespaceLister.
+type ArangoGraphNamespaceListerExpansion interface{}
+
 // ArangoUserListerExpansion allows custom methods to be added to
 // ArangoUserLister.
 type ArangoUserListerExpansion interface{}

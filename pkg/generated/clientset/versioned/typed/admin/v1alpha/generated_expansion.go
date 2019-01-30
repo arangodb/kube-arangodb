@@ -26,4 +26,6 @@ type ArangoCollectionExpansion interface{}
 
 type ArangoDatabaseExpansion interface{}
 
+type ArangoGraphExpansion interface{}
+
 type ArangoUserExpansion interface{}

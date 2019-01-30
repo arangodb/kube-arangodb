@@ -24,8 +24,10 @@ import (
 	"context"
 	"fmt"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -65,8 +67,8 @@ func (coll *Collection) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (coll *Collection) GetDeploymentName(resolv DeploymentNameResolver) string {
-	return coll.ArangoCollection.GetDeploymentName()
+func (coll *Collection) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
+	return resolv.DeploymentByDatabase(coll.ArangoCollection.GetDatabaseResourceName())
 }
 
 func NewCollectionFromObject(object runtime.Object) (*Collection, error) {
@@ -83,10 +85,87 @@ func NewCollectionFromObject(object runtime.Object) (*Collection, error) {
 	return nil, fmt.Errorf("Not a ArangoCollection")
 }
 
+// GetFinalizerName returns the name of the finalizer for this collection
+func (coll *Collection) GetFinalizerName() string {
+	return "database-admin-collection-" + coll.Spec.GetName()
+}
+
 // Reconcile updates the Collection resource to the given spec
 func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
 
+	dbr := coll.GetDatabaseResourceName()
+	finalizerName := coll.GetFinalizerName()
+
 	if coll.GetDeletionTimestamp() != nil {
+		removeFinalizers := false
+		defer func() {
+			if removeFinalizers {
+				admin.RemoveFinalizer(coll)
+				admin.RemoveResourceFinalizer(dbr, finalizerName)
+			}
+		}()
+
 		// Collection is marked to be deleted
+		client, err := admin.GetArangoDatabaseClient(ctx, dbr)
+		if driver.IsNotFound(err) {
+			removeFinalizers = true // Database gone!
+			return
+		} else if err != nil {
+			admin.ReportError(coll, "Connect to deployment", err)
+			return
+		}
+		acoll, err := client.Collection(ctx, coll.Spec.GetName())
+		if driver.IsNotFound(err) {
+			// Collection not found - great!
+			removeFinalizers = true
+			return
+		} else if err == nil {
+			// Delete the collection
+			if err := acoll.Remove(ctx); err != nil {
+				admin.ReportError(coll, "Remove collection", err)
+			}
+			removeFinalizers = true
+			return
+		} else {
+			admin.ReportError(coll, "Get Collection", err)
+		}
+	} else {
+		if !admin.HasFinalizer(coll) {
+			admin.AddFinalizer(coll)
+		}
+
+		admin.AddResourceFinalizer(dbr, coll.GetFinalizerName())
+
+		// Collection is not delete
+		client, err := admin.GetArangoDatabaseClient(ctx, dbr)
+		if err != nil {
+			admin.ReportError(coll, "Connect to deployment", err)
+			return
+		}
+		acoll, err := client.Collection(ctx, coll.Spec.GetName())
+		if driver.IsNotFound(err) {
+
+			if admin.GetCreatedAt(coll) != nil {
+				admin.ReportWarning(coll, "Collection lost", "The collection was lost and will be recreated")
+			}
+
+			// Collection is not there
+			_, err := client.CreateCollection(ctx, coll.Spec.GetName(), nil)
+			if err != nil {
+				admin.ReportError(coll, "Get statistics failed", err)
+				return
+			}
+			admin.SetCreatedAtNow(coll)
+
+		} else {
+			// Collection is there
+			_, err := acoll.Statistics(ctx)
+			if err != nil {
+				admin.ReportError(coll, "Get statistics failed", err)
+				return
+			}
+		}
+
+		admin.SetCondition(coll, api.ConditionTypeReady, v1.ConditionTrue, "Collection updated", "Collection is ready")
 	}
 }

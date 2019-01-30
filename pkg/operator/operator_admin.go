@@ -54,6 +54,10 @@ var resources = []WatchResource{
 		Name: api.ArangoCollectionResourcePlural,
 		Type: &api.ArangoCollection{},
 	},
+	{
+		Name: api.ArangoGraphResourcePlural,
+		Type: &api.ArangoGraph{},
+	},
 }
 
 func (o *Operator) watchDatabaseResources(stop <-chan struct{}) {

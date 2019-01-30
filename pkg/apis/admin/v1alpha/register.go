@@ -32,6 +32,8 @@ const (
 	ArangoUserResourcePlural       = "arangousers"
 	ArangoCollectionResourceKind   = "ArangoCollection"
 	ArangoCollectionResourcePlural = "arangocollections"
+	ArangoGraphResourceKind        = "ArangoGraph"
+	ArangoGraphResourcePlural      = "arangographs"
 	groupName                      = "databaseadmin.arangodb.com"
 )
 
@@ -46,6 +48,8 @@ var (
 	ArangoUserShortNames       = []string{"arangouser"}
 	ArangoCollectionCRDName    = ArangoUserResourcePlural + "." + groupName
 	ArangoCollectionShortNames = []string{"arangocol"}
+	ArangoGraphCRDName         = ArangoGraphResourcePlural + "." + groupName
+	ArangoGraphShortNames      = []string{}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
@@ -62,6 +66,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoUserList{},
 		&ArangoCollection{},
 		&ArangoCollectionList{},
+		&ArangoGraph{},
+		&ArangoGraphList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

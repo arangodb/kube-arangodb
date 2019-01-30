@@ -32,6 +32,8 @@ type Interface interface {
 	ArangoCollections() ArangoCollectionInformer
 	// ArangoDatabases returns a ArangoDatabaseInformer.
 	ArangoDatabases() ArangoDatabaseInformer
+	// ArangoGraphs returns a ArangoGraphInformer.
+	ArangoGraphs() ArangoGraphInformer
 	// ArangoUsers returns a ArangoUserInformer.
 	ArangoUsers() ArangoUserInformer
 }
@@ -55,6 +57,11 @@ func (v *version) ArangoCollections() ArangoCollectionInformer {
 // ArangoDatabases returns a ArangoDatabaseInformer.
 func (v *version) ArangoDatabases() ArangoDatabaseInformer {
 	return &arangoDatabaseInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoGraphs returns a ArangoGraphInformer.
+func (v *version) ArangoGraphs() ArangoGraphInformer {
+	return &arangoGraphInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoUsers returns a ArangoUserInformer.

@@ -40,6 +40,10 @@ func (c *FakeDatabaseadminV1alpha) ArangoDatabases(namespace string) v1alpha.Ara
 	return &FakeArangoDatabases{c, namespace}
 }
 
+func (c *FakeDatabaseadminV1alpha) ArangoGraphs(namespace string) v1alpha.ArangoGraphInterface {
+	return &FakeArangoGraphs{c, namespace}
+}
+
 func (c *FakeDatabaseadminV1alpha) ArangoUsers(namespace string) v1alpha.ArangoUserInterface {
 	return &FakeArangoUsers{c, namespace}
 }

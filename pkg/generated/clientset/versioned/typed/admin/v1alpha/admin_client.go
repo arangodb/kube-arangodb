@@ -33,6 +33,7 @@ type DatabaseadminV1alphaInterface interface {
 	RESTClient() rest.Interface
 	ArangoCollectionsGetter
 	ArangoDatabasesGetter
+	ArangoGraphsGetter
 	ArangoUsersGetter
 }
 
@@ -47,6 +48,10 @@ func (c *DatabaseadminV1alphaClient) ArangoCollections(namespace string) ArangoC
 
 func (c *DatabaseadminV1alphaClient) ArangoDatabases(namespace string) ArangoDatabaseInterface {
 	return newArangoDatabases(c, namespace)
+}
+
+func (c *DatabaseadminV1alphaClient) ArangoGraphs(namespace string) ArangoGraphInterface {
+	return newArangoGraphs(c, namespace)
 }
 
 func (c *DatabaseadminV1alphaClient) ArangoUsers(namespace string) ArangoUserInterface {

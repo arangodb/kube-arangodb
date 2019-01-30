@@ -70,8 +70,8 @@ func (user *User) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (user *User) GetDeploymentName(resolv DeploymentNameResolver) string {
-	return user.ArangoUser.GetDeploymentName()
+func (user *User) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
+	return user.ArangoUser.GetDeploymentName(), nil
 }
 
 // NewUserFromObject creates a new User from a runtime.Object, if possible
@@ -196,5 +196,6 @@ func (user *User) Reconcile(ctx context.Context, admin ReconcileContext) {
 			return
 		}
 
+		admin.SetCondition(user, api.ConditionTypeReady, v1.ConditionTrue, "User ready", "User is ready")
 	}
 }

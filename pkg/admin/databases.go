@@ -67,8 +67,8 @@ func (db *Database) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (db *Database) GetDeploymentName(resolv DeploymentNameResolver) string {
-	return db.ArangoDatabase.GetDeploymentName()
+func (db *Database) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
+	return db.ArangoDatabase.GetDeploymentName(), nil
 }
 
 func NewDatabaseFromObject(object runtime.Object) (*Database, error) {

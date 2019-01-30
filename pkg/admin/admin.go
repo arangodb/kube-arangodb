@@ -69,7 +69,7 @@ type DatabaseAdmin struct {
 type KubeClient client.DatabaseadminV1alphaInterface
 
 type DeploymentLinkedResource interface {
-	GetDeploymentName(DeploymentNameResolver) string
+	GetDeploymentName(DeploymentNameResolver) (string, error)
 }
 
 type ReconcileContext interface {
@@ -84,6 +84,14 @@ type ReconcileContext interface {
 	AddFinalizer(obj APIObjectResource)
 	// HasFinalizer return true if the operator finalizer is set
 	HasFinalizer(obj APIObjectResource) bool
+
+	// RemoveResourceFinalizer removes a finalizer from the database admin resource
+	// This requires an update of the resource
+	RemoveResourceFinalizer(res, finalizer string) error
+	// AddResourceFinalizer adds a finalizer to the database admin resource
+	// This requires an update of the resource
+	AddResourceFinalizer(res, finalizer string) error
+
 	ReportError(obj APIObjectResource, reason string, err error)
 	ReportWarning(obj APIObjectResource, reason, message string)
 	ReportEvent(obj APIObjectResource, reason, message string)
@@ -97,11 +105,15 @@ type ReconcileContext interface {
 	GetKubeSecret(obj APIObjectResource, name string) (map[string][]byte, error)
 	CreateKubeSecret(obj APIObjectResource, name string, data map[string][]byte) error
 
+	GetResource(name string) (DatabaseAdminResource, error)
+	GetDatabaseResource(name string) (*Database, error)
+
 	GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error)
+	GetArangoDatabaseClient(ctx context.Context, resourceName string) (driver.Database, error)
 }
 
 type DeploymentNameResolver interface {
-	//DeploymentByDatabase(database string) string
+	DeploymentByDatabase(database string) (string, error)
 	//DatabaseByCollection(collection string) string
 }
 
@@ -277,59 +289,60 @@ func (da *DatabaseAdmin) ModifyObject(object runtime.Object) {
 
 	// Try to obtain the meta data of the object
 	if name, ok := reflectObjectName(object); ok {
-		if res, found := da.Resources[name]; !found {
+		res, found := da.Resources[name]
+		if !found {
 			// This is an add now
 			da.Dependencies.Log.Debug().Msg("Unknown, redirecting")
 			da.AddObject(object)
 			return
-		} else {
-			resv := reflect.ValueOf(res)
-			old := getObjectSpecValue(res)
-			if !old.IsValid() {
-				da.Dependencies.Log.Debug().Msg("old is invalid")
-				return
-			}
-			new := getObjectSpecValue(object)
-			if !new.IsValid() {
-				da.Dependencies.Log.Debug().Msg("new is invalid")
-				return
-			}
+		}
 
-			// Check if new and old are the same type
-			if new.Type() != old.Type() {
-				da.Dependencies.Log.Error().Msgf("ModifyObject has different types: %v and %v", new.Type(), old.Type())
-				return
-			}
+		resv := reflect.ValueOf(res)
+		old := getObjectSpecValue(res)
+		if !old.IsValid() {
+			da.Dependencies.Log.Debug().Msg("old is invalid")
+			return
+		}
+		new := getObjectSpecValue(object)
+		if !new.IsValid() {
+			da.Dependencies.Log.Debug().Msg("new is invalid")
+			return
+		}
 
-			new.Addr().MethodByName("SetDefaultsFrom").Call([]reflect.Value{old.Addr()})
-			returnv := old.Addr().MethodByName("ResetImmutableFields").Call([]reflect.Value{new.Addr()})
-			if len(returnv) == 0 {
-				da.Dependencies.Log.Debug().Msg("bad return ResetImmutableFields")
-				return
-			}
+		// Check if new and old are the same type
+		if new.Type() != old.Type() {
+			da.Dependencies.Log.Error().Msgf("ModifyObject has different types: %v and %v", new.Type(), old.Type())
+			return
+		}
 
-			forceUpdate := false
+		new.Addr().MethodByName("SetDefaultsFrom").Call([]reflect.Value{old.Addr()})
+		returnv := old.Addr().MethodByName("ResetImmutableFields").Call([]reflect.Value{new.Addr()})
+		if len(returnv) == 0 {
+			da.Dependencies.Log.Debug().Msg("bad return ResetImmutableFields")
+			return
+		}
 
-			fields := returnv[0]
-			if fields.Len() > 0 {
-				reflect.ValueOf(da.ResetImmutableFieldsError).Call([]reflect.Value{resv, fields})
-				forceUpdate = true
-				//return
-			}
+		forceUpdate := false
 
-			valid := new.Addr().MethodByName("Validate").Call([]reflect.Value{})
-			if !valid[0].IsNil() {
-				reflect.ValueOf(da.ValidationError).Call([]reflect.Value{resv, valid[0]})
-				// reset the spec to old spec
-				reflect.ValueOf(object).Elem().FieldByName("Spec").Set(old)
-				forceUpdate = true
-			}
-			// Update!
-			resv.MethodByName("SetAPIObject").Call([]reflect.Value{reflect.ValueOf(object).Elem()})
+		fields := returnv[0]
+		if fields.Len() > 0 {
+			reflect.ValueOf(da.ResetImmutableFieldsError).Call([]reflect.Value{resv, fields})
+			forceUpdate = true
+			//return
+		}
 
-			if forceUpdate {
-				da.UpdateResource(res)
-			}
+		valid := new.Addr().MethodByName("Validate").Call([]reflect.Value{})
+		if !valid[0].IsNil() {
+			reflect.ValueOf(da.ValidationError).Call([]reflect.Value{resv, valid[0]})
+			// reset the spec to old spec
+			reflect.ValueOf(object).Elem().FieldByName("Spec").Set(old)
+			forceUpdate = true
+		}
+		// Update!
+		resv.MethodByName("SetAPIObject").Call([]reflect.Value{reflect.ValueOf(object).Elem()})
+
+		if forceUpdate {
+			da.UpdateResource(res)
 		}
 
 		da.ReconcileResource(da.Resources[name])
@@ -350,6 +363,10 @@ func NewFromObject(object runtime.Object) (DatabaseAdminResource, error) {
 		return NewDatabaseFromObject(object)
 	case *api.ArangoUser:
 		return NewUserFromObject(object)
+	case *api.ArangoCollection:
+		return NewCollectionFromObject(object)
+	case *api.ArangoGraph:
+		return NewGraphFromObject(object)
 	default:
 		return nil, fmt.Errorf("Unknown object type")
 	}
@@ -372,6 +389,7 @@ func (da *DatabaseAdmin) AddObject(object runtime.Object) {
 		obj, err := NewFromObject(object)
 		if err != nil {
 			log.Str("error", err.Error()).Msg("Failed to add resource")
+			return
 		}
 
 		da.Resources[name] = obj
@@ -513,7 +531,27 @@ func (rch *ReconcileContextHelper) SetCreatedAtNow(obj APIObjectResource) {
 }
 
 func (rch *ReconcileContextHelper) GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error) {
-	return rch.admin.GetClient(ctx, obj.GetDeploymentName(rch.admin), rch.admin.Namespace)
+	deployment, err := obj.GetDeploymentName(rch.admin)
+	if err != nil {
+		return nil, err
+	}
+	return rch.admin.GetClient(ctx, deployment, rch.admin.Namespace)
+}
+
+func (rch *ReconcileContextHelper) GetArangoDatabaseClient(ctx context.Context, databaseResourceName string) (driver.Database, error) {
+	db, err := rch.GetDatabaseResource(databaseResourceName)
+	if err != nil {
+		return nil, err
+	}
+	client, err := rch.GetArangoClient(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+	dbc, err := client.Database(ctx, db.Spec.GetName())
+	if err != nil {
+		return nil, err
+	}
+	return dbc, nil
 }
 
 func (rch *ReconcileContextHelper) GetKubeSecret(obj APIObjectResource, name string) (map[string][]byte, error) {
@@ -541,4 +579,79 @@ func (rch *ReconcileContextHelper) CreateKubeSecret(obj APIObjectResource, name 
 		return err
 	}
 	return err
+}
+
+// GetResource returns the resource with given name, if found
+func (rch *ReconcileContextHelper) GetResource(name string) (DatabaseAdminResource, error) {
+	if res, ok := rch.admin.Resources[name]; ok {
+		return res, nil
+	}
+
+	return nil, fmt.Errorf("Resource %s not found", name)
+}
+
+// GetDatabaseResource returns the database resource of the given name
+// or an error if there is no such database resource
+func (rch *ReconcileContextHelper) GetDatabaseResource(name string) (*Database, error) {
+	res, err := rch.GetResource(name)
+	if err != nil {
+		return nil, err
+	}
+	if db, ok := res.(*Database); ok {
+		return db, nil
+	}
+	return nil, fmt.Errorf("resource %s is not a database resource", name)
+}
+
+func (da *DatabaseAdmin) DeploymentByDatabase(database string) (string, error) {
+	if res, ok := da.Resources[database]; ok {
+		if db, ok := res.(*Database); ok {
+			return db.GetDeploymentName(da)
+		}
+	}
+
+	return "", fmt.Errorf("database resource %s unknown", database)
+}
+
+// RemoveResourceFinalizer removes a finalizer from the database admin resource
+// This requires an update of the resource
+func (rch *ReconcileContextHelper) RemoveResourceFinalizer(resname, finalizer string) error {
+	res, err := rch.GetResource(resname)
+	if err != nil {
+		return err
+	}
+	meta := res.GetAPIObject().GetMeta()
+	final := meta.GetFinalizers()
+	new := make([]string, 0, len(final))
+	for _, x := range final {
+		if x != finalizer {
+			new = append(new, x)
+		}
+	}
+
+	if len(new) == len(final) {
+		return nil // nothing changed
+	}
+	meta.SetFinalizers(new)
+	rch.admin.UpdateResource(res)
+	return nil
+}
+
+// AddResourceFinalizer adds a finalizer to the database admin resource
+// This requires an update of the resource
+func (rch *ReconcileContextHelper) AddResourceFinalizer(resname, finalizer string) error {
+	res, err := rch.GetResource(resname)
+	if err != nil {
+		return err
+	}
+	meta := res.GetAPIObject().GetMeta()
+	final := meta.GetFinalizers()
+	for _, x := range final {
+		if x == finalizer {
+			return nil // Already set
+		}
+	}
+	meta.SetFinalizers(append(final, finalizer))
+	rch.admin.UpdateResource(res)
+	return nil
 }

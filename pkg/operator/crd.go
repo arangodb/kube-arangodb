@@ -67,6 +67,9 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if err := crd.WaitCRDReady(o.KubeExtCli, daapi.ArangoCollectionCRDName); err != nil {
 			return maskAny(err)
 		}
+		if err := crd.WaitCRDReady(o.KubeExtCli, daapi.ArangoGraphCRDName); err != nil {
+			return maskAny(err)
+		}
 	}
 
 	log.Debug().Msg("CRDs ready")
