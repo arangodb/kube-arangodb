@@ -70,6 +70,15 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 		return false, maskAny(err)
 	}
+	cleanedOut, err := cluster.IsCleanedOut(ctx, a.action.MemberID)
+	if err != nil {
+		log.Debug().Err(err).Msg("IsCleanedOut failed")
+		return false, maskAny(err)
+	}
+	if cleanedOut {
+		log.Debug().Msg("Server already cleaned out")
+		return true, nil
+	}
 	var jobID string
 	ctx = driver.WithJobIDResponse(ctx, &jobID)
 	if err := cluster.CleanOutServer(ctx, a.action.MemberID); err != nil {
