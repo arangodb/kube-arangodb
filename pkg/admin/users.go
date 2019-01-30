@@ -70,8 +70,8 @@ func (user *User) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (user *User) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
-	return user.ArangoUser.GetDeploymentName(), nil
+func (user *User) GetDeploymentName() string {
+	return user.ArangoUser.GetDeploymentName()
 }
 
 // NewUserFromObject creates a new User from a runtime.Object, if possible

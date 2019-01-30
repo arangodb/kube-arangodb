@@ -67,8 +67,8 @@ func (coll *Collection) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (coll *Collection) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
-	return resolv.DeploymentByDatabase(coll.ArangoCollection.GetDatabaseResourceName())
+func (coll *Collection) GetDeploymentName() string {
+	return coll.ArangoCollection.GetDeploymentName()
 }
 
 func NewCollectionFromObject(object runtime.Object) (*Collection, error) {
@@ -93,7 +93,7 @@ func (coll *Collection) GetFinalizerName() string {
 // Reconcile updates the Collection resource to the given spec
 func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
 
-	dbr := coll.GetDatabaseResourceName()
+	dbn := coll.GetDatabaseName()
 	finalizerName := coll.GetFinalizerName()
 
 	if coll.GetDeletionTimestamp() != nil {
@@ -101,12 +101,14 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
 		defer func() {
 			if removeFinalizers {
 				admin.RemoveFinalizer(coll)
-				admin.RemoveResourceFinalizer(dbr, finalizerName)
+				if dbr, ok := admin.GetDatabaseResourceByDatabaseName(coll, dbn); ok {
+					admin.RemoveResourceFinalizer(dbr, finalizerName)
+				}
 			}
 		}()
 
 		// Collection is marked to be deleted
-		client, err := admin.GetArangoDatabaseClient(ctx, dbr)
+		client, err := admin.GetArangoDatabaseClient(ctx, coll, coll.GetDatabaseName())
 		if driver.IsNotFound(err) {
 			removeFinalizers = true // Database gone!
 			return
@@ -134,10 +136,12 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
 			admin.AddFinalizer(coll)
 		}
 
-		admin.AddResourceFinalizer(dbr, coll.GetFinalizerName())
+		if dbr, ok := admin.GetDatabaseResourceByDatabaseName(coll, dbn); ok {
+			admin.AddResourceFinalizer(dbr, finalizerName)
+		}
 
 		// Collection is not delete
-		client, err := admin.GetArangoDatabaseClient(ctx, dbr)
+		client, err := admin.GetArangoDatabaseClient(ctx, coll, dbn)
 		if err != nil {
 			admin.ReportError(coll, "Connect to deployment", err)
 			return

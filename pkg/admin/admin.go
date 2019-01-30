@@ -58,18 +58,21 @@ type DeploymentProvider interface {
 
 // DatabaseAdmin contains all information about the resources in the current cluster
 type DatabaseAdmin struct {
-	ResourceChannel chan interface{}
-	EventChannel    chan watch.Event
-	Databases       map[string]*Database
-	Namespace       string
-	Dependencies    Dependencies
-	Resources       map[string]DatabaseAdminResource
+	EventChannel chan watch.Event
+	Namespace    string
+	Dependencies Dependencies
+	Resources    map[string]DatabaseAdminResource
+
+	// Databases maps "<deployment>/<database>" to resource name
+	Databases map[string]string
+	// Collections maps "<deployment>/<database>/collection>" to resource name
+	Collections map[string]string
 }
 
 type KubeClient client.DatabaseadminV1alphaInterface
 
 type DeploymentLinkedResource interface {
-	GetDeploymentName(DeploymentNameResolver) (string, error)
+	GetDeploymentName() string
 }
 
 type ReconcileContext interface {
@@ -87,10 +90,10 @@ type ReconcileContext interface {
 
 	// RemoveResourceFinalizer removes a finalizer from the database admin resource
 	// This requires an update of the resource
-	RemoveResourceFinalizer(res, finalizer string) error
+	RemoveResourceFinalizer(resource DatabaseAdminResource, finalizer string) error
 	// AddResourceFinalizer adds a finalizer to the database admin resource
 	// This requires an update of the resource
-	AddResourceFinalizer(res, finalizer string) error
+	AddResourceFinalizer(resource DatabaseAdminResource, finalizer string) error
 
 	ReportError(obj APIObjectResource, reason string, err error)
 	ReportWarning(obj APIObjectResource, reason, message string)
@@ -107,9 +110,15 @@ type ReconcileContext interface {
 
 	GetResource(name string) (DatabaseAdminResource, error)
 	GetDatabaseResource(name string) (*Database, error)
+	GetCollectionResource(name string) (*Collection, error)
+
+	// GetDatabaseResourceByDatabaseName returns the Database resource corresponding to the database with the given name
+	// or false if there is no such resource
+	GetDatabaseResourceByDatabaseName(obj APIObjectResource, name string) (*Database, bool)
+	GetCollectionResourceByCollectionName(obj APIObjectResource, database, name string) (*Collection, bool)
 
 	GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error)
-	GetArangoDatabaseClient(ctx context.Context, resourceName string) (driver.Database, error)
+	GetArangoDatabaseClient(ctx context.Context, obj APIObjectResource, database string) (driver.Database, error)
 }
 
 type DeploymentNameResolver interface {
@@ -156,12 +165,12 @@ type APIObjectResource interface {
 // NewDatabaseAdmin creates a new DatabaseAdmin
 func NewDatabaseAdmin(Namespace string, deps Dependencies) *DatabaseAdmin {
 	return &DatabaseAdmin{
-		Databases:       make(map[string]*Database),
-		Namespace:       Namespace,
-		Dependencies:    deps,
-		ResourceChannel: make(chan interface{}),
-		EventChannel:    make(chan watch.Event),
-		Resources:       make(map[string]DatabaseAdminResource),
+		Databases:    make(map[string]string),
+		Collections:  make(map[string]string),
+		Namespace:    Namespace,
+		Dependencies: deps,
+		EventChannel: make(chan watch.Event),
+		Resources:    make(map[string]DatabaseAdminResource),
 	}
 }
 
@@ -185,8 +194,6 @@ func (da *DatabaseAdmin) UpdateResource(r DatabaseAdminResource) {
 	kube := da.Dependencies.DatabaseAdminCRCli.DatabaseadminV1alpha()
 
 	if err := r.Update(kube); err != nil {
-		da.Dependencies.Log.Error().Str("error", err.Error()).Msg("Failed to update resource")
-
 		if k8sutil.IsConflict(err) {
 			da.Dependencies.Log.Debug().Msg("Conflict - modify object")
 			if api, err := r.Load(kube); err != nil {
@@ -194,6 +201,8 @@ func (da *DatabaseAdmin) UpdateResource(r DatabaseAdminResource) {
 			} else {
 				da.ModifyObject(api)
 			}
+		} else {
+			da.Dependencies.Log.Error().Str("error", err.Error()).Msg("Failed to update resource")
 		}
 	}
 }
@@ -242,10 +251,6 @@ func (da *DatabaseAdmin) CheckResources() {
 			da.Dependencies.Log.Error().Str("error", err.Error()).Msg("Failed to reconcile")
 		}
 	}
-}
-
-type ModifyObjectHandler struct {
-	updateNeeded bool
 }
 
 func (da *DatabaseAdmin) ValidationError(err error) {
@@ -352,15 +357,31 @@ func (da *DatabaseAdmin) ModifyObject(object runtime.Object) {
 	da.Dependencies.Log.Error().Msg("Failed to modify object - not metav1.Object")
 }
 
-type NamedResource interface {
-	GetName() string
+func deploymentDatabaseName(db *Database) string {
+	return deploymentDatabaseNameFromString(db.GetDeploymentName(), db.Spec.GetName())
+}
+
+func deploymentDatabaseNameFromString(deployment, database string) string {
+	return deployment + "/" + database
+}
+
+func deploymentCollectioName(coll *Collection) string {
+	return deploymentCollectioNameFromString(coll.GetDeploymentName(), coll.GetDatabaseName(), coll.Spec.GetName())
+}
+
+func deploymentCollectioNameFromString(deployment, database, collection string) string {
+	return deployment + "/" + database + "/" + collection
 }
 
 // NewFromObject creates a new ArangoResource from a runtime.Object
-func NewFromObject(object runtime.Object) (DatabaseAdminResource, error) {
+func (da *DatabaseAdmin) NewFromObject(object runtime.Object) (DatabaseAdminResource, error) {
 	switch object.(type) {
 	case *api.ArangoDatabase:
-		return NewDatabaseFromObject(object)
+		db, err := NewDatabaseFromObject(object)
+		if err == nil {
+			da.Databases[deploymentDatabaseName(db)] = db.GetName()
+		}
+		return db, err
 	case *api.ArangoUser:
 		return NewUserFromObject(object)
 	case *api.ArangoCollection:
@@ -386,7 +407,7 @@ func (da *DatabaseAdmin) AddObject(object runtime.Object) {
 		}
 
 		// This is a new object
-		obj, err := NewFromObject(object)
+		obj, err := da.NewFromObject(object)
 		if err != nil {
 			log.Str("error", err.Error()).Msg("Failed to add resource")
 			return
@@ -437,7 +458,7 @@ func (da *DatabaseAdmin) Run(stop <-chan struct{}) {
 			da.HandleWatchEvent(ev)
 			break
 		case <-stop:
-			close(da.ResourceChannel)
+			close(da.EventChannel)
 			return
 		case <-time.After(5 * time.Second):
 			da.Dependencies.Log.Debug().Msg("Hello there! Inspecting your deployments...")
@@ -531,23 +552,15 @@ func (rch *ReconcileContextHelper) SetCreatedAtNow(obj APIObjectResource) {
 }
 
 func (rch *ReconcileContextHelper) GetArangoClient(ctx context.Context, obj APIObjectResource) (driver.Client, error) {
-	deployment, err := obj.GetDeploymentName(rch.admin)
-	if err != nil {
-		return nil, err
-	}
-	return rch.admin.GetClient(ctx, deployment, rch.admin.Namespace)
+	return rch.admin.GetClient(ctx, obj.GetDeploymentName(), rch.admin.Namespace)
 }
 
-func (rch *ReconcileContextHelper) GetArangoDatabaseClient(ctx context.Context, databaseResourceName string) (driver.Database, error) {
-	db, err := rch.GetDatabaseResource(databaseResourceName)
+func (rch *ReconcileContextHelper) GetArangoDatabaseClient(ctx context.Context, obj APIObjectResource, database string) (driver.Database, error) {
+	client, err := rch.GetArangoClient(ctx, obj)
 	if err != nil {
 		return nil, err
 	}
-	client, err := rch.GetArangoClient(ctx, db)
-	if err != nil {
-		return nil, err
-	}
-	dbc, err := client.Database(ctx, db.Spec.GetName())
+	dbc, err := client.Database(ctx, database)
 	if err != nil {
 		return nil, err
 	}
@@ -603,23 +616,22 @@ func (rch *ReconcileContextHelper) GetDatabaseResource(name string) (*Database, 
 	return nil, fmt.Errorf("resource %s is not a database resource", name)
 }
 
-func (da *DatabaseAdmin) DeploymentByDatabase(database string) (string, error) {
-	if res, ok := da.Resources[database]; ok {
-		if db, ok := res.(*Database); ok {
-			return db.GetDeploymentName(da)
-		}
+// GetCollectionResource returns the collection resource of the given name
+// or an error if there is no such collection resource
+func (rch *ReconcileContextHelper) GetCollectionResource(name string) (*Collection, error) {
+	res, err := rch.GetResource(name)
+	if err != nil {
+		return nil, err
 	}
-
-	return "", fmt.Errorf("database resource %s unknown", database)
+	if coll, ok := res.(*Collection); ok {
+		return coll, nil
+	}
+	return nil, fmt.Errorf("resource %s is not a database resource", name)
 }
 
 // RemoveResourceFinalizer removes a finalizer from the database admin resource
 // This requires an update of the resource
-func (rch *ReconcileContextHelper) RemoveResourceFinalizer(resname, finalizer string) error {
-	res, err := rch.GetResource(resname)
-	if err != nil {
-		return err
-	}
+func (rch *ReconcileContextHelper) RemoveResourceFinalizer(res DatabaseAdminResource, finalizer string) error {
 	meta := res.GetAPIObject().GetMeta()
 	final := meta.GetFinalizers()
 	new := make([]string, 0, len(final))
@@ -639,11 +651,7 @@ func (rch *ReconcileContextHelper) RemoveResourceFinalizer(resname, finalizer st
 
 // AddResourceFinalizer adds a finalizer to the database admin resource
 // This requires an update of the resource
-func (rch *ReconcileContextHelper) AddResourceFinalizer(resname, finalizer string) error {
-	res, err := rch.GetResource(resname)
-	if err != nil {
-		return err
-	}
+func (rch *ReconcileContextHelper) AddResourceFinalizer(res DatabaseAdminResource, finalizer string) error {
 	meta := res.GetAPIObject().GetMeta()
 	final := meta.GetFinalizers()
 	for _, x := range final {
@@ -654,4 +662,30 @@ func (rch *ReconcileContextHelper) AddResourceFinalizer(resname, finalizer strin
 	meta.SetFinalizers(append(final, finalizer))
 	rch.admin.UpdateResource(res)
 	return nil
+}
+
+func (rch *ReconcileContextHelper) GetDatabaseResourceByDatabaseName(obj APIObjectResource, name string) (*Database, bool) {
+	lookup := deploymentDatabaseNameFromString(obj.GetDeploymentName(), name)
+	if dbrn, ok := rch.admin.Databases[lookup]; ok {
+		if db, err := rch.GetDatabaseResource(dbrn); err != nil {
+			return db, true
+		}
+		// Remove this bad entry
+		delete(rch.admin.Databases, lookup)
+	}
+	return nil, false
+}
+
+func (rch *ReconcileContextHelper) GetCollectionResourceByCollectionName(obj APIObjectResource, database, name string) (*Collection, bool) {
+
+	lookup := deploymentCollectioNameFromString(obj.GetDeploymentName(), database, name)
+	if collrn, ok := rch.admin.Collections[lookup]; ok {
+		if coll, err := rch.GetCollectionResource(collrn); err != nil {
+			return coll, true
+		}
+		// Remove this bad entry
+		delete(rch.admin.Collections, lookup)
+	}
+	return nil, false
+
 }

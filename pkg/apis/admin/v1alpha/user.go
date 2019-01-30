@@ -53,11 +53,11 @@ type UserSpec struct {
 	// Secret name of the password secret, default is <deployment-name>-<user-name>-password
 	PasswordSecretName *string `json:"passwordSecretName,omitempty"`
 	// Name of the deployment this is user is part of
-	DeploymentName string `json:"deploymentName,omitempty"`
+	Deployment string `json:"deployment,omitempty"`
 }
 
 func (as *ArangoUser) GetDeploymentName() string {
-	return as.Spec.DeploymentName
+	return as.Spec.Deployment
 }
 
 // GetStatus returns the resource status of the database
@@ -85,7 +85,7 @@ func (us *UserSpec) GetName() string {
 
 // GetDeploymentName returns the name of the deployment
 func (us *UserSpec) GetDeploymentName() string {
-	return us.DeploymentName
+	return us.Deployment
 }
 
 // GetPasswordSecretName returns the password secret name or empty string
@@ -108,7 +108,7 @@ func (us *UserSpec) SetDefaults(resourceName string) {
 		us.Name = util.NewString(resourceName)
 	}
 	if us.PasswordSecretName == nil {
-		us.PasswordSecretName = util.NewString(defaultPasswordSecretName(us.DeploymentName, us.GetName()))
+		us.PasswordSecretName = util.NewString(defaultPasswordSecretName(us.Deployment, us.GetName()))
 	}
 }
 
@@ -120,8 +120,8 @@ func (us *UserSpec) SetDefaultsFrom(source *UserSpec) {
 	if us.PasswordSecretName == nil {
 		us.PasswordSecretName = util.NewStringOrNil(source.PasswordSecretName)
 	}
-	if us.DeploymentName == "" {
-		us.DeploymentName = source.DeploymentName
+	if us.Deployment == "" {
+		us.Deployment = source.Deployment
 	}
 }
 
@@ -139,8 +139,8 @@ func (us *UserSpec) ResetImmutableFields(target *UserSpec) []string {
 		resetFields = append(resetFields, "PasswordSecretName")
 	}
 	if us.GetDeploymentName() != target.GetDeploymentName() {
-		target.DeploymentName = us.DeploymentName
-		resetFields = append(resetFields, "DeploymentName")
+		target.Deployment = us.Deployment
+		resetFields = append(resetFields, "Deployment")
 	}
 	return resetFields
 }

@@ -48,8 +48,13 @@ type ArangoCollection struct {
 }
 
 // GetDeploymentName returns the name of the deployment this Collection belongs to
-func (cs *ArangoCollection) GetDatabaseResourceName() string {
-	return cs.Spec.DatabaseResourceName
+func (cs *ArangoCollection) GetDeploymentName() string {
+	return cs.Spec.Deployment
+}
+
+// GetDatabaseName returns the name of the database this Collection belongs to
+func (cs *ArangoCollection) GetDatabaseName() string {
+	return cs.Spec.Database
 }
 
 // GetStatus returns the resource status of the Collection
@@ -119,7 +124,8 @@ type KeyOptions struct {
 
 // CollectionSpec specifies a arangodb Collection
 type CollectionSpec struct {
-	DatabaseResourceName string          `json:"databaseResourceName,omitempty"`
+	Deployment           string          `json:"deployment,omitempty"`
+	Database             string          `json:"database,omitempty"`
 	Name                 *string         `json:"name,omitempty"`
 	Type                 *CollectionType `json:"collectionType,omitempty"`
 	NumberOfShards       *int            `json:"numberOfShards,omitempty"`

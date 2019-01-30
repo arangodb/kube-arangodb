@@ -49,10 +49,7 @@ type ArangoDatabase struct {
 
 // GetDeploymentName returns the name of the deployment this database belongs to
 func (ds *ArangoDatabase) GetDeploymentName() string {
-	if name, ok := ds.Labels["deployment"]; ok {
-		return name
-	}
-	return ""
+	return ds.Spec.Deployment
 }
 
 // GetStatus returns the resource status of the database
@@ -75,7 +72,8 @@ func (ds *ArangoDatabase) AsOwner() metav1.OwnerReference {
 
 // DatabaseSpec specifies a arangodb database
 type DatabaseSpec struct {
-	Name *string `json:"name,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Deployment string  `json:"deployment,omitempty"`
 }
 
 // GetName returns the name of the database or empty string

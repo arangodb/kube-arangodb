@@ -24,10 +24,8 @@ import (
 	"context"
 	"fmt"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -67,8 +65,8 @@ func (graph *Graph) UpdateStatus(kube KubeClient) error {
 	return err
 }
 
-func (graph *Graph) GetDeploymentName(resolv DeploymentNameResolver) (string, error) {
-	return resolv.DeploymentByDatabase(graph.ArangoGraph.GetDatabaseResourceName())
+func (graph *Graph) GetDeploymentName() string {
+	return graph.ArangoGraph.GetDeploymentName()
 }
 
 func NewGraphFromObject(object runtime.Object) (*Graph, error) {
@@ -92,7 +90,7 @@ func (graph *Graph) GetFinalizerName() string {
 
 // Reconcile updates the Graph resource to the given spec
 func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
-	dbn := graph.GetDatabaseResourceName()
+	/*dbn := graph.GetDatabaseResourceName()
 	gname := graph.Spec.GetName()
 	finalizerName := graph.GetFinalizerName()
 
@@ -160,5 +158,5 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 		}
 
 		admin.SetCondition(graph, api.ConditionTypeReady, v1.ConditionTrue, "Graph ready", "Graph is ready")
-	}
+	}*/
 }

@@ -48,8 +48,8 @@ type ArangoGraph struct {
 }
 
 // GetDeploymentName returns the name of the deployment this Graph belongs to
-func (gs *ArangoGraph) GetDatabaseResourceName() string {
-	return gs.Spec.DatabaseResourceName
+func (gs *ArangoGraph) GetDeploymentName() string {
+	return gs.Spec.Deployment
 }
 
 // GetStatus returns the resource status of the Graph
@@ -70,15 +70,28 @@ func (gs *ArangoGraph) AsOwner() metav1.OwnerReference {
 	}
 }
 
+// EdgeDefinition stores definition about the edges of a graph
+type EdgeDefinition struct {
+	From       []string `json:"from,omitempty"`
+	To         []string `json:"to,omitempty"`
+	Collection string   `json:"collection,omitempty"`
+}
+
 // GraphSpec specifies a arangodb Graph
 type GraphSpec struct {
-	Name                 *string `json:"name,omitempty"`
-	DatabaseResourceName string  `json:"databaseResourceName,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Deployment string  `json:"deployment,omitempty"`
+	Database   string  `json:"database,omitempty"`
+	IsSmart    *bool   `json:"isSmart,omitempty"`
 }
 
 // GetName returns the name of the Graph or empty string
 func (gs *GraphSpec) GetName() string {
 	return util.StringOrDefault(gs.Name)
+}
+
+func (gs *GraphSpec) GetDeploymentName() string {
+	return gs.Deployment
 }
 
 // Validate validates a GraphSpec
