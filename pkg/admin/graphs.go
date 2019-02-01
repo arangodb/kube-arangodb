@@ -24,8 +24,10 @@ import (
 	"context"
 	"fmt"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -33,6 +35,7 @@ import (
 // Graph stores information about a arangodb Graph
 type Graph struct {
 	api.ArangoGraph
+	createdCollections map[string]api.CollectionType
 }
 
 func (graph *Graph) GetAPIObject() ArangoResource {
@@ -77,6 +80,7 @@ func NewGraphFromObject(object runtime.Object) (*Graph, error) {
 		}
 		return &Graph{
 			ArangoGraph: *agraph,
+			//createdCollections: make(map[string]string, 0),
 		}, nil
 	}
 
@@ -88,9 +92,21 @@ func (graph *Graph) GetFinalizerName() string {
 	return "database-admin-graph-" + graph.Spec.GetName()
 }
 
+func (graph *Graph) GetCreateOptions() *driver.CreateGraphOptions {
+	spec := graph.Spec
+	//edgeDefinitions := make([]driver.EdgeDefinition, 0)
+	// Go-Driver is outdated - missing replication factor
+	return &driver.CreateGraphOptions{
+		IsSmart:             spec.GetIsSmart(),
+		SmartGraphAttribute: spec.GetOptions().GetSmartGraphAttribute(),
+		//EdgeDefinitions:     spec.EdgeDefinitions,
+		NumberOfShards: spec.GetOptions().GetNumberOfShards(),
+	}
+}
+
 // Reconcile updates the Graph resource to the given spec
 func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
-	/*dbn := graph.GetDatabaseResourceName()
+	dbn := graph.GetDatabaseName()
 	gname := graph.Spec.GetName()
 	finalizerName := graph.GetFinalizerName()
 
@@ -99,11 +115,13 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 		defer func() {
 			if removeFinalizer {
 				admin.RemoveFinalizer(graph)
-				admin.RemoveResourceFinalizer(dbn, finalizerName)
+				if dbr, ok := admin.GetDatabaseResourceByDatabaseName(graph, dbn); ok {
+					admin.RemoveResourceFinalizer(dbr, finalizerName)
+				}
 			}
 		}()
 
-		client, err := admin.GetArangoDatabaseClient(ctx, dbn)
+		client, err := admin.GetArangoDatabaseClient(ctx, graph, dbn)
 		if driver.IsNotFound(err) {
 			removeFinalizer = true // Database gone
 			return
@@ -117,9 +135,12 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 			removeFinalizer = true
 			return
 		} else if err == nil {
-			if err := agraph.Remove(ctx); err != nil {
-				admin.ReportError(graph, "Remove graph", err)
-				return
+			// Only delete the graph if we created it
+			if admin.GetCreatedAt(graph) != nil {
+				if err := agraph.Remove(ctx); err != nil {
+					admin.ReportError(graph, "Remove graph", err)
+					return
+				}
 			}
 			removeFinalizer = true
 		}
@@ -128,21 +149,21 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 			admin.AddFinalizer(graph)
 		}
 
-		admin.AddResourceFinalizer(dbn, finalizerName)
+		if dbr, ok := admin.GetDatabaseResourceByDatabaseName(graph, dbn); ok {
+			admin.AddResourceFinalizer(dbr, finalizerName)
+		}
 
-		client, err := admin.GetArangoDatabaseClient(ctx, dbn)
+		client, err := admin.GetArangoDatabaseClient(ctx, graph, dbn)
 		if err != nil {
 			admin.ReportError(graph, "Connect to database", err)
 			return
 		}
 
-		_, err = client.Graph(ctx, gname)
-		if driver.IsNotFound(err) {
+		if _, err := client.Graph(ctx, gname); driver.IsNotFound(err) {
 			if admin.GetCreatedAt(graph) != nil {
-				admin.ReportWarning(graph, "Collection lost", "The collection was lost and will be recreated")
+				admin.ReportWarning(graph, "Graph lost", "The Graph was lost and will be recreated")
 			}
-
-			_, err := client.CreateGraph(ctx, gname, nil)
+			_, err := client.CreateGraph(ctx, gname, graph.GetCreateOptions())
 			if err != nil {
 				admin.ReportError(graph, "Get Graph", err)
 				return
@@ -150,7 +171,8 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 
 			admin.SetCreatedAtNow(graph)
 		} else if err == nil {
-			// Graph exists
+
+			return
 
 		} else {
 			admin.ReportError(graph, "Get Graph", err)
@@ -158,5 +180,23 @@ func (graph *Graph) Reconcile(ctx context.Context, admin ReconcileContext) {
 		}
 
 		admin.SetCondition(graph, api.ConditionTypeReady, v1.ConditionTrue, "Graph ready", "Graph is ready")
-	}*/
+	}
+}
+
+func (graph *Graph) EnsureCollection(ctx context.Context, client driver.Database, collection string, collectionType api.CollectionType) error {
+
+	_, err := client.Collection(ctx, collection)
+	if driver.IsNotFound(err) {
+		graph.createdCollections[collection] = collectionType
+		// Collection will be created by the graph api
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (graph *Graph) ReconcileGraphCollections(ctx context.Context, admin ReconcileContext, client driver.Graph) error {
+	return nil
 }

@@ -30,7 +30,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"k8s.io/api/core/v1"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -123,7 +123,7 @@ func (user *User) ensurePasswordSecret(ctx context.Context, admin ReconcileConte
 }
 
 // Reconcile updates the database resource to the given spec
-func (user *User) Reconcile(ctx context.Context, admin ReconcileContext) {
+func (user *User) Reconcile(ctx context.Context, admin ReconcileContext) (bool, error) {
 	name := user.Spec.GetName()
 
 	if user.GetDeletionTimestamp() != nil {
@@ -141,61 +141,61 @@ func (user *User) Reconcile(ctx context.Context, admin ReconcileContext) {
 			if driver.IsNotFound(err) {
 				// cool, user is gone
 				removeFinalizer = true
+				return false, nil
 			} else if err == nil {
-				if err := auser.Remove(ctx); err != nil {
-					admin.ReportError(user, "Remove user", err)
-				} else {
-					removeFinalizer = true
-				}
-			} else {
-				admin.ReportError(user, "Get user", err)
-			}
-
-		} else {
-			admin.ReportError(user, "Connect to deployment", err)
-			return
-		}
-	} else {
-
-		client, err := admin.GetArangoClient(ctx, user)
-		if err == nil {
-
-			if !admin.HasFinalizer(user) {
-				admin.AddFinalizer(user)
-			}
-
-			auser, err := client.User(ctx, name)
-			if driver.IsNotFound(err) {
-				// Get user credentials
-				passwd, err := user.ensurePasswordSecret(ctx, admin)
-				if err == nil {
-					if _, err := client.CreateUser(ctx, name, &driver.UserOptions{Password: passwd}); err != nil {
-						admin.ReportError(user, "Create user", err)
-					} else {
-						admin.SetCreatedAtNow(user)
+				if admin.GetCreatedAt(user) != nil {
+					if err := auser.Remove(ctx); err != nil {
+						return true, errors.Wrap(err, "Could not remove user")
 					}
-				} else {
-					admin.ReportError(user, "Get credentials", err)
 				}
 
-			} else if err == nil {
-				// User was found
-				passwd, err := user.ensurePasswordSecret(ctx, admin)
-				if err == nil {
-					if err := auser.Update(ctx, driver.UserOptions{Password: passwd}); err != nil {
-						admin.ReportError(user, "Update user", err)
-					}
-
-					admin.SetCondition(user, api.ConditionTypeReady, v1.ConditionTrue, "User updated", "User is ready")
-				}
+				removeFinalizer = true
+				return false, nil
 			} else {
-				admin.ReportError(user, "Get user", err)
+				return false, errors.Wrap(err, "Could not get user")
 			}
 		} else {
-			admin.ReportError(user, "Connect to deployment", err)
-			return
+			return false, errors.Wrap(err, "Could not connect to deployment")
 		}
-
-		admin.SetCondition(user, api.ConditionTypeReady, v1.ConditionTrue, "User ready", "User is ready")
 	}
+
+	client, err := admin.GetArangoClient(ctx, user)
+	if err == nil {
+
+		if !admin.HasFinalizer(user) {
+			admin.AddFinalizer(user)
+		}
+
+		auser, err := client.User(ctx, name)
+		if driver.IsNotFound(err) {
+			// Get user credentials
+			passwd, err := user.ensurePasswordSecret(ctx, admin)
+			if err == nil {
+				if _, err := client.CreateUser(ctx, name, &driver.UserOptions{Password: passwd}); err != nil {
+					return false, errors.Wrap(err, "Could not create user")
+				}
+
+				admin.ReportEvent(user, "Reconciliation", "User created")
+				admin.SetCreatedAtNow(user)
+				return true, nil
+			}
+
+			return false, errors.Wrap(err, "Could not ensure user credentials")
+		} else if err == nil {
+			// User was found
+			passwd, err := user.ensurePasswordSecret(ctx, admin)
+			if err == nil {
+				if err := auser.Update(ctx, driver.UserOptions{Password: passwd}); err != nil {
+					return false, errors.Wrap(err, "Could not update user")
+				}
+
+				return true, nil
+			} else {
+				return false, errors.Wrap(err, "Could not ensure user credentials")
+			}
+		} else {
+			return false, errors.Wrap(err, "Could not get user")
+		}
+	}
+	return false, errors.Wrap(err, "Could not connect to deployment")
 }

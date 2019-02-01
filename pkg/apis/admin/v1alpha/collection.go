@@ -20,9 +20,9 @@
 package v1alpha
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -130,9 +130,9 @@ type CollectionSpec struct {
 	Type                 *CollectionType `json:"collectionType,omitempty"`
 	NumberOfShards       *int            `json:"numberOfShards,omitempty"`
 	ShardKeys            []string        `json:"shardKeys,omitempty"`
-	ReplicationFactor    *uint           `json:"replicationFactor,omitempty"`
+	ReplicationFactor    *int            `json:"replicationFactor,omitempty"`
 	WaitForSync          *bool           `json:"waitForSync,omitempty"`
-	IndexBuckets         *uint           `json:"indexBuckets,omitempty"`
+	IndexBuckets         *int            `json:"indexBuckets,omitempty"`
 	IsSystem             *bool           `json:"isSystem,omitempty"`
 	IsVolatile           *bool           `json:"isVolatile,omitempty"`
 	DoCompact            *bool           `json:"doCompact,omitempty"`
@@ -142,13 +142,36 @@ type CollectionSpec struct {
 	Indexes              []Index         `json:"indexes,omitempty"`
 }
 
+// GetWaitForSync returns wait for sync or false
+func (cs *CollectionSpec) GetWaitForSync() bool {
+	return util.BoolOrDefault(cs.WaitForSync)
+}
+
+// GetReplicationFactor returns the replication factor or zero
+func (cs *CollectionSpec) GetReplicationFactor() int {
+	return util.IntOrDefault(cs.ReplicationFactor)
+}
+
+// GetNumberOfShards returns the number of shards or zero
+func (cs *CollectionSpec) GetNumberOfShards() int {
+	return util.IntOrDefault(cs.NumberOfShards)
+}
+
 // GetName returns the name of the Collection or empty string
 func (cs *CollectionSpec) GetName() string {
 	return util.StringOrDefault(cs.Name)
 }
 
+// GetDeployment returns the deployment name
+func (cs *CollectionSpec) GetDeployment() string {
+	return cs.Deployment
+}
+
 // Validate validates a CollectionSpec
 func (cs *CollectionSpec) Validate() error {
+	if err := k8sutil.ValidateResourceName(cs.Deployment); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -172,6 +195,10 @@ func (cs *CollectionSpec) ResetImmutableFields(target *CollectionSpec) []string 
 	if cs.GetName() != target.GetName() {
 		target.Name = util.NewStringOrNil(cs.Name)
 		resetFields = append(resetFields, "Name")
+	}
+	if cs.GetNumberOfShards() != target.GetNumberOfShards() {
+		target.NumberOfShards = util.NewIntOrNil(cs.NumberOfShards)
+		resetFields = append(resetFields, "NumberOfShards")
 	}
 	// And this too!
 	return resetFields

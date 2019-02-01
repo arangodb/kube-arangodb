@@ -52,6 +52,11 @@ func (gs *ArangoGraph) GetDeploymentName() string {
 	return gs.Spec.Deployment
 }
 
+// GetDatabaseName returns the name of the database this Graph belongs to
+func (gs *ArangoGraph) GetDatabaseName() string {
+	return gs.Spec.Database
+}
+
 // GetStatus returns the resource status of the Graph
 func (gs *ArangoGraph) GetStatus() *ResourceStatus {
 	return &gs.Status
@@ -70,11 +75,25 @@ func (gs *ArangoGraph) AsOwner() metav1.OwnerReference {
 	}
 }
 
-// EdgeDefinition stores definition about the edges of a graph
-type EdgeDefinition struct {
-	From       []string `json:"from,omitempty"`
-	To         []string `json:"to,omitempty"`
-	Collection string   `json:"collection,omitempty"`
+type GraphOptions struct {
+	SmartGraphAttribute *string `json:"smartGraphAttribute,omitempty"`
+	NumberOfShards      *int    `json:"numberOfShards,omitempty"`
+	ReplicationFactor   *int    `json:"replicationFactor,omitempty"`
+}
+
+// GetSmartGraphAttribute returns the smartgraphattribute or, if not set, empty string
+func (gopt GraphOptions) GetSmartGraphAttribute() string {
+	return util.StringOrDefault(gopt.SmartGraphAttribute)
+}
+
+// GetNumberOfShards returns the number of shards or, if not set, zero
+func (gopt GraphOptions) GetNumberOfShards() int {
+	return util.IntOrDefault(gopt.NumberOfShards)
+}
+
+// GetReplicationFactor returns the replication factor, it not set, zero
+func (gopt GraphOptions) GetReplicationFactor() int {
+	return util.IntOrDefault(gopt.ReplicationFactor)
 }
 
 // GraphSpec specifies a arangodb Graph
@@ -83,6 +102,9 @@ type GraphSpec struct {
 	Deployment string  `json:"deployment,omitempty"`
 	Database   string  `json:"database,omitempty"`
 	IsSmart    *bool   `json:"isSmart,omitempty"`
+	//EdgeDefinitions   []driver.EdgeDefinition `json:"edgeDefinitions,omitempty"`
+	Options           GraphOptions `json:"options,omitempty"`
+	OrphanCollections []string     `json:"orphanCollections,omitempty"`
 }
 
 // GetName returns the name of the Graph or empty string
@@ -90,8 +112,16 @@ func (gs *GraphSpec) GetName() string {
 	return util.StringOrDefault(gs.Name)
 }
 
+func (gs *GraphSpec) GetIsSmart() bool {
+	return util.BoolOrDefault(gs.IsSmart)
+}
+
 func (gs *GraphSpec) GetDeploymentName() string {
 	return gs.Deployment
+}
+
+func (gs *GraphSpec) GetOptions() GraphOptions {
+	return gs.Options
 }
 
 // Validate validates a GraphSpec

@@ -23,10 +23,11 @@ package admin
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
-	"k8s.io/api/core/v1"
+	"github.com/pkg/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -85,14 +86,24 @@ func NewDatabaseFromObject(object runtime.Object) (*Database, error) {
 	return nil, fmt.Errorf("Not a ArangoDatabase")
 }
 
+func allCollectionsSystem(cols []driver.Collection) bool {
+	for _, c := range cols {
+		if !strings.HasPrefix(c.Name(), "_") {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Reconcile updates the database resource to the given spec
-func (db *Database) Reconcile(ctx context.Context, admin ReconcileContext) {
+func (db *Database) Reconcile(ctx context.Context, admin ReconcileContext) (bool, error) {
 	dbname := db.Spec.GetName()
 
 	if db.GetDeletionTimestamp() != nil {
 		arango, err := admin.GetArangoClient(ctx, db)
 		if err != nil {
-			admin.ReportError(db, "Reconcile", err)
+			return false, errors.Wrap(err, "Could not connect to deployment")
 		}
 
 		adb, err := arango.Database(ctx, dbname)
@@ -102,55 +113,63 @@ func (db *Database) Reconcile(ctx context.Context, admin ReconcileContext) {
 			admin.RemoveDeploymentFinalizer(db)
 			admin.RemoveFinalizer(db)
 
-			// Finally delete the database from the internal
-			return
+			// Resource is not ready, but no error
+			return false, nil
+		} else if err != nil {
+			return false, errors.Wrap(err, "Could not access database")
 		}
 
 		if cols, err := adb.Collections(ctx); err != nil {
 			// report error
-			admin.ReportError(db, "Failed to access database", err)
-		} else if len(cols) > 0 {
+			return false, errors.Wrap(err, "Could not access database")
+		} else if !allCollectionsSystem(cols) {
 			// Add event
 			admin.ReportWarning(db, "Database not empty", "The database contains collections and is therefore not deleted")
+			// Database is ready, no error
+			return true, nil
 		}
 
-		if err := adb.Remove(ctx); err != nil {
-			admin.ReportError(db, "Failed to remove database", err)
-		}
-	} else {
-		if !admin.HasFinalizer(db) {
-			admin.AddFinalizer(db)
-		}
-
-		arango, err := admin.GetArangoClient(ctx, db)
-		if err != nil {
-			admin.ReportWarning(db, "Connection failed", "Could not connect to deployment")
-			return
-		}
-
-		_, err = arango.Database(ctx, dbname)
-		if driver.IsNotFound(err) {
-			// check if database was created before
-			if admin.GetCreatedAt(db) != nil {
-				admin.ReportWarning(db, "Database lost", "Database was created before and is now lost")
+		if admin.GetCreatedAt(db) != nil {
+			if err := adb.Remove(ctx); err != nil {
+				return false, errors.Wrap(err, "Failed to remove database")
 			}
 
-			// create the database
-			_, err := arango.CreateDatabase(ctx, dbname, nil)
-			if err != nil {
-				// record create error
-				admin.ReportError(db, "Create database failed", err)
-			} else {
-				admin.ReportEvent(db, "Reconciliation", "Database created")
-			}
-
-			admin.SetCreatedAtNow(db)
-		} else if err != nil {
-			// Generic error
-			admin.ReportError(db, "Failed to access deployment", err)
+			admin.ReportEvent(db, "Reconciliation", "Database deleted")
 		}
 
-		// Database is there, everything good, set ready condition
-		admin.SetCondition(db, api.ConditionTypeReady, v1.ConditionTrue, "Database ready", "Database is ready")
+		return false, nil
 	}
+	if !admin.HasFinalizer(db) {
+		admin.AddFinalizer(db)
+	}
+
+	arango, err := admin.GetArangoClient(ctx, db)
+	if err != nil {
+		return false, errors.Wrap(err, "Could not connect to deployment")
+	}
+
+	_, err = arango.Database(ctx, dbname)
+	if driver.IsNotFound(err) {
+		// check if database was created before
+		if admin.GetCreatedAt(db) != nil {
+			admin.ReportWarning(db, "Database lost", "Database was created before and is now lost")
+		}
+
+		// create the database
+		_, err := arango.CreateDatabase(ctx, dbname, nil)
+		if err != nil {
+			// record create error
+			return false, errors.Wrap(err, "Create database failed")
+		}
+
+		admin.ReportEvent(db, "Reconciliation", "Database created")
+		admin.SetCreatedAtNow(db)
+		return true, nil
+
+	} else if err != nil {
+		// Generic error
+		return false, errors.Wrap(err, "Could not access database")
+	}
+
+	return true, nil
 }

@@ -26,8 +26,9 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/admin/v1alpha"
+	"github.com/pkg/errors"
 
-	"k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -91,7 +92,7 @@ func (coll *Collection) GetFinalizerName() string {
 }
 
 // Reconcile updates the Collection resource to the given spec
-func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
+func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) (bool, error) {
 
 	dbn := coll.GetDatabaseName()
 	finalizerName := coll.GetFinalizerName()
@@ -111,65 +112,105 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) {
 		client, err := admin.GetArangoDatabaseClient(ctx, coll, coll.GetDatabaseName())
 		if driver.IsNotFound(err) {
 			removeFinalizers = true // Database gone!
-			return
+			return true, nil
 		} else if err != nil {
-			admin.ReportError(coll, "Connect to deployment", err)
-			return
+			return false, errors.Wrap(err, "Could not connect to deployment")
 		}
 		acoll, err := client.Collection(ctx, coll.Spec.GetName())
 		if driver.IsNotFound(err) {
 			// Collection not found - great!
 			removeFinalizers = true
-			return
+			return false, nil
 		} else if err == nil {
-			// Delete the collection
-			if err := acoll.Remove(ctx); err != nil {
-				admin.ReportError(coll, "Remove collection", err)
+			// Check if the collection was created by the operator
+			if admin.GetCreatedAt(coll) != nil {
+				// Delete the collection
+				if err := acoll.Remove(ctx); err != nil {
+					admin.ReportError(coll, "Remove collection", err)
+					return false, errors.Wrap(err, "Could not remove collection")
+				}
+				admin.ReportEvent(coll, "Reconciliation", "Collection deleted")
 			}
 			removeFinalizers = true
-			return
+			return false, nil
 		} else {
-			admin.ReportError(coll, "Get Collection", err)
+			return false, errors.Wrap(err, "Could not access collection")
 		}
-	} else {
-		if !admin.HasFinalizer(coll) {
-			admin.AddFinalizer(coll)
+	}
+
+	if !admin.HasFinalizer(coll) {
+		admin.AddFinalizer(coll)
+	}
+
+	if dbr, ok := admin.GetDatabaseResourceByDatabaseName(coll, dbn); ok {
+		admin.AddResourceFinalizer(dbr, finalizerName)
+	}
+
+	// Collection is not delete
+	client, err := admin.GetArangoDatabaseClient(ctx, coll, dbn)
+	if err != nil {
+		return false, errors.Wrap(err, "Could not connect to deployment")
+	}
+	acoll, err := client.Collection(ctx, coll.Spec.GetName())
+	if driver.IsNotFound(err) {
+
+		if admin.GetCreatedAt(coll) != nil {
+			admin.ReportWarning(coll, "Collection lost", "The collection was lost and will be recreated")
 		}
 
-		if dbr, ok := admin.GetDatabaseResourceByDatabaseName(coll, dbn); ok {
-			admin.AddResourceFinalizer(dbr, finalizerName)
-		}
-
-		// Collection is not delete
-		client, err := admin.GetArangoDatabaseClient(ctx, coll, dbn)
+		// Collection is not there
+		_, err := client.CreateCollection(ctx, coll.Spec.GetName(), coll.getCreateOptions())
 		if err != nil {
-			admin.ReportError(coll, "Connect to deployment", err)
-			return
+			return false, errors.Wrap(err, "Could not create collection")
 		}
-		acoll, err := client.Collection(ctx, coll.Spec.GetName())
-		if driver.IsNotFound(err) {
+		admin.SetCreatedAtNow(coll)
+		admin.ReportEvent(coll, "Reconciliation", "Collection created")
 
-			if admin.GetCreatedAt(coll) != nil {
-				admin.ReportWarning(coll, "Collection lost", "The collection was lost and will be recreated")
-			}
+	} else if err != nil {
+		return false, errors.Wrap(err, "Could not access collection")
+	}
 
-			// Collection is not there
-			_, err := client.CreateCollection(ctx, coll.Spec.GetName(), nil)
-			if err != nil {
-				admin.ReportError(coll, "Get statistics failed", err)
-				return
-			}
-			admin.SetCreatedAtNow(coll)
+	props, err := acoll.Properties(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "Could not get collection properties")
+	}
 
-		} else {
-			// Collection is there
-			_, err := acoll.Statistics(ctx)
-			if err != nil {
-				admin.ReportError(coll, "Get statistics failed", err)
-				return
-			}
+	update, updateRequired, err := coll.getUpdateProperties(props)
+	if err != nil {
+		return false, errors.Wrap(err, "Can not update properties")
+	}
+
+	if updateRequired {
+		if err = acoll.SetProperties(ctx, update); err != nil {
+			return false, errors.Wrap(err, "Could not update collection properties")
 		}
+	}
 
-		admin.SetCondition(coll, api.ConditionTypeReady, v1.ConditionTrue, "Collection updated", "Collection is ready")
+	// Collection is there
+	return true, nil
+}
+
+func (coll *Collection) getUpdateProperties(props driver.CollectionProperties) (driver.SetCollectionPropertiesOptions, bool, error) {
+	spec := coll.Spec
+	var opts driver.SetCollectionPropertiesOptions
+	updateRequired := false
+
+	if spec.GetReplicationFactor() != props.ReplicationFactor {
+		opts.ReplicationFactor = spec.GetReplicationFactor()
+		updateRequired = true
+	}
+
+	if spec.GetWaitForSync() != props.WaitForSync {
+		opts.WaitForSync = util.NewBool(spec.GetWaitForSync())
+		updateRequired = true
+	}
+
+	return driver.SetCollectionPropertiesOptions{}, updateRequired, nil
+}
+
+func (coll *Collection) getCreateOptions() *driver.CreateCollectionOptions {
+	//spec := coll.Spec
+	return &driver.CreateCollectionOptions{
+		JournalSize: 0,
 	}
 }

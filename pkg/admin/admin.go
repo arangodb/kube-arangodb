@@ -50,18 +50,14 @@ type Dependencies struct {
 	EventRecorder      record.EventRecorder
 }
 
-// DeploymentProvider provides clients and api objects for deployments
-type DeploymentProvider interface {
-	GetClient(ctx context.Context, deployment, namespace string) (driver.Client, error)
-	GetAPIObject(deployment, namespace string) (*dapi.ArangoDeployment, error)
-}
-
 // DatabaseAdmin contains all information about the resources in the current cluster
 type DatabaseAdmin struct {
 	EventChannel chan watch.Event
 	Namespace    string
 	Dependencies Dependencies
 	Resources    map[string]DatabaseAdminResource
+
+	clientcache map[string]driver.Client
 
 	// Databases maps "<deployment>/<database>" to resource name
 	Databases map[string]string
@@ -121,22 +117,11 @@ type ReconcileContext interface {
 	GetArangoDatabaseClient(ctx context.Context, obj APIObjectResource, database string) (driver.Database, error)
 }
 
-type DeploymentNameResolver interface {
-	DeploymentByDatabase(database string) (string, error)
-	//DatabaseByCollection(collection string) string
-}
-
-type ModifyObjectContext interface {
-	ValidationError(err error)
-	ResetImmutableFields(fields []string)
-}
-
 type DatabaseAdminResource interface {
-	DeploymentLinkedResource
-	Reconcile(ctx context.Context, rctx ReconcileContext)
-	GetAPIObject() ArangoResource
+	APIObjectResource
+	// Reconcile inspects the resource and reconciles it if required. Returns true if ready, or error
+	Reconcile(ctx context.Context, rctx ReconcileContext) (bool, error)
 	GetNamespace() string
-	GetName() string
 
 	Update(kube KubeClient) error
 	UpdateStatus(kube KubeClient) error
@@ -146,12 +131,6 @@ type DatabaseAdminResource interface {
 type ArangoResource interface {
 	GetStatus() *api.ResourceStatus
 	GetMeta() *metav1.ObjectMeta
-}
-
-type ArangoResourceSpec interface {
-	Validate() error
-	SetDefaults()
-	ResetImmutableFields()
 }
 
 type APIObjectResource interface {
@@ -171,6 +150,7 @@ func NewDatabaseAdmin(Namespace string, deps Dependencies) *DatabaseAdmin {
 		Dependencies: deps,
 		EventChannel: make(chan watch.Event),
 		Resources:    make(map[string]DatabaseAdminResource),
+		clientcache:  make(map[string]driver.Client),
 	}
 }
 
@@ -181,9 +161,18 @@ func (da *DatabaseAdmin) GetAPIObject(deployment, namespace string) (*dapi.Arang
 
 // GetClient returns a database client for the given deployment
 func (da *DatabaseAdmin) GetClient(ctx context.Context, deployment, namespace string) (driver.Client, error) {
+	lookup := namespace + "/" + deployment
+	if client, ok := da.clientcache[lookup]; ok {
+		return client, nil
+	}
+
 	apiObject, err := da.GetAPIObject(deployment, namespace)
 	if err == nil {
-		return arangod.CreateArangodDatabaseClient(ctx, da.Dependencies.KubeCli.CoreV1(), apiObject, false)
+		client, err := arangod.CreateArangodDatabaseClient(ctx, da.Dependencies.KubeCli.CoreV1(), apiObject, false)
+		if err == nil {
+			da.clientcache[lookup] = client
+		}
+		return client, err
 	}
 
 	return nil, err
@@ -228,17 +217,22 @@ func (da *DatabaseAdmin) UpdateResourceStatus(r DatabaseAdminResource) {
 // ReconcileResource reconciles the given resource
 func (da *DatabaseAdmin) ReconcileResource(r DatabaseAdminResource) error {
 	ctx := context.Background()
-
-	//if db, ok := r.(*Database); ok {
-	//	da.onDatabaseResourceUpdate(&db.apiObject)
-	//}
-
 	helper := ReconcileContextHelper{admin: da}
 
 	//da.LoadResource(r)
-	r.Reconcile(ctx, &helper)
-	da.UpdateResource(r)
+	if ready, err := r.Reconcile(ctx, &helper); err != nil {
+		helper.ReportError(r, "Reconcile", err)
+		helper.SetCondition(r, api.ConditionTypeReady, v1.ConditionUnknown, "Reconciliation", "Error during Reconciliation")
+	} else if ready {
+		helper.SetCondition(r, api.ConditionTypeReady, v1.ConditionTrue, "Reconciliation", "Resource ready")
+	} else {
+		helper.SetCondition(r, api.ConditionTypeReady, v1.ConditionFalse, "Reconciliation", "Resource not ready")
+	}
+
 	// Check here if an update or updateStatus is required
+	if helper.updateRequired {
+		da.UpdateResource(r)
+	}
 
 	return nil
 }
@@ -382,12 +376,13 @@ func (da *DatabaseAdmin) NewFromObject(object runtime.Object) (DatabaseAdminReso
 			da.Databases[deploymentDatabaseName(db)] = db.GetName()
 		}
 		return db, err
-	case *api.ArangoUser:
-		return NewUserFromObject(object)
+
 	case *api.ArangoCollection:
 		return NewCollectionFromObject(object)
-	case *api.ArangoGraph:
-		return NewGraphFromObject(object)
+	case *api.ArangoUser:
+		return NewUserFromObject(object)
+	/*case *api.ArangoGraph:
+	return NewGraphFromObject(object)*/
 	default:
 		return nil, fmt.Errorf("Unknown object type")
 	}
@@ -491,6 +486,7 @@ func (rch *ReconcileContextHelper) RemoveFinalizer(obj APIObjectResource) {
 	for i, other := range meta.Finalizers {
 		if other == rch.GetFinalizerName() {
 			meta.Finalizers = append(meta.Finalizers[:i], meta.Finalizers[i+1:]...)
+			rch.updateRequired = true
 			return
 		}
 	}
@@ -499,6 +495,7 @@ func (rch *ReconcileContextHelper) RemoveFinalizer(obj APIObjectResource) {
 func (rch *ReconcileContextHelper) AddFinalizer(obj APIObjectResource) {
 	meta := obj.GetAPIObject().GetMeta()
 	meta.Finalizers = append(meta.Finalizers, rch.GetFinalizerName())
+	rch.updateRequired = true
 }
 
 func (rch *ReconcileContextHelper) GetFinalizerName() string {
