@@ -133,9 +133,8 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) (
 			}
 			removeFinalizers = true
 			return false, nil
-		} else {
-			return false, errors.Wrap(err, "Could not access collection")
 		}
+		return false, errors.Wrap(err, "Could not access collection")
 	}
 
 	if !admin.HasFinalizer(coll) {
@@ -165,7 +164,7 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) (
 		}
 		admin.SetCreatedAtNow(coll)
 		admin.ReportEvent(coll, "Reconciliation", "Collection created")
-
+		return true, nil
 	} else if err != nil {
 		return false, errors.Wrap(err, "Could not access collection")
 	}
@@ -184,6 +183,7 @@ func (coll *Collection) Reconcile(ctx context.Context, admin ReconcileContext) (
 		if err = acoll.SetProperties(ctx, update); err != nil {
 			return false, errors.Wrap(err, "Could not update collection properties")
 		}
+		admin.ReportEvent(coll, "Reconciliation", "Collection properties updated")
 	}
 
 	// Collection is there
@@ -205,12 +205,14 @@ func (coll *Collection) getUpdateProperties(props driver.CollectionProperties) (
 		updateRequired = true
 	}
 
-	return driver.SetCollectionPropertiesOptions{}, updateRequired, nil
+	return opts, updateRequired, nil
 }
 
 func (coll *Collection) getCreateOptions() *driver.CreateCollectionOptions {
-	//spec := coll.Spec
+	spec := coll.Spec
 	return &driver.CreateCollectionOptions{
-		JournalSize: 0,
+		ReplicationFactor: spec.GetReplicationFactor(),
+		WaitForSync:       spec.GetWaitForSync(),
+		NumberOfShards:    spec.GetNumberOfShards(),
 	}
 }

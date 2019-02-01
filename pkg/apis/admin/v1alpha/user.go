@@ -21,6 +21,7 @@ package v1alpha
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -95,6 +96,12 @@ func (us *UserSpec) GetPasswordSecretName() string {
 
 // Validate validates a UserSpec
 func (us *UserSpec) Validate() error {
+	if err := k8sutil.ValidateResourceName(us.GetDeploymentName()); err != nil {
+		return err
+	}
+	if err := k8sutil.ValidateResourceName(us.GetPasswordSecretName()); err != nil {
+		return err
+	}
 	return nil
 }
 

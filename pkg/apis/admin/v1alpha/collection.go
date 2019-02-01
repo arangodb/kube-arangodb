@@ -149,12 +149,12 @@ func (cs *CollectionSpec) GetWaitForSync() bool {
 
 // GetReplicationFactor returns the replication factor or zero
 func (cs *CollectionSpec) GetReplicationFactor() int {
-	return util.IntOrDefault(cs.ReplicationFactor)
+	return util.IntOrDefault(cs.ReplicationFactor, 1)
 }
 
 // GetNumberOfShards returns the number of shards or zero
 func (cs *CollectionSpec) GetNumberOfShards() int {
-	return util.IntOrDefault(cs.NumberOfShards)
+	return util.IntOrDefault(cs.NumberOfShards, 1)
 }
 
 // GetName returns the name of the Collection or empty string
