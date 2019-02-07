@@ -31,8 +31,10 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -185,15 +187,49 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 	// Not cleaned out yet, check member status
-	if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
+	if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) || (memberStatus.Phase == api.MemberPhaseCreated && !k8sutil.IsPodReady(p)) {
 		log.Warn().Msg("Member is already terminated before it could be cleaned out. Not good, but removing dbserver pod because we cannot do anything further")
 		return nil
 	}
-	// Ensure the cleanout is triggered
-	log.Debug().Msg("Server is not yet clean out. Triggering a clean out now")
-	if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
-		log.Debug().Err(err).Msg("Failed to clean out server")
-		return maskAny(err)
+	if memberStatus.Phase == api.MemberPhaseCreated {
+		// No cleanout job triggered
+		var jobID string
+		ctx = driver.WithJobIDResponse(ctx, &jobID)
+		// Ensure the cleanout is triggered
+		log.Debug().Msg("Server is not yet clean out. Triggering a clean out now")
+		if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
+			log.Debug().Err(err).Msg("Failed to clean out server")
+			return maskAny(err)
+		}
+		memberStatus.CleanoutJobID = jobID
+		memberStatus.Phase = api.MemberPhaseDrain
+		if err := updateMember(memberStatus); err != nil {
+			return maskAny(err)
+		}
+	} else if memberStatus.Phase == api.MemberPhaseDrain {
+		// Check the job progress
+		agency, err := r.context.GetAgency(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to create agency client")
+			return maskAny(err)
+		}
+		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, memberStatus.CleanoutJobID, c, agency)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
+			return maskAny(err)
+		}
+		if jobStatus.IsFailed() {
+			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
+			// Revert cleanout state
+			memberStatus.Phase = api.MemberPhaseCreated
+			memberStatus.CleanoutJobID = ""
+			return maskAny(fmt.Errorf("Clean out server job failed"))
+		}
+	} else {
+		log.Warn().Msgf("Unexpected MemberPhase %s, allow removal", memberStatus.Phase)
+		return nil
 	}
+
 	return maskAny(fmt.Errorf("Server is not yet cleaned out"))
+
 }

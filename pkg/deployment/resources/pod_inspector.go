@@ -182,9 +182,11 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
+					log.Debug().Str("pod-name", podName).Msg("Does not exist")
 					switch m.Phase {
 					case api.MemberPhaseNone:
 						// Do nothing
+						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
 					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated

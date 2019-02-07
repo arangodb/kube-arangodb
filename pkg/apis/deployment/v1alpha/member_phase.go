@@ -34,6 +34,8 @@ const (
 	MemberPhaseFailed MemberPhase = "Failed"
 	// MemberPhaseCleanOut indicates that a dbserver is in the process of being cleaned out
 	MemberPhaseCleanOut MemberPhase = "CleanOut"
+	// MemberPhaseDrain indicates that a dbserver is n the process of being cleaned out as result of draining a node
+	MemberPhaseDrain MemberPhase = "Drain"
 	// MemberPhaseShuttingDown indicates that a member is shutting down
 	MemberPhaseShuttingDown MemberPhase = "ShuttingDown"
 	// MemberPhaseRotating indicates that a member is being rotated
