@@ -189,6 +189,15 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	// Not cleaned out yet, check member status
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) || (memberStatus.Phase == api.MemberPhaseCreated && !k8sutil.IsPodReady(p)) {
 		log.Warn().Msg("Member is already terminated before it could be cleaned out. Not good, but removing dbserver pod because we cannot do anything further")
+		// At this point we have to set CleanedOut to true,
+		// because we can no longer reason about the state in the agency and
+		// bringing back the dbserver again may result in an cleaned out server without us knowing
+		memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "Draining server failed", "")
+		memberStatus.Phase = api.MemberPhaseCreated
+		memberStatus.CleanoutJobID = ""
+		if err := updateMember(memberStatus); err != nil {
+			return maskAny(err)
+		}
 		return nil
 	}
 	if memberStatus.Phase == api.MemberPhaseCreated {
