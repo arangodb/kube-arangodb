@@ -25,8 +25,10 @@ package v1alpha
 import (
 	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 )
 
 // MemberStatusList is a list of MemberStatus entries
@@ -177,4 +179,29 @@ func (l MemberStatusList) MembersReady() int {
 // AllMembersReady returns the true if all members are in the Ready state.
 func (l MemberStatusList) AllMembersReady() bool {
 	return len(l) == l.MembersReady()
+}
+
+// AllConditionTrueSince returns true if all members satisfy the condition since the given period
+func (l MemberStatusList) AllConditionTrueSince(cond ConditionType, status v1.ConditionStatus, period time.Duration) bool {
+	trueCount := 0
+	for _, x := range l {
+		if c, ok := x.Conditions.Get(cond); ok {
+			if c.Status == status && c.LastTransitionTime.Time.Add(period).Before(time.Now()) {
+				trueCount++
+			}
+		}
+	}
+
+	return trueCount == len(l)
+}
+
+// AllFailed returns true if all members are failed
+func (l MemberStatusList) AllFailed() bool {
+	failedCount := 0
+	for _, x := range l {
+		if x.Phase.IsFailed() {
+			failedCount++
+		}
+	}
+	return failedCount == len(l)
 }
