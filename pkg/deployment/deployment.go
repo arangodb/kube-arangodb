@@ -287,9 +287,15 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 		specBefore = *status.AcceptedSpec.DeepCopy()
 	}
 	newAPIObject := current.DeepCopy()
+	wasForceReload := false
+	if newAPIObject.Status.IsForceReload() {
+		newAPIObject.Status.ForceStatusReload = nil
+		wasForceReload = true
+		log.Warn().Msg("Forced status reload!")
+	}
 	newAPIObject.Spec.SetDefaultsFrom(specBefore)
 	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
-	newAPIObject.Status = status
+
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
@@ -318,6 +324,9 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	// Save updated accepted spec
 	{
 		status, lastVersion := d.GetStatus()
+		if wasForceReload {
+			status = newAPIObject.Status
+		}
 		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
 		if err := d.UpdateStatus(status, lastVersion); err != nil {
 			return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
