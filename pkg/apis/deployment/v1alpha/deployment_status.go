@@ -59,7 +59,7 @@ type DeploymentStatus struct {
 	// detect changes in secret values.
 	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
 
-	// ForceStatusReload if set to true forces a reload of the status from the CR.
+	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
 	ForceStatusReload *bool `json:"force-status-reload,omitempty"`
 }
 
