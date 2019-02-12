@@ -183,25 +183,24 @@ func (l MemberStatusList) AllMembersReady() bool {
 
 // AllConditionTrueSince returns true if all members satisfy the condition since the given period
 func (l MemberStatusList) AllConditionTrueSince(cond ConditionType, status v1.ConditionStatus, period time.Duration) bool {
-	trueCount := 0
 	for _, x := range l {
 		if c, ok := x.Conditions.Get(cond); ok {
 			if c.Status == status && c.LastTransitionTime.Time.Add(period).Before(time.Now()) {
-				trueCount++
+				continue
 			}
 		}
+		return false
 	}
 
-	return trueCount == len(l)
+	return true
 }
 
 // AllFailed returns true if all members are failed
 func (l MemberStatusList) AllFailed() bool {
-	failedCount := 0
 	for _, x := range l {
-		if x.Phase.IsFailed() {
-			failedCount++
+		if !x.Phase.IsFailed() {
+			return false
 		}
 	}
-	return failedCount == len(l)
+	return true
 }
