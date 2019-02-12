@@ -188,10 +188,6 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
-						updateMemberNeeded := false
-						if m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "") {
-							updateMemberNeeded = true
-						}
 						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
 						if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
 							if !wasTerminated {
@@ -199,9 +195,6 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 								now := metav1.Now()
 								m.RecentTerminations = append(m.RecentTerminations, now)
 							}
-							updateMemberNeeded = true
-						}
-						if updateMemberNeeded {
 							// Save it
 							if err := status.Members.Update(m, group); err != nil {
 								return maskAny(err)
