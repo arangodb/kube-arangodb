@@ -239,6 +239,19 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), spec.Sync.IsEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
 
+	if spec.GetMode().HasCoordinators() && status.Members.Coordinators.AllFailed() {
+		log.Error().Msg("All coordinators failed - reset")
+		for _, m := range status.Members.Coordinators {
+			if err := r.context.DeletePod(m.PodName); err != nil {
+				log.Error().Err(err).Msg("Failed to delete pod")
+			}
+			m.Phase = api.MemberPhaseNone
+			if err := status.Members.Update(m, api.ServerGroupCoordinators); err != nil {
+				log.Error().Err(err).Msg("Failed to update member")
+			}
+		}
+	}
+
 	// Update conditions
 	if len(podNamesWithScheduleTimeout) > 0 {
 		if status.Conditions.Update(api.ConditionTypePodSchedulingFailure, true,
