@@ -190,7 +190,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		log.Warn().Msg("Member is already terminated before it could be cleaned out. Not good, but removing dbserver pod because we cannot do anything further")
 		return nil
 	}
-	// Ensure the cleanout is triggered
 
 	return maskAny(fmt.Errorf("Server is not yet cleaned out"))
+
 }

@@ -182,9 +182,11 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 		for _, m := range members {
 			if podName := m.PodName; podName != "" {
 				if !podExists(podName) {
+					log.Debug().Str("pod-name", podName).Msg("Does not exist")
 					switch m.Phase {
 					case api.MemberPhaseNone:
 						// Do nothing
+						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
 					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
@@ -236,6 +238,19 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	spec := r.context.GetSpec()
 	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), spec.Sync.IsEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
+
+	if spec.GetMode().HasCoordinators() && status.Members.Coordinators.AllFailed() {
+		log.Error().Msg("All coordinators failed - reset")
+		for _, m := range status.Members.Coordinators {
+			if err := r.context.DeletePod(m.PodName); err != nil {
+				log.Error().Err(err).Msg("Failed to delete pod")
+			}
+			m.Phase = api.MemberPhaseNone
+			if err := status.Members.Update(m, api.ServerGroupCoordinators); err != nil {
+				log.Error().Err(err).Msg("Failed to update member")
+			}
+		}
+	}
 
 	// Update conditions
 	if len(podNamesWithScheduleTimeout) > 0 {

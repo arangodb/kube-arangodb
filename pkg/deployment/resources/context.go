@@ -26,6 +26,7 @@ import (
 	"context"
 
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
@@ -85,4 +86,6 @@ type Context interface {
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
+	// GetAgency returns a connection to the entire agency.
+	GetAgency(ctx context.Context) (agency.Agency, error)
 }

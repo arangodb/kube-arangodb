@@ -308,6 +308,11 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 		*out = new(SecretHashes)
 		**out = **in
 	}
+	if in.ForceStatusReload != nil {
+		in, out := &in.ForceStatusReload, &out.ForceStatusReload
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

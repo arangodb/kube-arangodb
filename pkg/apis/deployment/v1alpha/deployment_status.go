@@ -22,6 +22,8 @@
 
 package v1alpha
 
+import "github.com/arangodb/kube-arangodb/pkg/util"
+
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
 	// Phase holds the current lifetime phase of the deployment
@@ -56,6 +58,9 @@ type DeploymentStatus struct {
 	// SecretHashes keeps a sha256 hash of secret values, so we can
 	// detect changes in secret values.
 	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
+
+	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
+	ForceStatusReload *bool `json:"force-status-reload,omitempty"`
 }
 
 // Equal checks for equality
@@ -71,4 +76,9 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Plan.Equal(other.Plan) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes)
+}
+
+// IsForceReload returns true if ForceStatusReload is set to true
+func (ds *DeploymentStatus) IsForceReload() bool {
+	return util.BoolOrDefault(ds.ForceStatusReload, false)
 }
