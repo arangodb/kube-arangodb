@@ -158,6 +158,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 
+	if memberStatus.Conditions.Update(api.ConditionTypePVDeleted, true, "PV will be lost", "") {
+		if err := updateMember(memberStatus); err != nil {
+			return maskAny(err)
+		}
+	}
+
 	// Inspect cleaned out state
 	log.Debug().Msg("DBServer data is being deleted, so we will cleanout the dbserver first")
 	c, err := r.context.GetDatabaseClient(ctx)
@@ -176,11 +182,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 	if cleanedOut {
 		// Cleanout completed
-		if memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
-			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
-			}
-		}
 		log.Debug().Msg("DBServer is cleaned out.")
 		return nil
 	}
@@ -190,10 +191,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 	// Ensure the cleanout is triggered
-	log.Debug().Msg("Server is not yet clean out. Triggering a clean out now")
-	if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
-		log.Debug().Err(err).Msg("Failed to clean out server")
-		return maskAny(err)
-	}
+
 	return maskAny(fmt.Errorf("Server is not yet cleaned out"))
 }

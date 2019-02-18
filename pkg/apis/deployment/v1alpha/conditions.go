@@ -53,6 +53,8 @@ const (
 	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 	// ConditionTypeMemberOfCluster indicates that the member is a known member of the ArangoDB cluster.
 	ConditionTypeMemberOfCluster ConditionType = "MemberOfCluster"
+	// ConditionTypePVDeleted indicates that the PersistantVolume of the member is going to be deleted.
+	ConditionTypePVDeleted ConditionType = "PVDeleted"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

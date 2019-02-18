@@ -118,6 +118,21 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		return nil
 	})
 
+	// Check if a member is going to lose its volume
+	for _, m := range status.Members.DBServers {
+		if m.Conditions.IsTrue(api.ConditionTypePVDeleted) && len(plan) == 0 {
+			log.Debug().
+				Str("id", m.ID).
+				Msg("Creating drain node plan because member is going to lose its volume")
+			newID := ""
+			plan = append(plan,
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, m.ID),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, newID),
+			)
+		}
+	}
+
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
 		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
