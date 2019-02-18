@@ -120,7 +120,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
-		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+		if len(plan) == 0 && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
