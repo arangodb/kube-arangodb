@@ -16,6 +16,8 @@ make run-tests
 To prepare for a release, do the following:
 
 - Make sure all tests are OK.
+- Update the CHANGELOG manually, since the automatic CHANGELOG
+  generation is switched off (did not work in many cases).
 
 ## Building a release
 
