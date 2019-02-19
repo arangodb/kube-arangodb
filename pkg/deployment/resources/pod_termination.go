@@ -123,6 +123,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		log.Debug().Msg("Pod is already failed, safe to remove dbserver pod")
 		return nil
 	}
+	// If pod is not member of cluster, do nothing
+	if !memberStatus.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
+		log.Debug().Msg("Pod is not member of cluster")
+		return nil
+	}
+
 	// Inspect deployment deletion state
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {
@@ -151,6 +157,11 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return maskAny(err)
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
+		dbserverDataWillBeGone = true
+	}
+
+	// Once decided to drain the member, never go back
+	if memberStatus.Phase == api.MemberPhaseCreated {
 		dbserverDataWillBeGone = true
 	}
 
@@ -230,11 +241,15 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			return maskAny(err)
 		}
 		if jobStatus.IsFailed() {
-			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
+			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed")
 			// Revert cleanout state
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
-			return maskAny(fmt.Errorf("Clean out server job failed"))
+			if err := updateMember(memberStatus); err != nil {
+				return maskAny(err)
+			}
+			log.Error().Msg("Cleanout server job failed, continue anyway")
+			return nil
 		}
 	}
 
