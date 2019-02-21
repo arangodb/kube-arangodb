@@ -276,7 +276,7 @@ the time of a node drain**.
 
 ## Optional: Clean out a DBserver manually
 
-In this step we clean out a DBserver manually, before even issuing the
+In this step we clean out a _DBServer_ manually, before even issuing the
 `kubectl drain` command. This step is optional, but can speed up things
 considerably. Here is why: If this step is not performed, we must choose
 the grace period long enough to avoid any risk, as explained in the
@@ -285,7 +285,7 @@ do with ArangoDB: We have observed, that some k8s internal services like
 `fluentd` and some DNS services will always wait for the full grace
 period to finish a node drain. Therefore, the node drain operation will
 always take as long as the grace period. Since we have to choose this
-grace period long enough for ArangoDB to move all data on the DBserver
+grace period long enough for ArangoDB to move all data on the _DBServer_
 pod away to some other node, this can take a considerable amount of
 time, depending on the size of the data you keep in ArangoDB.
 
@@ -294,7 +294,7 @@ beforehand. One can observe completion and as soon as it is completed
 successfully, we can then issue the drain command with a relatively
 small grace period and still have a nearly risk-free procedure.
 
-To clean out a DBserver manually, we have to use this API:
+To clean out a _DBServer_ manually, we have to use this API:
 
 ```
 POST /_admin/cluster/cleanOutServer
