@@ -15,10 +15,12 @@ takes time, and even after the move, the distributed system ArangoDB has
 to recover from this change, for example by ensuring data synchronicity
 between the replicas in their new location.
 
+{% hint 'warning' %}
 Therefore, a systematic drain of all k8s nodes in sequence has to follow
 a careful procedure, in particular to ensure that ArangoDB is ready to
 move to the next step. This is necessary to avoid catastrophic data
 loss, and is simply the price one pays for running a stateful service.
+{% endhint %}
 
 This section describes this procedure.
 
