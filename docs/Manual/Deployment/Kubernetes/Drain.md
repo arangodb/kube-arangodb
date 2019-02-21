@@ -390,7 +390,10 @@ kubectl drain gke-draintest-default-pool-394fe601-glts --delete-local-data --ign
 As described above, I have added `--delete-local-data` for ArangoDB and
 `--ignore-daemonsets` for other services. I have chosen a `--grace-period` of
 300 seconds because I am confident that all the data on my DBserver pod
-can be moved to a different server within 5 minutes.
+can be moved to a different server within 5 minutes. Note that this is
+**not saying** that 300 seconds will always be enough, regardless of how
+much data is stored in the pod, your mileage may vary, moving a terabyte
+of data can take considerably longer!
 
 If the optional step in the previous section has been performed
 beforehand, I can easily reduce the grace period to 60 seconds, say, at
