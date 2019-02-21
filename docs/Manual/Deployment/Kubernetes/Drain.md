@@ -428,7 +428,7 @@ maintenance work on the drained node has been completed and it is
 uncordoned again. In this latter case, one should wait until the node is
 back up and the replacement pod has been deployed there.
 
-After that, one should perform the same checks as described in Section 
+After that, one should perform the same checks as described in
 [things to check before a node drain](#things-to-check-in-arangodb-before-a-node-drain)
 above.
 
