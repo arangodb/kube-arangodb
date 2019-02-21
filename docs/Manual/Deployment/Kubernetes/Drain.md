@@ -162,7 +162,7 @@ One has to check that each instance has a `Status` field with the value
 curl -k https://arangodb.9hoeffer.de:8529/_admin/cluster/health --user root: | jq . | grep '"Status"' | grep -v '"GOOD"'
 ```
 
-For the shards being in sync there is this API call:
+For the shards being in sync there is the [Cluster Inventory](../../../HTTP/Replications/ReplicationDump.html#return-cluster-inventory-of-collections-and-indexes) API call:
 
 ```
 POST /_db/_system/_api/replication/clusterInventory
