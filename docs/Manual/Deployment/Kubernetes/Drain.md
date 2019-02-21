@@ -70,11 +70,13 @@ before a node drain operation can be started:
  1. All cluster nodes are up and running and healthy.
  2. For all collections and shards all configured replicas are in sync.
 
+{% hint 'warning' %}
 If any cluster node is unhealthy, there is an increased risk that the
 system does not have enough resources to cope with a failure situation.
 
 If any shard replicas are not currently in sync, then there is a serious
 risk that the cluster is currently not as resilient as expected.
+{% endhint %}
 
 One possibility to verify these two things is via the web UI. Node
 health can be monitored on this screen ("NODES/Overview" tab):
