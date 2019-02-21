@@ -60,7 +60,7 @@ actually terminated, then it is killed the hard way. If this happens,
 the operator has no chance but to remove the pod, drop its persistent
 volume claim and persistent volume. This will obviously lead to a
 failure incident in ArangoDB and must be handled by fail-over management.
-Therefore, this event should be avoided.
+Therefore, **this event should be avoided**.
 
 ## Things to check in ArangoDB before a node drain
 
