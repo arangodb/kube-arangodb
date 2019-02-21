@@ -415,7 +415,7 @@ approximately within a minute.
 ## Things to check after a node drain
 
 After a node has been drained, there will usually be one of the
-DBservers gone from the cluster. As a replacement, another DBserver has
+DBservers gone from the cluster. As a replacement, another _DBServer_ has
 been deployed on a different node, if there is a different node
 available. If not, the replacement can only be deployed when the
 maintenance work on the drained node has been completed and it is
@@ -427,13 +427,13 @@ After that, one should perform the same checks as described in Section
 above.
 
 Finally, it is likely that the shard distribution in the "new" cluster
-is not balanced out. In particular, the new server is not automatically
-used to store shards. We recommend to re-balance the shard distribution,
+is not balanced out. In particular, the new _DBSserver_ is not automatically
+used to store shards. We recommend to [re-balance](../../Administration/Cluster/#movingrebalancing-shards) the shard distribution,
 either manually by moving shards or by using the "Rebalance Shards"
 button in the "NODES/Shards" tab in the UI. This redistribution can take
 some time again and progress can be monitored in the UI.
 
-After all this has been done, another round of checks should be done
-before proceeding to drain the next node.
+After all this has been done, **another round of checks should be done
+before proceeding to drain the next node**.
 
 
