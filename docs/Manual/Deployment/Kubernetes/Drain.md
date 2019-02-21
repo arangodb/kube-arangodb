@@ -142,7 +142,7 @@ which returns a JSON document looking like this:
       "Status": "GOOD",
       "LastAckedTime": 0.312
     },
-    [... some more entries, one for each instance]
+    ... [some more entries, one for each instance]
   },
   "ClusterId": "210a0536-fd28-46de-b77f-e8882d6d7078",
   "error": false,
