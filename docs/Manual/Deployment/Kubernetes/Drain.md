@@ -245,14 +245,18 @@ Here is a shell command which makes this check easy:
 curl -k https://arangodb.9hoeffer.de:8529/_db/_system/_api/replication/clusterInventory --user root: | jq . | grep '"allInSync"' | sort | uniq -c
 ```
 
+{% hint 'tip' %}
 If all these checks are performed and are OK, the cluster is ready to
 run a risk-free drain operation.
+{% endhint %}
 
+{% hint 'danger' %}
 Note that if there are some collections with `replicationFactor` set to
 1, the system is not resilient and cannot tolerate the failure of even a
 single server! One can still perform a drain operation in this case, but
 if anything goes wrong, in particular if the grace period is chosen too
 short and a pod is killed the hard way, data loss can happen.
+{% endhint %}
 
 If all `replicationFactor`s of all collections are at least 2, then the
 system can tolerate the failure of a single DBserver. If you have set
