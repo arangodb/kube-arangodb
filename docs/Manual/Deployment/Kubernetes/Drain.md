@@ -387,8 +387,9 @@ completely risk-free, even with a small grace period.
 
 ## Performing the drain
 
-After all checks in Section "Things to check in ArangoDB before a node
-drain" have been done successfully, it is safe to perform the drain
+After all checks in Section 
+[Things to check in ArangoDB before a node drain](#things-to-check-in-arangodb-before-a-node-drain)
+have been done successfully, it is safe to perform the drain
 operation, similar to this command:
 
 ```bash
@@ -422,7 +423,8 @@ uncordoned again. In this latter case, one should wait until the node is
 back up and the replacement pod has been deployed there.
 
 After that, one should perform the same checks as described in Section 
-"Things to check in ArangoDB before a node drain" above.
+[Things to check in ArangoDB before a node drain](#things-to-check-in-arangodb-before-a-node-drain)
+above.
 
 Finally, it is likely that the shard distribution in the "new" cluster
 is not balanced out. In particular, the new server is not automatically
