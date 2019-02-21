@@ -28,8 +28,8 @@ This section describes this procedure.
 
 When a `kubectl drain` operation is triggered for a node, k8s first
 checks if there are any pods with local data on disk. Our ArangoDB pods have
-this property (the coordinators do use `EmptyDir` volumes, and agents
-and DBservers could have persistent volumes which are actually stored on
+this property (the _Coordinators_ do use `EmptyDir` volumes, and _Agents_
+and _DBServers_ could have persistent volumes which are actually stored on
 a locally attached disk), so one has to override this with the
 `--delete-local-data=true` option.
 
