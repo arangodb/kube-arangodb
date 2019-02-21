@@ -310,7 +310,7 @@ and send as body a JSON document like this:
 The value of the `"server"` attribute should be the name of the DBserver
 which is one the pod which shall be drained next. This uses the UI short
 name, alternatively one can use the internal name, which corresponds to
-the pod name: In my example, the pod name is
+the pod name: In the example described in this section, the pod name is
 
 ```
 my-arangodb-cluster-prmr-wbsq47rz-5676ed
