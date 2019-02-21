@@ -5,14 +5,14 @@ which means removing all pods from it. Kubernetes offers a standard API
 for this and our operator supports this - to the best of its ability.
 
 Draining nodes is easy enough for stateless services, which can simply be
-relaunched on any other node. However, for a stateful service this
+re-launched on any other node. However, for a stateful service this
 operation is more difficult, and as a consequence more costly and there
 are certain risks involved, if the operation is not done carefully
 enough. To put it simply, the operator must first move all the data
 stored on the node (which could be in a locally attached disk) to
 another machine, before it can shut down the pod gracefully. Moving data
 takes time, and even after the move, the distributed system ArangoDB has
-to recover from this change, for example by ensuring data synchronizity
+to recover from this change, for example by ensuring data synchronicity
 between the replicas in their new location.
 
 Therefore, a systematic drain of all k8s nodes in sequence has to follow
@@ -57,7 +57,7 @@ grace period. If the grace period has passed but the pod has not
 actually terminated, then it is killed the hard way. If this happens,
 the operator has no chance but to remove the pod, drop its persistent
 volume claim and persistent volume. This will obviously lead to a
-failure incident in ArangoDB and must be handled by failover management.
+failure incident in ArangoDB and must be handled by fail-over management.
 Therefore, this event should be avoided.
 
 ## Things to check in ArangoDB before a node drain
@@ -87,8 +87,8 @@ As to the shards being in sync, one checks this on this screen
 
 ![Shard Screen](./ShardsInSync.png)
 
-One has to check that all collections have a green checkmark on the
-right side. If any collection does not have such a checkmark, one can
+One has to check that all collections have a green check mark on the
+right side. If any collection does not have such a check mark, one can
 click on the collection and see the details about shards. Please keep in
 mind that this has to be done for each database separately!
 
@@ -268,7 +268,7 @@ the time of a node drain.
 
 ## Optional: Clean out a DBserver manually
 
-In this step we clean out a DBserver manually, before even issueing the
+In this step we clean out a DBserver manually, before even issuing the
 `kubectl drain` command. This step is optional, but can speed up things
 considerably. Here is why: If this step is not performed, we must choose
 the grace period long enough to avoid any risk, as explained in the
@@ -281,7 +281,7 @@ grace period long enough for ArangoDB to move all data on the DBserver
 pod away to some other node, this can take a considerable amount of
 time, depending on the size of the data you keep in ArangoDB.
 
-Therefore it is more time-efficient to perform the cleanout operation
+Therefore it is more time-efficient to perform the clean-out operation
 beforehand. One can observe completion and as soon as it is completed
 successfully, we can then issue the drain command with a relatively
 small grace period and still have a nearly risk-free procedure.
@@ -299,7 +299,7 @@ and send as body a JSON document like this:
 ```
 
 (please compare the above output of the `/_admin/cluster/health` API).
-The value of the `"server"` attribute should be the name of the DBServer
+The value of the `"server"` attribute should be the name of the DBserver
 which is one the pod which shall be drained next. This uses the UI short
 name, alternatively one can use the internal name, which corresponds to
 the pod name: In my example, the pod name is
@@ -415,7 +415,7 @@ After that, one should perform the same checks as described in Section
 
 Finally, it is likely that the shard distribution in the "new" cluster
 is not balanced out. In particular, the new server is not automatically
-used to store shards. We recommend to rebalance the shard distribution,
+used to store shards. We recommend to re-balance the shard distribution,
 either manually by moving shards or by using the "Rebalance Shards"
 button in the "NODES/Shards" tab in the UI. This redistribution can take
 some time again and progress can be monitored in the UI.
