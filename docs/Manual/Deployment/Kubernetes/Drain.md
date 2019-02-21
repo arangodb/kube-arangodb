@@ -378,7 +378,7 @@ the job has completed, the answer will be:
 }
 ```
 
-Note that from this moment on the DBserver can no longer be used to move
+Note that from this moment on the _DBServer_ can no longer be used to move
 shards to. At the same time, it will no longer hold any data of the
 cluster.
 
