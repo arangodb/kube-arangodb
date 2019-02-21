@@ -96,7 +96,7 @@ right side**. If any collection does not have such a check mark, one can
 click on the collection and see the details about shards. Please keep in
 mind that this has to be done for each database separately!
 
-Obviously, this is tedious and calls for automation. Therefore, there
+Obviously, this might be tedious and calls for automation. Therefore, there
 are APIs for this. The first one is
 
 ```
