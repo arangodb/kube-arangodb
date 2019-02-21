@@ -158,8 +158,8 @@ Check that each instance has a `Status` field with the value `"GOOD"`.
 Here is a shell command which makes this check easy, using the
 [`jq` JSON pretty printer](https://stedolan.github.io/jq/):
 
-```bash
-curl -k https://arangodb.9hoeffer.de:8529/_admin/cluster/health --user root: | jq . | grep '"Status"' | grep -v '"GOOD"'
+```
+curl -k https://localhost:8529/_admin/cluster/health --user root: | jq "[.Health | to_entries[] | select(.value.Status!=\"GOOD\") | {(.key): .value.Status }] | add"
 ```
 
 For the shards being in sync there is the
