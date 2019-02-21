@@ -83,16 +83,16 @@ health can be monitored on this screen ("NODES/Overview" tab):
 
 ![Cluster Health Screen](./HealthyCluster.png)
 
-One has to check that all nodes are green and there is no node error in the
-top right corner.
+**One has to check that all nodes are green and there is no node error in the
+top right corner**.
 
 As to the shards being in sync, one checks this on this screen
 ("NODES/Shards" tab):
 
 ![Shard Screen](./ShardsInSync.png)
 
-One has to check that all collections have a green check mark on the
-right side. If any collection does not have such a check mark, one can
+**One has to check that all collections have a green check mark on the
+right side**. If any collection does not have such a check mark, one can
 click on the collection and see the details about shards. Please keep in
 mind that this has to be done for each database separately!
 
