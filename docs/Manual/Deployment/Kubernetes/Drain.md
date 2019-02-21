@@ -97,7 +97,7 @@ click on the collection and see the details about shards. Please keep in
 mind that this has to be done for each database separately!
 
 Obviously, this might be tedious and calls for automation. Therefore, there
-are APIs for this. The first one is
+are APIs for this. The first one is [Cluster Health](../../../HTTP/Cluster/Health.html):
 
 ```
 POST /_admin/cluster/health
