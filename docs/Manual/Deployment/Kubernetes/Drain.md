@@ -77,9 +77,7 @@ risk that the cluster is currently not as resilient as expected.
 One possibility to verify these two things is via the web UI. Node
 health can be monitored on this screen ("NODES/Overview" tab):
 
-<center>
-![Cluster Health Screen](HealthyCluster.png)
-</center>
+![Cluster Health Screen](./HealthyCluster.png)
 
 One has to check that all nodes are green and there is no node error in the
 top right corner.
@@ -87,9 +85,7 @@ top right corner.
 As to the shards being in sync, one checks this on this screen
 ("NODES/Shards" tab):
 
-<center>
-![Shard Screen](ShardsInSync.png)
-</center>
+![Shard Screen](./ShardsInSync.png)
 
 One has to check that all collections have a green checkmark on the
 right side. If any collection does not have such a checkmark, one can
