@@ -266,13 +266,13 @@ therefore the drain operation is relatively safe, even if the grace
 period is chosen too small.
 
 Furthermore, we recommend to have one k8s node more than DBservers in
-you cluster, such that the deployment of a replacement DBserver can
+you cluster, such that the deployment of a replacement _DBServer_ can
 happen quickly and not only after the maintenance work on the drained
 node has been completed. However, with the necessary care described
 below, the procedure should also work without this.
 
-Finally, one should not run a rolling upgrade or restart operation at
-the time of a node drain.
+Finally, **one should not run a rolling upgrade or restart operation at
+the time of a node drain**.
 
 ## Optional: Clean out a DBserver manually
 
