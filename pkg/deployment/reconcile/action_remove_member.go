@@ -71,8 +71,6 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
 				return false, maskAny(errors.Wrapf(err, "Failed to remove server from cluster: %#v", err))
 			} else if driver.IsPreconditionFailed(err) {
-
-				//if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
 				cluster, err := client.Cluster(ctx)
 				if err != nil {
 					return false, maskAny(errors.Wrapf(err, "Failed to obtain cluster: %#v", err))
@@ -94,7 +92,6 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 						a.log.Debug().Msg("dbserver has shut down")
 					}
 				}
-				//}
 			} else {
 				a.log.Warn().Msgf("ignoring error: %s", err.Error())
 			}
