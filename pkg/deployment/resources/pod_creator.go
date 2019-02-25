@@ -674,6 +674,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	m.Phase = newPhase
 	m.Conditions.Remove(api.ConditionTypeReady)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
+	m.Conditions.Remove(api.ConditionTypeTerminating)
 	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
 	if err := status.Members.Update(m, group); err != nil {
