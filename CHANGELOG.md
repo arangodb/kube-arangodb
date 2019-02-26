@@ -3,6 +3,14 @@
 ## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
 
+- Wait for shards to be in sync before continuing upgrade process.
+- Rotate members when patch-level upgrade.
+- Don't trigger cleanout server during upgrade.
+- More robust remove-server actions.
+
+## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
+
 - Added scaling limits to spec and enforce in operator.
 - npm update for dashboard to alleviate security problems.
 - Added bare metal walk through to documentation.

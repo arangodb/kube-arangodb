@@ -81,10 +81,16 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 				}
 				// We don't care if not found
 				if record, ok := health.Health[driver.ServerID(m.ID)]; ok {
-					if record.Status != driver.ServerStatusFailed {
-						return false, maskAny(fmt.Errorf("can not remove server from cluster. Not yet terminated. Retry later"))
+
+					// Check if the pod is terminating
+					if m.Conditions.IsTrue(api.ConditionTypeTerminating) {
+
+						if record.Status != driver.ServerStatusFailed {
+							return false, maskAny(fmt.Errorf("can not remove server from cluster. Not yet terminated. Retry later"))
+						}
+
+						a.log.Debug().Msg("dbserver has shut down")
 					}
-					a.log.Warn().Msg("dbserver is failed but still in use")
 				}
 			} else {
 				a.log.Warn().Msgf("ignoring error: %s", err.Error())

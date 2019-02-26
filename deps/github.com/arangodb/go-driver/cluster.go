@@ -64,19 +64,40 @@ type ClusterHealth struct {
 	Health map[ServerID]ServerHealth `json:"Health"`
 }
 
+// ServerSyncStatus describes the servers sync status
+type ServerSyncStatus string
+
+const (
+	ServerSyncStatusUnknown   ServerSyncStatus = "UNKNOWN"
+	ServerSyncStatusUndefined ServerSyncStatus = "UNDEFINED"
+	ServerSyncStatusStartup   ServerSyncStatus = "STARTUP"
+	ServerSyncStatusStopping  ServerSyncStatus = "STOPPING"
+	ServerSyncStatusStopped   ServerSyncStatus = "STOPPED"
+	ServerSyncStatusServing   ServerSyncStatus = "SERVING"
+	ServerSyncStatusShutdown  ServerSyncStatus = "SHUTDOWN"
+)
+
 // ServerHealth contains health information of a single server in a cluster.
 type ServerHealth struct {
-	Endpoint            string       `json:"Endpoint"`
-	LastHeartbeatAcked  time.Time    `json:"LastHeartbeatAcked"`
-	LastHeartbeatSent   time.Time    `json:"LastHeartbeatSent"`
-	LastHeartbeatStatus string       `json:"LastHeartbeatStatus"`
-	Role                ServerRole   `json:"Role"`
-	ShortName           string       `json:"ShortName"`
-	Status              ServerStatus `json:"Status"`
-	CanBeDeleted        bool         `json:"CanBeDeleted"`
-	HostID              string       `json:"Host,omitempty"`
-	Version             Version      `json:"Version,omitempty"`
-	Engine              EngineType   `json:"Engine,omitempty"`
+	Endpoint            string           `json:"Endpoint"`
+	LastHeartbeatAcked  time.Time        `json:"LastHeartbeatAcked"`
+	LastHeartbeatSent   time.Time        `json:"LastHeartbeatSent"`
+	LastHeartbeatStatus string           `json:"LastHeartbeatStatus"`
+	Role                ServerRole       `json:"Role"`
+	ShortName           string           `json:"ShortName"`
+	Status              ServerStatus     `json:"Status"`
+	CanBeDeleted        bool             `json:"CanBeDeleted"`
+	HostID              string           `json:"Host,omitempty"`
+	Version             Version          `json:"Version,omitempty"`
+	Engine              EngineType       `json:"Engine,omitempty"`
+	SyncStatus          ServerSyncStatus `json:"SyncStatus,omitempty"`
+
+	// Only for Coordinators
+	AdvertisedEndpoint *string `json:"AdvertisedEndpoint,omitempty"`
+
+	// Only for Agents
+	Leader  *string `json:"Leader,omitempty"`
+	Leading *bool   `json:"Leading,omitempty"`
 }
 
 // ServerStatus describes the health status of a server
@@ -146,6 +167,7 @@ type InventoryCollection struct {
 	Indexes     []InventoryIndex              `json:"indexes,omitempty"`
 	PlanVersion int64                         `json:"planVersion,omitempty"`
 	IsReady     bool                          `json:"isReady,omitempty"`
+	AllInSync   bool                          `json:"allInSync,omitempty"`
 }
 
 // IndexByFieldsAndType returns the InventoryIndex with given fields & type.
@@ -187,6 +209,11 @@ type InventoryCollectionParameters struct {
 	Type                 CollectionType         `json:"type,omitempty"`
 	WaitForSync          bool                   `json:"waitForSync,omitempty"`
 	DistributeShardsLike string                 `json:"distributeShardsLike,omitempty"`
+}
+
+// IsSatellite returns true if the collection is a satellite collection
+func (icp *InventoryCollectionParameters) IsSatellite() bool {
+	return icp.ReplicationFactor == ReplicationFactorSatellite
 }
 
 // ShardID is an internal identifier of a specific shard

@@ -149,6 +149,10 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 			unscheduledPodNames = append(unscheduledPodNames, p.GetName())
 		}
 		if k8sutil.IsPodMarkedForDeletion(&p) {
+			if memberStatus.Conditions.Update(api.ConditionTypeTerminating, true, "Pod marked for deletion", "") {
+				updateMemberStatusNeeded = true
+				log.Debug().Str("pod-name", p.GetName()).Msg("Pod marked as terminating")
+			}
 			// Process finalizers
 			if x, err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true

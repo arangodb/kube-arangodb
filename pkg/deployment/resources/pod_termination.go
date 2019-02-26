@@ -161,7 +161,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Once decided to drain the member, never go back
-	if memberStatus.Phase == api.MemberPhaseCreated {
+	if memberStatus.Phase == api.MemberPhaseDrain {
 		dbserverDataWillBeGone = true
 	}
 

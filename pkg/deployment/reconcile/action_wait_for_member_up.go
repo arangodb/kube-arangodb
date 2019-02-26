@@ -167,6 +167,26 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 		log.Debug().Str("status", string(sh.Status)).Msg("Member set status not yet good")
 		return false, false, nil
 	}
+	if a.action.Group == api.ServerGroupDBServers {
+		dbs, err := c.Databases(ctx)
+		if err != nil {
+			return false, false, err
+		}
+		for _, db := range dbs {
+			inv, err := cluster.DatabaseInventory(ctx, db)
+			if err != nil {
+				return false, false, err
+			}
+
+			for _, col := range inv.Collections {
+				if !col.AllInSync {
+					log.Debug().Str("col", col.Parameters.Name).Msg("Not in sync")
+					return false, false, nil
+				}
+			}
+		}
+
+	}
 	// Wait for the member to become ready from a kubernetes point of view
 	// otherwise the coordinators may be rotated to fast and thus none of them
 	// is ready resulting in a short downtime
