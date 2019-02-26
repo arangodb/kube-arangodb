@@ -41,7 +41,7 @@ it is intended to be.
 
 **WARNING**: Note that 0.3.8 is the latest release but we have just
 found a problem with it when performing rolling upgrades of a cluster,
-which can lead to data loss! DO NOT USE 0.3.8 FOR ROLLING UPGRADES.
+which can lead to data loss! **DO NOT USE 0.3.8 FOR ROLLING UPGRADES.**
 We will publish a fixed 0.3.9 as soon as possible, but we need rather
 thorough testing for this.
 
