@@ -62,7 +62,8 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<versi
 The first command installs two `CustomResourceDefinitions` in your Kubernetes cluster:
 
 - `ArangoDeployment` is the resource used to deploy ArangoDB database.
-- `ArangoLocalStorage` is the resource used to provision `PersistentVolumes` on local storage.
+- `ArangoDeploymentReplication` is the resource used to deploy ArangoDB DC2DC
+  replications.
 
 The second command installs a `Deployment` that runs the operator that controls
 `ArangoDeployment` resources.
@@ -70,7 +71,10 @@ The second command installs a `Deployment` that runs the operator that controls
 The optional third command installs a `Deployment` that runs the operator that
 provides `PersistentVolumes` on local disks of the cluster nodes.
 Use this when running on bare-metal or if there is no provisioner for fast
-storage in your Kubernetes cluster.
+storage in your Kubernetes cluster. Furthermore, this also installs a
+new custom resource definition:
+
+- `ArangoLocalStorage` is the resource used to provision `PersistentVolumes` on local storage.
 
 The optioal fourth command installs a `Deployment` that runs the
 operator that takes care of DC2DC replications.
