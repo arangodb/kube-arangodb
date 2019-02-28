@@ -48,23 +48,26 @@ at cluster level.
 
 For now, any recent Kubernetes cluster will do (e.g. `minikube`).
 
-Then run (replace `<version>` with the version of the operator that you want to install):
+Then run:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/arango-deployment.yaml
-# Optional
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/<version>/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.8/manifests/arango-crd.yaml
+# To use `ArangoLocalStorage`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.8/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.8/manifests/arango-deployment.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.8/manifests/arango-deployment-replication.yaml
 ```
 
-The first command installs two `CustomResourceDefinitions` in your Kubernetes cluster:
+The first commands install two `CustomResourceDefinitions` in your Kubernetes cluster:
 
 - `ArangoDeployment` is the resource used to deploy ArangoDB database.
 - `ArangoLocalStorage` is the resource used to provision `PersistentVolumes` on local storage.
 
-The second command installs a `Deployment` that runs the operator that controls
+The third command installs a `Deployment` that runs the operator that controls
 `ArangoDeployment` resources.
 
-The optional third command installs a `Deployment` that runs the operator that
+The optional last command installs a `Deployment` that runs the operator that
 provides `PersistentVolumes` on local disks of the cluster nodes.
 Use this when running on bare-metal or if there is no provisioner for fast
 storage in your Kubernetes cluster.
