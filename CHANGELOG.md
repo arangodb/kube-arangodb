@@ -1,15 +1,16 @@
 # Change Log
 
-## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
-[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
-
+## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
+- Fixed a serious bug in rolling upgrades which was introduced in 0.3.8.
+- Document the drain procedure for k8s nodes.
 - Wait for shards to be in sync before continuing upgrade process.
 - Rotate members when patch-level upgrade.
 - Don't trigger cleanout server during upgrade.
 - More robust remove-server actions.
 
 ## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
-[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.7...0.3.8)
 
 - Added scaling limits to spec and enforce in operator.
 - npm update for dashboard to alleviate security problems.
