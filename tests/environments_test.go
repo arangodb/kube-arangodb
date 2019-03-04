@@ -62,6 +62,11 @@ func TestEnvironmentProduction(t *testing.T) {
 	depl.Spec.Environment = api.NewEnvironment(api.EnvironmentProduction)
 	depl.Spec.DBServers.Count = util.NewInt(numNodes + 1)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
+
+	// This test failes to validate the spec if no image is set explicitly because this is required in production mode
+	if depl.Spec.Image == nil {
+		depl.Spec.Image = util.NewString("arangodb/arangodb:latest")
+	}
 	assert.NoError(t, depl.Spec.Validate())
 
 	dbserverCount := depl.Spec.DBServers.GetCount()
