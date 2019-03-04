@@ -92,7 +92,7 @@ RELEASE := $(GOBUILDDIR)/bin/release
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
 TESTLENGTHOPTIONS := -test.short
-TESTTIMEOUT := 20m
+TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 180m
@@ -294,6 +294,10 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
+.PHONY: run-upgrade-tests
+run-upgrade-tests:
+	TESTOPTIONS="-test.run=TestUpgrade" make run-tests
+
 .PHONY: run-tests
 run-tests: docker-test
 ifdef PUSHIMAGES
@@ -311,7 +315,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)

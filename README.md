@@ -39,33 +39,30 @@ it is intended to be.
 
 ## Installation of latest release using Helm
 
-**WARNING**: Note that 0.3.8 is the latest release but we have just
-found a problem with it when performing rolling upgrades of a cluster,
-which can lead to data loss! **DO NOT USE 0.3.8 FOR ROLLING UPGRADES.**
-We will publish a fixed 0.3.9 as soon as possible, but we need rather
-thorough testing for this.
-
-Therefore the commands below use the second latest release 0.3.7.
+**WARNING**: There is a problem with rolling upgrades in version 0.3.8.
+**DO NOT USE 0.3.8 FOR ROLLING UPGRADES.** If you are still using 0.3.8,
+then upgrade to 0.3.9 of the operator first before running any rolling
+upgrade.
 
 ```bash
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-crd.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb-crd.tgz
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb.tgz
 # To use `ArangoLocalStorage`, also run
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-storage.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb-storage.tgz
 ```
 
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.7/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.7/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.7/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.7/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-deployment-replication.yaml
 ```
 
 ## Building
