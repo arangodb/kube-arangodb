@@ -1,5 +1,32 @@
 # Change Log
 
+## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
+
+- Wait for shards to be in sync before continuing upgrade process.
+- Rotate members when patch-level upgrade.
+- Don't trigger cleanout server during upgrade.
+- More robust remove-server actions.
+
+## [0.3.8](https://github.com/arangodb/kube-arangodb/tree/0.3.8) (2019-02-19)
+[Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
+
+- Added scaling limits to spec and enforce in operator.
+- npm update for dashboard to alleviate security problems.
+- Added bare metal walk through to documentation.
+- Wait for coordinator to be ready in kubernetes.
+- Schedule only one CleanOutServer job in drain scenario, introduce
+  Drain phase.
+- Take care of case that server is terminated by drain before cleanout
+  has completed.
+- Added undocumented force-status-reload status field.
+- Take care of case that all coordinators have failed: delete all
+  coordinator pods and create new ones.
+- Updated lodash for dashboard.
+- Try harder to remove server from cluster if it does not work right away.
+- Update member status, if once decided to drain, continue draining.
+  This takes care of more corner cases.
+
 ## [0.3.7](https://github.com/arangodb/kube-arangodb/tree/0.3.7) (2019-01-03)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.6...0.3.7)
 

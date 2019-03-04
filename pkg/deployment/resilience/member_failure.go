@@ -49,11 +49,20 @@ func (r *Resilience) CheckMemberFailure() error {
 				Str("id", m.ID).
 				Str("role", group.AsRole()).
 				Logger()
-			// Check current state
-			if m.Phase != api.MemberPhaseCreated {
-				// Phase is not Created, so we're not looking further.
+
+			// Check if there are Members with Phase Upgrading or Rotation but no plan
+			switch m.Phase {
+			case api.MemberPhaseNone:
 				continue
+			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut:
+				if len(status.Plan) == 0 {
+					log.Error().Msgf("No plan but member is in phase %s - marking as failed", m.Phase)
+					m.Phase = api.MemberPhaseFailed
+					status.Members.Update(m, group)
+					updateStatusNeeded = true
+				}
 			}
+
 			// Check if pod is ready
 			if m.Conditions.IsTrue(api.ConditionTypeReady) {
 				// Pod is now ready, so we're not looking further

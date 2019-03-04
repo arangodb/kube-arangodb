@@ -39,6 +39,14 @@ it is intended to be.
 
 ## Installation of latest release using Helm
 
+**WARNING**: Note that 0.3.8 is the latest release but we have just
+found a problem with it when performing rolling upgrades of a cluster,
+which can lead to data loss! **DO NOT USE 0.3.8 FOR ROLLING UPGRADES.**
+We will publish a fixed 0.3.9 as soon as possible, but we need rather
+thorough testing for this.
+
+Therefore the commands below use the second latest release 0.3.7.
+
 ```bash
 # The following will install the custom resources required by the operators.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-crd.tgz

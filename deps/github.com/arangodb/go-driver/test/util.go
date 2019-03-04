@@ -97,3 +97,23 @@ func getIntFromEnv(envKey string, defaultValue int) int {
 	}
 	return defaultValue
 }
+
+const (
+	testModeCluster         = "cluster"
+	testModeResilientSingle = "resilientsingle"
+	testModeSingle          = "single"
+)
+
+func getTestMode() string {
+
+	return strings.TrimSpace(os.Getenv("TEST_MODE"))
+}
+
+func skipNoEnterprise(t *testing.T) {
+	c := createClientFromEnv(t, true)
+	if v, err := c.Version(nil); err != nil {
+		t.Errorf("Failed to get version: %s", describe(err))
+	} else if !v.IsEnterprise() {
+		t.Skipf("Enterprise only")
+	}
+}

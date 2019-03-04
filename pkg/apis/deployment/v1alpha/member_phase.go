@@ -34,6 +34,8 @@ const (
 	MemberPhaseFailed MemberPhase = "Failed"
 	// MemberPhaseCleanOut indicates that a dbserver is in the process of being cleaned out
 	MemberPhaseCleanOut MemberPhase = "CleanOut"
+	// MemberPhaseDrain indicates that a dbserver is in the process of being cleaned out as result of draining a node
+	MemberPhaseDrain MemberPhase = "Drain"
 	// MemberPhaseShuttingDown indicates that a member is shutting down
 	MemberPhaseShuttingDown MemberPhase = "ShuttingDown"
 	// MemberPhaseRotating indicates that a member is being rotated
@@ -45,4 +47,9 @@ const (
 // IsFailed returns true when given phase == "Failed"
 func (p MemberPhase) IsFailed() bool {
 	return p == MemberPhaseFailed
+}
+
+// IsCreatedOrDrain returns true when given phase is MemberPhaseCreated or MemberPhaseDrain
+func (p MemberPhase) IsCreatedOrDrain() bool {
+	return p == MemberPhaseCreated || p == MemberPhaseDrain
 }

@@ -70,6 +70,30 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
 				return false, maskAny(errors.Wrapf(err, "Failed to remove server from cluster: %#v", err))
+			} else if driver.IsPreconditionFailed(err) {
+				cluster, err := client.Cluster(ctx)
+				if err != nil {
+					return false, maskAny(errors.Wrapf(err, "Failed to obtain cluster: %#v", err))
+				}
+				health, err := cluster.Health(ctx)
+				if err != nil {
+					return false, maskAny(errors.Wrapf(err, "Failed to obtain cluster health: %#v", err))
+				}
+				// We don't care if not found
+				if record, ok := health.Health[driver.ServerID(m.ID)]; ok {
+
+					// Check if the pod is terminating
+					if m.Conditions.IsTrue(api.ConditionTypeTerminating) {
+
+						if record.Status != driver.ServerStatusFailed {
+							return false, maskAny(fmt.Errorf("can not remove server from cluster. Not yet terminated. Retry later"))
+						}
+
+						a.log.Debug().Msg("dbserver has shut down")
+					}
+				}
+			} else {
+				a.log.Warn().Msgf("ignoring error: %s", err.Error())
 			}
 		}
 	}
