@@ -95,7 +95,7 @@ func TestUpgradeClusterRocksDB3318Cto3322C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.16",
 		toVersion:   "3.3.22",
-		shortTest:   true,
+		shortTest:   false,
 	})
 }
 
