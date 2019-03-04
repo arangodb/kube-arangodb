@@ -92,7 +92,7 @@ RELEASE := $(GOBUILDDIR)/bin/release
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
 TESTLENGTHOPTIONS := -test.short
-TESTTIMEOUT := 20m
+TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 180m
