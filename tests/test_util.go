@@ -56,7 +56,8 @@ import (
 )
 
 const (
-	deploymentReadyTimeout = time.Minute * 4
+	deploymentReadyTimeout   = time.Minute * 4
+	deploymentUpgradeTimeout = time.Minute * 20
 )
 
 var (
@@ -344,7 +345,7 @@ func waitUntilSecretNotFound(cli kubernetes.Interface, secretName, ns string, ti
 
 // waitUntilClusterHealth waits until an arango cluster
 // reached a state where the given predicate returns nil.
-func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHealth) error) error {
+func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHealth) error, timeout ...time.Duration) error {
 	ctx := context.Background()
 	op := func() error {
 		cluster, err := cli.Cluster(ctx)
@@ -362,10 +363,28 @@ func waitUntilClusterHealth(cli driver.Client, predicate func(driver.ClusterHeal
 		}
 		return nil
 	}
-	if err := retry.Retry(op, deploymentReadyTimeout); err != nil {
+	actualTimeout := deploymentReadyTimeout
+	if len(timeout) > 0 {
+		actualTimeout = timeout[0]
+	}
+	if err := retry.Retry(op, actualTimeout); err != nil {
 		return maskAny(err)
 	}
 	return nil
+}
+
+// waitUntilClusterVersionUp waits until an arango cluster is healthy and
+// all servers are running the given version.
+func waitUntilClusterVersionUp(cli driver.Client, version driver.Version) error {
+	return waitUntilClusterHealth(cli, func(h driver.ClusterHealth) error {
+		for s, r := range h.Health {
+			if cmp := r.Version.CompareTo(version); cmp != 0 {
+				return maskAny(fmt.Errorf("Member %s has version %s, expecting %s", s, r.Version, version))
+			}
+		}
+
+		return nil
+	}, deploymentUpgradeTimeout)
 }
 
 // waitUntilVersionUp waits until the arango database responds to
@@ -552,16 +571,24 @@ func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
 
 // check if a deployment is up and has reached a state where it is able to answer to /_api/version requests.
 // Optionally the returned version can be checked against a user provided version
-func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface, versionString string) error {
+func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient driver.Client, k8sClient kubernetes.Interface, versionString driver.Version) error {
 	// deployment checks
 	var checkVersionPredicate func(driver.VersionInfo) error
 	if len(versionString) > 0 {
-		checkVersionPredicate = createEqualVersionsPredicate(driver.Version(versionString))
+		checkVersionPredicate = createEqualVersionsPredicate(versionString)
 	}
 	switch mode := deployment.Spec.GetMode(); mode {
 	case api.DeploymentModeCluster:
 		// Wait for cluster to be completely ready
 		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+			if len(versionString) > 0 {
+				for s, r := range h.Health {
+					if cmp := r.Version.CompareTo(versionString); cmp != 0 {
+						return maskAny(fmt.Errorf("Member %s has version %s, expecting %s", s, r.Version, versionString))
+					}
+				}
+			}
+
 			return clusterHealthEqualsSpec(h, deployment.Spec)
 		}); err != nil {
 			return maskAny(fmt.Errorf("Cluster not running in expected health in time: %s", err))
