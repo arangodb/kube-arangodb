@@ -25,15 +25,170 @@ package tests
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/ghodss/yaml"
 
 	"github.com/dchest/uniuri"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
+
+// deployAccessPackage unpacks the secrets from an access package and deploys them
+func deployAccessPackage(ap *v1.Secret, kube kubernetes.Interface) error {
+	if allyaml, ok := ap.Data[constants.SecretAccessPackageYaml]; ok {
+		secrets := strings.Split(string(allyaml), "---")
+		for _, secretyaml := range secrets {
+			var secret v1.Secret
+			if err := yaml.Unmarshal([]byte(secretyaml), &secret); err != nil {
+				return err
+			}
+
+			if _, err := kube.Core().Secrets(ap.GetNamespace()).Create(&secret); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+	return fmt.Errorf("Failed to read access package")
+}
+
+// removeAccessPackage fire and forget deletes secrets related to a access package
+func removeAccessPackage(name, ns string, kube kubernetes.Interface) {
+	kube.Core().Secrets(ns).Delete(name+"-auth", &metav1.DeleteOptions{})
+	kube.Core().Secrets(ns).Delete(name+"-ca", &metav1.DeleteOptions{})
+}
+
+// waitUntilReplicationNotFound waits until a replication resource is deleted
+func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) error {
+	return retry.Retry(func() error {
+		if _, err := cli.Replication().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		return fmt.Errorf("Resource not yet gone")
+	}, time.Minute)
+}
+
+// TestSyncSameDC create two clusters and configures sync between them.
+// Then it creates a test collection in source and waits for it to appear in dest.
+func TestSyncSameDC(t *testing.T) {
+	longOrSkip(t)
+	img := getEnterpriseImageOrSkip(t)
+	c := client.MustNewInCluster()
+	kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	apname := "test-sync-sdc-a-access-package"
+
+	depla := newDeployment("test-sync-sdc-a-" + uniuri.NewLen(4))
+	depla.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depla.Spec.Image = util.NewString(img)
+	depla.Spec.Sync.Enabled = util.NewBool(true)
+	depla.Spec.Sync.ExternalAccess.Type = api.NewExternalAccessType(api.ExternalAccessTypeNone)
+	depla.Spec.Sync.ExternalAccess.AccessPackageSecretNames = []string{apname}
+
+	// Create deployment
+	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depla)
+	if err != nil {
+		t.Fatalf("Create deployment a failed: %v", err)
+	}
+	// Prepare cleanup
+	defer deferedCleanupDeployment(c, depla.GetName(), ns)
+
+	deplb := newDeployment("test-sync-sdc-b-" + uniuri.NewLen(4))
+	deplb.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	deplb.Spec.Image = util.NewString(img)
+	deplb.Spec.Sync.Enabled = util.NewBool(true)
+	deplb.Spec.Sync.ExternalAccess.Type = api.NewExternalAccessType(api.ExternalAccessTypeNone)
+
+	// Create deployment
+	_, err = c.DatabaseV1alpha().ArangoDeployments(ns).Create(deplb)
+	if err != nil {
+		t.Fatalf("Create deployment b failed: %v", err)
+	}
+	// Prepare cleanup
+	defer deferedCleanupDeployment(c, deplb.GetName(), ns)
+
+	// Wait for deployments to be ready
+	// Wait for access package
+	// Deploy access package
+	ap, err := waitUntilSecret(kubecli, apname, ns, nil, deploymentReadyTimeout)
+	if err != nil {
+		t.Fatalf("Failed to get access package: %v", err)
+	}
+	if err := deployAccessPackage(ap, kubecli); err != nil {
+		t.Fatalf("Failed to deploy access package: %v", err)
+	}
+	defer removeAccessPackage(apname, ns, kubecli)
+
+	// Deploy Replication Resource
+	repl := newReplication("test-sync-sdc-repl")
+	repl.Spec.Source.DeploymentName = util.NewString(depla.GetName())
+	repl.Spec.Source.Authentication.KeyfileSecretName = util.NewString("test-syn-sdc-a-access-package-auth")
+	repl.Spec.Source.TLS.CASecretName = util.NewString("test-syn-sdc-a-access-package-ca")
+	repl.Spec.Destination.DeploymentName = util.NewString(deplb.GetName())
+	_, err = c.ReplicationV1alpha().ArangoDeploymentReplications(ns).Create(repl)
+	if err != nil {
+		t.Fatalf("Create replication resource failed: %v", err)
+	}
+	defer deferedCleanupReplication(c, repl.GetName(), ns)
+
+	deplaobj, err := waitUntilDeployment(c, depla.GetName(), ns, deploymentIsReady())
+	if err != nil {
+		t.Fatalf("Deployment A not running in time: %v", err)
+	}
+
+	deplbobj, err := waitUntilDeployment(c, deplb.GetName(), ns, deploymentIsReady())
+	if err != nil {
+		t.Fatalf("Deployment B not running in time: %v", err)
+	}
+
+	// Create a database in DC-A
+	// Wait for database in DC-B
+	time.Sleep(10 * time.Second)
+	testdbname := "replicated-db"
+
+	ctx := context.Background()
+	clienta := mustNewArangodDatabaseClient(ctx, kubecli, deplaobj, t, nil)
+	if _, err := clienta.CreateDatabase(ctx, testdbname, nil); err != nil {
+		t.Fatalf("Failed to create database in a: %v", err)
+	}
+
+	clientb := mustNewArangodDatabaseClient(ctx, kubecli, deplbobj, t, nil)
+	retry.Retry(func() error {
+		if ok, err := clientb.DatabaseExists(ctx, testdbname); err != nil {
+			return err
+		} else if !ok {
+			return fmt.Errorf("Database does not exist")
+		}
+		return nil
+	}, time.Minute)
+
+	// Disable replication
+	removeReplication(c, repl.GetName(), ns)
+	if err := waitUntilReplicationNotFound(ns, repl.GetName(), c); err != nil {
+		t.Errorf("Could not remove replication resource: %v", err)
+	}
+
+	// Cleanup
+	removeDeployment(c, deplb.GetName(), ns)
+	removeDeployment(c, depla.GetName(), ns)
+}
 
 // TestSyncToggleEnabled tests a normal cluster and enables sync later.
 // Once sync is active, it is disabled again.

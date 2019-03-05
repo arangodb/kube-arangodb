@@ -48,6 +48,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -236,6 +237,20 @@ func getNamespace(t *testing.T) string {
 		t.Fatal("Missing environment variable TEST_NAMESPACE")
 	}
 	return ns
+}
+
+func newReplication(name string) *rapi.ArangoDeploymentReplication {
+	repl := &rapi.ArangoDeploymentReplication{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: rapi.SchemeGroupVersion.String(),
+			Kind:       rapi.ArangoDeploymentReplicationResourceKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: strings.ToLower(name),
+		},
+	}
+
+	return repl
 }
 
 // newDeployment creates a basic ArangoDeployment with configured
@@ -549,6 +564,14 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 	return nil
 }
 
+// removeReplication removes a deployment
+func removeReplication(cli versioned.Interface, replicationName, ns string) error {
+	if err := cli.Replication().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // deferedCleanupDeployment removes a deployment when shouldCleanDeployments return true.
 // This function is intended to be used in a defer statement.
 func deferedCleanupDeployment(cli versioned.Interface, deploymentName, ns string) error {
@@ -556,6 +579,18 @@ func deferedCleanupDeployment(cli versioned.Interface, deploymentName, ns string
 		return nil
 	}
 	if err := removeDeployment(cli, deploymentName, ns); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
+// deferedCleanupReplication removes a replication when shouldCleanDeployments return true.
+// This function is intended to be used in a defer statement.
+func deferedCleanupReplication(cli versioned.Interface, replicationName, ns string) error {
+	if !shouldCleanDeployments() {
+		return nil
+	}
+	if err := removeReplication(cli, replicationName, ns); err != nil {
 		return maskAny(err)
 	}
 	return nil
