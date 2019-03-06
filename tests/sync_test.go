@@ -25,52 +25,20 @@ package tests
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/ghodss/yaml"
-
 	"github.com/dchest/uniuri"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
-
-// deployAccessPackage unpacks the secrets from an access package and deploys them
-func deployAccessPackage(ap *v1.Secret, kube kubernetes.Interface) error {
-	if allyaml, ok := ap.Data[constants.SecretAccessPackageYaml]; ok {
-		secrets := strings.Split(string(allyaml), "---")
-		for _, secretyaml := range secrets {
-			var secret v1.Secret
-			if err := yaml.Unmarshal([]byte(secretyaml), &secret); err != nil {
-				return err
-			}
-
-			if _, err := kube.Core().Secrets(ap.GetNamespace()).Create(&secret); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-	return fmt.Errorf("Failed to read access package")
-}
-
-// removeAccessPackage fire and forget deletes secrets related to a access package
-func removeAccessPackage(name, ns string, kube kubernetes.Interface) {
-	kube.Core().Secrets(ns).Delete(name+"-auth", &metav1.DeleteOptions{})
-	kube.Core().Secrets(ns).Delete(name+"-ca", &metav1.DeleteOptions{})
-}
 
 // waitUntilReplicationNotFound waits until a replication resource is deleted
 func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) error {
@@ -84,9 +52,9 @@ func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) erro
 	}, time.Minute)
 }
 
-// TestSyncSameDC create two clusters and configures sync between them.
+// TestSyncSimple create two clusters and configures sync between them.
 // Then it creates a test collection in source and waits for it to appear in dest.
-func TestSyncSameDC(t *testing.T) {
+func TestSyncSimple(t *testing.T) {
 	longOrSkip(t)
 	img := getEnterpriseImageOrSkip(t)
 	c := client.MustNewInCluster()
@@ -127,20 +95,16 @@ func TestSyncSameDC(t *testing.T) {
 	// Wait for deployments to be ready
 	// Wait for access package
 	// Deploy access package
-	ap, err := waitUntilSecret(kubecli, apname, ns, nil, deploymentReadyTimeout)
+	_, err = waitUntilSecret(kubecli, apname, ns, nil, deploymentReadyTimeout)
 	if err != nil {
 		t.Fatalf("Failed to get access package: %v", err)
 	}
-	if err := deployAccessPackage(ap, kubecli); err != nil {
-		t.Fatalf("Failed to deploy access package: %v", err)
-	}
-	defer removeAccessPackage(apname, ns, kubecli)
 
 	// Deploy Replication Resource
 	repl := newReplication("test-sync-sdc-repl")
 	repl.Spec.Source.DeploymentName = util.NewString(depla.GetName())
-	repl.Spec.Source.Authentication.KeyfileSecretName = util.NewString("test-syn-sdc-a-access-package-auth")
-	repl.Spec.Source.TLS.CASecretName = util.NewString("test-syn-sdc-a-access-package-ca")
+	repl.Spec.Source.Authentication.KeyfileSecretName = util.NewString(apname)
+	repl.Spec.Source.TLS.CASecretName = util.NewString(apname)
 	repl.Spec.Destination.DeploymentName = util.NewString(deplb.GetName())
 	_, err = c.ReplicationV1alpha().ArangoDeploymentReplications(ns).Create(repl)
 	if err != nil {

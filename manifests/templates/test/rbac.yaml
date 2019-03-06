@@ -10,7 +10,7 @@ rules:
   resources: ["nodes"]
   verbs: ["list"]
 - apiGroups: [""]
-  resources: ["pods", "services", "persistentvolumes", "persistentvolumeclaims", "secrets", "serviceaccounts"]
+  resources: ["pods", "services", "persistentvolumes", "persistentvolumeclaims", "secrets", "serviceaccounts", "pods/log"]
   verbs: ["*"]
 - apiGroups: ["apps"]
   resources: ["daemonsets", "deployments"]

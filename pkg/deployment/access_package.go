@@ -196,6 +196,8 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 		},
 		Data: map[string][]byte{
 			constants.SecretAccessPackageYaml: []byte(allYaml),
+			constants.SecretCACertificate:     []byte(tlsCACert),
+			constants.SecretTLSKeyfile:        []byte(keyfile),
 		},
 	}
 	// Attach secret to owner
