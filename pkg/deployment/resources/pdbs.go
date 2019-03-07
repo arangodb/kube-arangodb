@@ -1,7 +1,9 @@
 package resources
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -17,7 +19,7 @@ func min(a int, b int) int {
 	return a
 }
 
-// EnsurePDBs ensures Pod Distruption Budgets for different server groups in Cluster mode
+// EnsurePDBs ensures Pod Disruption Budgets for different server groups in Cluster mode
 func (r *Resources) EnsurePDBs() error {
 
 	// Only in Cluster and Production Mode
@@ -85,41 +87,62 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 	pdbcli := r.context.GetKubeCli().Policy().PodDisruptionBudgets(r.context.GetNamespace())
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
-	pdb, err := pdbcli.Get(pdbname, metav1.GetOptions{})
-	if k8sutil.IsNotFound(err) {
-		if wantedMinAvail != 0 {
-			// No PDB found - create new
-			pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
-			log.Debug().Msg("Creating new PDB")
-			if _, err := pdbcli.Create(pdb); err != nil {
-				log.Error().Err(err).Msg("failed to create PDB")
-				return maskAny(err)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	for {
+		pdb, err := pdbcli.Get(pdbname, metav1.GetOptions{})
+		if k8sutil.IsNotFound(err) {
+			if wantedMinAvail != 0 {
+				// No PDB found - create new
+				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
+				log.Debug().Msg("Creating new PDB")
+				if _, err := pdbcli.Create(pdb); err != nil {
+					log.Error().Err(err).Msg("failed to create PDB")
+					return maskAny(err)
+				}
 			}
-		}
-		return nil
-	} else if err == nil {
-		// PDB is there
-		// Update for PDBs is forbidden, thus one has to delete it and then create it again
-		// Otherwise delete it if wantedMinAvail is zero
-		if pdb.Spec.MinAvailable.IntValue() != wantedMinAvail || wantedMinAvail == 0 {
+			return nil
+		} else if err == nil {
+			// PDB is there
+			if pdb.Spec.MinAvailable.IntValue() == wantedMinAvail && wantedMinAvail != 0 {
+				return nil
+			}
+			// Update for PDBs is forbidden, thus one has to delete it and then create it again
+			// Otherwise delete it if wantedMinAvail is zero
 			log.Debug().Int("wanted-min-avail", wantedMinAvail).
 				Int("current-min-avail", pdb.Spec.MinAvailable.IntValue()).
 				Msg("Recreating PDB")
 			pdb.Spec.MinAvailable = newFromInt(wantedMinAvail)
 
-			// Update the PDB
-			if err := pdbcli.Delete(pdbname, &metav1.DeleteOptions{}); err != nil {
-				log.Error().Err(err).Msg("PDB deletion failed")
-				maskAny(err)
+			// Trigger deletion only if not already deleted
+			if pdb.GetDeletionTimestamp() == nil {
+				// Update the PDB
+				if err := pdbcli.Delete(pdbname, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+					log.Error().Err(err).Msg("PDB deletion failed")
+					return maskAny(err)
+				}
+			} else {
+				log.Debug().Msg("PDB already deleted")
 			}
-			// Create next reconcile loop, this should not be critical
-			// 	but only if wantedMinAvail is nonzero
-			return nil
+			// Exit here if deletion was intended
+			if wantedMinAvail == 0 {
+				return nil
+			}
+		} else {
+			return maskAny(err)
+		}
+		log.Debug().Msg("Retry loop for PDB")
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
 		}
 	}
-	return maskAny(err)
 }
 
 func newFromInt(v int) *intstr.IntOrString {
-	return &intstr.IntOrString{Type: intstr.Int, IntVal: int32(v)}
+	ret := &intstr.IntOrString{}
+	*ret = intstr.FromInt(v)
+	return ret
 }
