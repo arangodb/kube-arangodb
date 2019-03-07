@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.3.10](---) (XXXX-XX-XX)
+- Added Pod Disruption Budgets for all server groups in production mode.
+
 ## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
 - Fixed a serious bug in rolling upgrades which was introduced in 0.3.8.
