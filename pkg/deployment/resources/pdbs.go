@@ -12,9 +12,9 @@ import (
 
 func min(a int, b int) int {
 	if a > b {
-		return a
+		return b
 	}
-	return b
+	return a
 }
 
 // EnsurePDBs ensures Pod Distruption Budgets for different server groups in Cluster mode
