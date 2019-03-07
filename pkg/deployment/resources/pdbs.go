@@ -30,6 +30,15 @@ func (r *Resources) EnsurePDBs() error {
 		minDBServers := spec.GetServerGroupSpec(api.ServerGroupDBServers).GetCount() - 1
 		minCoordinators := min(spec.GetServerGroupSpec(api.ServerGroupCoordinators).GetCount()-1, 2)
 
+		// Setting those to zero triggers a remove of the PDB
+		minSyncMaster := 0
+		minSyncWorker := 0
+		if spec.Sync.IsEnabled() {
+			minSyncMaster = spec.GetServerGroupSpec(api.ServerGroupSyncMasters).GetCount() - 1
+			minSyncWorker = spec.GetServerGroupSpec(api.ServerGroupSyncWorkers).GetCount() - 1
+		}
+
+		// Ensure all PDBs as calculated
 		if err := r.ensurePDBForGroup(api.ServerGroupAgents, minAgents); err != nil {
 			return err
 		}
@@ -37,6 +46,12 @@ func (r *Resources) EnsurePDBs() error {
 			return err
 		}
 		if err := r.ensurePDBForGroup(api.ServerGroupCoordinators, minCoordinators); err != nil {
+			return err
+		}
+		if err := r.ensurePDBForGroup(api.ServerGroupSyncMasters, minSyncMaster); err != nil {
+			return err
+		}
+		if err := r.ensurePDBForGroup(api.ServerGroupSyncWorkers, minSyncWorker); err != nil {
 			return err
 		}
 	}
@@ -63,7 +78,7 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 	}
 }
 
-// ensurePDBForGroup ensure pdb for a specific server group
+// ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
 func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int) error {
 	deplname := r.context.GetAPIObject().GetName()
 	pdbname := pdbNameForGroup(deplname, group)
@@ -72,18 +87,21 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 
 	pdb, err := pdbcli.Get(pdbname, metav1.GetOptions{})
 	if k8sutil.IsNotFound(err) {
-		// No PDB found - create new
-		pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
-		log.Debug().Msg("Creating new PDB")
-		if _, err := pdbcli.Create(pdb); err != nil {
-			log.Error().Err(err).Msg("failed to create PDB")
-			return maskAny(err)
+		if wantedMinAvail != 0 {
+			// No PDB found - create new
+			pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
+			log.Debug().Msg("Creating new PDB")
+			if _, err := pdbcli.Create(pdb); err != nil {
+				log.Error().Err(err).Msg("failed to create PDB")
+				return maskAny(err)
+			}
 		}
 		return nil
 	} else if err == nil {
 		// PDB is there
 		// Update for PDBs is forbidden, thus one has to delete it and then create it again
-		if pdb.Spec.MinAvailable.IntValue() != wantedMinAvail {
+		// Otherwise delete it if wantedMinAvail is zero
+		if pdb.Spec.MinAvailable.IntValue() != wantedMinAvail || wantedMinAvail == 0 {
 			log.Debug().Int("wanted-min-avail", wantedMinAvail).
 				Int("current-min-avail", pdb.Spec.MinAvailable.IntValue()).
 				Msg("Recreating PDB")
@@ -95,11 +113,10 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 				maskAny(err)
 			}
 			// Create next reconcile loop, this should not be critical
+			// 	but only if wantedMinAvail is nonzero
 			return nil
 		}
-
 	}
-
 	return maskAny(err)
 }
 
