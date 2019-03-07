@@ -485,6 +485,10 @@ ifndef ARANGODIMAGE
 	@echo ARANGODIMAGE must point to the usable arangodb enterprise image
 	@exit 1
 endif
+ifndef ENTERPRISELICENSE
+	@echo For tests using ArangoSync you most likely need the license key. Please set ENTERPRISELICENSE.
+	@exit 1
+endif
 	@echo Using ArangoSync source at $(ARANGOSYNCSRCDIR)
 	@echo Using ArangoDB image $(ARANGODIMAGE)
 
@@ -503,4 +507,4 @@ ifdef PUSHIMAGES
 	docker push $(ARANGOSYNCTESTIMAGE)
 	docker push $(ARANGOSYNCIMAGE)
 endif
-	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)'
+	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)' '$(TESTOPTIONS)'

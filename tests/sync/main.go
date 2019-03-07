@@ -34,6 +34,7 @@ var (
 	arangoSyncImage      string
 	licenseKeySecretName string
 	namespace            string
+	additionalTestArgs   string
 )
 
 const (
@@ -50,6 +51,7 @@ func init() {
 	flag.StringVar(&arangoSyncImage, "arango-sync-image", "", "ArangoSync Image used for testing")
 	flag.StringVar(&licenseKeySecretName, "license-key-secret-name", "arangodb-license-key", "Secret name of the license key used for the deployments")
 	flag.StringVar(&namespace, "namespace", "default", "Testing namespace")
+	flag.StringVar(&additionalTestArgs, "test-args", "", "Additional parameters passed to the test executable")
 }
 
 func newDeployment(ns, name string) *dapi.ArangoDeployment {
@@ -85,6 +87,9 @@ func newSyncDeployment(ns, name string, accessPackage bool) *dapi.ArangoDeployme
 			},
 		},
 	}
+
+	d.Spec.SyncMasters.Args = append(d.Spec.SyncMasters.Args, "--log.level=debug")
+	d.Spec.SyncWorkers.Args = append(d.Spec.SyncWorkers.Args, "--log.level=debug")
 
 	if accessPackage {
 		d.Spec.Sync.ExternalAccess.AccessPackageSecretNames = []string{accessPackageSecretName}
@@ -141,18 +146,15 @@ func waitForSyncDeploymentReady(ctx context.Context, ns, name string, kubecli ku
 
 		sc, err := mustNewArangoDBSyncClient(ctx, kubecli, deployment)
 		if err != nil {
-			log.Printf("failed to create sync client: %s", err.Error())
 			return err
 		}
 
 		info, err := sc.Master().Status(ctx)
 		if err != nil {
-			log.Printf("failed to fetch status: %s", err.Error())
 			return err
 		}
 
 		if info.Status != sync.SyncStatusRunning {
-			log.Printf("SyncStatus not running: %s", info.Status)
 			return fmt.Errorf("SyncStatus not running: %s", info.Status)
 		}
 
@@ -296,7 +298,7 @@ func createArangoSyncTestPod(ns, name string) *corev1.Pod {
 					Name:            "tests",
 					Image:           arangoSyncTestImage,
 					ImagePullPolicy: corev1.PullAlways,
-					Args:            []string{"-test.v"},
+					Args:            []string{"-test.v", additionalTestArgs},
 					Env: []corev1.EnvVar{
 						corev1.EnvVar{
 							Name:  "MASTERAENDPOINTS",
