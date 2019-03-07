@@ -80,18 +80,19 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 		return nil
 	} else if err == nil {
 		// PDB is there
+		// Update for PDBs is forbidden, thus one has to delete it and then create it again
 		if pdb.Spec.MinAvailable.IntValue() != wantedMinAvail {
 			log.Debug().Int("wanted-min-avail", wantedMinAvail).
 				Int("current-min-avail", pdb.Spec.MinAvailable.IntValue()).
-				Msg("Updating PDB")
+				Msg("Recreating PDB")
 			pdb.Spec.MinAvailable = newFromInt(wantedMinAvail)
 
 			// Update the PDB
-			_, err := pdbcli.Update(pdb)
-			if err != nil {
-				log.Error().Err(err).Msg("PDB update failed")
+			if err := pdbcli.Delete(pdbname, &metav1.DeleteOptions{}); err != nil {
+				log.Error().Err(err).Msg("PDB deletion failed")
 				maskAny(err)
 			}
+			// Create next reconcile loop
 			return nil
 		}
 

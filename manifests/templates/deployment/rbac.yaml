@@ -36,7 +36,7 @@ rules:
   verbs: ["get"]
 - apiGroups: ["policy"]
   resources: ["poddisruptionbudgets"]
-  verbs: ["get", "create", "update"]
+  verbs: ["get", "create", "delete"]
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list"]
