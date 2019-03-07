@@ -61,14 +61,14 @@ func (r *Resources) EnsurePDBs() error {
 	return nil
 }
 
-func pdbNameForGroup(depl string, group api.ServerGroup) string {
+func PDBNameForGroup(depl string, group api.ServerGroup) string {
 	return fmt.Sprintf("%s-%s-pdb", depl, group.AsRole())
 }
 
 func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.OwnerReference) *policyv1beta1.PodDisruptionBudget {
 	return &policyv1beta1.PodDisruptionBudget{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            pdbNameForGroup(deplname, group),
+			Name:            PDBNameForGroup(deplname, group),
 			OwnerReferences: []metav1.OwnerReference{owner},
 		},
 		Spec: policyv1beta1.PodDisruptionBudgetSpec{
@@ -83,7 +83,7 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 // ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
 func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int) error {
 	deplname := r.context.GetAPIObject().GetName()
-	pdbname := pdbNameForGroup(deplname, group)
+	pdbname := PDBNameForGroup(deplname, group)
 	pdbcli := r.context.GetKubeCli().Policy().PodDisruptionBudgets(r.context.GetNamespace())
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
