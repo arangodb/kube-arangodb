@@ -215,7 +215,7 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pods", err, d.GetAPIObject()))
 		}
 
-		// Create PDBs
+		// Create Pod Distruption Budgets
 		if err := d.resources.EnsurePDBs(); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pdbs", err, d.GetAPIObject()))
 		}

@@ -17,13 +17,15 @@ func min(a int, b int) int {
 	return b
 }
 
-// EnsurePDBs ensures Pod Distruption Bugets for different server groups in Cluster mode
+// EnsurePDBs ensures Pod Distruption Budgets for different server groups in Cluster mode
 func (r *Resources) EnsurePDBs() error {
 
 	// Only in Cluster and Production Mode
 	spec := r.context.GetSpec()
 	if spec.IsProduction() && spec.GetMode().IsCluster() {
 
+		// We want to lose at most one agent and dbserver.
+		// Coordinators are not that critical. To keep the service available two should be enough
 		minAgents := spec.GetServerGroupSpec(api.ServerGroupAgents).GetCount() - 1
 		minDBServers := spec.GetServerGroupSpec(api.ServerGroupDBServers).GetCount() - 1
 		minCoordinators := min(spec.GetServerGroupSpec(api.ServerGroupCoordinators).GetCount()-1, 2)
@@ -92,7 +94,7 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 				log.Error().Err(err).Msg("PDB deletion failed")
 				maskAny(err)
 			}
-			// Create next reconcile loop
+			// Create next reconcile loop, this should not be critical
 			return nil
 		}
 
