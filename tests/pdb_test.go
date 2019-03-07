@@ -62,6 +62,8 @@ func waitForPDBsOfDeployment(kube kubernetes.Interface, apiObject *api.ArangoDep
 	}, 20*time.Second)
 }
 
+// TestPDBCreate create a deployment and check if the PDBs are created. Then rescale the cluster and check if the PDBs are
+// modified accordingly.
 func TestPDBCreate(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
