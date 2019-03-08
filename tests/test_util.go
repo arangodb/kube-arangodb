@@ -618,6 +618,9 @@ func waitUntilArangoDeploymentHealthy(deployment *api.ArangoDeployment, DBClient
 		if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
 			if len(versionString) > 0 {
 				for s, r := range h.Health {
+					if r.Version == "" { // Older versions of arangodb do not export the version string in cluster health
+						continue
+					}
 					if cmp := r.Version.CompareTo(versionString); cmp != 0 {
 						return maskAny(fmt.Errorf("Member %s has version %s, expecting %s", s, r.Version, versionString))
 					}
