@@ -394,7 +394,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 
 // createReadinessProbe creates configuration for a readiness probe of a server in the given group.
 func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
-	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators {
+	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
 		return nil, nil
 	}
 	authorization := ""
@@ -423,6 +423,10 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
 	if version.CompareTo("3.3.9") >= 0 {
 		probeCfg.LocalPath = "/_admin/server/availability"
+
+		if group == api.ServerGroupDBServers {
+			probeCfg.LocalPath += "?includeSyncStatus=true"
+		}
 	}
 
 	return probeCfg, nil
