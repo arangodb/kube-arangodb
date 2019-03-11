@@ -494,7 +494,7 @@ endif
 
 .PHONY: docker-sync
 docker-sync: check-sync-vars
-	SYNCIMAGE=$(ARANGOSYNCIMAGE) $(MAKE) -C $(ARANGOSYNCSRCDIR) docker docker-test
+	SYNCIMAGE=$(ARANGOSYNCIMAGE) TESTIMAGE=$(ARANGOSYNCTESTIMAGE) $(MAKE) -C $(ARANGOSYNCSRCDIR) docker docker-test
 
 .PHONY:
 docker-sync-test-ctrl: $(ARANGOSYNCTESTCTRLBIN)

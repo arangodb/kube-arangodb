@@ -14,7 +14,7 @@ ARANOSYNCTESTIMAGEID=$(docker inspect ${ARANOSYNCTESTIMAGE} '--format={{index .R
 ARANOSYNCTESTCTRLIMAGEID=$(docker inspect ${ARANOSYNCTESTCTRLIMAGE} '--format={{index .RepoDigests 0}}')
 
 kubectl --namespace ${DEPLOYMENTNAMESPACE} \
-    run arangodb-sync-test-controller -i --rm --quiet --restart=Never \
+    run kube-arangosync-test-controller -i --rm --quiet --restart=Never \
     --image=${ARANOSYNCTESTCTRLIMAGEID} \
     -- \
     --arango-image=${ARANGODIMAGE} \
