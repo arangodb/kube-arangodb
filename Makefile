@@ -240,7 +240,7 @@ endif
 
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
-	echo Building manifests
+	@echo Building manifests
 	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
 		--output-suffix=$(MANIFESTSUFFIX) \
 		--image=$(OPERATORIMAGE) \

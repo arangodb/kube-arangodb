@@ -1,0 +1,35 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: kube-reboot-pod
+spec:
+  restartPolicy: OnFailure
+  serviceAccountName: default
+  containers:
+    - image: arangodb/kube-arangodb:0.3.10
+      name: reboot
+      command: ["arangodb_operator", "reboot"]
+      args:
+        - --deployment-name=my-rebooted-depl
+        - --image-name=arangodb/arangodb:3.4.3
+        - --license-secret-name=arangodb-license-key
+        - --coordinators=3
+        - pvc-5f98090b-4417-11e9-9423-42010aa401d7
+        - pvc-60119ef4-4417-11e9-9423-42010aa401d7
+        - pvc-60c8c3d8-4417-11e9-9423-42010aa401d7
+        - pvc-6142d36a-4417-11e9-9423-42010aa401d7
+        - pvc-61bce8a5-4417-11e9-9423-42010aa401d7
+        - pvc-62928477-4417-11e9-9423-42010aa401d7
+        - pvc-630c8f56-4417-11e9-9423-42010aa401d7
+        - pvc-63680b68-4417-11e9-9423-42010aa401d7
+        - pvc-63a52558-4417-11e9-9423-42010aa401d7
+        - pvc-6400be5b-4417-11e9-9423-42010aa401d7
+      env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
