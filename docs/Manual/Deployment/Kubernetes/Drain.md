@@ -420,8 +420,8 @@ can be moved to a different server within 5 minutes. Note that this is
 much data is stored in the pod, your mileage may vary, moving a terabyte
 of data can take considerably longer!
 
-If the optional step of
-[cleaning out a DBserver manually](#clean-out-a-dbserver-manually-optional)
+If the step of
+[cleaning out a DBserver manually](#clean-out-a-dbserver-manually)
 has been performed beforehand, the grace period can easily be reduced to 60
 seconds - at least from the perspective of ArangoDB, since the server is already
 cleaned out, so it can be dropped readily and there is still no risk.
