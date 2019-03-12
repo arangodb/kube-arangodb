@@ -238,13 +238,14 @@ POST /_db/_system/_api/replication/clusterInventory
 }
 ```
 
-Check that for all collections the attribute `"allInSync"` has
-the value `true`. Note that it is necessary to do this for all databases!
+Check that for all collections the attributes `"isReady"` and `"allInSync"`
+both have the value `true`. Note that it is necessary to do this for all
+databases!
 
 Here is a shell command which makes this check easy:
 
 ```bash
-curl -k https://arangodb.9hoeffer.de:8529/_db/_system/_api/replication/clusterInventory --user root: | jq . | grep '"allInSync"' | sort | uniq -c
+curl -k https://arangodb.9hoeffer.de:8529/_db/_system/_api/replication/clusterInventory --user root: | jq . | grep '"isReady"\|"allInSync"' | sort | uniq -c
 ```
 
 If all these checks are performed and are okay, the cluster is ready to
@@ -274,13 +275,14 @@ below, the procedure should also work without this.
 Finally, one should **not run a rolling upgrade or restart operation**
 at the time of a node drain.
 
-## Clean out a DBserver manually (optional)
+## Clean out a DBserver manually
 
 In this step we clean out a _DBServer_ manually, before even issuing the
-`kubectl drain` command. This step is optional, but can speed up things
-considerably. Here is why:
+`kubectl drain` command. Previously, we have denoted this step as optional,
+but for safety reasons, we have made it mandatory now, since it is near
+impossible to choose the grace period long enough in a reliable way.
 
-If this step is not performed, we must choose
+Furthermore, if this step is not performed, we must choose
 the grace period long enough to avoid any risk, as explained in the
 previous section. However, this has a disadvantage which has nothing to
 do with ArangoDB: We have observed, that some k8s internal services like
@@ -328,6 +330,12 @@ could use the body:
 {"server":"PRMR-wbsq47rz"}
 ```
 
+You can use this command line to achieve this:
+
+```bash
+curl -k https://arangodb.9hoeffer.de:8529/_admin/cluster/cleanOutServer --user root: -d '{"server":"PRMR-wbsq47rz"}'
+```
+
 The API call will return immediately with a body like this:
 
 ```JSON
@@ -358,6 +366,12 @@ GET /_admin/cluster/queryAgencyJob?id=38029195
   },
   "code": 200
 }
+```
+
+Use this command line to check progress:
+
+```bash
+curl -k https://arangodb.9hoeffer.de:8529/_admin/cluster/queryAgencyJob?id=38029195 --user root:
 ```
 
 It indicates that the job is still ongoing (`"Pending"`). As soon as
