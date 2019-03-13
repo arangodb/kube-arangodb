@@ -248,8 +248,8 @@ Here is a shell command which makes this check easy:
 curl -k https://arangodb.9hoeffer.de:8529/_db/_system/_api/replication/clusterInventory --user root: | jq . | grep '"isReady"\|"allInSync"' | sort | uniq -c
 ```
 
-If all these checks are performed and are okay, the cluster is ready to
-run a risk-free drain operation.
+If all these checks are performed and are okay, then it is safe to
+continue with the clean out and drain procedure as described below.
 
 {% hint 'danger' %}
 If there are some collections with `replicationFactor` set to
@@ -277,9 +277,9 @@ at the time of a node drain.
 
 ## Clean out a DBserver manually
 
-In this step we clean out a _DBServer_ manually, before even issuing the
-`kubectl drain` command. Previously, we have denoted this step as optional,
-but for safety reasons, we have made it mandatory now, since it is near
+In this step we clean out a _DBServer_ manually, **before issuing the
+`kubectl drain` command**. Previously, we have denoted this step as optional,
+but for safety reasons, we consider it mandatory now, since it is near
 impossible to choose the grace period long enough in a reliable way.
 
 Furthermore, if this step is not performed, we must choose
@@ -405,8 +405,8 @@ completely risk-free, even with a small grace period.
 ## Performing the drain
 
 After all above [checks before a node drain](#things-to-check-in-arangodb-before-a-node-drain)
-have been done successfully, it is safe to perform the drain
-operation, similar to this command:
+and the [manual clean out of the DBServer](#clean-out-a-dbserver-manually)
+have been done successfully, it is safe to perform the drain operation, similar to this command:
 
 ```bash
 kubectl drain gke-draintest-default-pool-394fe601-glts --delete-local-data --ignore-daemonsets --grace-period=300
@@ -416,11 +416,11 @@ As described above, the options `--delete-local-data` for ArangoDB and
 `--ignore-daemonsets` for other services have been added. A `--grace-period` of
 300 seconds has been chosen because for this example we are confident that all the data on our _DBServer_ pod
 can be moved to a different server within 5 minutes. Note that this is
-**not saying** that 300 seconds will always be enough, regardless of how
+**not saying** that 300 seconds will always be enough. Regardless of how
 much data is stored in the pod, your mileage may vary, moving a terabyte
 of data can take considerably longer!
 
-If the step of
+If the highly recommended step of
 [cleaning out a DBserver manually](#clean-out-a-dbserver-manually)
 has been performed beforehand, the grace period can easily be reduced to 60
 seconds - at least from the perspective of ArangoDB, since the server is already
