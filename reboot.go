@@ -106,6 +106,10 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 	pvcspec := corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: claimname,
+			Labels: map[string]string{
+				"app":      "arangodb",
+				"rebooted": "yes",
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
