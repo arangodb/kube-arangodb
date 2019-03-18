@@ -83,17 +83,18 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 
 		// Resize inspector
 		groupSpec := spec.GetServerGroupSpec(group)
-		if volumeSize, ok := p.Spec.Resources.Requests[apiv1.ResourceStorage]; ok {
-			requestedSize := groupSpec.Resources.Requests[apiv1.ResourceStorage]
-			if volumeSize.Cmp(requestedSize) < 0 {
-				// Size of the volume is smaller than the requested size
-				// Update the pvc with the request size
-				p.Spec.Resources.Requests[apiv1.ResourceStorage] = requestedSize
+		if requestedSize, ok := groupSpec.Resources.Requests[apiv1.ResourceStorage]; ok {
+			if volumeSize, ok := p.Spec.Resources.Requests[apiv1.ResourceStorage]; ok {
+				if volumeSize.Cmp(requestedSize) < 0 {
+					// Size of the volume is smaller than the requested size
+					// Update the pvc with the request size
+					p.Spec.Resources.Requests[apiv1.ResourceStorage] = requestedSize
 
-				log.Debug().Str("pvc-capacity", volumeSize.String()).Str("requested", requestedSize.String()).Msg("PVC capacity differes - updating")
-				kube := r.context.GetKubeCli()
-				if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
-					log.Error().Err(err).Msg("Failed to update pvc")
+					log.Debug().Str("pvc-capacity", volumeSize.String()).Str("requested", requestedSize.String()).Msg("PVC capacity differes - updating")
+					kube := r.context.GetKubeCli()
+					if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
+						log.Error().Err(err).Msg("Failed to update pvc")
+					}
 				}
 			}
 		}
