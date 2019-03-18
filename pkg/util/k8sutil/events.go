@@ -193,6 +193,15 @@ func NewDowntimeNotAllowedEvent(apiObject APIObject, operation string) *Event {
 	return event
 }
 
+// NewPVCResizedEvent creates an event indicating that a PVC has been resized
+func NewPVCResizedEvent(apiObject APIObject, pvcname string) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "PVC Resized"
+	event.Message = fmt.Sprintf("The persistent volume claim %s has been resized", pvcname)
+	return event
+}
+
 // NewUpgradeNotAllowedEvent creates an event indicating that an upgrade (or downgrade) is not allowed.
 func NewUpgradeNotAllowedEvent(apiObject APIObject,
 	fromVersion, toVersion driver.Version,
