@@ -100,6 +100,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 				} else if cmp > 0 {
 					log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
 						Msg("Volume size should not shrink")
+					r.context.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(r.context.GetAPIObject(), p.Name))
 				}
 			}
 		}
