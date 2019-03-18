@@ -34,8 +34,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//"github.com/arangodb/kube-arangodb/pkg/util"
@@ -161,9 +161,12 @@ func TestPVCResize(t *testing.T) {
 			if volumeSize.Cmp(size10GB) != 0 {
 				return fmt.Errorf("wrong volume size: expected: %s, found: %s", size10GB.String(), volumeSize.String())
 			}
+			if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
+				return fmt.Errorf("persistent volume claim file system resize pending")
+			}
 		}
 		return nil
-	}, 1*time.Minute); err != nil {
+	}, 5*time.Minute); err != nil {
 		t.Fatalf("PVCs not resized: %s", err.Error())
 	}
 
