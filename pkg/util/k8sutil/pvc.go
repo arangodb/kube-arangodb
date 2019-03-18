@@ -37,9 +37,19 @@ type PersistentVolumeClaimInterface interface {
 	Get(name string, options metav1.GetOptions) (*v1.PersistentVolumeClaim, error)
 }
 
-// IsPersistentVolumeClaimMarkedForDeletion returns true if the pod has been marked for deletion.
+// IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
 func IsPersistentVolumeClaimMarkedForDeletion(pvc *v1.PersistentVolumeClaim) bool {
 	return pvc.DeletionTimestamp != nil
+}
+
+// IsPersistentVolumeClaimFileSystemResizePending returns true if the pvc has FileSystemResizePending set to true
+func IsPersistentVolumeClaimFileSystemResizePending(pvc *v1.PersistentVolumeClaim) bool {
+	for _, c := range pvc.Status.Conditions {
+		if c.Type == v1.PersistentVolumeClaimFileSystemResizePending && c.Status == v1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 // CreatePersistentVolumeClaimName returns the name of the persistent volume claim for a member with
