@@ -332,7 +332,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 // createLivenessProbe creates configuration for a liveness probe of a server in the given group.
 func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
 	switch group {
-	case api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupDBServers:
+	case api.ServerGroupSingle:
 		authorization := ""
 		if spec.IsAuthenticated() {
 			secretData, err := r.getJWTSecret(spec)
@@ -349,7 +349,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			Secure:        spec.IsSecure(),
 			Authorization: authorization,
 		}, nil
-	case api.ServerGroupCoordinators:
+	case api.ServerGroupCoordinators, api.ServerGroupAgents, api.ServerGroupDBServers:
 		return nil, nil
 	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
 		authorization := ""

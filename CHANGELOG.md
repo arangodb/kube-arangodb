@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.9.1](https://github.com/arangodb/kube-arangodb/tree/0.3.9.1) (2019-03-18)
+
+- Default liveness checks (pod running) for agents and dbservers.
+
 ## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
 - Fixed a serious bug in rolling upgrades which was introduced in 0.3.8.
