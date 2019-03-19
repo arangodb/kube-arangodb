@@ -23,9 +23,11 @@
 package k8sutil
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -66,4 +68,37 @@ func stripArangodPrefix(id string) string {
 		}
 	}
 	return id
+}
+
+// FixupResourceName ensures that the given name
+// complies with kubernetes name requirements.
+// If the name is to long or contains invalid characters,
+// if will be adjusted and a hash with be added.
+func FixupResourceName(name string, maxLength ...int) string {
+	maxLen := 63
+	if len(maxLength) > 0 {
+		maxLen = maxLength[0]
+	}
+	sb := strings.Builder{}
+	needHash := len(name) > maxLen
+	for _, ch := range name {
+		if unicode.IsDigit(ch) || unicode.IsLower(ch) || ch == '-' {
+			sb.WriteRune(ch)
+		} else if unicode.IsUpper(ch) {
+			sb.WriteRune(unicode.ToLower(ch))
+			needHash = true
+		} else {
+			needHash = true
+		}
+	}
+	result := sb.String()
+	if needHash {
+		hash := sha1.Sum([]byte(name))
+		h := fmt.Sprintf("-%0x", hash[:3])
+		if len(result)+len(h) > maxLen {
+			result = result[:maxLen-(len(h))]
+		}
+		result = result + h
+	}
+	return result
 }

@@ -60,12 +60,6 @@ func (p PasswordSecretName) IsAuto() bool {
 	return p == PasswordSecretNameAuto || p == ""
 }
 
-// Validate validates the password secret name
-func (p PasswordSecretName) Validate() error {
-
-	return nil
-}
-
 // GetSecretName returns the secret name given by the specs. Or None if not set.
 func (s PasswordSecretNameList) GetSecretName(user string) PasswordSecretName {
 	if s != nil {
@@ -78,7 +72,7 @@ func (s PasswordSecretNameList) GetSecretName(user string) PasswordSecretName {
 
 // getSecretNameForUserPassword returns the default secret name for the given user
 func getSecretNameForUserPassword(deploymentname, username string) PasswordSecretName {
-	return PasswordSecretName(deploymentname + "-" + username + "-password")
+	return PasswordSecretName(k8sutil.FixupResourceName(deploymentname + "-" + username + "-password"))
 }
 
 // Validate the specification.
@@ -97,9 +91,6 @@ func (b *BootstrapSpec) Validate() error {
 			if err := k8sutil.ValidateResourceName(string(secretname)); err != nil {
 				return maskAny(err)
 			}
-		}
-		if err := secretname.Validate(); err != nil {
-			return err
 		}
 	}
 

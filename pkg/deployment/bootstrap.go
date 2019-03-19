@@ -46,20 +46,22 @@ func (d *Deployment) EnsureBootstrap() error {
 	status, version := d.GetStatus()
 
 	if status.Conditions.IsTrue(api.ConditionTypeReady) {
-		if _, hasBootstrap := status.Conditions.Get(api.ConditionTypeBoostrapCompleted); !hasBootstrap {
+		if _, hasBootstrap := status.Conditions.Get(api.ConditionTypeBootstrapCompleted); !hasBootstrap {
 			return nil // The cluster was not initialised with ConditionTypeBoostrapCompleted == false
 		}
 
-		if status.Conditions.IsTrue(api.ConditionTypeBoostrapCompleted) {
+		if status.Conditions.IsTrue(api.ConditionTypeBootstrapCompleted) {
 			return nil // Nothing to do, already bootstrapped
 		}
 
 		d.deps.Log.Info().Msgf("Bootstrap deployment %s", d.Name())
 		err := d.runBootstrap()
 		if err != nil {
-			status.Conditions.Update(api.ConditionTypeBoostrapCompleted, true, "Bootstrap failed", err.Error())
+			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap failed", err.Error())
+			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, false, "Bootstrap failed", err.Error())
 		} else {
-			status.Conditions.Update(api.ConditionTypeBoostrapCompleted, true, "Bootstrap successful", "The bootstrap process has been completed")
+			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap successful", "The bootstrap process has been completed successfully")
+			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, true, "Bootstrap successful", "The bootstrap process has been completed successfully")
 		}
 
 		if err = d.UpdateStatus(status, version); err != nil {
@@ -127,7 +129,7 @@ func (d *Deployment) bootstrapUserPassword(client driver.Client, secrets k8sutil
 // runBootstrap is run for a deployment once
 func (d *Deployment) runBootstrap() error {
 
-	// execute the boostrap code
+	// execute the bootstrap code
 	// make sure that the bootstrap code is idempotent
 	client, err := d.clientCache.GetDatabase(nil)
 	if err != nil {

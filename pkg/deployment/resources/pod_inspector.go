@@ -241,7 +241,7 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	// Update overall conditions
 	if _, hasReady := status.Conditions.Get(api.ConditionTypeReady); !hasReady {
 		// Ready was never set, set BootstrapComplete to false
-		status.Conditions.Update(api.ConditionTypeBoostrapCompleted, false, "Bootstrap waiting", "Waiting for deployment")
+		status.Conditions.Update(api.ConditionTypeBootstrapCompleted, false, "Bootstrap waiting", "Waiting for deployment")
 	}
 	spec := r.context.GetSpec()
 	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), spec.Sync.IsEnabled())
