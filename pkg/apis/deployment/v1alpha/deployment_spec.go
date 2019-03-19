@@ -292,6 +292,11 @@ func (s DeploymentSpec) IsDevelopment() bool {
 	return s.GetEnvironment() == EnvironmentDevelopment
 }
 
+// IsProduction returns true when the spec contains a Production environment.
+func (s DeploymentSpec) IsProduction() bool {
+	return s.GetEnvironment() == EnvironmentProduction
+}
+
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
 // It returns a list of fields that have been reset.
 // Field names are relative to `spec.`.

@@ -154,6 +154,10 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
 		}
+		if err := d.resources.EnsurePDBs(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("PDB creation failed", err, d.apiObject))
+		}
 
 		// Create access packages
 		if err := d.createAccessPackages(); err != nil {

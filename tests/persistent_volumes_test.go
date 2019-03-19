@@ -29,8 +29,6 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/assert"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	//"github.com/arangodb/kube-arangodb/pkg/util"
@@ -41,18 +39,18 @@ func TestPersistence(t *testing.T) {
 	longOrSkip(t)
 
 	k8sNameSpace := getNamespace(t)
-	k8sClient := mustNewKubeClient(t)
+	//k8sClient := mustNewKubeClient(t)
 
-	volumesList, err := k8sClient.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
-	assert.NoError(t, err, "error while listing volumes")
-	claimsList, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).List(metav1.ListOptions{})
-	assert.NoError(t, err, "error while listing volume claims")
+	// volumesList, err := k8sClient.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+	// assert.NoError(t, err, "error while listing volumes")
+	// claimsList, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).List(metav1.ListOptions{})
+	// assert.NoError(t, err, "error while listing volume claims")
 
-	fmt.Printf("----------------------------------------")
-	fmt.Printf("%v %v", volumesList, claimsList)
-	fmt.Printf("----------------------------------------")
-	fmt.Printf("%v %v", len(volumesList.Items), len(claimsList.Items))
-	fmt.Printf("----------------------------------------")
+	// fmt.Printf("----------------------------------------")
+	// fmt.Printf("%v %v", volumesList, claimsList)
+	// fmt.Printf("----------------------------------------")
+	// fmt.Printf("%v %v", len(volumesList.Items), len(claimsList.Items))
+	// fmt.Printf("----------------------------------------")
 
 	mode := api.DeploymentModeCluster
 	engine := api.StorageEngineRocksDB
@@ -69,7 +67,7 @@ func TestPersistence(t *testing.T) {
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	// Create deployment
-	_, err = deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
 	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())

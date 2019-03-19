@@ -27,6 +27,7 @@ import (
 	"strings"
 	"testing"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -82,19 +83,138 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
 // }
 
-func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine, fromImage, toImage string) error {
-	// check environment
-	longOrSkip(t)
+func TestUpgradeClusterRocksDB3322Cto342C(t *testing.T) {
+	runUpgradeTest(t, &upgradeTest{
+		fromVersion: "3.3.22",
+		toVersion:   "3.4.2-1",
+		shortTest:   true,
+	})
+}
+
+func TestUpgradeClusterRocksDB3316Cto3322C(t *testing.T) {
+	runUpgradeTest(t, &upgradeTest{
+		fromVersion: "3.3.16",
+		toVersion:   "3.3.22",
+		shortTest:   false,
+	})
+}
+
+func TestUpgradeClusterRocksDB341Cto342C(t *testing.T) {
+	runUpgradeTest(t, &upgradeTest{
+		fromVersion: "3.4.1",
+		toImageTag:  "3.4.2",
+		toVersion:   "3.4.2-1",
+		shortTest:   true,
+	})
+}
+
+type upgradeTest struct {
+	fromVersion string
+	toVersion   string
+
+	// Mode describes the deployment mode of the upgrade test, defaults to Cluster
+	mode api.DeploymentMode
+	// Engine describes the deployment storage engine, defaults to RocksDB
+	engine api.StorageEngine
+
+	// fromImage describes the image of the version from which the upgrade should start, defaults to "arangodb/arangodb:<fromVersion>"
+	fromImage    string
+	fromImageTag string
+
+	// toImage describes the image of the version to which the upgrade should start, defaults to "arangodb/arangodb:<toVersion>"
+	toImage    string
+	toImageTag string
+
+	name      string
+	shortTest bool
+}
+
+type UpgradeTest interface {
+	FromVersion() driver.Version
+	ToVersion() driver.Version
+
+	Name() string
+	FromImage() string
+	ToImage() string
+
+	Mode() api.DeploymentMode
+	Engine() api.StorageEngine
+
+	IsShortTest() bool
+}
+
+func (u *upgradeTest) FromImage() string {
+	imageName := "arangodb/arangodb"
+	if u.fromImage != "" {
+		imageName = u.fromImage
+	}
+	imageTag := u.fromVersion
+	if u.fromImageTag != "" {
+		imageTag = u.fromImageTag
+	}
+	return fmt.Sprintf("%s:%s", imageName, imageTag)
+}
+
+func (u *upgradeTest) ToImage() string {
+	imageName := "arangodb/arangodb"
+	if u.toImage != "" {
+		imageName = u.toImage
+	}
+	imageTag := u.toVersion
+	if u.toImageTag != "" {
+		imageTag = u.toImageTag
+	}
+	return fmt.Sprintf("%s:%s", imageName, imageTag)
+}
+
+func (u *upgradeTest) Mode() api.DeploymentMode {
+	if u.mode != "" {
+		return u.mode
+	}
+	return api.DeploymentModeCluster
+}
+
+func (u *upgradeTest) Engine() api.StorageEngine {
+	if u.engine != "" {
+		return u.engine
+	}
+	return api.StorageEngineRocksDB
+}
+
+func (u *upgradeTest) Name() string {
+	if u.name != "" {
+		return u.name
+	}
+
+	return strings.Replace(fmt.Sprintf("%s-to-%s", u.FromVersion(), u.ToVersion()), ".", "-", -1)
+}
+
+func (u *upgradeTest) FromVersion() driver.Version {
+	return driver.Version(u.fromVersion)
+}
+
+func (u *upgradeTest) ToVersion() driver.Version {
+	return driver.Version(u.toVersion)
+}
+
+func (u *upgradeTest) IsShortTest() bool {
+	return u.shortTest
+}
+
+func runUpgradeTest(t *testing.T, spec UpgradeTest) {
+	if !spec.IsShortTest() {
+		longOrSkip(t)
+	}
 
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
 	c := kubeArangoClient.MustNewInCluster()
 
-	depl := newDeployment(strings.Replace(fmt.Sprintf("tu-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
-	depl.Spec.Mode = api.NewMode(mode)
-	depl.Spec.StorageEngine = api.NewStorageEngine(engine)
+	depl := newDeployment(fmt.Sprintf("tu-%s-%s", spec.Name(), uniuri.NewLen(4)))
+	depl.Spec.Mode = api.NewMode(spec.Mode())
+	depl.Spec.StorageEngine = api.NewStorageEngine(spec.Engine())
 	depl.Spec.TLS = api.TLSSpec{} // should auto-generate cert
-	depl.Spec.Image = util.NewString(fromImage)
+	depl.Spec.Image = util.NewString(spec.FromImage())
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
@@ -113,37 +233,27 @@ func upgradeSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEng
 	// Create a database client
 	ctx := context.Background()
 	DBClient := mustNewArangodDatabaseClient(ctx, kubecli, deployment, t, nil)
-
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, ""); err != nil {
+	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, spec.FromVersion()); err != nil {
 		t.Fatalf("Deployment not healthy in time: %v", err)
 	}
 
 	// Try to change image version
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
-		func(spec *api.DeploymentSpec) {
-			spec.Image = util.NewString(toImage)
+		func(depl *api.DeploymentSpec) {
+			depl.Image = util.NewString(spec.ToImage())
 		})
 	if err != nil {
-		t.Fatalf("Failed to upgrade the Image from version : " + fromImage + " to version: " + toImage)
+		t.Fatalf("Failed to upgrade the Image from version : " + spec.FromImage() + " to version: " + spec.ToImage())
 	} else {
 		t.Log("Updated deployment")
 	}
 
-	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
-	if err != nil {
-		t.Fatalf("Deployment not running in time: %v", err)
-	} else {
-		t.Log("Deployment running")
-	}
-
-	if err := waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, toImage); err != nil {
-		t.Fatalf("Deployment not healthy in time: %v", err)
+	if err := waitUntilClusterVersionUp(DBClient, spec.ToVersion()); err != nil {
+		t.Errorf("Deployment not healthy in time: %v", err)
 	} else {
 		t.Log("Deployment healthy")
 	}
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
-
-	return nil
 }
