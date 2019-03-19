@@ -3,7 +3,7 @@
 Starting an ArangoDB database (either single server or full blown cluster)
 on Kubernetes involves a lot of resources.
 
-The servers needs to run in `Pods`, you need `Secrets` for authentication,
+The servers need to run in `Pods`, you need `Secrets` for authentication,
 TLS certificates and `Services` to enable communication with the database.
 
 Use `kube-arangodb`, the ArangoDB Kubernetes Operator to greatly simplify
@@ -76,7 +76,7 @@ new custom resource definition:
 
 - `ArangoLocalStorage` is the resource used to provision `PersistentVolumes` on local storage.
 
-The optioal fourth command installs a `Deployment` that runs the
+The optional fourth command installs a `Deployment` that runs the
 operator that takes care of DC2DC replications.
 
 ## Deploying your first ArangoDB database
