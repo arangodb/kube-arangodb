@@ -753,6 +753,11 @@ func (in *SyncSpec) DeepCopyInto(out *SyncSpec) {
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	in.TLS.DeepCopyInto(&out.TLS)
 	in.Monitoring.DeepCopyInto(&out.Monitoring)
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

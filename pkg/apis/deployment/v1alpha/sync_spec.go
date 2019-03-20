@@ -36,11 +36,22 @@ type SyncSpec struct {
 	Authentication SyncAuthenticationSpec `json:"auth"`
 	TLS            TLSSpec                `json:"tls"`
 	Monitoring     MonitoringSpec         `json:"monitoring"`
+	Image          *string                `json:"image"`
 }
 
 // IsEnabled returns the value of enabled.
 func (s SyncSpec) IsEnabled() bool {
 	return util.BoolOrDefault(s.Enabled)
+}
+
+// GetSyncImage returns the syncer image or empty string
+func (s SyncSpec) GetSyncImage() string {
+	return util.StringOrDefault(s.Image)
+}
+
+// HasSyncImage returns whether a special sync image is set
+func (s SyncSpec) HasSyncImage() bool {
+	return s.GetSyncImage() != ""
 }
 
 // Validate the given spec
@@ -78,6 +89,9 @@ func (s *SyncSpec) SetDefaultsFrom(source SyncSpec) {
 	if s.Enabled == nil {
 		s.Enabled = util.NewBoolOrNil(source.Enabled)
 	}
+	if s.Image == nil {
+		s.Image = util.NewStringOrNil(source.Image)
+	}
 	s.ExternalAccess.SetDefaultsFrom(source.ExternalAccess)
 	s.Authentication.SetDefaultsFrom(source.Authentication)
 	s.TLS.SetDefaultsFrom(source.TLS)
@@ -94,6 +108,9 @@ func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []s
 	}
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
+	}
+	if s.GetSyncImage() != target.GetSyncImage() {
+		resetFields = append(resetFields, fieldPrefix+".image")
 	}
 	return resetFields
 }
