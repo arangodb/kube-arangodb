@@ -598,6 +598,11 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
 			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
+		// Check if the sync image is overwritten by the SyncSpec
+		imageID := imageInfo.ImageID
+		if spec.Sync.HasSyncImage() {
+			imageID = spec.Sync.GetSyncImage()
+		}
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
@@ -664,7 +669,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if group == api.ServerGroupSyncWorkers {
 			affinityWithRole = api.ServerGroupDBServers.AsRole()
 		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageInfo.ImageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
+		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole, groupSpec.GetNodeSelector()); err != nil {
 			return maskAny(err)
 		}

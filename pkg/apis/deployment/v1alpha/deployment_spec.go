@@ -99,6 +99,14 @@ func (s DeploymentSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)
 }
 
+// GetSyncImage returns, if set, Sync.Image or the default image.
+func (s DeploymentSpec) GetSyncImage() string {
+	if s.Sync.HasSyncImage() {
+		return s.Sync.GetSyncImage()
+	}
+	return s.GetImage()
+}
+
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)

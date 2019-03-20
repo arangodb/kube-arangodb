@@ -109,8 +109,8 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 For this guide, we go with **flannel**, as it is an easy way of setting up a layer 3 network, which uses the Kubernetes API and just works anywhere, where a network between the involved machines works:
 
 ```
-kubectl apply -f \ 
-   https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+kubectl apply -f \
+	https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 ```
 ```
   clusterrole.rbac.authorization.k8s.io/flannel created
@@ -220,8 +220,8 @@ kubectl get all --all-namespaces
 - Attach `tiller` to proper role
 
   ```
-  kubectl create clusterrolebinding tiller-cluster-rule \
-    --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+kubectl create clusterrolebinding tiller-cluster-rule \
+	--clusterrole=cluster-admin --serviceaccount=kube-system:tiller
   ```
   ```
     clusterrolebinding.rbac.authorization.k8s.io/tiller-cluster-rule created
@@ -330,7 +330,7 @@ for how to get started.
 - As unlike cloud k8s offerings no file volume infrastructure exists, we need to still deploy the storage operator chart:
 
 ```
-helm install \ 
+helm install \
 	https://github.com/arangodb/kube-arangodb/releases/download/0.3.7/kube-arangodb-storage.tgz
 ```
 ```
