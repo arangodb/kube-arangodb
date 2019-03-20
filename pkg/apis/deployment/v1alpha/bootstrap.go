@@ -50,14 +50,14 @@ type BootstrapSpec struct {
 	PasswordSecretNames PasswordSecretNameList `json:"passwordSecretNames,omitempty"`
 }
 
-// IsNone returns true if p is None
+// IsNone returns true if p is None or p is empty
 func (p PasswordSecretName) IsNone() bool {
-	return p == PasswordSecretNameNone
+	return p == PasswordSecretNameNone || p == ""
 }
 
-// IsAuto returns true if p is Auto or p is empty
+// IsAuto returns true if p is Auto
 func (p PasswordSecretName) IsAuto() bool {
-	return p == PasswordSecretNameAuto || p == ""
+	return p == PasswordSecretNameAuto
 }
 
 // GetSecretName returns the secret name given by the specs. Or None if not set.

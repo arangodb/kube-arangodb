@@ -351,8 +351,8 @@ according to the credentials given by the secret. If the secret doesn't exist
 the operator creates a secret with a random password.
 
 There are two magic values for the secret name:
-- `None` specifies no action. This disables root password randomization. (Thus the root password is empty - not recommended)
-- `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`. This is the default value. 
+- `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
+- `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`. 
 
 ### `spec.<group>.count: number`
 
