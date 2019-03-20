@@ -92,7 +92,7 @@ RELEASE := $(GOBUILDDIR)/bin/release
 GHRELEASE := $(GOBUILDDIR)/bin/github-release 
 
 TESTLENGTHOPTIONS := -test.short
-TESTTIMEOUT := 20m
+TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 180m
@@ -103,6 +103,22 @@ endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
+
+ifndef ARANGOSYNCSRCDIR
+	ARANGOSYNCSRCDIR := $(SCRIPTDIR)/arangosync
+endif
+DOCKERARANGOSYNCCTRLFILE=tests/sync/Dockerfile
+ifndef ARANGOSYNCTESTCTRLIMAGE
+	ARANGOSYNCTESTCTRLIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync-test-ctrl$(IMAGESUFFIX)
+endif
+ifndef ARANGOSYNCTESTIMAGE
+	ARANGOSYNCTESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync-test$(IMAGESUFFIX)
+endif
+ifndef ARANGOSYNCIMAGE
+	ARANGOSYNCIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync$(IMAGESUFFIX)
+endif
+ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
+ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
 .PHONY: all
 all: verify-generated build
@@ -294,6 +310,27 @@ $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 docker-test: $(TESTBIN)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
+.PHONY: run-upgrade-tests
+run-upgrade-tests:
+	TESTOPTIONS="-test.run=TestUpgrade" make run-tests
+
+.PHONY: prepare-run-tests
+prepare-run-tests:
+ifdef PUSHIMAGES
+	docker push $(OPERATORIMAGE)
+endif
+ifneq ($(DEPLOYMENTNAMESPACE), default)
+	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
+	kubectl create namespace $(DEPLOYMENTNAMESPACE)
+endif
+	kubectl apply -f $(MANIFESTPATHCRD)
+	kubectl apply -f $(MANIFESTPATHSTORAGE)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
+	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHTEST)
+	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
+	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+
 .PHONY: run-tests
 run-tests: docker-test
 ifdef PUSHIMAGES
@@ -311,7 +348,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
 
 $(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
@@ -420,3 +457,54 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	kubectl get pods 
+
+## ArangoSync Tests
+
+$(ARANGOSYNCTESTCTRLBIN): $(GOBUILDDIR) $(SOURCES)
+	@mkdir -p $(BINDIR)
+	docker run \
+		--rm \
+		-v $(SRCDIR):/usr/code \
+		-v $(CACHEVOL):/usr/gocache \
+		-e GOCACHE=/usr/gocache \
+		-e GOPATH=/usr/code/.gobuild \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e CGO_ENABLED=0 \
+		-w /usr/code/ \
+		golang:$(GOVERSION) \
+		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(ARANGOSYNCTESTCTRLBINNAME) $(REPOPATH)/tests/sync
+
+.PHONY: check-sync-vars
+check-sync-vars:
+ifndef ARANGOSYNCSRCDIR
+	@echo ARANGOSYNCSRCDIR must point to the arangosync source directory
+	@exit 1
+endif
+ifndef ARANGODIMAGE
+	@echo ARANGODIMAGE must point to the usable arangodb enterprise image
+	@exit 1
+endif
+ifndef ENTERPRISELICENSE
+	@echo For tests using ArangoSync you most likely need the license key. Please set ENTERPRISELICENSE.
+	@exit 1
+endif
+	@echo Using ArangoSync source at $(ARANGOSYNCSRCDIR)
+	@echo Using ArangoDB image $(ARANGODIMAGE)
+
+.PHONY: docker-sync
+docker-sync: check-sync-vars
+	SYNCIMAGE=$(ARANGOSYNCIMAGE) TESTIMAGE=$(ARANGOSYNCTESTIMAGE) $(MAKE) -C $(ARANGOSYNCSRCDIR) docker docker-test
+
+.PHONY:
+docker-sync-test-ctrl: $(ARANGOSYNCTESTCTRLBIN)
+	docker build --quiet -f $(DOCKERARANGOSYNCCTRLFILE) -t $(ARANGOSYNCTESTCTRLIMAGE) .
+
+.PHONY:
+run-sync-tests: check-vars docker-sync docker-sync-test-ctrl prepare-run-tests
+ifdef PUSHIMAGES
+	docker push $(ARANGOSYNCTESTCTRLIMAGE)
+	docker push $(ARANGOSYNCTESTIMAGE)
+	docker push $(ARANGOSYNCIMAGE)
+endif
+	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)' '$(TESTOPTIONS)'

@@ -44,6 +44,15 @@ func NewKubeClient() (kubernetes.Interface, error) {
 	return c, nil
 }
 
+// MustNewKubeClient calls NewKubeClient an panics if it fails
+func MustNewKubeClient() kubernetes.Interface {
+	i, err := NewKubeClient()
+	if err != nil {
+		panic(err)
+	}
+	return i
+}
+
 // NewKubeExtClient creates a new k8s api extensions client
 func NewKubeExtClient() (apiextensionsclient.Interface, error) {
 	cfg, err := InClusterConfig()

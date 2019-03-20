@@ -215,6 +215,11 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pods", err, d.GetAPIObject()))
 		}
 
+		// Create Pod Disruption Budgets
+		if err := d.resources.EnsurePDBs(); err != nil {
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pdbs", err, d.GetAPIObject()))
+		}
+
 		status, lastVersion := d.GetStatus()
 		status.Phase = api.DeploymentPhaseRunning
 		if err := d.UpdateStatus(status, lastVersion); err != nil {
@@ -289,7 +294,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	newAPIObject := current.DeepCopy()
 	newAPIObject.Spec.SetDefaultsFrom(specBefore)
 	newAPIObject.Spec.SetDefaults(d.apiObject.GetName())
-	newAPIObject.Status = status
+
 	resetFields := specBefore.ResetImmutableFields(&newAPIObject.Spec)
 	if len(resetFields) > 0 {
 		log.Debug().Strs("fields", resetFields).Msg("Found modified immutable fields")
@@ -318,6 +323,11 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	// Save updated accepted spec
 	{
 		status, lastVersion := d.GetStatus()
+		if newAPIObject.Status.IsForceReload() {
+			log.Warn().Msg("Forced status reload!")
+			status = newAPIObject.Status
+			status.ForceStatusReload = nil
+		}
 		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
 		if err := d.UpdateStatus(status, lastVersion); err != nil {
 			return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))

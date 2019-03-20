@@ -309,6 +309,11 @@ func (in *DeploymentStatus) DeepCopyInto(out *DeploymentStatus) {
 		*out = new(SecretHashes)
 		**out = **in
 	}
+	if in.ForceStatusReload != nil {
+		in, out := &in.ForceStatusReload, &out.ForceStatusReload
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
@@ -701,6 +706,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.MinCount != nil {
+		in, out := &in.MinCount, &out.MinCount
+		*out = new(int)
+		**out = **in
+	}
+	if in.MaxCount != nil {
+		in, out := &in.MaxCount, &out.MaxCount
+		*out = new(int)
+		**out = **in
+	}
 	if in.Args != nil {
 		in, out := &in.Args, &out.Args
 		*out = make([]string, len(*in))
@@ -809,6 +824,11 @@ func (in *SyncSpec) DeepCopyInto(out *SyncSpec) {
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	in.TLS.DeepCopyInto(&out.TLS)
 	in.Monitoring.DeepCopyInto(&out.Monitoring)
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

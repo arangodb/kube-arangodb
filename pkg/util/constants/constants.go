@@ -23,10 +23,11 @@
 package constants
 
 const (
-	EnvOperatorNodeName     = "MY_NODE_NAME"
-	EnvOperatorPodName      = "MY_POD_NAME"
-	EnvOperatorPodNamespace = "MY_POD_NAMESPACE"
-	EnvOperatorPodIP        = "MY_POD_IP"
+	EnvOperatorNodeName       = "MY_NODE_NAME"
+	EnvOperatorNodeNameArango = "NODE_NAME"
+	EnvOperatorPodName        = "MY_POD_NAME"
+	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
+	EnvOperatorPodIP          = "MY_POD_IP"
 
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
 	EnvArangodJWTSecret          = "ARANGOD_JWT_SECRET"          // Contains JWT secret for the ArangoDB cluster

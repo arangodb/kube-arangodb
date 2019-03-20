@@ -424,6 +424,22 @@ func newLifecycle() (*v1.Lifecycle, []v1.EnvVar, []v1.Volume, error) {
 				},
 			},
 		},
+		v1.EnvVar{
+			Name: constants.EnvOperatorNodeName,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "spec.nodeName",
+				},
+			},
+		},
+		v1.EnvVar{
+			Name: constants.EnvOperatorNodeNameArango,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "spec.nodeName",
+				},
+			},
+		},
 	}
 	vols := []v1.Volume{
 		v1.Volume{

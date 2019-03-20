@@ -74,6 +74,11 @@ func (m DeploymentMode) SupportsSync() bool {
 	return m == DeploymentModeCluster
 }
 
+// IsCluster returns true if the deployment mode is cluster
+func (m DeploymentMode) IsCluster() bool {
+	return m == DeploymentModeCluster
+}
+
 // NewMode returns a reference to a string with given value.
 func NewMode(input DeploymentMode) *DeploymentMode {
 	return &input

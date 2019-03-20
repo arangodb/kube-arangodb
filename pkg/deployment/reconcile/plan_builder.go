@@ -120,7 +120,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
-		if len(plan) == 0 && m.Phase == api.MemberPhaseCreated && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+		if len(plan) == 0 && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
@@ -180,7 +180,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 					if podName := m.PodName; podName != "" {
 						if p := getPod(podName); p != nil {
 							// Got pod, compare it with what it should be
-							decision := podNeedsUpgrading(*p, spec, status.Images)
+							decision := podNeedsUpgrading(log, *p, spec, status.Images)
 							if decision.UpgradeNeeded && !decision.UpgradeAllowed {
 								// Oops, upgrade is not allowed
 								upgradeNotAllowed = true
@@ -193,7 +193,8 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 								// Only rotate/upgrade 1 pod at a time
 								if decision.UpgradeNeeded {
 									// Yes, upgrade is needed (and allowed)
-									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status)
+									newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status, !decision.AutoUpgradeNeeded)
+
 								} else {
 									// Upgrade is not needed, see if rotation is needed
 									if rotNeeded, reason := podNeedsRotation(log, *p, apiObject, spec, group, status, m.ID, context); rotNeeded {
@@ -238,7 +239,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+func podNeedsUpgrading(log zerolog.Logger, p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
 	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
 		specImageInfo, found := images.GetByImage(spec.GetImage())
 		if !found {
@@ -276,6 +277,10 @@ func podNeedsUpgrading(p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoLi
 		}
 		if specVersion.Major() != podVersion.Major() || specVersion.Minor() != podVersion.Minor() {
 			// Is allowed, with `--database.auto-upgrade`
+			log.Info().Str("spec-version", string(specVersion)).Str("pod-version", string(podVersion)).
+				Int("spec-version.major", specVersion.Major()).Int("spec-version.minor", specVersion.Minor()).
+				Int("pod-version.major", podVersion.Major()).Int("pod-version.minor", podVersion.Minor()).
+				Str("pod", p.GetName()).Msg("Deciding to do a upgrade with --auto-upgrade")
 			return upgradeDecision{
 				FromVersion:       podVersion,
 				FromLicense:       podLicense,
@@ -433,9 +438,9 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus) api.Plan {
+	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus, rotateStatefull bool) api.Plan {
 	upgradeAction := api.ActionTypeUpgradeMember
-	if group.IsStateless() {
+	if rotateStatefull || group.IsStateless() {
 		upgradeAction = api.ActionTypeRotateMember
 	}
 	log.Debug().

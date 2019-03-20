@@ -98,6 +98,14 @@ func (s DeploymentSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)
 }
 
+// GetSyncImage returns, if set, Sync.Image or the default image.
+func (s DeploymentSpec) GetSyncImage() string {
+	if s.Sync.HasSyncImage() {
+		return s.Sync.GetSyncImage()
+	}
+	return s.GetImage()
+}
+
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
@@ -289,6 +297,11 @@ func (s *DeploymentSpec) Validate() error {
 // IsDevelopment returns true when the spec contains a Development environment.
 func (s DeploymentSpec) IsDevelopment() bool {
 	return s.GetEnvironment() == EnvironmentDevelopment
+}
+
+// IsProduction returns true when the spec contains a Production environment.
+func (s DeploymentSpec) IsProduction() bool {
+	return s.GetEnvironment() == EnvironmentProduction
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
