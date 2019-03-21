@@ -407,7 +407,7 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 
 	if groupspec.HasProbesSpec() {
 		probesspec := groupspec.GetProbesSpec()
-		if probesspec.IsLivenessProbeDisabled() {
+		if probesspec.IsReadinessProbeDisabled() {
 			return nil, nil
 		}
 	}
