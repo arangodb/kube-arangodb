@@ -401,6 +401,14 @@ for each server of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
 
+### `spec.<group>.probes.livenessProbeDisabled: bool`
+
+If set to true, the operator does not generate a liveness probe for new pods belonging to this group.
+
+### `spec.<group>.probes.readinessProbeDisabled: bool`
+
+If set to true, the operator does not generate a readiness probe for new pods belonging to this group.
+
 ### `spec.<group>.tolerations: []Toleration`
 
 This setting specifies the `tolerations` for the `Pod`s created

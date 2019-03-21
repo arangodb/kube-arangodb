@@ -331,6 +331,15 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 
 // createLivenessProbe creates configuration for a liveness probe of a server in the given group.
 func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
+	groupspec := spec.GetServerGroupSpec(group)
+
+	if groupspec.HasProbesSpec() {
+		probesspec := groupspec.GetProbesSpec()
+		if probesspec.IsLivenessProbeDisabled() {
+			return nil, nil
+		}
+	}
+
 	switch group {
 	case api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupDBServers:
 		authorization := ""
@@ -394,9 +403,19 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 
 // createReadinessProbe creates configuration for a readiness probe of a server in the given group.
 func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+	groupspec := spec.GetServerGroupSpec(group)
+
+	if groupspec.HasProbesSpec() {
+		probesspec := groupspec.GetProbesSpec()
+		if probesspec.IsLivenessProbeDisabled() {
+			return nil, nil
+		}
+	}
+
 	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators {
 		return nil, nil
 	}
+
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
