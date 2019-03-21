@@ -37,11 +37,11 @@ func TestCreate(t *testing.T) {
 	config := HTTPProbeConfig{path, false, secret, 0, 0, 0, 0, 0, 0}
 	probe := config.Create()
 
-	assert.Equal(t, probe.InitialDelaySeconds, int32(30))
+	assert.Equal(t, probe.InitialDelaySeconds, int32(15*60))
 	assert.Equal(t, probe.TimeoutSeconds, int32(2))
-	assert.Equal(t, probe.PeriodSeconds, int32(10))
+	assert.Equal(t, probe.PeriodSeconds, int32(60))
 	assert.Equal(t, probe.SuccessThreshold, int32(1))
-	assert.Equal(t, probe.FailureThreshold, int32(3))
+	assert.Equal(t, probe.FailureThreshold, int32(10))
 
 	assert.Equal(t, probe.Handler.HTTPGet.Path, path)
 	assert.Equal(t, probe.Handler.HTTPGet.HTTPHeaders[0].Name, "Authorization")
