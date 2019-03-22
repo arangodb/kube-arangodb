@@ -121,6 +121,12 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
 		}
 
+		// Immediate actions
+		if err := d.reconciler.CheckDeployment(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Reconciler immediate actions failed", err, d.apiObject))
+		}
+
 		// Create scale/update plan
 		if err := d.reconciler.CreatePlan(); err != nil {
 			hasError = true

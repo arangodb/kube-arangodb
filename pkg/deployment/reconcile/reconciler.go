@@ -22,7 +22,10 @@
 
 package reconcile
 
-import "github.com/rs/zerolog"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/rs/zerolog"
+)
 
 // Reconciler is the service that takes care of bring the a deployment
 // in line with its (changed) specification.
@@ -37,4 +40,36 @@ func NewReconciler(log zerolog.Logger, context Context) *Reconciler {
 		log:     log,
 		context: context,
 	}
+}
+
+// CheckDeployment checks for obviously broken things and fixes them immediately
+func (r *Reconciler) CheckDeployment() error {
+	spec := r.context.GetSpec()
+	status, _ := r.context.GetStatus()
+
+	if spec.GetMode().HasCoordinators() {
+
+		// Check if there are coordinators
+		if len(status.Members.Coordinators) == 0 {
+			// No more coordinators! Take immediate action
+			r.log.Error().Msg("No Coordinator members! Create one member immediately")
+			_, err := r.context.CreateMember(api.ServerGroupCoordinators, "")
+			if err != nil {
+				return err
+			}
+		} else if status.Members.Coordinators.AllFailed() {
+			r.log.Error().Msg("All coordinators failed - reset")
+			for _, m := range status.Members.Coordinators {
+				if err := r.context.DeletePod(m.PodName); err != nil {
+					r.log.Error().Err(err).Msg("Failed to delete pod")
+				}
+				m.Phase = api.MemberPhaseNone
+				if err := status.Members.Update(m, api.ServerGroupCoordinators); err != nil {
+					r.log.Error().Err(err).Msg("Failed to update member")
+				}
+			}
+		}
+	}
+
+	return nil
 }
