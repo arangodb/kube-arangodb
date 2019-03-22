@@ -48,7 +48,6 @@ func (r *Reconciler) CheckDeployment() error {
 	status, _ := r.context.GetStatus()
 
 	if spec.GetMode().HasCoordinators() {
-
 		// Check if there are coordinators
 		if len(status.Members.Coordinators) == 0 {
 			// No more coordinators! Take immediate action
