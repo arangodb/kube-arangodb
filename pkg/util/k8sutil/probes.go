@@ -77,10 +77,10 @@ func (config HTTPProbeConfig) Create() *v1.Probe {
 				HTTPHeaders: headers,
 			},
 		},
-		InitialDelaySeconds: def(config.InitialDelaySeconds, 30), // Wait 30s before first probe
-		TimeoutSeconds:      def(config.TimeoutSeconds, 2),       // Timeout of each probe is 2s
-		PeriodSeconds:       def(config.PeriodSeconds, 10),       // Interval between probes is 10s
-		SuccessThreshold:    def(config.SuccessThreshold, 1),     // Single probe is enough to indicate success
-		FailureThreshold:    def(config.FailureThreshold, 3),     // Need 3 failed probes to consider a failed state
+		InitialDelaySeconds: def(config.InitialDelaySeconds, 15*60), // Wait 15min before first probe
+		TimeoutSeconds:      def(config.TimeoutSeconds, 2),          // Timeout of each probe is 2s
+		PeriodSeconds:       def(config.PeriodSeconds, 60),          // Interval between probes is 10s
+		SuccessThreshold:    def(config.SuccessThreshold, 1),        // Single probe is enough to indicate success
+		FailureThreshold:    def(config.FailureThreshold, 10),       // Need 10 failed probes to consider a failed state
 	}
 }

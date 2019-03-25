@@ -56,6 +56,40 @@ type ServerGroupSpec struct {
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 	// NodeSelector speficies a set of selectors for nodes
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// Probes specifies additional behaviour for probes
+	Probes *ServerGroupProbesSpec `json:"probes,omitempty"`
+}
+
+// ServerGroupProbesSpec contains specification for probes for pods of the server group
+type ServerGroupProbesSpec struct {
+	// LivenessProbeDisabled if true livenessProbes are disabled
+	LivenessProbeDisabled *bool `json:"livenessProbeDisabled,omitempty"`
+	// LivenessProbeDisabled if specified the given probes is used as liveness probe
+	//LivenessProbeOverride *v1.Probe `json:"LivenessProbeOverride,omitempty"`
+	// LivenessProbeDisabled if true readinessProbes are disabled
+	ReadinessProbeDisabled *bool `json:"ReadinessProbeDisabled,omitempty"`
+	// ReadinessProbeOverride if specified the given probes is used as readiness probe
+	//ReadinessProbeOverride *v1.Probe `json:"ReadinessProbeOverride,omitempty"`
+}
+
+// // HasLivenessProbeOverride returns true if a livenessprobe override is set
+// func (s ServerGroupProbesSpec) HasLivenessProbeOverride() bool {
+// 	return s.LivenessProbeOverride != nil
+// }
+
+// // HasReadinessProbeOverride returns true if a readinessprobe override is set
+// func (s ServerGroupProbesSpec) HasReadinessProbeOverride() bool {
+// 	return s.ReadinessProbeOverride != nil
+// }
+
+// IsLivenessProbeDisabled returns true if liveness probes are disabled
+func (s ServerGroupProbesSpec) IsLivenessProbeDisabled() bool {
+	return util.BoolOrDefault(s.LivenessProbeDisabled)
+}
+
+// IsReadinessProbeDisabled returns true if readiness probes are disabled
+func (s ServerGroupProbesSpec) IsReadinessProbeDisabled() bool {
+	return util.BoolOrDefault(s.ReadinessProbeDisabled)
 }
 
 // GetCount returns the value of count.
@@ -96,6 +130,19 @@ func (s ServerGroupSpec) GetTolerations() []v1.Toleration {
 // GetServiceAccountName returns the value of serviceAccountName.
 func (s ServerGroupSpec) GetServiceAccountName() string {
 	return util.StringOrDefault(s.ServiceAccountName)
+}
+
+// HasProbesSpec returns true if Probes is non nil
+func (s ServerGroupSpec) HasProbesSpec() bool {
+	return s.Probes != nil
+}
+
+// GetProbesSpec returns the Probes spec or the nil value if not set
+func (s ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
+	if s.HasProbesSpec() {
+		return *s.Probes
+	}
+	return ServerGroupProbesSpec{}
 }
 
 // Validate the given group spec
