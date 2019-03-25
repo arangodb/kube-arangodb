@@ -248,6 +248,28 @@ func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerR
 	return nil
 }
 
+// CreateBasicAuthSecret creates a secret with given name in given namespace
+// with a given username and password as value.
+func CreateBasicAuthSecret(secrets SecretInterface, secretName, username, password string, ownerRef *metav1.OwnerReference) error {
+	// Create secret
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			constants.SecretUsername: []byte(username),
+			constants.SecretPassword: []byte(password),
+		},
+	}
+	// Attach secret to owner
+	addOwnerRefToObject(secret, ownerRef)
+	if _, err := secrets.Create(secret); err != nil {
+		// Failed to create secret
+		return maskAny(err)
+	}
+	return nil
+}
+
 // GetBasicAuthSecret loads a secret with given name in the given namespace
 // and extracts the `username` & `password` field.
 // If the secret does not exists or one of the fields is missing,

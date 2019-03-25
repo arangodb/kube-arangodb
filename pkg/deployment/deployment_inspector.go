@@ -171,6 +171,12 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
 		}
 
+		// Ensure deployment bootstrap
+		if err := d.EnsureBootstrap(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Bootstrap failed", err, d.apiObject))
+		}
+
 		// Inspect deployment for obsolete members
 		if err := d.resources.CleanupRemovedMembers(); err != nil {
 			hasError = true

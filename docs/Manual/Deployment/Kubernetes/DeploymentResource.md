@@ -342,6 +342,18 @@ This setting specifies the name of a kubernetes `Secret` that contains
 the license key token used for enterprise images. This value is not used for
 the community edition.
 
+### `spec.bootstrap.passwordSecretNames.root: string`
+
+This setting specifies a secret name for the credentials of the root user.
+
+When a deployment is created the operator will setup the root user account 
+according to the credentials given by the secret. If the secret doesn't exist
+the operator creates a secret with a random password.
+
+There are two magic values for the secret name:
+- `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
+- `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`. 
+
 ### `spec.<group>.count: number`
 
 This setting specifies the number of servers to start for the given group.

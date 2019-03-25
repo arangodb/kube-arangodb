@@ -53,6 +53,10 @@ const (
 	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 	// ConditionTypeMemberOfCluster indicates that the member is a known member of the ArangoDB cluster.
 	ConditionTypeMemberOfCluster ConditionType = "MemberOfCluster"
+	// ConditionTypeBootstrapCompleted indicates that the initial cluster bootstrap has been completed.
+	ConditionTypeBootstrapCompleted ConditionType = "BootstrapCompleted"
+	// ConditionTypeBootstrapSucceded indicates that the initial cluster bootstrap completed successfully.
+	ConditionTypeBootstrapSucceded ConditionType = "BootstrapSucceded"
 	// ConditionTypeTerminating indicates that the member is terminating but not yet terminated.
 	ConditionTypeTerminating ConditionType = "Terminating"
 )

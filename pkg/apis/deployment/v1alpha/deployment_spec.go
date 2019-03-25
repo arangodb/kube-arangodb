@@ -70,6 +70,8 @@ type DeploymentSpec struct {
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
 	Chaos ChaosSpec `json:"chaos"`
+
+	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
 }
 
 // Equal compares two DeploymentSpec
@@ -188,6 +190,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode())
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
 	s.Chaos.SetDefaults()
+	s.Bootstrap.SetDefaults(deploymentName)
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -226,6 +229,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
 	s.Chaos.SetDefaultsFrom(source.Chaos)
+	s.Bootstrap.SetDefaultsFrom(source.Bootstrap)
 }
 
 // Validate the specification.
@@ -284,6 +288,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.License.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.licenseKey"))
+	}
+	if err := s.Bootstrap.Validate(); err != nil {
+		return maskAny(err)
 	}
 	return nil
 }
