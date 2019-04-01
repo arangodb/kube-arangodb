@@ -105,7 +105,7 @@ func (b *BootstrapSpec) SetDefaults(deploymentname string) {
 
 	// If root is not set init with Auto
 	if _, ok := b.PasswordSecretNames[UserNameRoot]; !ok {
-		b.PasswordSecretNames[UserNameRoot] = PasswordSecretNameAuto
+		b.PasswordSecretNames[UserNameRoot] = PasswordSecretNameNone
 	}
 
 	// Replace Auto with generated secret name
