@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -131,7 +132,8 @@ func (d *Deployment) runBootstrap() error {
 
 	// execute the bootstrap code
 	// make sure that the bootstrap code is idempotent
-	client, err := d.clientCache.GetDatabase(nil)
+	ctx := context.Background()
+	client, err := d.clientCache.GetDatabase(ctx)
 	if err != nil {
 		return maskAny(err)
 	}
