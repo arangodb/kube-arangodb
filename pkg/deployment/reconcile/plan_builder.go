@@ -345,6 +345,13 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "ServiceAccountName changed"
 	}
 
+	// Check resource requirements
+	// Kubernetes will fill in some default values thus this will always rotate the pod.
+	// One could come up with something more sophisticated to check if a rotation is needed. (check if the requirements are more than requested and limits are less than requested)
+	/*if !reflect.DeepEqual(spec.GetServerGroupSpec(group).Resources, k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
+		return true, "Resource Requirements changed"
+	}*/
+
 	return false, ""
 }
 

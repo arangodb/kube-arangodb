@@ -263,6 +263,7 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 	return c
 }
 
+// filterStorageResourceRequirement filters resource requirements for Storage.
 func filterStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
 
 	filterStorage := func(list v1.ResourceList) v1.ResourceList {
@@ -298,7 +299,7 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		Resources:    filterStorageResourceRequirement(resources),
+		Resources:    filterStorageResourceRequirement(resources), // Storage is handled via pvcs
 		VolumeMounts: arangodVolumeMounts(),
 	}
 	for k, v := range env {

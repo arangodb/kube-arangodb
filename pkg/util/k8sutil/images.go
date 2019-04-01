@@ -53,3 +53,17 @@ func GetArangoDBImageIDFromPod(pod *corev1.Pod) string {
 	}
 	return ConvertImageID2Image(rawImageID)
 }
+
+// GetArangoDBContainerFromPod returns the ArangoDB container from a pod
+func GetArangoDBContainerFromPod(pod *corev1.Pod) corev1.Container {
+	arangoc := pod.Spec.Containers[0]
+	if len(pod.Status.ContainerStatuses) > 1 {
+		for _, container := range pod.Spec.Containers {
+			if strings.Contains(container.Name, "server") {
+				arangoc = container
+			}
+		}
+	}
+
+	return arangoc
+}
