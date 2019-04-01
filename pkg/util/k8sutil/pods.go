@@ -434,7 +434,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
+	podPriorityClassName string, podPriority *int32) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -468,6 +469,10 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add priority and priorityClassName
+	p.Spec.Priority = podPriority
+	p.Spec.PriorityClassName = podPriorityClassName
 
 	// Add UUID init container
 	if alpineImage != "" {
@@ -553,7 +558,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
+	podPriorityClassName string, podPriority *int32) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -593,6 +599,10 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add priority and priorityClassName
+	p.Spec.Priority = podPriority
+	p.Spec.PriorityClassName = podPriorityClassName
 
 	// TLS keyfile secret mount (if any)
 	if tlsKeyfileSecretName != "" {
