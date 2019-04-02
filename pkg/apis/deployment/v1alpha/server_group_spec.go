@@ -60,8 +60,6 @@ type ServerGroupSpec struct {
 	Probes *ServerGroupProbesSpec `json:"probes,omitempty"`
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`
-	// Priority specifies the pod priority
-	Priority *int32 `json:"priority,omitempty"`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group

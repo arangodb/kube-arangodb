@@ -345,6 +345,11 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "ServiceAccountName changed"
 	}
 
+	// Check priorities
+	if groupSpec.PriorityClassName != p.Spec.PriorityClassName {
+		return true, "Pod priority changed"
+	}
+
 	return false, ""
 }
 

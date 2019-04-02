@@ -435,7 +435,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, podPriority *int32) error {
+	podPriorityClassName string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -470,8 +470,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
-	// Add priority and priorityClassName
-	p.Spec.Priority = podPriority
+	// Add priorityClassName
 	p.Spec.PriorityClassName = podPriorityClassName
 
 	// Add UUID init container
@@ -559,7 +558,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string, podPriority *int32) error {
+	podPriorityClassName string) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -600,8 +599,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
 
-	// Add priority and priorityClassName
-	p.Spec.Priority = podPriority
+	// Add priorityClassName
 	p.Spec.PriorityClassName = podPriorityClassName
 
 	// TLS keyfile secret mount (if any)
