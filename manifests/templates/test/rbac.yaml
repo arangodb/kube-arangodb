@@ -12,8 +12,11 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "services", "persistentvolumes", "persistentvolumeclaims", "secrets", "serviceaccounts", "pods/log"]
   verbs: ["*"]
-- apiGroups: ["apps", "scheduling.k8s.io"]
-  resources: ["daemonsets", "deployments", "priorityclasses"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets", "deployments"]
+  verbs: ["*"]
+- apiGroups: ["scheduling.k8s.io"]
+  resources: ["priorityclasses"]
   verbs: ["*"]
 
 ---

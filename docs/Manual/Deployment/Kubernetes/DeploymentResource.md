@@ -413,6 +413,10 @@ for each server of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
 
+### `spec.<group>.priorityClassName: string`
+
+Priority class name for pods of this group. Will be forwarded to the pod spec.
+
 ### `spec.<group>.probes.livenessProbeDisabled: bool`
 
 If set to true, the operator does not generate a liveness probe for new pods belonging to this group.
