@@ -33,6 +33,7 @@ it is intended to be.
 | Azure AKS            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
 | OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
 | Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | Yes              |                       |
+| Bare metal (kubeadm) | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
 | Bare metal (kubeadm) | 1.12               | >= 3.3.13        | Runs  | No               |                       |
 | Bare metal (kubeadm) | 1.13               | >= 3.3.13        | Runs  | No               |                       |
 | Bare metal (kubeadm) | 1.14               | >= 3.3.13        | Runs  | No               |                       |
