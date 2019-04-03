@@ -263,9 +263,29 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 	return c
 }
 
+// filterStorageResourceRequirement filters resource requirements for Storage.
+func filterStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+
+	filterStorage := func(list v1.ResourceList) v1.ResourceList {
+		newlist := make(v1.ResourceList)
+		for k, v := range list {
+			if k == v1.ResourceStorage {
+				continue
+			}
+			newlist[k] = v
+		}
+		return newlist
+	}
+
+	return v1.ResourceRequirements{
+		Limits:   filterStorage(resources.Limits),
+		Requests: filterStorage(resources.Requests),
+	}
+}
+
 // arangodContainer creates a container configured to run `arangod`.
 func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
 		Name:            ServerContainerName,
@@ -279,6 +299,7 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources:    filterStorageResourceRequirement(resources), // Storage is handled via pvcs
 		VolumeMounts: arangodVolumeMounts(),
 	}
 	for k, v := range env {
@@ -434,7 +455,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
+	resources v1.ResourceRequirements) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -457,7 +479,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 
 	// Add arangod container
-	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars)
+	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}

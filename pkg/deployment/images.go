@@ -198,7 +198,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		}
 	}
 	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, env, nil, nil, nil,
-		tolerations, serviceAccountName, "", "", "", nil); err != nil {
+		tolerations, serviceAccountName, "", "", "", nil, v1.ResourceRequirements{}); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

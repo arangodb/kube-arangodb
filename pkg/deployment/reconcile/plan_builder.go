@@ -345,7 +345,29 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "ServiceAccountName changed"
 	}
 
+	// Check resource requirements
+	if resourcesRequireRotation(spec.GetServerGroupSpec(group).Resources, k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
+		return true, "Resource Requirements changed"
+	}
+
 	return false, ""
+}
+
+// resourcesRequireRotation returns true if the resource requirements have changed such that a rotation is required
+func resourcesRequireRotation(wanted, given v1.ResourceRequirements) bool {
+	checkList := func(wanted, given v1.ResourceList) bool {
+		for k, v := range wanted {
+			if gv, ok := given[k]; !ok {
+				return true
+			} else if v.Cmp(gv) != 0 {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
 }
 
 // normalizeServiceAccountName replaces default with empty string, otherwise returns the input.
