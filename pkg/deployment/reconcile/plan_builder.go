@@ -351,9 +351,10 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 	}
 
 	// Check resource requirements
-	if resourcesRequireRotation(spec.GetServerGroupSpec(group).Resources, k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
+	if resourcesRequireRotation(
+		k8sutil.FilterStorageResourceRequirement(spec.GetServerGroupSpec(group).Resources),
+		k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
 		return true, "Resource Requirements changed"
-
 	}
 
 	return false, ""
