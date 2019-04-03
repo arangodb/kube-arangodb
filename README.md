@@ -32,7 +32,10 @@ it is intended to be.
 | Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |                       |
 | Azure AKS            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
 | OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
-| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | Yes              |                       |
+| Bare metal (kubeadm) | 1.12               | >= 3.3.13        | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.13               | >= 3.3.13        | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.14               | >= 3.3.13        | Runs  | No               |                       |
 | Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
 | Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |                       |
