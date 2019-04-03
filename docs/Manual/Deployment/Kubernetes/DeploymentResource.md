@@ -415,7 +415,7 @@ because servers in these groups do not need persistent storage.
 
 ### `spec.<group>.priorityClassName: string`
 
-Priority class name for pods of this group. Will be forwarded to the pod spec.
+Priority class name for pods of this group. Will be forwarded to the pod spec. [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/)
 
 ### `spec.<group>.probes.livenessProbeDisabled: bool`
 
