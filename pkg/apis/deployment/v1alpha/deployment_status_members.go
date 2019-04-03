@@ -243,3 +243,23 @@ func (ds DeploymentStatusMembers) AllMembersReady(mode DeploymentMode, syncEnabl
 		return false
 	}
 }
+
+// MembersOfGroup returns the member list of the given group
+func (ds DeploymentStatusMembers) MembersOfGroup(group ServerGroup) MemberStatusList {
+	switch group {
+	case ServerGroupSingle:
+		return ds.Single
+	case ServerGroupAgents:
+		return ds.Agents
+	case ServerGroupDBServers:
+		return ds.DBServers
+	case ServerGroupCoordinators:
+		return ds.Coordinators
+	case ServerGroupSyncMasters:
+		return ds.SyncMasters
+	case ServerGroupSyncWorkers:
+		return ds.SyncWorkers
+	default:
+		return MemberStatusList{}
+	}
+}

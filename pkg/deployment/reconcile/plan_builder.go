@@ -345,9 +345,15 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "ServiceAccountName changed"
 	}
 
+	// Check priorities
+	if groupSpec.PriorityClassName != p.Spec.PriorityClassName {
+		return true, "Pod priority changed"
+	}
+
 	// Check resource requirements
 	if resourcesRequireRotation(spec.GetServerGroupSpec(group).Resources, k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
 		return true, "Resource Requirements changed"
+
 	}
 
 	return false, ""
