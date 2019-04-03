@@ -321,7 +321,7 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 
 // arangosyncContainer creates a container configured to run `arangosync`.
 func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
 		Name:            ServerContainerName,
@@ -335,6 +335,7 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources: filterStorageResourceRequirement(resources), // Storage is handled via pvcs
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -580,7 +581,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string) error {
+	podPriorityClassName string, resources v1.ResourceRequirements) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -606,7 +607,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
 
 	// Add arangosync container
-	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars)
+	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars, resources)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}

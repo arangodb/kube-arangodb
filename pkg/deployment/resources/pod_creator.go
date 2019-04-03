@@ -690,7 +690,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		}
 		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole, groupSpec.GetNodeSelector(),
-			groupSpec.PriorityClassName); err != nil {
+			groupSpec.PriorityClassName, groupSpec.Resources); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
