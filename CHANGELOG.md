@@ -9,6 +9,7 @@
 - Allow to disable liveness probes, increase timeouts in defaults.
 - Handle case of all coordinators gone better.
 - Added MY_NODE_NAME and NODE_NAME env vars for all pods.
+- Produce specialized tokens for improved security.
 
 ## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
