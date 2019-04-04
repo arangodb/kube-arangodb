@@ -1,8 +1,14 @@
 # Change Log
 
-## [0.3.10](---) (XXXX-XX-XX)
+## [0.3.10](---) (2019-04-04)
 - Added Pod Disruption Budgets for all server groups in production mode.
 - Added Priority Class Name to be specified per server group.
+- Forward resource requirements to k8s.
+- Automatic creation of randomized root password on demand.
+- Volume resizing (only enlarge).
+- Allow to disable liveness probes, increase timeouts in defaults.
+- Handle case of all coordinators gone better.
+- Added MY_NODE_NAME and NODE_NAME env vars for all pods.
 
 ## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
