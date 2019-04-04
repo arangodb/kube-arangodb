@@ -24,8 +24,10 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 )
@@ -87,4 +89,22 @@ func (r *Resources) fetchDeploymentHealth() error {
 	r.health.clusterHealth = h
 	r.health.timestamp = time.Now()
 	return nil
+}
+
+// GetDeploymentHealth returns a copy of the latest known state of cluster health
+func (r *Resources) GetDeploymentHealth() (driver.ClusterHealth, error) {
+
+	r.health.mutex.Lock()
+	defer r.health.mutex.Unlock()
+	if r.health.timestamp.IsZero() {
+		return driver.ClusterHealth{}, fmt.Errorf("No cluster health available")
+	}
+
+	newhealth := r.health.clusterHealth
+	newhealth.Health = make(map[driver.ServerID]driver.ServerHealth)
+
+	for k, v := range r.health.clusterHealth.Health {
+		newhealth.Health[k] = v
+	}
+	return newhealth, nil
 }

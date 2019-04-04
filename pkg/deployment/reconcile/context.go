@@ -93,4 +93,6 @@ type Context interface {
 	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 		agents api.MemberStatusList, id string, version driver.Version) []string
+	// GetDeploymentHealth returns a copy of the latest known state of cluster health
+	GetDeploymentHealth() (driver.ClusterHealth, error)
 }

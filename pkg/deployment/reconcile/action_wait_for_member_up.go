@@ -28,6 +28,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -143,20 +144,9 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 // of a cluster deployment (coordinator/dbserver).
 func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, bool, error) {
 	log := a.log
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	h, err := a.actionCtx.GetDeploymentHealth()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, maskAny(err)
-	}
-	cluster, err := c.Cluster(ctx)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, false, maskAny(err)
-	}
-	h, err := cluster.Health(ctx)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get cluster health")
-		return false, false, maskAny(err)
+		return false, false, maskAny(errors.Wrapf(err, "failed to get cluster health"))
 	}
 	sh, found := h.Health[driver.ServerID(a.action.MemberID)]
 	if !found {
@@ -168,12 +158,24 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 		return false, false, nil
 	}
 	if a.action.Group == api.ServerGroupDBServers {
-		dbs, err := c.Databases(ctx)
+		inventoryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		c, err := a.actionCtx.GetDatabaseClient(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to create database client")
+			return false, false, maskAny(err)
+		}
+		cluster, err := c.Cluster(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to access cluster")
+			return false, false, maskAny(err)
+		}
+		dbs, err := c.Databases(inventoryCtx)
 		if err != nil {
 			return false, false, err
 		}
 		for _, db := range dbs {
-			inv, err := cluster.DatabaseInventory(ctx, db)
+			inv, err := cluster.DatabaseInventory(inventoryCtx, db)
 			if err != nil {
 				return false, false, err
 			}

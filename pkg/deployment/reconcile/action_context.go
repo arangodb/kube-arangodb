@@ -84,6 +84,8 @@ type ActionContext interface {
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
 	SetCurrentImage(imageInfo api.ImageInfo) error
+	// GetDeploymentHealth returns a copy of the latest known state of cluster health
+	GetDeploymentHealth() (driver.ClusterHealth, error)
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -103,6 +105,11 @@ type actionContext struct {
 // Gets the specified mode of deployment
 func (ac *actionContext) GetMode() api.DeploymentMode {
 	return ac.context.GetSpec().GetMode()
+}
+
+// GetDeploymentHealth returns a copy of the latest known state of cluster health
+func (ac *actionContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
+	return ac.context.GetDeploymentHealth()
 }
 
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
