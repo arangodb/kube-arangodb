@@ -12,6 +12,9 @@ printheader
 
 patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Development work.yaml
 
+# Ensure enterprise license key
+ensureLicenseKey
+
 # Deploy local storage:
 kubectl apply -f $YAMLFILESTORAGE
 and waitForKubectl "get storageclass" "acceptance.*arangodb.*localstorage" "" 1 1
