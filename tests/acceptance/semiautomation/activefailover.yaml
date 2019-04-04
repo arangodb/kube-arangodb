@@ -8,4 +8,6 @@ spec:
   disableIPv6: @DISABLEIPV6@
   externalAccess:
     type: LoadBalancer
+  license:
+    secretName: arangodb-license-key
   mode: ActiveFailover

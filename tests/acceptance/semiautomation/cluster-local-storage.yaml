@@ -9,6 +9,8 @@ spec:
   externalAccess:
     type: LoadBalancer
   mode: Cluster
+  license:
+    secretName: arangodb-license-key
   agents:
     storageClassName: acceptance
   dbservers:

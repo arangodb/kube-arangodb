@@ -11,6 +11,9 @@ printheader
 
 patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Production work.yaml
 
+# Ensure enterprise license key
+ensureLicenseKey
+
 # Deploy and check
 kubectl apply -f work.yaml
 and waitForKubectl "get pod" "$DEPLOYMENT" "1/1 *Running" 9 2
