@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	apiv1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -57,6 +58,7 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
+	spec := r.context.GetSpec()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
@@ -77,6 +79,30 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 				}
 			}
 			continue
+		}
+
+		// Resize inspector
+		groupSpec := spec.GetServerGroupSpec(group)
+		if requestedSize, ok := groupSpec.Resources.Requests[apiv1.ResourceStorage]; ok {
+			if volumeSize, ok := p.Spec.Resources.Requests[apiv1.ResourceStorage]; ok {
+				cmp := volumeSize.Cmp(requestedSize)
+				if cmp < 0 {
+					// Size of the volume is smaller than the requested size
+					// Update the pvc with the request size
+					p.Spec.Resources.Requests[apiv1.ResourceStorage] = requestedSize
+
+					log.Debug().Str("pvc-capacity", volumeSize.String()).Str("requested", requestedSize.String()).Msg("PVC capacity differs - updating")
+					kube := r.context.GetKubeCli()
+					if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
+						log.Error().Err(err).Msg("Failed to update pvc")
+					}
+					r.context.CreateEvent(k8sutil.NewPVCResizedEvent(r.context.GetAPIObject(), p.Name))
+				} else if cmp > 0 {
+					log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+						Msg("Volume size should not shrink")
+					r.context.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(r.context.GetAPIObject(), p.Name))
+				}
+			}
 		}
 
 		if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) {

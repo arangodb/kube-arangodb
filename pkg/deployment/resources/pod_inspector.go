@@ -239,22 +239,13 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	})
 
 	// Update overall conditions
+	if _, hasReady := status.Conditions.Get(api.ConditionTypeReady); !hasReady {
+		// Ready was never set, set BootstrapComplete to false
+		status.Conditions.Update(api.ConditionTypeBootstrapCompleted, false, "Bootstrap waiting", "Waiting for deployment")
+	}
 	spec := r.context.GetSpec()
 	allMembersReady := status.Members.AllMembersReady(spec.GetMode(), spec.Sync.IsEnabled())
 	status.Conditions.Update(api.ConditionTypeReady, allMembersReady, "", "")
-
-	if spec.GetMode().HasCoordinators() && status.Members.Coordinators.AllFailed() {
-		log.Error().Msg("All coordinators failed - reset")
-		for _, m := range status.Members.Coordinators {
-			if err := r.context.DeletePod(m.PodName); err != nil {
-				log.Error().Err(err).Msg("Failed to delete pod")
-			}
-			m.Phase = api.MemberPhaseNone
-			if err := status.Members.Update(m, api.ServerGroupCoordinators); err != nil {
-				log.Error().Err(err).Msg("Failed to update member")
-			}
-		}
-	}
 
 	// Update conditions
 	if len(podNamesWithScheduleTimeout) > 0 {

@@ -15,6 +15,9 @@ rules:
 - apiGroups: ["apps"]
   resources: ["daemonsets", "deployments"]
   verbs: ["*"]
+- apiGroups: ["scheduling.k8s.io"]
+  resources: ["priorityclasses"]
+  verbs: ["*"]
 
 ---
 

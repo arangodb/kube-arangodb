@@ -71,6 +71,8 @@ type DeploymentSpec struct {
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
 	Chaos ChaosSpec `json:"chaos"`
+
+	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
 }
 
 // Equal compares two DeploymentSpec
@@ -190,6 +192,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
 	s.Metrics.SetDefaults(deploymentName+"-exporter-jwt-token", s.Authentication.IsAuthenticated())
 	s.Chaos.SetDefaults()
+	s.Bootstrap.SetDefaults(deploymentName)
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
@@ -229,6 +232,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
 	s.Metrics.SetDefaultsFrom(source.Metrics)
 	s.Chaos.SetDefaultsFrom(source.Chaos)
+	s.Bootstrap.SetDefaultsFrom(source.Bootstrap)
 }
 
 // Validate the specification.
@@ -290,6 +294,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.License.Validate(); err != nil {
 		return maskAny(errors.Wrap(err, "spec.licenseKey"))
+	}
+	if err := s.Bootstrap.Validate(); err != nil {
+		return maskAny(err)
 	}
 	return nil
 }

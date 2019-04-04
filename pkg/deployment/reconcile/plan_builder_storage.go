@@ -57,10 +57,6 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 			}
 			groupSpec := spec.GetServerGroupSpec(group)
 			storageClassName := groupSpec.GetStorageClassName()
-			if storageClassName == "" {
-				// Using default storage class name
-				continue
-			}
 			// Load PVC
 			pvc, err := getPVC(m.PersistentVolumeClaimName)
 			if err != nil {
@@ -71,9 +67,16 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 				continue
 			}
 			replacementNeeded := false
-			if util.StringOrDefault(pvc.Spec.StorageClassName) != storageClassName {
+			if util.StringOrDefault(pvc.Spec.StorageClassName) != storageClassName && storageClassName != "" {
 				// Storageclass has changed
+				log.Debug().Str("pod-name", m.PodName).
+					Str("pvc-storage-class", util.StringOrDefault(pvc.Spec.StorageClassName)).
+					Str("group-storage-class", storageClassName).Msg("Storage class has changed - pod needs replacement")
 				replacementNeeded = true
+			}
+			rotationNeeded := false
+			if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
+				rotationNeeded = true
 			}
 			if replacementNeeded {
 				if group != api.ServerGroupAgents && group != api.ServerGroupDBServers {
@@ -107,6 +110,8 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 						)
 					}
 				}
+			} else if rotationNeeded {
+				plan = createRotateMemberPlan(log, m, group, "Filesystem resize pending")
 			}
 		}
 		return nil

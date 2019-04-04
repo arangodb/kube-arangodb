@@ -304,9 +304,29 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 	return c
 }
 
+// FilterStorageResourceRequirement filters resource requirements for Storage.
+func FilterStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+
+	filterStorage := func(list v1.ResourceList) v1.ResourceList {
+		newlist := make(v1.ResourceList)
+		for k, v := range list {
+			if k == v1.ResourceStorage {
+				continue
+			}
+			newlist[k] = v
+		}
+		return newlist
+	}
+
+	return v1.ResourceRequirements{
+		Limits:   filterStorage(resources.Limits),
+		Requests: filterStorage(resources.Requests),
+	}
+}
+
 // arangodContainer creates a container configured to run `arangod`.
 func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
 		Name:            ServerContainerName,
@@ -320,6 +340,7 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources:    FilterStorageResourceRequirement(resources), // Storage is handled via pvcs
 		VolumeMounts: arangodVolumeMounts(),
 	}
 	for k, v := range env {
@@ -341,7 +362,7 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 
 // arangosyncContainer creates a container configured to run `arangosync`.
 func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar) v1.Container {
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
 		Name:            ServerContainerName,
@@ -355,6 +376,7 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources: FilterStorageResourceRequirement(resources), // Storage is handled via pvcs
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -508,7 +530,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	exporter *ArangodbExporterContainerConf) error {
+	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -531,7 +553,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 
 	// Add arangod container
-	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars)
+	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -556,6 +578,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		p.Spec.Containers = append(p.Spec.Containers, c)
 		p.Labels[LabelKeyArangoExporter] = "yes"
 	}
+
+	// Add priorityClassName
+	p.Spec.PriorityClassName = podPriorityClassName
 
 	// Add UUID init container
 	if alpineImage != "" {
@@ -654,7 +679,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // If another error occurs, that error is returned.
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string) error {
+	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
+	podPriorityClassName string, resources v1.ResourceRequirements) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -680,7 +706,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
 
 	// Add arangosync container
-	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars)
+	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars, resources)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -694,6 +720,9 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add priorityClassName
+	p.Spec.PriorityClassName = podPriorityClassName
 
 	// TLS keyfile secret mount (if any)
 	if tlsKeyfileSecretName != "" {
