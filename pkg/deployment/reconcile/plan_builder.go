@@ -209,12 +209,17 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 			})
 			return newPlan, upgradeNotAllowed, fromVersion, toVersion, fromLicense, toLicense
 		}
+
 		if newPlan, upgradeNotAllowed, fromVersion, toVersion, fromLicense, toLicense := createRotateOrUpgradePlan(); upgradeNotAllowed {
 			// Upgrade is needed, but not allowed
 			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion, fromLicense, toLicense))
-		} else {
-			// Use the new plan
-			plan = newPlan
+		} else if len(newPlan) > 0 {
+			if clusterReadyForUpgrade(context) {
+				// Use the new plan
+				plan = newPlan
+			} else {
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+			}
 		}
 	}
 
@@ -235,6 +240,15 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Return plan
 	return plan, true
+}
+
+// clusterReadyForUpgrade returns true if the cluster is ready for the next update, that is:
+// 	- all shards are in sync
+// 	- all members are ready and fine
+func clusterReadyForUpgrade(context PlanBuilderContext) bool {
+	status, _ := context.GetStatus()
+	allInSync := context.GetShardSyncStatus()
+	return allInSync && status.Conditions.IsTrue(api.ConditionTypeReady)
 }
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with

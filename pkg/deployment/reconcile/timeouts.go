@@ -33,5 +33,5 @@ const (
 	rotateMemberTimeout          = time.Minute * 30
 	shutdownMemberTimeout        = time.Minute * 30
 	upgradeMemberTimeout         = time.Hour * 6
-	waitForMemberUpTimeout       = time.Minute * 15
+	waitForMemberUpTimeout       = time.Minute * 45
 )

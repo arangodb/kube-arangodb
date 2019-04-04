@@ -40,6 +40,11 @@ type Resources struct {
 		timestamp     time.Time            // Timestamp of last fetch of cluster health
 		mutex         sync.Mutex           // Mutex guarding fields in this struct
 	}
+	shardSync struct {
+		allInSync bool
+		timestamp time.Time
+		mutex     sync.Mutex
+	}
 }
 
 // NewResources creates a new Resources service, used to

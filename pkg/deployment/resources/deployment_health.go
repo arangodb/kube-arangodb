@@ -28,10 +28,12 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	deploymentHealthFetchesCounters = metrics.MustRegisterCounterVec(metricsComponent, "deployment_health_fetches", "Number of times the health of the deployment was fetched", metrics.DeploymentName, metrics.Result)
+	deploymentSyncFetchesCounters   = metrics.MustRegisterCounterVec(metricsComponent, "deployment_sync_fetches", "Number of times the sync status of shards of the deplyoment was fetched", metrics.DeploymentName, metrics.Result)
 )
 
 // RunDeploymentHealthLoop creates a loop to fetch the health of the deployment.
@@ -87,4 +89,81 @@ func (r *Resources) fetchDeploymentHealth() error {
 	r.health.clusterHealth = h
 	r.health.timestamp = time.Now()
 	return nil
+}
+
+// RunDeploymentShardSyncLoop creates a loop to fetch the sync status of shards of the deployment.
+// The loop ends when the given channel is closed.
+func (r *Resources) RunDeploymentShardSyncLoop(stopCh <-chan struct{}) {
+	log := r.log
+	deploymentName := r.context.GetAPIObject().GetName()
+
+	if r.context.GetSpec().GetMode() != api.DeploymentModeCluster {
+		// Deployment health is currently only applicable for clusters
+		return
+	}
+
+	for {
+		if err := r.fetchClusterShardSyncState(); err != nil {
+			log.Debug().Err(err).Msg("Failed to fetch deployment shard sync state")
+			deploymentSyncFetchesCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
+		} else {
+			deploymentSyncFetchesCounters.WithLabelValues(deploymentName, metrics.Success).Inc()
+		}
+		select {
+		case <-time.After(time.Second * 30):
+			// Continue
+		case <-stopCh:
+			// We're done
+			return
+		}
+	}
+}
+
+// fetchClusterShardSyncState performs a single fetch of the cluster inventory and
+// checks if all shards are in sync
+func (r *Resources) fetchClusterShardSyncState() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+	c, err := r.context.GetDatabaseClient(ctx)
+	if err != nil {
+		return err
+	}
+	cluster, err := c.Cluster(ctx)
+	if err != nil {
+		return err
+	}
+	dbs, err := c.Databases(ctx)
+	if err != nil {
+		return err
+	}
+
+	allInSync := true
+dbloop:
+	for _, db := range dbs {
+		inv, err := cluster.DatabaseInventory(ctx, db)
+		if err != nil {
+			return err
+		}
+
+		for _, col := range inv.Collections {
+			if !col.AllInSync {
+				log.Debug().Str("col", col.Parameters.Name).Msg("Not in sync")
+				allInSync = false
+				break dbloop
+			}
+		}
+	}
+
+	r.shardSync.mutex.Lock()
+	defer r.shardSync.mutex.Unlock()
+	r.shardSync.allInSync = allInSync
+	r.shardSync.timestamp = time.Now()
+	return nil
+}
+
+// GetShardSyncStatus returns true if all shards are in sync
+func (r *Resources) GetShardSyncStatus() bool {
+	r.shardSync.mutex.Lock()
+	defer r.shardSync.mutex.Unlock()
+	return r.shardSync.allInSync
 }

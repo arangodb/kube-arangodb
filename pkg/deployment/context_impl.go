@@ -380,3 +380,8 @@ func (d *Deployment) GetExpectedPodArguments(apiObject metav1.Object, deplSpec a
 	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return d.resources.GetExpectedPodArguments(apiObject, deplSpec, group, agents, id, version)
 }
+
+// GetShardSyncStatus returns true if all shards are in sync
+func (d *Deployment) GetShardSyncStatus() bool {
+	return d.resources.GetShardSyncStatus()
+}
