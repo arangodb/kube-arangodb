@@ -11,6 +11,8 @@
 - Added `MY_NODE_NAME` and `NODE_NAME` env vars for all pods.
 - Internal communications with ArangoDB more secure through tokens which
   are limited to certain API paths.
+- Rolling upgrade waits till all shards are in sync before proceeding to
+  next dbserver, even if it takes longer than 15 min.
 
 ## [0.3.9](https://github.com/arangodb/kube-arangodb/tree/0.3.9) (2019-02-28)
 [Full Changelog](https://github.com/arangodb/kube-arangodb/compare/0.3.8...0.3.9)
