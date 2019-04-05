@@ -28,7 +28,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -147,7 +146,7 @@ dbloop:
 
 		for _, col := range inv.Collections {
 			if !col.AllInSync {
-				log.Debug().Str("col", col.Parameters.Name).Msg("Not in sync")
+				r.log.Debug().Str("db", db.Name()).Str("col", col.Parameters.Name).Msg("Collection not in sync")
 				allInSync = false
 				break dbloop
 			}
