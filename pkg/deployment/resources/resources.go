@@ -27,6 +27,7 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 	"github.com/rs/zerolog"
 )
 
@@ -39,6 +40,12 @@ type Resources struct {
 		clusterHealth driver.ClusterHealth // Last fetched cluster health
 		timestamp     time.Time            // Timestamp of last fetch of cluster health
 		mutex         sync.Mutex           // Mutex guarding fields in this struct
+	}
+	shardSync struct {
+		allInSync             bool
+		timestamp             time.Time
+		mutex                 sync.Mutex
+		triggerSyncInspection trigger.Trigger
 	}
 }
 
