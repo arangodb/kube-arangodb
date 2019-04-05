@@ -167,7 +167,6 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 		log.Debug().Str("status", string(sh.Status)).Msg("Member set status not yet good")
 		return false, false, nil
 	}
-
 	// Wait for the member to become ready from a kubernetes point of view
 	// otherwise the coordinators may be rotated to fast and thus none of them
 	// is ready resulting in a short downtime

@@ -30,7 +30,7 @@ const (
 	removeMemberTimeout          = time.Minute * 15
 	renewTLSCertificateTimeout   = time.Minute * 30
 	renewTLSCACertificateTimeout = time.Minute * 30
-	rotateMemberTimeout          = time.Minute * 30
+	rotateMemberTimeout          = time.Minute * 15
 	shutdownMemberTimeout        = time.Minute * 30
 	upgradeMemberTimeout         = time.Hour * 6
 	waitForMemberUpTimeout       = time.Minute * 15
