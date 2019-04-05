@@ -84,6 +84,8 @@ type ActionContext interface {
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
 	SetCurrentImage(imageInfo api.ImageInfo) error
+	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+	InvalidateSyncStatus()
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -283,4 +285,9 @@ func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
 		return maskAny(err)
 	}
 	return nil
+}
+
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (ac *actionContext) InvalidateSyncStatus() {
+	ac.context.InvalidateSyncStatus()
 }
