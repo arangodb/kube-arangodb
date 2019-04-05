@@ -54,6 +54,7 @@ func (r *Resources) RunDeploymentHealthLoop(stopCh <-chan struct{}) {
 			deploymentHealthFetchesCounters.WithLabelValues(deploymentName, metrics.Success).Inc()
 		}
 		select {
+		case <-r.shardSync.triggerSyncInspection.Done():
 		case <-time.After(time.Second * 5):
 			// Continue
 		case <-stopCh:
@@ -118,6 +119,15 @@ func (r *Resources) RunDeploymentShardSyncLoop(stopCh <-chan struct{}) {
 	}
 }
 
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (r *Resources) InvalidateSyncStatus() {
+	r.log.Debug().Msg("Invalidating sync status due to previous events")
+	r.shardSync.mutex.Lock()
+	defer r.shardSync.mutex.Unlock()
+	r.shardSync.allInSync = false
+	r.shardSync.triggerSyncInspection.Trigger()
+}
+
 // fetchClusterShardSyncState performs a single fetch of the cluster inventory and
 // checks if all shards are in sync
 func (r *Resources) fetchClusterShardSyncState() error {
@@ -154,9 +164,15 @@ dbloop:
 	}
 
 	r.shardSync.mutex.Lock()
-	defer r.shardSync.mutex.Unlock()
+	oldSyncState := r.shardSync.allInSync
 	r.shardSync.allInSync = allInSync
 	r.shardSync.timestamp = time.Now()
+	r.shardSync.mutex.Unlock()
+
+	if !oldSyncState && allInSync {
+		r.log.Debug().Msg("Everything is in sync by now")
+	}
+
 	return nil
 }
 

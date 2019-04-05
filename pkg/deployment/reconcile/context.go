@@ -95,4 +95,6 @@ type Context interface {
 		agents api.MemberStatusList, id string, version driver.Version) []string
 	// GetShardSyncStatus returns true if all shards are in sync
 	GetShardSyncStatus() bool
+	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+	InvalidateSyncStatus()
 }

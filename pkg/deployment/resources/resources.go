@@ -27,6 +27,7 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 	"github.com/rs/zerolog"
 )
 
@@ -41,9 +42,10 @@ type Resources struct {
 		mutex         sync.Mutex           // Mutex guarding fields in this struct
 	}
 	shardSync struct {
-		allInSync bool
-		timestamp time.Time
-		mutex     sync.Mutex
+		allInSync             bool
+		timestamp             time.Time
+		mutex                 sync.Mutex
+		triggerSyncInspection trigger.Trigger
 	}
 }
 

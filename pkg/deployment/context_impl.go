@@ -385,3 +385,8 @@ func (d *Deployment) GetExpectedPodArguments(apiObject metav1.Object, deplSpec a
 func (d *Deployment) GetShardSyncStatus() bool {
 	return d.resources.GetShardSyncStatus()
 }
+
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (d *Deployment) InvalidateSyncStatus() {
+	d.resources.InvalidateSyncStatus()
+}
