@@ -23,23 +23,25 @@ it is intended to be.
 
 ### Production readiness state
 
-| Platform             | Kubernetes version | ArangoDB version | State | Production ready | Remarks               |
-|----------------------|--------------------|------------------|-------|------------------|-----------------------|
-| Google GKE           | 1.10               | >= 3.3.13        | Runs  | Yes              | Don't use micro nodes |
-| Google GKE           | 1.11               | >= 3.3.13        | Runs  | Yes              | Don't use micro nodes |
-| Amazon EKS           | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
-| Pivotal PKS          | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
-| Amazon & Kops        | 1.10               | >= 3.3.13        | Runs  | No               |                       |
-| Azure AKS            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
-| OpenShift            | 1.10               | >= 3.3.13        | Runs  | No               |                       |
-| Bare metal (kubeadm) | 1.10               | >= 3.3.13        | Runs  | Yes              |                       |
-| Bare metal (kubeadm) | 1.11               | >= 3.3.13        | Runs  | Yes              |                       |
-| Bare metal (kubeadm) | 1.12               | >= 3.3.13        | Runs  | No               |                       |
-| Bare metal (kubeadm) | 1.13               | >= 3.3.13        | Runs  | In progress      |                       |
-| Bare metal (kubeadm) | 1.14               | >= 3.3.13        | Runs  | In progress      |                       |
-| Minikube             | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
-| Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
-| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |                       |
+| Platform             | Kubernetes version | ArangoDB version | ArangoDB K8s Operator Version | State | Production ready | Remarks               |
+|----------------------|--------------------|------------------|-------------------------------|-------|------------------|-----------------------|
+| Google GKE           | 1.10               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
+| Google GKE           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
+| Amazon EKS           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
+| Pivotal PKS          | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
+| IBM Cloud            | 1.10               | >= 3.4.5         |          >= 0.3.10            | Runs  | Yes              |                       |
+| IBM Cloud            | 1.11               | >= 3.4.5         |          >= 0.3.10            | Runs  | Yes              |                       |
+| Amazon & Kops        | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
+| Azure AKS            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
+| OpenShift            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.10               | >= 3.3.13        |                               | Runs  | Yes              |                       |
+| Bare metal (kubeadm) | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
+| Bare metal (kubeadm) | 1.12               | >= 3.3.13        |                               | Runs  | No               |                       |
+| Bare metal (kubeadm) | 1.13               | >= 3.3.13        |                               | Runs  | In progress      |                       |
+| Bare metal (kubeadm) | 1.14               | >= 3.3.13        |                               | Runs  | In progress      |                       |
+| Minikube             | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
+| Docker for Mac Edge  | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
+| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No               |                       |
 
 ## Installation of latest release using Helm
 
