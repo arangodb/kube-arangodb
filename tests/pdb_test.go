@@ -80,6 +80,11 @@ func TestPDBCreate(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
+	// This test failes to validate the spec if no image is set explicitly because this is required in production mode
+	if depl.Spec.Image == nil {
+		depl.Spec.Image = util.NewString("arangodb/arangodb:latest")
+	}
+
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	if err != nil {
