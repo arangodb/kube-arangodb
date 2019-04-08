@@ -178,11 +178,11 @@ dbloop:
 
 // GetShardSyncStatus returns true if all shards are in sync
 func (r *Resources) GetShardSyncStatus() bool {
-	r.shardSync.mutex.Lock()
-	defer r.shardSync.mutex.Unlock()
 	if r.context.GetSpec().GetMode() != api.DeploymentModeCluster {
 		// Shard sync status is only applicable for clusters
 		return true
 	}
+	r.shardSync.mutex.Lock()
+	defer r.shardSync.mutex.Unlock()
 	return r.shardSync.allInSync
 }
