@@ -84,6 +84,7 @@ func TestPDBCreate(t *testing.T) {
 	if depl.Spec.Image == nil {
 		depl.Spec.Image = util.NewString("arangodb/arangodb:latest")
 	}
+	assert.NoError(t, depl.Spec.Validate())
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
