@@ -11,6 +11,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/dchest/uniuri"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -79,6 +80,12 @@ func TestPDBCreate(t *testing.T) {
 	depl.Spec.Coordinators.Count = util.NewInt(2)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
+
+	// This test failes to validate the spec if no image is set explicitly because this is required in production mode
+	if depl.Spec.Image == nil {
+		depl.Spec.Image = util.NewString("arangodb/arangodb:latest")
+	}
+	assert.NoError(t, depl.Spec.Validate())
 
 	// Create deployment
 	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
