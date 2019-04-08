@@ -30,14 +30,7 @@ To run only a single test, set `TESTOPTIONS` to something like
 To prepare for a release, do the following:
 
 - Make sure all tests are OK.
-- To run a complete set of tests, do the following:
-
-  Then do
-
-~~~
-make run-tests
-~~~
-
+- To run a complete set of tests, see above.
 - Update the CHANGELOG manually, since the automatic CHANGELOG
   generation is switched off (did not work in many cases).
 
