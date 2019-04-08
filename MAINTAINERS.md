@@ -21,6 +21,10 @@ make build
 make run-tests
 ```
 
+To run only a single test, set `TESTOPTIONS` to something like
+`-test.run=TestRocksDBEncryptionSingle` where
+`TestRocksDBEncryptionSingle` is the name of the test.
+
 ## Preparing a release
 
 To prepare for a release, do the following:
