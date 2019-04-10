@@ -122,8 +122,9 @@ func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, t
 	if _, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		claims := map[string]interface{}{
-			"iss":       "arangodb",
-			"server_id": "exporter",
+			"iss":           "arangodb",
+			"server_id":     "exporter",
+			"allowed_paths": []string{"/_admin/statistics", "/_admin/statistics-description"},
 		}
 		// Create secret
 		owner := r.context.GetAPIObject().AsOwner()
