@@ -372,7 +372,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -406,7 +406,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -440,32 +440,34 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		return nil, nil
 	}
 
+	localPath := "/_api/version"
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		localPath = "/_admin/echo"
+	}
+
+	// /_admin/server/availability is the way to go, it is available since 3.3.9
+	if version.CompareTo("3.3.9") >= 0 {
+		localPath = "/_admin/server/availability"
+	}
+
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{localPath})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_api/version",
+		LocalPath:           localPath,
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
-	}
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		probeCfg.LocalPath = "/_admin/echo"
-	}
-
-	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		probeCfg.LocalPath = "/_admin/server/availability"
 	}
 
 	return probeCfg, nil
