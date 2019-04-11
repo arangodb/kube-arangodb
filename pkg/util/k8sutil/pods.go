@@ -269,7 +269,7 @@ func FilterStorageResourceRequirement(resources v1.ResourceRequirements) v1.Reso
 	filterStorage := func(list v1.ResourceList) v1.ResourceList {
 		newlist := make(v1.ResourceList)
 		for k, v := range list {
-			if k == v1.ResourceStorage {
+			if k == v1.ResourceStorage || k == "iops" {
 				continue
 			}
 			newlist[k] = v
