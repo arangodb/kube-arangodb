@@ -752,6 +752,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(ServerGroupProbesSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.VolumeClaimTemplate != nil {
+		in, out := &in.VolumeClaimTemplate, &out.VolumeClaimTemplate
+		*out = new(v1.PersistentVolumeClaim)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

@@ -609,7 +609,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources); err != nil {
+			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, groupSpec.VolumeClaimTemplate); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -723,6 +723,7 @@ func (r *Resources) EnsurePods() error {
 	imageNotFoundOnce := &sync.Once{}
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
+			r.log.Debug().Str("phase", string(m.Phase)).Str("pod", m.PodName).Msg("EnsurePods")
 			if m.Phase != api.MemberPhaseNone {
 				continue
 			}

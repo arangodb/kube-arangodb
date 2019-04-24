@@ -58,10 +58,30 @@ func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 	return deploymentName + "-" + role + "-" + stripArangodPrefix(id)
 }
 
+// ExtractStorageResourceRequirement filters resource requirements for Pods.
+func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+
+	filterStorage := func(list v1.ResourceList) v1.ResourceList {
+		newlist := make(v1.ResourceList)
+		for k, v := range list {
+			if k != v1.ResourceStorage && k != "iops" {
+				continue
+			}
+			newlist[k] = v
+		}
+		return newlist
+	}
+
+	return v1.ResourceRequirements{
+		Limits:   filterStorage(resources.Limits),
+		Requests: filterStorage(resources.Requests),
+	}
+}
+
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{
@@ -73,14 +93,19 @@ func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, d
 				constants.AnnotationEnforceAntiAffinity: strconv.FormatBool(enforceAntiAffinity),
 			},
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
+	}
+	if vct == nil {
+		pvc.Spec = v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
 			},
 			VolumeMode: &volumeMode,
-			Resources:  resources,
-		},
+			Resources:  ExtractStorageResourceRequirement(resources),
+		}
+	} else {
+		pvc.Spec = vct.Spec
 	}
+
 	if storageClassName != "" {
 		pvc.Spec.StorageClassName = &storageClassName
 	}

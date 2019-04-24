@@ -46,6 +46,8 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	// UpdateMember updates the deployment status wrt the given member.
+	UpdateMember(member api.MemberStatus) error
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
