@@ -723,7 +723,6 @@ func (r *Resources) EnsurePods() error {
 	imageNotFoundOnce := &sync.Once{}
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			r.log.Debug().Str("phase", string(m.Phase)).Str("pod", m.PodName).Msg("EnsurePods")
 			if m.Phase != api.MemberPhaseNone {
 				continue
 			}
