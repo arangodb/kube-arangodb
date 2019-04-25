@@ -1,0 +1,13 @@
+apiVersion: "database.arangodb.com/v1alpha"
+kind: "ArangoDeployment"
+metadata:
+  name: "acceptance-cluster"
+spec:
+  environment: Development
+  image: arangodb/enterprise-preview:3.4.5
+  disableIPv6: false
+  externalAccess:
+    type: LoadBalancer
+  license:
+    secretName: arangodb-license-key
+  mode: Cluster

@@ -1,0 +1,6 @@
+good Test: test1a, Desc: Deployment of mode single (development)
+good Test: test1b, Desc: Deployment of mode active/failover (development)
+good Test: test1c, Desc: Deployment of mode cluster (development, enterprise)
+good Test: test1d, Desc: Deployment of mode cluster with sync (development, enterprise)
+good Test: test2a, Desc: Scale an active failover deployment (enterprise, development)
+good Test: test2b, Desc: Scale a cluster deployment (development, enterprise)
