@@ -40,7 +40,7 @@ it is intended to be.
 | Bare metal (kubeadm) | 1.14               | >= 3.3.13        |                               | Runs  | In progress      |                       |
 | Minikube             | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
-| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No               |                       |
+| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No    |                  |                       |
 
 ## Installation of latest release using Helm
 
