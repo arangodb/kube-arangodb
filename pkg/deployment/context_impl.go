@@ -118,6 +118,23 @@ func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32
 	return nil
 }
 
+// UpdateMember updates the deployment status wrt the given member.
+func (d *Deployment) UpdateMember(member api.MemberStatus) error {
+	status, lastVersion := d.GetStatus()
+	_, group, found := status.Members.ElementByID(member.ID)
+	if !found {
+		return maskAny(fmt.Errorf("Member %s not found", member.ID))
+	}
+	if err := status.Members.Update(member, group); err != nil {
+		return maskAny(err)
+	}
+	if err := d.UpdateStatus(status, lastVersion); err != nil {
+		log.Debug().Err(err).Msg("Updating CR status failed")
+		return maskAny(err)
+	}
+	return nil
+}
+
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
 func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, error) {

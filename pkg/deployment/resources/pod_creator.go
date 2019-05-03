@@ -41,7 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -660,7 +660,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, exporter, groupSpec.GetSidecars()); err != nil {
+			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, exporter, groupSpec.GetSidecars(), groupSpec.VolumeClaimTemplate); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

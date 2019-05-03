@@ -60,6 +60,8 @@ type ServerGroupSpec struct {
 	Probes *ServerGroupProbesSpec `json:"probes,omitempty"`
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// VolumeClaimTemplate specifies a template for volume claims
+	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
 }
@@ -99,6 +101,16 @@ func (s ServerGroupProbesSpec) IsLivenessProbeDisabled() bool {
 // IsReadinessProbeDisabled returns true if readiness probes are disabled
 func (s ServerGroupProbesSpec) IsReadinessProbeDisabled() bool {
 	return util.BoolOrDefault(s.ReadinessProbeDisabled)
+}
+
+// HasVolumeClaimTemplate returns whether there is a volumeClaimTemplate or not
+func (s ServerGroupSpec) HasVolumeClaimTemplate() bool {
+	return s.VolumeClaimTemplate != nil
+}
+
+// GetVolumeClaimTemplate returns a pointer to a volume claim template or nil if none is specified
+func (s ServerGroupSpec) GetVolumeClaimTemplate() *v1.PersistentVolumeClaim {
+	return s.VolumeClaimTemplate
 }
 
 // GetCount returns the value of count.
@@ -243,13 +255,25 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		s.MinCount = nil
 		s.MaxCount = nil
 	}
-	if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
-		switch group {
-		case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers:
-			if s.Resources.Requests == nil {
-				s.Resources.Requests = make(map[v1.ResourceName]resource.Quantity)
+	if !s.HasVolumeClaimTemplate() {
+		if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
+			switch group {
+			case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers:
+				volumeMode := v1.PersistentVolumeFilesystem
+				s.VolumeClaimTemplate = &v1.PersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						AccessModes: []v1.PersistentVolumeAccessMode{
+							v1.ReadWriteOnce,
+						},
+						VolumeMode: &volumeMode,
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceStorage: resource.MustParse("8Gi"),
+							},
+						},
+					},
+				}
 			}
-			s.Resources.Requests[v1.ResourceStorage] = resource.MustParse("8Gi")
 		}
 	}
 }
@@ -294,6 +318,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	}
 	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
+	if s.VolumeClaimTemplate == nil {
+		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
+	}
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
@@ -305,6 +332,10 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 			target.Count = util.NewIntOrNil(s.Count)
 			resetFields = append(resetFields, fieldPrefix+".count")
 		}
+	}
+	if s.HasVolumeClaimTemplate() != target.HasVolumeClaimTemplate() {
+		target.VolumeClaimTemplate = s.GetVolumeClaimTemplate()
+		resetFields = append(resetFields, fieldPrefix+".volumeClaimTemplate")
 	}
 	return resetFields
 }

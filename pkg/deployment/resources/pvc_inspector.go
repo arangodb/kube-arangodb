@@ -83,24 +83,41 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 
 		// Resize inspector
 		groupSpec := spec.GetServerGroupSpec(group)
-		if requestedSize, ok := groupSpec.Resources.Requests[apiv1.ResourceStorage]; ok {
-			if volumeSize, ok := p.Spec.Resources.Requests[apiv1.ResourceStorage]; ok {
-				cmp := volumeSize.Cmp(requestedSize)
-				if cmp < 0 {
-					// Size of the volume is smaller than the requested size
-					// Update the pvc with the request size
-					p.Spec.Resources.Requests[apiv1.ResourceStorage] = requestedSize
 
-					log.Debug().Str("pvc-capacity", volumeSize.String()).Str("requested", requestedSize.String()).Msg("PVC capacity differs - updating")
-					kube := r.context.GetKubeCli()
-					if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
-						log.Error().Err(err).Msg("Failed to update pvc")
-					}
+		if groupSpec.HasVolumeClaimTemplate() {
+			res := groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+			// For pvc only resources.requests is mutable
+			if compareResourceList(p.Spec.Resources.Requests, res) {
+				p.Spec.Resources.Requests = res
+				log.Debug().Msg("volumeClaimTemplate requested resources changed - updating")
+				kube := r.context.GetKubeCli()
+				if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
+					log.Error().Err(err).Msg("Failed to update pvc")
+				} else {
 					r.context.CreateEvent(k8sutil.NewPVCResizedEvent(r.context.GetAPIObject(), p.Name))
-				} else if cmp > 0 {
-					log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-						Msg("Volume size should not shrink")
-					r.context.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(r.context.GetAPIObject(), p.Name))
+				}
+			}
+		} else {
+			if requestedSize, ok := groupSpec.Resources.Requests[apiv1.ResourceStorage]; ok {
+				if volumeSize, ok := p.Spec.Resources.Requests[apiv1.ResourceStorage]; ok {
+					cmp := volumeSize.Cmp(requestedSize)
+					if cmp < 0 {
+						// Size of the volume is smaller than the requested size
+						// Update the pvc with the request size
+						p.Spec.Resources.Requests[apiv1.ResourceStorage] = requestedSize
+
+						log.Debug().Str("pvc-capacity", volumeSize.String()).Str("requested", requestedSize.String()).Msg("PVC capacity differs - updating")
+						kube := r.context.GetKubeCli()
+						if _, err := kube.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Update(&p); err != nil {
+							log.Error().Err(err).Msg("Failed to update pvc")
+						} else {
+							r.context.CreateEvent(k8sutil.NewPVCResizedEvent(r.context.GetAPIObject(), p.Name))
+						}
+					} else if cmp > 0 {
+						log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+							Msg("Volume size should not shrink")
+						r.context.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(r.context.GetAPIObject(), p.Name))
+					}
 				}
 			}
 		}
@@ -117,4 +134,22 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	}
 
 	return nextInterval, nil
+}
+
+func compareResourceList(wanted, given apiv1.ResourceList) bool {
+	for k, v := range wanted {
+		if gv, ok := given[k]; !ok {
+			return true
+		} else if v.Cmp(gv) != 0 {
+			return true
+		}
+	}
+
+	for k := range given {
+		if _, ok := wanted[k]; !ok {
+			return true
+		}
+	}
+
+	return false
 }

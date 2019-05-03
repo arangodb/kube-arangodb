@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -198,7 +198,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		}
 	}
 	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", "", ib.Spec.GetImagePullPolicy(), "", false, terminationGracePeriod, args, env, nil, nil, nil,
-		tolerations, serviceAccountName, "", "", "", nil, "", v1.ResourceRequirements{}, nil, nil); err != nil {
+		tolerations, serviceAccountName, "", "", "", nil, "", v1.ResourceRequirements{}, nil, nil, nil); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}
