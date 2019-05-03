@@ -530,7 +530,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf) error {
+	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -577,6 +577,11 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		}
 		p.Spec.Containers = append(p.Spec.Containers, c)
 		p.Labels[LabelKeyArangoExporter] = "yes"
+	}
+
+	// Add sidecars
+	if len(sidecars) > 0 {
+		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
 	}
 
 	// Add priorityClassName
@@ -680,7 +685,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements) error {
+	podPriorityClassName string, resources v1.ResourceRequirements, sidecars []v1.Container) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -720,6 +725,11 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add sidecars
+	if len(sidecars) > 0 {
+		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
+	}
 
 	// Add priorityClassName
 	p.Spec.PriorityClassName = podPriorityClassName
