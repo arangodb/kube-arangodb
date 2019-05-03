@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	jg "github.com/dgrijalva/jwt-go"
 )
 
 // SecretInterface has methods to work with Secret resources.
@@ -246,6 +247,27 @@ func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerR
 		return maskAny(err)
 	}
 	return nil
+}
+
+// CreateJWTFromSecret creates a JWT using the secret stored in secretSecretName and stores the
+// result in a new secret called tokenSecretName
+func CreateJWTFromSecret(secrets SecretInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *metav1.OwnerReference) error {
+
+	secret, err := GetTokenSecret(secrets, secretSecretName)
+	if err != nil {
+		return maskAny(err)
+	}
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
+	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims(claims))
+
+	// Sign and get the complete encoded token as a string using the secret
+	signedToken, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return maskAny(err)
+	}
+
+	return CreateTokenSecret(secrets, tokenSecretName, signedToken, ownerRef)
 }
 
 // CreateBasicAuthSecret creates a secret with given name in given namespace

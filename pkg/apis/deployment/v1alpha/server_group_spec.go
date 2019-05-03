@@ -62,6 +62,8 @@ type ServerGroupSpec struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// VolumeClaimTemplate specifies a template for volume claims
 	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	// Sidecars specifies a list of additional containers to be started
+	Sidecars []v1.Container `json:"sidecars,omitempty"`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group
@@ -85,6 +87,11 @@ type ServerGroupProbesSpec struct {
 // func (s ServerGroupProbesSpec) HasReadinessProbeOverride() bool {
 // 	return s.ReadinessProbeOverride != nil
 // }
+
+// GetSidecars returns a list of sidecars the use wish to add
+func (s ServerGroupSpec) GetSidecars() []v1.Container {
+	return s.Sidecars
+}
 
 // IsLivenessProbeDisabled returns true if liveness probes are disabled
 func (s ServerGroupProbesSpec) IsLivenessProbeDisabled() bool {
