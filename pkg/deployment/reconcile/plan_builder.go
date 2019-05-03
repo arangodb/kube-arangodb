@@ -343,6 +343,24 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return false, "Server Image not found"
 	}
 
+	if group.IsExportMetrics() {
+		e, hasExporter := k8sutil.GetContainerByName(&p, k8sutil.ExporterContainerName)
+
+		if spec.Metrics.IsEnabled() {
+			if !hasExporter {
+				return true, "Exporter configuration changed"
+			}
+
+			if spec.Metrics.HasImage() {
+				if e.Image != spec.Metrics.GetImage() {
+					return true, "Exporter image changed"
+				}
+			}
+		} else if hasExporter {
+			return true, "Exporter was disabled"
+		}
+	}
+
 	// Check arguments
 	expectedArgs := strings.Join(context.GetExpectedPodArguments(apiObject, spec, group, status.Members.Agents, id, podImageInfo.ArangoDBVersion), " ")
 	actualArgs := strings.Join(getContainerArgs(c), " ")
