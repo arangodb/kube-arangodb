@@ -1,6 +1,12 @@
 # Change Log
 
-## [0.3.10](---) (2019-04-04)
+## [0.3.11](---) (XXXX-XX-XX)
+- Introduced volume claim templates for all server groups that require volume.
+- Added arangodb-exporter support as sidecar to all arangodb pods.
+- Fixed a bug in the case that all coordinators failed.
+
+
+## [0.3.10](https://github.com/arangodb/kube-arangodb/tree/0.3.10) (2019-04-04)
 - Added Pod Disruption Budgets for all server groups in production mode.
 - Added Priority Class Name to be specified per server group.
 - Forward resource requirements to k8s.
