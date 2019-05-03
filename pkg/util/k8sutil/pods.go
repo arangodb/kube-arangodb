@@ -94,8 +94,8 @@ func IsPodReady(pod *v1.Pod) bool {
 	return condition != nil && condition.Status == v1.ConditionTrue
 }
 
-// IsPodSucceeded returns true if all containers of the pod
-// have terminated with exit code 0.
+// IsPodSucceeded returns true if the arangodb container of the pod
+// has terminated with exit code 0.
 func IsPodSucceeded(pod *v1.Pod) bool {
 	if pod.Status.Phase == v1.PodSucceeded {
 		return true
@@ -114,8 +114,8 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 	}
 }
 
-// IsPodFailed returns true if all containers of the pod
-// have terminated and at least one of them wih a non-zero exit code.
+// IsPodFailed returns true if the arangodb container of the pod
+// has terminated wih a non-zero exit code.
 func IsPodFailed(pod *v1.Pod) bool {
 	if pod.Status.Phase == v1.PodFailed {
 		return true
