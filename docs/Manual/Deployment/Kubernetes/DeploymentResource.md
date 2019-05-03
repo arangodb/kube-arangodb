@@ -443,6 +443,10 @@ The default value is `8Gi`.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
 
+Please use VolumeClaimTemplate from now on. This field is not considered if 
+VolumeClaimTemplate is set. Note however, that the information in requests 
+is completely handed over to the pod in this case.
+
 ### `spec.<group>.storageClassName: string`
 
 This setting specifies the `storageClass` for the `PersistentVolume`s created
@@ -450,3 +454,7 @@ for each server of this group.
 
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
 because servers in these groups do not need persistent storage.
+
+Please use VolumeClaimTemplate from now on. This field is not considered if 
+VolumeClaimTemplate is set. Note however, that the information in requests 
+is completely handed over to the pod in this case.
