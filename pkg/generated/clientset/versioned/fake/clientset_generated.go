@@ -84,27 +84,12 @@ func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
 	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
 }
 
-// Database retrieves the DatabaseV1alphaClient
-func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
-	return &fakedatabasev1alpha.FakeDatabaseV1alpha{Fake: &c.Fake}
-}
-
 // ReplicationV1alpha retrieves the ReplicationV1alphaClient
 func (c *Clientset) ReplicationV1alpha() replicationv1alpha.ReplicationV1alphaInterface {
 	return &fakereplicationv1alpha.FakeReplicationV1alpha{Fake: &c.Fake}
 }
 
-// Replication retrieves the ReplicationV1alphaClient
-func (c *Clientset) Replication() replicationv1alpha.ReplicationV1alphaInterface {
-	return &fakereplicationv1alpha.FakeReplicationV1alpha{Fake: &c.Fake}
-}
-
 // StorageV1alpha retrieves the StorageV1alphaClient
 func (c *Clientset) StorageV1alpha() storagev1alpha.StorageV1alphaInterface {
-	return &fakestoragev1alpha.FakeStorageV1alpha{Fake: &c.Fake}
-}
-
-// Storage retrieves the StorageV1alphaClient
-func (c *Clientset) Storage() storagev1alpha.StorageV1alphaInterface {
 	return &fakestoragev1alpha.FakeStorageV1alpha{Fake: &c.Fake}
 }

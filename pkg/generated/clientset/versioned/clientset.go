@@ -34,14 +34,8 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface
-	// Deprecated: please explicitly pick a version if possible.
-	Database() databasev1alpha.DatabaseV1alphaInterface
 	ReplicationV1alpha() replicationv1alpha.ReplicationV1alphaInterface
-	// Deprecated: please explicitly pick a version if possible.
-	Replication() replicationv1alpha.ReplicationV1alphaInterface
 	StorageV1alpha() storagev1alpha.StorageV1alphaInterface
-	// Deprecated: please explicitly pick a version if possible.
-	Storage() storagev1alpha.StorageV1alphaInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -58,31 +52,13 @@ func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {
 	return c.databaseV1alpha
 }
 
-// Deprecated: Database retrieves the default version of DatabaseClient.
-// Please explicitly pick a version.
-func (c *Clientset) Database() databasev1alpha.DatabaseV1alphaInterface {
-	return c.databaseV1alpha
-}
-
 // ReplicationV1alpha retrieves the ReplicationV1alphaClient
 func (c *Clientset) ReplicationV1alpha() replicationv1alpha.ReplicationV1alphaInterface {
 	return c.replicationV1alpha
 }
 
-// Deprecated: Replication retrieves the default version of ReplicationClient.
-// Please explicitly pick a version.
-func (c *Clientset) Replication() replicationv1alpha.ReplicationV1alphaInterface {
-	return c.replicationV1alpha
-}
-
 // StorageV1alpha retrieves the StorageV1alphaClient
 func (c *Clientset) StorageV1alpha() storagev1alpha.StorageV1alphaInterface {
-	return c.storageV1alpha
-}
-
-// Deprecated: Storage retrieves the default version of StorageClient.
-// Please explicitly pick a version.
-func (c *Clientset) Storage() storagev1alpha.StorageV1alphaInterface {
 	return c.storageV1alpha
 }
 
