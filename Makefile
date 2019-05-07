@@ -262,20 +262,9 @@ endif
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
 	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
 
-$(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
+$(DURATIONTESTBIN): $(SOURCES)
+	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
+		
 
 .PHONY: docker-duration-test
 docker-duration-test: $(DURATIONTESTBIN)
@@ -374,18 +363,7 @@ redeploy-operator: delete-operator manifests
 
 $(ARANGOSYNCTESTCTRLBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(ARANGOSYNCTESTCTRLBINNAME) $(REPOPATH)/tests/sync
+	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(ARANGOSYNCTESTCTRLBINNAME) $(REPOPATH)/tests/sync
 
 .PHONY: check-sync-vars
 check-sync-vars:
