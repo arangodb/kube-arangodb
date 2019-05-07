@@ -132,7 +132,7 @@ build: check-vars docker manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -142,70 +142,16 @@ ifndef DOCKERNAMESPACE
 endif
 	@echo "Using docker namespace: $(DOCKERNAMESPACE)"
 
-.PHONY: deps
-deps:
-	@${MAKE} -B -s $(GOBUILDDIR)
-
-$(GOBUILDDIR):
-	# Build pulsar & go-assets-builder from vendor
-	@mkdir -p $(GOBUILDDIR)
-	@ln -sf $(VENDORDIR) $(GOBUILDDIR)/src
-	@GOPATH=$(GOBUILDDIR) go install github.com/pulcy/pulsar
-	@GOPATH=$(GOBUILDDIR) go install github.com/jessevdk/go-assets-builder
-	@rm -Rf $(GOBUILDDIR)/src
-	# Prepare .gobuild directory
-	@mkdir -p $(ORGDIR)
-	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
-	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
-	# Note: Next library is not vendored, since we always want the latest version
-	GOPATH=$(GOBUILDDIR) go get github.com/arangodb/go-upgrade-rules
-
-$(CACHEVOL):
-	@docker volume create $(CACHEVOL)
-
 .PHONY: update-vendor
 update-vendor:
-	@mkdir -p $(GOBUILDDIR)
-	@GOPATH=$(GOBUILDDIR) go get github.com/pulcy/pulsar
-	@rm -Rf $(VENDORDIR)
-	@mkdir -p $(VENDORDIR)
-	@git clone https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.14.1 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
-	@$(PULSAR) go vendor -V $(VENDORDIR) \
-		k8s.io/client-go/... \
-		k8s.io/gengo/args \
-		k8s.io/apiextensions-apiserver \
-		github.com/aktau/github-release \
-		github.com/arangodb-helper/go-certificates \
-		github.com/arangodb/go-driver \
-		github.com/cenkalti/backoff \
-		github.com/coreos/go-semver/semver \
-		github.com/dchest/uniuri \
-		github.com/dgrijalva/jwt-go \
-		github.com/gin-gonic/gin \
-		github.com/jessevdk/go-assets-builder \
-		github.com/julienschmidt/httprouter \
-		github.com/pkg/errors \
-		github.com/prometheus/client_golang/prometheus \
-		github.com/pulcy/pulsar \
-		github.com/rs/zerolog \
-		github.com/spf13/cobra \
-		github.com/stretchr/testify
-	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
-	@${MAKE} -B -s clean
-	# Manually restore arangosync vendor with: git checkout deps/github.com/arangodb/arangosync
+
 
 .PHONY: update-generated
 update-generated: $(GOBUILDDIR) 
-	@docker build $(SRCDIR)/tools/codegen --build-arg GOVERSION=$(GOVERSION) -t k8s-codegen
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOBIN=/usr/code/.gobuild/bin \
-		-w /usr/code/ \
-		k8s-codegen \
-		"./deps/k8s.io/code-generator/generate-groups.sh"  \
+	$(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
@@ -228,22 +174,9 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		$(DASHBOARDBUILDIMAGE)
 	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
+$(BIN): $(SOURCES) dashboard/assets.go
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
-
-
+	CGO_ENABLED=0 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
 
 .PHONY: docker
 docker: check-vars $(BIN)
@@ -267,44 +200,23 @@ manifests: $(GOBUILDDIR)
 # Testing
 
 .PHONY: run-unit-tests
-run-unit-tests: $(GOBUILDDIR) $(SOURCES)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go test $(TESTVERBOSEOPTIONS) \
-			$(REPOPATH)/pkg/apis/deployment/v1alpha \
-			$(REPOPATH)/pkg/apis/replication/v1alpha \
-			$(REPOPATH)/pkg/apis/storage/v1alpha \
-			$(REPOPATH)/pkg/deployment/reconcile \
-			$(REPOPATH)/pkg/deployment/resources \
-			$(REPOPATH)/pkg/storage \
-			$(REPOPATH)/pkg/util/k8sutil \
-			$(REPOPATH)/pkg/util/k8sutil/test \
-			$(REPOPATH)/pkg/util/probe \
-			$(REPOPATH)/pkg/util/validation 
+run-unit-tests: $(SOURCES)
+	go test $(TESTVERBOSEOPTIONS) \
+		$(REPOPATH)/pkg/apis/deployment/v1alpha \
+		$(REPOPATH)/pkg/apis/replication/v1alpha \
+		$(REPOPATH)/pkg/apis/storage/v1alpha \
+		$(REPOPATH)/pkg/deployment/reconcile \
+		$(REPOPATH)/pkg/deployment/resources \
+		$(REPOPATH)/pkg/storage \
+		$(REPOPATH)/pkg/util/k8sutil \
+		$(REPOPATH)/pkg/util/k8sutil/test \
+		$(REPOPATH)/pkg/util/probe \
+		$(REPOPATH)/pkg/util/validation 
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
+	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
+		
 
 .PHONY: docker-test
 docker-test: $(TESTBIN)
