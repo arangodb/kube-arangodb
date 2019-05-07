@@ -150,7 +150,10 @@ update-vendor:
 
 
 .PHONY: update-generated
-update-generated: $(GOBUILDDIR) 
+update-generated:
+	@rm -f $(ORGDIR)
+	@mkdir -p $(ORGDIR)
+	@ln -s -f   $(SCRIPTDIR) $(ORGDIR)
 	$(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
@@ -172,7 +175,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
 		$(DASHBOARDBUILDIMAGE)
-	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
 $(BIN): $(SOURCES) dashboard/assets.go
 	@mkdir -p $(BINDIR)

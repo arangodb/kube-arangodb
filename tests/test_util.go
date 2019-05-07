@@ -34,7 +34,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync/client"
@@ -541,12 +541,12 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 func updateDeployment(cli versioned.Interface, deploymentName, ns string, update func(*api.DeploymentSpec)) (*api.ArangoDeployment, error) {
 	for {
 		// Get current version
-		current, err := cli.Database().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		current, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 		update(&current.Spec)
-		current, err = cli.Database().ArangoDeployments(ns).Update(current)
+		current, err = cli.DatabaseV1alpha().ArangoDeployments(ns).Update(current)
 		if k8sutil.IsConflict(err) {
 			// Retry
 		} else if err != nil {
@@ -558,7 +558,7 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
-	if err := cli.Database().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.DatabaseV1alpha().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -566,7 +566,7 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 
 // removeReplication removes a deployment
 func removeReplication(cli versioned.Interface, replicationName, ns string) error {
-	if err := cli.Replication().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.ReplicationV1alpha().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
