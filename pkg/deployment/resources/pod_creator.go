@@ -41,7 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -329,6 +329,30 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
+func createExporterArgs(isSecure bool) []string {
+	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
+	options := make([]optionPair, 0, 64)
+	options = append(options,
+		optionPair{"--arangodb.jwt-file", tokenpath},
+		optionPair{"--arangodb.endpoint", "http://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
+	)
+	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	if isSecure {
+		options = append(options,
+			optionPair{"--ssl.keyfile", keyPath},
+		)
+	}
+	args := make([]string, 0, 2+len(options))
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].CompareTo(options[j]) < 0
+	})
+	for _, o := range options {
+		args = append(args, o.Key+"="+o.Value)
+	}
+
+	return args
+}
+
 // createLivenessProbe creates configuration for a liveness probe of a server in the given group.
 func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
 	groupspec := spec.GetServerGroupSpec(group)
@@ -348,7 +372,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -382,7 +406,7 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 			if err != nil {
 				return nil, maskAny(err)
 			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 			if err != nil {
 				return nil, maskAny(err)
 			}
@@ -416,32 +440,34 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 		return nil, nil
 	}
 
+	localPath := "/_api/version"
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		localPath = "/_admin/echo"
+	}
+
+	// /_admin/server/availability is the way to go, it is available since 3.3.9
+	if version.CompareTo("3.3.9") >= 0 {
+		localPath = "/_admin/server/availability"
+	}
+
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeader(secretData, "kube-arangodb")
+		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{localPath})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 	}
 	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_api/version",
+		LocalPath:           localPath,
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       2,
-	}
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		probeCfg.LocalPath = "/_admin/echo"
-	}
-
-	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		probeCfg.LocalPath = "/_admin/server/availability"
 	}
 
 	return probeCfg, nil
@@ -493,6 +519,16 @@ func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.Se
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, unreachableDur))
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, unreachableDur))
 	return tolerations
+}
+
+func createExporterLivenessProbe(isSecure bool) *k8sutil.HTTPProbeConfig {
+	probeCfg := &k8sutil.HTTPProbeConfig{
+		LocalPath: "/",
+		Port:      k8sutil.ArangoExporterPort,
+		Secure:    isSecure,
+	}
+
+	return probeCfg
 }
 
 // createPodForMember creates all Pods listed in member status
@@ -602,12 +638,29 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
+		var exporter *k8sutil.ArangodbExporterContainerConf
+
+		if spec.Metrics.IsEnabled() {
+			if group.IsExportMetrics() {
+				image := spec.GetImage()
+				if spec.Metrics.HasImage() {
+					image = spec.Metrics.GetImage()
+				}
+				exporter = &k8sutil.ArangodbExporterContainerConf{
+					Args:               createExporterArgs(spec.IsSecure()),
+					JWTTokenSecretName: spec.Metrics.GetJWTTokenSecretName(),
+					LivenessProbe:      createExporterLivenessProbe(spec.IsSecure()),
+					Image:              image,
+				}
+			}
+		}
+
 		engine := spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
 		finalizers := r.createPodFinalizers(group)
 		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(),
 			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources); err != nil {
+			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, exporter, groupSpec.GetSidecars(), groupSpec.VolumeClaimTemplate); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -690,7 +743,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		}
 		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageID, lifecycleImage, spec.GetImagePullPolicy(), terminationGracePeriod, args, env,
 			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole, groupSpec.GetNodeSelector(),
-			groupSpec.PriorityClassName, groupSpec.Resources); err != nil {
+			groupSpec.PriorityClassName, groupSpec.Resources, groupSpec.GetSidecars()); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")

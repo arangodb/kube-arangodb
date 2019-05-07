@@ -2,20 +2,35 @@
 
 ## Running tests
 
-To run the entire test set, run:
+To run the entire test set, first set the following environment variables:
+
+  - `DOCKERNAMESPACE` to your docker hub account
+  - `VERBOSE` to `1` (default is empty)
+  - `LONG` to `1` (default is empty, which skips lots of tests)
+  - `ARANGODB` to the name of a community image you want to test,
+    default is `arangodb/arangodb:latest`
+  - `ENTERPRISEIMAGE` to the name of an enterprise image, you want to
+    test, if not set, some tests are skipped
+  - `ARANGO_LICENSE_KEY` to the enterpise license key
+  - `KUBECONFIG` to the path to some k8s configuration with
+    credentials, this indicates which cluster to use
 
 ```bash
-export DOCKERNAMESPACE=<your docker hub account>
 make clean
 make build
 make run-tests
 ```
+
+To run only a single test, set `TESTOPTIONS` to something like
+`-test.run=TestRocksDBEncryptionSingle` where
+`TestRocksDBEncryptionSingle` is the name of the test.
 
 ## Preparing a release
 
 To prepare for a release, do the following:
 
 - Make sure all tests are OK.
+- To run a complete set of tests, see above.
 - Update the CHANGELOG manually, since the automatic CHANGELOG
   generation is switched off (did not work in many cases).
 

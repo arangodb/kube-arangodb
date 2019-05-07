@@ -123,6 +123,23 @@ func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32
 	return nil
 }
 
+// UpdateMember updates the deployment status wrt the given member.
+func (d *Deployment) UpdateMember(member api.MemberStatus) error {
+	status, lastVersion := d.GetStatus()
+	_, group, found := status.Members.ElementByID(member.ID)
+	if !found {
+		return maskAny(fmt.Errorf("Member %s not found", member.ID))
+	}
+	if err := status.Members.Update(member, group); err != nil {
+		return maskAny(err)
+	}
+	if err := d.UpdateStatus(status, lastVersion); err != nil {
+		log.Debug().Err(err).Msg("Updating CR status failed")
+		return maskAny(err)
+	}
+	return nil
+}
+
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
 func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
@@ -384,4 +401,14 @@ func (d *Deployment) DeleteSecret(secretName string) error {
 func (d *Deployment) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return d.resources.GetExpectedPodArguments(apiObject, deplSpec, group, agents, id, version)
+}
+
+// GetShardSyncStatus returns true if all shards are in sync
+func (d *Deployment) GetShardSyncStatus() bool {
+	return d.resources.GetShardSyncStatus()
+}
+
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (d *Deployment) InvalidateSyncStatus() {
+	d.resources.InvalidateSyncStatus()
 }

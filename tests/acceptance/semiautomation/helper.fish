@@ -49,6 +49,15 @@ function output
   for l in $argv[2..-1] ; echo $l ; end
 end
 
+function ensureLicenseKey
+  if test -z "$ARANGO_LICENSE_KEY"
+    echo "Need ARANGO_LICENSE_KEY for enterprise image."
+    exit 1
+  end
+  kubectl get secret arangodb-license-key ; or kubectl create secret generic arangodb-license-key \
+    --from-literal=token="$ARANGO_LICENSE_KEY" > /dev/null
+end
+
 function log
   echo "$argv[1] Test: $TESTNAME, Desc: $TESTDESC" >> testprotocol.log
 end

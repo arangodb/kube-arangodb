@@ -28,7 +28,6 @@ import (
 	"github.com/arangodb/arangosync/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -46,6 +45,8 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	// UpdateMember updates the deployment status wrt the given member.
+	UpdateMember(member api.MemberStatus) error
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
@@ -95,4 +96,8 @@ type Context interface {
 		agents api.MemberStatusList, id string, version driver.Version) []string
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
+	// GetShardSyncStatus returns true if all shards are in sync
+	GetShardSyncStatus() bool
+	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+	InvalidateSyncStatus()
 }

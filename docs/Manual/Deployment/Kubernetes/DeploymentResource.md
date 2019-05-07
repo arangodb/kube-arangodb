@@ -377,25 +377,22 @@ Specifies a maximum for the count of servers. If set, a specification is invalid
 This setting specifies additional commandline arguments passed to all servers of this group.
 The default value is an empty array.
 
-### `spec.<group>.resources.requests.cpu: cpuUnit`
+### `spec.<group>.resources: ResourceRequirements`
 
-This setting specifies the amount of CPU requested by server of this group.
-
-See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for details.
-
-### `spec.<group>.resources.requests.memory: memoryUnit`
-
-This setting specifies the amount of memory requested by server of this group.
+This setting specifies the resources required by pods of this group. This includes requests and limits.
 
 See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for details.
 
-### `spec.<group>.resources.requests.storage: storageUnit`
+### `spec.<group>.volumeClaimTemplate.Spec: PersistentVolumeClaimSpec`
 
-This setting specifies the amount of storage required for each server of this group.
-The default value is `8Gi`.
+Specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
+This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
 
-This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
-because servers in these groups do not need persistent storage.
+The default value describes a volume with `8Gi` storage, `ReadWriteOnce` access mode and volume mode set to `PersistentVolumeFilesystem`. 
+
+If this field is not set and `spec.<group>.resources.requests.storage` is set, then a default volume claim
+with size as specified by `spec.<group>.resources.requests.storage` will be created. In that case `storage`
+and `iops` is not forwarded to the pods resource requirements.
 
 ### `spec.<group>.serviceAccountName: string`
 
@@ -404,14 +401,6 @@ for each server of this group.
 
 Using an alternative `ServiceAccount` is typically used to separate access rights.
 The ArangoDB deployments do not require any special rights.
-
-### `spec.<group>.storageClassName: string`
-
-This setting specifies the `storageClass` for the `PersistentVolume`s created
-for each server of this group.
-
-This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
-because servers in these groups do not need persistent storage.
 
 ### `spec.<group>.priorityClassName: string`
 
@@ -443,3 +432,29 @@ For more information on tolerations, consult the [Kubernetes documentation](http
 This setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
 For more information on node selectors, consult the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/).
+
+## Deprecated Fields
+
+### `spec.<group>.resources.requests.storage: storageUnit`
+
+This setting specifies the amount of storage required for each server of this group.
+The default value is `8Gi`.
+
+This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
+because servers in these groups do not need persistent storage.
+
+Please use VolumeClaimTemplate from now on. This field is not considered if 
+VolumeClaimTemplate is set. Note however, that the information in requests 
+is completely handed over to the pod in this case.
+
+### `spec.<group>.storageClassName: string`
+
+This setting specifies the `storageClass` for the `PersistentVolume`s created
+for each server of this group.
+
+This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`
+because servers in these groups do not need persistent storage.
+
+Please use VolumeClaimTemplate from now on. This field is not considered if 
+VolumeClaimTemplate is set. Note however, that the information in requests 
+is completely handed over to the pod in this case.

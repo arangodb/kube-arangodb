@@ -86,6 +86,8 @@ type ActionContext interface {
 	SetCurrentImage(imageInfo api.ImageInfo) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
+	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+	InvalidateSyncStatus()
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -290,4 +292,9 @@ func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
 		return maskAny(err)
 	}
 	return nil
+}
+
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (ac *actionContext) InvalidateSyncStatus() {
+	ac.context.InvalidateSyncStatus()
 }

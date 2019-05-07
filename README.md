@@ -37,32 +37,79 @@ it is intended to be.
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        | Runs  | Not intended     |                       |
 | Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?     | No               |                       |
 
-## Installation of latest release using Helm
+## WARNING
 
 **WARNING**: There is a problem with rolling upgrades in version 0.3.8.
 **DO NOT USE 0.3.8 FOR ROLLING UPGRADES.** If you are still using 0.3.8,
 then upgrade to 0.3.9 of the operator first before running any rolling
 upgrade.
 
-```bash
-# The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb-crd.tgz
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb.tgz
-# To use `ArangoLocalStorage`, also run
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.9/kube-arangodb-storage.tgz
-```
-
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.10/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.10/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.10/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.9/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.3.10/manifests/arango-deployment-replication.yaml
+```
+
+This procedure can also be used for upgrades and will not harm any
+running ArangoDB deployments.
+
+## Installation of latest release using Helm
+
+Only use this procedure for a new install of the operator. See below for
+upgrades.
+
+```bash
+# The following will install the custom resources required by the operators.
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.10/kube-arangodb-crd.tgz
+# The following will install the operator for `ArangoDeployment` &
+# `ArangoDeploymentReplication` resources.
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.10/kube-arangodb.tgz
+# To use `ArangoLocalStorage`, also run
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.10/kube-arangodb-storage.tgz
+```
+
+## Upgrading the operator using Helm
+
+To upgrade the operator to the latest version with Helm, you have to
+delete the previous deployment and then install the latest. **HOWEVER**:
+You *must not delete* the deployment of the custom resource definitions
+(CRDs), or your ArangoDB deployments will be deleted!
+
+Therefore, you have to use `helm list` to find the deployments for the
+operator (`kube-arangodb`) and of the storage operator
+(`kube-arangodb-storage`) and use `helm delete` to delete them using the
+automatically generated deployment names. Here is an example of a `helm
+list` output:
+
+```
+% helm list
+NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
+intent-camel    	1       	Mon Apr  8 11:37:52 2019	DEPLOYED	kube-arangodb-storage-0.3.10-preview	           	default  
+steely-mule     	1       	Sun Mar 31 21:11:07 2019	DEPLOYED	kube-arangodb-crd-0.3.9             	           	default  
+vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
+```
+
+So here, you would have to do
+
+```bash
+helm delete intent-camel
+helm delete vetoed-ladybird
+```
+
+but **not delete `steely-mule`**. Then you could install the new version
+with `helm install` as normal:
+
+```bash
+# The following will install the operator for `ArangoDeployment` &
+# `ArangoDeploymentReplication` resources.
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.10/kube-arangodb.tgz
+# To use `ArangoLocalStorage`, also run
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.10/kube-arangodb-storage.tgz
 ```
 
 ## Building

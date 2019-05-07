@@ -63,7 +63,8 @@ func (r *Reconciler) CheckDeployment() error {
 					r.log.Error().Err(err).Msg("Failed to delete pod")
 				}
 				m.Phase = api.MemberPhaseNone
-				if err := status.Members.Update(m, api.ServerGroupCoordinators); err != nil {
+
+				if err := r.context.UpdateMember(m); err != nil {
 					r.log.Error().Err(err).Msg("Failed to update member")
 				}
 			}

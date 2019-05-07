@@ -27,6 +27,7 @@ const (
 	ArangoPort           = 8529
 	ArangoSyncMasterPort = 8629
 	ArangoSyncWorkerPort = 8729
+	ArangoExporterPort   = 9101
 
 	// K8s constants
 	ClusterIPNone                      = "None"

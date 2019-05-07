@@ -54,8 +54,9 @@ func (r *Resources) EnsurePVCs() error {
 					storageClassName := spec.GetStorageClassName()
 					role := group.AsRole()
 					resources := spec.Resources
+					vct := spec.VolumeClaimTemplate
 					finalizers := r.createPVCFinalizers(group)
-					if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, finalizers, owner); err != nil {
+					if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
 						return maskAny(err)
 					}
 				}

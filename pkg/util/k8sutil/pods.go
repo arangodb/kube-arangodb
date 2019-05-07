@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -40,6 +40,7 @@ const (
 	InitDataContainerName           = "init-data"
 	InitLifecycleContainerName      = "init-lifecycle"
 	ServerContainerName             = "server"
+	ExporterContainerName           = "exporter"
 	arangodVolumeName               = "arangod-data"
 	tlsKeyfileVolumeName            = "tls-keyfile"
 	lifecycleVolumeName             = "lifecycle"
@@ -47,6 +48,7 @@ const (
 	clusterJWTSecretVolumeName      = "cluster-jwt"
 	masterJWTSecretVolumeName       = "master-jwt"
 	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
+	exporterJWTVolumeName           = "exporter-jwt"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	JWTSecretFileVolumeMountDir     = "/secrets/jwt"
@@ -54,6 +56,7 @@ const (
 	LifecycleVolumeMountDir         = "/lifecycle/tools"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
+	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
 
@@ -91,16 +94,45 @@ func IsPodReady(pod *v1.Pod) bool {
 	return condition != nil && condition.Status == v1.ConditionTrue
 }
 
-// IsPodSucceeded returns true if all containers of the pod
-// have terminated with exit code 0.
+// IsPodSucceeded returns true if the arangodb container of the pod
+// has terminated with exit code 0.
 func IsPodSucceeded(pod *v1.Pod) bool {
-	return pod.Status.Phase == v1.PodSucceeded
+	if pod.Status.Phase == v1.PodSucceeded {
+		return true
+	} else {
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.Name != ServerContainerName {
+				continue
+			}
+
+			t := c.State.Terminated
+			if t != nil {
+				return t.ExitCode == 0
+			}
+		}
+		return false
+	}
 }
 
-// IsPodFailed returns true if all containers of the pod
-// have terminated and at least one of them wih a non-zero exit code.
+// IsPodFailed returns true if the arangodb container of the pod
+// has terminated wih a non-zero exit code.
 func IsPodFailed(pod *v1.Pod) bool {
-	return pod.Status.Phase == v1.PodFailed
+	if pod.Status.Phase == v1.PodFailed {
+		return true
+	} else {
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.Name != ServerContainerName {
+				continue
+			}
+
+			t := c.State.Terminated
+			if t != nil {
+				return t.ExitCode != 0
+			}
+		}
+
+		return false
+	}
 }
 
 // IsPodScheduled returns true if the pod has been scheduled.
@@ -221,6 +253,15 @@ func clusterJWTVolumeMounts() []v1.VolumeMount {
 	}
 }
 
+func exporterJWTVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      exporterJWTVolumeName,
+			MountPath: ExporterJWTVolumeMountDir,
+		},
+	}
+}
+
 // rocksdbEncryptionVolumeMounts creates a volume mount structure for a RocksDB encryption key.
 func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 	return []v1.VolumeMount{
@@ -263,13 +304,13 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 	return c
 }
 
-// FilterStorageResourceRequirement filters resource requirements for Storage.
-func FilterStorageResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+// ExtractPodResourceRequirement filters resource requirements for Pods.
+func ExtractPodResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
 
 	filterStorage := func(list v1.ResourceList) v1.ResourceList {
 		newlist := make(v1.ResourceList)
 		for k, v := range list {
-			if k == v1.ResourceStorage {
+			if k != v1.ResourceCPU && k != v1.ResourceMemory {
 				continue
 			}
 			newlist[k] = v
@@ -285,7 +326,7 @@ func FilterStorageResourceRequirement(resources v1.ResourceRequirements) v1.Reso
 
 // arangodContainer creates a container configured to run `arangod`.
 func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
+	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements, noFilterResources bool) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/usr/sbin/arangod"}, args...),
 		Name:            ServerContainerName,
@@ -299,9 +340,14 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		Resources:    FilterStorageResourceRequirement(resources), // Storage is handled via pvcs
 		VolumeMounts: arangodVolumeMounts(),
 	}
+	if noFilterResources {
+		c.Resources = resources // if volumeclaimtemplate is specified
+	} else {
+		c.Resources = ExtractPodResourceRequirement(resources) // Storage is handled via pvcs
+	}
+
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
 	}
@@ -335,7 +381,7 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		Resources: FilterStorageResourceRequirement(resources), // Storage is handled via pvcs
+		Resources: resources,
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -348,6 +394,29 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 		c.VolumeMounts = append(c.VolumeMounts, lifecycleVolumeMounts()...)
 	}
 
+	return c
+}
+
+func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+	c := v1.Container{
+		Command:         append([]string{"/app/arangodb-exporter"}, args...),
+		Name:            ExporterContainerName,
+		Image:           image,
+		ImagePullPolicy: v1.PullIfNotPresent,
+		Ports: []v1.ContainerPort{
+			{
+				Name:          "exporter",
+				ContainerPort: int32(ArangoExporterPort),
+				Protocol:      v1.ProtocolTCP,
+			},
+		},
+	}
+	for k, v := range env {
+		c.Env = append(c.Env, v.CreateEnvVar(k))
+	}
+	if livenessProbe != nil {
+		c.LivenessProbe = livenessProbe.Create()
+	}
 	return c
 }
 
@@ -448,6 +517,15 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 	return p
 }
 
+// ArangodbExporterContainerConf contains configuration of the exporter container
+type ArangodbExporterContainerConf struct {
+	Args               []string
+	Env                map[string]EnvValue
+	JWTTokenSecretName string
+	LivenessProbe      *HTTPProbeConfig
+	Image              string
+}
+
 // CreateArangodPod creates a Pod that runs `arangod`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
@@ -457,7 +535,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements) error {
+	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
 
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
@@ -481,7 +559,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 
 	// Add arangod container
-	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources)
+	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources, vct != nil)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -491,7 +569,26 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	if clusterJWTSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
+
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add arangodb exporter container
+	if exporter != nil {
+		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
+		if exporter.JWTTokenSecretName != "" {
+			c.VolumeMounts = append(c.VolumeMounts, exporterJWTVolumeMounts()...)
+		}
+		if tlsKeyfileSecretName != "" {
+			c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
+		}
+		p.Spec.Containers = append(p.Spec.Containers, c)
+		p.Labels[LabelKeyArangoExporter] = "yes"
+	}
+
+	// Add sidecars
+	if len(sidecars) > 0 {
+		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
+	}
 
 	// Add priorityClassName
 	p.Spec.PriorityClassName = podPriorityClassName
@@ -550,6 +647,19 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 		p.Spec.Volumes = append(p.Spec.Volumes, vol)
 	}
 
+	// Exporter Token Mount
+	if exporter != nil && exporter.JWTTokenSecretName != "" {
+		vol := v1.Volume{
+			Name: exporterJWTVolumeName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: exporter.JWTTokenSecretName,
+				},
+			},
+		}
+		p.Spec.Volumes = append(p.Spec.Volumes, vol)
+	}
+
 	// Cluster JWT secret mount (if any)
 	if clusterJWTSecretName != "" {
 		vol := v1.Volume{
@@ -581,7 +691,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements) error {
+	podPriorityClassName string, resources v1.ResourceRequirements, sidecars []v1.Container) error {
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -621,6 +731,11 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
 	}
 	p.Spec.Containers = append(p.Spec.Containers, c)
+
+	// Add sidecars
+	if len(sidecars) > 0 {
+		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
+	}
 
 	// Add priorityClassName
 	p.Spec.PriorityClassName = podPriorityClassName

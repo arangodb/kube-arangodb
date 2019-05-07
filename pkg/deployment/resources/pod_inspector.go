@@ -109,6 +109,7 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 					// Record termination time
 					now := metav1.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+					r.InvalidateSyncStatus()
 				}
 			}
 		} else if k8sutil.IsPodFailed(&p) {
@@ -122,6 +123,7 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 					// Record termination time
 					now := metav1.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+					r.InvalidateSyncStatus()
 				}
 			}
 		}

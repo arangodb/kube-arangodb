@@ -15,6 +15,9 @@ patchYamlFile $YAMLFILE $ARANGODB_ENTERPRISE Production work.yaml
 patchYamlFile $YAMLFILE2 $ARANGODB_ENTERPRISE Production work2.yaml
 cp replication.yaml work3.yaml
 
+# Ensure enterprise license key
+ensureLicenseKey
+
 # Deploy and check
 kubectl apply -f work.yaml
 kubectl apply -f work2.yaml

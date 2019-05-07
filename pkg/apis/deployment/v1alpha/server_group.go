@@ -130,3 +130,13 @@ func (g ServerGroup) IsArangosync() bool {
 		return false
 	}
 }
+
+// IsExportMetrics return true when the group can be used with the arangodbexporter
+func (g ServerGroup) IsExportMetrics() bool {
+	switch g {
+	case ServerGroupCoordinators, ServerGroupDBServers, ServerGroupSingle:
+		return true
+	default:
+		return false
+	}
+}
