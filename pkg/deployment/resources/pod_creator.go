@@ -332,9 +332,13 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 func createExporterArgs(isSecure bool) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := make([]optionPair, 0, 64)
+	scheme := "http"
+	if isSecure {
+		scheme = "https"
+	}
 	options = append(options,
 		optionPair{"--arangodb.jwt-file", tokenpath},
-		optionPair{"--arangodb.endpoint", "http://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
+		optionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if isSecure {
