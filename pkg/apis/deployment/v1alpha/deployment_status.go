@@ -71,6 +71,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Reason == other.Reason &&
 		ds.ServiceName == other.ServiceName &&
 		ds.SyncServiceName == other.SyncServiceName &&
+		ds.ExporterServiceName == other.ExporterServiceName &&
 		ds.Images.Equal(other.Images) &&
 		ds.CurrentImage.Equal(other.CurrentImage) &&
 		ds.Members.Equal(other.Members) &&
