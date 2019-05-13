@@ -29,7 +29,7 @@ it is intended to be.
 | Google GKE           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
 | Amazon EKS           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
 | Pivotal PKS          | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| IBM Cloud            | 1.11               | >= 3.4.5         |          >= 0.3.10            | Runs  | Yes              |                       |
+| IBM Cloud            | 1.11               | >= 3.4.5         |          >= 0.3.11            | Runs  | Yes              |                       |
 | Amazon & Kops        | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
 | Azure AKS            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
 | OpenShift            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
