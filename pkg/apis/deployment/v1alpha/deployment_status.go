@@ -38,6 +38,8 @@ type DeploymentStatus struct {
 	// to access syncmasters (only set when dc2dc synchronization is enabled).
 	SyncServiceName string `json:"syncServiceName,omitempty"`
 
+	ExporterServiceName string `json:"exporterServiceName,omitempty"`
+
 	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
 	Images ImageInfoList `json:"arangodb-images,omitempty"`
 	// Image that is currently being used when new pods are created

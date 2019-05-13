@@ -50,6 +50,22 @@ func addOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
 	}
 }
 
+// LabelsForExporterServiceSelector returns a map of labels, used to select the all arangodb-exporter containers
+func LabelsForExporterServiceSelector(deploymentName string) map[string]string {
+	return map[string]string{
+		LabelKeyArangoDeployment: deploymentName,
+		LabelKeyArangoExporter:   "yes",
+	}
+}
+
+// LabelsForExporterService returns a map of labels, used to select the all arangodb-exporter containers
+func LabelsForExporterService(deploymentName string) map[string]string {
+	return map[string]string{
+		LabelKeyArangoDeployment: deploymentName,
+		LabelKeyApp:              AppName,
+	}
+}
+
 // LabelsForDeployment returns a map of labels, given to all resources for given deployment name
 func LabelsForDeployment(deploymentName, role string) map[string]string {
 	l := map[string]string{
