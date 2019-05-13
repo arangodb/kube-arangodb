@@ -25,7 +25,7 @@ package resources
 import (
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -112,6 +112,21 @@ func (r *Resources) EnsureServices() error {
 		status, lastVersion := r.context.GetStatus()
 		if status.SyncServiceName != eaServiceName {
 			status.SyncServiceName = eaServiceName
+			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+				return maskAny(err)
+			}
+		}
+	}
+
+	if spec.Metrics.IsEnabled() {
+		name, _, err := k8sutil.CreateExporterService(svcs, apiObject, apiObject.AsOwner())
+		if err != nil {
+			log.Debug().Err(err).Msgf("Failed to create %s exporter service", name)
+			return maskAny(err)
+		}
+		status, lastVersion := r.context.GetStatus()
+		if status.ExporterServiceName != name {
+			status.ExporterServiceName = name
 			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				return maskAny(err)
 			}

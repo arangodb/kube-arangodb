@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -62,6 +62,45 @@ func CreateDatabaseExternalAccessServiceName(deploymentName string) string {
 // deployment name.
 func CreateSyncMasterClientServiceName(deploymentName string) string {
 	return deploymentName + "-sync"
+}
+
+// CreateExporterClientServiceName returns the name of the service used by arangodb-exporter clients for the given
+// deployment name.
+func CreateExporterClientServiceName(deploymentName string) string {
+	return deploymentName + "-exporter"
+}
+
+// CreateExporterService
+func CreateExporterService(svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+	deploymentName := deployment.GetName()
+	svcName := CreateExporterClientServiceName(deploymentName)
+
+	selectorLabels := LabelsForExporterServiceSelector(deploymentName)
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   svcName,
+			Labels: LabelsForExporterService(deploymentName),
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: v1.ClusterIPNone,
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:     "exporter",
+					Protocol: v1.ProtocolTCP,
+					Port:     ArangoExporterPort,
+				},
+			},
+			Selector: selectorLabels,
+		},
+	}
+	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
+	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
+		return svcName, false, nil
+	} else if err != nil {
+		return svcName, false, maskAny(err)
+	}
+	return svcName, true, nil
 }
 
 // CreateHeadlessService prepares and creates a headless service in k8s, used to provide a stable
