@@ -37,6 +37,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
+	github.com/coreos/prometheus-operator v0.30.0
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
@@ -45,7 +46,7 @@ require (
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/dustin/go-broadcast v0.0.0-20171205050544-f664265f5a66
 	github.com/dustin/go-humanize v1.0.0
-	github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633
+	github.com/emicklei/go-restful v2.6.0+incompatible
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
 	github.com/ewoutp/go-gitlab-client v0.0.0-20150214183219-6e4464cd3221
 	github.com/ghodss/yaml v1.0.0
@@ -55,8 +56,8 @@ require (
 	github.com/go-kit/kit v0.8.0
 	github.com/go-openapi/analysis v0.19.0
 	github.com/go-openapi/errors v0.19.0
-	github.com/go-openapi/jsonpointer v0.18.0
-	github.com/go-openapi/jsonreference v0.18.0
+	github.com/go-openapi/jsonpointer v0.19.0
+	github.com/go-openapi/jsonreference v0.19.0
 	github.com/go-openapi/loads v0.19.0
 	github.com/go-openapi/runtime v0.19.0
 	github.com/go-openapi/spec v0.18.0
@@ -130,7 +131,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e
-	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db
+	golang.org/x/text v0.3.1
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20190425163242-31fd60d6bfdc
 	google.golang.org/api v0.4.0 // indirect
@@ -147,9 +148,8 @@ require (
 	k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/gengo v0.0.0-20190128074634-0689ccc1d7d6
+	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 	k8s.io/klog v0.3.0
 	k8s.io/kube-openapi v0.0.0-20190502190224-411b2483e503 // indirect
 	k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )

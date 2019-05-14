@@ -201,6 +201,11 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create services", err, d.GetAPIObject()))
 		}
 
+		// Create service monitor
+		if err := d.resources.EnsureServiceMonitor(); err != nil {
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create service monitor", err, d.GetAPIObject()))
+		}
+
 		// Create members
 		if err := d.createInitialMembers(d.apiObject); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
