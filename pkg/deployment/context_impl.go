@@ -33,7 +33,6 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog/log"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -41,6 +40,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // GetAPIObject returns the deployment as k8s object.
@@ -245,7 +245,7 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 func (d *Deployment) DeletePod(podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.Core().Pods(ns).Delete(podName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return maskAny(err)
 	}
@@ -260,7 +260,7 @@ func (d *Deployment) CleanupPod(p v1.Pod) error {
 	ns := p.GetNamespace()
 	options := metav1.NewDeleteOptions(0)
 	options.Preconditions = metav1.NewUIDPreconditions(string(p.GetUID()))
-	if err := d.deps.KubeCli.Core().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return maskAny(err)
 	}
@@ -291,7 +291,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 func (d *Deployment) DeletePvc(pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.Core().PersistentVolumeClaims(ns).Delete(pvcName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return maskAny(err)
 	}

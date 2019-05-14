@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/leaderelection"
@@ -61,6 +61,7 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 		namespace,
 		lockName,
 		kubecli.CoreV1(),
+		kubecli.CoordinationV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      o.Config.ID,
 			EventRecorder: o.Dependencies.EventRecorder,

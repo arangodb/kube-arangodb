@@ -36,7 +36,6 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -52,6 +51,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog"
 )
 
 const (
@@ -111,6 +112,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", defaultAlpineImage, "Docker image used for alpine containers")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
+
 }
 
 func main() {
@@ -131,7 +133,6 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	ip := os.Getenv(constants.EnvOperatorPodIP)
 
 	// Prepare log service
-	goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
 	logService, err = logging.NewService(logLevel)
 	if err != nil {
@@ -143,7 +144,10 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		cliLog = cliLog.With().Str("operator-id", operatorID).Logger()
 		return log.With().Str("operator-id", operatorID).Logger()
 	})
-	logService.CaptureGLog(logService.MustGetLogger("glog"))
+
+	klog.SetOutput(logService.MustGetLogger("klog"))
+	klog.Info("nice to meet you")
+	klog.Flush()
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage {
@@ -301,7 +305,7 @@ func createRecorder(log zerolog.Logger, kubecli kubernetes.Interface, name, name
 	eventBroadcaster.StartLogging(func(format string, args ...interface{}) {
 		log.Info().Msgf(format, args...)
 	})
-	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.Core().RESTClient()).Events(namespace)})
+	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.CoreV1().RESTClient()).Events(namespace)})
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
 	v1.AddToScheme(combinedScheme)

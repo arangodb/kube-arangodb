@@ -29,13 +29,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 type testContext struct{}
@@ -67,6 +67,19 @@ func (c *testContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) 
 func (c *testContext) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return nil // not implemented
+}
+
+// GetShardSyncStatus returns true if all shards are in sync
+func (c *testContext) GetShardSyncStatus() bool {
+	return true
+}
+
+// InvalidateSyncStatus resets the sync state to false and triggers an inspection
+func (c *testContext) InvalidateSyncStatus() {}
+
+// GetStatus returns the current status of the deployment
+func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
+	return api.DeploymentStatus{}, 0
 }
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.

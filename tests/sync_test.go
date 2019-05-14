@@ -43,7 +43,7 @@ import (
 // waitUntilReplicationNotFound waits until a replication resource is deleted
 func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := cli.Replication().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := cli.ReplicationV1alpha().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
