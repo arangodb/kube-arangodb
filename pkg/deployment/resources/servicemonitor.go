@@ -23,28 +23,41 @@
 package resources
 
 import (
-	"time"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	coreosv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	clientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/rs/zerolog"
+	"k8s.io/client-go/rest"
 )
 
+func LabelsForExporterServiceMonitor(deploymentName string) map[string]string {
+	return map[string]string{
+		k8sutil.LabelKeyArangoDeployment: deploymentName,
+		k8sutil.LabelKeyApp:              "arango-exporter",
+		"context":                        "metrics",
+	}
+}
+
+func LabelsForExporterServiceMonitorSelector(deploymentName string) map[string]string {
+	return map[string]string{
+		k8sutil.LabelKeyArangoDeployment: deploymentName,
+		k8sutil.LabelKeyApp:              "arangodb",
+	}
+}
+
 // EnsureServiceMonitor creates or updates a ServiceMonitor.
-func (f *Resources) EnsureServiceMonitor() error {
+func (r *Resources) EnsureServiceMonitor() error {
 	// Some preparations:
 	log := r.log
-	start := time.Now()
-	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
+	if !spec.Metrics.IsEnabled() {
+		return nil
+	}
 	serviceMonitorName := deploymentName + "-exporter"
 
 	// First get a client:
@@ -60,19 +73,39 @@ func (f *Resources) EnsureServiceMonitor() error {
 	}
 
 	// Check if ServiceMonitor already exists
-	serviceMonitors := mClient.ServiceMonitors()
-	var found *coreosv1.ServiceMonitor
-	found, err = serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
+	serviceMonitors := mClient.ServiceMonitors(ns)
+	_, err = serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
 	if err != nil {
-		if k8serr.IsNotFound(rr) {
+		if k8sutil.IsNotFound(err) {
 			// Need to create one:
-      smon := &coreosv1.ServiceMonitor{
-			  ObjectMeta: metav1.ObjectMeta{
-				  Name: serviceMonitorName,
-					Labels: LabelsForExporterServiceMonitor(deploymentName),
+			smon := &coreosv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:            serviceMonitorName,
+					Labels:          LabelsForExporterServiceMonitor(deploymentName),
+					OwnerReferences: []metav1.OwnerReference{owner},
 				},
 				Spec: coreosv1.ServiceMonitorSpec{
-				  
+					JobLabel: "k8s-app",
+					Endpoints: []coreosv1.Endpoint{
+						coreosv1.Endpoint{
+							Port:     "exporter",
+							Interval: "10s",
+							Scheme:   "https",
+							TLSConfig: &coreosv1.TLSConfig{
+								InsecureSkipVerify: true,
+							},
+						},
+					},
+					Selector: metav1.LabelSelector{
+						MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
+					},
+				},
+			}
+			smon, err = serviceMonitors.Create(smon)
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
+				return maskAny(err)
+			}
 		} else {
 			log.Error().Err(err).Msgf("Failed to get ServiceMonitor %s", serviceMonitorName)
 			return maskAny(err)
