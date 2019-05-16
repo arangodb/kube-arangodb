@@ -33,6 +33,5 @@
             ""
         ]
     },
-    "go.gopath": "${workspaceRoot}/.gobuild",
-    "go.formatTool": "goimports"
+    "go.gopath": "${workspaceRoot}/.gobuild"
 }
