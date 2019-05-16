@@ -24,7 +24,7 @@ rules:
   verbs: ["*"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
-  verbs: ["get"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
   verbs: ["*"]

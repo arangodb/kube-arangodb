@@ -55,10 +55,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
-	if !spec.Metrics.IsEnabled() {
-		return nil
-	}
+	wantMetrics := spec.Metrics.IsEnabled()
 	serviceMonitorName := deploymentName + "-exporter"
+	log.Debug().Msgf("EnsureServiceMonitor running %s", serviceMonitorName)
 
 	// First get a client:
 	var restConfig *rest.Config
@@ -77,6 +76,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 	_, err = serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
+			if !wantMetrics {
+				return nil
+			}
 			// Need to create one:
 			smon := &coreosv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -106,13 +108,24 @@ func (r *Resources) EnsureServiceMonitor() error {
 				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
 				return maskAny(err)
 			}
+			log.Debug().Msgf("ServiceMonitor %s successfully created.", serviceMonitorName)
+			return nil
 		} else {
 			log.Error().Err(err).Msgf("Failed to get ServiceMonitor %s", serviceMonitorName)
 			return maskAny(err)
 		}
 	}
-
-	log.Debug().Msgf("ServiceMonitor %s already found, no need to create.",
-		serviceMonitorName)
-	return nil
+	if wantMetrics {
+		log.Debug().Msgf("ServiceMonitor %s already found, no need to create.",
+			serviceMonitorName)
+		return nil
+	}
+	// Need to get rid of the ServiceMonitor:
+	err = serviceMonitors.Delete(serviceMonitorName, &metav1.DeleteOptions{})
+	if err == nil {
+		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)
+		return nil
+	}
+	log.Error().Err(err).Msgf("Could not delete ServiceMonitor %s.", serviceMonitorName)
+	return maskAny(err)
 }
