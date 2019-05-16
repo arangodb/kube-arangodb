@@ -57,7 +57,6 @@ func (r *Resources) EnsureServiceMonitor() error {
 	spec := r.context.GetSpec()
 	wantMetrics := spec.Metrics.IsEnabled()
 	serviceMonitorName := deploymentName + "-exporter"
-	log.Debug().Msgf("EnsureServiceMonitor running %s", serviceMonitorName)
 
 	// First get a client:
 	var restConfig *rest.Config
