@@ -69,29 +69,13 @@ func (r *Resources) EnsureMonitoringClient() (*clientv1.MonitoringV1Client, erro
 
 func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
 	if isSecure {
-		kubecli := r.context.GetKubeCli()
-		ns := r.context.GetNamespace()
-		secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
-		spec := r.context.GetSpec()
-		secretName := spec.TLS.GetCASecretName()
-		cert, _, _, err := k8sutil.GetCASecret(secrets, secretName, nil)
-
-		var tlsconfig *coreosv1.TLSConfig
-		if err == nil {
-			tlsconfig = &coreosv1.TLSConfig{
-				CAFile:             cert,
-				InsecureSkipVerify: false,
-			}
-		} else {
-			tlsconfig = &coreosv1.TLSConfig{
-				InsecureSkipVerify: true,
-			}
-		}
 		return coreosv1.Endpoint{
-			Port:      "exporter",
-			Interval:  "10s",
-			Scheme:    "https",
-			TLSConfig: tlsconfig,
+			Port:     "exporter",
+			Interval: "10s",
+			Scheme:   "https",
+			TLSConfig: &coreosv1.TLSConfig{
+				InsecureSkipVerify: true,
+			},
 		}
 	} else {
 		return coreosv1.Endpoint{
