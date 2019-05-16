@@ -516,21 +516,21 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	_, err := d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
 	log := d.deps.Log
-	log.Debug().Msgf("looking for ServiceMonitor CRD...")
+	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
 	if err == nil {
 		if !d.haveServiceMonitorCRD {
-			log.Info().Msgf("have discovered ServiceMonitor CRD")
+			log.Info().Msgf("...have discovered ServiceMonitor CRD")
 		}
 		d.haveServiceMonitorCRD = true
 		d.triggerInspection()
 		return
 	} else if k8sutil.IsNotFound(err) {
 		if d.haveServiceMonitorCRD {
-			log.Info().Msgf("ServiceMonitor CRD no longer there")
+			log.Info().Msgf("...ServiceMonitor CRD no longer there")
 		}
 		d.haveServiceMonitorCRD = false
 		return
 	}
-	log.Warn().Err(err).Msgf("error when looking for ServiceMonitor CRD")
+	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
 	return
 }

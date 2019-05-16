@@ -34,7 +34,7 @@ import (
 func LabelsForExporterServiceMonitor(deploymentName string) map[string]string {
 	return map[string]string{
 		k8sutil.LabelKeyArangoDeployment: deploymentName,
-		k8sutil.LabelKeyApp:              "arango-exporter",
+		k8sutil.LabelKeyApp:              k8sutil.AppName,
 		"context":                        "metrics",
 	}
 }
@@ -42,7 +42,63 @@ func LabelsForExporterServiceMonitor(deploymentName string) map[string]string {
 func LabelsForExporterServiceMonitorSelector(deploymentName string) map[string]string {
 	return map[string]string{
 		k8sutil.LabelKeyArangoDeployment: deploymentName,
-		k8sutil.LabelKeyApp:              "arangodb",
+		k8sutil.LabelKeyApp:              k8sutil.AppName,
+	}
+}
+
+// EnsureMonitoringClient returns a client for looking at ServiceMonitors
+// and keeps it in the Resources.
+func (r *Resources) EnsureMonitoringClient() (*clientv1.MonitoringV1Client, error) {
+	if r.monitoringClient != nil {
+		return r.monitoringClient, nil
+	}
+
+	// Make a client:
+	var restConfig *rest.Config
+	restConfig, err := k8sutil.InClusterConfig()
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	mClient, err := clientv1.NewForConfig(restConfig)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	r.monitoringClient = mClient
+	return mClient, nil
+}
+
+func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
+	if isSecure {
+		kubecli := r.context.GetKubeCli()
+		ns := r.context.GetNamespace()
+		secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
+		spec := r.context.GetSpec()
+		secretName := spec.TLS.GetCASecretName()
+		cert, _, _, err := k8sutil.GetCASecret(secrets, secretName, nil)
+
+		var tlsconfig *coreosv1.TLSConfig
+		if err == nil {
+			tlsconfig = &coreosv1.TLSConfig{
+				CAFile:             cert,
+				InsecureSkipVerify: false,
+			}
+		} else {
+			tlsconfig = &coreosv1.TLSConfig{
+				InsecureSkipVerify: true,
+			}
+		}
+		return coreosv1.Endpoint{
+			Port:      "exporter",
+			Interval:  "10s",
+			Scheme:    "https",
+			TLSConfig: tlsconfig,
+		}
+	} else {
+		return coreosv1.Endpoint{
+			Port:     "exporter",
+			Interval: "10s",
+			Scheme:   "http",
+		}
 	}
 }
 
@@ -56,17 +112,11 @@ func (r *Resources) EnsureServiceMonitor() error {
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
 	wantMetrics := spec.Metrics.IsEnabled()
-	serviceMonitorName := deploymentName + "-exporter"
+	serviceMonitorName := k8sutil.CreateExporterClientServiceName(deploymentName)
 
-	// First get a client:
-	var restConfig *rest.Config
-	restConfig, err := k8sutil.InClusterConfig()
+	mClient, err := r.EnsureMonitoringClient()
 	if err != nil {
-		return maskAny(err)
-	}
-	var mClient *clientv1.MonitoringV1Client
-	mClient, err = clientv1.NewForConfig(restConfig)
-	if err != nil {
+		log.Error().Err(err).Msgf("Cannot get a monitoring client.")
 		return maskAny(err)
 	}
 
@@ -88,14 +138,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 				Spec: coreosv1.ServiceMonitorSpec{
 					JobLabel: "k8s-app",
 					Endpoints: []coreosv1.Endpoint{
-						coreosv1.Endpoint{
-							Port:     "exporter",
-							Interval: "10s",
-							Scheme:   "https",
-							TLSConfig: &coreosv1.TLSConfig{
-								InsecureSkipVerify: true,
-							},
-						},
+						r.makeEndpoint(spec.IsSecure()),
 					},
 					Selector: metav1.LabelSelector{
 						MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
