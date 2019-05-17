@@ -36,6 +36,7 @@ func LabelsForExporterServiceMonitor(deploymentName string) map[string]string {
 		k8sutil.LabelKeyArangoDeployment: deploymentName,
 		k8sutil.LabelKeyApp:              k8sutil.AppName,
 		"context":                        "metrics",
+		"metrics":                        "prometheus",
 	}
 }
 
