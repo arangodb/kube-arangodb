@@ -364,7 +364,10 @@ also have to specify a string for `spec.metrics.image`, which is the
 Docker image name of the `arangodb-exporter`. At the time of this
 writing you should use `arangodb/arangodb-exporter:0.1.6`. See [this
 repository](https://github.com/arangodb-helper/arangodb-exporter) for
-the latest version.
+the latest version. If the image name is left empty, the same image as
+for the main deployment is used. Note however, that current ArangoDB
+releases (<= 3.4.5) do not ship the exporter in their image. This is
+going to change in the future.
 
 In addition to the sidecar containers the operator will deploy a service
 to access the exporter ports (from within the k8s cluster), and a
