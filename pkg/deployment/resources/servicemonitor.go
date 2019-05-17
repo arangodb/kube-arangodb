@@ -107,7 +107,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 
 	// Check if ServiceMonitor already exists
 	serviceMonitors := mClient.ServiceMonitors(ns)
-	_, err = serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
+	servMon, err := serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			if !wantMetrics {
@@ -145,6 +145,19 @@ func (r *Resources) EnsureServiceMonitor() error {
 	if wantMetrics {
 		log.Debug().Msgf("ServiceMonitor %s already found, no need to create.",
 			serviceMonitorName)
+		return nil
+	}
+	// Check if the service monitor is ours, otherwise we do not touch it:
+	found := false
+	for _, owner := range servMon.ObjectMeta.OwnerReferences {
+		if owner.Kind == "ArangoDeployment" &&
+			owner.Name == deploymentName {
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Debug().Msgf("Found unneeded ServiceMonitor %s, but not owned by us, will not touch it", serviceMonitorName)
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:
