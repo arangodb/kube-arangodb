@@ -399,7 +399,8 @@ which have metrics enabled.
 ### `spec.metrics.image: string`
 
 See above, this is the name of the Docker image for the ArangoDB
-exporter to expose metrics.
+exporter to expose metrics. If empty, the same image as for the main
+deployment is used.
 
 ### `spec.<group>.count: number`
 
