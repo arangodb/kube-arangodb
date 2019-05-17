@@ -201,19 +201,6 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 
 // listenForCRDEvents keep listening for changes in CRDs until the given channel is closed.
 func (d *Deployment) listenForCRDEvents(stopCh <-chan struct{}) {
-	//getCRD := func(obj interface{}) (*v1beta1.CustomResourceDefinition, bool) {
-	//		crd, ok := obj.(*v1beta1.CustomResourceDefinition)
-	//		if !ok {
-	//			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
-	//			if !ok {
-	//				return nil, false
-	//			}
-	//			crd, ok = tombstone.Obj.(*v1beta1.CustomResourceDefinition)
-	//			return crd, ok
-	//		}
-	//		return crd, true
-	//	}
-
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
 		d.deps.KubeExtCli.ApiextensionsV1beta1().RESTClient(),
