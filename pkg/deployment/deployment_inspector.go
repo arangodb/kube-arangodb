@@ -152,6 +152,13 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
 		}
+		if d.haveServiceMonitorCRD {
+			if err := d.resources.EnsureServiceMonitor(); err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("Service monitor creation failed", err, d.apiObject))
+			}
+		}
+
 		if err := d.resources.EnsurePVCs(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
@@ -207,4 +214,9 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 // triggerInspection ensures that an inspection is run soon.
 func (d *Deployment) triggerInspection() {
 	d.inspectTrigger.Trigger()
+}
+
+// triggerCRDInspection ensures that an inspection is run soon.
+func (d *Deployment) triggerCRDInspection() {
+	d.inspectCRDTrigger.Trigger()
 }

@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/arangosync/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
@@ -59,6 +60,7 @@ type Config struct {
 type Dependencies struct {
 	Log           zerolog.Logger
 	KubeCli       kubernetes.Interface
+	KubeExtCli    apiextensionsclient.Interface
 	DatabaseCRCli versioned.Interface
 	EventRecorder record.EventRecorder
 }
@@ -98,6 +100,7 @@ type Deployment struct {
 	stopped int32
 
 	inspectTrigger            trigger.Trigger
+	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               *clientCache
 	recentInspectionErrors    int
@@ -107,6 +110,7 @@ type Deployment struct {
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
 	syncClientCache           client.ClientCache
+	haveServiceMonitorCRD     bool
 }
 
 // New creates a new Deployment from the given API object.
@@ -136,6 +140,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	go d.listenForPVCEvents(d.stopCh)
 	go d.listenForSecretEvents(d.stopCh)
 	go d.listenForServiceEvents(d.stopCh)
+	go d.listenForCRDEvents(d.stopCh)
 	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
@@ -201,6 +206,13 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create services", err, d.GetAPIObject()))
 		}
 
+		// Create service monitor
+		if d.haveServiceMonitorCRD {
+			if err := d.resources.EnsureServiceMonitor(); err != nil {
+				d.CreateEvent(k8sutil.NewErrorEvent("Failed to create service monitor", err, d.GetAPIObject()))
+			}
+		}
+
 		// Create members
 		if err := d.createInitialMembers(d.apiObject); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
@@ -228,6 +240,8 @@ func (d *Deployment) run() {
 		}
 		log.Info().Msg("start running...")
 	}
+
+	d.lookForServiceMonitorCRD()
 
 	inspectionInterval := maxInspectionInterval
 	for {
@@ -258,6 +272,8 @@ func (d *Deployment) run() {
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
 			log.Debug().Str("interval", inspectionInterval.String()).Msg("...inspected deployment")
 
+		case <-d.inspectCRDTrigger.Done():
+			d.lookForServiceMonitorCRD()
 		case <-d.updateDeploymentTrigger.Done():
 			inspectionInterval = minInspectionInterval
 			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
@@ -491,4 +507,30 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 		return false
 	}
 	return ownerRefs[0].UID == d.apiObject.UID
+}
+
+// lookForServiceMonitorCRD checks if there is a CRD for the ServiceMonitor
+// CR and sets the flag haveServiceMonitorCRD accordingly. This is called
+// once at creation time of the deployment and then always if the CRD
+// informer is triggered.
+func (d *Deployment) lookForServiceMonitorCRD() {
+	_, err := d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+	log := d.deps.Log
+	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
+	if err == nil {
+		if !d.haveServiceMonitorCRD {
+			log.Info().Msgf("...have discovered ServiceMonitor CRD")
+		}
+		d.haveServiceMonitorCRD = true
+		d.triggerInspection()
+		return
+	} else if k8sutil.IsNotFound(err) {
+		if d.haveServiceMonitorCRD {
+			log.Info().Msgf("...ServiceMonitor CRD no longer there")
+		}
+		d.haveServiceMonitorCRD = false
+		return
+	}
+	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
+	return
 }

@@ -212,6 +212,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 			Str("deployment", apiObject.GetName()).
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,
+		KubeExtCli:    o.Dependencies.KubeExtCli,
 		DatabaseCRCli: o.Dependencies.CRCli,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}

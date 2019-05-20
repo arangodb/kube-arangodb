@@ -121,7 +121,10 @@ ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
 ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
 .PHONY: all
-all: verify-generated build
+all: build
+
+.PHONY: allall
+allall: verify-generated build
 
 #
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.

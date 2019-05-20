@@ -354,6 +354,54 @@ There are two magic values for the secret name:
 - `None` specifies no action. This disables root password randomization. This is the default value. (Thus the root password is empty - not recommended)
 - `Auto` specifies automatic name generation, which is `<deploymentname>-root-password`. 
 
+### `spec.metrics.enabled: bool`
+
+If this is set to `true`, the operator runs a sidecar container for
+every DBserver pod and every coordinator pod. The sidecar container runs
+the ArangoDB-exporter and exposes metrics of the corresponding `arangod`
+instance in Prometheus format on port 9101 under path `/metrics`. You
+also have to specify a string for `spec.metrics.image`, which is the
+Docker image name of the `arangodb-exporter`. At the time of this
+writing you should use `arangodb/arangodb-exporter:0.1.6`. See [this
+repository](https://github.com/arangodb-helper/arangodb-exporter) for
+the latest version. If the image name is left empty, the same image as
+for the main deployment is used. Note however, that current ArangoDB
+releases (<= 3.4.5) do not ship the exporter in their image. This is
+going to change in the future.
+
+In addition to the sidecar containers the operator will deploy a service
+to access the exporter ports (from within the k8s cluster), and a
+resource of type `ServiceMonitor`, provided the corresponding custom
+resource definition is deployed in the k8s cluster. If you are running
+Prometheus in the same k8s cluster with the Prometheus operator, this
+will be the case. The `ServiceMonitor` will have the following labels
+set:
+
+  - `app: arangodb`
+  - `arango_deployment: YOUR_DEPLOYMENT_NAME`
+  - `context: metrics`
+  - `metrics: prometheus`
+
+This makes it possible that you configure your Prometheus deployment to
+automatically start monitoring on the available Prometheus feeds. To
+this end, you must configure the `serviceMonitorSelector` in the specs
+of your Prometheus deployment to match these labels. For example:
+
+```yaml
+  serviceMonitorSelector:
+    matchLabels:
+      metrics: prometheus
+```
+
+would automatically select all pods of all ArangoDB cluster deployments
+which have metrics enabled.
+
+### `spec.metrics.image: string`
+
+See above, this is the name of the Docker image for the ArangoDB
+exporter to expose metrics. If empty, the same image as for the main
+deployment is used.
+
 ### `spec.<group>.count: number`
 
 This setting specifies the number of servers to start for the given group.

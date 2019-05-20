@@ -341,6 +341,56 @@ func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate 
 	return result, nil
 }
 
+// waitUntilService waits until a service with given name in given
+// namespace exists and has reached a state where the given predicate
+// returns nil.
+func waitUntilService(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Service) error, timeout time.Duration) (*v1.Service, error) {
+	var result *v1.Service
+	op := func() error {
+		obj, err := cli.CoreV1().Services(ns).Get(serviceName, metav1.GetOptions{})
+		if err != nil {
+			result = nil
+			return maskAny(err)
+		}
+		result = obj
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
+// waitUntilEndpoints waits until an endpoints resource with given name
+// in given namespace exists and has reached a state where the given
+// predicate returns nil.
+func waitUntilEndpoints(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Endpoints) error, timeout time.Duration) (*v1.Endpoints, error) {
+	var result *v1.Endpoints
+	op := func() error {
+		obj, err := cli.CoreV1().Endpoints(ns).Get(serviceName, metav1.GetOptions{})
+		if err != nil {
+			result = nil
+			return maskAny(err)
+		}
+		result = obj
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
 // waitUntilSecretNotFound waits until a secret with given name in given namespace
 // is no longer found.
 func waitUntilSecretNotFound(cli kubernetes.Interface, secretName, ns string, timeout time.Duration) error {
