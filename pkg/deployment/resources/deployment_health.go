@@ -70,7 +70,7 @@ func (r *Resources) RunDeploymentHealthLoop(stopCh <-chan struct{}) {
 // and stores it in-memory.
 func (r *Resources) fetchDeploymentHealth() error {
 	// Ask cluster for its health
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	client, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {
@@ -151,7 +151,7 @@ func (r *Resources) InvalidateSyncStatus() {
 // fetchClusterShardSyncState performs a single fetch of the cluster inventory and
 // checks if all shards are in sync
 func (r *Resources) fetchClusterShardSyncState() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 	c, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {
