@@ -58,11 +58,12 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	agentDataWillBeGone := false
 	if p.Spec.NodeName != "" {
 		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
-		if err != nil {
+		if k8sutil.IsNotFound(err) {
+			log.Warn().Msg("Node not found")
+		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get node for member")
 			return maskAny(err)
-		}
-		if node.Spec.Unschedulable {
+		} else if node.Spec.Unschedulable {
 			agentDataWillBeGone = true
 		}
 	}
@@ -140,11 +141,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	dbserverDataWillBeGone := false
 	if p.Spec.NodeName != "" {
 		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
-		if err != nil {
+		if k8sutil.IsNotFound(err) {
+			log.Warn().Msg("Node not found")
+		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get node for member")
 			return maskAny(err)
-		}
-		if node.Spec.Unschedulable {
+		} else if node.Spec.Unschedulable {
 			dbserverDataWillBeGone = true
 		}
 	}

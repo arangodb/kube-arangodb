@@ -28,7 +28,6 @@ import (
 	"github.com/arangodb/arangosync/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -95,6 +94,8 @@ type Context interface {
 	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 		agents api.MemberStatusList, id string, version driver.Version) []string
+	// GetDeploymentHealth returns a copy of the latest known state of cluster health
+	GetDeploymentHealth() (driver.ClusterHealth, error)
 	// GetShardSyncStatus returns true if all shards are in sync
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
