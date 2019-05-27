@@ -182,7 +182,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 
 $(BIN): $(SOURCES) dashboard/assets.go
 	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
 
 .PHONY: docker
 docker: check-vars $(BIN)
