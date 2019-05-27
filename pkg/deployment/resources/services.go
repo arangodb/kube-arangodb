@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -143,7 +144,9 @@ func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, 
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
 	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
 		// External access service exists
+		updateExternalAccessService := false
 		loadBalancerIP := spec.GetLoadBalancerIP()
+		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
 		nodePort := spec.GetNodePort()
 		if spec.GetType().IsNone() {
 			if noneIsClusterIP {
@@ -179,10 +182,20 @@ func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, 
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
 			}
+			if strings.Join(existing.Spec.LoadBalancerSourceRanges, ",") != strings.Join(loadBalancerSourceRanges, ",") {
+				updateExternalAccessService = true
+				existing.Spec.LoadBalancerSourceRanges = loadBalancerSourceRanges
+			}
 		} else if spec.GetType().IsNodePort() {
 			if existing.Spec.Type != v1.ServiceTypeNodePort || len(existing.Spec.Ports) != 1 || (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
+			}
+		}
+		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
+			if _, err := svcs.Update(existing); err != nil {
+				log.Debug().Err(err).Msgf("Failed to update %s external access service", title)
+				return maskAny(err)
 			}
 		}
 	} else if k8sutil.IsNotFound(err) {

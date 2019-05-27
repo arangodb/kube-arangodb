@@ -36,6 +36,7 @@ import (
 // ServiceInterface has methods to work with Service resources.
 type ServiceInterface interface {
 	Create(*v1.Service) (*v1.Service, error)
+	Update(*v1.Service) (*v1.Service, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	Get(name string, options metav1.GetOptions) (*v1.Service, error)
 }
