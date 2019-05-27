@@ -202,7 +202,8 @@ func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, 
 		// Let's create or update the database external access service
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, apiObject.AsOwner())
+		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return maskAny(err)
