@@ -158,6 +158,14 @@ This setting is used when `spec.externalAccess.type` is set to `LoadBalancer` or
 
 If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
 
+### `spec.externalAccess.loadBalancerSourceRanges: []string`
+
+If specified and supported by the platform (cloud provider), this will restrict traffic through the cloud-provider
+load-balancer will be restricted to the specified client IPs. This field will be ignored if the
+cloud-provider does not support the feature.
+
+More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+
 ### `spec.externalAccess.nodePort: int`
 
 This setting specifies the port used to expose the ArangoDB deployment on.
@@ -253,6 +261,15 @@ This setting specifies the port used to expose the ArangoSync SyncMasters on.
 This setting is used when `spec.sync.externalAccess.type` is set to `NodePort` or `Auto`.
 
 If you do not specify this setting, a random port will be chosen automatically.
+
+### `spec.sync.externalAccess.loadBalancerSourceRanges: []string`
+
+If specified and supported by the platform (cloud provider), this will restrict traffic through the cloud-provider
+load-balancer will be restricted to the specified client IPs. This field will be ignored if the
+cloud-provider does not support the feature.
+
+More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+
 
 ### `spec.sync.externalAccess.masterEndpoint: []string`
 
