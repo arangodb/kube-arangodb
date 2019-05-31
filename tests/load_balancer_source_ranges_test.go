@@ -50,6 +50,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	depl := newDeployment(namePrefix + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.Image = util.NewString("arangodb/arangodb:latest")
+	depl.Spec.ExternalAccess.Type = api.NewExternalAccessType(api.ExternalAccessTypeLoadBalancer)
 	depl.Spec.ExternalAccess.LoadBalancerSourceRanges = append(depl.Spec.ExternalAccess.LoadBalancerSourceRanges, "1.2.3.0/24", "0.0.0.0/0")
 
 	// Create deployment
@@ -81,7 +82,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 
 	// Now let's use the k8s api to check if the source ranges are present in
 	// the external service spec:
-	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
+	svcs := kubecli.CoreV1().Services(ns)
 	eaServiceName := k8sutil.CreateDatabaseExternalAccessServiceName(depl.GetName())
 	// Just in case, give the service some time to appear, it should usually
 	// be there already, when the deployment is ready, however, we have had
