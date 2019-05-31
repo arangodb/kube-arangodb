@@ -87,12 +87,13 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	// be there already, when the deployment is ready, however, we have had
 	// unstable tests in the past
 	counter := 0
-	for counter < 60 {
+	var foundExternalIP string
+	for {
 		if svc, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
 			spec := svc.Spec
 			ranges := spec.LoadBalancerSourceRanges
 			if len(ranges) != 2 {
-				t.Errorf("LoadBalancerSourceRanges do not have length 2: %v", ranges)
+				t.Errorf("LoadBalancerSourceRanges does not have length 2: %v", ranges)
 			} else {
 				if ranges[0] != "1.2.3.0/24" {
 					t.Errorf("Expecting first LoadBalancerSourceRange to be \"1.2.3.0/24\", but ranges are: %v", ranges)
@@ -101,11 +102,56 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 					t.Errorf("Expecting second LoadBalancerSourceRange to be \"0.0.0.0/0\", but ranges are: %v", ranges)
 				}
 			}
-			return
+			foundExternalIP = spec.LoadBalancerIP
+			break
 		}
 		t.Logf("Service %s cannot be found, waiting for some time...", eaServiceName)
 		time.Sleep(time.Second)
 		counter += 1
+		if counter >= 60 {
+			t.Fatalf("Could not find service %s within 60 seconds, giving up.", eaServiceName)
+		}
 	}
-	t.Fatalf("Could not find service %s within 60 seconds, giving up.", eaServiceName)
+
+	// Now change the deployment spec to use different ranges:
+	depl, err = updateDeployment(c, depl.GetName(), ns,
+		func(spec *api.DeploymentSpec) {
+			spec.ExternalAccess.LoadBalancerSourceRanges = []string{"4.5.0.0/16"}
+		})
+	if err != nil {
+		t.Fatalf("Failed to update the deployment")
+	}
+
+	// And check again:
+	counter = 0
+	for {
+		time.Sleep(time.Second)
+		if svc, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+			spec := svc.Spec
+			ranges := spec.LoadBalancerSourceRanges
+			good := true
+			if len(ranges) != 1 {
+				t.Logf("LoadBalancerSourceRanges does not have length 1: %v, waiting some more...", ranges)
+				good = false
+			} else {
+				if ranges[0] != "4.5.0.0/16" {
+					t.Logf("Expecting only LoadBalancerSourceRange to be \"4.5.0.0/16\", but ranges are: %v, waiting some more...", ranges)
+					good = false
+				} else {
+					if spec.LoadBalancerIP != foundExternalIP {
+						t.Errorf("Oops, the external IP of the external access service has changed: previously: %s, now: %s", foundExternalIP, spec.LoadBalancerIP)
+					}
+				}
+			}
+			if good {
+				break
+			}
+		}
+		t.Logf("Service %s cannot be found, waiting for some more time...", eaServiceName)
+		counter += 1
+		if counter >= 60 {
+			t.Fatalf("Could not find changed service %s within 60 seconds, giving up.", eaServiceName)
+		}
+	}
+	t.Logf("Success! Service %s was changed correctly.", eaServiceName)
 }
