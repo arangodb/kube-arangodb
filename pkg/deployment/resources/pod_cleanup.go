@@ -32,6 +32,10 @@ import (
 )
 
 const (
+	logFinalizerNameString = "logs.database.arangodb.com/receive-log"
+)
+
+const (
 	statelessTerminationPeriod         = time.Minute                    // We wait this long for a stateless server to terminate on it's own. Afterwards we kill it.
 	recheckStatefullPodCleanupInterval = util.Interval(time.Second * 2) // Interval used when Pod finalizers need to be rechecked soon
 )
@@ -59,6 +63,15 @@ func (r *Resources) CleanupTerminatedPods() (util.Interval, error) {
 		// Check pod state
 		if !(k8sutil.IsPodSucceeded(&p) || k8sutil.IsPodFailed(&p) || k8sutil.IsPodTerminating(&p)) {
 			continue
+		}
+
+		// check if the pod has the log finalizer, do not delete unless the finalizer is gone
+		for _, f := range p.GetFinalizers() {
+			if f == logFinalizerNameString {
+				nextInterval.ReduceTo(recheckStatefullPodCleanupInterval)
+				log.Debug().Str("pod", p.GetName()).Msg("Pod has log receive finalizer. Wait for finalizer to be gone before deleting the pod.")
+				return nextInterval, nil
+			}
 		}
 
 		// Find member status
