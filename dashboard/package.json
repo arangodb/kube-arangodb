@@ -13,7 +13,8 @@
     "react-timeout": "^1.1.2",
     "semantic-ui-less": "^2.4.1",
     "semantic-ui-react": "^0.81.3",
-    "js-yaml": ">=3.13.1"
+    "js-yaml": ">=3.13.1",
+    "handlebars": ">=4.0.14"
   },
   "devDependencies": {
     "react-scripts": "^3.0.0"
