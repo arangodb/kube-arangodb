@@ -1,10 +1,16 @@
 # Change Log
 
-## [0.3.11](---) (XXXX-XX-XX)
+## [0.3.12]() (XXXX-XX-XX)
+- Limit source IP ranges for external services
+
+## [0.3.11](https://github.com/arangodb/kube-arangodb/tree/0.3.11) (2019-06-07)
 - Introduced volume claim templates for all server groups that require volume.
 - Added arangodb-exporter support as sidecar to all arangodb pods.
 - Fixed a bug in the case that all coordinators failed.
-
+- Increase some timeouts in cluster observation.
+- Ignore connection errors when removing servers.
+- Switch to go 1.12 and modules.
+- User sidecars.
 
 ## [0.3.10](https://github.com/arangodb/kube-arangodb/tree/0.3.10) (2019-04-04)
 - Added Pod Disruption Budgets for all server groups in production mode.
