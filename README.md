@@ -23,6 +23,14 @@ it is intended to be.
 
 ### Production readiness state
 
+Beginning with Version 0.3.11 we maintain a production readiness
+state for individual new features, since we expect that new
+features will first be released with an "alpha" or "beta" readiness
+state and over time move to full "production readiness".
+
+The following table has the general readiness state, the table below
+covers individual newer features separately.
+
 | Platform             | Kubernetes version | ArangoDB version | ArangoDB K8s Operator Version | State | Production ready | Remarks               |
 |----------------------|--------------------|------------------|-------------------------------|-------|------------------|-----------------------|
 | Google GKE           | 1.10               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
@@ -43,12 +51,19 @@ it is intended to be.
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
 | Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No    |                  |                       |
 
-## WARNING
+Feature-wise production readiness table:
 
-**WARNING**: There is a problem with rolling upgrades in version 0.3.8.
-**DO NOT USE 0.3.8 FOR ROLLING UPGRADES.** If you are still using 0.3.8,
-then upgrade to 0.3.9 of the operator first before running any rolling
-upgrade.
+| Feature                      | ArangoDB K8s Operator Version         | Production Readiness      | Remarks           |
+|------------------------------|---------------------------------------|---------------------------|-------------------|
+| Pod Disruption Budgets       | 0.3.10                                | new - alpha               |                   |
+|                              | 0.3.11                                | beta                      |                   |
+| Volume Resizing              | 0.3.10                                | new - beta                |                   |
+|                              | 0.3.11                                | beta                      |                   |
+| Disabling of liveness probes | 0.3.10                                | new - beta                |                   |
+|                              | 0.3.11                                | production ready          |                   |
+| Volume Claim Templates       | 0.3.11                                | new - alpha               |                   |
+| Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
+| User sidecar containers      | 0.3.11                                | new - alpha               |                   |
 
 ## Installation of latest release using Kubectl
 
