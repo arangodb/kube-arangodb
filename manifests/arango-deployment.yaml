@@ -25,7 +25,7 @@ rules:
   verbs: ["*"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
-  verbs: ["get"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
   verbs: ["*"]
@@ -41,6 +41,10 @@ rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list"]
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["servicemonitors"]
+  verbs: ["get", "create", "delete"]
+  
 
 ---
 
@@ -106,7 +110,7 @@ spec:
       containers:
       - name: operator
         imagePullPolicy: IfNotPresent
-        image: arangodb/kube-arangodb@sha256:bc17d77ca6c8f134a065db4f5dcbc07b84feb74ae10dd6666e822334f9ff9680
+        image: arangodb/kube-arangodb@sha256:3e695cc42f62a680f5460a320aee2518fe7a3bfb0eb6f3fc248badaa5ed58665
         args:
           - --operator.deployment
           - --chaos.allowed=false
