@@ -58,6 +58,15 @@ func (sc *servicesCache) Create(s *v1.Service) (*v1.Service, error) {
 	return result, nil
 }
 
+func (sc *servicesCache) Update(s *v1.Service) (*v1.Service, error) {
+	sc.cache = nil
+	result, err := sc.cli.Update(s)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
 func (sc *servicesCache) Delete(name string, options *metav1.DeleteOptions) error {
 	sc.cache = nil
 	if err := sc.cli.Delete(name, options); err != nil {

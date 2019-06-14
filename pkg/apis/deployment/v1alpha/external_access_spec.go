@@ -24,6 +24,7 @@ package v1alpha
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -37,6 +38,11 @@ type ExternalAccessSpec struct {
 	NodePort *int `json:"nodePort,omitempty"`
 	// Optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 	LoadBalancerIP *string `json:"loadBalancerIP,omitempty"`
+	// If specified and supported by the platform, this will restrict traffic through the cloud-provider
+	// load-balancer will be restricted to the specified client IPs. This field will be ignored if the
+	// cloud-provider does not support the feature.
+	// More info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/
+	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges,omitempty"`
 	// Advertised Endpoint is passed to the coordinators/single servers for advertising a specific endpoint
 	AdvertisedEndpoint *string `json:"advertisedEndpoint,omitempty"`
 }
@@ -77,6 +83,11 @@ func (s ExternalAccessSpec) Validate() error {
 			return maskAny(fmt.Errorf("Failed to parse advertised endpoint '%s': %s", ep, err))
 		}
 	}
+	for _, x := range s.LoadBalancerSourceRanges {
+		if _, _, err := net.ParseCIDR(x); err != nil {
+			return maskAny(fmt.Errorf("Failed to parse loadbalancer source range '%s': %s", x, err))
+		}
+	}
 	return nil
 }
 
@@ -94,6 +105,9 @@ func (s *ExternalAccessSpec) SetDefaultsFrom(source ExternalAccessSpec) {
 	}
 	if s.LoadBalancerIP == nil {
 		s.LoadBalancerIP = util.NewStringOrNil(source.LoadBalancerIP)
+	}
+	if s.LoadBalancerSourceRanges == nil && len(source.LoadBalancerSourceRanges) > 0 {
+		s.LoadBalancerSourceRanges = append([]string{}, source.LoadBalancerSourceRanges...)
 	}
 	if s.AdvertisedEndpoint == nil {
 		s.AdvertisedEndpoint = source.AdvertisedEndpoint
