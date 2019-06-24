@@ -86,24 +86,23 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 func TestUpgradeClusterRocksDB3322Cto342C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.22",
-		toVersion:   "3.4.2-1",
+		toVersion:   "3.4.6.1",
 		shortTest:   true,
 	})
 }
 
-func TestUpgradeClusterRocksDB3316Cto3322C(t *testing.T) {
+func TestUpgradeClusterRocksDB3316Cto3323C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.16",
-		toVersion:   "3.3.22",
+		toVersion:   "3.3.23",
 		shortTest:   false,
 	})
 }
 
-func TestUpgradeClusterRocksDB341Cto342C(t *testing.T) {
+func TestUpgradeClusterRocksDB346Cto3461C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
-		fromVersion: "3.4.1",
-		toImageTag:  "3.4.2",
-		toVersion:   "3.4.2-1",
+		fromVersion: "3.4.6",
+		toVersion:   "3.4.6.1",
 		shortTest:   true,
 	})
 }
@@ -125,6 +124,9 @@ type upgradeTest struct {
 	toImage    string
 	toImageTag string
 
+	toEnterprise   bool
+	fromEnterprise bool
+
 	name      string
 	shortTest bool
 }
@@ -145,6 +147,9 @@ type UpgradeTest interface {
 
 func (u *upgradeTest) FromImage() string {
 	imageName := "arangodb/arangodb"
+	if u.fromEnterprise {
+		imageName = "arangodb/enterprise"
+	}
 	if u.fromImage != "" {
 		imageName = u.fromImage
 	}
@@ -157,6 +162,9 @@ func (u *upgradeTest) FromImage() string {
 
 func (u *upgradeTest) ToImage() string {
 	imageName := "arangodb/arangodb"
+	if u.toEnterprise {
+		imageName = "arangodb/enterprise"
+	}
 	if u.toImage != "" {
 		imageName = u.toImage
 	}

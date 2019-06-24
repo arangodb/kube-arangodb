@@ -369,7 +369,7 @@ redeploy-operator: delete-operator manifests
 
 $(ARANGOSYNCTESTCTRLBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(ARANGOSYNCTESTCTRLBINNAME) $(REPOPATH)/tests/sync
+	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(ARANGOSYNCTESTCTRLBIN) $(REPOPATH)/tests/sync
 
 .PHONY: check-sync-vars
 check-sync-vars:
