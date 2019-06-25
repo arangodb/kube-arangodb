@@ -27,8 +27,8 @@ import (
 	"strconv"
 
 	certificates "github.com/arangodb-helper/go-certificates"
-	"github.com/arangodb/arangosync/client"
-	"github.com/arangodb/arangosync/tasks"
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/arangosync-client/tasks"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"

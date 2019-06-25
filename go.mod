@@ -3,7 +3,6 @@ module github.com/arangodb/kube-arangodb
 go 1.12
 
 replace (
-	github.com/arangodb/arangosync => ./deps/github.com/arangodb/arangosync
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
 	k8s.io/api => k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
@@ -23,8 +22,8 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 	github.com/aktau/github-release v0.7.2
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
-	github.com/arangodb/arangosync v0.0.0-00010101000000-000000000000
-	github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d
+	github.com/arangodb/arangosync-client v0.0.0-20190625094541-f976ef443156
+	github.com/arangodb/go-driver v0.0.0-20190514134119-4cd2eb482d16
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
