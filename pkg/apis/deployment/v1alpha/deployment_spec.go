@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -72,7 +72,7 @@ type DeploymentSpec struct {
 
 	Chaos ChaosSpec `json:"chaos"`
 
-	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
+	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
 }
 
 // Equal compares two DeploymentSpec
