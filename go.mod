@@ -22,7 +22,7 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 	github.com/aktau/github-release v0.7.2
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
-	github.com/arangodb/arangosync-client v0.0.0-20190625094541-f976ef443156
+	github.com/arangodb/arangosync-client v0.6.3
 	github.com/arangodb/go-driver v0.0.0-20190514134119-4cd2eb482d16
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad

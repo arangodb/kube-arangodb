@@ -48,6 +48,8 @@ github.com/arangodb/arangosync-client v0.0.0-20190625093824-7e0a13d4e5ee h1:eIeD
 github.com/arangodb/arangosync-client v0.0.0-20190625093824-7e0a13d4e5ee/go.mod h1:nJ76oYSGsIvyhExvAGZcYj5M4I7ab97H3OOCAjI7qKU=
 github.com/arangodb/arangosync-client v0.0.0-20190625094541-f976ef443156 h1:VIxhX8tYAwUG/2aSGZaVuTnuQt2Czr9O0p30Lqo6xo4=
 github.com/arangodb/arangosync-client v0.0.0-20190625094541-f976ef443156/go.mod h1:C0DmhtoPKJGm2PO18FrfZf4mVWcG7qW2YPBTFMR2P1g=
+github.com/arangodb/arangosync-client v0.6.3 h1:CJL9IxjCNVci2HNuWncZdVzHBeYTz0CeqqTf5Kpj2Ac=
+github.com/arangodb/arangosync-client v0.6.3/go.mod h1:C0DmhtoPKJGm2PO18FrfZf4mVWcG7qW2YPBTFMR2P1g=
 github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d h1:9w1hB1yqZ8B1pWBI0vPVaAl1UhUhOrJrgQhzSlfmMRM=
 github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
 github.com/arangodb/go-driver v0.0.0-20190514134119-4cd2eb482d16 h1:D0+YgwcHnePwiKuV1lOzJLPZb6Tw8hHK2qKSQGqN28s=
