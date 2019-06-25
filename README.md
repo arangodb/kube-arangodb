@@ -136,7 +136,7 @@ helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.11/
 ## Building
 
 ```bash
-DOCKERNAMESPACE=<your dockerhub account> make allall
+DOCKERNAMESPACE=<your dockerhub account> make
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml
