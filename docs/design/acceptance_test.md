@@ -228,10 +228,10 @@ Change the value of `spec.dbservers.count` from 4 to 2.
 - [ ] Three dbservers are removed (one by one)
 - [ ] The deployment must yield 9 `Pods`
 
-Change the value of `spec.coordinators.count` from 4 to 1.
+Change the value of `spec.coordinators.count` from 4 to 2.
 
 - [ ] Three coordinators are removed (one by one)
-- [ ] The deployment must yield 6 `Pods`
+- [ ] The deployment must yield 7 `Pods`
 
 ### Test 4a: Create cluster deployment with `ArangoLocalStorage` provided volumes
 
