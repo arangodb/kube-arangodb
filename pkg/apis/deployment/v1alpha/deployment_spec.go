@@ -54,6 +54,7 @@ type DeploymentSpec struct {
 	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
 	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
 	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
+	LocallyAttachedVolumes *bool 	`json:"locallyAttachedVolumes,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -72,7 +73,7 @@ type DeploymentSpec struct {
 
 	Chaos ChaosSpec `json:"chaos"`
 
-	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
+	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
 }
 
 // Equal compares two DeploymentSpec
@@ -121,6 +122,11 @@ func (s DeploymentSpec) IsDowntimeAllowed() bool {
 // IsDisableIPv6 returns the value of disableIPv6.
 func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
+}
+
+// IsLocallyAttachedVolumes returns the value of locallyAttachedVolumes, default true
+func (s DeploymentSpec) IsLocallyAttachedVolumes() bool {
+	return util.BoolOrDefault(s.LocallyAttachedVolumes, true)
 }
 
 // GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6

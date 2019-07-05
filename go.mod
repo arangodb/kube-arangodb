@@ -24,7 +24,9 @@ require (
 	github.com/aktau/github-release v0.7.2
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync v0.0.0-00010101000000-000000000000
-	github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d
+	// THIS IS CURRENTLY HARD WIRED TO THE CORESPONDING GO-DRIVER BRANCH!
+	// WHEN MERGED, REPLACE WITH LATEST MASTER
+	github.com/arangodb/go-driver v0.0.0-20190704144722-b504aec1c4d1
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
