@@ -137,6 +137,15 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 
+	resignJobAvailable := false
+	status, _ := r.context.GetStatus()
+	currentVersion := status.CurrentImage.ArangoDBVersion
+	if currentVersion.CompareTo("3.4.7") > 0 && currentVersion.CompareTo("3.5") < 0 {
+		resignJobAvailable = true
+	} else if currentVersion.CompareTo("3.5.0") > 0 {
+		resignJobAvailable = true
+	}
+
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
 	if p.Spec.NodeName != "" {
@@ -147,7 +156,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			log.Warn().Err(err).Msg("Failed to get node for member")
 			return maskAny(err)
 		} else if node.Spec.Unschedulable {
-			if r.context.GetSpec().IsLocallyAttachedVolumes() {
+			if r.context.GetSpec().IsLocallyAttachedVolumes() || !resignJobAvailable {
 				dbserverDataWillBeGone = true
 			}
 		}
@@ -170,10 +179,10 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Is this a simple pod restart?
-	//if !dbserverDataWillBeGone {
-	//	log.Debug().Msg("Pod is just being restarted, safe to remove dbserver pod")
-	//	return nil
-	//}
+	if !dbserverDataWillBeGone && !resignJobAvailable {
+		log.Debug().Msg("Pod is just being restarted, safe to remove dbserver pod")
+		return nil
+	}
 
 	// Inspect cleaned out state
 	c, err := r.context.GetDatabaseClient(ctx)
