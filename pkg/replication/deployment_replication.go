@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

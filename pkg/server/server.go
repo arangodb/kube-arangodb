@@ -32,11 +32,11 @@ import (
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
 	assets "github.com/jessevdk/go-assets"
-	"github.com/prometheus/client_golang/prometheus"
+	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"

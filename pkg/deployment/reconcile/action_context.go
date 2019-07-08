@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/go-driver/agency"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

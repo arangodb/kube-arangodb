@@ -37,8 +37,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/arangosync/client"
-	"github.com/arangodb/arangosync/tasks"
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
 	vst "github.com/arangodb/go-driver/vst"
 	vstProtocol "github.com/arangodb/go-driver/vst/protocol"

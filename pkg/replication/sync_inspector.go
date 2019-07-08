@@ -27,7 +27,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 )
 

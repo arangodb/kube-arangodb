@@ -25,7 +25,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"k8s.io/api/core/v1"

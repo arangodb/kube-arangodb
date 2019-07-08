@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	sync "github.com/arangodb/arangosync/client"
+	sync "github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
