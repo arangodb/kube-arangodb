@@ -395,6 +395,7 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "Resource Requirements changed"
 	}
 
+	// Check for missing side cars in 
 	for _, specSidecar := range groupSpec.GetSidecars() {
 		var stateSidecar v1.Container;
 		if stateSidecar, found = status.SideCarSpecs[specSidecar.Name]; !found {
@@ -406,14 +407,11 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		}
 	}
 
-	for name, stateSidecar := range status.SideCarSpecs {
+	for name := range status.SideCarSpecs {
 		var found = false
 		for _, specSidecar := range groupSpec.GetSidecars() {
 			if name == specSidecar.Name {
 				found = true
-				if sideCarRequireRotation(specSidecar.DeepCopy(), &stateSidecar) {
-					return true, "Sidecar " + name + " requires rotation"
-				}
 				break
 			}
 		}
