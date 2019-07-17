@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"strings"
+	"reflect"
 
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
@@ -394,7 +395,102 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "Resource Requirements changed"
 	}
 
+	for _, specSidecar := range groupSpec.GetSidecars() {
+		var stateSidecar v1.Container;
+		if stateSidecar, found = status.SideCarSpecs[specSidecar.Name]; !found {
+			status.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
+			return true, "Sidecar " + specSidecar.Name + " not found in running pod"
+		}
+		if sideCarRequireRotation(specSidecar.DeepCopy(), &stateSidecar) {
+			return true, "Sidecar " + specSidecar.Name + " requires rotation"
+		}
+	}
+
+	for name, stateSidecar := range status.SideCarSpecs {
+		var found = false
+		for _, specSidecar := range groupSpec.GetSidecars() {
+			if name == specSidecar.Name {
+				found = true
+				if sideCarRequireRotation(specSidecar.DeepCopy(), &stateSidecar) {
+					return true, "Sidecar " + name + " requires rotation"
+				}
+				break
+			}
+		}
+		if (!found) {
+			delete (status.SideCarSpecs, name)
+			return true, "Sidecar " + name + " no longer in specification"
+		}
+	}
+
 	return false, ""
+}
+
+func sideCarRequireRotation(wanted, given *v1.Container) bool {
+	if !reflect.DeepEqual(wanted.Args, given.Args) {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.Command, given.Command) {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.Env, given.Env) {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.EnvFrom, given.EnvFrom) {
+		return true
+	}
+	if wanted.Image != given.Image {
+		return true
+	}
+	if (wanted.ImagePullPolicy != given.ImagePullPolicy) {
+		if wanted.ImagePullPolicy != "Always" || !strings.HasSuffix(given.Image, ":latest") {
+			return true
+		}
+	}
+	if wanted.Lifecycle != given.Lifecycle {
+		return true
+	}
+	if wanted.LivenessProbe != given.LivenessProbe {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.Ports, given.Ports) {
+		return true
+	}
+	if wanted.ReadinessProbe != given.ReadinessProbe {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.Resources, given.Resources) {
+		return true
+	}
+	if wanted.SecurityContext != given.SecurityContext {
+		return true
+	}
+	if wanted.Stdin != given.Stdin && wanted.Stdin == true {
+		return true
+	}
+	if wanted.StdinOnce != given.StdinOnce && wanted.StdinOnce == true {
+		return true
+	}
+	if wanted.TerminationMessagePath != given.TerminationMessagePath {
+		return true
+	}
+	if wanted.TerminationMessagePolicy != given.TerminationMessagePolicy {
+		return true
+	}
+	if wanted.TTY != given.TTY && wanted.StdinOnce == true {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.VolumeDevices, given.VolumeDevices) {
+		return true
+	}
+	if !reflect.DeepEqual(wanted.VolumeMounts, given.VolumeMounts) {
+		return true
+	}
+	if wanted.WorkingDir != given.WorkingDir {
+		return true
+	}
+
+	return false
 }
 
 // resourcesRequireRotation returns true if the resource requirements have changed such that a rotation is required

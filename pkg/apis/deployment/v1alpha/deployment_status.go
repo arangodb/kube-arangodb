@@ -22,7 +22,10 @@
 
 package v1alpha
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	v1 "k8s.io/api/core/v1"
+)
 
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
@@ -65,6 +68,9 @@ type DeploymentStatus struct {
 
 	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
 	ForceStatusReload *bool `json:"force-status-reload,omitempty"`
+
+	// SideCarSpecs contains list of specifications specified for side cars
+	SideCarSpecs map[string]v1.Container
 }
 
 // Equal checks for equality

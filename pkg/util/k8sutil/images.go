@@ -67,3 +67,17 @@ func GetArangoDBContainerFromPod(pod *corev1.Pod) corev1.Container {
 
 	return arangoc
 }
+
+// GetNonArangoNonExporterFromPod returns all non ArangoDB/Exporter containers from a pod
+func GetOtherContainersFromPod(pod *corev1.Pod) corev1.Container {
+	arangoc := pod.Spec.Containers[0]
+	if len(pod.Status.ContainerStatuses) > 1 {
+		for _, container := range pod.Spec.Containers {
+			if strings.Contains(container.Name, "server") {
+				arangoc = container
+			}
+		}
+	}
+
+	return arangoc
+}
