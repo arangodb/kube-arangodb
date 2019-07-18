@@ -220,7 +220,7 @@ kubectl get all --all-namespaces
 - Attach `tiller` to proper role
 
   ```
-kubectl create clusterrolebinding tiller-cluster-rule \
+  kubectl create clusterrolebinding tiller-cluster-rule \
 	--clusterrole=cluster-admin --serviceaccount=kube-system:tiller
   ```
   ```
