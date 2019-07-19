@@ -395,19 +395,28 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "Resource Requirements changed"
 	}
 
+	if status.SideCarSpecs == nil {
+		status.SideCarSpecs = make (map[string]v1.Container)
+	}
+	
+	var memberStatus, _, _ = status.Members.MemberStatusByPodName(p.GetName())
+	if memberStatus.SideCarSpecs == nil {
+		memberStatus.SideCarSpecs = make(map[string]v1.Container)
+	}
+
 	// Check for missing side cars in 
 	for _, specSidecar := range groupSpec.GetSidecars() {
 		var stateSidecar v1.Container;
-		if stateSidecar, found = status.SideCarSpecs[specSidecar.Name]; !found {
-			status.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
-			return true, "Sidecar " + specSidecar.Name + " not found in running pod"
+		if stateSidecar, found = memberStatus.SideCarSpecs[specSidecar.Name]; !found {		
+			memberStatus.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
+			return true, "Sidecar " + specSidecar.Name + " not found in running pod " + p.GetName()
 		}
 		if sideCarRequireRotation(specSidecar.DeepCopy(), &stateSidecar) {
 			return true, "Sidecar " + specSidecar.Name + " requires rotation"
 		}
 	}
 
-	for name := range status.SideCarSpecs {
+	for name := range memberStatus.SideCarSpecs {
 		var found = false
 		for _, specSidecar := range groupSpec.GetSidecars() {
 			if name == specSidecar.Name {
@@ -416,7 +425,7 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 			}
 		}
 		if (!found) {
-			delete (status.SideCarSpecs, name)
+			delete (memberStatus.SideCarSpecs, name)
 			return true, "Sidecar " + name + " no longer in specification"
 		}
 	}

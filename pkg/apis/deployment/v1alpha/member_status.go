@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -53,6 +54,8 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
+	// SideCarSpecs contains list of specifications specified for side cars
+	SideCarSpecs map[string]v1.Container
 }
 
 // Equal checks for equality
@@ -64,7 +67,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.PodName == other.PodName &&
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
-		s.CleanoutJobID == other.CleanoutJobID
+		s.CleanoutJobID == other.CleanoutJobID &&
+		reflect.DeepEqual(s.SideCarSpecs, other.SideCarSpecs)
 }
 
 // Age returns the duration since the creation timestamp of this member.
