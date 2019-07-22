@@ -23,16 +23,16 @@
 package reconcile
 
 import (
-	"strings"
 	"reflect"
+	"strings"
 
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -396,19 +396,18 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 	}
 
 	if status.SideCarSpecs == nil {
-		status.SideCarSpecs = make (map[string]v1.Container)
+		status.SideCarSpecs = make(map[string]v1.Container)
 	}
-	
+
 	var memberStatus, _, _ = status.Members.MemberStatusByPodName(p.GetName())
 	if memberStatus.SideCarSpecs == nil {
 		memberStatus.SideCarSpecs = make(map[string]v1.Container)
 	}
 
-	// Check for missing side cars in 
+	// Check for missing side cars in
 	for _, specSidecar := range groupSpec.GetSidecars() {
-		var stateSidecar v1.Container;
-		if stateSidecar, found = memberStatus.SideCarSpecs[specSidecar.Name]; !found {		
-			memberStatus.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
+		var stateSidecar v1.Container
+		if stateSidecar, found = memberStatus.SideCarSpecs[specSidecar.Name]; !found {
 			return true, "Sidecar " + specSidecar.Name + " not found in running pod " + p.GetName()
 		}
 		if sideCarRequireRotation(specSidecar.DeepCopy(), &stateSidecar) {
@@ -424,8 +423,7 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 				break
 			}
 		}
-		if (!found) {
-			delete (memberStatus.SideCarSpecs, name)
+		if !found {
 			return true, "Sidecar " + name + " no longer in specification"
 		}
 	}
@@ -449,7 +447,7 @@ func sideCarRequireRotation(wanted, given *v1.Container) bool {
 	if wanted.Image != given.Image {
 		return true
 	}
-	if (wanted.ImagePullPolicy != given.ImagePullPolicy) {
+	if wanted.ImagePullPolicy != given.ImagePullPolicy {
 		if wanted.ImagePullPolicy != "Always" || !strings.HasSuffix(given.Image, ":latest") {
 			return true
 		}
