@@ -25,8 +25,9 @@ package v1alpha
 import (
 	"time"
 
+	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,6 +54,8 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
+	// ArangoVersion holds the ArangoDB version in member
+	ArangoVersion driver.Version `json:"arango-version,omitempty"`
 }
 
 // Equal checks for equality
@@ -64,7 +67,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.PodName == other.PodName &&
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
-		s.CleanoutJobID == other.CleanoutJobID
+		s.CleanoutJobID == other.CleanoutJobID &&
+		s.ArangoVersion == other.ArangoVersion
 }
 
 // Age returns the duration since the creation timestamp of this member.
