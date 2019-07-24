@@ -669,10 +669,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		}
 
 		if err == nil {
-			if imageInfo.ImageID == status.CurrentImage.ImageID {
-				m.ArangoVersion = status.CurrentImage.ArangoDBVersion
-				status.Members.Update(m, group)
-			}
+			m.ArangoVersion = status.CurrentImage.ArangoDBVersion
+			status.Members.Update(m, group)
 		}
 
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
