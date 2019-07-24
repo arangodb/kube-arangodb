@@ -535,7 +535,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) (v1.Pod, error) {
+	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
 
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
@@ -549,12 +549,12 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	if lifecycleImage != "" {
 		c, err := initLifecycleContainer(lifecycleImage)
 		if err != nil {
-			return p, maskAny(err)
+			return maskAny(err)
 		}
 		p.Spec.InitContainers = append(p.Spec.InitContainers, c)
 		lifecycle, lifecycleEnvVars, lifecycleVolumes, err = newLifecycle()
 		if err != nil {
-			return p, maskAny(err)
+			return maskAny(err)
 		}
 	}
 
@@ -680,9 +680,9 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, "")
 
 	if err := createPod(kubecli, &p, deployment.GetNamespace(), deployment.AsOwner()); err != nil {
-		return p, maskAny(err)
+		return maskAny(err)
 	}
-	return p, nil
+	return nil
 }
 
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
