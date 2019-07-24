@@ -668,10 +668,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			return maskAny(err)
 		}
 
-		if err == nil {
-			m.ArangoVersion = status.CurrentImage.ArangoDBVersion
-			status.Members.Update(m, group)
-		}
+		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
+		status.Members.Update(m, group)
 
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
