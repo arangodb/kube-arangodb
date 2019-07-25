@@ -667,6 +667,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, exporter, groupSpec.GetSidecars(), groupSpec.VolumeClaimTemplate); err != nil {
 			return maskAny(err)
 		}
+
+		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
+		m.ImageID = status.CurrentImage.ImageID
+
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
 		// Check image
