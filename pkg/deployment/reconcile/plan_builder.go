@@ -32,9 +32,9 @@ import (
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	v1 "k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // upgradeDecision is the result of an upgrade check.
@@ -427,6 +427,7 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 	return false, ""
 }
 
+// sideCarRequireRotation checks if side car requires rotation including default parameters
 func sideCarRequireRotation(wanted, given *v1.Container) bool {
 	if !reflect.DeepEqual(wanted.Args, given.Args) {
 		return true
