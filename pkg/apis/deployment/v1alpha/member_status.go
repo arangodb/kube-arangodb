@@ -56,6 +56,8 @@ type MemberStatus struct {
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
 	// ArangoVersion holds the ArangoDB version in member
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
+	//ImageId holds the members ArangoDB image ID
+	ImageID string `json:"image-id,omitempty"`
 }
 
 // Equal checks for equality
@@ -68,7 +70,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
 		s.CleanoutJobID == other.CleanoutJobID &&
-		s.ArangoVersion == other.ArangoVersion
+		s.ArangoVersion == other.ArangoVersion &&
+		s.ImageID == other.ImageID
 }
 
 // Age returns the duration since the creation timestamp of this member.
