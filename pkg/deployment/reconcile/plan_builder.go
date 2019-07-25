@@ -32,7 +32,7 @@ import (
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -393,10 +393,6 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 
 	if resourcesRequireRotation(resources, k8sutil.GetArangoDBContainerFromPod(&p).Resources) {
 		return true, "Resource Requirements changed"
-	}
-
-	if status.SideCarSpecs == nil {
-		status.SideCarSpecs = make(map[string]v1.Container)
 	}
 
 	var memberStatus, _, _ = status.Members.MemberStatusByPodName(p.GetName())
