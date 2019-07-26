@@ -269,6 +269,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
 		t.Fatalf("Failed to add a container to both coordinators and db servers", grp)
@@ -282,6 +283,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
@@ -307,6 +309,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
