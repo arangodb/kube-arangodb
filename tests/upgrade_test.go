@@ -83,10 +83,11 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
 // }
 
-func TestUpgradeClusterRocksDB3322Cto342C(t *testing.T) {
+func TestUpgradeClusterRocksDB3322Cto346C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.22",
-		toVersion:   "3.4.6.1",
+		toVersion:   "3.4.6-1",
+		toImageTag:  "3.4.6.1",
 		shortTest:   true,
 	})
 }
@@ -99,11 +100,12 @@ func TestUpgradeClusterRocksDB3316Cto3323C(t *testing.T) {
 	})
 }
 
-func TestUpgradeClusterRocksDB346Cto3461C(t *testing.T) {
+func TestUpgradeClusterRocksDB346Cto347C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
-		fromVersion: "3.4.6",
-		toVersion:   "3.4.6.1",
-		shortTest:   true,
+		fromVersion:  "3.4.6-1",
+		fromImageTag: "3.4.6.1",
+		toVersion:    "3.4.7",
+		shortTest:    true,
 	})
 }
 
