@@ -52,7 +52,7 @@ type SideCarTest interface {
 	Version() driver.Version
 	GroupSideCars(string) []v1.Container
 	AddSideCar(string, v1.Container)
-	ClearGroupSideCars()
+	ClearGroupSideCars(group string)
 }
 
 func (s *sideCarTest) IsShortTest() bool {
@@ -156,10 +156,16 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Log("Updated deployment")
 	}
 
-	cmd1 := [...]string{"sh", "-c", "sleep 3600"}
-	cmd2 := [...]string{"sh", "-c", "sleep 1800"}
-	cmd := [...]string{"sh"}
-	args := [...]string{"-c", "sleep 3600"}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
+
+	cmd1 := []string{"sh", "-c", "sleep 3600"}
+	cmd2 := []string{"sh", "-c", "sleep 1800"}
+	cmd := []string{"sh"}
+	args := []string{"-c", "sleep 3600"}
 
 	// Add 2nd sidecar to coordinators
 	container = v1.Container{Image: "busybox", Name: "sleeper", Command: cmd1}
@@ -174,9 +180,14 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
 
 	// Change command line of second sidecar
-	container = &spec.GroupSideCars()[1]
+	container = spec.GroupSideCars(grp)[0]
 	container.Command = cmd2
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
@@ -186,6 +197,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new command line")
 	} else {
 		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	// Change command line args of second sidecar
@@ -200,10 +216,15 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
 
 	// Change environment variables of second container
-	container.Env = [...]v1.EnvVar{
-		{Name: "Hello", Value: "World"}, {Name: "Pi", Value: 3.14159265359}, {Name: "Two", Value: 2}}
+	container.Env = []v1.EnvVar{
+		{Name: "Hello", Value: "World"}, {Name: "Pi", Value: "3.14159265359"}, {Name: "Two", Value: "2"}}
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
@@ -213,9 +234,14 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
 
 	// Upgrade side car image
-	container = &spec.GroupSideCars()[0]
+	container = spec.GroupSideCars(grp)[0]
 	container.Image = "nginx:1.7.10"
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
@@ -226,17 +252,10 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
-
-	// Update side car image with new pull policy
-	container.ImagePullPolicy = v1.PullPolicy("Always")
-	deployment, err = updateDeployment(c, depl.GetName(), ns,
-		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
-		})
-	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image pull policy")
-	} else {
-		t.Log("Updated deployment")
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	// Update side car image with new pull policy
@@ -249,6 +268,28 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image pull policy")
 	} else {
 		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
+
+	// Update side car image with new pull policy
+	container.ImagePullPolicy = v1.PullPolicy("Always")
+	deployment, err = updateDeployment(c, depl.GetName(), ns,
+		func(depl *api.DeploymentSpec) {
+			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+		})
+	if err != nil {
+		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image pull policy")
+	} else {
+		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	// Remove all sidecars again
@@ -261,6 +302,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Fatalf("Failed to remove all sidecars from group ", grp)
 	} else {
 		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	// Adding containers to coordinators and db servers
@@ -276,6 +322,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
+	}
 
 	// Clear containers from both groups
 	spec.ClearGroupSideCars(grp)
@@ -289,6 +340,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
 	} else {
 		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	// Adding containers to coordinators again
@@ -315,6 +371,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
 	} else {
 		t.Log("Updated deployment")
+	}
+	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	removeDeployment(c, depl.GetName(), ns)
