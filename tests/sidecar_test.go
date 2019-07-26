@@ -151,7 +151,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add ", container.Name, " to group ", grp)
+		t.Fatalf("Failed to add %s to group %s", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -176,7 +176,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add ", container.Name, " to group ", grp)
+		t.Fatalf("Failed to add %s to group %s", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -194,7 +194,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new command line")
+		t.Fatalf("Failed to update %s in group %s with new command line ", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -212,7 +212,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new command line arguments")
+		t.Fatalf("Failed to update %s in group %s with new command line arguments", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -230,7 +230,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, " with new enironment variables")
+		t.Fatalf("Failed to update %s in group %s with new enironment variables", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -248,7 +248,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image")
+		t.Fatalf("Failed to update %s in group %s with new image", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -265,7 +265,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image pull policy")
+		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -282,7 +282,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update ", container.Name, " in group ", grp, "with new image pull policy")
+		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -299,7 +299,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to remove all sidecars from group ", grp)
+		t.Fatalf("Failed to remove all sidecars from group %s", grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -318,7 +318,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add a container to both coordinators and db servers", grp)
+		t.Fatalf("Failed to add a container to both coordinators and db servers")
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -337,7 +337,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
-		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
+		t.Fatalf("Failed to delete all containers from both coordinators and db servers")
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -354,7 +354,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add a container to both coordinators and db servers", grp)
+		t.Fatalf("Failed to add a container to both coordinators and db servers")
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -368,7 +368,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
 		})
 	if err != nil {
-		t.Fatalf("Failed to delete all containers from both coordinators and db servers", grp)
+		t.Fatalf("Failed to delete all containers from both coordinators and db servers")
 	} else {
 		t.Log("Updated deployment")
 	}
