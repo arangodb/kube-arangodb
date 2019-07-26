@@ -467,10 +467,10 @@ func sideCarRequireRotation(wanted, given *v1.Container) bool {
 	if wanted.SecurityContext != given.SecurityContext {
 		return true
 	}
-	if wanted.Stdin != given.Stdin && wanted.Stdin == true {
+	if wanted.Stdin != given.Stdin {
 		return true
 	}
-	if wanted.StdinOnce != given.StdinOnce && wanted.StdinOnce == true {
+	if wanted.StdinOnce != given.StdinOnce {
 		return true
 	}
 	if wanted.TerminationMessagePath != given.TerminationMessagePath {
@@ -479,7 +479,7 @@ func sideCarRequireRotation(wanted, given *v1.Container) bool {
 	if wanted.TerminationMessagePolicy != given.TerminationMessagePolicy {
 		return true
 	}
-	if wanted.TTY != given.TTY && wanted.StdinOnce == true {
+	if wanted.TTY != given.TTY {
 		return true
 	}
 	if !reflect.DeepEqual(wanted.VolumeDevices, given.VolumeDevices) {
