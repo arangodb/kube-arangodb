@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -62,6 +63,9 @@ func (r *Resources) CleanupRemovedMembers() error {
 
 // cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
 func (r *Resources) cleanupRemovedClusterMembers() error {
+
+	log.Info().Msg("Cleanup routine 1")
+
 	log := r.log
 
 	// Fetch recent cluster health
@@ -70,15 +74,23 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	ts := r.health.timestamp
 	r.health.mutex.Unlock()
 
+	log.Info().Msg("Cleanup routine 2")
+
 	// Only accept recent cluster health values
 	if time.Since(ts) > maxClusterHealthAge {
+		log.Info().Msg("Cleanup longer than max cluster health exiting")
 		return nil
 	}
 
+	log.Info().Msg("Cleanup routine 3")
+
 	serverFound := func(id string) bool {
 		_, found := h.Health[driver.ServerID(id)]
+		log.Info().Msg("Server found exit")
 		return found
 	}
+
+	log.Info().Msg("Cleanup routine 4")
 
 	// For over all members that can be removed
 	status, lastVersion := r.context.GetStatus()
@@ -87,6 +99,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		if group != api.ServerGroupCoordinators && group != api.ServerGroupDBServers {
 			// We're not interested in these other groups
+			log.Info().Str("group ", group.AsRole()).Msg("Not interested in group ")
 			return nil
 		}
 		for _, m := range list {
@@ -120,22 +133,31 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 		return nil
 	})
 
+	log.Info().Msg("Cleanup routine 4")
+
 	if updateStatusNeeded {
+		log.Info().Msg("updatestatusneeded ")
+
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 			return maskAny(err)
 		}
 	}
 
+	log.Info().Msg("Cleanup routine 5")
 	for _, podName := range podNamesToRemove {
 		if err := r.context.DeletePod(podName); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pod", podName).Msg("Failed to remove obsolete pod")
 		}
 	}
+
+	log.Info().Msg("Cleanup routine 6")
 	for _, pvcName := range pvcNamesToRemove {
 		if err := r.context.DeletePvc(pvcName); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pvc", pvcName).Msg("Failed to remove obsolete PVC")
 		}
 	}
+
+	log.Info().Msg("Cleanup routine 7")
 
 	return nil
 }
