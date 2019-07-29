@@ -86,7 +86,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 
 	serverFound := func(id string) bool {
 		_, found := h.Health[driver.ServerID(id)]
-		log.Info().Bool("found", found).Str("server id", id).Msg("Server found exit")
+		log.Info().Bool("found ", found).Str("server id ", id)
 		return found
 	}
 
