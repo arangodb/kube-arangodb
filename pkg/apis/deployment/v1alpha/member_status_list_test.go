@@ -66,4 +66,17 @@ func TestMemberStatusList(t *testing.T) {
 	assert.Equal(t, m1.ID, (*list)[0].ID)
 	assert.Equal(t, m2.ID, (*list)[1].ID)
 	assert.Equal(t, m3.ID, (*list)[2].ID)
+
+	list2 := &MemberStatusList{m3, m2, m1}
+	assert.True(t, list.Equal(*list2))
+	assert.True(t, list2.Equal(*list))
+
+	list3 := &MemberStatusList{m3, m1}
+	assert.False(t, list.Equal(*list3))
+	assert.False(t, list3.Equal(*list))
+
+	list4 := MemberStatusList{m3, m2, m1}
+	list4[1].Phase = "something-else"
+	assert.False(t, list.Equal(list4))
+	assert.False(t, list4.Equal(*list))
 }
