@@ -86,7 +86,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 
 	serverFound := func(id string) bool {
 		_, found := h.Health[driver.ServerID(id)]
-		log.Info().Bool("found", found).Str("id", id).Msg("Server found exit")
+		log.Info().Bool("found", found).Str("server id", id).Msg("Server found exit")
 		return found
 	}
 
@@ -103,6 +103,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 			return nil
 		}
 		for _, m := range list {
+
 			if serverFound(m.ID) {
 				// Member is (still) found, skip it
 				if m.Conditions.Update(api.ConditionTypeMemberOfCluster, true, "", "") {
