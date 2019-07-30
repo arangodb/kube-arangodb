@@ -302,8 +302,8 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	}
 
 	// Adding containers to coordinators and db servers
-	name = "busybox"
-	image = "sleeper"
+	image = "busybox"
+	name = "sleeper"
 	spec.AddSideCar(coordinators, v1.Container{Image: image, Name: name, Command: cmd1})
 	spec.AddSideCar(dbservers, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
