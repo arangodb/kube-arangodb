@@ -270,7 +270,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)'
 
 $(DURATIONTESTBIN): $(SOURCES)
 	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
