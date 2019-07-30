@@ -562,27 +562,35 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 
 // clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
 func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+
 	c := cl.MustNewInCluster()
 	ns := getNamespace(t)
 
-	// Fetch latest status so we know all member details
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("Failed to get deployment: %v", err)
-	}
-
 	var noGood int
-	for start := time.Now(); time.Since(start) < 180*time.Second; {
+	for start := time.Now(); time.Since(start) < 300*time.Second; {
+
+		// Fetch latest status so we know all member details
+		apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Failed to get deployment: %v", err)
+		}
 
 		// How many pods not matching
 		noGood = 0
 
 		// Check member after another
 		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+
+			t.Logf("%s group has %d sidecars", group.AsRole(), spec.GetSidecars())
+
 			for _, m := range *status {
-				sidecars, found := m.SideCarSpecs[group.AsRole()]
-				if found && sidecars.Size() == len(spec.GetSidecars()) {
-					if sidecars.Size() != 0 && !reflect.DeepEqual(sidecars, spec.GetSidecars()) {
+				for _, scar := range spec.GetSidecars() {
+					mcar, found := m.SideCarSpecs[scar.Name]
+					if found {
+						if !reflect.DeepEqual(mcar, scar) {
+							noGood++
+						}
+					} else {
 						noGood++
 					}
 				}
@@ -593,6 +601,7 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 		if noGood == 0 {
 			return nil
 		}
+
 		time.Sleep(2 * time.Second)
 	}
 
