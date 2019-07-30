@@ -159,7 +159,7 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
-const TestEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+const testEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
 
 func getEnterpriseLicenseKey() string {
 	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
@@ -269,7 +269,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 		Spec: api.DeploymentSpec{
 			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
 			License: api.LicenseSpec{
-				SecretName: util.NewString(TestEnterpriseLicenseKeySecretName),
+				SecretName: util.NewString(testEnterpriseLicenseKeySecretName),
 			},
 		},
 	}
@@ -571,11 +571,11 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
-	var no_good int
+	var noGood int
 	for start := time.Now(); time.Since(start) < 180*time.Second; {
 
 		// How many pods not matching
-		no_good = 0
+		noGood = 0
 
 		// Check member after another
 		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
@@ -583,20 +583,20 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 				sidecars, found := m.SideCarSpecs[group.AsRole()]
 				if found && sidecars.Size() == len(spec.GetSidecars()) {
 					if sidecars.Size() != 0 && !reflect.DeepEqual(sidecars, spec.GetSidecars()) {
-						no_good++
+						noGood++
 					}
 				}
 			}
 			return nil
 		}, &apiObject.Status)
 
-		if no_good == 0 {
+		if noGood == 0 {
 			return nil
 		}
 		time.Sleep(2 * time.Second)
 	}
 
-	return maskAny(fmt.Errorf("%d pods with unmatched sidecars", no_good))
+	return maskAny(fmt.Errorf("%d pods with unmatched sidecars", noGood))
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches

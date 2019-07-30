@@ -274,13 +274,13 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update % in group %s with new image pull policy", container.Name, grp)
+		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update % in group %s with new image pull policy: %v", container.Name, grp, err)
+		t.Fatalf("Failed to update %s in group %s with new image pull policy: %v", container.Name, grp, err)
 	}
 
 	// Remove all sidecars again
