@@ -177,9 +177,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add %s to group %s", container.Name, grp)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("XXXXX")
 	}
+	t.Log("YYYY")
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+	t.Log("ZZZZ")
 	if err != nil {
 		t.Fatalf("Failed to add %s to group %s: %v", container.Name, grp, err)
 	}
