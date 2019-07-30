@@ -160,7 +160,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to add %s to group %s: %v", name, coordinators, err)
+		t.Fatalf("... failed: %v", name, coordinators, err)
 	} else {
 		t.Log("... done")
 	}
@@ -228,7 +228,6 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	}
 
 	// Change environment variables of second container
-	name = spec.GroupSideCars(coordinators)[1].Name
 	spec.GroupSideCars(coordinators)[1].Env = []v1.EnvVar{
 		{Name: "Hello", Value: "World"}, {Name: "Pi", Value: "3.14159265359"}, {Name: "Two", Value: "2"}}
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
@@ -322,7 +321,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 
 	// Adding containers to coordinators and db servers
 	name = "busybox"
-	image = name
+	image = "sleeper"
 	spec.AddSideCar(coordinators, v1.Container{Image: image, Name: name, Command: cmd1})
 	spec.AddSideCar(dbservers, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
@@ -362,7 +361,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Log("... done")
 	}
 
-	// Adding containers to coordinators again
+	// Adding containers to agents again
 	spec.AddSideCar(agents, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
@@ -371,7 +370,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add a %s sidecar to %s", name, agents)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Failed to add a %s sidecar to %s", name, agents)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
