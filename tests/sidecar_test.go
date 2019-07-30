@@ -96,13 +96,14 @@ func (s *sideCarTest) ClearGroupSideCars(group string) {
 	s.sideCars[group] = nil
 }
 
-func TestAddSideCarToCoordinators(t *testing.T) {
+// TestSideCars tests side car functionality
+func TestSideCars(t *testing.T) {
 	runSideCarTest(t, &sideCarTest{
-		version:   "3.4.7",
-		name:      "test",
-		shortTest: true,
+		version: "3.4.7",
+		name:    "sidecar-tests",
 	})
 }
+
 func runSideCarTest(t *testing.T, spec SideCarTest) {
 
 	if !spec.IsShortTest() {
