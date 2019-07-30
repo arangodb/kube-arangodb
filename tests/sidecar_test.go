@@ -373,8 +373,10 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		t.Log("Updated deployment")
 	}
 
-	if err := waitUntilclusterSidecarsEqualSpec(t, spec , depl) {
-		
+	if err := waitUntilClusterSidecarsEqualSpec(t, spec , depl) error {
+		return clusterHealthEqualsSpec(h, deployment.Spec)
+	}); err != nil {
+		t.Fatalf("Cluster not running, after scale-up, in expected health in time: %v", err)
 	}
 
 	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {

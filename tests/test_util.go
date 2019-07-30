@@ -561,9 +561,8 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 }
 
 // clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
-func clusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
 	c := cl.MustNewInCluster()
-	//kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
 	// Fetch latest status so we know all member details
@@ -572,12 +571,11 @@ func clusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.Ar
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
 
-	timeout := time.After(180 * time.Second)
-	//tick := time.Tick(500 * time.Millisecond)
+	var no_good int
+	for start := time.Now(); time.Since(start) < 180*time.Second; {
 
-	for {
-		// How many servers are as desired
-		no_good := 0
+		// How many pods not matching
+		no_good = 0
 
 		// Check member after another
 		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
@@ -595,12 +593,10 @@ func clusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.Ar
 		if no_good == 0 {
 			return nil
 		}
-
 		time.Sleep(2 * time.Second)
-
 	}
 
-	return nil
+	return maskAny(fmt.Errorf("%d pods with unmatched sidecars", no_good))
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches
