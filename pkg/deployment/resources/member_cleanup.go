@@ -71,8 +71,9 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	r.health.mutex.Unlock()
 
 	// Only accept recent cluster health values
-	if time.Since(ts) > maxClusterHealthAge {
-		log.Info().Msg("Cleanup longer than max cluster health exiting")
+	healthAge := time.Since(ts)
+	if healthAge > maxClusterHealthAge {
+		log.Info().Dur("age", healthAge).Msg("Cleanup longer than max cluster health. Exiting")
 		return nil
 	}
 
