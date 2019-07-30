@@ -72,6 +72,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 
 	// Only accept recent cluster health values
 	if time.Since(ts) > maxClusterHealthAge {
+		log.Info().Str("member", h.ID).Msg(" cluster health is older that us. Disregarding")
 		return nil
 	}
 

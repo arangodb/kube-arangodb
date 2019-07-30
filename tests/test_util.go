@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,6 +50,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	cl "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -556,6 +558,49 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 		}
 		return nil
 	}
+}
+
+// clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
+func clusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+	c := cl.MustNewInCluster()
+	//kubecli := mustNewKubeClient(t)
+	ns := getNamespace(t)
+
+	// Fetch latest status so we know all member details
+	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get deployment: %v", err)
+	}
+
+	timeout := time.After(180 * time.Second)
+	//tick := time.Tick(500 * time.Millisecond)
+
+	for {
+		// How many servers are as desired
+		no_good := 0
+
+		// Check member after another
+		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+			for _, m := range *status {
+				sidecars, found := m.SideCarSpecs[group.AsRole()]
+				if found && sidecars.Size() == len(spec.GetSidecars()) {
+					if sidecars.Size() != 0 && !reflect.DeepEqual(sidecars, spec.GetSidecars()) {
+						no_good++
+					}
+				}
+			}
+			return nil
+		}, &apiObject.Status)
+
+		if no_good == 0 {
+			return nil
+		}
+
+		time.Sleep(2 * time.Second)
+
+	}
+
+	return nil
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches

@@ -282,7 +282,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
+		t.Fatalf("Failed to update % in group %s with new image pull policy", container.Name, grp)
 	} else {
 		t.Log("Updated deployment")
 	}
@@ -372,6 +372,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	} else {
 		t.Log("Updated deployment")
 	}
+
+	if err := waitUntilclusterSidecarsEqualSpec(t, spec , depl) {
+		
+	}
+
 	if err := waitUntilClusterHealth(DBClient, func(h driver.ClusterHealth) error {
 		return clusterHealthEqualsSpec(h, deployment.Spec)
 	}); err != nil {
