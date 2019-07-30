@@ -580,9 +580,6 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 
 		// Check member after another
 		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-
-			t.Logf("%s group has %d sidecars", group.AsRole(), spec.GetSidecars())
-
 			for _, m := range *status {
 				for _, scar := range spec.GetSidecars() {
 					mcar, found := m.SideCarSpecs[scar.Name]

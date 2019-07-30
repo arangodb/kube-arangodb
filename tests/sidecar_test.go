@@ -141,24 +141,28 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	}
 
 	// Add sidecar to coordinators
-	container := v1.Container{Image: "nginx:1.7.9", Name: "nginx"}
-	var grp = "coordinators"
-	var dbs = "dbservers"
+	var coordinators = api.ServerGroupCoordinators.AsRole()
+	var dbservers = api.ServerGroupDBServers.AsRole()
+	var agents = api.ServerGroupAgents.AsRole()
 
-	spec.AddSideCar(grp, container)
+	var name = "nginx"
+	var image = "nginx:1.7.9"
 
+	spec.AddSideCar(coordinators, v1.Container{Image: image, Name: name})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add %s to group %s", container.Name, grp)
+		t.Fatalf("Failed to add %s to group %s", name, coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Adding %s sidecar to group %s ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to add %s to group %s: %v", container.Name, grp, err)
+		t.Fatalf("Failed to add %s to group %s: %v", name, coordinators, err)
+	} else {
+		t.Log("... done")
 	}
 
 	cmd1 := []string{"sh", "-c", "sleep 3600"}
@@ -167,211 +171,236 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	args := []string{"-c", "sleep 3600"}
 
 	// Add 2nd sidecar to coordinators
-	container = v1.Container{Image: "busybox", Name: "sleeper", Command: cmd1}
-	spec.AddSideCar(grp, container)
-
+	image = "busybox"
+	name = "sleeper"
+	spec.AddSideCar(coordinators, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add %s to group %s", container.Name, grp)
+		t.Fatalf("Failed to add %s to group %s", name, coordinators)
 	} else {
-		t.Log("XXXXX")
-	}
-	t.Log("YYYY")
-	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
-	t.Log("ZZZZ")
-	if err != nil {
-		t.Fatalf("Failed to add %s to group %s: %v", container.Name, grp, err)
-	}
-
-	// Change command line of second sidecar
-	container = spec.GroupSideCars(grp)[0]
-	container.Command = cmd2
-	deployment, err = updateDeployment(c, depl.GetName(), ns,
-		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
-		})
-	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new command line ", container.Name, grp)
-	} else {
-		t.Log("Updated deployment")
+		t.Log("Adding sidecar %s to group %s", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new command line: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
+	}
+
+	// Update command line of second sidecar
+	spec.GroupSideCars(coordinators)[1].Command = cmd2
+	deployment, err = updateDeployment(c, depl.GetName(), ns,
+		func(depl *api.DeploymentSpec) {
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
+		})
+	if err != nil {
+		t.Fatalf("Failed to update %s in group %s with new command line ", name, coordinators)
+	} else {
+		t.Log("Update %s in group %s with new command line ")
+	}
+	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+	if err != nil {
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Change command line args of second sidecar
-	container.Command = cmd
-	container.Args = args
+	spec.GroupSideCars(coordinators)[1].Command = cmd
+	spec.GroupSideCars(coordinators)[1].Args = args
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new command line arguments", container.Name, grp)
+		t.Fatalf("Failed to update %s in group %s with new command line arguments", name, coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Updating %s in group %s with new command line arguments ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new command line arguments: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Change environment variables of second container
-	container.Env = []v1.EnvVar{
+	name = spec.GroupSideCars(coordinators)[1].Name
+	spec.GroupSideCars(coordinators)[1].Env = []v1.EnvVar{
 		{Name: "Hello", Value: "World"}, {Name: "Pi", Value: "3.14159265359"}, {Name: "Two", Value: "2"}}
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new enironment variables", container.Name, grp)
+		t.Fatalf("Failed to change environment variables of second container", name, coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Change environment variables of second container ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new enironment variables: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Upgrade side car image
-	container = spec.GroupSideCars(grp)[0]
-	container.Image = "nginx:1.7.10"
+	name = spec.GroupSideCars(coordinators)[0].Name
+	spec.GroupSideCars(coordinators)[0].Image = "nginx:1.7.10"
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image", container.Name, grp)
+		t.Fatalf("Failed to update %s in group %s with new image", name, coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Update image of sidecar %s in group %s", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Update side car image with new pull policy
-	container.ImagePullPolicy = v1.PullPolicy("Always")
+	spec.GroupSideCars(coordinators)[0].ImagePullPolicy = v1.PullPolicy("Always")
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
+		t.Fatalf("Failed to update %s in group %s with new image pull policy", name, coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Update %s in group %s with new image pull policy", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Update side car image with new pull policy
-	container.ImagePullPolicy = v1.PullPolicy("Always")
+	spec.GroupSideCars(coordinators)[0].ImagePullPolicy = v1.PullPolicy("Always")
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy", container.Name, grp)
+		t.Fatalf("Failed to update %s in group %s with new image pull policy", name, coordinators)
 	} else {
 		t.Log("Updated deployment")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy: %v", container.Name, grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Remove all sidecars again
-	spec.ClearGroupSideCars(grp)
+	spec.ClearGroupSideCars(coordinators)
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to remove all sidecars from group %s", grp)
+		t.Fatalf("Failed to remove all sidecars from group %s", coordinators)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Remove all sidecars from group %s", coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to remove all sidecars from group %s: %v", grp, err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Adding containers to coordinators and db servers
-	spec.AddSideCar(grp, v1.Container{Image: "busybox", Name: "busybox", Command: cmd1})
-	spec.AddSideCar(dbs, v1.Container{Image: "busybox", Name: "busybox", Command: cmd1})
+	name = "busybox"
+	image = name
+	spec.AddSideCar(coordinators, v1.Container{Image: image, Name: name, Command: cmd1})
+	spec.AddSideCar(dbservers, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
-			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbservers)
 		})
 	if err != nil {
 		t.Fatalf("Failed to add a container to both coordinators and db servers")
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Add %s sidecar to %s and %s", name, coordinators, dbservers)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to add a container to both coordinators and db servers: %v", err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Clear containers from both groups
-	spec.ClearGroupSideCars(grp)
-	spec.ClearGroupSideCars(dbs)
+	spec.ClearGroupSideCars(coordinators)
+	spec.ClearGroupSideCars(dbservers)
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
-			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbservers)
 		})
 	if err != nil {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers")
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Remove all sidecars")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to delete all containers from both coordinators and db servers: %v", err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Adding containers to coordinators again
-	spec.AddSideCar(grp, v1.Container{Image: "busybox", Name: "busybox", Command: cmd1})
+	spec.AddSideCar(agents, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to add a container to both coordinators and db servers")
+		t.Fatalf("Failed to add a %s sidecar to %s", name, agents)
 	} else {
 		t.Log("Updated deployment")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to add a container to both coordinators and db servers: %v", err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
 	// Clear containers from coordinators and add to db servers
-	spec.ClearGroupSideCars(grp)
-	spec.AddSideCar(dbs, v1.Container{Image: "busybox", Name: "busybox", Command: cmd1})
+	spec.ClearGroupSideCars(agents)
+	spec.AddSideCar(dbservers, v1.Container{Image: image, Name: name, Command: cmd1})
 	deployment, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(grp)
-			depl.DBServers.Sidecars = spec.GroupSideCars(dbs)
+			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
+			depl.DBServers.Sidecars = spec.GroupSideCars(dbservers)
 		})
 	if err != nil {
-		t.Fatalf("Failed to delete all containers from both coordinators and db servers")
+		t.Fatalf("Failed to delete %s containers and add %s to %s", agents, dbservers)
 	} else {
-		t.Log("Updated deployment")
+		t.Log("Delete %s containers and add %s to %s")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("Failed to delete all containers from both coordinators and db servers: %v", err)
+		t.Fatalf("... failed: %v", err)
+	} else {
+		t.Log("... done")
 	}
 
+	// Clean up
 	removeDeployment(c, depl.GetName(), ns)
 
 }
