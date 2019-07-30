@@ -237,7 +237,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to change environment variables of %s sidecars for %s", name, coordinators)
 	} else {
-		t.Logf("Failed to change environment variables of %s sidecars for %s", name, coordinators)
+		t.Logf("Change environment variables of %s sidecars for %s", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
