@@ -156,11 +156,11 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add %s to group %s", name, coordinators)
 	} else {
-		t.Log("Adding %s sidecar to group %s ...", name, coordinators)
+		t.Logf("Add %s sidecar to group %s ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
-		t.Fatalf("... failed: %v", name, coordinators, err)
+		t.Fatalf("... failed: %v", err)
 	} else {
 		t.Log("... done")
 	}
@@ -181,7 +181,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add %s to group %s", name, coordinators)
 	} else {
-		t.Log("Adding sidecar %s to group %s", name, coordinators)
+		t.Logf("Adding sidecar %s to group %s ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -197,9 +197,9 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new command line ", name, coordinators)
+		t.Fatalf("Failed to update %s in group %s with new command line", name, coordinators)
 	} else {
-		t.Log("Update %s in group %s with new command line ")
+		t.Logf("Update %s in group %s with new command line ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -218,7 +218,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to update %s in group %s with new command line arguments", name, coordinators)
 	} else {
-		t.Log("Updating %s in group %s with new command line arguments ...", name, coordinators)
+		t.Logf("Updating %s in group %s with new command line arguments ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -235,9 +235,9 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
 		})
 	if err != nil {
-		t.Fatalf("Failed to change environment variables of second container", name, coordinators)
+		t.Fatalf("Failed to change environment variables of %s sidecars for %s", name, coordinators)
 	} else {
-		t.Log("Change environment variables of second container ...", name, coordinators)
+		t.Logf("Failed to change environment variables of %s sidecars for %s", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -256,7 +256,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to update %s in group %s with new image", name, coordinators)
 	} else {
-		t.Log("Update image of sidecar %s in group %s", name, coordinators)
+		t.Logf("Update image of sidecar %s in group %s ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -274,25 +274,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to update %s in group %s with new image pull policy", name, coordinators)
 	} else {
-		t.Log("Update %s in group %s with new image pull policy", name, coordinators)
-	}
-	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
-	if err != nil {
-		t.Fatalf("... failed: %v", err)
-	} else {
-		t.Log("... done")
-	}
-
-	// Update side car image with new pull policy
-	spec.GroupSideCars(coordinators)[0].ImagePullPolicy = v1.PullPolicy("Always")
-	deployment, err = updateDeployment(c, depl.GetName(), ns,
-		func(depl *api.DeploymentSpec) {
-			depl.Coordinators.Sidecars = spec.GroupSideCars(coordinators)
-		})
-	if err != nil {
-		t.Fatalf("Failed to update %s in group %s with new image pull policy", name, coordinators)
-	} else {
-		t.Log("Updated deployment")
+		t.Logf("Update %s in group %s with new image pull policy ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -310,7 +292,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to remove all sidecars from group %s", coordinators)
 	} else {
-		t.Log("Remove all sidecars from group %s", coordinators)
+		t.Logf("Remove all sidecars from group %s ...", coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -332,7 +314,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add a container to both coordinators and db servers")
 	} else {
-		t.Log("Add %s sidecar to %s and %s", name, coordinators, dbservers)
+		t.Logf("Add %s sidecar to %s and %s ...", name, coordinators, dbservers)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -352,7 +334,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to delete all containers from both coordinators and db servers")
 	} else {
-		t.Log("Remove all sidecars")
+		t.Logf("Remove all sidecars ...")
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -370,7 +352,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add a %s sidecar to %s", name, agents)
 	} else {
-		t.Log("Failed to add a %s sidecar to %s", name, agents)
+		t.Logf("Failed to add a %s sidecar to %s ...", name, agents)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -388,9 +370,9 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 			depl.DBServers.Sidecars = spec.GroupSideCars(dbservers)
 		})
 	if err != nil {
-		t.Fatalf("Failed to delete %s containers and add %s to %s", agents, dbservers)
+		t.Fatalf("Failed to delete %s containers and add %s sidecars to %s", agents, name, dbservers)
 	} else {
-		t.Log("Delete %s containers and add %s to %s")
+		t.Logf("Delete %s containers and add %s sidecars to %s", agents, name, dbservers)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
