@@ -567,7 +567,7 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 	ns := getNamespace(t)
 
 	var noGood int
-	for start := time.Now(); time.Since(start) < 300*time.Second; {
+	for start := time.Now(); time.Since(start) < 600*time.Second; {
 
 		// Fetch latest status so we know all member details
 		apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
