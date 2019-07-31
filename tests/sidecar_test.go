@@ -181,7 +181,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add %s to group %s", name, coordinators)
 	} else {
-		t.Logf("Adding sidecar %s to group %s ...", name, coordinators)
+		t.Logf("Add sidecar %s to group %s ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -218,7 +218,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to update %s in group %s with new command line arguments", name, coordinators)
 	} else {
-		t.Logf("Updating %s in group %s with new command line arguments ...", name, coordinators)
+		t.Logf("Update %s in group %s with new command line arguments ...", name, coordinators)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
@@ -352,7 +352,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	if err != nil {
 		t.Fatalf("Failed to add a %s sidecar to %s", name, agents)
 	} else {
-		t.Logf("Failed to add a %s sidecar to %s ...", name, agents)
+		t.Logf("Add a %s sidecar to %s ...", name, agents)
 	}
 	err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
 	if err != nil {
