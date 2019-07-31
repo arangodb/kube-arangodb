@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"reflect"
 	"time"
 
 	driver "github.com/arangodb/go-driver"
@@ -54,6 +55,8 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
+	// SideCarSpecs contains list of specifications specified for side cars
+	SideCarSpecs map[string]v1.Container
 	// ArangoVersion holds the ArangoDB version in member
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
 	//ImageId holds the members ArangoDB image ID
@@ -70,6 +73,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
 		s.CleanoutJobID == other.CleanoutJobID &&
+		reflect.DeepEqual(s.SideCarSpecs, other.SideCarSpecs) &&
 		s.ArangoVersion == other.ArangoVersion &&
 		s.ImageID == other.ImageID
 }

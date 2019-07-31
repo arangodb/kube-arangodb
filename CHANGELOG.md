@@ -1,6 +1,7 @@
 # Change Log
 
 ## [0.3.13]() (XXXX-XX-XX)
+- Added side car changed to pod rotation criterium
 - Added ArangoDB version and image id to member status
 
 ## [0.3.12](https://github.com/arangodb/kube-arangodb/tree/0.3.12) (2019-07-04)

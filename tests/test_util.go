@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,6 +50,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	cl "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -157,7 +159,7 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
-const TestEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+const testEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
 
 func getEnterpriseLicenseKey() string {
 	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
@@ -267,7 +269,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 		Spec: api.DeploymentSpec{
 			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
 			License: api.LicenseSpec{
-				SecretName: util.NewString(TestEnterpriseLicenseKeySecretName),
+				SecretName: util.NewString(testEnterpriseLicenseKeySecretName),
 			},
 		},
 	}
@@ -556,6 +558,55 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 		}
 		return nil
 	}
+}
+
+// clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
+func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+
+	c := cl.MustNewInCluster()
+	ns := getNamespace(t)
+
+	var noGood int
+	for start := time.Now(); time.Since(start) < 600*time.Second; {
+
+		// Fetch latest status so we know all member details
+		apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Failed to get deployment: %v", err)
+		}
+
+		// How many pods not matching
+		noGood = 0
+
+		// Check member after another
+		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+			for _, m := range *status {
+				if len(m.SideCarSpecs) != len(spec.GetSidecars()) {
+					noGood++
+					continue
+				}
+				for _, scar := range spec.GetSidecars() {
+					mcar, found := m.SideCarSpecs[scar.Name]
+					if found {
+						if !reflect.DeepEqual(mcar, scar) {
+							noGood++
+						}
+					} else {
+						noGood++
+					}
+				}
+			}
+			return nil
+		}, &apiObject.Status)
+
+		if noGood == 0 {
+			return nil
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	return maskAny(fmt.Errorf("%d pods with unmatched sidecars", noGood))
 }
 
 // clusterHealthEqualsSpec returns nil when the given health matches
