@@ -144,6 +144,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	}
 
 	// Build router
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.GET("/health", gin.WrapF(deps.LivenessProbe.LivenessHandler))
