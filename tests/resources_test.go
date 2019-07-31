@@ -43,8 +43,11 @@ func TestResourcesChangeLimitsCluster(t *testing.T) {
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 	ns := getNamespace(t)
 
-	size500mCPU, _ := resource.ParseQuantity("50m")
-	size1CPU, _ := resource.ParseQuantity("1")
+	size500m, _ := resource.ParseQuantity("50m")
+	size1, _ := resource.ParseQuantity("1")
+	size100Gi, _ := resource.ParseQuantity("100Gi")
+	size1Gi, _ := resource.ParseQuantity("1Gi")
+	size2Gi, _ := resource.ParseQuantity("2Gi")
 
 	// Prepare deployment config
 	depl := newDeployment("test-chng-limits-" + uniuri.NewLen(4))
@@ -61,35 +64,56 @@ func TestResourcesChangeLimitsCluster(t *testing.T) {
 
 	testGroups := []api.ServerGroup{api.ServerGroupCoordinators, api.ServerGroupAgents, api.ServerGroupDBServers}
 
+	testCases := []v1.ResourceRequirements{
+		{
+			Limits: v1.ResourceList{
+				v1.ResourceCPU: size1,
+			},
+		},
+		{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU: size500m,
+			},
+		},
+		{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    size500m,
+				v1.ResourceMemory: size1Gi,
+			},
+		},
+		{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    size500m,
+				v1.ResourceMemory: size2Gi,
+			},
+		},
+		{
+			Limits: v1.ResourceList{
+				v1.ResourceCPU:    size1,
+				v1.ResourceMemory: size100Gi,
+			},
+		},
+	}
+
 	for _, testgroup := range testGroups {
 		t.Run(testgroup.AsRole(), func(t *testing.T) {
 
 			_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, deploymentIsReady())
 			assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %s", err))
 
-			depl, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-				gspec := spec.GetServerGroupSpec(testgroup)
-				gspec.Resources.Limits = v1.ResourceList{
-					v1.ResourceCPU: size1CPU,
-				}
-				spec.UpdateServerGroupSpec(testgroup, gspec)
-			})
-			assert.NoError(t, err, fmt.Sprintf("Failed to update deployment: %s", err))
+			for i, testCase := range testCases {
+				t.Run(fmt.Sprintf("case-%d", i+1), func(t *testing.T) {
+					depl, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+						gspec := spec.GetServerGroupSpec(testgroup)
+						gspec.Resources = testCase
+						spec.UpdateServerGroupSpec(testgroup, gspec)
+					})
+					assert.NoError(t, err, fmt.Sprintf("Failed to update deployment: %s", err))
 
-			_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, resourcesAsRequested(kubecli, ns))
-			assert.NoError(t, err, fmt.Sprintf("Deployment not rotated in time: %s", err))
-
-			depl, err = updateDeployment(c, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
-				gspec := spec.GetServerGroupSpec(testgroup)
-				gspec.Resources.Requests = v1.ResourceList{
-					v1.ResourceCPU: size500mCPU,
-				}
-				spec.UpdateServerGroupSpec(testgroup, gspec)
-			})
-			assert.NoError(t, err, fmt.Sprintf("Failed to update deployment: %s", err))
-
-			_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, resourcesAsRequested(kubecli, ns))
-			assert.NoError(t, err, fmt.Sprintf("Deployment not rotated in time: %s", err))
+					_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, resourcesAsRequested(kubecli, ns))
+					assert.NoError(t, err, fmt.Sprintf("Deployment not rotated in time: %s", err))
+				})
+			}
 		})
 	}
 
