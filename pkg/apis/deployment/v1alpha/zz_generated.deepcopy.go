@@ -525,6 +525,13 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.SideCarSpecs != nil {
+		in, out := &in.SideCarSpecs, &out.SideCarSpecs
+		*out = make(map[string]v1.Container, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
+	}
 	return
 }
 
