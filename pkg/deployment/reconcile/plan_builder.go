@@ -29,11 +29,11 @@ import (
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // upgradeDecision is the result of an upgrade check.

@@ -162,6 +162,25 @@ func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 	}
 }
 
+// UpdateServerGroupSpec returns the server group spec (from this
+// deployment spec) for the given group.
+func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGroupSpec) {
+	switch group {
+	case ServerGroupSingle:
+		s.Single = gspec
+	case ServerGroupAgents:
+		s.Agents = gspec
+	case ServerGroupDBServers:
+		s.DBServers = gspec
+	case ServerGroupCoordinators:
+		s.Coordinators = gspec
+	case ServerGroupSyncMasters:
+		s.SyncMasters = gspec
+	case ServerGroupSyncWorkers:
+		s.SyncWorkers = gspec
+	}
+}
+
 // SetDefaults fills in default values when a field is not specified.
 func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	if s.GetMode() == "" {
