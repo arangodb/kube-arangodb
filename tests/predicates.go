@@ -25,6 +25,7 @@ package tests
 import (
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +44,22 @@ func deploymentIsReady() func(*api.ArangoDeployment) error {
 		}
 		return fmt.Errorf("Expected Ready condition to be set, it is not")
 	}
+}
+
+func resourcesRequireRotation(wanted, given v1.ResourceRequirements) bool {
+	checkList := func(wanted, given v1.ResourceList) bool {
+		for k, v := range wanted {
+			if gv, ok := given[k]; !ok {
+				return true
+			} else if v.Cmp(gv) != 0 {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
 }
 
 func resourcesAsRequested(kubecli kubernetes.Interface, ns string) func(obj *api.ArangoDeployment) error {

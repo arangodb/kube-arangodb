@@ -36,22 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func resourcesRequireRotation(wanted, given v1.ResourceRequirements) bool {
-	checkList := func(wanted, given v1.ResourceList) bool {
-		for k, v := range wanted {
-			if gv, ok := given[k]; !ok {
-				return true
-			} else if v.Cmp(gv) != 0 {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
-}
-
 func TestResourcesChangeLimitsCluster(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
