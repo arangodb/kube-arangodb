@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/arangosync/pkg/retry"
+	"github.com/arangodb/arangosync-client/pkg/retry"
 
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/assert"

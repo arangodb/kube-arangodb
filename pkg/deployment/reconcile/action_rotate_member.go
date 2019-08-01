@@ -26,6 +26,7 @@ import (
 	"context"
 	"time"
 
+	"k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/rs/zerolog"
 )
@@ -89,6 +90,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Update status
 	m.Phase = api.MemberPhaseRotating
+
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}
@@ -117,6 +119,15 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
 	m.CleanoutJobID = ""
+
+	group := a.action.Group
+	var groupSpec = a.actionCtx.GetSpec().GetServerGroupSpec(group)
+	// Check for missing side cars in
+	m.SideCarSpecs = make(map[string]v1.Container)
+	for _, specSidecar := range groupSpec.GetSidecars() {
+		m.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
+	}
+
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, false, maskAny(err)
 	}

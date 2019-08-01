@@ -27,20 +27,20 @@ GOVERSION := 1.10.0-alpine
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
-DOCKERFILE := Dockerfile 
+DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
-ifndef LOCALONLY 
+ifndef LOCALONLY
 	PUSHIMAGES := 1
 	IMAGESHA256 := true
 else
 	IMAGESHA256 := false
 endif
 
-ifdef IMAGETAG 
+ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
-else 
+else
 	IMAGESUFFIX := :dev
 endif
 
@@ -88,17 +88,17 @@ TESTBINNAME := $(PROJECT)_test
 TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
-RELEASE := $(GOBUILDDIR)/bin/release 
-GHRELEASE := $(GOBUILDDIR)/bin/github-release 
+RELEASE := $(GOBUILDDIR)/bin/release
+GHRELEASE := $(GOBUILDDIR)/bin/github-release
 
 TESTLENGTHOPTIONS := -test.short
 TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
-	TESTTIMEOUT := 180m
+	TESTTIMEOUT := 240m
 endif
 ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v 
+	TESTVERBOSEOPTIONS := -v
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
@@ -121,10 +121,14 @@ ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
 ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
 .PHONY: all
-all: check-vars build
+all: check-vars verify-generated build
 
+.PHONY: compile
+compile:	check-vars build
+
+# allall  is now obsolete
 .PHONY: allall
-allall: check-vars verify-generated build
+allall: all
 
 #
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
@@ -191,7 +195,7 @@ ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
 
-# Manifests 
+# Manifests
 
 .PHONY: manifests
 manifests: $(GOBUILDDIR)
@@ -217,12 +221,12 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/k8sutil \
 		$(REPOPATH)/pkg/util/k8sutil/test \
 		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation 
+		$(REPOPATH)/pkg/util/validation
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
-		
+
 
 .PHONY: docker-test
 docker-test: $(TESTBIN)
@@ -266,11 +270,11 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)'
 
 $(DURATIONTESTBIN): $(SOURCES)
 	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
-		
+
 
 .PHONY: docker-duration-test
 docker-duration-test: $(DURATIONTESTBIN)
@@ -327,12 +331,12 @@ $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 .PHONY: build-ghrelease
 build-ghrelease: $(GHRELEASE)
 
-$(GHRELEASE): $(GOBUILDDIR) 
+$(GHRELEASE): $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
 
 .PHONY: release-patch
 release-patch: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch
 
 .PHONY: release-minor
 release-minor: $(RELEASE)
@@ -340,7 +344,7 @@ release-minor: $(RELEASE)
 
 .PHONY: release-major
 release-major: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major
 
 ## Kubernetes utilities
 
@@ -363,7 +367,7 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	kubectl apply -f $(MANIFESTPATHTEST)
-	kubectl get pods 
+	kubectl get pods
 
 ## ArangoSync Tests
 

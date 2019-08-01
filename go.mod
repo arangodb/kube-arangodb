@@ -3,7 +3,6 @@ module github.com/arangodb/kube-arangodb
 go 1.12
 
 replace (
-	github.com/arangodb/arangosync => ./deps/github.com/arangodb/arangosync
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
 	k8s.io/api => k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
@@ -23,14 +22,14 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 	github.com/aktau/github-release v0.7.2
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
-	github.com/arangodb/arangosync v0.0.0-00010101000000-000000000000
+	github.com/arangodb/arangosync-client v0.6.3
 	// THIS IS CURRENTLY HARD WIRED TO THE CORESPONDING GO-DRIVER BRANCH!
 	// WHEN MERGED, REPLACE WITH LATEST MASTER
 	github.com/arangodb/go-driver v0.0.0-20190704144722-b504aec1c4d1
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
-	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+	github.com/beorn7/perks v1.0.0
 	github.com/bugagazavr/go-gitlab-client v0.0.0-20150830002541-e5999f934dc4
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/cockroachdb/cmux v0.0.0-20170110192607-30d10be49292
@@ -39,7 +38,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
-	github.com/coreos/prometheus-operator v0.30.0
+	github.com/coreos/prometheus-operator v0.31.1
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
@@ -71,11 +70,9 @@ require (
 	github.com/golang/protobuf v1.3.1
 	github.com/google/btree v1.0.0
 	github.com/google/gofuzz v1.0.0
-	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/googleapis/gnostic v0.2.0
 	github.com/gophercloud/gophercloud v0.0.0-20190504011306-6f9faf57fddc
 	github.com/gorilla/websocket v1.4.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5
 	github.com/hashicorp/golang-lru v0.5.1
@@ -83,7 +80,6 @@ require (
 	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jonboulle/clockwork v0.1.0
-	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/juju/errgo v0.0.0-20140925100237-08cceb5d0b53
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kr/pretty v0.1.0
@@ -102,16 +98,12 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
-	github.com/prometheus/client_model v0.0.0-20190115171406-56726106282f
-	github.com/prometheus/common v0.2.0
-	github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1
+	github.com/prometheus/client_golang v1.0.0
 	github.com/pulcy/pulsar v0.0.0-20180915062927-71ea24b0ec2f
 	github.com/rs/zerolog v1.14.3
 	github.com/russross/blackfriday v2.0.0+incompatible
 	github.com/shurcooL/sanitized_anchor_name v1.0.0
-	github.com/sirupsen/logrus v1.4.1
-	github.com/soheilhy/cmux v0.1.4 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/sourcegraph/go-vcsurl v0.0.0-20161114165620-2305ecca26ab
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
@@ -128,8 +120,8 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
-	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
+	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f
+	golang.org/x/net v0.0.0-20190522155817-f3200d17e092
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e
@@ -143,7 +135,6 @@ require (
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/go-playground/assert.v1 v1.2.1
 	gopkg.in/go-playground/validator.v8 v8.18.2
-	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/sourcegraph/go-vcsurl.v1 v1.0.0-20131114132947-6b12603ea6fd
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b

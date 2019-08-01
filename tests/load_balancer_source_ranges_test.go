@@ -108,7 +108,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 		}
 		t.Logf("Service %s cannot be found, waiting for some time...", eaServiceName)
 		time.Sleep(time.Second)
-		counter += 1
+		counter++
 		if counter >= 60 {
 			t.Fatalf("Could not find service %s within 60 seconds, giving up.", eaServiceName)
 		}
@@ -149,7 +149,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 			}
 		}
 		t.Logf("Service %s cannot be found, waiting for some more time...", eaServiceName)
-		counter += 1
+		counter++
 		if counter >= 60 {
 			t.Fatalf("Could not find changed service %s within 60 seconds, giving up.", eaServiceName)
 		}

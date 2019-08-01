@@ -22,7 +22,9 @@
 
 package v1alpha
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {

@@ -1,6 +1,12 @@
 # Change Log
 
-## [0.3.12]() (XXXX-XX-XX)
+## [0.3.13]() (XXXX-XX-XX)
+- Added side car changed to pod rotation criterium
+- Added ArangoDB version and image id to member status
+- Fix bug with MemberOfCluster condition
+- Added test for resource change
+
+## [0.3.12](https://github.com/arangodb/kube-arangodb/tree/0.3.12) (2019-07-04)
 - Limit source IP ranges for external services
 
 ## [0.3.11](https://github.com/arangodb/kube-arangodb/tree/0.3.11) (2019-06-07)

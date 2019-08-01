@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -165,6 +165,25 @@ func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 		return s.SyncWorkers
 	default:
 		return ServerGroupSpec{}
+	}
+}
+
+// UpdateServerGroupSpec returns the server group spec (from this
+// deployment spec) for the given group.
+func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGroupSpec) {
+	switch group {
+	case ServerGroupSingle:
+		s.Single = gspec
+	case ServerGroupAgents:
+		s.Agents = gspec
+	case ServerGroupDBServers:
+		s.DBServers = gspec
+	case ServerGroupCoordinators:
+		s.Coordinators = gspec
+	case ServerGroupSyncMasters:
+		s.SyncMasters = gspec
+	case ServerGroupSyncWorkers:
+		s.SyncWorkers = gspec
 	}
 }
 

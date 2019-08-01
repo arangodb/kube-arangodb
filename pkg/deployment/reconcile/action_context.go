@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/go-driver/agency"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -88,6 +88,9 @@ type ActionContext interface {
 	GetDeploymentHealth() (driver.ClusterHealth, error)
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
+	// GetSpec returns a copy of the spec
+	GetSpec() api.DeploymentSpec
+
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -107,6 +110,10 @@ type actionContext struct {
 // Gets the specified mode of deployment
 func (ac *actionContext) GetMode() api.DeploymentMode {
 	return ac.context.GetSpec().GetMode()
+}
+
+func (ac *actionContext) GetSpec() api.DeploymentSpec {
+	return ac.context.GetSpec()
 }
 
 // GetDeploymentHealth returns a copy of the latest known state of cluster health
