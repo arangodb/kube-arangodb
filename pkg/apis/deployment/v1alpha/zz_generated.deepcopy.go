@@ -267,6 +267,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.LocallyAttachedVolumes != nil {
+		in, out := &in.LocallyAttachedVolumes, &out.LocallyAttachedVolumes
+		*out = new(bool)
+		**out = **in
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)
