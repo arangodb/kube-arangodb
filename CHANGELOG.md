@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.3.13]() (XXXX-XX-XX)
+## [0.3.13]() (2019-08-02)
 - Added side car changed to pod rotation criterium
 - Added ArangoDB version and image id to member status
 - Fix bug with MemberOfCluster condition
