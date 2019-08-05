@@ -449,22 +449,22 @@ func sideCarRequireRotation(wanted, given *v1.Container) bool {
 			return true
 		}
 	}
-	if wanted.Lifecycle != given.Lifecycle {
+	if !reflect.DeepEqual(wanted.Lifecycle, given.Lifecycle) {
 		return true
 	}
-	if wanted.LivenessProbe != given.LivenessProbe {
+	if !reflect.DeepEqual(wanted.LivenessProbe, given.LivenessProbe) {
 		return true
 	}
 	if !reflect.DeepEqual(wanted.Ports, given.Ports) {
 		return true
 	}
-	if wanted.ReadinessProbe != given.ReadinessProbe {
+	if !reflect.DeepEqual(wanted.ReadinessProbe, given.ReadinessProbe) {
 		return true
 	}
 	if !reflect.DeepEqual(wanted.Resources, given.Resources) {
 		return true
 	}
-	if wanted.SecurityContext != given.SecurityContext {
+	if !reflect.DeepEqual(wanted.SecurityContext, given.SecurityContext) {
 		return true
 	}
 	if wanted.Stdin != given.Stdin {
