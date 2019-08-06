@@ -345,10 +345,10 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 	// Check that no pod rotation happens for 2 mins, this is to check that
 	// no unnecessary rotations happen and to guard against a regression.
 	t.Run("Check no pod rotation", func(t *testing.T) {
-    d, err := waitUntilDeployment(c, depl.GetName(), ns, resourcesAsRequested(kubecli, ns))
-    if err != nil {
-      t.Fatalf("Deployment not rotated in time: %s", err)
-    }
+		d, err := waitUntilDeployment(c, depl.GetName(), ns, resourcesAsRequested(kubecli, ns))
+		if err != nil {
+			t.Fatalf("Deployment not rotated in time: %s", err)
+		}
 		podCreationTimes := getPodCreationTimes(t, kubecli, d);
 		time.Sleep(2 * time.Minute)
 		checkPodCreationTimes(t, kubecli, d, podCreationTimes)
