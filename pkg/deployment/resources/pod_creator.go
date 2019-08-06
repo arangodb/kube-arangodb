@@ -671,6 +671,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
 		m.ImageID = status.CurrentImage.ImageID
 
+		// Check for missing side cars in
+		m.SideCarSpecs = make(map[string]v1.Container)
+		for _, specSidecar := range groupSpec.GetSidecars() {
+			m.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
+		}
+
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
 		// Check image

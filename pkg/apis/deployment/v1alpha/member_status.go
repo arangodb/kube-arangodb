@@ -56,7 +56,7 @@ type MemberStatus struct {
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
 	// SideCarSpecs contains list of specifications specified for side cars
-	SideCarSpecs map[string]v1.Container
+	SideCarSpecs map[string]v1.Container `json:"sidecars-specs,omitempty"`
 	// ArangoVersion holds the ArangoDB version in member
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
 	//ImageId holds the members ArangoDB image ID
