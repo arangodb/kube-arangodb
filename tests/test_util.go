@@ -814,3 +814,40 @@ func testServerRole(ctx context.Context, client driver.Client, expectedRole driv
 	}
 	return nil
 }
+
+func getPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.ArangoDeployment) map[string]metav1.Time {
+	ns := getNamespace(t)
+	podCreationTimes := make(map[string]metav1.Time)
+	depl.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+    fmt.Printf("Looking at group %s with %d pods...\n", group.AsRole(), len(*status))
+		for _, m := range *status {
+			// Get pod:
+      fmt.Printf("Looking at pod %s...\n", m.PodName)
+			pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+			// Simply ignore error and skip pod:
+			if err == nil {
+				fmt.Printf("Found creation time of %v for pod %s\n", pod.GetCreationTimestamp(), m.PodName)
+				podCreationTimes[m.PodName] = pod.GetCreationTimestamp()
+			} else {
+        fmt.Printf("Could not get pod %s error: %v\n", m.PodName, err)
+      }
+		}
+		return nil
+	}, &depl.Status)
+	return podCreationTimes
+}
+
+func checkPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.ArangoDeployment, times map[string]metav1.Time) {
+	foundTimes := getPodCreationTimes(t, kubecli, depl)
+	for name, timestamp := range(times) {
+		ti, found := foundTimes[name]
+		if !found {
+			t.Errorf("Did not find pod %s any more in creation time check!", name)
+	  } else if ti != timestamp {
+			t.Errorf("Pod %s has been rotated unexpectedly in creation time check!", name)
+		}
+	}
+	if len(foundTimes) != len(times) {
+		t.Errorf("Number of pods found (%d) in creation time check does not match expected %d!", len(foundTimes), len(times))
+	}
+}
