@@ -32,6 +32,10 @@ type FakeDatabaseV1alpha struct {
 	*testing.Fake
 }
 
+func (c *FakeDatabaseV1alpha) ArangoBackups(namespace string) v1alpha.ArangoBackupInterface {
+	return &FakeArangoBackups{c, namespace}
+}
+
 func (c *FakeDatabaseV1alpha) ArangoDeployments(namespace string) v1alpha.ArangoDeploymentInterface {
 	return &FakeArangoDeployments{c, namespace}
 }

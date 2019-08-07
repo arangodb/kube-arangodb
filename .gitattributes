@@ -1,0 +1,2 @@
+pkg/generated/** linguist-generated
+**/zz_generated.deepcopy.go linguist-generated

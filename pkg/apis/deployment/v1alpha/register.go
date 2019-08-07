@@ -31,7 +31,11 @@ import (
 const (
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
 	ArangoDeploymentResourcePlural = "arangodeployments"
-	groupName                      = "database.arangodb.com"
+
+	ArangoBackupResourceKind   = "ArangoBackup"
+	ArangoBackupResourcePlural = "arangobackups"
+
+	groupName = "database.arangodb.com"
 )
 
 var (
@@ -41,6 +45,8 @@ var (
 	SchemeGroupVersion         = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
 	ArangoDeploymentCRDName    = ArangoDeploymentResourcePlural + "." + groupName
 	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
+	ArangoBackupCRDName        = ArangoBackupResourcePlural + "." + groupName
+	ArangoBackupShortNames     = []string{"arangobackup"}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
@@ -53,6 +59,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
 		&ArangoDeployment{},
 		&ArangoDeploymentList{},
+		&ArangoBackup{},
+		&ArangoBackupList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

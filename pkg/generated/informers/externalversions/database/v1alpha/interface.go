@@ -30,8 +30,6 @@ import (
 type Interface interface {
 	// ArangoBackups returns a ArangoBackupInformer.
 	ArangoBackups() ArangoBackupInformer
-	// ArangoDeployments returns a ArangoDeploymentInformer.
-	ArangoDeployments() ArangoDeploymentInformer
 }
 
 type version struct {
@@ -48,9 +46,4 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ArangoBackups returns a ArangoBackupInformer.
 func (v *version) ArangoBackups() ArangoBackupInformer {
 	return &arangoBackupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// ArangoDeployments returns a ArangoDeploymentInformer.
-func (v *version) ArangoDeployments() ArangoDeploymentInformer {
-	return &arangoDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

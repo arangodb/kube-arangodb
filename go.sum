@@ -63,6 +63,10 @@ github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d h1:9w1hB1yqZ8B1
 github.com/arangodb/go-driver v0.0.0-20190430103524-b14f41496c3d/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
 github.com/arangodb/go-driver v0.0.0-20190514134119-4cd2eb482d16 h1:D0+YgwcHnePwiKuV1lOzJLPZb6Tw8hHK2qKSQGqN28s=
 github.com/arangodb/go-driver v0.0.0-20190514134119-4cd2eb482d16/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
+github.com/arangodb/go-driver v0.0.0-20190802090312-412e0d96515d h1:i3nY/zdQsS5z2TfEAtiON7gGTolxwHu/DsJWx6c3zaM=
+github.com/arangodb/go-driver v0.0.0-20190802090312-412e0d96515d/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
+github.com/arangodb/go-driver v0.0.0-20190802095550-7a2c11a3ff12 h1:SZZFNsy/6c3CAv9HmhPukMtkbpdt5u1kZ1AaZElDGqE=
+github.com/arangodb/go-driver v0.0.0-20190802095550-7a2c11a3ff12/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5ttxi/Ygh/39vialtypE23p9KI7P0J2qtoqUV4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21/go.mod h1:RkPIG6JJ2pcJUoymc18NxAJGraZd+iAEVnOTDjZey/w=
 github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad h1:Ah+VRYUWLuqgbfnDyuC8IrIe8XFzpt9tBVVnPGFNTJ8=
@@ -284,6 +288,7 @@ github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/pprof v0.0.0-20180605153948-8b03ce837f34/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go v2.0.2+incompatible h1:silFMLAnr330+NRuag/VjIGF7TLp/LBrV2CJKFLWEww=
 github.com/googleapis/gax-go v2.0.2+incompatible/go.mod h1:SFVmujtThgffbyetf+mdk2eWhX2bMyUtNHzFKcPA9HY=
@@ -349,6 +354,7 @@ github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpO
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/improbable-eng/thanos v0.3.2/go.mod h1:GZewVGILKuJVPNRn7L4Zw+7X96qzFOwj63b22xYGXBE=
 github.com/improbable-eng/thanos v0.5.0/go.mod h1:RXlsWB7YlTbhIod//QDyd5cBZsnEN0jROXZJY/ol4nk=
+github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/influxdata/influxdb v0.0.0-20170331210902-15e594fc09f1/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
 github.com/jackc/fake v0.0.0-20150926172116-812a484cc733/go.mod h1:WrMFNQdiFJ80sQsxDoMokWK1W5TQtxBFNpzWTD84ibQ=
@@ -465,6 +471,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible h1:Jd6xfriVlJ6hWPvYOE0Ni0QWcNTLRehfGPFxr3eSL80=
 github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible/go.mod h1:xlUlxe/2ItGlQyMTstqeDv9r3U4obH7xYd26TbDQutY=
+github.com/pborman/uuid v1.2.0 h1:J7Q5mO4ysT1dv8hyrUGHb9+ooztCXu1D8MY8DZYsu3g=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=
 github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
@@ -724,6 +731,7 @@ google.golang.org/api v0.3.2/go.mod h1:6wY9I6uQWHQ8EM57III9mq/AjF+i8G65rmVagqKMt
 google.golang.org/api v0.4.0 h1:KKgc1aqhV8wDPbDzlDtpvyjZFY3vjz85FP7p4wcQUyI=
 google.golang.org/api v0.4.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEtwE=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
+google.golang.org/appengine v1.4.0 h1:/wp5JvzpHIxhs/dumFmF7BXTf3Z+dd4uXta4kVyO508=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.5.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/genproto v0.0.0-20170731182057-09f6ed296fc6/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
