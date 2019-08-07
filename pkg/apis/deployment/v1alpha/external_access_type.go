@@ -24,7 +24,7 @@ package v1alpha
 
 import (
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // ExternalAccessType specifies the type of external access provides for the deployment

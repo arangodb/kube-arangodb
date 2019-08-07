@@ -52,12 +52,14 @@ var (
 		DeploymentOperatorName            string
 		DeploymentReplicationOperatorName string
 		StorageOperatorName               string
+		BackupOperatorName                string
 		RBAC                              bool
 		AllowChaos                        bool
 	}
 	crdTemplateNames = []Template{
 		Template{Name: "deployment.yaml"},
 		Template{Name: "deployment-replication.yaml"},
+		Template{Name: "backup.yaml"},
 	}
 	deploymentTemplateNames = []Template{
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
@@ -71,6 +73,11 @@ var (
 	}
 	storageTemplateNames = []Template{
 		Template{Name: "crd.yaml"},
+		Template{Name: "rbac.yaml", Predicate: hasRBAC},
+		Template{Name: "deployment.yaml"},
+		Template{Name: "service.yaml"},
+	}
+	backupTemplateNames = []Template{
 		Template{Name: "rbac.yaml", Predicate: hasRBAC},
 		Template{Name: "deployment.yaml"},
 		Template{Name: "service.yaml"},
@@ -153,6 +160,23 @@ DeploymentReplication:
     ServiceAccountName: {{ .DeploymentReplication.Operator.ServiceAccountName | quote }}
     ServiceType: {{ .DeploymentReplication.Operator.ServiceType | quote }}
 `
+
+	kubeArangoDBBackupValuesTemplate = `
+# Image containing the kube-arangodb operators
+Image: {{ .Image | quote }}
+# Image pull policy for Image
+ImagePullPolicy: {{ .ImagePullPolicy | quote }}
+RBAC:
+  Create: {{ .RBAC }}
+Backup:
+  Create: {{ .Backup.Create }}
+  User:
+    ServiceAccountName: {{ .Backup.User.ServiceAccountName | quote }}
+  Operator:
+    ServiceAccountName: {{ .Backup.Operator.ServiceAccountName | quote }}
+    ServiceType: {{ .Backup.Operator.ServiceType | quote }}
+`
+
 	kubeArangoDBStorageValuesTemplate = `
 Image: {{ .Image | quote }}
 ImagePullPolicy: {{ .ImagePullPolicy | quote }}
@@ -220,6 +244,11 @@ var (
 			"values.yaml":         kubeArangoDBStorageValuesTemplate,
 			"templates/NOTES.txt": kubeArangoDBStorageNotesText,
 		},
+		"kube-arangodb-backup": chartTemplates{
+			"Chart.yaml":          kubeArangoDBChartTemplate,
+			"values.yaml":         kubeArangoDBBackupValuesTemplate,
+			"templates/NOTES.txt": kubeArangoDBNotesText,
+		},
 	}
 )
 
@@ -233,6 +262,7 @@ func init() {
 	pflag.StringVar(&options.DeploymentOperatorName, "deployment-operator-name", "arango-deployment-operator", "Name of the ArangoDeployment operator deployment")
 	pflag.StringVar(&options.DeploymentReplicationOperatorName, "deployment-replication-operator-name", "arango-deployment-replication-operator", "Name of the ArangoDeploymentReplication operator deployment")
 	pflag.StringVar(&options.StorageOperatorName, "storage-operator-name", "arango-storage-operator", "Name of the ArangoLocalStorage operator deployment")
+	pflag.StringVar(&options.BackupOperatorName, "backup-operator-name", "arango-backup-operator", "Name of the ArangoBackup operator deployment")
 	pflag.BoolVar(&options.RBAC, "rbac", true, "Use role based access control")
 	pflag.BoolVar(&options.AllowChaos, "allow-chaos", false, "If set, allows chaos in deployments")
 
@@ -249,6 +279,7 @@ type TemplateOptions struct {
 	Deployment            ResourceOptions
 	DeploymentReplication ResourceOptions
 	Storage               ResourceOptions
+	Backup                ResourceOptions
 	Test                  CommonOptions
 }
 
@@ -301,6 +332,7 @@ func main() {
 		"deployment":             TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentTemplateNames},
 		"deployment-replication": TemplateGroup{ChartName: "kube-arangodb", Templates: deploymentReplicationTemplateNames},
 		"storage":                TemplateGroup{ChartName: "kube-arangodb-storage", Templates: storageTemplateNames},
+		"backup":                 TemplateGroup{ChartName: "kube-arangodb-backup", Templates: backupTemplateNames},
 		"test":                   TemplateGroup{ChartName: "", Templates: testTemplateNames},
 	}
 
@@ -377,6 +409,23 @@ func main() {
 			},
 			OperatorDeploymentName: "arango-storage-operator",
 		},
+		Backup: ResourceOptions{
+			Create: "true",
+			User: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-backups",
+				RoleBindingName:    "arango-backups",
+				ServiceAccountName: "default",
+			},
+			Operator: CommonOptions{
+				Namespace:          options.Namespace,
+				RoleName:           "arango-backup-operator",
+				RoleBindingName:    "arango-backup-operator",
+				ServiceAccountName: "default",
+				ServiceType:        "ClusterIP",
+			},
+			OperatorDeploymentName: "arango-backup-operator",
+		},
 		Test: CommonOptions{
 			Namespace:          options.Namespace,
 			RoleName:           "arango-operator-test",
@@ -447,6 +496,25 @@ func main() {
 				ServiceType:        "{{ .Values.Storage.Operator.ServiceType }}",
 			},
 			OperatorDeploymentName: "arango-storage-operator", // Fixed name because only 1 is allowed per namespace
+		},
+		Backup: ResourceOptions{
+			Create:      "{{ .Values.Backup.Create }}",
+			FilterStart: "{{- if .Values.Backup.Create }}",
+			FilterEnd:   "{{- end }}",
+			User: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "backup" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "backup" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Backup.User.ServiceAccountName }}",
+			},
+			Operator: CommonOptions{
+				Namespace:          "{{ .Release.Namespace }}",
+				RoleName:           `{{ printf "%s-%s" .Release.Name "backup-operator" | trunc 63 | trimSuffix "-" }}`,
+				RoleBindingName:    `{{ printf "%s-%s" .Release.Name "backup-operator" | trunc 63 | trimSuffix "-" }}`,
+				ServiceAccountName: "{{ .Values.Backup.Operator.ServiceAccountName }}",
+				ServiceType:        "{{ .Values.Backup.Operator.ServiceType }}",
+			},
+			OperatorDeploymentName: "arango-backup-operator", // Fixed name because only 1 is allowed per namespace
 		},
 	}
 

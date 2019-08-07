@@ -31,7 +31,8 @@ import (
 const (
 	ArangoLocalStorageResourceKind   = "ArangoLocalStorage"
 	ArangoLocalStorageResourcePlural = "arangolocalstorages"
-	groupName                        = "storage.arangodb.com"
+
+	groupName = "storage.arangodb.com"
 )
 
 var (

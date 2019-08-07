@@ -44,6 +44,8 @@ type DeploymentStatus struct {
 
 	ExporterServiceMonitorName string `json:"exporterServiceMonitorName,omitempty"`
 
+	Restore *DeploymentRestoreResult `json:"restore,omitempty"`
+
 	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
 	Images ImageInfoList `json:"arangodb-images,omitempty"`
 	// Image that is currently being used when new pods are created
@@ -78,6 +80,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.ExporterServiceName == other.ExporterServiceName &&
 		ds.ExporterServiceMonitorName == other.ExporterServiceMonitorName &&
 		ds.Images.Equal(other.Images) &&
+		ds.Restore.Equal(other.Restore) &&
 		ds.CurrentImage.Equal(other.CurrentImage) &&
 		ds.Members.Equal(other.Members) &&
 		ds.Conditions.Equal(other.Conditions) &&

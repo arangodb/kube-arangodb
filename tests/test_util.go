@@ -160,6 +160,7 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 }
 
 const testEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+const testBackupRemoteSecretName = "arangodb-backup-remote-secret"
 
 func getEnterpriseLicenseKey() string {
 	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
@@ -819,18 +820,18 @@ func getPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.A
 	ns := getNamespace(t)
 	podCreationTimes := make(map[string]metav1.Time)
 	depl.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
-    fmt.Printf("Looking at group %s with %d pods...\n", group.AsRole(), len(*status))
+		fmt.Printf("Looking at group %s with %d pods...\n", group.AsRole(), len(*status))
 		for _, m := range *status {
 			// Get pod:
-      fmt.Printf("Looking at pod %s...\n", m.PodName)
+			fmt.Printf("Looking at pod %s...\n", m.PodName)
 			pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
 			// Simply ignore error and skip pod:
 			if err == nil {
 				fmt.Printf("Found creation time of %v for pod %s\n", pod.GetCreationTimestamp(), m.PodName)
 				podCreationTimes[m.PodName] = pod.GetCreationTimestamp()
 			} else {
-        fmt.Printf("Could not get pod %s error: %v\n", m.PodName, err)
-      }
+				fmt.Printf("Could not get pod %s error: %v\n", m.PodName, err)
+			}
 		}
 		return nil
 	}, &depl.Status)
@@ -839,11 +840,11 @@ func getPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.A
 
 func checkPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.ArangoDeployment, times map[string]metav1.Time) {
 	foundTimes := getPodCreationTimes(t, kubecli, depl)
-	for name, timestamp := range(times) {
+	for name, timestamp := range times {
 		ti, found := foundTimes[name]
 		if !found {
 			t.Errorf("Did not find pod %s any more in creation time check!", name)
-	  } else if ti != timestamp {
+		} else if ti != timestamp {
 			t.Errorf("Pod %s has been rotated unexpectedly in creation time check!", name)
 		}
 	}

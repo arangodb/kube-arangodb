@@ -1,0 +1,64 @@
+{{ .Backup.FilterStart }}
+{{ .RBACFilterStart }}
+
+## Cluster role granting access to ArangoDeployment resources.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Backup.User.RoleName }}
+rules:
+- apiGroups: ["backup.arangodb.com"]
+  resources: ["arangobackuppolicies", "arangobackups"]
+  verbs: ["*"]
+
+---
+
+## Cluster role granting access to all resources needed by the ArangoDeployment operator.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ .Backup.Operator.RoleName }}
+rules:
+- apiGroups: ["backup.arangodb.com"]
+  resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status"]
+  verbs: ["*"]
+
+
+---
+
+## Bind the cluster role granting access to ArangoDeployment resources
+## to the default service account of the configured namespace.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .Backup.User.RoleBindingName }}
+  namespace: {{ .Backup.User.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Backup.User.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Backup.User.ServiceAccountName }}
+  namespace: {{ .Backup.User.Namespace }}
+
+---
+
+## Bind the cluster role granting access to all resources needed by 
+## the ArangoDeployment operator to the default service account
+## the is being used to run the operator deployment.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Backup.Operator.RoleBindingName }}-{{ .Backup.Operator.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Backup.Operator.RoleName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Backup.Operator.ServiceAccountName }}
+  namespace: {{ .Backup.Operator.Namespace }}
+
+{{ .RBACFilterEnd }}
+{{ .Backup.FilterEnd }}

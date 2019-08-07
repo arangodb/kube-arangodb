@@ -40,6 +40,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Config settings for the Server
@@ -66,6 +67,7 @@ type Dependencies struct {
 	Deployment            OperatorDependency
 	DeploymentReplication OperatorDependency
 	Storage               OperatorDependency
+	Backup                OperatorDependency
 	Operators             Operators
 	Secrets               corev1.SecretInterface
 }
