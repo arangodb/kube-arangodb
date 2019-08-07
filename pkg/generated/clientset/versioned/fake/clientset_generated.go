@@ -24,6 +24,8 @@ package fake
 
 import (
 	clientset "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	backupv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
+	fakebackupv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha/fake"
 	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
 	fakedatabasev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha/fake"
 	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1alpha"
@@ -78,6 +80,11 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// BackupV1alpha retrieves the BackupV1alphaClient
+func (c *Clientset) BackupV1alpha() backupv1alpha.BackupV1alphaInterface {
+	return &fakebackupv1alpha.FakeBackupV1alpha{Fake: &c.Fake}
+}
 
 // DatabaseV1alpha retrieves the DatabaseV1alphaClient
 func (c *Clientset) DatabaseV1alpha() databasev1alpha.DatabaseV1alphaInterface {

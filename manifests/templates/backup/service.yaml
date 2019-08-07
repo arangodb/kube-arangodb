@@ -1,0 +1,23 @@
+{{ .Backup.FilterStart }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Backup.OperatorDeploymentName }}
+  namespace: {{ .Backup.Operator.Namespace }}
+  labels:
+    name: {{ .Backup.OperatorDeploymentName }}
+    app: arango-backup-operator
+spec:
+  ports:
+  - name: server
+    port: 8528
+    protocol: TCP
+    targetPort: 8528
+  selector:
+    name: {{ .Backup.OperatorDeploymentName }}
+    app: arango-backup-operator
+    role: leader
+  type: {{ .Backup.Operator.ServiceType }}
+
+{{ .Backup.FilterEnd }}

@@ -4,6 +4,8 @@
 - [User manual](./Manual/Deployment/Kubernetes/README.md)
   - [Using the Operator](./Manual/Deployment/Kubernetes/Usage.md)
   - [Deployment Resource](./Manual/Deployment/Kubernetes/DeploymentResource.md)
+  - [Backup Resource](./Manual/Deployment/Kubernetes/BackupResource.md)
+  - [BackupPolicy Resource](./Manual/Deployment/Kubernetes/BackupPolicyResource.md)
   - [ArangoDB configuration & secrets](./Manual/Deployment/Kubernetes/ConfigAndSecrets.md)
   - [Metrics](./Manual/Deployment/Kubernetes/Metrics.md)
   - [Scaling](./Manual/Deployment/Kubernetes/Scaling.md)

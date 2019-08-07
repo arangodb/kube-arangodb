@@ -36,10 +36,10 @@ import (
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Config settings for the Server
@@ -61,6 +61,7 @@ type Dependencies struct {
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	BackupProbe                *probe.ReadyProbe
 	Operators                  Operators
 	Secrets                    corev1.SecretInterface
 }
@@ -151,6 +152,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	r.GET("/ready/deployment", gin.WrapF(deps.DeploymentProbe.ReadyHandler))
 	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
 	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
+	r.GET("/ready/backup", gin.WrapF(deps.BackupProbe.ReadyHandler))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
 	r.POST("/login", s.auth.handleLogin)
 	api := r.Group("/api", s.auth.checkAuthentication)

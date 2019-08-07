@@ -55,6 +55,7 @@ endif
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
+MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
@@ -134,6 +135,14 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
+.PHONY: fmt
+fmt:
+	golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all --enable=deadcode --enable=gocyclo \
+	                  --enable=golint --enable=varcheck --enable=structcheck --enable=maligned --enable=errcheck \
+	                  --enable=dupl --enable=ineffassign --enable=interfacer --enable=unconvert --enable=goconst \
+	                  --enable=gosec --enable=megacheck --exclude-use-default=false \
+	                  $(ROOTDIR)/pkg/backup/...
+
 .PHONY: build
 build: docker manifests
 
@@ -165,7 +174,7 @@ update-generated:
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
+		"deployment:v1alpha replication:v1alpha storage:v1alpha backup:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -214,6 +223,7 @@ run-unit-tests: $(SOURCES)
 	go test $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/apis/deployment/v1alpha \
 		$(REPOPATH)/pkg/apis/replication/v1alpha \
+		$(REPOPATH)/pkg/apis/backup/v1alpha \
 		$(REPOPATH)/pkg/apis/storage/v1alpha \
 		$(REPOPATH)/pkg/deployment/reconcile \
 		$(REPOPATH)/pkg/deployment/resources \
@@ -221,7 +231,8 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/k8sutil \
 		$(REPOPATH)/pkg/util/k8sutil/test \
 		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation
+		$(REPOPATH)/pkg/util/validation \
+		$(REPOPATH)/pkg/backup/...
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
@@ -249,9 +260,11 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
 
 .PHONY: run-tests
 run-tests: docker-test
@@ -267,10 +280,12 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)'
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)' '$(TEST_REMOTE_REPOSITORY)'
 
 $(DURATIONTESTBIN): $(SOURCES)
 	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
@@ -357,6 +372,7 @@ delete-operator:
 	kubectl delete -f $(MANIFESTPATHTEST) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHBACKUP) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
 
@@ -366,6 +382,7 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	kubectl get pods
 
