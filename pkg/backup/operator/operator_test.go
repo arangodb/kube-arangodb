@@ -314,3 +314,53 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	close(is)
 	close(id)
 }
+
+func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
+	// Arrange
+	name := string(uuid.NewUUID())
+	o := NewOperator(name)
+	size := 128
+
+	objects := make([]string, size)
+	for id := range objects {
+		objects[id] = randomString(10)
+	}
+
+	m, i := mockSimpleObject(name, true)
+	require.NoError(t, o.RegisterHandler(m))
+
+	client := fake.NewSimpleClientset()
+	informer := informers.NewSharedInformerFactoryWithOptions(client, 0, informers.WithNamespace(objects[0]))
+
+	require.NoError(t, o.RegisterInformer(informer.Core().V1().Pods().Informer(), "", "v1", "pods"))
+	require.NoError(t, o.RegisterStarter(informer))
+
+	stopCh := make(chan struct{})
+
+	// Act
+	require.NoError(t, o.Start(4, stopCh))
+
+	for _, name := range objects {
+		_, err := client.CoreV1().Pods(name).Create(&core.Pod{
+			TypeMeta: meta.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Pod",
+			},
+			ObjectMeta: meta.ObjectMeta{
+				Name: name,
+				Namespace: name,
+			},
+		})
+		require.NoError(t, err)
+	}
+
+	// Assert
+	res := waitForItems(t, i, 1, time.Second)
+	assert.Len(t, res, 1)
+
+	time.Sleep(50 * time.Millisecond)
+	assert.Len(t, i, 0)
+
+	close(stopCh)
+	close(i)
+}

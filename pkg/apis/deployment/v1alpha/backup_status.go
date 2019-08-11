@@ -29,12 +29,13 @@ import (
 // ArangoBackupStatus contains the status part of
 // an ArangoBackup.
 type ArangoBackupStatus struct {
-	State   ArangoBackupState    `json:",inline"`
-	Details *ArangoBackupDetails `json:"backup,omitempty"`
+	State     ArangoBackupState    `json:",inline"`
+	Details   *ArangoBackupDetails `json:"backup,omitempty"`
+	Available bool `json:"available"`
 }
 
 type ArangoBackupDetails struct {
 	ID                string         `json:"ID"`
 	Version           string         `json:"version"`
-	creationTimestamp meta.Timestamp `json:"createdAt"`
+	CreationTimestamp meta.Timestamp `json:"createdAt"`
 }

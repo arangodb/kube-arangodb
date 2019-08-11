@@ -31,21 +31,11 @@ import (
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 )
 
-func registerInformer(operator operator.Operator, informer arangoInformer.SharedInformerFactory) error {
+func registerInformer(operator operator.Operator, client arangoClientSet.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Database().V1alpha().ArangoBackups().Informer(),
 		database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
 		database.ArangoBackupResourceKind); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func RegisterHandler(operator operator.Operator, client arangoClientSet.Interface) error {
-	informer := arangoInformer.NewSharedInformerFactory(client, 30*time.Second)
-
-	if err := registerInformer(operator, informer); err != nil {
 		return err
 	}
 
@@ -62,4 +52,12 @@ func RegisterHandler(operator operator.Operator, client arangoClientSet.Interfac
 	}
 
 	return nil
+}
+
+func RegisterNamespacedHandler(operator operator.Operator, client arangoClientSet.Interface, namespace string) error {
+	return registerInformer(operator, client, arangoInformer.NewSharedInformerFactoryWithOptions(client, 30*time.Second, arangoInformer.WithNamespace(namespace)))
+}
+
+func RegisterHandler(operator operator.Operator, client arangoClientSet.Interface) error {
+	return registerInformer(operator, client, arangoInformer.NewSharedInformerFactory(client, 30*time.Second))
 }

@@ -33,6 +33,7 @@ const (
 	ArangoBackupStateDownload    state.State = "Download"
 	ArangoBackupStateDownloading state.State = "Downloading"
 	ArangoBackupStateCreate      state.State = "Create"
+	ArangoBackupStateUpload   state.State = "Upload"
 	ArangoBackupStateUploading   state.State = "Uploading"
 	ArangoBackupStateReady       state.State = "Ready"
 	ArangoBackupStateDeleted     state.State = "Deleted"
@@ -41,13 +42,14 @@ const (
 
 var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateNone:        {ArangoBackupStatePending},
-	ArangoBackupStatePending:     {ArangoBackupStateScheduled},
+	ArangoBackupStatePending:     {ArangoBackupStateScheduled, ArangoBackupStateFailed},
 	ArangoBackupStateScheduled:   {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
-	ArangoBackupStateDownload:    {ArangoBackupStateDownloading},
-	ArangoBackupStateDownloading: {ArangoBackupStateReady},
-	ArangoBackupStateCreate:      {ArangoBackupStateUploading},
-	ArangoBackupStateUploading:   {ArangoBackupStateReady},
-	ArangoBackupStateReady:       {ArangoBackupStateDeleted},
+	ArangoBackupStateDownload:    {ArangoBackupStateDownloading, ArangoBackupStateFailed},
+	ArangoBackupStateDownloading: {ArangoBackupStateReady, ArangoBackupStateFailed},
+	ArangoBackupStateCreate:      {ArangoBackupStateReady, ArangoBackupStateDeleted, ArangoBackupStateUpload, ArangoBackupStateFailed},
+	ArangoBackupStateUpload: {ArangoBackupStateUploading, ArangoBackupStateFailed},
+	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed},
+	ArangoBackupStateReady:       {ArangoBackupStateDeleted, ArangoBackupStateFailed},
 	ArangoBackupStateDeleted:     {},
 	ArangoBackupStateFailed:      {ArangoBackupStatePending},
 }
@@ -60,5 +62,10 @@ type ArangoBackupState struct {
 	Message string `json:"Message,omitempty"`
 
 	// Progress for the operation
-	Progress string `json:"Message,omitempty"`
+	Progress *ArangoBackupProgress `json:"Message,omitempty"`
+}
+
+type ArangoBackupProgress struct {
+	JobID string `json:"jobID"`
+	Progress string `json:"progress"`
 }

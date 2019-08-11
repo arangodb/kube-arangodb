@@ -23,14 +23,23 @@
 package backup
 
 import (
+	"fmt"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
+)
+
+const (
+	defaultArangoClientTimeout = 30*time.Second
 )
 
 type handler struct {
 	client arangoClientSet.Interface
+
+	arangoClientFactory ArangoClientFactory
+	arangoClientTimeout time.Duration
 }
 
 func (h *handler) Name() string {
@@ -75,7 +84,11 @@ func (h *handler) Handle(item operator.Item) error {
 }
 
 func (h *handler) processArangoBackup(backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
-	return database.ArangoBackupStatus{}, nil
+	if f, ok := stateHolders[backup.Status.State.State]; !ok {
+		return database.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State.State)
+	} else {
+		return f(h, backup)
+	}
 }
 
 func (h *handler) CanBeHandled(item operator.Item) bool {
@@ -84,4 +97,10 @@ func (h *handler) CanBeHandled(item operator.Item) bool {
 		item.Kind == database.ArangoBackupResourceKind
 }
 
-var _ operator.Handler = &handler{}
+func (h *handler) getArangoDeploymentObject(backup *database.ArangoBackup) (*database.ArangoDeployment, error) {
+	if backup.Spec.Deployment.Name == "" {
+		return nil, fmt.Errorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
+	}
+
+	return h.client.DatabaseV1alpha().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
+}

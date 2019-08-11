@@ -22,8 +22,37 @@
 
 package backup
 
-import "testing"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"testing"
+)
 
-func Test(t *testing.T) {
+func Test_ObjectNotFound(t *testing.T) {
+	// Arrange
+	handler := newFakeHandler()
 
+	i := newItem(operator.OperationAdd, "test", "test")
+
+	actions := map[operator.Operation]bool {
+		operator.OperationAdd: true,
+		operator.OperationUpdate: true,
+		operator.OperationDelete: true,
+	}
+
+	// Act
+	for operation, shouldFail := range actions {
+		t.Run(string(operation), func(t *testing.T) {
+			err := handler.Handle(i)
+
+			// Assert
+			if shouldFail {
+				require.Error(t, err)
+				require.True(t, errors.IsNotFound(err))
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

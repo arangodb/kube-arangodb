@@ -34,8 +34,7 @@ type ArangoBackupSpec struct {
 }
 
 type ArangoBackupSpecDeployment struct {
-	Reference string `json:"ref"`
-	Name      string `json:"name,omitempty"`
+	Name      string `json:"name"`
 }
 
 type ArangoBackupSpecOperation struct {
