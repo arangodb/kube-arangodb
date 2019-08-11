@@ -48,6 +48,6 @@ type ArangoBackup struct {
 	Status ArangoBackupStatus `json:"status"`
 }
 
-func (ab * ArangoBackup) Validate() error {
+func (ab *ArangoBackup) Validate() error {
 	return nil
 }

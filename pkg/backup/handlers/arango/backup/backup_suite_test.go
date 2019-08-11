@@ -1,7 +1,31 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Adam Janikowski
+//
+
 package backup
 
 import (
 	"fmt"
+	"testing"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
@@ -9,19 +33,18 @@ import (
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"testing"
 )
 
 func newFakeHandler() *handler {
 	f := fakeClientSet.NewSimpleClientset()
 
 	return &handler{
-		client:f,
-		arangoClientTimeout:defaultArangoClientTimeout,
+		client:              f,
+		arangoClientTimeout: defaultArangoClientTimeout,
 	}
 }
 
-func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler,  *mockArangoClientBackup) {
+func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler, *mockArangoClientBackup) {
 	handler := newFakeHandler()
 
 	mock := newMockArangoClientBackup(errors)
@@ -51,14 +74,14 @@ func compareTemporaryState(t *testing.T, err error, errorMsg string, handler *ha
 
 func newItem(operation operator.Operation, namespace, name string) operator.Item {
 	return operator.Item{
-		Group: database.SchemeGroupVersion.Group,
+		Group:   database.SchemeGroupVersion.Group,
 		Version: database.SchemeGroupVersion.Version,
-		Kind:database.ArangoBackupResourceKind,
+		Kind:    database.ArangoBackupResourceKind,
 
-		Operation:operation,
+		Operation: operation,
 
-		Namespace:namespace,
-		Name:name,
+		Namespace: namespace,
+		Name:      name,
 	}
 }
 
@@ -70,11 +93,11 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *data
 	return &database.ArangoBackup{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: database.SchemeGroupVersion.String(),
-			Kind: database.ArangoBackupResourceKind,
+			Kind:       database.ArangoBackupResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
-			Name: name,
-			Namespace:namespace,
+			Name:      name,
+			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/pods/%s",
 				database.SchemeGroupVersion.String(),
 				database.ArangoBackupResourcePlural,
@@ -82,27 +105,27 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *data
 				name),
 			UID: uuid.NewUUID(),
 		},
-		Spec:database.ArangoBackupSpec{
+		Spec: database.ArangoBackupSpec{
 			Deployment: database.ArangoBackupSpecDeployment{
 				Name: objectRef,
 			},
 		},
-		Status:database.ArangoBackupStatus{
-			State:database.ArangoBackupState{
+		Status: database.ArangoBackupStatus{
+			State: database.ArangoBackupState{
 				State: state,
 			},
 		},
 	}
 }
 
-func createArangoBackup(t *testing.T, h *handler, backups ... *database.ArangoBackup) {
+func createArangoBackup(t *testing.T, h *handler, backups ...*database.ArangoBackup) {
 	for _, backup := range backups {
 		_, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Create(backup)
 		require.NoError(t, err)
 	}
 }
 
-func refreshArangoBackup(t *testing.T, h *handler, backup *database.ArangoBackup) *database.ArangoBackup{
+func refreshArangoBackup(t *testing.T, h *handler, backup *database.ArangoBackup) *database.ArangoBackup {
 	obj, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Get(backup.Name, meta.GetOptions{})
 	require.NoError(t, err)
 	return obj
@@ -112,11 +135,11 @@ func newArangoDeployment(namespace, name string) *database.ArangoDeployment {
 	return &database.ArangoDeployment{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: database.SchemeGroupVersion.String(),
-			Kind: database.ArangoDeploymentResourceKind,
+			Kind:       database.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
-			Name: name,
-			Namespace:namespace,
+			Name:      name,
+			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/pods/%s",
 				database.SchemeGroupVersion.String(),
 				database.ArangoDeploymentResourcePlural,
@@ -127,7 +150,7 @@ func newArangoDeployment(namespace, name string) *database.ArangoDeployment {
 	}
 }
 
-func createArangoDeployment(t *testing.T, h *handler, deployments ... *database.ArangoDeployment) {
+func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
 	for _, deployment := range deployments {
 		_, err := h.client.DatabaseV1alpha().ArangoDeployments(deployment.Namespace).Create(deployment)
 		require.NoError(t, err)

@@ -1,11 +1,34 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Adam Janikowski
+//
+
 package backup
 
 import (
 	"fmt"
+	"testing"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_State_Uploading_Common(t *testing.T) {
@@ -27,9 +50,9 @@ func Test_State_Uploading_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:string(backupMeta.ID),
-		Version:backupMeta.Version,
-		CreationTimestamp:now(),
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: now(),
 	}
 
 	obj.Status.State.Progress = &database.ArangoBackupProgress{
@@ -46,7 +69,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, database.ArangoBackupStateUploading, newObj.Status.State.State)
-		require.Equal(t, fmt.Sprintf("%d%%",0), newObj.Status.State.Progress.Progress)
+		require.Equal(t, fmt.Sprintf("%d%%", 0), newObj.Status.State.Progress.Progress)
 		require.Equal(t, obj.Status.State.Progress.JobID, newObj.Status.State.Progress.JobID)
 
 		require.True(t, newObj.Status.Available)
@@ -63,8 +86,8 @@ func Test_State_Uploading_Success(t *testing.T) {
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, database.ArangoBackupStateUploading, newObj.Status.State.State)
-		require.Equal(t, fmt.Sprintf("%d%%",p), newObj.Status.State.Progress.Progress)
-		require.Equal(t, fmt.Sprintf("%s",progress), newObj.Status.State.Progress.JobID)
+		require.Equal(t, fmt.Sprintf("%d%%", p), newObj.Status.State.Progress.Progress)
+		require.Equal(t, fmt.Sprintf("%s", progress), newObj.Status.State.Progress.JobID)
 
 		require.True(t, newObj.Status.Available)
 	})
@@ -99,7 +122,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 
 	errorMsg := "error"
 	mock.progresses[progress] = ArangoBackupProgress{
-		Failed: true,
+		Failed:      true,
 		FailMessage: errorMsg,
 	}
 
@@ -173,7 +196,7 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	errorMsg := "progress error"
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		isTemporaryError: true,
-		progressError: errorMsg,
+		progressError:    errorMsg,
 	})
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateUploading)

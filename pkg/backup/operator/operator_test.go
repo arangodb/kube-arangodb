@@ -347,7 +347,7 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 				Kind:       "Pod",
 			},
 			ObjectMeta: meta.ObjectMeta{
-				Name: name,
+				Name:      name,
 				Namespace: name,
 			},
 		})

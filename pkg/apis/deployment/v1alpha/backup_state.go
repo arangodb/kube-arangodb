@@ -33,7 +33,7 @@ const (
 	ArangoBackupStateDownload    state.State = "Download"
 	ArangoBackupStateDownloading state.State = "Downloading"
 	ArangoBackupStateCreate      state.State = "Create"
-	ArangoBackupStateUpload   state.State = "Upload"
+	ArangoBackupStateUpload      state.State = "Upload"
 	ArangoBackupStateUploading   state.State = "Uploading"
 	ArangoBackupStateReady       state.State = "Ready"
 	ArangoBackupStateDeleted     state.State = "Deleted"
@@ -47,7 +47,7 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateDownload:    {ArangoBackupStateDownloading, ArangoBackupStateFailed},
 	ArangoBackupStateDownloading: {ArangoBackupStateReady, ArangoBackupStateFailed},
 	ArangoBackupStateCreate:      {ArangoBackupStateReady, ArangoBackupStateDeleted, ArangoBackupStateUpload, ArangoBackupStateFailed},
-	ArangoBackupStateUpload: {ArangoBackupStateUploading, ArangoBackupStateFailed},
+	ArangoBackupStateUpload:      {ArangoBackupStateUploading, ArangoBackupStateFailed},
 	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed},
 	ArangoBackupStateReady:       {ArangoBackupStateDeleted, ArangoBackupStateFailed},
 	ArangoBackupStateDeleted:     {},
@@ -66,6 +66,6 @@ type ArangoBackupState struct {
 }
 
 type ArangoBackupProgress struct {
-	JobID string `json:"jobID"`
+	JobID    string `json:"jobID"`
 	Progress string `json:"progress"`
 }

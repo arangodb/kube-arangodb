@@ -24,15 +24,16 @@ package backup
 
 import (
 	"fmt"
+	"time"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 const (
-	defaultArangoClientTimeout = 30*time.Second
+	defaultArangoClientTimeout = 30 * time.Second
 )
 
 type handler struct {

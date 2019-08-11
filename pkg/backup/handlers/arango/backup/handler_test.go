@@ -23,10 +23,11 @@
 package backup
 
 import (
+	"testing"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"testing"
 )
 
 func Test_ObjectNotFound(t *testing.T) {
@@ -35,8 +36,8 @@ func Test_ObjectNotFound(t *testing.T) {
 
 	i := newItem(operator.OperationAdd, "test", "test")
 
-	actions := map[operator.Operation]bool {
-		operator.OperationAdd: true,
+	actions := map[operator.Operation]bool{
+		operator.OperationAdd:    true,
 		operator.OperationUpdate: true,
 		operator.OperationDelete: true,
 	}
