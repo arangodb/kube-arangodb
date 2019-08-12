@@ -25,6 +25,7 @@ package backup
 import (
 	"github.com/arangodb/go-driver"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
@@ -33,7 +34,7 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return createFailedState(err, backup.Status), nil
 	}
 
-	client, err := h.arangoClientFactory(deployment)
+	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
@@ -50,7 +51,7 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 			// Go into deleted state
 			return database.ArangoBackupStatus{
-				State: database.ArangoBackupState{
+				ArangoBackupState: database.ArangoBackupState{
 					State: database.ArangoBackupStateDeleted,
 				},
 				Details: backup.Status.Details,
@@ -66,13 +67,13 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 	details := &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 
 	if backup.Spec.Upload != nil {
 		return database.ArangoBackupStatus{
 			Available: true,
-			State: database.ArangoBackupState{
+			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateUpload,
 			},
 			Details: details,
@@ -81,7 +82,7 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateReady,
 		},
 		Details: details,

@@ -20,22 +20,23 @@
 // Author Adam Janikowski
 //
 
-package v1alpha
+package utils
 
-import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+import "math/rand"
+
+var (
+	randomBase = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 )
 
-// ArangoBackupStatus contains the status part of
-// an ArangoBackup.
-type ArangoBackupStatus struct {
-	ArangoBackupState `json:",inline"`
-	Details           *ArangoBackupDetails `json:"backup,omitempty"`
-	Available         bool                 `json:"available"`
+func RandomString(n int) string {
+	return RandomStringFrom(n, randomBase)
 }
 
-type ArangoBackupDetails struct {
-	ID                string    `json:"ID"`
-	Version           string    `json:"version"`
-	CreationTimestamp meta.Time `json:"createdAt"`
+func RandomStringFrom(n int, base []rune) string {
+	runes := make([]rune, n)
+	for id := range runes {
+		runes[id] = base[rand.Intn(len(base))]
+	}
+
+	return string(runes)
 }

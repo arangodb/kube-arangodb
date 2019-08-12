@@ -22,7 +22,11 @@
 
 package operator
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+)
 
 func (o *operator) worker() {
 	for o.processNextItem() {
@@ -63,10 +67,26 @@ func (o *operator) processObject(obj interface{}) error {
 		return nil
 	}
 
+	log.Debug().Msgf("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+		item.Operation,
+		item.Group,
+		item.Version,
+		item.Kind,
+		item.Namespace,
+		item.Name)
+
 	if err = o.processItem(item); err != nil {
 		o.workqueue.AddRateLimited(key)
 		return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
 	}
+
+	log.Debug().Msgf("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+		item.Operation,
+		item.Group,
+		item.Version,
+		item.Kind,
+		item.Namespace,
+		item.Name)
 
 	o.workqueue.Forget(obj)
 	return nil

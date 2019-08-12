@@ -41,7 +41,7 @@ const (
 )
 
 var ArangoBackupStateMap = state.Map{
-	ArangoBackupStateNone:        {ArangoBackupStatePending},
+	ArangoBackupStateNone:        {ArangoBackupStatePending, ArangoBackupStateFailed},
 	ArangoBackupStatePending:     {ArangoBackupStateScheduled, ArangoBackupStateFailed},
 	ArangoBackupStateScheduled:   {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
 	ArangoBackupStateDownload:    {ArangoBackupStateDownloading, ArangoBackupStateFailed},
@@ -50,7 +50,7 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateUpload:      {ArangoBackupStateUploading, ArangoBackupStateFailed},
 	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed},
 	ArangoBackupStateReady:       {ArangoBackupStateDeleted, ArangoBackupStateFailed},
-	ArangoBackupStateDeleted:     {},
+	ArangoBackupStateDeleted:     {ArangoBackupStateFailed},
 	ArangoBackupStateFailed:      {ArangoBackupStatePending},
 }
 
@@ -59,10 +59,10 @@ type ArangoBackupState struct {
 	State state.State `json:"state"`
 
 	// Message for the state this object is in.
-	Message string `json:"Message,omitempty"`
+	Message string `json:"message,omitempty"`
 
 	// Progress for the operation
-	Progress *ArangoBackupProgress `json:"Message,omitempty"`
+	Progress *ArangoBackupProgress `json:"progress,omitempty"`
 }
 
 type ArangoBackupProgress struct {

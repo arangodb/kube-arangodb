@@ -42,7 +42,7 @@ func Test_State_None_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStatePending)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStatePending)
 
 	require.False(t, newObj.Status.Available)
 }

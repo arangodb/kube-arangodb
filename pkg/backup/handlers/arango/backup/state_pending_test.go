@@ -50,9 +50,9 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-	require.Equal(t, newObj.Status.State.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
+	require.Equal(t, newObj.Status.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
 }
 
 func Test_State_Pending_OneBackupObject(t *testing.T) {
@@ -69,7 +69,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateScheduled)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateScheduled)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -92,7 +92,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateScheduled)
+		require.Equal(t, newObj.Status.State, database.ArangoBackupStateScheduled)
 
 		require.False(t, newObj.Status.Available)
 	})
@@ -102,7 +102,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)
-		require.Equal(t, newObj.Status.State.State, database.ArangoBackupStatePending)
-		require.Equal(t, newObj.Status.State.Message, "backup already in process")
+		require.Equal(t, newObj.Status.State, database.ArangoBackupStatePending)
+		require.Equal(t, newObj.Status.Message, "backup already in process")
 	})
 }

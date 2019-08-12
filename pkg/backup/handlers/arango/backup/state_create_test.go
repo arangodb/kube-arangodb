@@ -28,6 +28,7 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Create_Common(t *testing.T) {
@@ -49,7 +50,7 @@ func Test_State_Create_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateReady)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
 
 	require.NotNil(t, newObj.Status.Details)
 
@@ -65,7 +66,9 @@ func Test_State_Create_Upload(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{}
+	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+		RepositoryURL: "test",
+	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -75,7 +78,7 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateUpload)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateUpload)
 
 	require.NotNil(t, newObj.Status.Details)
 
@@ -105,8 +108,8 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.State.Message, errorMsg)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.Message, errorMsg)
 
 	require.Nil(t, newObj.Status.Details)
 
@@ -145,7 +148,7 @@ func Test_State_Create_GetFailedWithExistingDeploymentSpec(t *testing.T) {
 	obj.Status.Details = &database.ArangoBackupDetails{
 		ID:                "non-existent",
 		Version:           "non-existent",
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act
@@ -156,7 +159,7 @@ func Test_State_Create_GetFailedWithExistingDeploymentSpec(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateDeleted)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDeleted)
 
 	require.NotNil(t, newObj.Status.Details)
 
@@ -176,7 +179,7 @@ func Test_State_Create_TemporaryGetFailedWithExistingDeploymentSpec(t *testing.T
 	obj.Status.Details = &database.ArangoBackupDetails{
 		ID:                "non-existent",
 		Version:           "non-existent",
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act

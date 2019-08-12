@@ -29,7 +29,7 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
-type ArangoClientFactory func(deployment *database.ArangoDeployment) (ArangoBackupClient, error)
+type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error)
 
 type ArangoBackupProgress struct {
 	Progress          int

@@ -98,7 +98,7 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *data
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			SelfLink: fmt.Sprintf("/api/%s/%s/%s/pods/%s",
+			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
 				database.SchemeGroupVersion.String(),
 				database.ArangoBackupResourcePlural,
 				namespace,
@@ -111,7 +111,7 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *data
 			},
 		},
 		Status: database.ArangoBackupStatus{
-			State: database.ArangoBackupState{
+			ArangoBackupState: database.ArangoBackupState{
 				State: state,
 			},
 		},
@@ -140,7 +140,7 @@ func newArangoDeployment(namespace, name string) *database.ArangoDeployment {
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			SelfLink: fmt.Sprintf("/api/%s/%s/%s/pods/%s",
+			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
 				database.SchemeGroupVersion.String(),
 				database.ArangoDeploymentResourcePlural,
 				namespace,
@@ -171,9 +171,9 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.State.Message, fmt.Sprintf("deployment ref is not specified for backup %s/%s", obj.Namespace, obj.Name))
+		require.Equal(t, newObj.Status.Message, fmt.Sprintf("deployment name can not be empty"))
 	})
 
 	t.Run("Missing Deployment", func(t *testing.T) {
@@ -188,9 +188,9 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.State.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
+		require.Equal(t, newObj.Status.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
 	})
 }
 
@@ -214,7 +214,7 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 		require.True(t, IsTemporaryError(err))
 
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State.State, state)
+		require.Equal(t, newObj.Status.State, state)
 
 	})
 }
@@ -233,9 +233,9 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.State.Message, fmt.Sprintf("backup details are missing"))
+		require.Equal(t, newObj.Status.Message, fmt.Sprintf("backup details are missing"))
 
 	})
 }

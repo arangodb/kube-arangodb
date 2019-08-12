@@ -35,7 +35,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 		return createFailedState(err, backup.Status), nil
 	}
 
-	client, err := h.arangoClientFactory(deployment)
+	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
@@ -44,11 +44,11 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
 	}
 
-	if backup.Status.State.Progress == nil {
+	if backup.Status.Progress == nil {
 		return createFailedState(fmt.Errorf("backup progress details are missing"), backup.Status), nil
 	}
 
-	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.State.Progress.JobID))
+	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
 		return switchTemporaryError(err, backup.Status)
 	}
@@ -60,7 +60,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 	if details.Completed {
 		return database.ArangoBackupStatus{
 			Available: true,
-			State: database.ArangoBackupState{
+			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateReady,
 			},
 			Details: backup.Status.Details,
@@ -69,10 +69,10 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateUploading,
 			Progress: &database.ArangoBackupProgress{
-				JobID:    backup.Status.State.Progress.JobID,
+				JobID:    backup.Status.Progress.JobID,
 				Progress: fmt.Sprintf("%d%%", details.Progress),
 			},
 		},

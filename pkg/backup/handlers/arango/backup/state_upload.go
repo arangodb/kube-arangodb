@@ -35,7 +35,7 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return createFailedState(err, backup.Status), nil
 	}
 
-	client, err := h.arangoClientFactory(deployment)
+	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
@@ -56,7 +56,7 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateUploading,
 			Progress: &database.ArangoBackupProgress{
 				JobID:    string(jobID),

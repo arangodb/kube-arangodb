@@ -24,8 +24,29 @@ package backup
 
 import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var (
+	notProgressStates = []state.State{
+		database.ArangoBackupStatePending,
+		database.ArangoBackupStateNone,
+		database.ArangoBackupStateFailed,
+		database.ArangoBackupStateDeleted,
+		database.ArangoBackupStateReady,
+	}
+)
+
+func inProgress(backup *database.ArangoBackup) bool {
+	for _, state := range notProgressStates {
+		if state == backup.Status.State {
+			return false
+		}
+	}
+
+	return true
+}
 
 func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
 	_, err := h.getArangoDeploymentObject(backup)
@@ -49,12 +70,16 @@ func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.Ar
 			break
 		}
 
+		if !inProgress(&presentBackup) {
+			continue
+		}
+
 		count++
 	}
 
 	if count >= 1 {
 		return database.ArangoBackupStatus{
-			State: database.ArangoBackupState{
+			ArangoBackupState: database.ArangoBackupState{
 				State:   database.ArangoBackupStatePending,
 				Message: "backup already in process",
 			},
@@ -62,7 +87,7 @@ func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.Ar
 	}
 
 	return database.ArangoBackupStatus{
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateScheduled,
 		},
 	}, nil

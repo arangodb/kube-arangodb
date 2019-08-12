@@ -35,7 +35,7 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 		return createFailedState(err, backup.Status), nil
 	}
 
-	client, err := h.arangoClientFactory(deployment)
+	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
@@ -51,7 +51,7 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 		}
 		// Go into deleted state
 		return database.ArangoBackupStatus{
-			State: database.ArangoBackupState{
+			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateDeleted,
 			},
 			Details: backup.Status.Details,
@@ -60,7 +60,7 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateReady,
 		},
 		Details: backup.Status.Details,

@@ -23,19 +23,30 @@
 package v1alpha
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"fmt"
+	"time"
+
+	"github.com/gorhill/cronexpr"
 )
 
-// ArangoBackupStatus contains the status part of
-// an ArangoBackup.
-type ArangoBackupStatus struct {
-	ArangoBackupState `json:",inline"`
-	Details           *ArangoBackupDetails `json:"backup,omitempty"`
-	Available         bool                 `json:"available"`
+func (a *ArangoBackupPolicy) Validate() error {
+	if err := a.Spec.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-type ArangoBackupDetails struct {
-	ID                string    `json:"ID"`
-	Version           string    `json:"version"`
-	CreationTimestamp meta.Time `json:"createdAt"`
+func (a *ArangoBackupPolicySpec) Validate() error {
+	if expr, err := cronexpr.Parse(a.Schedule); err != nil {
+		return fmt.Errorf("error while parsing expr: %s", err.Error())
+	} else if expr.Next(time.Now()).IsZero() {
+		return fmt.Errorf("invalid schedule format")
+	}
+
+	if a.BackupTemplate.Download != nil {
+		return fmt.Errorf("download configuration not supported")
+	}
+
+	return nil
 }

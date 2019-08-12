@@ -36,6 +36,10 @@ func (c *FakeDatabaseV1alpha) ArangoBackups(namespace string) v1alpha.ArangoBack
 	return &FakeArangoBackups{c, namespace}
 }
 
+func (c *FakeDatabaseV1alpha) ArangoBackupPolicies(namespace string) v1alpha.ArangoBackupPolicyInterface {
+	return &FakeArangoBackupPolicies{c, namespace}
+}
+
 func (c *FakeDatabaseV1alpha) ArangoDeployments(namespace string) v1alpha.ArangoDeploymentInterface {
 	return &FakeArangoDeployments{c, namespace}
 }

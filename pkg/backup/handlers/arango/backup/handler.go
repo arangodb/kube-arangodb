@@ -24,7 +24,10 @@ package backup
 
 import (
 	"fmt"
+	"reflect"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
@@ -44,7 +47,7 @@ type handler struct {
 }
 
 func (h *handler) Name() string {
-	return "ArangoBackup"
+	return database.ArangoBackupResourceKind
 }
 
 func (h *handler) Handle(item operator.Item) error {
@@ -59,22 +62,36 @@ func (h *handler) Handle(item operator.Item) error {
 		return err
 	}
 
-	// Check if object is valid. With AdmissionWebhooks this state should always return true
-	if err = backup.Validate(); err != nil {
-		return err
-	}
-
 	status, err := h.processArangoBackup(backup.DeepCopy())
 	if err != nil {
 		return err
 	}
 
+	// Nothing to update, objects are equal
+	if reflect.DeepEqual(backup.Status, status) {
+		return nil
+	}
+
 	// Ensure that transit is possible
-	if err = database.ArangoBackupStateMap.Transit(backup.Status.State.State, status.State.State); err != nil {
+	if err = database.ArangoBackupStateMap.Transit(backup.Status.State, status.State); err != nil {
 		return err
 	}
 
+	if backup.Status.State != status.State {
+		log.Info().Msgf("Transiting %s %s/%s from %s to %s",
+			item.Kind,
+			item.Namespace,
+			item.Name,
+			backup.Status.State,
+			status.State)
+	}
+
 	backup.Status = status
+
+	log.Debug().Msgf("Updating %s %s/%s",
+		item.Kind,
+		item.Namespace,
+		item.Name)
 
 	// Update status on object
 	if _, err = h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).UpdateStatus(backup); err != nil {
@@ -85,8 +102,12 @@ func (h *handler) Handle(item operator.Item) error {
 }
 
 func (h *handler) processArangoBackup(backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
-	if f, ok := stateHolders[backup.Status.State.State]; !ok {
-		return database.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State.State)
+	if err := backup.Validate(); err != nil {
+		return createFailedState(err, backup.Status), nil
+	}
+
+	if f, ok := stateHolders[backup.Status.State]; !ok {
+		return database.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
 	} else {
 		return f(h, backup)
 	}

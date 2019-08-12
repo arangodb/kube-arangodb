@@ -28,7 +28,7 @@ import (
 
 func stateNoneHandler(*handler, *database.ArangoBackup) (database.ArangoBackupStatus, error) {
 	return database.ArangoBackupStatus{
-		State: database.ArangoBackupState{
+		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStatePending,
 		},
 	}, nil

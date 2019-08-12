@@ -20,29 +20,30 @@
 // Author Adam Janikowski
 //
 
-package backup
+package policy
 
 import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 )
 
-func switchTemporaryError(err error, status database.ArangoBackupStatus) (database.ArangoBackupStatus, error) {
-	if IsTemporaryError(err) {
-		return database.ArangoBackupStatus{}, err
+func RegisterInformer(operator operator.Operator, client arangoClientSet.Interface, informer arangoInformer.SharedInformerFactory) error {
+	if err := operator.RegisterInformer(informer.Database().V1alpha().ArangoBackupPolicies().Informer(),
+		database.SchemeGroupVersion.Group,
+		database.SchemeGroupVersion.Version,
+		database.ArangoBackupPolicyResourceKind); err != nil {
+		return err
 	}
 
-	return createFailedState(err, status), nil
-}
-
-func createFailedState(err error, status database.ArangoBackupStatus) database.ArangoBackupStatus {
-	newStatus := status.DeepCopy()
-
-	newStatus.ArangoBackupState = database.ArangoBackupState{
-		State:   database.ArangoBackupStateFailed,
-		Message: err.Error(),
+	h := &handler{
+		client: client,
 	}
 
-	newStatus.Available = false
+	if err := operator.RegisterHandler(h); err != nil {
+		return err
+	}
 
-	return *newStatus
+	return nil
 }

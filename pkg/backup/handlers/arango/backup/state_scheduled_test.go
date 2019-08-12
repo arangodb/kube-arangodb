@@ -40,7 +40,9 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
 
-	obj.Spec.Download = &database.ArangoBackupSpecOperation{}
+	obj.Spec.Download = &database.ArangoBackupSpecOperation{
+		RepositoryURL: "test",
+	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -50,7 +52,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateDownload)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDownload)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -69,7 +71,7 @@ func Test_State_Scheduled_Create(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateCreate)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -80,7 +82,9 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
 
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{}
+	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+		RepositoryURL: "test",
+	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -90,7 +94,7 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State.State, database.ArangoBackupStateCreate)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
 
 	require.False(t, newObj.Status.Available)
 }

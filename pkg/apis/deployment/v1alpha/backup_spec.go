@@ -24,7 +24,7 @@ package v1alpha
 
 type ArangoBackupSpec struct {
 	// Deployment
-	Deployment ArangoBackupSpecDeployment `json:"deployment"`
+	Deployment ArangoBackupSpecDeployment `json:"deployment,omitempty"`
 
 	// Download
 	Download *ArangoBackupSpecOperation `json:"download,omitempty"`
@@ -34,10 +34,10 @@ type ArangoBackupSpec struct {
 }
 
 type ArangoBackupSpecDeployment struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 type ArangoBackupSpecOperation struct {
-	RepositoryURL     string `json:"repositoryURL"`
-	CredentialsSecret string `json:"credentialsSecret,omitempty"`
+	RepositoryURL         string `json:"repositoryURL"`
+	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
 }

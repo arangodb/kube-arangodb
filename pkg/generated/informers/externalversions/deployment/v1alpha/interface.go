@@ -30,6 +30,8 @@ import (
 type Interface interface {
 	// ArangoBackups returns a ArangoBackupInformer.
 	ArangoBackups() ArangoBackupInformer
+	// ArangoBackupPolicies returns a ArangoBackupPolicyInformer.
+	ArangoBackupPolicies() ArangoBackupPolicyInformer
 	// ArangoDeployments returns a ArangoDeploymentInformer.
 	ArangoDeployments() ArangoDeploymentInformer
 }
@@ -48,6 +50,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ArangoBackups returns a ArangoBackupInformer.
 func (v *version) ArangoBackups() ArangoBackupInformer {
 	return &arangoBackupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoBackupPolicies returns a ArangoBackupPolicyInformer.
+func (v *version) ArangoBackupPolicies() ArangoBackupPolicyInformer {
+	return &arangoBackupPolicyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoDeployments returns a ArangoDeploymentInformer.

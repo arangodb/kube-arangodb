@@ -26,16 +26,11 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ArangoBackupStatus contains the status part of
-// an ArangoBackup.
-type ArangoBackupStatus struct {
-	ArangoBackupState `json:",inline"`
-	Details           *ArangoBackupDetails `json:"backup,omitempty"`
-	Available         bool                 `json:"available"`
+type ArangoBackupPolicyStatus struct {
+	Scheduled meta.Time                  `json:"scheduled,omitempty"`
+	Message   *ArangoBackupPolicyMessage `json:"error,omitempty,inline"`
 }
 
-type ArangoBackupDetails struct {
-	ID                string    `json:"ID"`
-	Version           string    `json:"version"`
-	CreationTimestamp meta.Time `json:"createdAt"`
+type ArangoBackupPolicyMessage struct {
+	Message string `json:"message"`
 }

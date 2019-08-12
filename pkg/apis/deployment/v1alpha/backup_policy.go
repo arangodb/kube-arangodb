@@ -20,18 +20,19 @@
 // Author Adam Janikowski
 //
 
-// Move backup under backups
-
 package v1alpha
 
 import (
+	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoBackupList is a list of ArangoDB backups.
-type ArangoBackupList struct {
+// ArangoBackupPolicyList is a list of ArangoDB backup policy.
+type ArangoBackupPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
@@ -41,11 +42,28 @@ type ArangoBackupList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoBackup contains definition and status of the ArangoDB Backup.
-type ArangoBackup struct {
+// ArangoBackupPolicy contains definition and status of the ArangoDB Backup Policy.
+type ArangoBackupPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ArangoBackupSpec   `json:"spec"`
-	Status ArangoBackupStatus `json:"status"`
+	Spec   ArangoBackupPolicySpec   `json:"spec"`
+	Status ArangoBackupPolicyStatus `json:"status"`
+}
+
+func (a *ArangoBackupPolicy) NewBackup(d *ArangoDeployment) *ArangoBackup {
+	spec := a.Spec.BackupTemplate.DeepCopy()
+	spec.Deployment = ArangoBackupSpecDeployment{
+		Name: d.Name,
+	}
+
+	return &ArangoBackup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%s", d.Name, utils.RandomString(8)),
+			Namespace: a.Namespace,
+
+			Labels: a.Labels,
+		},
+		Spec: *spec,
+	}
 }

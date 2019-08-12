@@ -28,6 +28,7 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Ready_Common(t *testing.T) {
@@ -47,7 +48,7 @@ func Test_State_Ready_Success(t *testing.T) {
 	obj.Status.Details = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 	obj.Status.Available = true
 
@@ -78,7 +79,7 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 	obj.Status.Details = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 	obj.Status.Available = true
 
@@ -90,7 +91,7 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateDeleted, newObj.Status.State.State)
+	require.Equal(t, database.ArangoBackupStateDeleted, newObj.Status.State)
 	require.False(t, newObj.Status.Available)
 }
 
@@ -110,7 +111,7 @@ func Test_State_Ready_TemporaryGetFailed(t *testing.T) {
 	obj.Status.Details = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
-		CreationTimestamp: now(),
+		CreationTimestamp: meta.Now(),
 	}
 	obj.Status.Available = true
 

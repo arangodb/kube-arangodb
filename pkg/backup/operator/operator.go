@@ -27,6 +27,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -157,6 +158,15 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 }
 
 func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
+	// Execute pre checks
+	log.Info().Msgf("Executing Lifecycle PreStart")
+	for _, handler := range o.handlers {
+		if err := ExecLifecyclePreStart(handler); err != nil {
+			return err
+		}
+	}
+
+	log.Info().Msgf("Starting informers")
 	for _, starter := range o.starters {
 		starter.Start(stopCh)
 	}
@@ -165,10 +175,12 @@ func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 		return err
 	}
 
+	log.Info().Msgf("Starting workers")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(o.worker, time.Second, stopCh)
 	}
 
+	log.Info().Msgf("Operator started")
 	return nil
 }
 
