@@ -231,7 +231,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		ctx = driver.WithJobIDResponse(ctx, &jobID)
 		// Ensure the cleanout is triggered
 		if dbserverDataWillBeGone {
-			log.Debug().Msg("Server is not yet clean out. Triggering a clean out now")
+			log.Debug().Msg("Server is not yet cleaned out. Triggering a clean out now")
 			if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
 				log.Debug().Err(err).Msg("Failed to clean out server")
 				return maskAny(err)
