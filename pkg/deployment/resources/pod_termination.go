@@ -138,12 +138,13 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	resignJobAvailable := false
-	status, _ := r.context.GetStatus()
-	currentVersion := status.CurrentImage.ArangoDBVersion
-	if currentVersion.CompareTo("3.4.7") > 0 && currentVersion.CompareTo("3.5") < 0 {
-		resignJobAvailable = true
-	} else if currentVersion.CompareTo("3.5.0") > 0 {
-		resignJobAvailable = true
+	currentVersion := memberStatus.ArangoVersion
+	if currentVersion != "" {
+		if currentVersion.CompareTo("3.4.7") > 0 && currentVersion.CompareTo("3.5") < 0 {
+		  resignJobAvailable = true
+	  } else if currentVersion.CompareTo("3.5.0") > 0 {
+			resignJobAvailable = true
+		}
 	}
 
 	// Check node the pod is scheduled on
