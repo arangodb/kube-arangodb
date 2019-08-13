@@ -26,6 +26,8 @@ type ArangoBackupSpec struct {
 	// Deployment
 	Deployment ArangoBackupSpecDeployment `json:"deployment,omitempty"`
 
+	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
+
 	// Download
 	Download *ArangoBackupSpecOperation `json:"download,omitempty"`
 
@@ -35,6 +37,11 @@ type ArangoBackupSpec struct {
 
 type ArangoBackupSpecDeployment struct {
 	Name string `json:"name,omitempty"`
+}
+
+type ArangoBackupSpecOptions struct {
+	Timeout *float32 `json:"timeout,omitempty"`
+	Force   *bool    `json:"force,omitempty"`
 }
 
 type ArangoBackupSpecOperation struct {
