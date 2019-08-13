@@ -31,7 +31,7 @@ import (
 
 // waitForCRD waits for the CustomResourceDefinition (created externally)
 // to be ready.
-func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage bool) error {
+func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage, enableBackup bool) error {
 	log := o.log
 
 	if enableDeployment {
@@ -51,6 +51,13 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 	if enableStorage {
 		log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
 		if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
+			return maskAny(err)
+		}
+	}
+
+	if enableBackup {
+		log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoBackupCRDName); err != nil {
 			return maskAny(err)
 		}
 	}

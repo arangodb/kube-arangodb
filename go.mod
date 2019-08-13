@@ -18,7 +18,7 @@ require (
 	github.com/aktau/github-release v0.7.2 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
-	github.com/arangodb/go-driver v0.0.0-20190802090312-412e0d96515d
+	github.com/arangodb/go-driver v0.0.0-20190806145426-48dd51aa0940
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/bugagazavr/go-gitlab-client v0.0.0-20150830002541-e5999f934dc4 // indirect

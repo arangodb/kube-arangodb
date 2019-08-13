@@ -88,6 +88,7 @@ var (
 		enableDeployment            bool // Run deployment operator
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
+		enableBackup                bool // Run backup operator
 		alpineImage                 string
 	}
 	chaosOptions struct {
@@ -97,6 +98,7 @@ var (
 	deploymentProbe            probe.ReadyProbe
 	deploymentReplicationProbe probe.ReadyProbe
 	storageProbe               probe.ReadyProbe
+	backupProbe                probe.ReadyProbe
 )
 
 func init() {
@@ -110,6 +112,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
+	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", defaultAlpineImage, "Docker image used for alpine containers")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 
@@ -150,8 +153,8 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	klog.Flush()
 
 	// Check operating mode
-	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage {
-		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage or any combination of these")
+	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage && !operatorOptions.enableBackup {
+		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup or any combination of these")
 	}
 
 	// Log version
@@ -210,6 +213,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		DeploymentProbe:            &deploymentProbe,
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
+		BackupProbe:                &backupProbe,
 		Operators:                  o,
 		Secrets:                    secrets,
 	}); err != nil {
@@ -255,6 +259,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableDeployment:            operatorOptions.enableDeployment,
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
+		EnableBackup:                operatorOptions.enableBackup,
 		AllowChaos:                  chaosOptions.allowed,
 		AlpineImage:                 operatorOptions.alpineImage,
 	}
@@ -268,6 +273,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		DeploymentProbe:            &deploymentProbe,
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
+		BackupProbe:                &backupProbe,
 	}
 
 	return cfg, deps, nil

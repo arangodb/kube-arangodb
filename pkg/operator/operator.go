@@ -24,6 +24,7 @@ package operator
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -36,12 +37,19 @@ import (
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
+	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"
+	backupOper "github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"k8s.io/client-go/rest"
+
+	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 )
 
 const (
@@ -75,6 +83,7 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
+	EnableBackup                bool
 	AllowChaos                  bool
 }
 
@@ -88,6 +97,7 @@ type Dependencies struct {
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	BackupProbe                *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -114,6 +124,9 @@ func (o *Operator) Run() {
 	if o.Config.EnableStorage {
 		go o.runLeaderElection("arango-storage-operator", o.onStartStorage, o.Dependencies.StorageProbe)
 	}
+	if o.Config.EnableBackup {
+		go o.runLeaderElection("arango-backup-operator", o.onStartBackup, o.Dependencies.BackupProbe)
+	}
 	// Wait until process terminates
 	<-context.TODO().Done()
 }
@@ -121,7 +134,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(true, false, false); err == nil {
+		if err := o.waitForCRD(true, false, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -135,7 +148,7 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
 func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, true, false); err == nil {
+		if err := o.waitForCRD(false, true, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -149,7 +162,7 @@ func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, false, true); err == nil {
+		if err := o.waitForCRD(false, false, true, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -158,4 +171,52 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 		}
 	}
 	o.runLocalStorages(stop)
+}
+
+// onStartBackup starts the backup operator and run till given channel is closed.
+func (o *Operator) onStartBackup(stop <-chan struct{}) {
+	for {
+		if err := o.waitForCRD(false, false, false, true); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+	operatorName := "arangodb-backup-operator"
+	operator := backupOper.NewOperator(operatorName)
+
+	rand.Seed(time.Now().Unix())
+
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
+	restClient, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	arangoClientSet, err := arangoClientSet.NewForConfig(restClient)
+	if err != nil {
+		panic(err)
+	}
+
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 30*time.Second, arangoInformer.WithNamespace(o.Namespace))
+
+	if err = backup.RegisterInformer(operator, arangoClientSet, arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err = policy.RegisterInformer(operator, arangoClientSet, arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err = operator.RegisterStarter(arangoInformer); err != nil {
+		panic(err)
+	}
+
+	o.Dependencies.BackupProbe.SetReady()
+	operator.Start(2, stop)
+
+	<-stop
 }
