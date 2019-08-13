@@ -39,7 +39,7 @@ func RegisterInformer(operator operator.Operator, client arangoClientSet.Interfa
 
 	h := &handler{
 		client:              client,
-		arangoClientFactory: newMockArangoClientBackupFactory(newMockArangoClientBackup(mockErrorsArangoClientBackup{})),
+		arangoClientFactory: newArangoClientBackupFactory(), //newMockArangoClientBackupFactory(newMockArangoClientBackup(mockErrorsArangoClientBackup{})),
 		arangoClientTimeout: defaultArangoClientTimeout,
 	}
 

@@ -24,9 +24,10 @@ package operator
 
 import (
 	"context"
-	"github.com/prometheus/client_golang/prometheus"
 	"math/rand"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -218,8 +219,8 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	prometheus.MustRegister(operator)
 
-	o.Dependencies.BackupProbe.SetReady()
 	operator.Start(2, stop)
+	o.Dependencies.BackupProbe.SetReady()
 
 	<-stop
 }

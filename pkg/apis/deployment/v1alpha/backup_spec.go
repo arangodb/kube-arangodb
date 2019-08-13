@@ -32,7 +32,7 @@ type ArangoBackupSpec struct {
 	Download *ArangoBackupSpecOperation `json:"download,omitempty"`
 
 	// Upload
-	Upload *ArangoBackupSpecOperation `json:"export,omitempty"`
+	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
 }
 
 type ArangoBackupSpecDeployment struct {
