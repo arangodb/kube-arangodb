@@ -197,3 +197,23 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 	}
 	return ret, nil
 }
+
+func (ac *arangoClientBackupImpl) Exists(backupID driver.BackupID) (bool, error) {
+	_, err := ac.Get(backupID)
+	if err != nil {
+		if driver.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (ac *arangoClientBackupImpl) Delete(backupID driver.BackupID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	defer cancel()
+
+	return ac.driver.Backup().Delete(ctx, backupID)
+}
