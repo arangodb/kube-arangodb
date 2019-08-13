@@ -39,11 +39,11 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	var backupMeta driver.BackupMeta
+	var details *database.ArangoBackupDetails
 
 	// Try to recover old backup. If old backup is missing go into deleted state
 	if backup.Status.Details != nil {
-		backupMeta, err = client.Get(driver.BackupID(backup.Status.Details.ID))
+		_, err = client.Get(driver.BackupID(backup.Status.Details.ID))
 		if err != nil {
 			if IsTemporaryError(err) {
 				return switchTemporaryError(err, backup.Status)
@@ -57,17 +57,23 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 				Details: backup.Status.Details,
 			}, nil
 		}
+
+		details = backup.Status.Details.DeepCopy()
 	} else {
-		backupMeta, err = client.Create()
+		response, err := client.Create()
 		if err != nil {
 			return switchTemporaryError(err, backup.Status)
 		}
-	}
 
-	details := &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+		details = &database.ArangoBackupDetails{
+			ID:                string(response.ID),
+			Version:           response.Version,
+			CreationTimestamp: meta.Now(),
+		}
+
+		if response.Forced {
+			details.Forced = &response.Forced
+		}
 	}
 
 	if backup.Spec.Upload != nil {

@@ -37,8 +37,13 @@ type ArangoBackupProgress struct {
 	FailMessage       string
 }
 
+type ArangoBackupCreateResponse struct {
+	driver.BackupMeta
+	Forced bool
+}
+
 type ArangoBackupClient interface {
-	Create() (driver.BackupMeta, error)
+	Create() (ArangoBackupCreateResponse, error)
 	Get(driver.BackupID) (driver.BackupMeta, error)
 
 	Upload(driver.BackupID) (driver.BackupTransferJobID, error)

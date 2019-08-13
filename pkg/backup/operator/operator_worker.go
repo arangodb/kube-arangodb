@@ -35,6 +35,26 @@ func (o *operator) worker() {
 }
 
 func (o *operator) processNextItem() bool {
+	defer func() {
+		// Recover from panic to not shutdown whole operator
+		if err := recover(); err != nil {
+			e := log.Error()
+
+			switch obj := err.(type) {
+			case error:
+				e = e.AnErr("err", obj)
+			case string:
+				e = e.Str("err", obj)
+			case int:
+				e = e.Int("err", obj)
+			default:
+				e.Interface("err", obj)
+			}
+
+			e.Msgf("Recovered from painic")
+		}
+	}()
+
 	obj, shutdown := o.workqueue.Get()
 
 	if shutdown {
@@ -62,7 +82,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return nil
 	}
 
-	if item, err = NewItemFromString(key); !ok {
+	if item, err = NewItemFromString(key); err != nil {
 		o.workqueue.Forget(obj)
 		return nil
 	}

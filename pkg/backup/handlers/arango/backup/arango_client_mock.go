@@ -58,6 +58,8 @@ func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoC
 type mockErrorsArangoClientBackup struct {
 	createError, getError, uploadError, downloadError, progressError string
 	isTemporaryError                                                 bool
+
+	createForced bool
 }
 
 type mockArangoClientBackup struct {
@@ -136,12 +138,12 @@ func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, err
 	}
 }
 
-func (m *mockArangoClientBackup) Create() (driver.BackupMeta, error) {
+func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
 	if err := m.newError(m.errors.createError); err != nil {
-		return driver.BackupMeta{}, err
+		return ArangoBackupCreateResponse{}, err
 	}
 
 	id := driver.BackupID(uuid.NewUUID())
@@ -153,7 +155,10 @@ func (m *mockArangoClientBackup) Create() (driver.BackupMeta, error) {
 
 	m.backups[id] = meta
 
-	return meta, nil
+	return ArangoBackupCreateResponse{
+		BackupMeta: meta,
+		Forced:     m.errors.createForced,
+	}, nil
 }
 
 func (m *mockArangoClientBackup) getIDs() []string {

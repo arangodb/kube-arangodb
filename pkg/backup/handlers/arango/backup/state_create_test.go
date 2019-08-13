@@ -59,6 +59,38 @@ func Test_State_Create_Success(t *testing.T) {
 
 	require.Equal(t, newObj.Status.Details.ID, backups[0])
 	require.Equal(t, newObj.Status.Details.Version, mockVersion)
+
+	require.Nil(t, newObj.Status.Details.Forced)
+}
+
+func Test_State_Create_SuccessForced(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+	mock.errors.createForced = true
+
+	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
+
+	require.NotNil(t, newObj.Status.Details)
+
+	backups := mock.getIDs()
+	require.Len(t, backups, 1)
+
+	require.Equal(t, newObj.Status.Details.ID, backups[0])
+	require.Equal(t, newObj.Status.Details.Version, mockVersion)
+
+	require.NotNil(t, newObj.Status.Details.Forced)
+	value := *newObj.Status.Details.Forced
+	require.True(t, value)
 }
 
 func Test_State_Create_Upload(t *testing.T) {
