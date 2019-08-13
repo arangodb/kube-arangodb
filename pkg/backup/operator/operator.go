@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -38,6 +40,9 @@ type Starter interface {
 }
 
 type Operator interface {
+	// Implement prometheus collector interface
+	prometheus.Collector
+
 	Start(threadiness int, stopCh <-chan struct{}) error
 
 	RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string) error
@@ -49,9 +54,14 @@ type Operator interface {
 }
 
 func NewOperator(name string) Operator {
-	return &operator{
+	o := &operator{
+		name:      name,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
+
+	o.prometheusMetrics = newCollector(o)
+
+	return o
 }
 
 type operator struct {
@@ -66,6 +76,9 @@ type operator struct {
 	handlers  []Handler
 
 	workqueue workqueue.RateLimitingInterface
+
+	// Implement prometheus collector
+	*prometheusMetrics
 }
 
 func (o *operator) ProcessItem(item Item) error {

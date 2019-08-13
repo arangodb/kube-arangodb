@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/rs/zerolog/log"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -51,15 +53,29 @@ func (h *handler) Name() string {
 }
 
 func (h *handler) Handle(item operator.Item) error {
-	// Do not act on delete event, finalizers are used
-	if item.Operation == operator.OperationDelete {
-		return nil
-	}
-
 	// Get Backup object. It also cover NotFound case
 	backup, err := h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+
 		return err
+	}
+
+	// Check if we should start finalizer
+	if backup.DeletionTimestamp != nil {
+		log.Debug().Msgf("Finalizing %s %s/%s",
+			item.Kind,
+			item.Namespace,
+			item.Name)
+
+		return h.finalize(backup)
+	}
+
+	// Do not act on delete event, finalizer should be used
+	if item.Operation == operator.OperationDelete {
+		return nil
 	}
 
 	status, err := h.processArangoBackup(backup.DeepCopy())
@@ -77,6 +93,7 @@ func (h *handler) Handle(item operator.Item) error {
 		return err
 	}
 
+	// Log message about state change
 	if backup.Status.State != status.State {
 		log.Info().Msgf("Transiting %s %s/%s from %s to %s",
 			item.Kind,

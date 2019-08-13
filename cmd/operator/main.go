@@ -6,9 +6,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/tools/clientcmd"
 	"math/rand"
+	"net/http"
 	"time"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -52,6 +55,13 @@ func main() {
 	stopCh := make(chan struct{})
 
 	operator.Start(2, stopCh)
+
+	prometheus.MustRegister(operator)
+
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		http.ListenAndServe("127.0.0.1:5000", nil)
+	}()
 
 	<-stopCh
 }

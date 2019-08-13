@@ -23,37 +23,19 @@
 package backup
 
 import (
-	"testing"
-
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
-	"github.com/stretchr/testify/require"
+	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-func Test_ObjectNotFound(t *testing.T) {
-	// Arrange
-	handler := newFakeHandler()
+func (h *handler) finalize(backup *database.ArangoBackup) error {
+	_, err := h.getArangoDeploymentObject(backup)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
 
-	i := newItem(operator.OperationAdd, "test", "test")
-
-	actions := map[operator.Operation]bool{
-		operator.OperationAdd:    false,
-		operator.OperationUpdate: false,
-		operator.OperationDelete: false,
+		return err
 	}
 
-	// Act
-	for operation, shouldFail := range actions {
-		t.Run(string(operation), func(t *testing.T) {
-			err := handler.Handle(i)
-
-			// Assert
-			if shouldFail {
-				require.Error(t, err)
-				require.True(t, errors.IsNotFound(err))
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
+	return nil
 }

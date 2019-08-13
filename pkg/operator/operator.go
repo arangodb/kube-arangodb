@@ -24,6 +24,7 @@ package operator
 
 import (
 	"context"
+	"github.com/prometheus/client_golang/prometheus"
 	"math/rand"
 	"time"
 
@@ -214,6 +215,8 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 	if err = operator.RegisterStarter(arangoInformer); err != nil {
 		panic(err)
 	}
+
+	prometheus.MustRegister(operator)
 
 	o.Dependencies.BackupProbe.SetReady()
 	operator.Start(2, stop)

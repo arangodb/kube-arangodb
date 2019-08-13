@@ -50,6 +50,9 @@ type ArangoBackupClient interface {
 	Download(driver.BackupID) (driver.BackupTransferJobID, error)
 
 	Progress(driver.BackupTransferJobID) (ArangoBackupProgress, error)
+
+	Exists(driver.BackupID) (bool, error)
+	Delete(driver.BackupID) error
 }
 
 func NewTemporaryError(format string, a ...interface{}) error {

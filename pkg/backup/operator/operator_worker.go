@@ -51,7 +51,7 @@ func (o *operator) processNextItem() bool {
 				e.Interface("err", obj)
 			}
 
-			e.Msgf("Recovered from painic")
+			e.Msgf("Recovered from panic")
 		}
 	}()
 
@@ -64,6 +64,7 @@ func (o *operator) processNextItem() bool {
 	err := o.processObject(obj)
 
 	if err != nil {
+		log.Error().Err(err).Interface("object", obj).Msgf("Error during object handling")
 		return true
 	}
 
@@ -86,6 +87,8 @@ func (o *operator) processObject(obj interface{}) error {
 		o.workqueue.Forget(obj)
 		return nil
 	}
+
+	o.objectProcessed.Inc()
 
 	log.Debug().Msgf("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,
