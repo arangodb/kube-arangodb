@@ -78,6 +78,18 @@ func backupIsAvailable(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup not available - status: %s", backup.Status.State)
 }
 
+func backupIsNotAvailable(backup *api.ArangoBackup, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if !backup.Status.Available {
+		return nil
+	}
+
+	return fmt.Errorf("Backup is still available - status: %s", backup.Status.State)
+}
+
 func backupIsNotFound(backup *api.ArangoBackup, err error) error {
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
@@ -89,8 +101,14 @@ func backupIsNotFound(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup resource still exists")
 }
 
-func newBackup(name, deployment string) *api.ArangoBackup {
-	return &api.ArangoBackup{
+type EnsureBackupOptions struct {
+	Options  *api.ArangoBackupSpecOptions
+	Download *api.ArangoBackupSpecOperation
+	Upload   *api.ArangoBackupSpecOperation
+}
+
+func newBackup(name, deployment string, options *EnsureBackupOptions) *api.ArangoBackup {
+	backup := &api.ArangoBackup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
 		},
@@ -100,6 +118,14 @@ func newBackup(name, deployment string) *api.ArangoBackup {
 			},
 		},
 	}
+
+	if options != nil {
+		backup.Spec.Options = options.Options
+		backup.Spec.Upload = options.Upload
+		backup.Spec.Download = options.Download
+	}
+
+	return backup
 }
 
 func skipIfBackupUnavailable(t *testing.T, client driver.Client) {
@@ -128,8 +154,8 @@ func statBackupMeta(client driver.Client, backupID driver.BackupID) (bool, drive
 	return false, driver.BackupMeta{}, fmt.Errorf("List does not contain backup")
 }
 
-func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*api.ArangoBackup, error) error) (*api.ArangoBackup, string, driver.BackupID) {
-	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment)
+func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*api.ArangoBackup, error) error, options *EnsureBackupOptions) (*api.ArangoBackup, string, driver.BackupID) {
+	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment, options)
 	_, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
 	assert.NoError(t, err, "failed to create backup: %s", err)
 	name := backup.GetName()
@@ -169,7 +195,7 @@ func TestBackupCluster(t *testing.T) {
 	skipIfBackupUnavailable(t, databaseClient)
 
 	t.Run("create backup", func(t *testing.T) {
-		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName())
+		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		_, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
 		assert.NoError(t, err, "failed to create backup: %s", err)
 		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(backup.GetName(), &metav1.DeleteOptions{})
@@ -186,7 +212,7 @@ func TestBackupCluster(t *testing.T) {
 	})
 
 	t.Run("create backup and delete", func(t *testing.T) {
-		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable)
+		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
 		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
 
 		// check that the backup is actually available
@@ -205,4 +231,38 @@ func TestBackupCluster(t *testing.T) {
 		assert.False(t, found)
 	})
 
+	t.Run("remove backup locally", func(t *testing.T) {
+		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// now remove the backup locally
+		err := databaseClient.Backup().Delete(nil, id)
+		assert.NoError(t, err, "Failed to delete backup: %s", err)
+
+		// wait for the backup to become unavailable
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.Equal(t, api.ArangoBackupStateDeleted, backup.Status.State)
+	})
+
+	t.Run("handle existing backups", func(t *testing.T) {
+		// create a local backup manually
+		id, _, err := databaseClient.Backup().Create(nil, nil)
+		assert.NoError(t, err, "Creating backup failed: %s", err)
+		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(id))
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.True(t, found)
+
+		// create a backup resource manually with that id
+		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
+		backup.Status.Details = &api.ArangoBackupDetails{ID: string(id), Version: meta.Version}
+		_, err = deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
+		assert.NoError(t, err, "failed to create backup: %s", err)
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(backup.GetName(), &metav1.DeleteOptions{})
+
+		// wait until the backup becomes available
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
+		assert.NoError(t, err, "backup did not become available: %s", err)
+		assert.Equal(t, api.ArangoBackupStateReady, backup.Status.State)
+	})
 }
