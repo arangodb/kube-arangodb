@@ -55,6 +55,7 @@ endif
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
+MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
@@ -165,7 +166,7 @@ update-generated:
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
+		"deployment:v1alpha replication:v1alpha storage:v1alpha \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -221,7 +222,11 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/k8sutil \
 		$(REPOPATH)/pkg/util/k8sutil/test \
 		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation
+		$(REPOPATH)/pkg/util/validation \
+		$(REPOPATH)/pkg/backup/handlers/arango/backup \
+		$(REPOPATH)/pkg/backup/handlers/arango/policy \
+		$(REPOPATH)/pkg/backup/operator \
+		$(REPOPATH)/pkg/backup/state
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
@@ -249,6 +254,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
@@ -267,6 +273,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
@@ -357,6 +364,7 @@ delete-operator:
 	kubectl delete -f $(MANIFESTPATHTEST) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHBACKUP) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
 
@@ -366,6 +374,7 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	kubectl get pods
 
