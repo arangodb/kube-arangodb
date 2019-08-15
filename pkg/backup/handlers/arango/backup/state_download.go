@@ -24,8 +24,8 @@ package backup
 
 import (
 	"fmt"
-
 	"github.com/arangodb/go-driver"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
@@ -40,16 +40,15 @@ func stateDownloadHandler(h *handler, backup *database.ArangoBackup) (database.A
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	if backup.Status.Details == nil {
-		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
+	if backup.Spec.Download == nil {
+		return createFailedState(fmt.Errorf("missing field .spec.download"), backup.Status), nil
 	}
 
-	meta, err := client.Get(driver.BackupID(backup.Status.Details.ID))
-	if err != nil {
-		return switchTemporaryError(err, backup.Status)
+	if backup.Spec.Download.ID == "" {
+		return createFailedState(fmt.Errorf("missing field .spec.download.id"), backup.Status), nil
 	}
 
-	jobID, err := client.Download(meta.ID)
+	jobID, err := client.Download(driver.BackupID(backup.Spec.Download.ID))
 	if err != nil {
 		return switchTemporaryError(err, backup.Status)
 	}
@@ -63,6 +62,5 @@ func stateDownloadHandler(h *handler, backup *database.ArangoBackup) (database.A
 				Progress: "0%",
 			},
 		},
-		Details: backup.Status.Details,
 	}, nil
 }

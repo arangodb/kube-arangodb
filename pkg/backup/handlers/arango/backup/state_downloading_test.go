@@ -35,7 +35,6 @@ import (
 func Test_State_Downloading_Common(t *testing.T) {
 	wrapperUndefinedDeployment(t, database.ArangoBackupStateDownloading)
 	wrapperConnectionIssues(t, database.ArangoBackupStateDownloading)
-	wrapperProgressMissing(t, database.ArangoBackupStateDownloading)
 }
 
 func Test_State_Downloading_Success(t *testing.T) {
@@ -54,6 +53,13 @@ func Test_State_Downloading_Success(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
+	}
+
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
 	}
 
 	obj.Status.Progress = &database.ArangoBackupProgress{
@@ -133,6 +139,13 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 		CreationTimestamp: meta.Now(),
 	}
 
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
+	}
+
 	obj.Status.Progress = &database.ArangoBackupProgress{
 		JobID: string(progress),
 	}
@@ -171,6 +184,13 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
+	}
+
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
 	}
 
 	obj.Status.Progress = &database.ArangoBackupProgress{
@@ -212,6 +232,13 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
+	}
+
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
 	}
 
 	obj.Status.Progress = &database.ArangoBackupProgress{

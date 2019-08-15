@@ -64,6 +64,14 @@ func (a *ArangoBackupSpecOperation) Validate() error {
 	return nil
 }
 
+func (a *ArangoBackupSpecDownload) Validate() error {
+	if a.ID == "" {
+		return fmt.Errorf("ID can not be empty")
+	}
+
+	return a.ArangoBackupSpecOperation.Validate()
+}
+
 func (a *ArangoBackupStatus) Validate() error {
 	if err := ArangoBackupStateMap.Exists(a.ArangoBackupState.State); err != nil {
 		return err

@@ -116,7 +116,7 @@ func backupIsNotFound(backup *api.ArangoBackup, err error) error {
 
 type EnsureBackupOptions struct {
 	Options  *api.ArangoBackupSpecOptions
-	Download *api.ArangoBackupSpecOperation
+	Download *api.ArangoBackupSpecDownload
 	Upload   *api.ArangoBackupSpecOperation
 }
 

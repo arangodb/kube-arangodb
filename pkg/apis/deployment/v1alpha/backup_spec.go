@@ -29,7 +29,7 @@ type ArangoBackupSpec struct {
 	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
 
 	// Download
-	Download *ArangoBackupSpecOperation `json:"download,omitempty"`
+	Download *ArangoBackupSpecDownload `json:"download,omitempty"`
 
 	// Upload
 	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
@@ -47,4 +47,10 @@ type ArangoBackupSpecOptions struct {
 type ArangoBackupSpecOperation struct {
 	RepositoryURL         string `json:"repositoryURL"`
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
+}
+
+type ArangoBackupSpecDownload struct {
+	ArangoBackupSpecOperation
+
+	ID string `json:"id"`
 }

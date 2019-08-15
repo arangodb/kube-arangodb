@@ -63,6 +63,10 @@ func (a *ArangoBackupPolicy) NewBackup(d *ArangoDeployment) *ArangoBackup {
 			Namespace: a.Namespace,
 
 			Labels: a.Labels,
+
+			Finalizers: []string {
+				FinalizerArangoBackup,
+			},
 		},
 		Spec: *spec,
 	}

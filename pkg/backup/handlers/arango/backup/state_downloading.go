@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -40,12 +41,16 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	if backup.Status.Details == nil {
-		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
-	}
-
 	if backup.Status.Progress == nil {
 		return createFailedState(fmt.Errorf("backup progress details are missing"), backup.Status), nil
+	}
+
+	if backup.Spec.Download == nil {
+		return createFailedState(fmt.Errorf("missing field .spec.download"), backup.Status), nil
+	}
+
+	if backup.Spec.Download.ID == "" {
+		return createFailedState(fmt.Errorf("missing field .spec.download.id"), backup.Status), nil
 	}
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
@@ -58,12 +63,21 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 	}
 
 	if details.Completed {
+		backupMeta, err := client.Get(driver.BackupID(backup.Spec.Download.ID))
+		if err != nil {
+			return switchTemporaryError(err, backup.Status)
+		}
+
 		return database.ArangoBackupStatus{
 			Available: true,
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateReady,
 			},
-			Details: backup.Status.Details,
+			Details: &database.ArangoBackupDetails{
+				ID:                string(backupMeta.ID),
+				Version:           backupMeta.Version,
+				CreationTimestamp: meta.Now(),
+			},
 		}, nil
 	}
 
@@ -76,6 +90,5 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 				Progress: fmt.Sprintf("%d%%", details.Progress),
 			},
 		},
-		Details: backup.Status.Details,
 	}, nil
 }

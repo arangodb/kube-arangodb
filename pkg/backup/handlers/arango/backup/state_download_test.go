@@ -28,7 +28,6 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Download_Common(t *testing.T) {
@@ -42,13 +41,11 @@ func Test_State_Download_Success(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
 
-	backupMeta, err := mock.Create()
-	require.NoError(t, err)
-
-	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: "test",
 	}
 
 	// Act
@@ -68,80 +65,9 @@ func Test_State_Download_Success(t *testing.T) {
 
 	require.False(t, newObj.Status.Available)
 
-	require.NotNil(t, newObj.Status.Details)
-	require.Equal(t, string(backupMeta.ID), newObj.Status.Details.ID)
-	require.Equal(t, backupMeta.Version, newObj.Status.Details.Version)
+	require.Nil(t, newObj.Status.Details)
 }
-
-func Test_State_Download_GetFailed(t *testing.T) {
-	// Arrange
-	errorMsg := "get error"
-	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		getError: errorMsg,
-	})
-
-	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
-
-	backupMeta, err := mock.Create()
-	require.NoError(t, err)
-
-	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
-	}
-
-	// Act
-	createArangoDeployment(t, handler, deployment)
-	createArangoBackup(t, handler, obj)
-
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
-
-	// Assert
-	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
-
-	require.Nil(t, newObj.Status.Progress)
-	progresses := mock.getProgressIDs()
-	require.Len(t, progresses, 0)
-
-	require.False(t, newObj.Status.Available)
-
-	require.NotNil(t, newObj.Status.Details)
-	require.Equal(t, string(backupMeta.ID), newObj.Status.Details.ID)
-	require.Equal(t, backupMeta.Version, newObj.Status.Details.Version)
-}
-
-func Test_State_Download_TemporaryGetFailed(t *testing.T) {
-	// Arrange
-	errorMsg := "get error"
-	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		isTemporaryError: true,
-
-		getError: errorMsg,
-	})
-
-	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
-
-	backupMeta, err := mock.Create()
-	require.NoError(t, err)
-
-	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
-	}
-
-	// Act
-	createArangoDeployment(t, handler, deployment)
-	createArangoBackup(t, handler, obj)
-
-	err = handler.Handle(newItemFromBackup(operator.OperationUpdate, obj))
-
-	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
-}
-
+// Check version
 func Test_State_Download_DownloadFailed(t *testing.T) {
 	// Arrange
 	errorMsg := "download error"
@@ -151,13 +77,11 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
 
-	backupMeta, err := mock.Create()
-	require.NoError(t, err)
-
-	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: "test",
 	}
 
 	// Act
@@ -176,35 +100,31 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	require.False(t, newObj.Status.Available)
 
-	require.NotNil(t, newObj.Status.Details)
-	require.Equal(t, string(backupMeta.ID), newObj.Status.Details.ID)
-	require.Equal(t, backupMeta.Version, newObj.Status.Details.Version)
+	require.Nil(t, newObj.Status.Details)
 }
 
 func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 	// Arrange
 	errorMsg := "download error"
-	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		isTemporaryError: true,
 		downloadError:    errorMsg,
 	})
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
 
-	backupMeta, err := mock.Create()
-	require.NoError(t, err)
-
-	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: "test",
 	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err = handler.Handle(newItemFromBackup(operator.OperationUpdate, obj))
+	err := handler.Handle(newItemFromBackup(operator.OperationUpdate, obj))
 
 	// Assert
 	compareTemporaryState(t, err, errorMsg, handler, obj)

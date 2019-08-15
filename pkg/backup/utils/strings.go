@@ -28,6 +28,37 @@ var (
 	randomBase = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 )
 
+type StringList []string
+
+func (s StringList) Has(i string) bool {
+	for _, obj := range s {
+		if obj == i {
+			return true
+		}
+	}
+	return false
+}
+
+func (s StringList) Append(i string) StringList {
+	return append(s, i)
+}
+
+func (a StringList) Remove(i ... string) StringList {
+	r := make(StringList, 0, len(a))
+
+	strings := StringList(i)
+
+	for _, obj := range a {
+		if strings.Has(obj) {
+			continue
+		}
+
+		r = r.Append(obj)
+	}
+
+	return r
+}
+
 func RandomString(n int) string {
 	return RandomStringFrom(n, randomBase)
 }

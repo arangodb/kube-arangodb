@@ -29,12 +29,15 @@ import (
 )
 
 const (
+	ArangoDeploymentCRDName = ArangoDeploymentResourcePlural + "." + groupName
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
 	ArangoDeploymentResourcePlural = "arangodeployments"
 
+	ArangoBackupCRDName    = ArangoBackupResourcePlural + "." + groupName
 	ArangoBackupResourceKind   = "ArangoBackup"
 	ArangoBackupResourcePlural = "arangobackups"
 
+	ArangoBackupPolicyCRDName    = ArangoBackupPolicyResourcePlural + "." + groupName
 	ArangoBackupPolicyResourceKind   = "ArangoBackupPolicy"
 	ArangoBackupPolicyResourcePlural = "arangobackuppolicies"
 
@@ -47,13 +50,10 @@ var (
 
 	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
 
-	ArangoDeploymentCRDName    = ArangoDeploymentResourcePlural + "." + groupName
 	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
 
-	ArangoBackupCRDName    = ArangoBackupResourcePlural + "." + groupName
 	ArangoBackupShortNames = []string{"arangobackup"}
 
-	ArangoBackupPolicyCRDName    = ArangoBackupPolicyResourcePlural + "." + groupName
 	ArangoBackupPolicyShortNames = []string{"arangobackuppolicy"}
 )
 
