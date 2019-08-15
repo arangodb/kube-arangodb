@@ -175,7 +175,10 @@ func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versione
 
 	backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, predicate)
 	assert.NoError(t, err, "backup did not become available: %s", err)
-	backupID := backup.Status.Details.ID
+	var backupID string
+	if backup.Status.Details != nil {
+		backupID = backup.Status.Details.ID
+	}
 	return backup, name, driver.BackupID(backupID)
 }
 
