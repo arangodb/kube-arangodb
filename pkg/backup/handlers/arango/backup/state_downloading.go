@@ -68,6 +68,8 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 			return switchTemporaryError(err, backup.Status)
 		}
 
+		trueVar := true
+
 		return database.ArangoBackupStatus{
 			Available: true,
 			ArangoBackupState: database.ArangoBackupState{
@@ -77,6 +79,7 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
 				CreationTimestamp: meta.Now(),
+				Downloaded: &trueVar,
 			},
 		}, nil
 	}

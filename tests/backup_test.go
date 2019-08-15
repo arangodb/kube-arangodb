@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
@@ -178,7 +178,7 @@ func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versione
 	name := backup.GetName()
 
 	backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, predicate)
-	assert.NoError(t, err, "backup did not become available: %s", err)
+	require.NoError(t, err, "backup did not become available: %s", err)
 	var backupID string
 	if backup.Status.Details != nil {
 		backupID = backup.Status.Details.ID
@@ -198,6 +198,16 @@ func newOperation() *api.ArangoBackupSpecOperation {
 	return &api.ArangoBackupSpecOperation{
 		RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
 		CredentialsSecretName: testBackupRemoteSecretName,
+	}
+}
+
+func newDownload(ID string) *api.ArangoBackupSpecDownload {
+	return &api.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: api.ArangoBackupSpecOperation{
+			RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+			CredentialsSecretName: testBackupRemoteSecretName,
+		},
+		ID: ID,
 	}
 }
 
@@ -425,7 +435,64 @@ func TestBackupCluster(t *testing.T) {
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
 		assert.NoError(t, err, "backup did not become ready: %s", err)
 
-		// TODO there is no way to tell from the status if a upload happened or not
+		require.NotNil(t, backup.Status.Details)
+		require.NotNil(t, backup.Status.Details.Uploaded)
+		require.Nil(t, backup.Status.Details.Downloaded)
+
+		assert.True(t, *backup.Status.Details.Uploaded)
+	})
+
+	t.Run("upload-download cycle", func(t *testing.T) {
+		skipOrRemotePath(t)
+
+		// create backup with upload operation
+		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// wait until the backup becomes ready
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		assert.NoError(t, err, "backup did not become ready: %s", err)
+
+		// check that the backup is actually available
+		found, meta, err := statBackupMeta(databaseClient, id)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.True(t, found)
+		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+
+		require.NotNil(t, backup.Status.Details)
+		require.NotNil(t, backup.Status.Details.Uploaded)
+		require.Nil(t, backup.Status.Details.Downloaded)
+
+		assert.True(t, *backup.Status.Details.Uploaded)
+
+		// After all remove backup
+		deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+
+		// check that the actual backup has been deleted
+		found, _, err = statBackupMeta(databaseClient, id)
+		assert.False(t, found)
+
+		// create backup with download operation
+		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// wait until the backup becomes ready
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		assert.NoError(t, err, "backup did not become ready: %s", err)
+
+		// check that the backup is actually available
+		found, meta, err = statBackupMeta(databaseClient, id)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.True(t, found)
+		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+
+		require.NotNil(t, backup.Status.Details)
+		require.Nil(t, backup.Status.Details.Uploaded)
+		require.NotNil(t, backup.Status.Details.Downloaded)
+
+		assert.True(t, *backup.Status.Details.Downloaded)
 	})
 
 	/*t.Run("create-upload-download-restore-cycle", func(t *testing.T) {

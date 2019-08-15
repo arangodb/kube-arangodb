@@ -23,7 +23,9 @@
 package backup
 
 import (
+	"fmt"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 
 func switchTemporaryError(err error, status database.ArangoBackupStatus) (database.ArangoBackupStatus, error) {
@@ -34,12 +36,16 @@ func switchTemporaryError(err error, status database.ArangoBackupStatus) (databa
 	return createFailedState(err, status), nil
 }
 
+func createFailMessage(state state.State, message string) string {
+	return fmt.Sprintf("Failed State %s: %s", state, message)
+}
+
 func createFailedState(err error, status database.ArangoBackupStatus) database.ArangoBackupStatus {
 	newStatus := status.DeepCopy()
 
 	newStatus.ArangoBackupState = database.ArangoBackupState{
 		State:   database.ArangoBackupStateFailed,
-		Message: err.Error(),
+		Message: createFailMessage(status.State, err.Error()),
 	}
 
 	newStatus.Available = false

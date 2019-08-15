@@ -52,7 +52,7 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-	require.Equal(t, newObj.Status.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
+	require.Equal(t, newObj.Status.Message, createFailMessage(database.ArangoBackupStatePending, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 }
 
 func Test_State_Pending_OneBackupObject(t *testing.T) {

@@ -58,12 +58,18 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 	}
 
 	if details.Completed {
+		newDetails := backup.Status.Details.DeepCopy()
+
+		trueVar := true
+
+		newDetails.Uploaded = &trueVar
+
 		return database.ArangoBackupStatus{
 			Available: true,
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateReady,
 			},
-			Details: backup.Status.Details,
+			Details: newDetails,
 		}, nil
 	}
 

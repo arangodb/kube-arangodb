@@ -141,7 +141,7 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.Message, errorMsg)
+	require.Equal(t, newObj.Status.Message, createFailMessage(database.ArangoBackupStateCreate, errorMsg))
 
 	require.Nil(t, newObj.Status.Details)
 

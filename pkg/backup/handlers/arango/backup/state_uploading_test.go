@@ -106,6 +106,8 @@ func Test_State_Uploading_Success(t *testing.T) {
 		require.Nil(t, newObj.Status.Progress)
 
 		require.True(t, newObj.Status.Available)
+		require.NotNil(t, newObj.Status.Details.Uploaded)
+		require.True(t, *newObj.Status.Details.Uploaded)
 	})
 }
 
@@ -146,7 +148,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, database.ArangoBackupStateFailed, newObj.Status.State)
-	require.Equal(t, fmt.Sprintf("upload failed with error: %s", errorMsg), newObj.Status.Message)
+	require.Equal(t, createFailMessage(database.ArangoBackupStateUploading, fmt.Sprintf("upload failed with error: %s", errorMsg)), newObj.Status.Message)
 	require.Nil(t, newObj.Status.Progress)
 
 	require.False(t, newObj.Status.Available)
@@ -186,7 +188,7 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, database.ArangoBackupStateFailed, newObj.Status.State)
-	require.Equal(t, errorMsg, newObj.Status.Message)
+	require.Equal(t, createFailMessage(database.ArangoBackupStateUploading, errorMsg), newObj.Status.Message)
 	require.Nil(t, newObj.Status.Progress)
 
 	require.False(t, newObj.Status.Available)

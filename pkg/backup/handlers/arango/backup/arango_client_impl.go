@@ -157,7 +157,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 		return "", err
 	}
 
-	return ac.driver.Backup().Upload(ctx, backupID, downloadSpec.RepositoryURL, cred)
+	return ac.driver.Backup().Download(ctx, backupID, downloadSpec.RepositoryURL, cred)
 }
 
 func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (ArangoBackupProgress, error) {

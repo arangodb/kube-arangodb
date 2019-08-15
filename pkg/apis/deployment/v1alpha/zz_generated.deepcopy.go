@@ -89,6 +89,16 @@ func (in *ArangoBackupDetails) DeepCopyInto(out *ArangoBackupDetails) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Uploaded != nil {
+		in, out := &in.Uploaded, &out.Uploaded
+		*out = new(bool)
+		**out = **in
+	}
+	if in.Downloaded != nil {
+		in, out := &in.Downloaded, &out.Downloaded
+		*out = new(bool)
+		**out = **in
+	}
 	in.CreationTimestamp.DeepCopyInto(&out.CreationTimestamp)
 	return
 }

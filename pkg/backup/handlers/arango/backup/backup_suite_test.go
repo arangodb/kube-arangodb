@@ -173,7 +173,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, fmt.Sprintf("deployment name can not be empty"))
+		require.Equal(t, newObj.Status.Message, createFailMessage(state, "deployment name can not be empty"))
 	})
 
 	t.Run("Missing Deployment", func(t *testing.T) {
@@ -190,7 +190,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name))
+		require.Equal(t, newObj.Status.Message, createFailMessage(state,fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 	})
 }
 
@@ -235,7 +235,7 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, fmt.Sprintf("backup details are missing"))
+		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("backup details are missing")))
 
 	})
 }
