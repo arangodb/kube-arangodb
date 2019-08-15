@@ -295,7 +295,6 @@ func TestBackupCluster(t *testing.T) {
 	})
 
 	t.Run("create-restore-cycle", func(t *testing.T) {
-
 		type Book struct {
 			Title  string
 			Author string
@@ -328,7 +327,7 @@ func TestBackupCluster(t *testing.T) {
 		})
 		assert.NoError(t, err, "Failed to update deployment: %s", err)
 
-		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+		_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
 			status := depl.Status
 			if status.Restore != nil {
 				result := status.Restore
@@ -346,6 +345,7 @@ func TestBackupCluster(t *testing.T) {
 
 			return fmt.Errorf("Restore is not set on deployment")
 		})
+		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
 
 		// restore was completed, check if documents are there
 		found, err := col.DocumentExists(ctx, meta1.Key)
@@ -373,6 +373,37 @@ func TestBackupCluster(t *testing.T) {
 			return fmt.Errorf("Restore is not set to nil")
 		})
 
+	})
+
+	t.Run("restore-nonexistent", func(t *testing.T) {
+		// try to restore a backup that doesn not exist
+		name := "does-not-exist"
+
+		_, err := updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = util.NewString(name)
+		})
+		assert.NoError(t, err, "Failed to update deployment: %s", err)
+
+		depl, err := waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore != nil {
+				result := status.Restore
+
+				if result.RequestedFrom != name {
+					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
+				}
+
+				if result.Restored {
+					t.Fatalf("Backup has been restored!")
+				}
+
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set on deployment")
+		})
+		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+		assert.False(t, depl.Status.Restore.Restored)
 	})
 
 	t.Run("upload", func(t *testing.T) {

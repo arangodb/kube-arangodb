@@ -22,7 +22,7 @@
 package v1alpha
 
 type DeploymentRestoreResult struct {
-	RequestedFrom string
-	Message       string
-	Restored      bool
+	RequestedFrom string `json:"requestedFrom"`
+	Message       string `json:"message,omitempty"`
+	Restored      bool   `json:"restored"`
 }
