@@ -357,6 +357,22 @@ func TestBackupCluster(t *testing.T) {
 		assert.NoError(t, err, "Failed to check if document exists: %s", err)
 		assert.False(t, found)
 
+		// delete the RestoreFrom entry
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = nil
+		})
+		assert.NoError(t, err, "Failed to update deployment: %s", err)
+
+		// wait for it to be deleted in the status
+		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore == nil {
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set to nil")
+		})
+
 	})
 
 	t.Run("upload", func(t *testing.T) {
