@@ -25,6 +25,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
@@ -124,6 +125,9 @@ func newBackup(name, deployment string, options *EnsureBackupOptions) *api.Arang
 	backup := &api.ArangoBackup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
+			Finalizers: []string {
+				api.FinalizerArangoBackup,
+			},
 		},
 		Spec: api.ArangoBackupSpec{
 			Deployment: api.ArangoBackupSpecDeployment{
@@ -406,6 +410,7 @@ func TestBackupCluster(t *testing.T) {
 			return fmt.Errorf("Restore is not set on deployment")
 		})
 		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+		require.NotNil(t, depl.Status.Restore)
 		assert.False(t, depl.Status.Restore.Restored)
 	})
 

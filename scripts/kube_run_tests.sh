@@ -14,7 +14,7 @@ TESTREPOPATH=$8
 IMAGEID=$(docker inspect ${TESTIMAGE} '--format={{index .RepoDigests 0}}')
 
 kubectl --namespace ${DEPLOYMENTNAMESPACE} \
-    run arangodb-operator-test -i --rm --quiet --restart=Never \
+    run arangodb-operator-test -i --restart=Never \
     --image=${IMAGEID} \
     --env="ENTERPRISEIMAGE=${ENTERPRISEIMAGE}" \
     --env="ARANGODIMAGE=${ARANGODIMAGE}" \

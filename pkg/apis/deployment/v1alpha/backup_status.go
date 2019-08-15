@@ -37,6 +37,6 @@ type ArangoBackupStatus struct {
 type ArangoBackupDetails struct {
 	ID                string    `json:"ID"`
 	Version           string    `json:"version"`
-	Forced            *bool     `json:"forced"`
+	Forced            *bool     `json:"forced,omitempty"`
 	CreationTimestamp meta.Time `json:"createdAt"`
 }
