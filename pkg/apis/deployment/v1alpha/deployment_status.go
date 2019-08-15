@@ -44,6 +44,8 @@ type DeploymentStatus struct {
 
 	ExporterServiceMonitorName string `json:"exporterServiceMonitorName,omitempty"`
 
+	Restore *DeploymentRestoreResult `json:"restore,omitempty"`
+
 	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
 	Images ImageInfoList `json:"arangodb-images,omitempty"`
 	// Image that is currently being used when new pods are created

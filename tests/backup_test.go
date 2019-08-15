@@ -25,6 +25,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -64,6 +65,18 @@ func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*ap
 		return nil, maskAny(err)
 	}
 	return result, nil
+}
+
+func backupIsReady(backup *api.ArangoBackup, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if backup.Status.State == api.ArangoBackupStateReady {
+		return nil
+	}
+
+	return fmt.Errorf("Backup not ready - status: %s", backup.Status.State)
 }
 
 func backupIsAvailable(backup *api.ArangoBackup, err error) error {
@@ -166,6 +179,21 @@ func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versione
 	return backup, name, driver.BackupID(backupID)
 }
 
+func skipOrRemotePath(t *testing.T) (repoPath string) {
+	repoPath = os.Getenv("TEST_REMOTE_REPOSITORY")
+	if repoPath == "" {
+		t.Skip("TEST_REMOTE_REPOSITORY not set")
+	}
+	return repoPath
+}
+
+func newOperation() *api.ArangoBackupSpecOperation {
+	return &api.ArangoBackupSpecOperation{
+		RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+		CredentialsSecretName: testBackupRemoteSecretName,
+	}
+}
+
 func TestBackupCluster(t *testing.T) {
 	longOrSkip(t)
 	c := client.MustNewInCluster()
@@ -265,4 +293,130 @@ func TestBackupCluster(t *testing.T) {
 		assert.NoError(t, err, "backup did not become available: %s", err)
 		assert.Equal(t, api.ArangoBackupStateReady, backup.Status.State)
 	})
+
+	t.Run("create-restore-cycle", func(t *testing.T) {
+
+		type Book struct {
+			Title  string
+			Author string
+		}
+
+		ctx := context.Background()
+		// first add collections, insert data into the cluster
+		dbname := "backup-test-db"
+		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
+		assert.NoError(t, err, "failed to create database: %s", err)
+
+		colname := "backup-test-col"
+		col, err := db.CreateCollection(ctx, colname, nil)
+		assert.NoError(t, err, "failed to create collection: %s", err)
+
+		meta1, err := col.CreateDocument(ctx, &Book{Title: "My first Go-Program", Author: "Adam"})
+		assert.NoError(t, err, "failed to create document: %s", err)
+
+		// Now create a backup
+		_, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// insert yet another document
+		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
+		assert.NoError(t, err, "failed to create document: %s", err)
+
+		// now restore the backup
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = util.NewString(string(name))
+		})
+		assert.NoError(t, err, "Failed to update deployment: %s", err)
+
+		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore != nil {
+				result := status.Restore
+
+				if result.RequestedFrom != name {
+					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
+				}
+
+				if !result.Restored {
+					t.Fatalf("Failed to restore backup: %s", result.Message)
+				}
+
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set on deployment")
+		})
+
+		// restore was completed, check if documents are there
+		found, err := col.DocumentExists(ctx, meta1.Key)
+		assert.NoError(t, err, "Failed to check if document exists: %s", err)
+		assert.True(t, found)
+
+		// second document should not exist
+		found, err = col.DocumentExists(ctx, meta2.Key)
+		assert.NoError(t, err, "Failed to check if document exists: %s", err)
+		assert.False(t, found)
+
+	})
+
+	t.Run("upload", func(t *testing.T) {
+		skipOrRemotePath(t)
+
+		// create backup with upload operation
+		backup, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// wait until the backup becomes ready
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		assert.NoError(t, err, "backup did not become ready: %s", err)
+
+		// TODO there is no way to tell from the status if a upload happened or not
+	})
+
+	/*t.Run("create-upload-download-restore-cycle", func(t *testing.T) {
+		skipOrRemotePath(t)
+
+		type Book struct {
+			Title  string
+			Author string
+		}
+
+		ctx := context.Background()
+		// first add collections, insert data into the cluster
+		dbname := "backup-test-db"
+		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
+		assert.NoError(t, err, "failed to create database: %s", err)
+
+		colname := "backup-test-col"
+		col, err := db.CreateCollection(ctx, colname, nil)
+		assert.NoError(t, err, "failed to create collection: %s", err)
+
+		meta1, err := col.CreateDocument(ctx, &Book{Title: "My first Go-Program", Author: "Adam"})
+		assert.NoError(t, err, "failed to create document: %s", err)
+
+		// Now create a backup
+		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// insert yet another document
+		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
+		assert.NoError(t, err, "failed to create document: %s", err)
+
+		// now remove the backup locally
+		err = databaseClient.Backup().Delete(nil, id)
+		assert.NoError(t, err, "Failed to delete backup: %s", err)
+
+		// wait for the backup to become unavailable
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.Equal(t, api.ArangoBackupStateDeleted, backup.Status.State)
+
+		// now remove the backup
+		deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
+		assert.NoError(t, err, "Backup test failed: %s", err)
+
+		// create the backup with a download
+
+	})*/
 }

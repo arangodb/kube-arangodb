@@ -43,6 +43,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// GetBackup receives information about a backup resource
+func (d *Deployment) GetBackup(backup string) (*api.ArangoBackup, error) {
+	return d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoBackups(d.Namespace()).Get(backup, metav1.GetOptions{})
+}
+
 // GetAPIObject returns the deployment as k8s object.
 func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 	return d.apiObject

@@ -166,7 +166,7 @@ update-generated:
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha \
+		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -258,6 +258,7 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
 
 .PHONY: run-tests
 run-tests: docker-test
@@ -277,7 +278,8 @@ endif
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)'
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)' '$(TEST_REMOTE_REPOSITORY)'
 
 $(DURATIONTESTBIN): $(SOURCES)
 	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
