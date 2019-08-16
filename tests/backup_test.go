@@ -25,11 +25,12 @@ package tests
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -125,7 +126,7 @@ func newBackup(name, deployment string, options *EnsureBackupOptions) *api.Arang
 	backup := &api.ArangoBackup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
-			Finalizers: []string {
+			Finalizers: []string{
 				api.FinalizerArangoBackup,
 			},
 		},
@@ -442,7 +443,7 @@ func TestBackupCluster(t *testing.T) {
 		assert.True(t, *backup.Status.Details.Uploaded)
 	})
 
-	t.Run("upload-download cycle", func(t *testing.T) {
+	t.Run("upload-download-cycle", func(t *testing.T) {
 		skipOrRemotePath(t)
 
 		// create backup with upload operation
@@ -495,7 +496,7 @@ func TestBackupCluster(t *testing.T) {
 		assert.True(t, *backup.Status.Details.Downloaded)
 	})
 
-	/*t.Run("create-upload-download-restore-cycle", func(t *testing.T) {
+	t.Run("create-upload-download-restore-cycle", func(t *testing.T) {
 		skipOrRemotePath(t)
 
 		type Book struct {
@@ -505,7 +506,7 @@ func TestBackupCluster(t *testing.T) {
 
 		ctx := context.Background()
 		// first add collections, insert data into the cluster
-		dbname := "backup-test-db"
+		dbname := "backup-test-db-up-down"
 		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
 		assert.NoError(t, err, "failed to create database: %s", err)
 
@@ -519,6 +520,10 @@ func TestBackupCluster(t *testing.T) {
 		// Now create a backup
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
 		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
+
+		// wait until the backup becomes ready
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		assert.NoError(t, err, "backup did not become ready: %s", err)
 
 		// insert yet another document
 		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
@@ -538,7 +543,64 @@ func TestBackupCluster(t *testing.T) {
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
 		assert.NoError(t, err, "Backup test failed: %s", err)
 
-		// create the backup with a download
+		// create backup with download operation
+		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
 
-	})*/
+		// wait until the backup becomes ready
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		assert.NoError(t, err, "backup did not become ready: %s", err)
+
+		// now restore the backup
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = util.NewString(string(name))
+		})
+		assert.NoError(t, err, "Failed to update deployment: %s", err)
+
+		_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore != nil {
+				result := status.Restore
+
+				if result.RequestedFrom != name {
+					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
+				}
+
+				if !result.Restored {
+					t.Fatalf("Failed to restore backup: %s", result.Message)
+				}
+
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set on deployment")
+		})
+		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+
+		// restore was completed, check if documents are there
+		found, err := col.DocumentExists(ctx, meta1.Key)
+		assert.NoError(t, err, "Failed to check if document exists: %s", err)
+		assert.True(t, found)
+
+		// second document should not exist
+		found, err = col.DocumentExists(ctx, meta2.Key)
+		assert.NoError(t, err, "Failed to check if document exists: %s", err)
+		assert.False(t, found)
+
+		// delete the RestoreFrom entry
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = nil
+		})
+		assert.NoError(t, err, "Failed to update deployment: %s", err)
+
+		// wait for it to be deleted in the status
+		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore == nil {
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set to nil")
+		})
+	})
 }
