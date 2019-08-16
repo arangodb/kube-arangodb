@@ -20,7 +20,7 @@ metadata:
   name: {{ .Backup.Operator.RoleName }}
 rules:
 - apiGroups: ["database.arangodb.com"]
-  resources: ["arangobackuppolicies", "arangobackups", "arangobackups/status"]
+  resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status"]
   verbs: ["*"]
 
 

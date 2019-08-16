@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
@@ -79,7 +80,7 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
 				CreationTimestamp: meta.Now(),
-				Downloaded: &trueVar,
+				Downloaded:        &trueVar,
 			},
 		}, nil
 	}

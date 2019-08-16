@@ -30,7 +30,7 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/gorhill/cronexpr"
+	"github.com/robfig/cron"
 	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -78,19 +78,15 @@ func (h *handler) Handle(item operator.Item) error {
 func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (database.ArangoBackupPolicyStatus, error) {
 	if err := policy.Validate(); err != nil {
 		return database.ArangoBackupPolicyStatus{
-			Message: &database.ArangoBackupPolicyMessage{
-				Message: fmt.Sprintf("Validation error: %s", err.Error()),
-			},
+			Message: fmt.Sprintf("Validation error: %s", err.Error()),
 		}, nil
 	}
 
 	if policy.Status.Scheduled.IsZero() {
-		expr, err := cronexpr.Parse(policy.Spec.Schedule)
+		expr, err := cron.Parse(policy.Spec.Schedule)
 		if err != nil {
 			return database.ArangoBackupPolicyStatus{
-				Message: &database.ArangoBackupPolicyMessage{
-					Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
-				},
+				Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
 			}, nil
 		}
 
@@ -123,9 +119,7 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 	if err != nil {
 		return database.ArangoBackupPolicyStatus{
 			Scheduled: policy.Status.Scheduled,
-			Message: &database.ArangoBackupPolicyMessage{
-				Message: fmt.Sprintf("deployments listing failed: %s", err.Error()),
-			},
+			Message:   fmt.Sprintf("deployments listing failed: %s", err.Error()),
 		}, nil
 	}
 
@@ -135,21 +129,17 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 		if _, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Create(backup); err != nil {
 			return database.ArangoBackupPolicyStatus{
 				Scheduled: policy.Status.Scheduled,
-				Message: &database.ArangoBackupPolicyMessage{
-					Message: fmt.Sprintf("backup creation failed: %s", err.Error()),
-				},
+				Message:   fmt.Sprintf("backup creation failed: %s", err.Error()),
 			}, nil
 		}
 
 		log.Info().Msgf("Created Backup %s/%s for policy %s/%s", backup.Namespace, backup.Name, policy.Namespace, policy.Name)
 	}
 
-	expr, err := cronexpr.Parse(policy.Spec.Schedule)
+	expr, err := cron.Parse(policy.Spec.Schedule)
 	if err != nil {
 		return database.ArangoBackupPolicyStatus{
-			Message: &database.ArangoBackupPolicyMessage{
-				Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
-			},
+			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
 		}, nil
 	}
 

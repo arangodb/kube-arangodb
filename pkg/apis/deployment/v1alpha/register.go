@@ -29,15 +29,15 @@ import (
 )
 
 const (
-	ArangoDeploymentCRDName = ArangoDeploymentResourcePlural + "." + groupName
+	ArangoDeploymentCRDName        = ArangoDeploymentResourcePlural + "." + groupName
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
 	ArangoDeploymentResourcePlural = "arangodeployments"
 
-	ArangoBackupCRDName    = ArangoBackupResourcePlural + "." + groupName
+	ArangoBackupCRDName        = ArangoBackupResourcePlural + "." + groupName
 	ArangoBackupResourceKind   = "ArangoBackup"
 	ArangoBackupResourcePlural = "arangobackups"
 
-	ArangoBackupPolicyCRDName    = ArangoBackupPolicyResourcePlural + "." + groupName
+	ArangoBackupPolicyCRDName        = ArangoBackupPolicyResourcePlural + "." + groupName
 	ArangoBackupPolicyResourceKind   = "ArangoBackupPolicy"
 	ArangoBackupPolicyResourcePlural = "arangobackuppolicies"
 

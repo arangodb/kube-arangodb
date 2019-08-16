@@ -35,7 +35,7 @@ type ArangoBackupStatus struct {
 }
 
 type ArangoBackupDetails struct {
-	ID                string    `json:"ID"`
+	ID                string    `json:"id"`
 	Version           string    `json:"version"`
 	Forced            *bool     `json:"forced,omitempty"`
 	Uploaded          *bool     `json:"uploaded,omitempty"`

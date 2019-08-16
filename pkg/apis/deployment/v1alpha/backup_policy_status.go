@@ -27,10 +27,6 @@ import (
 )
 
 type ArangoBackupPolicyStatus struct {
-	Scheduled meta.Time                  `json:"scheduled,omitempty"`
-	Message   *ArangoBackupPolicyMessage `json:"error,omitempty,inline"`
-}
-
-type ArangoBackupPolicyMessage struct {
-	Message string `json:"message"`
+	Scheduled meta.Time `json:"scheduled,omitempty"`
+	Message   string    `json:"message,omitempty"`
 }

@@ -64,7 +64,7 @@ func (a *ArangoBackupPolicy) NewBackup(d *ArangoDeployment) *ArangoBackup {
 
 			Labels: a.Labels,
 
-			Finalizers: []string {
+			Finalizers: []string{
 				FinalizerArangoBackup,
 			},
 		},

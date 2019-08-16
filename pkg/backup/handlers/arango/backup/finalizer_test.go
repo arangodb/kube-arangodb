@@ -1,12 +1,13 @@
 package backup
 
 import (
+	"testing"
+	"time"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
-	"time"
 )
 
 func Test_Finalizer_PassThru(t *testing.T) {
@@ -47,10 +48,10 @@ func Test_Finalizer_RemoveObject(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:string(backupMeta.ID),
-		Forced:&backupMeta.Forced,
-		Version:backupMeta.Version,
-		CreationTimestamp:meta.Now(),
+		ID:                string(backupMeta.ID),
+		Forced:            &backupMeta.Forced,
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act
@@ -84,10 +85,10 @@ func Test_Finalizer_RemoveObject_WithoutFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:string(backupMeta.ID),
-		Forced:&backupMeta.Forced,
-		Version:backupMeta.Version,
-		CreationTimestamp:meta.Now(),
+		ID:                string(backupMeta.ID),
+		Forced:            &backupMeta.Forced,
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act
@@ -124,10 +125,10 @@ func Test_Finalizer_RemoveObject_UnknownFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:string(backupMeta.ID),
-		Forced:&backupMeta.Forced,
-		Version:backupMeta.Version,
-		CreationTimestamp:meta.Now(),
+		ID:                string(backupMeta.ID),
+		Forced:            &backupMeta.Forced,
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act
@@ -165,10 +166,10 @@ func Test_Finalizer_RemoveObject_MixedFinalizers(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Details = &database.ArangoBackupDetails{
-		ID:string(backupMeta.ID),
-		Forced:&backupMeta.Forced,
-		Version:backupMeta.Version,
-		CreationTimestamp:meta.Now(),
+		ID:                string(backupMeta.ID),
+		Forced:            &backupMeta.Forced,
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
 	}
 
 	// Act

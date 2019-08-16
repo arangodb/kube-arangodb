@@ -190,7 +190,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, createFailMessage(state,fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
+		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 	})
 }
 

@@ -50,7 +50,7 @@ type ArangoBackupSpecOperation struct {
 }
 
 type ArangoBackupSpecDownload struct {
-	ArangoBackupSpecOperation
+	ArangoBackupSpecOperation `json:"inline"`
 
 	ID string `json:"id"`
 }

@@ -70,6 +70,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.0.0
 	github.com/pulcy/pulsar v0.0.0-20180915062927-71ea24b0ec2f // indirect
+	github.com/robfig/cron v1.2.0
 	github.com/rs/zerolog v1.14.3
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect

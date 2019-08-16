@@ -48,7 +48,7 @@ func (h *handler) finalize(backup *database.ArangoBackup) error {
 		}
 	}
 
-	backup.Finalizers = finalizers.Remove(finalizersToRemove ...)
+	backup.Finalizers = finalizers.Remove(finalizersToRemove...)
 
 	if i := len(backup.Finalizers); i > 0 {
 		log.Warn().Msgf("After finalizing on object %s %s/%s finalizers left: %d",

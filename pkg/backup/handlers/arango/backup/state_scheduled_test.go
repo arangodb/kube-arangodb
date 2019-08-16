@@ -42,7 +42,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL:"Some URL",
+			RepositoryURL: "Some URL",
 		},
 		ID: "id",
 	}

@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )

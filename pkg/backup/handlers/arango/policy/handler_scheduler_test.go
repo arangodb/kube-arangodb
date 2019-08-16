@@ -54,7 +54,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
-	require.Nil(t, newPolicy.Status.Message)
+	require.Empty(t, newPolicy.Status.Message)
 	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
 
 	backups := listArangoBackups(t, handler, namespace)
@@ -81,7 +81,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
 	require.NotNil(t, newPolicy.Status.Message)
-	require.Equal(t, "Validation error: error while parsing expr: missing field(s)", newPolicy.Status.Message.Message)
+	require.Equal(t, "Validation error: error while parsing expr: missing field(s)", newPolicy.Status.Message)
 
 	backups := listArangoBackups(t, handler, namespace)
 	require.Len(t, backups, 0)
@@ -111,7 +111,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
-	require.Nil(t, newPolicy.Status.Message)
+	require.Empty(t, newPolicy.Status.Message)
 	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
 
 	backups := listArangoBackups(t, handler, namespace)

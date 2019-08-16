@@ -225,12 +225,15 @@ func TestBackupCluster(t *testing.T) {
 	depl.Spec.DBServers.Count = util.NewInt(2)
 	depl.Spec.Coordinators.Count = util.NewInt(2)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
+	depl.Labels = map[string]string{
+		"TEST": "1",
+	}
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Create deployment
 	apiObject, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
-	assert.NoError(t, err, "failed to create deplyment: %s", err)
+	assert.NoError(t, err, "failed to create deployment: %s", err)
 
 	_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, deploymentIsReady())
 	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %s", err))

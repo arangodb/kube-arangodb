@@ -43,7 +43,7 @@ func (s StringList) Append(i string) StringList {
 	return append(s, i)
 }
 
-func (a StringList) Remove(i ... string) StringList {
+func (a StringList) Remove(i ...string) StringList {
 	r := make(StringList, 0, len(a))
 
 	strings := StringList(i)

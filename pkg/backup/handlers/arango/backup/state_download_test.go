@@ -67,6 +67,7 @@ func Test_State_Download_Success(t *testing.T) {
 
 	require.Nil(t, newObj.Status.Details)
 }
+
 // Check version
 func Test_State_Download_DownloadFailed(t *testing.T) {
 	// Arrange
