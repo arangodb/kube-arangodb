@@ -146,6 +146,29 @@ func newBackup(name, deployment string, options *EnsureBackupOptions) *api.Arang
 	return backup
 }
 
+func newBackupPolicy(name, schedule string, labels map[string]string, options *EnsureBackupOptions) *api.ArangoBackupPolicy {
+	policy := &api.ArangoBackupPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   strings.ToLower(name),
+			Labels: labels,
+		},
+		Spec: api.ArangoBackupPolicySpec{
+			DeploymentSelector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+
+			Schedule: schedule,
+		},
+	}
+
+	if options != nil {
+		policy.Spec.BackupTemplate.Options = options.Options
+		policy.Spec.BackupTemplate.Upload = options.Upload
+	}
+
+	return policy
+}
+
 func skipIfBackupUnavailable(t *testing.T, client driver.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -219,29 +242,65 @@ func TestBackupCluster(t *testing.T) {
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 	ns := getNamespace(t)
 
+	backupPolicyClient := deploymentClient.DatabaseV1alpha().ArangoBackupPolicies(ns)
+	backupClient := deploymentClient.DatabaseV1alpha().ArangoBackups(ns)
+
 	// Prepare deployment config
+	deplLabels := map[string]string{
+		"COMMON": "1",
+		"TEST":   "1",
+	}
+
 	depl := newDeployment("test-backup-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.DBServers.Count = util.NewInt(2)
 	depl.Spec.Coordinators.Count = util.NewInt(2)
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
-	depl.Labels = map[string]string{
-		"TEST": "1",
-	}
+	depl.Labels = deplLabels
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
+
+	// Prepare deployment config
+	depl2Labels := map[string]string{
+		"COMMON": "1",
+		"TEST":   "2",
+	}
+
+	depl2 := newDeployment("test-backup-two-" + uniuri.NewLen(4))
+	depl2.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
+	depl2.Spec.DBServers.Count = util.NewInt(2)
+	depl2.Spec.Coordinators.Count = util.NewInt(2)
+	depl2.Spec.SetDefaults(depl2.GetName()) // this must be last
+	depl2.Labels = depl2Labels
+	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 
 	// Create deployment
 	apiObject, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
 	assert.NoError(t, err, "failed to create deployment: %s", err)
 
+	api2Object, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl2)
+	defer removeDeployment(deploymentClient, depl2.GetName(), ns)
+	assert.NoError(t, err, "failed to create deployment two: %s", err)
+
 	_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, deploymentIsReady())
 	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %s", err))
+
+	_, err = waitUntilDeployment(deploymentClient, depl2.GetName(), ns, deploymentIsReady())
+	assert.NoError(t, err, fmt.Sprintf("Deployment two not running in time: %s", err))
 
 	ctx := context.Background()
 	databaseClient := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
 
+	database2Client := mustNewArangodDatabaseClient(ctx, kubecli, api2Object, t, nil)
+
 	skipIfBackupUnavailable(t, databaseClient)
+	skipIfBackupUnavailable(t, database2Client)
+
+	deployments := []*api.ArangoDeployment{depl, depl2}
+	databaseClients := map[*api.ArangoDeployment]driver.Client{
+		depl:  databaseClient,
+		depl2: database2Client,
+	}
 
 	t.Run("create backup", func(t *testing.T) {
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
@@ -437,7 +496,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		require.NotNil(t, backup.Status.Details)
 		require.NotNil(t, backup.Status.Details.Uploaded)
@@ -605,5 +664,164 @@ func TestBackupCluster(t *testing.T) {
 
 			return fmt.Errorf("Restore is not set to nil")
 		})
+	})
+
+	t.Run("create-backup-policy", func(t *testing.T) {
+		skipOrRemotePath(t)
+
+		selector := metav1.FormatLabelSelector(&metav1.LabelSelector{
+			MatchLabels: deplLabels,
+		})
+
+		policy := newBackupPolicy(depl.GetName(), "0/15 * * * * *", deplLabels, nil)
+		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+		require.NoError(t, err)
+		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
+
+		_, err = backupPolicyClient.Create(policy)
+		require.NoError(t, err)
+		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+
+		// Wait until 2 backups are created
+		err = timeout(5*time.Second, 2*time.Minute, func() error {
+			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+
+			if err != nil {
+				return err
+			}
+
+			t.Logf("Received %d ArangoBackups from label selector %s", len(list.Items), selector)
+
+			if len(list.Items) < 2 {
+				return nil
+			}
+
+			return interrupt{}
+		})
+		require.NoError(t, err)
+
+		// Cleanup scheduler
+		backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+
+		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
+			MatchLabels: deplLabels,
+		})})
+		require.NoError(t, err)
+
+		for _, backup := range backups.Items {
+			t.Run(fmt.Sprintf("deleting - %s", backup.Name), func(t *testing.T) {
+				defer backupClient.Delete(backup.Name, &metav1.DeleteOptions{})
+
+				currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
+				require.NoError(t, err, "backup did not become available: %s", err)
+				backupID := currentBackup.Status.Details.ID
+
+				// check that the backup is actually available
+				found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
+				assert.NoError(t, err, "Backup test failed: %s", err)
+				assert.True(t, found)
+				assert.Equal(t, meta.Version, currentBackup.Status.Details.Version)
+				assert.Equal(t, depl.GetName(), currentBackup.Spec.Deployment.Name)
+			})
+		}
+
+		// Cleanup
+		err = timeout(time.Second, 2*time.Minute, func() error {
+			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			if err != nil {
+				return err
+			}
+
+			if len(list.Items) != 0 {
+				return nil
+			}
+
+			return interrupt{}
+		})
+		require.NoError(t, err)
+	})
+
+	t.Run("create-backup-policy-multiple", func(t *testing.T) {
+		skipOrRemotePath(t)
+
+		labels := map[string]string{
+			"COMMON": "1",
+		}
+		selector := metav1.FormatLabelSelector(&metav1.LabelSelector{
+			MatchLabels: labels,
+		})
+
+		policy := newBackupPolicy(depl.GetName(), "0/15 * * * * *", labels, nil)
+		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+		require.NoError(t, err)
+		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
+
+		_, err = backupPolicyClient.Create(policy)
+		require.NoError(t, err)
+		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+
+		// Wait until 2 backups are created
+		err = timeout(5*time.Second, 2*time.Minute, func() error {
+			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+
+			if err != nil {
+				return err
+			}
+
+			t.Logf("Received %d ArangoBackups from label selector %s", len(list.Items), selector)
+
+			if len(list.Items) < 4 {
+				return nil
+			}
+
+			return interrupt{}
+		})
+		require.NoError(t, err)
+
+		// Cleanup scheduler
+		backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+
+		for _, deployment := range deployments {
+			t.Run(fmt.Sprintf("deployment %s", deployment.Name), func(t *testing.T) {
+				backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
+					MatchLabels: deployment.Labels,
+				})})
+				require.NoError(t, err)
+
+				require.Len(t, backups.Items, 2)
+
+				for _, backup := range backups.Items {
+					t.Run(fmt.Sprintf("deleting - %s", backup.Name), func(t *testing.T) {
+						defer backupClient.Delete(backup.Name, &metav1.DeleteOptions{})
+
+						currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
+						require.NoError(t, err, "backup did not become available: %s", err)
+						backupID := currentBackup.Status.Details.ID
+
+						// check that the backup is actually available
+						found, meta, err := statBackupMeta(databaseClients[deployment], driver.BackupID(backupID))
+						assert.NoError(t, err, "Backup test failed: %s", err)
+						assert.True(t, found)
+						assert.Equal(t, meta.Version, currentBackup.Status.Details.Version)
+						assert.Equal(t, deployment.GetName(), currentBackup.Spec.Deployment.Name)
+					})
+				}
+			})
+		}
+
+		// Cleanup
+		err = timeout(time.Second, 2*time.Minute, func() error {
+			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			if err != nil {
+				return err
+			}
+
+			if len(list.Items) != 0 {
+				return nil
+			}
+
+			return interrupt{}
+		})
+		require.NoError(t, err)
 	})
 }

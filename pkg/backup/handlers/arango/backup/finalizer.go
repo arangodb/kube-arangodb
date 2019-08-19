@@ -102,3 +102,55 @@ func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
 
 	return nil
 }
+
+func hasFinalizers(backup *database.ArangoBackup) bool {
+	if backup.Finalizers == nil {
+		return false
+	}
+
+	if len(database.FinalizersArangoBackup) > len(backup.Finalizers) {
+		return false
+	}
+
+	for _, finalizer := range database.FinalizersArangoBackup {
+		if !hasFinalizer(backup, finalizer) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func hasFinalizer(backup *database.ArangoBackup, finalizer string) bool {
+	if backup.Finalizers == nil {
+		return false
+	}
+
+	for _, existingFinalizer := range backup.Finalizers {
+		if finalizer == existingFinalizer {
+			return true
+		}
+	}
+
+	return false
+}
+
+func appendFinalizers(backup *database.ArangoBackup) []string {
+	if backup.Finalizers == nil {
+		return database.FinalizersArangoBackup
+	}
+
+	if len(backup.Finalizers) == 0 {
+		return database.FinalizersArangoBackup
+	}
+
+	old := backup.Finalizers
+
+	for _, finalizer := range database.FinalizersArangoBackup {
+		if !hasFinalizer(backup, finalizer) {
+			old = append(old, finalizer)
+		}
+	}
+
+	return old
+}

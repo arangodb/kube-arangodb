@@ -27,9 +27,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"k8s.io/client-go/kubernetes"
 )
 
-func RegisterInformer(operator operator.Operator, client arangoClientSet.Interface, informer arangoInformer.SharedInformerFactory) error {
+func RegisterInformer(operator operator.Operator, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Database().V1alpha().ArangoBackups().Informer(),
 		database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
@@ -38,10 +39,12 @@ func RegisterInformer(operator operator.Operator, client arangoClientSet.Interfa
 	}
 
 	h := &handler{
-		client:              client,
-		arangoClientFactory: newArangoClientBackupFactory(), //newMockArangoClientBackupFactory(newMockArangoClientBackup(mockErrorsArangoClientBackup{})),
+		client:     client,
+		kubeClient: kubeClient,
+
 		arangoClientTimeout: defaultArangoClientTimeout,
 	}
+	h.arangoClientFactory = newArangoClientBackupFactory(h)
 
 	if err := operator.RegisterHandler(h); err != nil {
 		return err

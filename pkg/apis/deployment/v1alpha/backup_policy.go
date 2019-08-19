@@ -62,7 +62,7 @@ func (a *ArangoBackupPolicy) NewBackup(d *ArangoDeployment) *ArangoBackup {
 			Name:      fmt.Sprintf("%s-%s", d.Name, utils.RandomString(8)),
 			Namespace: a.Namespace,
 
-			Labels: a.Labels,
+			Labels: d.Labels,
 
 			Finalizers: []string{
 				FinalizerArangoBackup,

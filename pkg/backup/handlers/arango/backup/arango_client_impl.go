@@ -42,12 +42,10 @@ type arangoClientBackupImpl struct {
 	kubecli    kubernetes.Interface
 }
 
-func newArangoClientBackupFactory() ArangoClientFactory {
-
-	kubecli := k8sutil.MustNewKubeClient()
+func newArangoClientBackupFactory(handler *handler) ArangoClientFactory {
 	return func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error) {
 		ctx := context.Background()
-		client, err := arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), deployment, false)
+		client, err := arangod.CreateArangodDatabaseClient(ctx, handler.kubeClient.CoreV1(), deployment, false)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +54,7 @@ func newArangoClientBackupFactory() ArangoClientFactory {
 			deployment: deployment,
 			backup:     backup,
 			driver:     client,
-			kubecli:    kubecli,
+			kubecli:    handler.kubeClient,
 		}, nil
 	}
 }

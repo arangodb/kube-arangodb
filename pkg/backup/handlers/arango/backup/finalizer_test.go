@@ -90,6 +90,7 @@ func Test_Finalizer_RemoveObject_WithoutFinalizer(t *testing.T) {
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}
+	obj.Finalizers = nil
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -188,4 +189,47 @@ func Test_Finalizer_RemoveObject_MixedFinalizers(t *testing.T) {
 	exists, err := mock.Exists(backupMeta.ID)
 	require.NoError(t, err)
 	require.False(t, exists)
+}
+
+func Test_Finalizer_AddDefault(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(database.ArangoBackupStateNone)
+
+	obj.Finalizers = nil
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.NotNil(t, newObj.Finalizers)
+	require.True(t, hasFinalizers(newObj))
+}
+
+func Test_Finalizer_AppendDefault(t *testing.T) {
+	// Arrange
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(database.ArangoBackupStateNone)
+
+	obj.Finalizers = []string{
+		"RANDOM",
+		"FINALIZERS",
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.NotNil(t, newObj.Finalizers)
+	require.True(t, hasFinalizers(newObj))
 }

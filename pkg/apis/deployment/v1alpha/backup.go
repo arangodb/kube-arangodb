@@ -32,6 +32,12 @@ const (
 	FinalizerArangoBackup = ArangoBackupCRDName + "/cleanup"
 )
 
+var (
+	FinalizersArangoBackup = []string{
+		FinalizerArangoBackup,
+	}
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoBackupList is a list of ArangoDB backups.

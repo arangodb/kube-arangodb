@@ -103,7 +103,8 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *data
 				database.ArangoBackupResourcePlural,
 				namespace,
 				name),
-			UID: uuid.NewUUID(),
+			UID:        uuid.NewUUID(),
+			Finalizers: database.FinalizersArangoBackup,
 		},
 		Spec: database.ArangoBackupSpec{
 			Deployment: database.ArangoBackupSpecDeployment{

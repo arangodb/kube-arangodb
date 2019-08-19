@@ -203,9 +203,14 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		panic(err)
 	}
 
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 30*time.Second, arangoInformer.WithNamespace(o.Namespace))
+	kubeClientSet, err := kubernetes.NewForConfig(restClient)
+	if err != nil {
+		panic(err)
+	}
 
-	if err = backup.RegisterInformer(operator, arangoClientSet, arangoInformer); err != nil {
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 15*time.Second, arangoInformer.WithNamespace(o.Namespace))
+
+	if err = backup.RegisterInformer(operator, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)
 	}
 

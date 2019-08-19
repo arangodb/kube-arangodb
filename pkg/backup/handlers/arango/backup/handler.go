@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"time"
 
+	"k8s.io/client-go/kubernetes"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/rs/zerolog/log"
@@ -42,7 +44,8 @@ const (
 )
 
 type handler struct {
-	client arangoClientSet.Interface
+	client     arangoClientSet.Interface
+	kubeClient kubernetes.Interface
 
 	arangoClientFactory ArangoClientFactory
 	arangoClientTimeout time.Duration
@@ -75,6 +78,21 @@ func (h *handler) Handle(item operator.Item) error {
 
 	// Do not act on delete event, finalizer should be used
 	if item.Operation == operator.OperationDelete {
+		return nil
+	}
+
+	// Add finalizers
+	if !hasFinalizers(backup) {
+		backup.Finalizers = appendFinalizers(backup)
+		log.Info().Msgf("Updating finalizers %s %s/%s",
+			item.Kind,
+			item.Namespace,
+			item.Name)
+
+		if _, err = h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).Update(backup); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
