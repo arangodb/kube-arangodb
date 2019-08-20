@@ -23,7 +23,6 @@
 package backup
 
 import (
-	"github.com/arangodb/go-driver"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,55 +41,25 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 	var details *database.ArangoBackupDetails
 
 	// Try to recover old backup. If old backup is missing go into deleted state
-	if backup.Status.Backup != nil {
-		_, err = client.Get(driver.BackupID(backup.Status.Backup.ID))
-		if err != nil {
-			if IsTemporaryError(err) {
-				return switchTemporaryError(err, backup.Status)
-			}
 
-			// Go into deleted state
-			return database.ArangoBackupStatus{
-				ArangoBackupState: database.ArangoBackupState{
-					State: database.ArangoBackupStateDeleted,
-				},
-				Backup: backup.Status.Backup,
-			}, nil
-		}
-
-		details = backup.Status.Backup.DeepCopy()
-	} else {
-		response, err := client.Create()
-		if err != nil {
-			return switchTemporaryError(err, backup.Status)
-		}
-
-		details = &database.ArangoBackupDetails{
-			ID:                string(response.ID),
-			Version:           response.Version,
-			CreationTimestamp: meta.Now(),
-		}
-
-		if response.Forced {
-			details.Forced = &response.Forced
-		}
+	response, err := client.Create()
+	if err != nil {
+		return switchTemporaryError(err, backup.Status)
 	}
 
-	if backup.Spec.Upload != nil {
-		return database.ArangoBackupStatus{
-			Available: true,
-			ArangoBackupState: database.ArangoBackupState{
-				State: database.ArangoBackupStateUpload,
-			},
-			Backup: details,
-		}, nil
+	details = &database.ArangoBackupDetails{
+		ID:                string(response.ID),
+		Version:           response.Version,
+		CreationTimestamp: meta.Now(),
+	}
+
+	if response.Forced {
+		details.Forced = &response.Forced
 	}
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateReady,
-		},
+		ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
 		Backup: details,
 	}, nil
 }

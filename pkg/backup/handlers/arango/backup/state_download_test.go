@@ -43,7 +43,7 @@ func Test_State_Download_Success(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryPath: "S3 URL",
+			RepositoryUrl: "S3 URL",
 		},
 		ID: "test",
 	}
@@ -80,7 +80,7 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryPath: "S3 URL",
+			RepositoryUrl: "S3 URL",
 		},
 		ID: "test",
 	}
@@ -116,7 +116,7 @@ func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryPath: "S3 URL",
+			RepositoryUrl: "S3 URL",
 		},
 		ID: "test",
 	}

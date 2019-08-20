@@ -24,13 +24,14 @@ package backup
 
 import (
 	"fmt"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 
 func switchTemporaryError(err error, status database.ArangoBackupStatus) (database.ArangoBackupStatus, error) {
-	if IsTemporaryError(err) {
+	if checkTemporaryError(err) {
 		return database.ArangoBackupStatus{}, err
 	}
 
@@ -44,12 +45,20 @@ func createFailMessage(state state.State, message string) string {
 func createFailedState(err error, status database.ArangoBackupStatus) database.ArangoBackupStatus {
 	newStatus := status.DeepCopy()
 
-	newStatus.ArangoBackupState = database.ArangoBackupState{
-		State:   database.ArangoBackupStateFailed,
-		Message: createFailMessage(status.State, err.Error()),
-	}
+	newStatus.ArangoBackupState = newState(database.ArangoBackupStateFailed, createFailMessage(status.State, err.Error()), nil)
 
 	newStatus.Available = false
 
 	return *newStatus
+}
+
+func newState(state state.State, message string, progress *database.ArangoBackupProgress) database.ArangoBackupState {
+	return database.ArangoBackupState{
+		State:state,
+		Time:meta.Now(),
+
+		Message: message,
+
+		Progress:progress,
+	}
 }

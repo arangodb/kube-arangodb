@@ -56,13 +56,11 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateUploading,
-			Progress: &database.ArangoBackupProgress{
+		ArangoBackupState: newState(database.ArangoBackupStateUploading, "",
+			&database.ArangoBackupProgress{
 				JobID:    string(jobID),
 				Progress: "0%",
-			},
-		},
+			}),
 		Backup: backup.Status.Backup,
 	}, nil
 }

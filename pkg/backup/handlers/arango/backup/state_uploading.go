@@ -54,7 +54,12 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 	}
 
 	if details.Failed {
-		return createFailedState(fmt.Errorf("upload failed with error: %s", details.FailMessage), backup.Status), nil
+		return database.ArangoBackupStatus{
+			Available:         true,
+			ArangoBackupState: newState(database.ArangoBackupStateUploadError,
+				fmt.Sprintf("Upload failed with error: %s", details.FailMessage), nil),
+			Backup:            backup.Status.Backup,
+		}, nil
 	}
 
 	if details.Completed {
@@ -65,23 +70,19 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 		newDetails.Uploaded = &trueVar
 
 		return database.ArangoBackupStatus{
-			Available: true,
-			ArangoBackupState: database.ArangoBackupState{
-				State: database.ArangoBackupStateReady,
-			},
-			Backup: newDetails,
+			Available:         true,
+			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+			Backup:            newDetails,
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
 		Available: true,
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateUploading,
-			Progress: &database.ArangoBackupProgress{
+		ArangoBackupState: newState(database.ArangoBackupStateUploading, "",
+			&database.ArangoBackupProgress{
 				JobID:    backup.Status.Progress.JobID,
 				Progress: fmt.Sprintf("%d%%", details.Progress),
-			},
-		},
+			}),
 		Backup: backup.Status.Backup,
 	}, nil
 }

@@ -120,7 +120,7 @@ func (h *handler) Handle(item operator.Item) error {
 
 	// Log message about state change
 	if backup.Status.State != status.State {
-		if backup.Status.State == database.ArangoBackupStateFailed {
+		if status.State == database.ArangoBackupStateFailed {
 			h.eventRecorder.Warning(backup, StateChange, "Transiting from %s to %s with error: %s",
 				backup.Status.State,
 				status.State,
@@ -130,6 +130,9 @@ func (h *handler) Handle(item operator.Item) error {
 				backup.Status.State,
 				status.State)
 		}
+	} else {
+		// Keep old time in case when object did not change
+		status.Time = backup.Status.Time
 	}
 
 	backup.Status = status

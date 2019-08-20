@@ -31,6 +31,10 @@ import (
 
 type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error)
 
+type TemporaryErrorInterface interface {
+	Temporary() bool
+}
+
 type ArangoBackupProgress struct {
 	Progress          int
 	Failed, Completed bool
@@ -74,4 +78,16 @@ func (t TemporaryError) Error() string {
 func IsTemporaryError(err error) bool {
 	_, ok := err.(TemporaryError)
 	return ok
+}
+
+func checkTemporaryError(err error) bool {
+	if ok := IsTemporaryError(err); ok {
+		return ok
+	}
+
+	if _, ok :=err.(TemporaryErrorInterface); ok {
+		return ok
+	}
+
+	return false
 }

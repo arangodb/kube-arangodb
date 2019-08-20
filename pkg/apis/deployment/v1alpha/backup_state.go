@@ -24,6 +24,7 @@ package v1alpha
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -31,10 +32,12 @@ const (
 	ArangoBackupStatePending     state.State = "Pending"
 	ArangoBackupStateScheduled   state.State = "Scheduled"
 	ArangoBackupStateDownload    state.State = "Download"
+	ArangoBackupStateDownloadError    state.State = "DownloadError"
 	ArangoBackupStateDownloading state.State = "Downloading"
 	ArangoBackupStateCreate      state.State = "Create"
 	ArangoBackupStateUpload      state.State = "Upload"
 	ArangoBackupStateUploading   state.State = "Uploading"
+	ArangoBackupStateUploadError      state.State = "UploadError"
 	ArangoBackupStateReady       state.State = "Ready"
 	ArangoBackupStateDeleted     state.State = "Deleted"
 	ArangoBackupStateFailed      state.State = "Failed"
@@ -45,10 +48,12 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStatePending:     {ArangoBackupStateScheduled, ArangoBackupStateFailed},
 	ArangoBackupStateScheduled:   {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
 	ArangoBackupStateDownload:    {ArangoBackupStateDownloading, ArangoBackupStateFailed},
-	ArangoBackupStateDownloading: {ArangoBackupStateReady, ArangoBackupStateFailed},
-	ArangoBackupStateCreate:      {ArangoBackupStateReady, ArangoBackupStateDeleted, ArangoBackupStateUpload, ArangoBackupStateFailed},
+	ArangoBackupStateDownloading: {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
+	ArangoBackupStateDownloadError: {ArangoBackupStateDownload, ArangoBackupStateFailed},
+	ArangoBackupStateCreate:      {ArangoBackupStateReady, ArangoBackupStateFailed},
 	ArangoBackupStateUpload:      {ArangoBackupStateUploading, ArangoBackupStateFailed},
-	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed},
+	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
+	ArangoBackupStateUploadError: {ArangoBackupStateUpload, ArangoBackupStateFailed, ArangoBackupStateReady},
 	ArangoBackupStateReady:       {ArangoBackupStateDeleted, ArangoBackupStateFailed, ArangoBackupStateUpload},
 	ArangoBackupStateDeleted:     {ArangoBackupStateFailed},
 	ArangoBackupStateFailed:      {ArangoBackupStatePending},
@@ -57,6 +62,8 @@ var ArangoBackupStateMap = state.Map{
 type ArangoBackupState struct {
 	// State holds the current high level state of the backup
 	State state.State `json:"state"`
+
+	Time meta.Time `json:"time"`
 
 	// Message for the state this object is in.
 	Message string `json:"message,omitempty"`

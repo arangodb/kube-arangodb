@@ -23,11 +23,26 @@
 package backup
 
 import (
+	"time"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
-func stateNoneHandler(*handler, *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+const (
+	downloadDelay = time.Minute
+)
+
+func stateDownloadErrorHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+	// Start again download
+	if backup.Status.Time.Time.Add(downloadDelay).Before(time.Now()) {
+		return database.ArangoBackupStatus{
+			Available: false,
+			ArangoBackupState: newState(database.ArangoBackupStateDownload, "", nil),
+		}, nil
+	}
+
 	return database.ArangoBackupStatus{
-		ArangoBackupState: newState(database.ArangoBackupStatePending, "", nil),
+		Available: false,
+		ArangoBackupState: backup.Status.ArangoBackupState,
 	}, nil
 }

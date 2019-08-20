@@ -56,12 +56,10 @@ func stateDownloadHandler(h *handler, backup *database.ArangoBackup) (database.A
 
 	return database.ArangoBackupStatus{
 		Available: false,
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateDownloading,
-			Progress: &database.ArangoBackupProgress{
+		ArangoBackupState: newState(database.ArangoBackupStateDownloading, "",
+			&database.ArangoBackupProgress{
 				JobID:    string(jobID),
 				Progress: "0%",
-			},
-		},
+			}),
 	}, nil
 }

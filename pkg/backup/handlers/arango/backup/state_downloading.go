@@ -60,7 +60,11 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 	}
 
 	if details.Failed {
-		return createFailedState(fmt.Errorf("download failed with error: %s", details.FailMessage), backup.Status), nil
+		return database.ArangoBackupStatus{
+			Available: false,
+			ArangoBackupState: newState(database.ArangoBackupStateDownloadError,
+				fmt.Sprintf("Download failed with error: %s", details.FailMessage), nil),
+		}, nil
 	}
 
 	if details.Completed {
@@ -72,10 +76,8 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 		trueVar := true
 
 		return database.ArangoBackupStatus{
-			Available: true,
-			ArangoBackupState: database.ArangoBackupState{
-				State: database.ArangoBackupStateReady,
-			},
+			Available:         true,
+			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
 			Backup: &database.ArangoBackupDetails{
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
@@ -87,12 +89,10 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 
 	return database.ArangoBackupStatus{
 		Available: false,
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateDownloading,
-			Progress: &database.ArangoBackupProgress{
+		ArangoBackupState: newState(database.ArangoBackupStateDownloading, "",
+			&database.ArangoBackupProgress{
 				JobID:    backup.Status.Progress.JobID,
 				Progress: fmt.Sprintf("%d%%", details.Progress),
-			},
-		},
+			}),
 	}, nil
 }

@@ -28,7 +28,6 @@ import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Create_Common(t *testing.T) {
@@ -99,7 +98,7 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryPath: "test",
+		RepositoryUrl: "test",
 	}
 
 	// Act
@@ -110,7 +109,7 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateUpload)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
 
 	require.NotNil(t, newObj.Status.Backup)
 
@@ -157,62 +156,6 @@ func Test_State_Create_TemporaryCreateFailed(t *testing.T) {
 	})
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
-
-	// Act
-	createArangoDeployment(t, handler, deployment)
-	createArangoBackup(t, handler, obj)
-
-	err := handler.Handle(newItemFromBackup(operator.OperationUpdate, obj))
-
-	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
-}
-
-func Test_State_Create_GetFailedWithExistingDeploymentSpec(t *testing.T) {
-	// Arrange
-	errorMsg := "get error"
-	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		getError: errorMsg,
-	})
-
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
-
-	obj.Status.Backup = &database.ArangoBackupDetails{
-		ID:                "non-existent",
-		Version:           "non-existent",
-		CreationTimestamp: meta.Now(),
-	}
-
-	// Act
-	createArangoDeployment(t, handler, deployment)
-	createArangoBackup(t, handler, obj)
-
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
-
-	// Assert
-	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDeleted)
-
-	require.NotNil(t, newObj.Status.Backup)
-
-	require.False(t, newObj.Status.Available)
-}
-
-func Test_State_Create_TemporaryGetFailedWithExistingDeploymentSpec(t *testing.T) {
-	// Arrange
-	errorMsg := "get error"
-	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		isTemporaryError: true,
-		getError:         errorMsg,
-	})
-
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
-
-	obj.Status.Backup = &database.ArangoBackupDetails{
-		ID:                "non-existent",
-		Version:           "non-existent",
-		CreationTimestamp: meta.Now(),
-	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)

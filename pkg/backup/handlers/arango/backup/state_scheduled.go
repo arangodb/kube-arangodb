@@ -34,15 +34,11 @@ func stateScheduledHandler(h *handler, backup *database.ArangoBackup) (database.
 
 	if backup.Spec.Download != nil {
 		return database.ArangoBackupStatus{
-			ArangoBackupState: database.ArangoBackupState{
-				State: database.ArangoBackupStateDownload,
-			},
+			ArangoBackupState: newState(database.ArangoBackupStateDownload, "", nil),
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateCreate,
-		},
+		ArangoBackupState: newState(database.ArangoBackupStateCreate, "", nil),
 	}, nil
 }

@@ -47,7 +47,7 @@ type ArangoBackupSpecOptions struct {
 }
 
 type ArangoBackupSpecOperation struct {
-	RepositoryPath        string `json:"repositoryPath"`
+	RepositoryUrl         string `json:"repositoryUrl"`
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
 }
 

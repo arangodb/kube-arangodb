@@ -79,16 +79,11 @@ func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.Ar
 
 	if count >= 1 {
 		return database.ArangoBackupStatus{
-			ArangoBackupState: database.ArangoBackupState{
-				State:   database.ArangoBackupStatePending,
-				Message: "backup already in process",
-			},
+			ArangoBackupState: newState(database.ArangoBackupStatePending, "backup already in process", nil),
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
-		ArangoBackupState: database.ArangoBackupState{
-			State: database.ArangoBackupStateScheduled,
-		},
+		ArangoBackupState: newState(database.ArangoBackupStateScheduled, "", nil),
 	}, nil
 }

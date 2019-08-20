@@ -24,28 +24,27 @@ package backup
 
 import (
 	"testing"
+	"time"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_State_Scheduled_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStateScheduled)
-}
-
-func Test_State_Scheduled_Download(t *testing.T) {
+func Test_State_DownloadError_Reschedule(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
+	obj, deployment := newObjectSet(database.ArangoBackupStateDownloadError)
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "Some URL",
+			RepositoryUrl: "S3 URL",
 		},
-		ID: "id",
+		ID: "test",
 	}
+
+	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -58,37 +57,26 @@ func Test_State_Scheduled_Download(t *testing.T) {
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDownload)
 
 	require.False(t, newObj.Status.Available)
+
+	require.Nil(t, newObj.Status.Backup)
 }
 
-func Test_State_Scheduled_Create(t *testing.T) {
+func Test_State_DownloadError_Wait(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
+	obj, deployment := newObjectSet(database.ArangoBackupStateDownloadError)
 
-	// Act
-	createArangoDeployment(t, handler, deployment)
-	createArangoBackup(t, handler, obj)
-
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
-
-	// Assert
-	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
-
-	require.False(t, newObj.Status.Available)
-}
-
-func Test_State_Scheduled_Upload(t *testing.T) {
-	// Arrange
-	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
-
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
-
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryUrl: "test",
+	obj.Spec.Download = &database.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+			RepositoryUrl: "S3 URL",
+		},
+		ID: "test",
 	}
 
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Status.Message = "message"
+
 	// Act
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
@@ -97,7 +85,10 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
+	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDownloadError)
 
 	require.False(t, newObj.Status.Available)
+	require.Equal(t, "message", newObj.Status.Message)
+
+	require.Nil(t, newObj.Status.Backup)
 }
