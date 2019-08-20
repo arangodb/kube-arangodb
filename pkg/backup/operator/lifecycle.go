@@ -7,9 +7,8 @@ type LifecyclePreStart interface {
 }
 
 func ExecLifecyclePreStart(handler Handler) error {
-	if l, ok := handler.(LifecyclePreStart); !ok {
-		return nil
-	} else {
+	if l, ok := handler.(LifecyclePreStart); ok {
 		return l.LifecyclePreStart()
 	}
+	return nil
 }

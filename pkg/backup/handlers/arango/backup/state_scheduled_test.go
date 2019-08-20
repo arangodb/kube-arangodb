@@ -42,7 +42,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "Some URL",
+			RepositoryPath: "Some URL",
 		},
 		ID: "id",
 	}
@@ -86,7 +86,7 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
 
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryURL: "test",
+		RepositoryPath: "test",
 	}
 
 	// Act

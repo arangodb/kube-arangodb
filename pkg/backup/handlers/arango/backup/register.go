@@ -24,13 +24,20 @@ package backup
 
 import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/event"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"k8s.io/client-go/kubernetes"
 )
 
-func RegisterInformer(operator operator.Operator, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
+func newEventInstance(recorder event.EventRecorder) event.EventRecorderInstance {
+	return recorder.NewInstance(database.SchemeGroupVersion.Group,
+		database.SchemeGroupVersion.Version,
+		database.ArangoBackupResourceKind)
+}
+
+func RegisterInformer(operator operator.Operator, recorder event.EventRecorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Database().V1alpha().ArangoBackups().Informer(),
 		database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
@@ -41,6 +48,8 @@ func RegisterInformer(operator operator.Operator, client arangoClientSet.Interfa
 	h := &handler{
 		client:     client,
 		kubeClient: kubeClient,
+
+		eventRecorder: newEventInstance(recorder),
 
 		arangoClientTimeout: defaultArangoClientTimeout,
 	}

@@ -27,6 +27,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"k8s.io/client-go/kubernetes/fake"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -37,10 +40,15 @@ import (
 
 func newFakeHandler() *handler {
 	f := fakeClientSet.NewSimpleClientset()
+	k := fake.NewSimpleClientset()
 
-	return &handler{
-		client: f,
+	h := &handler{
+		client:        f,
+		kubeClient:    k,
+		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
 	}
+
+	return h
 }
 
 func newItem(operation operator.Operation, namespace, name string) operator.Item {
@@ -60,7 +68,7 @@ func newItemFromBackupPolicy(operation operator.Operation, policy *database.Aran
 	return newItem(operation, policy.Namespace, policy.Name)
 }
 
-func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template database.ArangoBackupSpec) *database.ArangoBackupPolicy {
+func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template database.ArangoBackupTemplate) *database.ArangoBackupPolicy {
 	return &database.ArangoBackupPolicy{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: database.SchemeGroupVersion.String(),

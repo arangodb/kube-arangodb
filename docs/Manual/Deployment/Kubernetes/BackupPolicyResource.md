@@ -20,7 +20,7 @@ spec:
 
 Action:
 
-Create ArangoBackup object for each ArangoBackup in each 15 seconds
+Create an ArangoBackup object for each ArangoBackup every 15 seconds
 
 ### Create schedule for selected deployments
 
@@ -39,7 +39,7 @@ spec:
 
 Action:
 
-Create ArangoBackup object for selected ArangoBackup in each 15 seconds
+Create an ArangoBackup object for selected ArangoBackup every 15 seconds
 
 ### Create schedule for all deployments and upload
 
@@ -53,11 +53,11 @@ spec:
   schedule: "*/15 * * * * *"
   template:
       upload:
-        repositoryURL: "s3:/..."
+        repositoryPath: "s3:/..."
         credentialsSecretName: "secret-name"
 ```
 
-Create ArangoBackup object for each ArangoBackup in each 15 seconds and upload to repositoryURL
+Create an ArangoBackup object for each ArangoBackup every 15 seconds and upload to repositoryPath
 
 ## ArangoBackup Custom Resource Spec:
 
@@ -77,7 +77,7 @@ spec:
         timeout: 3
         force: true
       upload:
-        repositoryURL: "s3:/..."
+        repositoryPath: "s3:/..."
         credentialsSecretName: "secret-name"
 status:
   scheduled: "time"
@@ -108,9 +108,25 @@ Required: false
 
 Default: {}
 
-### `spec.template: ArangoBackupSpec`
+### `spec.template: ArangoBackupTemplate`
 
-Fields options and upload are supported
+Template for the ArangoBackup object
+
+Required: false
+
+Default: {}
+
+### `spec.template.options: ArangoBackup - spec.options`
+
+ArangoBackup options
+
+Required: false
+
+Default: {}
+
+### `spec.template.upload: ArangoBackup - spec.upload`
+
+ArangoBackup upload configuration
 
 Required: false
 
@@ -134,7 +150,7 @@ Default: ""
 
 ### `spec.message: String`
 
-Operator message
+Message from the operator in case of failure (schedule not valid, ArangoBackupPolicy not valid)
 
 Required: false
 

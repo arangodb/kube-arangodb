@@ -52,9 +52,15 @@ type ArangoBackupPolicy struct {
 }
 
 func (a *ArangoBackupPolicy) NewBackup(d *ArangoDeployment) *ArangoBackup {
-	spec := a.Spec.BackupTemplate.DeepCopy()
-	spec.Deployment = ArangoBackupSpecDeployment{
-		Name: d.Name,
+	policyName := a.Name
+
+	spec := &ArangoBackupSpec{
+		Deployment: ArangoBackupSpecDeployment{
+			Name: d.Name,
+		},
+		Upload:     a.Spec.BackupTemplate.Upload.DeepCopy(),
+		Options:    a.Spec.BackupTemplate.Options.DeepCopy(),
+		PolicyName: &policyName,
 	}
 
 	return &ArangoBackup{

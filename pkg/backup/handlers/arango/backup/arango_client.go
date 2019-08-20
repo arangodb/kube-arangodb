@@ -50,6 +50,7 @@ type ArangoBackupClient interface {
 	Download(driver.BackupID) (driver.BackupTransferJobID, error)
 
 	Progress(driver.BackupTransferJobID) (ArangoBackupProgress, error)
+	Abort(driver.BackupTransferJobID) error
 
 	Exists(driver.BackupID) (bool, error)
 	Delete(driver.BackupID) error

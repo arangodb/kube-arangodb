@@ -4,6 +4,20 @@ metadata:
   name: arangobackuppolicies.database.arangodb.com
 spec:
   group: database.arangodb.com
+  additionalPrinterColumns:
+  - JSONPath: .spec.schedule
+    description: Schedule
+    name: Schedule
+    type: string
+  - JSONPath: .status.scheduled
+    description: Scheduled
+    name: Scheduled
+    type: string
+  - JSONPath: .status.message
+    priority: 1
+    description: Message of the ArangoBackupPolicy object
+    name: Message
+    type: string
   names:
     kind: ArangoBackupPolicy
     listKind: ArangoBackupPolicyList
@@ -25,6 +39,32 @@ metadata:
   name: arangobackups.database.arangodb.com
 spec:
   group: database.arangodb.com
+  additionalPrinterColumns:
+    - JSONPath: .spec.policyName
+      description: Policy name
+      name: Policy
+      type: string
+    - JSONPath: .spec.deployment.name
+      description: Deployment name
+      name: Deployment
+      type: string
+    - JSONPath: .status.backup.version
+      description: Backup Version
+      name: Version
+      type: string
+    - JSONPath: .status.backup.createdAt
+      description: Backup Creation Timestamp
+      name: Created
+      type: string
+    - JSONPath: .status.state
+      description: The actual state of the ArangoBackup
+      name: State
+      type: string
+    - JSONPath: .status.message
+      priority: 1
+      description: Message of the ArangoBackup object
+      name: Message
+      type: string
   names:
     kind: ArangoBackup
     listKind: ArangoBackupList

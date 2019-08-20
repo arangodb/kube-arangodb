@@ -42,8 +42,8 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 	var details *database.ArangoBackupDetails
 
 	// Try to recover old backup. If old backup is missing go into deleted state
-	if backup.Status.Details != nil {
-		_, err = client.Get(driver.BackupID(backup.Status.Details.ID))
+	if backup.Status.Backup != nil {
+		_, err = client.Get(driver.BackupID(backup.Status.Backup.ID))
 		if err != nil {
 			if IsTemporaryError(err) {
 				return switchTemporaryError(err, backup.Status)
@@ -54,11 +54,11 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 				ArangoBackupState: database.ArangoBackupState{
 					State: database.ArangoBackupStateDeleted,
 				},
-				Details: backup.Status.Details,
+				Backup: backup.Status.Backup,
 			}, nil
 		}
 
-		details = backup.Status.Details.DeepCopy()
+		details = backup.Status.Backup.DeepCopy()
 	} else {
 		response, err := client.Create()
 		if err != nil {
@@ -82,7 +82,7 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateUpload,
 			},
-			Details: details,
+			Backup: details,
 		}, nil
 	}
 
@@ -91,6 +91,6 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateReady,
 		},
-		Details: details,
+		Backup: details,
 	}, nil
 }

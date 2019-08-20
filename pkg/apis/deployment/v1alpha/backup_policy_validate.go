@@ -44,9 +44,5 @@ func (a *ArangoBackupPolicySpec) Validate() error {
 		return fmt.Errorf("invalid schedule format")
 	}
 
-	if a.BackupTemplate.Download != nil {
-		return fmt.Errorf("download configuration not supported")
-	}
-
 	return nil
 }

@@ -50,7 +50,7 @@ require (
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/gophercloud/gophercloud v0.0.0-20190504011306-6f9faf57fddc // indirect
-	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
+	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

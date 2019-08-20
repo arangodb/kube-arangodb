@@ -33,6 +33,8 @@ type ArangoBackupSpec struct {
 
 	// Upload
 	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
+
+	PolicyName *string `json:"policyName,omitempty"`
 }
 
 type ArangoBackupSpecDeployment struct {
@@ -45,12 +47,12 @@ type ArangoBackupSpecOptions struct {
 }
 
 type ArangoBackupSpecOperation struct {
-	RepositoryURL         string `json:"repositoryURL"`
+	RepositoryPath        string `json:"repositoryPath"`
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
 }
 
 type ArangoBackupSpecDownload struct {
-	ArangoBackupSpecOperation `json:"inline"`
+	ArangoBackupSpecOperation `json:",inline"`
 
 	ID string `json:"id"`
 }

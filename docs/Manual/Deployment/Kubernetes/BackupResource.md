@@ -14,8 +14,7 @@ apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
-  finalizers:
-    - arangobackups.database.arangodb.com/cleanup
+  namespace: "arangodb"
 spec:
   deployment:
     name: "my-deployment"
@@ -33,13 +32,12 @@ apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
-  finalizers:
-    - arangobackups.database.arangodb.com/cleanup
+  namespace: "arangodb"
 spec:
   deployment:
     name: "my-deployment"
   upload:
-    repositoryURL: "S3://test/kube-test"
+    repositoryPath: "S3://test/kube-test"
 ```
 
 Action:
@@ -54,13 +52,12 @@ apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
-  finalizers:
-    - arangobackups.database.arangodb.com/cleanup
+  namespace: "arangodb"
 spec:
   deployment:
     name: "my-deployment"
   download:
-    repositoryURL: "S3://test/kube-test"
+    repositoryPath: "S3://test/kube-test"
     id: "backup-id"
 ```
 
@@ -73,20 +70,20 @@ apiVersion: "database.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
-  finalizers:
-    - arangobackups.database.arangodb.com/cleanup
+  namespace: "arangodb"
 spec:
+  policyName: "my-policy"
   deployment:
     name: "my-deployment"
   options:
     timeout: 3
     force: true
   download:
-    repositoryURL: "s3:/..."
+    repositoryPath: "s3:/..."
     credentialsSecretName: "secret-name"
     id: "backup-id"
   upload:
-    repositoryURL: "s3:/..."
+    repositoryPath: "s3:/..."
     credentialsSecretName: "secret-name"
 status:
   state: "Ready"
@@ -106,7 +103,7 @@ status:
 
 ## `spec: Object`
 
-Spec of the ArangoBackup object. This field is immutable
+Spec of the ArangoBackup object.
 
 Required: true
 
@@ -114,11 +111,19 @@ Default: {}
 
 ### `spec.deployment: Object`
 
-ArangoDeployment specification
+ArangoDeployment specification. This field is immutable
 
 Required: true
 
 Default: {}
+
+#### `spec.policyName: String`
+
+Name of the ArangoBackupPolicy which created this object
+
+Required: false
+
+Default: ""
 
 #### `spec.deployment.name: String`
 
@@ -130,7 +135,7 @@ Default: ""
 
 ### `spec.options: Object`
 
-Backup options
+Backup options. This field is immutable
 
 Required: false
 
@@ -138,7 +143,7 @@ Default: {}
 
 #### `spec.options.timeout: float`
 
-Timeout for backup creation request
+Timeout for backup creation request in seconds
 
 Required: false
 
@@ -147,6 +152,8 @@ Default: 30
 #### `spec.options.force: bool`
 
 Force flag for backup creation request
+
+TODO: Point to ArangoDB documentation
 
 Required: false
 
@@ -162,9 +169,9 @@ Required: false
 
 Default: {}
 
-#### `spec.download.repositoryURL: string`
+#### `spec.download.repositoryPath: string`
 
-Repository URL
+# TODO: Point to the backup API definition
 
 Required: true
 
@@ -172,7 +179,9 @@ Default: ""
 
 #### `spec.download.credentialsSecretName: string`
 
-Name of the secrets used while accessing repositoru
+Name of the secrets used while accessing repository
+
+# TODO: Point to the credential structure
 
 Required: false
 
@@ -196,9 +205,9 @@ Required: false
 
 Default: {}
 
-#### `spec.upload.repositoryURL: string`
+#### `spec.upload.repositoryPath: string`
 
-Repository URL
+# TODO: Point to the backup API definition
 
 Required: true
 
@@ -206,7 +215,9 @@ Default: ""
 
 #### `spec.upload.credentialsSecretName: string`
 
-Name of the secrets used while accessing repositoru
+Name of the secrets used while accessing repository
+
+# TODO: Point to the credential structure
 
 Required: false
 
@@ -215,6 +226,10 @@ Default: ""
 ## `status: Object`
 
 Status of the arangoBackup object. This field is managed by subresource and only by operator
+
+Advertised fields:
+- `.status.state` - current object state
+- `.status.message` - additional message for current state
 
 Required: true
 

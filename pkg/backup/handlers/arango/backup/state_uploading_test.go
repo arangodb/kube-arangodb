@@ -50,7 +50,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 	progress, err := mock.Upload(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -106,8 +106,8 @@ func Test_State_Uploading_Success(t *testing.T) {
 		require.Nil(t, newObj.Status.Progress)
 
 		require.True(t, newObj.Status.Available)
-		require.NotNil(t, newObj.Status.Details.Uploaded)
-		require.True(t, *newObj.Status.Details.Uploaded)
+		require.NotNil(t, newObj.Status.Backup.Uploaded)
+		require.True(t, *newObj.Status.Backup.Uploaded)
 	})
 }
 
@@ -129,7 +129,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 		FailMessage: errorMsg,
 	}
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -169,7 +169,7 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 	progress, err := mock.Upload(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -210,7 +210,7 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	progress, err := mock.Upload(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),

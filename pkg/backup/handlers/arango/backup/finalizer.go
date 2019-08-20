@@ -45,6 +45,8 @@ func (h *handler) finalize(backup *database.ArangoBackup) error {
 				return err
 			}
 			finalizersToRemove = append(finalizersToRemove, database.FinalizerArangoBackup)
+
+			h.eventRecorder.Normal(backup, FinalizerChange, "Removed Finalizer: %s", database.FinalizerArangoBackup)
 		}
 	}
 
@@ -66,7 +68,7 @@ func (h *handler) finalize(backup *database.ArangoBackup) error {
 }
 
 func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
-	if backup.Status.Details == nil {
+	if backup.Status.Backup == nil {
 		// No details passed, object can be removed
 		return nil
 	}
@@ -86,7 +88,14 @@ func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
 		return err
 	}
 
-	exists, err := client.Exists(driver.BackupID(backup.Status.Details.ID))
+	if err = h.finalizeBackupAction(backup, client); err != nil {
+		log.Warn().Err(err).Msgf("Operation abort failed for %s %s/%s",
+			backup.GroupVersionKind().String(),
+			backup.Namespace,
+			backup.Name)
+	}
+
+	exists, err := client.Exists(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
 		return err
 	}
@@ -95,8 +104,28 @@ func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
 		return nil
 	}
 
-	err = client.Delete(driver.BackupID(backup.Status.Details.ID))
+	err = client.Delete(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *handler) finalizeBackupAction(backup *database.ArangoBackup, client ArangoBackupClient) error {
+	if backup.Status.Progress == nil {
+		return nil
+	}
+	status, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
+	if err != nil {
+		return err
+	}
+
+	if status.Failed || status.Completed {
+		return nil
+	}
+
+	if err = client.Abort(driver.BackupTransferJobID(backup.Status.Progress.JobID)); err != nil {
 		return err
 	}
 

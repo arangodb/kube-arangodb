@@ -40,11 +40,11 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	if backup.Status.Details == nil {
+	if backup.Status.Backup == nil {
 		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
 	}
 
-	meta, err := client.Get(driver.BackupID(backup.Status.Details.ID))
+	meta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
 		return switchTemporaryError(err, backup.Status)
 	}
@@ -63,6 +63,6 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 				Progress: "0%",
 			},
 		},
-		Details: backup.Status.Details,
+		Backup: backup.Status.Backup,
 	}, nil
 }

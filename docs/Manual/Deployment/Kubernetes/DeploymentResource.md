@@ -367,7 +367,7 @@ It will contain some of the following fields:
 
 If the `restoreFrom` key is removed from the spec, the `restore` key is deleted as well.
 
-A new restore attempt is made if and only if either in the status `restore` is not set or if `restoreFrom` and `requestedFrom` do not agree.
+A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
 
 ### `spec.license.secretName: string`
 

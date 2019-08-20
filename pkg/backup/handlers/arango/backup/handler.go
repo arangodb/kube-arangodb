@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+
 	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -41,11 +43,16 @@ import (
 
 const (
 	defaultArangoClientTimeout = 30 * time.Second
+
+	StateChange     = "StateChange"
+	FinalizerChange = "FinalizerChange"
 )
 
 type handler struct {
 	client     arangoClientSet.Interface
 	kubeClient kubernetes.Interface
+
+	eventRecorder event.EventRecorderInstance
 
 	arangoClientFactory ArangoClientFactory
 	arangoClientTimeout time.Duration
@@ -113,12 +120,16 @@ func (h *handler) Handle(item operator.Item) error {
 
 	// Log message about state change
 	if backup.Status.State != status.State {
-		log.Info().Msgf("Transiting %s %s/%s from %s to %s",
-			item.Kind,
-			item.Namespace,
-			item.Name,
-			backup.Status.State,
-			status.State)
+		if backup.Status.State == database.ArangoBackupStateFailed {
+			h.eventRecorder.Warning(backup, StateChange, "Transiting from %s to %s with error: %s",
+				backup.Status.State,
+				status.State,
+				status.Message)
+		} else {
+			h.eventRecorder.Normal(backup, StateChange, "Transiting from %s to %s",
+				backup.Status.State,
+				status.State)
+		}
 	}
 
 	backup.Status = status

@@ -30,7 +30,7 @@ import (
 // an ArangoBackup.
 type ArangoBackupStatus struct {
 	ArangoBackupState `json:",inline"`
-	Details           *ArangoBackupDetails `json:"backup,omitempty"`
+	Backup            *ArangoBackupDetails `json:"backup,omitempty"`
 	Available         bool                 `json:"available"`
 }
 

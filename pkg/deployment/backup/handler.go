@@ -69,7 +69,7 @@ func (b *BackupHandler) restoreFrom(backupName string) error {
 		return err
 	}
 
-	backupID := backupResource.Status.Details.ID
+	backupID := backupResource.Status.Backup.ID
 
 	// trigger the actual restore
 	if err := dbc.Backup().Restore(ctx, driver.BackupID(backupID), nil); err != nil {

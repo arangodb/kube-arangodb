@@ -40,7 +40,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	if backup.Status.Details == nil {
+	if backup.Status.Backup == nil {
 		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
 	}
 
@@ -58,7 +58,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 	}
 
 	if details.Completed {
-		newDetails := backup.Status.Details.DeepCopy()
+		newDetails := backup.Status.Backup.DeepCopy()
 
 		trueVar := true
 
@@ -69,7 +69,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateReady,
 			},
-			Details: newDetails,
+			Backup: newDetails,
 		}, nil
 	}
 
@@ -82,6 +82,6 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 				Progress: fmt.Sprintf("%d%%", details.Progress),
 			},
 		},
-		Details: backup.Status.Details,
+		Backup: backup.Status.Backup,
 	}, nil
 }

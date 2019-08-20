@@ -43,6 +43,8 @@ type Operator interface {
 	// Implement prometheus collector interface
 	prometheus.Collector
 
+	Name() string
+
 	Start(threadiness int, stopCh <-chan struct{}) error
 
 	RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string) error
@@ -79,6 +81,10 @@ type operator struct {
 
 	// Implement prometheus collector
 	*prometheusMetrics
+}
+
+func (o *operator) Name() string {
+	return o.name
 }
 
 func (o *operator) ProcessItem(item Item) error {

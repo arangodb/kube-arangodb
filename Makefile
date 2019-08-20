@@ -135,6 +135,13 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
+.PHONY: fmt
+fmt:
+	golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all --enable=deadcode --enable=gocyclo \
+	                  --enable=golint --enable=varcheck   --enable=structcheck --enable=maligned --enable=errcheck \
+	                  --enable=dupl --enable=ineffassign   --enable=interfacer --enable=unconvert --enable=goconst \
+	                  --enable=gosec --enable=megacheck --exclude-use-default=false $(PACKAGE)
+
 .PHONY: build
 build: docker manifests
 

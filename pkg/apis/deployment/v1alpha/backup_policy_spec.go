@@ -31,5 +31,11 @@ type ArangoBackupPolicySpec struct {
 
 	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`
 
-	BackupTemplate ArangoBackupSpec `json:"template"`
+	BackupTemplate ArangoBackupTemplate `json:"template"`
+}
+
+type ArangoBackupTemplate struct {
+	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
+
+	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
 }

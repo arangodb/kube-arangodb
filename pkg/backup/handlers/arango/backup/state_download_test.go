@@ -43,7 +43,7 @@ func Test_State_Download_Success(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: "test",
 	}
@@ -65,7 +65,7 @@ func Test_State_Download_Success(t *testing.T) {
 
 	require.False(t, newObj.Status.Available)
 
-	require.Nil(t, newObj.Status.Details)
+	require.Nil(t, newObj.Status.Backup)
 }
 
 // Check version
@@ -80,7 +80,7 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: "test",
 	}
@@ -101,7 +101,7 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	require.False(t, newObj.Status.Available)
 
-	require.Nil(t, newObj.Status.Details)
+	require.Nil(t, newObj.Status.Backup)
 }
 
 func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
@@ -116,7 +116,7 @@ func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: "test",
 	}

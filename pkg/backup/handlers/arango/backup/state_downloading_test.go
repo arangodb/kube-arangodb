@@ -49,7 +49,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 	progress, err := mock.Download(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -57,7 +57,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -112,8 +112,8 @@ func Test_State_Downloading_Success(t *testing.T) {
 		require.Nil(t, newObj.Status.Progress)
 
 		require.True(t, newObj.Status.Available)
-		require.NotNil(t, newObj.Status.Details.Downloaded)
-		require.True(t, *newObj.Status.Details.Downloaded)
+		require.NotNil(t, newObj.Status.Backup.Downloaded)
+		require.True(t, *newObj.Status.Backup.Downloaded)
 	})
 }
 
@@ -135,7 +135,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 		FailMessage: errorMsg,
 	}
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -143,7 +143,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -182,7 +182,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 	progress, err := mock.Download(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -190,7 +190,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -230,7 +230,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	progress, err := mock.Download(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -238,7 +238,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryURL: "S3 URL",
+			RepositoryPath: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}

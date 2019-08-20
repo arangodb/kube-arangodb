@@ -204,8 +204,8 @@ func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versione
 	backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, predicate)
 	require.NoError(t, err, "backup did not become available: %s", err)
 	var backupID string
-	if backup.Status.Details != nil {
-		backupID = backup.Status.Details.ID
+	if backup.Status.Backup != nil {
+		backupID = backup.Status.Backup.ID
 	}
 	return backup, name, driver.BackupID(backupID)
 }
@@ -220,7 +220,7 @@ func skipOrRemotePath(t *testing.T) (repoPath string) {
 
 func newOperation() *api.ArangoBackupSpecOperation {
 	return &api.ArangoBackupSpecOperation{
-		RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+		RepositoryPath:        os.Getenv("TEST_REMOTE_REPOSITORY"),
 		CredentialsSecretName: testBackupRemoteSecretName,
 	}
 }
@@ -228,7 +228,7 @@ func newOperation() *api.ArangoBackupSpecOperation {
 func newDownload(ID string) *api.ArangoBackupSpecDownload {
 	return &api.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: api.ArangoBackupSpecOperation{
-			RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+			RepositoryPath:        os.Getenv("TEST_REMOTE_REPOSITORY"),
 			CredentialsSecretName: testBackupRemoteSecretName,
 		},
 		ID: ID,
@@ -310,13 +310,70 @@ func TestBackupCluster(t *testing.T) {
 
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 		assert.NoError(t, err, "backup did not become available: %s", err)
-		backupID := backup.Status.Details.ID
+		backupID := backup.Status.Backup.ID
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
 		assert.NoError(t, err, "Backup test failed: %s", err)
 		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+	})
+
+	t.Run("create-upload backup", func(t *testing.T) {
+		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
+		_, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
+		assert.NoError(t, err, "failed to create backup: %s", err)
+		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(backup.GetName(), &metav1.DeleteOptions{})
+
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		require.NoError(t, err, "backup did not become available: %s", err)
+		backupID := backup.Status.Backup.ID
+
+		// check that the backup is actually available
+		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.True(t, found)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.Nil(t, backup.Status.Backup.Uploaded)
+		require.Nil(t, backup.Status.Backup.Downloaded)
+
+		t.Logf("Add upload")
+		// add upload part
+		currentBackup, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Get(backup.Name, metav1.GetOptions{})
+		require.NoError(t, err)
+
+		currentBackup.Spec.Upload = newOperation()
+
+		_, err = deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Update(currentBackup)
+		require.NoError(t, err)
+
+		t.Logf("Check for uploading")
+		err = timeout(time.Second, 2*time.Minute, func() error {
+			currentBackup, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Get(backup.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if currentBackup.Status.State == api.ArangoBackupStateUpload || currentBackup.Status.State == api.ArangoBackupStateUploading {
+				return interrupt{}
+			}
+
+			return nil
+		})
+		require.NoError(t, err)
+
+		t.Logf("Uploading done")
+
+		// After backup went thru uploading phase wait for finnish
+		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
+		require.NoError(t, err, "backup did not become ready: %s", err)
+
+		found, meta, err = statBackupMeta(databaseClient, driver.BackupID(backupID))
+		assert.NoError(t, err, "Backup test failed: %s", err)
+		assert.True(t, found)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NotNil(t, backup.Status.Backup.Uploaded, "Upload flag is nil")
+		require.Nil(t, backup.Status.Backup.Downloaded)
 	})
 
 	t.Run("create backup and delete", func(t *testing.T) {
@@ -327,7 +384,7 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err := statBackupMeta(databaseClient, id)
 		assert.NoError(t, err, "Backup test failed: %s", err)
 		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		// now remove the backup
 		deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
@@ -363,7 +420,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create a backup resource manually with that id
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
-		backup.Status.Details = &api.ArangoBackupDetails{ID: string(id), Version: meta.Version}
+		backup.Status.Backup = &api.ArangoBackupDetails{ID: string(id), Version: meta.Version}
 		_, err = deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
 		assert.NoError(t, err, "failed to create backup: %s", err)
 		defer deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(backup.GetName(), &metav1.DeleteOptions{})
@@ -498,11 +555,11 @@ func TestBackupCluster(t *testing.T) {
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
 		require.NoError(t, err, "backup did not become ready: %s", err)
 
-		require.NotNil(t, backup.Status.Details)
-		require.NotNil(t, backup.Status.Details.Uploaded)
-		require.Nil(t, backup.Status.Details.Downloaded)
+		require.NotNil(t, backup.Status.Backup)
+		require.NotNil(t, backup.Status.Backup.Uploaded)
+		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Details.Uploaded)
+		assert.True(t, *backup.Status.Backup.Uploaded)
 	})
 
 	t.Run("upload-download-cycle", func(t *testing.T) {
@@ -520,13 +577,13 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err := statBackupMeta(databaseClient, id)
 		assert.NoError(t, err, "Backup test failed: %s", err)
 		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
 
-		require.NotNil(t, backup.Status.Details)
-		require.NotNil(t, backup.Status.Details.Uploaded)
-		require.Nil(t, backup.Status.Details.Downloaded)
+		require.NotNil(t, backup.Status.Backup)
+		require.NotNil(t, backup.Status.Backup.Uploaded)
+		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Details.Uploaded)
+		assert.True(t, *backup.Status.Backup.Uploaded)
 
 		// After all remove backup
 		deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Delete(name, &metav1.DeleteOptions{})
@@ -549,13 +606,13 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err = statBackupMeta(databaseClient, id)
 		assert.NoError(t, err, "Backup test failed: %s", err)
 		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Details.Version)
+		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
 
-		require.NotNil(t, backup.Status.Details)
-		require.Nil(t, backup.Status.Details.Uploaded)
-		require.NotNil(t, backup.Status.Details.Downloaded)
+		require.NotNil(t, backup.Status.Backup)
+		require.Nil(t, backup.Status.Backup.Uploaded)
+		require.NotNil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Details.Downloaded)
+		assert.True(t, *backup.Status.Backup.Downloaded)
 	})
 
 	t.Run("create-upload-download-restore-cycle", func(t *testing.T) {
@@ -714,13 +771,13 @@ func TestBackupCluster(t *testing.T) {
 
 				currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 				require.NoError(t, err, "backup did not become available: %s", err)
-				backupID := currentBackup.Status.Details.ID
+				backupID := currentBackup.Status.Backup.ID
 
 				// check that the backup is actually available
 				found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
 				assert.NoError(t, err, "Backup test failed: %s", err)
 				assert.True(t, found)
-				assert.Equal(t, meta.Version, currentBackup.Status.Details.Version)
+				assert.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
 				assert.Equal(t, depl.GetName(), currentBackup.Spec.Deployment.Name)
 			})
 		}
@@ -796,13 +853,13 @@ func TestBackupCluster(t *testing.T) {
 
 						currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 						require.NoError(t, err, "backup did not become available: %s", err)
-						backupID := currentBackup.Status.Details.ID
+						backupID := currentBackup.Status.Backup.ID
 
 						// check that the backup is actually available
 						found, meta, err := statBackupMeta(databaseClients[deployment], driver.BackupID(backupID))
 						assert.NoError(t, err, "Backup test failed: %s", err)
 						assert.True(t, found)
-						assert.Equal(t, meta.Version, currentBackup.Status.Details.Version)
+						assert.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
 						assert.Equal(t, deployment.GetName(), currentBackup.Spec.Deployment.Name)
 					})
 				}

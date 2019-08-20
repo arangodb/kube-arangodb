@@ -52,15 +52,15 @@ func Test_State_Create_Success(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
 
-	require.NotNil(t, newObj.Status.Details)
+	require.NotNil(t, newObj.Status.Backup)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Details.ID, backups[0])
-	require.Equal(t, newObj.Status.Details.Version, mockVersion)
+	require.Equal(t, newObj.Status.Backup.ID, backups[0])
+	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
 
-	require.Nil(t, newObj.Status.Details.Forced)
+	require.Nil(t, newObj.Status.Backup.Forced)
 }
 
 func Test_State_Create_SuccessForced(t *testing.T) {
@@ -80,16 +80,16 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
 
-	require.NotNil(t, newObj.Status.Details)
+	require.NotNil(t, newObj.Status.Backup)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Details.ID, backups[0])
-	require.Equal(t, newObj.Status.Details.Version, mockVersion)
+	require.Equal(t, newObj.Status.Backup.ID, backups[0])
+	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
 
-	require.NotNil(t, newObj.Status.Details.Forced)
-	value := *newObj.Status.Details.Forced
+	require.NotNil(t, newObj.Status.Backup.Forced)
+	value := *newObj.Status.Backup.Forced
 	require.True(t, value)
 }
 
@@ -99,7 +99,7 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryURL: "test",
+		RepositoryPath: "test",
 	}
 
 	// Act
@@ -112,13 +112,13 @@ func Test_State_Create_Upload(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateUpload)
 
-	require.NotNil(t, newObj.Status.Details)
+	require.NotNil(t, newObj.Status.Backup)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Details.ID, backups[0])
-	require.Equal(t, newObj.Status.Details.Version, mockVersion)
+	require.Equal(t, newObj.Status.Backup.ID, backups[0])
+	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
 
 	require.True(t, newObj.Status.Available)
 }
@@ -143,7 +143,7 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
 	require.Equal(t, newObj.Status.Message, createFailMessage(database.ArangoBackupStateCreate, errorMsg))
 
-	require.Nil(t, newObj.Status.Details)
+	require.Nil(t, newObj.Status.Backup)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -177,7 +177,7 @@ func Test_State_Create_GetFailedWithExistingDeploymentSpec(t *testing.T) {
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                "non-existent",
 		Version:           "non-existent",
 		CreationTimestamp: meta.Now(),
@@ -193,7 +193,7 @@ func Test_State_Create_GetFailedWithExistingDeploymentSpec(t *testing.T) {
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDeleted)
 
-	require.NotNil(t, newObj.Status.Details)
+	require.NotNil(t, newObj.Status.Backup)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -208,7 +208,7 @@ func Test_State_Create_TemporaryGetFailedWithExistingDeploymentSpec(t *testing.T
 
 	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
 
-	obj.Status.Details = &database.ArangoBackupDetails{
+	obj.Status.Backup = &database.ArangoBackupDetails{
 		ID:                "non-existent",
 		Version:           "non-existent",
 		CreationTimestamp: meta.Now(),

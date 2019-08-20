@@ -26,6 +26,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"k8s.io/client-go/kubernetes/fake"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
@@ -37,10 +40,14 @@ import (
 
 func newFakeHandler() *handler {
 	f := fakeClientSet.NewSimpleClientset()
+	k := fake.NewSimpleClientset()
 
 	return &handler{
-		client:              f,
+		client:     f,
+		kubeClient: k,
+
 		arangoClientTimeout: defaultArangoClientTimeout,
+		eventRecorder:       newEventInstance(event.NewEventRecorder("mock", k)),
 	}
 }
 

@@ -24,6 +24,7 @@ package operator
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/backup/event"
 	"math/rand"
 	"time"
 
@@ -208,13 +209,15 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		panic(err)
 	}
 
+	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
+
 	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 15*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
-	if err = backup.RegisterInformer(operator, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)
 	}
 
-	if err = policy.RegisterInformer(operator, arangoClientSet, arangoInformer); err != nil {
+	if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)
 	}
 

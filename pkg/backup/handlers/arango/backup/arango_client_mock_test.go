@@ -56,8 +56,8 @@ func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoC
 }
 
 type mockErrorsArangoClientBackup struct {
-	createError, getError, uploadError, downloadError, progressError, existsError, deleteError string
-	isTemporaryError                                                                           bool
+	createError, getError, uploadError, downloadError, progressError, existsError, deleteError, abortError string
+	isTemporaryError                                                                                       bool
 
 	createForced bool
 }
@@ -69,6 +69,21 @@ type mockArangoClientBackup struct {
 	progresses map[driver.BackupTransferJobID]ArangoBackupProgress
 
 	errors mockErrorsArangoClientBackup
+}
+
+func (m *mockArangoClientBackup) Abort(d driver.BackupTransferJobID) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if err := m.newError(m.errors.abortError); err != nil {
+		return err
+	}
+
+	if _, ok := m.progresses[d]; ok {
+		delete(m.progresses, d)
+	}
+
+	return nil
 }
 
 func (m *mockArangoClientBackup) Exists(id driver.BackupID) (bool, error) {

@@ -40,11 +40,11 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	if backup.Status.Details == nil {
+	if backup.Status.Backup == nil {
 		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
 	}
 
-	_, err = client.Get(driver.BackupID(backup.Status.Details.ID))
+	_, err = client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
 		if IsTemporaryError(err) {
 			return switchTemporaryError(err, backup.Status)
@@ -54,7 +54,18 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateDeleted,
 			},
-			Details: backup.Status.Details,
+			Backup: backup.Status.Backup,
+		}, nil
+	}
+
+	// Check if upload flag was specified later in runtime
+	if backup.Spec.Upload != nil && backup.Status.Backup.Downloaded == nil && backup.Status.Backup.Uploaded == nil {
+		return database.ArangoBackupStatus{
+			Available: true,
+			ArangoBackupState: database.ArangoBackupState{
+				State: database.ArangoBackupStateUpload,
+			},
+			Backup: backup.Status.Backup,
 		}, nil
 	}
 
@@ -63,6 +74,6 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 		ArangoBackupState: database.ArangoBackupState{
 			State: database.ArangoBackupStateReady,
 		},
-		Details: backup.Status.Details,
+		Backup: backup.Status.Backup,
 	}, nil
 }

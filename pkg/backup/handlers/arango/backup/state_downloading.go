@@ -76,7 +76,7 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 			ArangoBackupState: database.ArangoBackupState{
 				State: database.ArangoBackupStateReady,
 			},
-			Details: &database.ArangoBackupDetails{
+			Backup: &database.ArangoBackupDetails{
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
 				CreationTimestamp: meta.Now(),

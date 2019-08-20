@@ -106,7 +106,7 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 		}
 	}
 
-	return driver.BackupMeta{}, fmt.Errorf("Backup %s was not contained in list", backupID)
+	return driver.BackupMeta{}, fmt.Errorf("backup %s was not contained in list", backupID)
 }
 
 func (ac *arangoClientBackupImpl) getCredentialsFromSecret(secretName string) (interface{}, error) {
@@ -118,7 +118,7 @@ func (ac *arangoClientBackupImpl) getCredentialsFromSecret(secretName string) (i
 
 	var raw json.RawMessage
 	if err := json.Unmarshal([]byte(token), &raw); err != nil {
-		return nil, errors.Wrap(err, "Failed to unmarshal credentials: ")
+		return nil, errors.Wrap(err, "failed to unmarshal credentials: ")
 	}
 
 	return raw, nil
@@ -130,7 +130,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 
 	uploadSpec := ac.backup.Spec.Upload
 	if uploadSpec == nil {
-		return "", fmt.Errorf("Upload was called but not upload spec was given")
+		return "", fmt.Errorf("upload was called but not upload spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(uploadSpec.CredentialsSecretName)
@@ -138,7 +138,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 		return "", err
 	}
 
-	return ac.driver.Backup().Upload(ctx, backupID, uploadSpec.RepositoryURL, cred)
+	return ac.driver.Backup().Upload(ctx, backupID, uploadSpec.RepositoryPath, cred)
 }
 
 func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.BackupTransferJobID, error) {
@@ -155,7 +155,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 		return "", err
 	}
 
-	return ac.driver.Backup().Download(ctx, backupID, downloadSpec.RepositoryURL, cred)
+	return ac.driver.Backup().Download(ctx, backupID, downloadSpec.RepositoryPath, cred)
 }
 
 func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (ArangoBackupProgress, error) {
@@ -214,4 +214,11 @@ func (ac *arangoClientBackupImpl) Delete(backupID driver.BackupID) error {
 	defer cancel()
 
 	return ac.driver.Backup().Delete(ctx, backupID)
+}
+
+func (ac *arangoClientBackupImpl) Abort(jobID driver.BackupTransferJobID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
+	defer cancel()
+
+	return ac.driver.Backup().Abort(ctx, jobID)
 }

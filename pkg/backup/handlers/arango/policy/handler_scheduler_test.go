@@ -40,7 +40,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupSpec{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{
 		"test": "me",
@@ -68,7 +68,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, database.ArangoBackupSpec{})
+	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{})
 
@@ -81,7 +81,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
 	require.NotNil(t, newPolicy.Status.Message)
-	require.Equal(t, "Validation error: error while parsing expr: missing field(s)", newPolicy.Status.Message)
+	require.Equal(t, "Validation error: error while parsing expr: Empty spec string", newPolicy.Status.Message)
 
 	backups := listArangoBackups(t, handler, namespace)
 	require.Len(t, backups, 0)
@@ -94,7 +94,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupSpec{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -118,6 +118,8 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	require.Len(t, backups, 1)
 
 	isInList(t, backups, database)
+	require.NotNil(t, backups[0].Spec.PolicyName)
+	require.Equal(t, policy.Name, *backups[0].Spec.PolicyName)
 }
 
 func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
@@ -131,7 +133,7 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupSpec{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -147,13 +149,15 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
-	require.Nil(t, newPolicy.Status.Message)
+	require.Empty(t, newPolicy.Status.Message)
 	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
 
 	backups := listArangoBackups(t, handler, namespace)
 	require.Len(t, backups, 1)
 
 	isInList(t, backups, database)
+	require.NotNil(t, backups[0].Spec.PolicyName)
+	require.Equal(t, policy.Name, *backups[0].Spec.PolicyName)
 }
 
 func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
@@ -167,7 +171,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupSpec{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -183,7 +187,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
-	require.Nil(t, newPolicy.Status.Message)
+	require.Empty(t, newPolicy.Status.Message)
 	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
 
 	backups := listArangoBackups(t, handler, namespace)
@@ -191,4 +195,8 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 
 	isInList(t, backups, database)
 	isInList(t, backups, database2)
+	require.NotNil(t, backups[0].Spec.PolicyName)
+	require.Equal(t, policy.Name, *backups[0].Spec.PolicyName)
+	require.NotNil(t, backups[1].Spec.PolicyName)
+	require.Equal(t, policy.Name, *backups[1].Spec.PolicyName)
 }

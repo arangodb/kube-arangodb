@@ -1,0 +1,138 @@
+//
+// DISCLAIMER
+//
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Adam Janikowski
+//
+
+package event
+
+import (
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes"
+)
+
+func NewEventRecorder(name string, kubeClientSet kubernetes.Interface) EventRecorder {
+	return &eventRecorder{
+		kubeClientSet: kubeClientSet,
+		name:          name,
+	}
+}
+
+type EventRecorder interface {
+	NewInstance(group, version, kind string) EventRecorderInstance
+
+	event(group, version, kind string, object meta.Object, eventType, reason, message string)
+}
+
+type eventRecorder struct {
+	name          string
+	kubeClientSet kubernetes.Interface
+}
+
+func (e *eventRecorder) newEvent(group, version, kind string, object meta.Object, eventType, reason, message string) *core.Event {
+	return &core.Event{
+		InvolvedObject: e.newObjectReference(group, version, kind, object),
+
+		ReportingController: e.name,
+
+		Type:    eventType,
+		Reason:  reason,
+		Message: message,
+
+		ObjectMeta: meta.ObjectMeta{
+			Namespace: object.GetNamespace(),
+			Name:      string(uuid.NewUUID()),
+		},
+
+		FirstTimestamp: meta.Now(),
+		LastTimestamp:  meta.Now(),
+
+		Source: core.EventSource{
+			Component: e.name,
+		},
+	}
+}
+
+func (e *eventRecorder) newObjectReference(group, version, kind string, object meta.Object) core.ObjectReference {
+	return core.ObjectReference{
+		UID:        object.GetUID(),
+		APIVersion: fmt.Sprintf("%s/%s", group, version),
+		Kind:       kind,
+		Name:       object.GetName(),
+		Namespace:  object.GetNamespace(),
+	}
+}
+
+func (e *eventRecorder) event(group, version, kind string, object meta.Object, eventType, reason, message string) {
+	_, err := e.kubeClientSet.CoreV1().Events(object.GetNamespace()).Create(e.newEvent(group, version, kind, object, eventType, reason, message))
+	if err != nil {
+		log.Warn().Err(err).
+			Str("APIVersion", fmt.Sprintf("%s/%s", group, version)).
+			Str("Kind", kind).
+			Str("Object", fmt.Sprintf("%s/%s", object.GetNamespace(), object.GetName())).
+			Msgf("Unable to send event")
+		return
+	}
+
+	log.Info().
+		Str("APIVersion", fmt.Sprintf("%s/%s", group, version)).
+		Str("Kind", kind).
+		Str("Object", fmt.Sprintf("%s/%s", object.GetNamespace(), object.GetName())).
+		Msgf("Event send %s - %s - %s", eventType, reason, message)
+}
+
+func (e *eventRecorder) NewInstance(group, version, kind string) EventRecorderInstance {
+	return &eventRecorderInstance{
+		group:   group,
+		version: version,
+		kind:    kind,
+
+		eventRecorder: e,
+	}
+}
+
+type EventRecorderInstance interface {
+	Event(object meta.Object, eventType, reason, format string, a ...interface{})
+
+	Warning(object meta.Object, reason, format string, a ...interface{})
+	Normal(object meta.Object, reason, format string, a ...interface{})
+}
+
+type eventRecorderInstance struct {
+	group, version, kind string
+
+	eventRecorder EventRecorder
+}
+
+func (e *eventRecorderInstance) Warning(object meta.Object, reason, format string, a ...interface{}) {
+	e.Event(object, core.EventTypeWarning, reason, format, a...)
+}
+
+func (e *eventRecorderInstance) Normal(object meta.Object, reason, format string, a ...interface{}) {
+	e.Event(object, core.EventTypeNormal, reason, format, a...)
+}
+
+func (e *eventRecorderInstance) Event(object meta.Object, eventType, reason, format string, a ...interface{}) {
+	e.eventRecorder.event(e.group, e.version, e.kind, object, eventType, reason, fmt.Sprintf(format, a...))
+}
