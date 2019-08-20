@@ -36,13 +36,13 @@ func stateDownloadErrorHandler(h *handler, backup *database.ArangoBackup) (datab
 	// Start again download
 	if backup.Status.Time.Time.Add(downloadDelay).Before(time.Now()) {
 		return database.ArangoBackupStatus{
-			Available: false,
+			Available:         false,
 			ArangoBackupState: newState(database.ArangoBackupStateDownload, "", nil),
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
-		Available: false,
+		Available:         false,
 		ArangoBackupState: backup.Status.ArangoBackupState,
 	}, nil
 }

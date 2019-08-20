@@ -58,8 +58,8 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 	}
 
 	return database.ArangoBackupStatus{
-		Available: true,
+		Available:         true,
 		ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
-		Backup: details,
+		Backup:            details,
 	}, nil
 }

@@ -585,13 +585,13 @@ func TestBackupCluster(t *testing.T) {
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
 		assert.True(t, *backup.Status.Backup.Uploaded)
-		
+
 		// Remove upload option
 		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
 		require.NoError(t, err)
-		
+
 		currentBackup.Spec.Upload = nil
-		
+
 		_, err = backupClient.Update(currentBackup)
 		require.NoError(t, err)
 

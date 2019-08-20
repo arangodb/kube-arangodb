@@ -45,14 +45,14 @@ func stateUploadErrorHandler(h *handler, backup *database.ArangoBackup) (databas
 	// Start again upload
 	if backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
 		return database.ArangoBackupStatus{
-			Available: true,
+			Available:         true,
 			ArangoBackupState: newState(database.ArangoBackupStateUpload, "", nil),
 			Backup:            backup.Status.Backup.DeepCopy(),
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
-		Available: true,
+		Available:         true,
 		ArangoBackupState: backup.Status.ArangoBackupState,
 		Backup:            backup.Status.Backup.DeepCopy(),
 	}, nil

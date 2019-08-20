@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -54,11 +55,11 @@ func createFailedState(err error, status database.ArangoBackupStatus) database.A
 
 func newState(state state.State, message string, progress *database.ArangoBackupProgress) database.ArangoBackupState {
 	return database.ArangoBackupState{
-		State:state,
-		Time:meta.Now(),
+		State: state,
+		Time:  meta.Now(),
 
 		Message: message,
 
-		Progress:progress,
+		Progress: progress,
 	}
 }

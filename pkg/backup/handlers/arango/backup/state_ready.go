@@ -59,28 +59,28 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 	}
 
 	// Check if upload flag was specified later in runtime
-	if backup.Spec.Upload != nil  && backup.Status.Backup.Uploaded == nil {
+	if backup.Spec.Upload != nil && backup.Status.Backup.Uploaded == nil {
 		return database.ArangoBackupStatus{
-			Available: true,
+			Available:         true,
 			ArangoBackupState: newState(database.ArangoBackupStateUpload, "", nil),
-			Backup: backup.Status.Backup,
+			Backup:            backup.Status.Backup,
 		}, nil
 	}
 
 	// Remove old upload flag
-	if backup.Spec.Upload == nil  && backup.Status.Backup.Uploaded != nil {
+	if backup.Spec.Upload == nil && backup.Status.Backup.Uploaded != nil {
 		newBackup := backup.Status.Backup.DeepCopy()
 		newBackup.Uploaded = nil
 		return database.ArangoBackupStatus{
-			Available: true,
+			Available:         true,
 			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
-			Backup: newBackup,
+			Backup:            newBackup,
 		}, nil
 	}
 
 	return database.ArangoBackupStatus{
-		Available: true,
+		Available:         true,
 		ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
-		Backup: backup.Status.Backup,
+		Backup:            backup.Status.Backup,
 	}, nil
 }

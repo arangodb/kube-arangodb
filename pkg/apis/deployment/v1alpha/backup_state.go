@@ -28,35 +28,35 @@ import (
 )
 
 const (
-	ArangoBackupStateNone        state.State = ""
-	ArangoBackupStatePending     state.State = "Pending"
-	ArangoBackupStateScheduled   state.State = "Scheduled"
-	ArangoBackupStateDownload    state.State = "Download"
-	ArangoBackupStateDownloadError    state.State = "DownloadError"
-	ArangoBackupStateDownloading state.State = "Downloading"
-	ArangoBackupStateCreate      state.State = "Create"
-	ArangoBackupStateUpload      state.State = "Upload"
-	ArangoBackupStateUploading   state.State = "Uploading"
-	ArangoBackupStateUploadError      state.State = "UploadError"
-	ArangoBackupStateReady       state.State = "Ready"
-	ArangoBackupStateDeleted     state.State = "Deleted"
-	ArangoBackupStateFailed      state.State = "Failed"
+	ArangoBackupStateNone          state.State = ""
+	ArangoBackupStatePending       state.State = "Pending"
+	ArangoBackupStateScheduled     state.State = "Scheduled"
+	ArangoBackupStateDownload      state.State = "Download"
+	ArangoBackupStateDownloadError state.State = "DownloadError"
+	ArangoBackupStateDownloading   state.State = "Downloading"
+	ArangoBackupStateCreate        state.State = "Create"
+	ArangoBackupStateUpload        state.State = "Upload"
+	ArangoBackupStateUploading     state.State = "Uploading"
+	ArangoBackupStateUploadError   state.State = "UploadError"
+	ArangoBackupStateReady         state.State = "Ready"
+	ArangoBackupStateDeleted       state.State = "Deleted"
+	ArangoBackupStateFailed        state.State = "Failed"
 )
 
 var ArangoBackupStateMap = state.Map{
-	ArangoBackupStateNone:        {ArangoBackupStatePending, ArangoBackupStateFailed},
-	ArangoBackupStatePending:     {ArangoBackupStateScheduled, ArangoBackupStateFailed},
-	ArangoBackupStateScheduled:   {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
-	ArangoBackupStateDownload:    {ArangoBackupStateDownloading, ArangoBackupStateFailed},
-	ArangoBackupStateDownloading: {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
+	ArangoBackupStateNone:          {ArangoBackupStatePending, ArangoBackupStateFailed},
+	ArangoBackupStatePending:       {ArangoBackupStateScheduled, ArangoBackupStateFailed},
+	ArangoBackupStateScheduled:     {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
+	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed},
+	ArangoBackupStateDownloading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloadError: {ArangoBackupStateDownload, ArangoBackupStateFailed},
-	ArangoBackupStateCreate:      {ArangoBackupStateReady, ArangoBackupStateFailed},
-	ArangoBackupStateUpload:      {ArangoBackupStateUploading, ArangoBackupStateFailed},
-	ArangoBackupStateUploading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
-	ArangoBackupStateUploadError: {ArangoBackupStateUpload, ArangoBackupStateFailed, ArangoBackupStateReady},
-	ArangoBackupStateReady:       {ArangoBackupStateDeleted, ArangoBackupStateFailed, ArangoBackupStateUpload},
-	ArangoBackupStateDeleted:     {ArangoBackupStateFailed},
-	ArangoBackupStateFailed:      {ArangoBackupStatePending},
+	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed},
+	ArangoBackupStateUpload:        {ArangoBackupStateUploading, ArangoBackupStateFailed},
+	ArangoBackupStateUploading:     {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
+	ArangoBackupStateUploadError:   {ArangoBackupStateUpload, ArangoBackupStateFailed, ArangoBackupStateReady},
+	ArangoBackupStateReady:         {ArangoBackupStateDeleted, ArangoBackupStateFailed, ArangoBackupStateUpload},
+	ArangoBackupStateDeleted:       {ArangoBackupStateFailed},
+	ArangoBackupStateFailed:        {ArangoBackupStatePending},
 }
 
 type ArangoBackupState struct {

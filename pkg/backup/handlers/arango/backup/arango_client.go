@@ -85,7 +85,7 @@ func checkTemporaryError(err error) bool {
 		return ok
 	}
 
-	if _, ok :=err.(TemporaryErrorInterface); ok {
+	if _, ok := err.(TemporaryErrorInterface); ok {
 		return ok
 	}
 

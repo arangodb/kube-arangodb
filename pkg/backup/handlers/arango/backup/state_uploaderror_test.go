@@ -23,9 +23,10 @@
 package backup
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
@@ -39,7 +40,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
 
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-			RepositoryUrl: "S3 URL",
+		RepositoryUrl: "S3 URL",
 	}
 
 	backupMeta, err := mock.Create()

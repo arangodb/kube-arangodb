@@ -55,10 +55,10 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 
 	if details.Failed {
 		return database.ArangoBackupStatus{
-			Available:         true,
+			Available: true,
 			ArangoBackupState: newState(database.ArangoBackupStateUploadError,
 				fmt.Sprintf("Upload failed with error: %s", details.FailMessage), nil),
-			Backup:            backup.Status.Backup,
+			Backup: backup.Status.Backup,
 		}, nil
 	}
 
