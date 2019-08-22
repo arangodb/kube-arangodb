@@ -1,6 +1,12 @@
-# Change Log
+# Change 0
 
-## [0.3.13]() (2019-08-02)
+## [0.3.15](https://github.com/arangodb/kube-arangodb/tree/0.3.15) (XXXX-XX-XX)
+- Ahead of Deployment API deprecation
+
+## [0.3.14](https://github.com/arangodb/kube-arangodb/tree/0.3.14) (2019-08-16)
+- Resign leadership
+
+## [Log.3.13]() (2019-08-02)
 - Added side car changed to pod rotation criterium
 - Added ArangoDB version and image id to member status
 - Fix bug with MemberOfCluster condition
