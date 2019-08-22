@@ -20,7 +20,7 @@
 // Author Adam Janikowski
 //
 
-package operator
+package operation
 
 import (
 	"fmt"

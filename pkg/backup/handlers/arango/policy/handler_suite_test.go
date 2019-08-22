@@ -24,14 +24,14 @@ package policy
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"k8s.io/client-go/kubernetes/fake"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,20 +51,20 @@ func newFakeHandler() *handler {
 	return h
 }
 
-func newItem(operation operator.Operation, namespace, name string) operator.Item {
-	return operator.Item{
+func newItem(o operation.Operation, namespace, name string) operation.Item {
+	return operation.Item{
 		Group:   database.SchemeGroupVersion.Group,
 		Version: database.SchemeGroupVersion.Version,
 		Kind:    database.ArangoBackupPolicyResourceKind,
 
-		Operation: operation,
+		Operation: o,
 
 		Namespace: namespace,
 		Name:      name,
 	}
 }
 
-func newItemFromBackupPolicy(operation operator.Operation, policy *database.ArangoBackupPolicy) operator.Item {
+func newItemFromBackupPolicy(operation operation.Operation, policy *database.ArangoBackupPolicy) operation.Item {
 	return newItem(operation, policy.Namespace, policy.Name)
 }
 
@@ -150,14 +150,4 @@ func isInList(t *testing.T, backups []database.ArangoBackup, deployment *databas
 		}
 	}
 	require.Fail(t, "backup is not present on list")
-}
-
-func hasOwnerReference(references []meta.OwnerReference, expectedReference meta.OwnerReference) bool {
-	for _, ownerRef := range references {
-		if reflect.DeepEqual(ownerRef, expectedReference) {
-			return true
-		}
-	}
-
-	return false
 }

@@ -27,6 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,23 +49,23 @@ func randomString(len int) string {
 type mockHandler struct {
 	name string
 
-	wrapperHandle       func(item Item) error
-	wrapperCanBeHandled func(item Item) bool
+	wrapperHandle       func(item operation.Item) error
+	wrapperCanBeHandled func(item operation.Item) bool
 }
 
 func (m *mockHandler) Name() string {
 	return m.name
 }
 
-func (m *mockHandler) Handle(item Item) error {
+func (m *mockHandler) Handle(item operation.Item) error {
 	return m.wrapperHandle(item)
 }
 
-func (m *mockHandler) CanBeHandled(item Item) bool {
+func (m *mockHandler) CanBeHandled(item operation.Item) bool {
 	return m.wrapperCanBeHandled(item)
 }
 
-func newMockHandler(name string, handle func(item Item) error, canBeHandled func(item Item) bool) Handler {
+func newMockHandler(name string, handle func(item operation.Item) error, canBeHandled func(item operation.Item) bool) Handler {
 	return &mockHandler{
 		name:                name,
 		wrapperHandle:       handle,
@@ -71,9 +73,9 @@ func newMockHandler(name string, handle func(item Item) error, canBeHandled func
 	}
 }
 
-func randomItem() Item {
-	return Item{
-		Operation: OperationAdd,
+func randomItem() operation.Item {
+	return operation.Item{
+		Operation: operation.OperationAdd,
 
 		Group:   randomString(5),
 		Version: randomString(2),
@@ -84,26 +86,26 @@ func randomItem() Item {
 	}
 }
 
-func mockSimpleObjectFunc(name string, canBeHandled func(Item) bool) (Handler, chan Item) {
-	c := make(chan Item, 1024)
+func mockSimpleObjectFunc(name string, canBeHandled func(item operation.Item) bool) (Handler, chan operation.Item) {
+	c := make(chan operation.Item, 1024)
 	return newMockHandler(name,
-		func(item Item) error {
+		func(item operation.Item) error {
 			c <- item
 			return nil
 		},
 		canBeHandled), c
 }
 
-func mockSimpleObject(name string, canBeHandled bool) (Handler, chan Item) {
-	return mockSimpleObjectFunc(name, func(item Item) bool {
+func mockSimpleObject(name string, canBeHandled bool) (Handler, chan operation.Item) {
+	return mockSimpleObjectFunc(name, func(item operation.Item) bool {
 		return canBeHandled
 	})
 }
 
-func waitForItems(t *testing.T, i <-chan Item, expectedSize int, timeout time.Duration) []Item {
+func waitForItems(t *testing.T, i <-chan operation.Item, expectedSize int, timeout time.Duration) []operation.Item {
 	tmout := time.NewTimer(timeout)
 	defer tmout.Stop()
-	received := make([]Item, 0, expectedSize)
+	received := make([]operation.Item, 0, expectedSize)
 	for {
 		select {
 		case item := <-i:

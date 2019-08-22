@@ -25,8 +25,9 @@ package backup
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,7 +41,7 @@ func Test_State_Deleted(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

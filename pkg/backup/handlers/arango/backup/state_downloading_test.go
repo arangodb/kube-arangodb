@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,7 +57,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "S3 URL",
+			RepositoryURL: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -71,7 +71,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Restore percent", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -88,13 +88,13 @@ func Test_State_Downloading_Success(t *testing.T) {
 			Progress: p,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, database.ArangoBackupStateDownloading, newObj.Status.State)
 		require.Equal(t, fmt.Sprintf("%d%%", p), newObj.Status.Progress.Progress)
-		require.Equal(t, fmt.Sprintf("%s", progress), newObj.Status.Progress.JobID)
+		require.Equal(t, string(progress), newObj.Status.Progress.JobID)
 
 		require.False(t, newObj.Status.Available)
 	})
@@ -104,7 +104,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 			Completed: true,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -129,7 +129,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 	progress, err := mock.Download(backupMeta.ID)
 	require.NoError(t, err)
 
-	errorMsg := "error"
+	errorMsg := errorString
 	mock.progresses[progress] = ArangoBackupProgress{
 		Failed:      true,
 		FailMessage: errorMsg,
@@ -143,7 +143,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "S3 URL",
+			RepositoryURL: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -156,7 +156,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -190,7 +190,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "S3 URL",
+			RepositoryURL: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -203,7 +203,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -238,7 +238,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "S3 URL",
+			RepositoryURL: "S3 URL",
 		},
 		ID: string(backupMeta.ID),
 	}
@@ -251,7 +251,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err = handler.Handle(newItemFromBackup(operator.OperationUpdate, obj))
+	err = handler.Handle(newItemFromBackup(operation.OperationUpdate, obj))
 
 	// Assert
 	compareTemporaryState(t, err, errorMsg, handler, obj)

@@ -25,6 +25,8 @@ package operator
 import (
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -73,7 +75,7 @@ func (o *operator) processNextItem() bool {
 
 func (o *operator) processObject(obj interface{}) error {
 	defer o.workqueue.Done(obj)
-	var item Item
+	var item operation.Item
 	var key string
 	var ok bool
 	var err error
@@ -83,7 +85,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return nil
 	}
 
-	if item, err = NewItemFromString(key); err != nil {
+	if item, err = operation.NewItemFromString(key); err != nil {
 		o.workqueue.Forget(obj)
 		return nil
 	}
@@ -115,7 +117,7 @@ func (o *operator) processObject(obj interface{}) error {
 	return nil
 }
 
-func (o *operator) processItem(item Item) error {
+func (o *operator) processItem(item operation.Item) error {
 	for _, handler := range o.handlers {
 		if handler.CanBeHandled(item) {
 			return handler.Handle(item)

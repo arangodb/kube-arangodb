@@ -24,8 +24,8 @@ package policy
 
 import (
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/event"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"k8s.io/client-go/kubernetes"

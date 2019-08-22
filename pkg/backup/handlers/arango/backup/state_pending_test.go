@@ -26,8 +26,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,7 +47,7 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -65,7 +66,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -88,7 +89,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	createArangoBackup(t, handler, obj, obj2)
 
 	t.Run("First backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -98,7 +99,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	})
 
 	t.Run("Second backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj2)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj2)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)

@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 )
@@ -42,26 +43,26 @@ type resourceEventWrapper struct {
 	Group, Version, Kind string
 }
 
-func (r *resourceEventWrapper) push(operation Operation, obj interface{}) {
+func (r *resourceEventWrapper) push(o operation.Operation, obj interface{}) {
 	if obj == nil {
 		return
 	}
 
 	if object, ok := obj.(meta.Object); ok {
-		if item, err := NewItemFromObject(operation, r.Group, r.Version, r.Kind, object); err == nil {
+		if item, err := operation.NewItemFromObject(o, r.Group, r.Version, r.Kind, object); err == nil {
 			r.Operator.EnqueueItem(item)
 		}
 	}
 }
 
 func (r *resourceEventWrapper) OnAdd(obj interface{}) {
-	r.push(OperationAdd, obj)
+	r.push(operation.OperationAdd, obj)
 }
 
 func (r *resourceEventWrapper) OnUpdate(oldObj, newObj interface{}) {
-	r.push(OperationUpdate, newObj)
+	r.push(operation.OperationUpdate, newObj)
 }
 
 func (r *resourceEventWrapper) OnDelete(obj interface{}) {
-	r.push(OperationDelete, obj)
+	r.push(operation.OperationDelete, obj)
 }

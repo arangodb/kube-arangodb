@@ -25,8 +25,9 @@ package backup
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +43,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	obj.Spec.Download = &database.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
-			RepositoryUrl: "Some URL",
+			RepositoryURL: "Some URL",
 		},
 		ID: "id",
 	}
@@ -51,7 +52,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -70,7 +71,7 @@ func Test_State_Scheduled_Create(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -86,14 +87,14 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
 
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryUrl: "test",
+		RepositoryURL: "test",
 	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)

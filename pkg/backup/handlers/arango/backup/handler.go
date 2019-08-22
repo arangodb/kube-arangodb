@@ -27,7 +27,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -36,7 +37,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -62,7 +62,7 @@ func (h *handler) Name() string {
 	return database.ArangoBackupResourceKind
 }
 
-func (h *handler) Handle(item operator.Item) error {
+func (h *handler) Handle(item operation.Item) error {
 	// Get Backup object. It also cover NotFound case
 	backup, err := h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *handler) Handle(item operator.Item) error {
 	}
 
 	// Do not act on delete event, finalizer should be used
-	if item.Operation == operator.OperationDelete {
+	if item.Operation == operation.OperationDelete {
 		return nil
 	}
 
@@ -162,7 +162,7 @@ func (h *handler) processArangoBackup(backup *database.ArangoBackup) (database.A
 	}
 }
 
-func (h *handler) CanBeHandled(item operator.Item) bool {
+func (h *handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == database.SchemeGroupVersion.Group &&
 		item.Version == database.SchemeGroupVersion.Version &&
 		item.Kind == database.ArangoBackupResourceKind

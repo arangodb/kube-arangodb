@@ -24,7 +24,7 @@ package operator
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"math/rand"
 	"time"
 

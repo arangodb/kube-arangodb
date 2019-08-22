@@ -22,4 +22,5 @@
 
 package state
 
+// State holds state string representation
 type State string

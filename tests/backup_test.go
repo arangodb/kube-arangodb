@@ -244,7 +244,7 @@ func skipOrRemotePath(t *testing.T) (repoPath string) {
 
 func newOperation() *api.ArangoBackupSpecOperation {
 	return &api.ArangoBackupSpecOperation{
-		RepositoryUrl:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+		RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
 		CredentialsSecretName: testBackupRemoteSecretName,
 	}
 }
@@ -252,7 +252,7 @@ func newOperation() *api.ArangoBackupSpecOperation {
 func newDownload(ID string) *api.ArangoBackupSpecDownload {
 	return &api.ArangoBackupSpecDownload{
 		ArangoBackupSpecOperation: api.ArangoBackupSpecOperation{
-			RepositoryUrl:         os.Getenv("TEST_REMOTE_REPOSITORY"),
+			RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
 			CredentialsSecretName: testBackupRemoteSecretName,
 		},
 		ID: ID,

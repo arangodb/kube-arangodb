@@ -57,8 +57,8 @@ func (a *ArangoBackupSpec) Validate() error {
 }
 
 func (a *ArangoBackupSpecOperation) Validate() error {
-	if a.RepositoryUrl == "" {
-		return fmt.Errorf("RepositoryUrl can not be empty")
+	if a.RepositoryURL == "" {
+		return fmt.Errorf("RepositoryURL can not be empty")
 	}
 
 	return nil

@@ -25,6 +25,8 @@ package operator
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"github.com/stretchr/testify/assert"
 
 	"testing"
@@ -218,17 +220,17 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 		objects[id] = randomString(10)
 	}
 
-	mp, ip := mockSimpleObjectFunc(name, func(item Item) bool {
+	mp, ip := mockSimpleObjectFunc(name, func(item operation.Item) bool {
 		return item.Kind == "pods"
 	})
 	require.NoError(t, o.RegisterHandler(mp))
 
-	mn, in := mockSimpleObjectFunc(name, func(item Item) bool {
+	mn, in := mockSimpleObjectFunc(name, func(item operation.Item) bool {
 		return item.Kind == "nodes"
 	})
 	require.NoError(t, o.RegisterHandler(mn))
 
-	ms, is := mockSimpleObjectFunc(name, func(item Item) bool {
+	ms, is := mockSimpleObjectFunc(name, func(item operation.Item) bool {
 		return item.Kind == "services"
 	})
 	require.NoError(t, o.RegisterHandler(ms))

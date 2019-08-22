@@ -26,6 +26,7 @@ import (
 	"fmt"
 )
 
+// NotFound exception is returned when State is not defined in current transition map
 type NotFound struct {
 	state State
 }
@@ -34,6 +35,7 @@ func (s NotFound) Error() string {
 	return fmt.Sprintf("State %s not found", s.state)
 }
 
+// ChangeNotPossible exception is returned when State transition is not possible
 type ChangeNotPossible struct {
 	from, to State
 }

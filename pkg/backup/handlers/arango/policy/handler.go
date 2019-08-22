@@ -27,11 +27,13 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"k8s.io/client-go/kubernetes"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/robfig/cron"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,9 +55,9 @@ func (*handler) Name() string {
 	return database.ArangoBackupPolicyResourceKind
 }
 
-func (h *handler) Handle(item operator.Item) error {
+func (h *handler) Handle(item operation.Item) error {
 	// Do not act on delete event, finalizers are used
-	if item.Operation == operator.OperationDelete {
+	if item.Operation == operation.OperationDelete {
 		return nil
 	}
 
@@ -172,7 +174,7 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 	}, nil
 }
 
-func (*handler) CanBeHandled(item operator.Item) bool {
+func (*handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == database.SchemeGroupVersion.Group &&
 		item.Version == database.SchemeGroupVersion.Version &&
 		item.Kind == database.ArangoBackupPolicyResourceKind

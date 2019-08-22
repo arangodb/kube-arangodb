@@ -25,7 +25,8 @@ package policy
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
@@ -34,12 +35,12 @@ func Test_ObjectNotFound(t *testing.T) {
 	// Arrange
 	handler := newFakeHandler()
 
-	i := newItem(operator.OperationAdd, "test", "test")
+	i := newItem(operation.OperationAdd, "test", "test")
 
-	actions := map[operator.Operation]bool{
-		operator.OperationAdd:    true,
-		operator.OperationUpdate: true,
-		operator.OperationDelete: true,
+	actions := map[operation.Operation]bool{
+		operation.OperationAdd:    true,
+		operation.OperationUpdate: true,
+		operation.OperationDelete: true,
 	}
 
 	// Act

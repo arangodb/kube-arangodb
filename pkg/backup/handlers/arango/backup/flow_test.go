@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +42,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from None to Pending", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -51,7 +51,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Pending to Scheduled", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -60,7 +60,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Scheduled to Create", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -69,7 +69,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Create to Ready", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -78,7 +78,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Ensure Ready State Keeps", func(t *testing.T) {
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -87,10 +87,10 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 	t.Run("Change from Ready to Deleted", func(t *testing.T) {
 		// Arrange
-		mock.errors.getError = "error"
+		mock.errors.getError = errorString
 
 		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)

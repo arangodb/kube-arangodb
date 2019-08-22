@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/rs/zerolog/log"
@@ -40,7 +42,7 @@ type Starter interface {
 }
 
 type Operator interface {
-	// Implement prometheus collector interface
+	// Define prometheus collector interface
 	prometheus.Collector
 
 	Name() string
@@ -51,8 +53,8 @@ type Operator interface {
 	RegisterStarter(starter Starter) error
 	RegisterHandler(handler Handler) error
 
-	EnqueueItem(item Item)
-	ProcessItem(item Item) error
+	EnqueueItem(item operation.Item)
+	ProcessItem(item operation.Item) error
 }
 
 func NewOperator(name string) Operator {
@@ -61,6 +63,7 @@ func NewOperator(name string) Operator {
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
 
+	// Declaration of prometheus interface
 	o.prometheusMetrics = newCollector(o)
 
 	return o
@@ -87,7 +90,7 @@ func (o *operator) Name() string {
 	return o.name
 }
 
-func (o *operator) ProcessItem(item Item) error {
+func (o *operator) ProcessItem(item operation.Item) error {
 	{
 		o.lock.Lock()
 		defer o.lock.Unlock()
@@ -138,7 +141,7 @@ func (o *operator) RegisterStarter(starter Starter) error {
 	return nil
 }
 
-func (o *operator) EnqueueItem(item Item) {
+func (o *operator) EnqueueItem(item operation.Item) {
 	o.workqueue.Add(item.String())
 }
 

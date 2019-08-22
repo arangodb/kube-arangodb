@@ -26,8 +26,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -50,7 +51,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operator.OperationUpdate, policy)))
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.OperationUpdate, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -76,7 +77,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operator.OperationUpdate, policy)))
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.OperationUpdate, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -107,7 +108,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operator.OperationUpdate, policy)))
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.OperationUpdate, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -145,7 +146,7 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database, database2)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operator.OperationUpdate, policy)))
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.OperationUpdate, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
@@ -183,7 +184,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 	createArangoBackupPolicy(t, handler, policy)
 	createArangoDeployment(t, handler, database, database2)
 
-	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operator.OperationUpdate, policy)))
+	require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.OperationUpdate, policy)))
 
 	// Assert
 	newPolicy := refreshArangoBackupPolicy(t, handler, policy)

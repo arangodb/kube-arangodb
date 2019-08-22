@@ -138,9 +138,10 @@ allall: all
 .PHONY: fmt
 fmt:
 	golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all --enable=deadcode --enable=gocyclo \
-	                  --enable=golint --enable=varcheck   --enable=structcheck --enable=maligned --enable=errcheck \
-	                  --enable=dupl --enable=ineffassign   --enable=interfacer --enable=unconvert --enable=goconst \
-	                  --enable=gosec --enable=megacheck --exclude-use-default=false $(PACKAGE)
+	                  --enable=golint --enable=varcheck --enable=structcheck --enable=maligned --enable=errcheck \
+	                  --enable=dupl --enable=ineffassign --enable=interfacer --enable=unconvert --enable=goconst \
+	                  --enable=gosec --enable=megacheck --exclude-use-default=false \
+	                  $(ROOTDIR)/pkg/backup/...
 
 .PHONY: build
 build: docker manifests
@@ -230,10 +231,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/k8sutil/test \
 		$(REPOPATH)/pkg/util/probe \
 		$(REPOPATH)/pkg/util/validation \
-		$(REPOPATH)/pkg/backup/handlers/arango/backup \
-		$(REPOPATH)/pkg/backup/handlers/arango/policy \
-		$(REPOPATH)/pkg/backup/operator \
-		$(REPOPATH)/pkg/backup/state
+		$(REPOPATH)/pkg/backup/...
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)

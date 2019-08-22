@@ -22,10 +22,12 @@
 
 package operator
 
+import "github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 type Handler interface {
 	Name() string
 
-	Handle(item Item) error
+	Handle(item operation.Item) error
 
-	CanBeHandled(item Item) bool
+	CanBeHandled(item operation.Item) bool
 }

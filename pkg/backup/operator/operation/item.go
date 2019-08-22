@@ -20,7 +20,7 @@
 // Author Adam Janikowski
 //
 
-package operator
+package operation
 
 import (
 	"fmt"
@@ -56,6 +56,7 @@ func NewItemFromObject(operation Operation, group, version, kind string, object 
 	return NewItem(operation, group, version, kind, object.GetNamespace(), object.GetName())
 }
 
+// Creates new Item
 func NewItem(operation Operation, group, version, kind, namespace, name string) (Item, error) {
 	i := Item{
 		Operation: operation,
@@ -73,6 +74,7 @@ func NewItem(operation Operation, group, version, kind, namespace, name string) 
 	return i, nil
 }
 
+// Item defines action in operator
 type Item struct {
 	Operation Operation
 
@@ -96,6 +98,7 @@ func validateField(name, value string, allowEmpty bool) error {
 	return nil
 }
 
+// Validate item if all required fields are set
 func (i Item) Validate() error {
 	if err := validateField("operation", string(i.Operation), false); err != nil {
 		return err

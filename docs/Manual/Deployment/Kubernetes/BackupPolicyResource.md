@@ -53,11 +53,11 @@ spec:
   schedule: "*/15 * * * * *"
   template:
       upload:
-        repositoryPath: "s3:/..."
+        repositoryURL: "s3:/..."
         credentialsSecretName: "secret-name"
 ```
 
-Create an ArangoBackup object for each ArangoBackup every 15 seconds and upload to repositoryPath
+Create an ArangoBackup object for each ArangoBackup every 15 seconds and upload to repositoryURL
 
 ## ArangoBackup Custom Resource Spec:
 
@@ -77,7 +77,7 @@ spec:
         timeout: 3
         force: true
       upload:
-        repositoryPath: "s3:/..."
+        repositoryURL: "s3:/..."
         credentialsSecretName: "secret-name"
 status:
   scheduled: "time"
@@ -150,7 +150,7 @@ Default: ""
 
 ### `spec.message: String`
 
-Message from the operator in case of failure (schedule not valid, ArangoBackupPolicy not valid)
+Message from the operator in case of failure - schedule not valid, ArangoBackupPolicy not valid
 
 Required: false
 

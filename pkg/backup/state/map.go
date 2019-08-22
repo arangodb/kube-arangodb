@@ -22,8 +22,10 @@
 
 package state
 
+// Map of the States and possible transitions
 type Map map[State][]State
 
+// Exists checks if State is defined in transitions
 func (m Map) Exists(state State) error {
 	if _, ok := m[state]; ok {
 		return nil
@@ -32,6 +34,7 @@ func (m Map) Exists(state State) error {
 	return NotFound{state: state}
 }
 
+// Transit checks if change from one State to another is possible with current defined transitions
 func (m Map) Transit(from, to State) error {
 	if err := m.Exists(from); err != nil {
 		return err

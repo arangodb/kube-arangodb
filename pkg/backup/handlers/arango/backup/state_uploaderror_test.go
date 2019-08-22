@@ -26,10 +26,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,7 +41,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
 
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryUrl: "S3 URL",
+		RepositoryURL: "S3 URL",
 	}
 
 	backupMeta, err := mock.Create()
@@ -61,7 +62,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -79,7 +80,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
 
 	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
-		RepositoryUrl: "S3 URL",
+		RepositoryURL: "S3 URL",
 	}
 
 	backupMeta, err := mock.Create()
@@ -101,7 +102,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -137,7 +138,7 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operator.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
