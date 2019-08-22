@@ -185,7 +185,7 @@ Default: {}
 
 Field is immutable.
 
-# TODO: Point to the Backup API definition
+TODO: Point to the Backup API definition
 
 Required: true
 
@@ -197,7 +197,7 @@ Name of the secrets used while accessing repository
 
 Field is immutable.
 
-# TODO: Point to the credential structure
+TODO: Point to the credential structure
 
 Required: false
 
@@ -228,7 +228,7 @@ Default: {}
 
 Field is immutable.
 
-# TODO: Point to the Backup API definition
+TODO: Point to the Backup API definition
 
 Required: true
 
@@ -240,7 +240,7 @@ Name of the secrets used while accessing repository
 
 Field is immutable.
 
-# TODO: Point to the credential structure
+TODO: Point to the credential structure
 
 Required: false
 
