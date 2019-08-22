@@ -71,14 +71,14 @@ func GetNumberOfServers(ctx context.Context, conn driver.Connection) (NumberOfSe
 }
 
 // SetNumberOfServers updates the number of servers the cluster has.
-func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinators, noDBServers int) error {
+func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinators, noDBServers *int) error {
 	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
 	if err != nil {
 		return maskAny(err)
 	}
 	input := NumberOfServers{
-		Coordinators: &noCoordinators,
-		DBServers:    &noDBServers,
+		Coordinators: noCoordinators,
+		DBServers:    noDBServers,
 	}
 	if _, err := req.SetBody(input); err != nil {
 		return maskAny(err)
