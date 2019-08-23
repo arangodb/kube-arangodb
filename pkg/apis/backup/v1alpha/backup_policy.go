@@ -20,28 +20,21 @@
 // Author Adam Janikowski
 //
 
-// Move backup under backups
-
 package v1alpha
 
 import (
+	"fmt"
+
+	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	FinalizerArangoBackup = ArangoBackupCRDName + "/cleanup"
-)
-
-var (
-	FinalizersArangoBackup = []string{
-		FinalizerArangoBackup,
-	}
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoBackupList is a list of ArangoDB backups.
-type ArangoBackupList struct {
+// ArangoBackupPolicyList is a list of ArangoDB backup policy.
+type ArangoBackupPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
@@ -51,11 +44,38 @@ type ArangoBackupList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoBackup contains definition and status of the ArangoDB Backup.
-type ArangoBackup struct {
+// ArangoBackupPolicy contains definition and status of the ArangoDB Backup Policy.
+type ArangoBackupPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ArangoBackupSpec   `json:"spec"`
-	Status ArangoBackupStatus `json:"status"`
+	Spec   ArangoBackupPolicySpec   `json:"spec"`
+	Status ArangoBackupPolicyStatus `json:"status"`
+}
+
+func (a *ArangoBackupPolicy) NewBackup(d *deployment.ArangoDeployment) *ArangoBackup {
+	policyName := a.Name
+
+	spec := &ArangoBackupSpec{
+		Deployment: ArangoBackupSpecDeployment{
+			Name: d.Name,
+		},
+		Upload:     a.Spec.BackupTemplate.Upload.DeepCopy(),
+		Options:    a.Spec.BackupTemplate.Options.DeepCopy(),
+		PolicyName: &policyName,
+	}
+
+	return &ArangoBackup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%s", d.Name, utils.RandomString(8)),
+			Namespace: a.Namespace,
+
+			Labels: d.Labels,
+
+			Finalizers: []string{
+				FinalizerArangoBackup,
+			},
+		},
+		Spec: *spec,
+	}
 }

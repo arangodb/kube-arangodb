@@ -26,10 +26,11 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
-type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error)
+type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error)
 
 type TemporaryErrorInterface interface {
 	Temporary() bool

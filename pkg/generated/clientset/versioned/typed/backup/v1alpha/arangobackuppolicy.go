@@ -25,7 +25,7 @@ package v1alpha
 import (
 	"time"
 
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -60,7 +60,7 @@ type arangoBackupPolicies struct {
 }
 
 // newArangoBackupPolicies returns a ArangoBackupPolicies
-func newArangoBackupPolicies(c *DatabaseV1alphaClient, namespace string) *arangoBackupPolicies {
+func newArangoBackupPolicies(c *BackupV1alphaClient, namespace string) *arangoBackupPolicies {
 	return &arangoBackupPolicies{
 		client: c.RESTClient(),
 		ns:     namespace,

@@ -25,10 +25,10 @@ package v1alpha
 import (
 	time "time"
 
-	deploymentv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/listers/backup/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -65,16 +65,16 @@ func NewFilteredArangoBackupPolicyInformer(client versioned.Interface, namespace
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1alpha().ArangoBackupPolicies(namespace).List(options)
+				return client.BackupV1alpha().ArangoBackupPolicies(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1alpha().ArangoBackupPolicies(namespace).Watch(options)
+				return client.BackupV1alpha().ArangoBackupPolicies(namespace).Watch(options)
 			},
 		},
-		&deploymentv1alpha.ArangoBackupPolicy{},
+		&backupv1alpha.ArangoBackupPolicy{},
 		resyncPeriod,
 		indexers,
 	)
@@ -85,7 +85,7 @@ func (f *arangoBackupPolicyInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *arangoBackupPolicyInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv1alpha.ArangoBackupPolicy{}, f.defaultInformer)
+	return f.factory.InformerFor(&backupv1alpha.ArangoBackupPolicy{}, f.defaultInformer)
 }
 
 func (f *arangoBackupPolicyInformer) Lister() v1alpha.ArangoBackupPolicyLister {

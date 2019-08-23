@@ -23,7 +23,7 @@
 package fake
 
 import (
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,13 +34,13 @@ import (
 
 // FakeArangoBackups implements ArangoBackupInterface
 type FakeArangoBackups struct {
-	Fake *FakeDatabaseV1alpha
+	Fake *FakeBackupV1alpha
 	ns   string
 }
 
-var arangobackupsResource = schema.GroupVersionResource{Group: "database.arangodb.com", Version: "v1alpha", Resource: "arangobackups"}
+var arangobackupsResource = schema.GroupVersionResource{Group: "backup.arangodb.com", Version: "v1alpha", Resource: "arangobackups"}
 
-var arangobackupsKind = schema.GroupVersionKind{Group: "database.arangodb.com", Version: "v1alpha", Kind: "ArangoBackup"}
+var arangobackupsKind = schema.GroupVersionKind{Group: "backup.arangodb.com", Version: "v1alpha", Kind: "ArangoBackup"}
 
 // Get takes name of the arangoBackup, and returns the corresponding arangoBackup object, and an error if there is any.
 func (c *FakeArangoBackups) Get(name string, options v1.GetOptions) (result *v1alpha.ArangoBackup, err error) {

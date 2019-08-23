@@ -23,11 +23,11 @@
 package backup
 
 import (
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateNoneHandler(*handler, *database.ArangoBackup) (database.ArangoBackupStatus, error) {
-	return database.ArangoBackupStatus{
-		ArangoBackupState: newState(database.ArangoBackupStatePending, "", nil),
+func stateNoneHandler(*handler, *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+	return backupApi.ArangoBackupStatus{
+		ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "", nil),
 	}, nil
 }

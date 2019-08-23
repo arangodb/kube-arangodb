@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +35,7 @@ func Test_State_Deleted(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateDeleted)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDeleted)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)

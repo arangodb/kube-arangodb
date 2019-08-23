@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/arangodb/go-driver"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
@@ -36,13 +37,13 @@ const (
 )
 
 func newMockArangoClientBackupErrorFactory(err error) ArangoClientFactory {
-	return func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error) {
+	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
 		return nil, err
 	}
 }
 
 func newMockArangoClientBackupFactory(mock *mockArangoClientBackup) ArangoClientFactory {
-	return func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error) {
+	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
 		return mock, nil
 	}
 }

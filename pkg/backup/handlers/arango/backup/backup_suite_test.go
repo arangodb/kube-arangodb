@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"k8s.io/client-go/kubernetes/fake"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -64,7 +65,7 @@ func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler, *mockA
 	return handler, mock
 }
 
-func newObjectSet(state state.State) (*database.ArangoBackup, *database.ArangoDeployment) {
+func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoDeployment) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
@@ -74,7 +75,7 @@ func newObjectSet(state state.State) (*database.ArangoBackup, *database.ArangoDe
 	return obj, deployment
 }
 
-func compareTemporaryState(t *testing.T, err error, errorMsg string, handler *handler, obj *database.ArangoBackup) {
+func compareTemporaryState(t *testing.T, err error, errorMsg string, handler *handler, obj *backupApi.ArangoBackup) {
 	require.Error(t, err)
 	require.True(t, IsTemporaryError(err))
 	require.EqualError(t, err, errorMsg)
@@ -87,7 +88,7 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
 		Group:   database.SchemeGroupVersion.Group,
 		Version: database.SchemeGroupVersion.Version,
-		Kind:    database.ArangoBackupResourceKind,
+		Kind:    backupApi.ArangoBackupResourceKind,
 
 		Operation: o,
 
@@ -96,49 +97,49 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	}
 }
 
-func newItemFromBackup(operation operation.Operation, backup *database.ArangoBackup) operation.Item {
+func newItemFromBackup(operation operation.Operation, backup *backupApi.ArangoBackup) operation.Item {
 	return newItem(operation, backup.Namespace, backup.Name)
 }
 
-func newArangoBackup(objectRef, namespace, name string, state state.State) *database.ArangoBackup {
-	return &database.ArangoBackup{
+func newArangoBackup(objectRef, namespace, name string, state state.State) *backupApi.ArangoBackup {
+	return &backupApi.ArangoBackup{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: database.SchemeGroupVersion.String(),
-			Kind:       database.ArangoBackupResourceKind,
+			Kind:       backupApi.ArangoBackupResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
 				database.SchemeGroupVersion.String(),
-				database.ArangoBackupResourcePlural,
+				backupApi.ArangoBackupResourcePlural,
 				namespace,
 				name),
 			UID:        uuid.NewUUID(),
 			Finalizers: database.FinalizersArangoBackup,
 		},
-		Spec: database.ArangoBackupSpec{
-			Deployment: database.ArangoBackupSpecDeployment{
+		Spec: backupApi.ArangoBackupSpec{
+			Deployment: backupApi.ArangoBackupSpecDeployment{
 				Name: objectRef,
 			},
 		},
-		Status: database.ArangoBackupStatus{
-			ArangoBackupState: database.ArangoBackupState{
+		Status: backupApi.ArangoBackupStatus{
+			ArangoBackupState: backupApi.ArangoBackupState{
 				State: state,
 			},
 		},
 	}
 }
 
-func createArangoBackup(t *testing.T, h *handler, backups ...*database.ArangoBackup) {
+func createArangoBackup(t *testing.T, h *handler, backups ...*backupApi.ArangoBackup) {
 	for _, backup := range backups {
-		_, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Create(backup)
+		_, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).Create(backup)
 		require.NoError(t, err)
 	}
 }
 
-func refreshArangoBackup(t *testing.T, h *handler, backup *database.ArangoBackup) *database.ArangoBackup {
-	obj, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Get(backup.Name, meta.GetOptions{})
+func refreshArangoBackup(t *testing.T, h *handler, backup *backupApi.ArangoBackup) *backupApi.ArangoBackup {
+	obj, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).Get(backup.Name, meta.GetOptions{})
 	require.NoError(t, err)
 	return obj
 }
@@ -183,7 +184,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
 		require.Equal(t, newObj.Status.Message, createFailMessage(state, "deployment name can not be empty"))
 	})
@@ -200,7 +201,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
 		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 	})
@@ -245,7 +246,7 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
 		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("backup details are missing")))
 

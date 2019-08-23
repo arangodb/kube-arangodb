@@ -25,7 +25,7 @@ package backup
 import (
 	"testing"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +34,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateNone)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateNone)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -46,7 +46,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStatePending, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStatePending, newObj.Status.State)
 	})
 
 	t.Run("Change from Pending to Scheduled", func(t *testing.T) {
@@ -55,7 +55,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStateScheduled, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStateScheduled, newObj.Status.State)
 	})
 
 	t.Run("Change from Scheduled to Create", func(t *testing.T) {
@@ -64,7 +64,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStateCreate, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStateCreate, newObj.Status.State)
 	})
 
 	t.Run("Change from Create to Ready", func(t *testing.T) {
@@ -73,7 +73,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStateReady, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	})
 
 	t.Run("Ensure Ready State Keeps", func(t *testing.T) {
@@ -82,7 +82,7 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStateReady, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	})
 
 	t.Run("Change from Ready to Deleted", func(t *testing.T) {
@@ -94,6 +94,6 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, database.ArangoBackupStateDeleted, newObj.Status.State)
+		require.Equal(t, backupApi.ArangoBackupStateDeleted, newObj.Status.State)
 	})
 }

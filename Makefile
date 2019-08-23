@@ -174,7 +174,7 @@ update-generated:
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
+		"deployment:v1alpha replication:v1alpha storage:v1alpha backup:v1alpha" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -223,6 +223,7 @@ run-unit-tests: $(SOURCES)
 	go test $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/apis/deployment/v1alpha \
 		$(REPOPATH)/pkg/apis/replication/v1alpha \
+		$(REPOPATH)/pkg/apis/backup/v1alpha \
 		$(REPOPATH)/pkg/apis/storage/v1alpha \
 		$(REPOPATH)/pkg/deployment/reconcile \
 		$(REPOPATH)/pkg/deployment/resources \

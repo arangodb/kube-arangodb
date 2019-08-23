@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -41,7 +41,7 @@ func Test_Scheduler_Schedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{
 		"test": "me",
@@ -69,7 +69,7 @@ func Test_Scheduler_InvalidSchedule(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
 
 	database := newArangoDeployment(namespace, map[string]string{})
 
@@ -95,7 +95,7 @@ func Test_Scheduler_Valid_OneObject_SelectAll(t *testing.T) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, database.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, map[string]string{}, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -134,7 +134,7 @@ func Test_Scheduler_Valid_OneObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}
@@ -172,7 +172,7 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 		"SELECTOR": string(uuid.NewUUID()),
 	}
 
-	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, database.ArangoBackupTemplate{})
+	policy := newArangoBackupPolicy("* * * */2 *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
 	policy.Status.Scheduled = meta.Time{
 		Time: time.Now().Add(-1 * time.Hour),
 	}

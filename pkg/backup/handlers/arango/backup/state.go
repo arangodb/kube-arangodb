@@ -23,26 +23,26 @@
 package backup
 
 import (
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 
-type stateHolder func(handler *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error)
+type stateHolder func(handler *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error)
 
 var (
 	stateHolders = map[state.State]stateHolder{
-		database.ArangoBackupStateNone:          stateNoneHandler,
-		database.ArangoBackupStatePending:       statePendingHandler,
-		database.ArangoBackupStateScheduled:     stateScheduledHandler,
-		database.ArangoBackupStateCreate:        stateCreateHandler,
-		database.ArangoBackupStateUpload:        stateUploadHandler,
-		database.ArangoBackupStateUploading:     stateUploadingHandler,
-		database.ArangoBackupStateUploadError:   stateUploadErrorHandler,
-		database.ArangoBackupStateDownload:      stateDownloadHandler,
-		database.ArangoBackupStateDownloading:   stateDownloadingHandler,
-		database.ArangoBackupStateDownloadError: stateDownloadErrorHandler,
-		database.ArangoBackupStateReady:         stateReadyHandler,
-		database.ArangoBackupStateDeleted:       stateDeletedHandler,
-		database.ArangoBackupStateFailed:        stateFailedHandler,
+		backupApi.ArangoBackupStateNone:          stateNoneHandler,
+		backupApi.ArangoBackupStatePending:       statePendingHandler,
+		backupApi.ArangoBackupStateScheduled:     stateScheduledHandler,
+		backupApi.ArangoBackupStateCreate:        stateCreateHandler,
+		backupApi.ArangoBackupStateUpload:        stateUploadHandler,
+		backupApi.ArangoBackupStateUploading:     stateUploadingHandler,
+		backupApi.ArangoBackupStateUploadError:   stateUploadErrorHandler,
+		backupApi.ArangoBackupStateDownload:      stateDownloadHandler,
+		backupApi.ArangoBackupStateDownloading:   stateDownloadingHandler,
+		backupApi.ArangoBackupStateDownloadError: stateDownloadErrorHandler,
+		backupApi.ArangoBackupStateReady:         stateReadyHandler,
+		backupApi.ArangoBackupStateDeleted:       stateDeletedHandler,
+		backupApi.ArangoBackupStateFailed:        stateFailedHandler,
 	}
 )

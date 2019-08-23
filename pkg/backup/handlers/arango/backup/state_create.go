@@ -23,11 +23,11 @@
 package backup
 
 import (
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
@@ -35,10 +35,10 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
-	var details *database.ArangoBackupDetails
+	var details *backupApi.ArangoBackupDetails
 
 	// Try to recover old backup. If old backup is missing go into deleted state
 
@@ -47,7 +47,7 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return switchTemporaryError(err, backup.Status)
 	}
 
-	details = &database.ArangoBackupDetails{
+	details = &backupApi.ArangoBackupDetails{
 		ID:                string(response.ID),
 		Version:           response.Version,
 		CreationTimestamp: meta.Now(),
@@ -57,9 +57,9 @@ func stateCreateHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		details.Forced = &response.Forced
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available:         true,
-		ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+		ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 		Backup:            details,
 	}, nil
 }

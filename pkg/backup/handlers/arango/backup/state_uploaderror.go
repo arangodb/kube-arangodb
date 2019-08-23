@@ -25,33 +25,33 @@ package backup
 import (
 	"time"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
 const (
 	uploadDelay = time.Minute
 )
 
-func stateUploadErrorHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	// After upload removal go into Ready status
 	if backup.Spec.Upload == nil {
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 			Backup:            backup.Status.Backup.DeepCopy(),
 		}, nil
 	}
 
 	// Start again upload
 	if backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateUpload, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateUpload, "", nil),
 			Backup:            backup.Status.Backup.DeepCopy(),
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available:         true,
 		ArangoBackupState: backup.Status.ArangoBackupState,
 		Backup:            backup.Status.Backup.DeepCopy(),

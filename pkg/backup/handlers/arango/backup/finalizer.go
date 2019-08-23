@@ -24,13 +24,13 @@ package backup
 
 import (
 	"github.com/arangodb/go-driver"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (h *handler) finalize(backup *database.ArangoBackup) error {
+func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
 	if backup.Finalizers == nil || len(backup.Finalizers) == 0 {
 		return nil
 	}
@@ -40,13 +40,13 @@ func (h *handler) finalize(backup *database.ArangoBackup) error {
 
 	for _, finalizer := range finalizers {
 		switch finalizer {
-		case database.FinalizerArangoBackup:
+		case backupApi.FinalizerArangoBackup:
 			if err := h.finalizeBackup(backup); err != nil {
 				return err
 			}
-			finalizersToRemove = append(finalizersToRemove, database.FinalizerArangoBackup)
+			finalizersToRemove = append(finalizersToRemove, backupApi.FinalizerArangoBackup)
 
-			h.eventRecorder.Normal(backup, FinalizerChange, "Removed Finalizer: %s", database.FinalizerArangoBackup)
+			h.eventRecorder.Normal(backup, FinalizerChange, "Removed Finalizer: %s", backupApi.FinalizerArangoBackup)
 		}
 	}
 
@@ -60,14 +60,14 @@ func (h *handler) finalize(backup *database.ArangoBackup) error {
 			i)
 	}
 
-	if _, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Update(backup); err != nil {
+	if _, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).Update(backup); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
+func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 	if backup.Status.Backup == nil {
 		// No details passed, object can be removed
 		return nil
@@ -112,7 +112,7 @@ func (h *handler) finalizeBackup(backup *database.ArangoBackup) error {
 	return nil
 }
 
-func (h *handler) finalizeBackupAction(backup *database.ArangoBackup, client ArangoBackupClient) error {
+func (h *handler) finalizeBackupAction(backup *backupApi.ArangoBackup, client ArangoBackupClient) error {
 	if backup.Status.Progress == nil {
 		return nil
 	}
@@ -132,16 +132,16 @@ func (h *handler) finalizeBackupAction(backup *database.ArangoBackup, client Ara
 	return nil
 }
 
-func hasFinalizers(backup *database.ArangoBackup) bool {
+func hasFinalizers(backup *backupApi.ArangoBackup) bool {
 	if backup.Finalizers == nil {
 		return false
 	}
 
-	if len(database.FinalizersArangoBackup) > len(backup.Finalizers) {
+	if len(backupApi.FinalizersArangoBackup) > len(backup.Finalizers) {
 		return false
 	}
 
-	for _, finalizer := range database.FinalizersArangoBackup {
+	for _, finalizer := range backupApi.FinalizersArangoBackup {
 		if !hasFinalizer(backup, finalizer) {
 			return false
 		}
@@ -150,12 +150,12 @@ func hasFinalizers(backup *database.ArangoBackup) bool {
 	return true
 }
 
-func hasFinalizer(backup *database.ArangoBackup, finalizer string) bool {
-	if backup.Finalizers == nil {
+func hasFinalizer(backup *backupApi.ArangoBackup, finalizer string) bool {
+	if backupApi.FinalizersArangoBackup == nil {
 		return false
 	}
 
-	for _, existingFinalizer := range backup.Finalizers {
+	for _, existingFinalizer := range backupApi.FinalizersArangoBackup {
 		if finalizer == existingFinalizer {
 			return true
 		}
@@ -164,18 +164,18 @@ func hasFinalizer(backup *database.ArangoBackup, finalizer string) bool {
 	return false
 }
 
-func appendFinalizers(backup *database.ArangoBackup) []string {
+func appendFinalizers(backup *backupApi.ArangoBackup) []string {
 	if backup.Finalizers == nil {
-		return database.FinalizersArangoBackup
+		return backupApi.FinalizersArangoBackup
 	}
 
 	if len(backup.Finalizers) == 0 {
-		return database.FinalizersArangoBackup
+		return backupApi.FinalizersArangoBackup
 	}
 
 	old := backup.Finalizers
 
-	for _, finalizer := range database.FinalizersArangoBackup {
+	for _, finalizer := range backupApi.FinalizersArangoBackup {
 		if !hasFinalizer(backup, finalizer) {
 			old = append(old, finalizer)
 		}

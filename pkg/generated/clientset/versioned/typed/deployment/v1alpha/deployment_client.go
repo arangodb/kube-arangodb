@@ -31,22 +31,12 @@ import (
 
 type DatabaseV1alphaInterface interface {
 	RESTClient() rest.Interface
-	ArangoBackupsGetter
-	ArangoBackupPoliciesGetter
 	ArangoDeploymentsGetter
 }
 
 // DatabaseV1alphaClient is used to interact with features provided by the database.arangodb.com group.
 type DatabaseV1alphaClient struct {
 	restClient rest.Interface
-}
-
-func (c *DatabaseV1alphaClient) ArangoBackups(namespace string) ArangoBackupInterface {
-	return newArangoBackups(c, namespace)
-}
-
-func (c *DatabaseV1alphaClient) ArangoBackupPolicies(namespace string) ArangoBackupPolicyInterface {
-	return newArangoBackupPolicies(c, namespace)
 }
 
 func (c *DatabaseV1alphaClient) ArangoDeployments(namespace string) ArangoDeploymentInterface {

@@ -33,6 +33,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
@@ -47,10 +48,10 @@ import (
 
 var backupAPIAvailable *bool
 
-func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*api.ArangoBackup, error) error, timeout ...time.Duration) (*api.ArangoBackup, error) {
-	var result *api.ArangoBackup
+func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*backupApi.ArangoBackup, error) error, timeout ...time.Duration) (*backupApi.ArangoBackup, error) {
+	var result *backupApi.ArangoBackup
 	op := func() error {
-		obj, err := ci.DatabaseV1alpha().ArangoBackups(ns).Get(name, metav1.GetOptions{})
+		obj, err := ci.BackupV1alpha().ArangoBackups(ns).Get(name, metav1.GetOptions{})
 		result = obj
 		if predicate != nil {
 			if err := predicate(obj, err); err != nil {
@@ -69,19 +70,19 @@ func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*ap
 	return result, nil
 }
 
-func backupIsReady(backup *api.ArangoBackup, err error) error {
+func backupIsReady(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		return err
 	}
 
-	if backup.Status.State == api.ArangoBackupStateReady {
+	if backup.Status.State == backupApi.ArangoBackupStateReady {
 		return nil
 	}
 
 	return fmt.Errorf("Backup not ready - status: %s", backup.Status.State)
 }
 
-func backupIsUploaded(backup *api.ArangoBackup, err error) error {
+func backupIsUploaded(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func backupIsUploaded(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup not ready - status: %s", backup.Status.State)
 }
 
-func backupIsNotUploaded(backup *api.ArangoBackup, err error) error {
+func backupIsNotUploaded(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func backupIsNotUploaded(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup not ready - status: %s", backup.Status.State)
 }
 
-func backupIsAvailable(backup *api.ArangoBackup, err error) error {
+func backupIsAvailable(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func backupIsAvailable(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup not available - status: %s", backup.Status.State)
 }
 
-func backupIsNotAvailable(backup *api.ArangoBackup, err error) error {
+func backupIsNotAvailable(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func backupIsNotAvailable(backup *api.ArangoBackup, err error) error {
 	return fmt.Errorf("Backup is still available - status: %s", backup.Status.State)
 }
 
-func backupIsNotFound(backup *api.ArangoBackup, err error) error {
+func backupIsNotFound(backup *backupApi.ArangoBackup, err error) error {
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -141,21 +142,21 @@ func backupIsNotFound(backup *api.ArangoBackup, err error) error {
 }
 
 type EnsureBackupOptions struct {
-	Options  *api.ArangoBackupSpecOptions
-	Download *api.ArangoBackupSpecDownload
-	Upload   *api.ArangoBackupSpecOperation
+	Options  *backupApi.ArangoBackupSpecOptions
+	Download *backupApi.ArangoBackupSpecDownload
+	Upload   *backupApi.ArangoBackupSpecOperation
 }
 
-func newBackup(name, deployment string, options *EnsureBackupOptions) *api.ArangoBackup {
-	backup := &api.ArangoBackup{
+func newBackup(name, deployment string, options *EnsureBackupOptions) *backupApi.ArangoBackup {
+	backup := &backupApi.ArangoBackup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
 			Finalizers: []string{
-				api.FinalizerArangoBackup,
+				backupApi.FinalizerArangoBackup,
 			},
 		},
-		Spec: api.ArangoBackupSpec{
-			Deployment: api.ArangoBackupSpecDeployment{
+		Spec: backupApi.ArangoBackupSpec{
+			Deployment: backupApi.ArangoBackupSpecDeployment{
 				Name: deployment,
 			},
 		},
@@ -170,13 +171,13 @@ func newBackup(name, deployment string, options *EnsureBackupOptions) *api.Arang
 	return backup
 }
 
-func newBackupPolicy(name, schedule string, labels map[string]string, options *EnsureBackupOptions) *api.ArangoBackupPolicy {
-	policy := &api.ArangoBackupPolicy{
+func newBackupPolicy(name, schedule string, labels map[string]string, options *EnsureBackupOptions) *backupApi.ArangoBackupPolicy {
+	policy := &backupApi.ArangoBackupPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   strings.ToLower(name),
 			Labels: labels,
 		},
-		Spec: api.ArangoBackupPolicySpec{
+		Spec: backupApi.ArangoBackupPolicySpec{
 			DeploymentSelector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -219,9 +220,9 @@ func statBackupMeta(client driver.Client, backupID driver.BackupID) (bool, drive
 	return false, driver.BackupMeta{}, fmt.Errorf("List does not contain backup")
 }
 
-func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*api.ArangoBackup, error) error, options *EnsureBackupOptions) (*api.ArangoBackup, string, driver.BackupID) {
+func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*backupApi.ArangoBackup, error) error, options *EnsureBackupOptions) (*backupApi.ArangoBackup, string, driver.BackupID) {
 	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment, options)
-	_, err := deploymentClient.DatabaseV1alpha().ArangoBackups(ns).Create(backup)
+	_, err := deploymentClient.BackupV1alpha().ArangoBackups(ns).Create(backup)
 	assert.NoError(t, err, "failed to create backup: %s", err)
 	name := backup.GetName()
 
@@ -242,16 +243,16 @@ func skipOrRemotePath(t *testing.T) (repoPath string) {
 	return repoPath
 }
 
-func newOperation() *api.ArangoBackupSpecOperation {
-	return &api.ArangoBackupSpecOperation{
+func newOperation() *backupApi.ArangoBackupSpecOperation {
+	return &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
 		CredentialsSecretName: testBackupRemoteSecretName,
 	}
 }
 
-func newDownload(ID string) *api.ArangoBackupSpecDownload {
-	return &api.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: api.ArangoBackupSpecOperation{
+func newDownload(ID string) *backupApi.ArangoBackupSpecDownload {
+	return &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL:         os.Getenv("TEST_REMOTE_REPOSITORY"),
 			CredentialsSecretName: testBackupRemoteSecretName,
 		},
@@ -266,8 +267,8 @@ func TestBackupCluster(t *testing.T) {
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 	ns := getNamespace(t)
 
-	backupPolicyClient := deploymentClient.DatabaseV1alpha().ArangoBackupPolicies(ns)
-	backupClient := deploymentClient.DatabaseV1alpha().ArangoBackups(ns)
+	backupPolicyClient := deploymentClient.BackupV1alpha().ArangoBackupPolicies(ns)
+	backupClient := deploymentClient.BackupV1alpha().ArangoBackups(ns)
 
 	// Prepare deployment config
 	deplLabels := map[string]string{
@@ -329,11 +330,11 @@ func TestBackupCluster(t *testing.T) {
 	t.Run("create backup", func(t *testing.T) {
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		_, err := backupClient.Create(backup)
-		assert.NoError(t, err, "failed to create backup: %s", err)
+		require.NoError(t, err, "failed to create backup: %s", err)
 		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
 
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
-		assert.NoError(t, err, "backup did not become available: %s", err)
+		require.NoError(t, err, "backup did not become available: %s", err)
 		backupID := backup.Status.Backup.ID
 
 		// check that the backup is actually available
@@ -414,7 +415,7 @@ func TestBackupCluster(t *testing.T) {
 		// wait for the backup to become unavailable
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
 		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.Equal(t, api.ArangoBackupStateDeleted, backup.Status.State)
+		assert.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
 	})
 
 	t.Run("handle existing backups", func(t *testing.T) {
@@ -427,7 +428,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create a backup resource manually with that id
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
-		backup.Status.Backup = &api.ArangoBackupDetails{ID: string(id), Version: meta.Version}
+		backup.Status.Backup = &backupApi.ArangoBackupDetails{ID: string(id), Version: meta.Version}
 		_, err = backupClient.Create(backup)
 		assert.NoError(t, err, "failed to create backup: %s", err)
 		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
@@ -435,7 +436,7 @@ func TestBackupCluster(t *testing.T) {
 		// wait until the backup becomes available
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 		assert.NoError(t, err, "backup did not become available: %s", err)
-		assert.Equal(t, api.ArangoBackupStateReady, backup.Status.State)
+		assert.Equal(t, backupApi.ArangoBackupStateReady, backup.Status.State)
 	})
 
 	t.Run("create-restore-cycle", func(t *testing.T) {
@@ -773,7 +774,7 @@ func TestBackupCluster(t *testing.T) {
 		// wait for the backup to become unavailable
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
 		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.Equal(t, api.ArangoBackupStateDeleted, backup.Status.State)
+		assert.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
 
 		// now remove the backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})

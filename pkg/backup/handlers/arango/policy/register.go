@@ -23,6 +23,7 @@
 package policy
 
 import (
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
@@ -34,14 +35,14 @@ import (
 func newEventInstance(eventRecorder event.EventRecorder) event.EventRecorderInstance {
 	return eventRecorder.NewInstance(database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
-		database.ArangoBackupPolicyResourceKind)
+		backupApi.ArangoBackupPolicyResourceKind)
 }
 
 func RegisterInformer(operator operator.Operator, recorder event.EventRecorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Database().V1alpha().ArangoBackupPolicies().Informer(),
+	if err := operator.RegisterInformer(informer.Backup().V1alpha().ArangoBackupPolicies().Informer(),
 		database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
-		database.ArangoBackupPolicyResourceKind); err != nil {
+		backupApi.ArangoBackupPolicyResourceKind); err != nil {
 		return err
 	}
 

@@ -36,6 +36,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,12 +60,12 @@ type handler struct {
 }
 
 func (h *handler) Name() string {
-	return database.ArangoBackupResourceKind
+	return backupApi.ArangoBackupResourceKind
 }
 
 func (h *handler) Handle(item operation.Item) error {
 	// Get Backup object. It also cover NotFound case
-	backup, err := h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+	b, err := h.client.BackupV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil
@@ -74,13 +75,13 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Check if we should start finalizer
-	if backup.DeletionTimestamp != nil {
+	if b.DeletionTimestamp != nil {
 		log.Debug().Msgf("Finalizing %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)
 
-		return h.finalize(backup)
+		return h.finalize(b)
 	}
 
 	// Do not act on delete event, finalizer should be used
@@ -89,53 +90,53 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Add finalizers
-	if !hasFinalizers(backup) {
-		backup.Finalizers = appendFinalizers(backup)
+	if !hasFinalizers(b) {
+		b.Finalizers = appendFinalizers(b)
 		log.Info().Msgf("Updating finalizers %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)
 
-		if _, err = h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).Update(backup); err != nil {
+		if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).Update(b); err != nil {
 			return err
 		}
 
 		return nil
 	}
 
-	status, err := h.processArangoBackup(backup.DeepCopy())
+	status, err := h.processArangoBackup(b.DeepCopy())
 	if err != nil {
 		return err
 	}
 
 	// Nothing to update, objects are equal
-	if reflect.DeepEqual(backup.Status, status) {
+	if reflect.DeepEqual(b.Status, status) {
 		return nil
 	}
 
 	// Ensure that transit is possible
-	if err = database.ArangoBackupStateMap.Transit(backup.Status.State, status.State); err != nil {
+	if err = backupApi.ArangoBackupStateMap.Transit(b.Status.State, status.State); err != nil {
 		return err
 	}
 
 	// Log message about state change
-	if backup.Status.State != status.State {
-		if status.State == database.ArangoBackupStateFailed {
-			h.eventRecorder.Warning(backup, StateChange, "Transiting from %s to %s with error: %s",
-				backup.Status.State,
+	if b.Status.State != status.State {
+		if status.State == backupApi.ArangoBackupStateFailed {
+			h.eventRecorder.Warning(b, StateChange, "Transiting from %s to %s with error: %s",
+				b.Status.State,
 				status.State,
 				status.Message)
 		} else {
-			h.eventRecorder.Normal(backup, StateChange, "Transiting from %s to %s",
-				backup.Status.State,
+			h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s",
+				b.Status.State,
 				status.State)
 		}
 	} else {
 		// Keep old time in case when object did not change
-		status.Time = backup.Status.Time
+		status.Time = b.Status.Time
 	}
 
-	backup.Status = status
+	b.Status = status
 
 	log.Debug().Msgf("Updating %s %s/%s",
 		item.Kind,
@@ -143,20 +144,20 @@ func (h *handler) Handle(item operation.Item) error {
 		item.Name)
 
 	// Update status on object
-	if _, err = h.client.DatabaseV1alpha().ArangoBackups(item.Namespace).UpdateStatus(backup); err != nil {
+	if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).UpdateStatus(b); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *handler) processArangoBackup(backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	if err := backup.Validate(); err != nil {
 		return createFailedState(err, backup.Status), nil
 	}
 
 	if f, ok := stateHolders[backup.Status.State]; !ok {
-		return database.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
+		return backupApi.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
 	} else {
 		return f(h, backup)
 	}
@@ -165,10 +166,10 @@ func (h *handler) processArangoBackup(backup *database.ArangoBackup) (database.A
 func (h *handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == database.SchemeGroupVersion.Group &&
 		item.Version == database.SchemeGroupVersion.Version &&
-		item.Kind == database.ArangoBackupResourceKind
+		item.Kind == backupApi.ArangoBackupResourceKind
 }
 
-func (h *handler) getArangoDeploymentObject(backup *database.ArangoBackup) (*database.ArangoDeployment, error) {
+func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*database.ArangoDeployment, error) {
 	if backup.Spec.Deployment.Name == "" {
 		return nil, fmt.Errorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
 	}

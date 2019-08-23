@@ -23,22 +23,26 @@
 package fake
 
 import (
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeDatabaseV1alpha struct {
+type FakeBackupV1alpha struct {
 	*testing.Fake
 }
 
-func (c *FakeDatabaseV1alpha) ArangoDeployments(namespace string) v1alpha.ArangoDeploymentInterface {
-	return &FakeArangoDeployments{c, namespace}
+func (c *FakeBackupV1alpha) ArangoBackups(namespace string) v1alpha.ArangoBackupInterface {
+	return &FakeArangoBackups{c, namespace}
+}
+
+func (c *FakeBackupV1alpha) ArangoBackupPolicies(namespace string) v1alpha.ArangoBackupPolicyInterface {
+	return &FakeArangoBackupPolicies{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeDatabaseV1alpha) RESTClient() rest.Interface {
+func (c *FakeBackupV1alpha) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

@@ -28,19 +28,20 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_State_Pending_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStatePending)
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStatePending)
 }
 
 func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStatePending)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
 	deployment.Namespace = "non-existent"
 
 	// Act
@@ -51,16 +52,16 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
-	require.Equal(t, newObj.Status.Message, createFailMessage(database.ArangoBackupStatePending, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
+	require.Equal(t, newObj.Status.Message, createFailMessage(backupApi.ArangoBackupStatePending, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 }
 
 func Test_State_Pending_OneBackupObject(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStatePending)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -70,7 +71,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateScheduled)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateScheduled)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -79,8 +80,8 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStatePending)
-	obj2, _ := newObjectSet(database.ArangoBackupStatePending)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStatePending)
+	obj2, _ := newObjectSet(backupApi.ArangoBackupStatePending)
 	obj2.Namespace = obj.Namespace
 	obj2.Spec.Deployment.Name = deployment.Name
 
@@ -93,7 +94,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State, database.ArangoBackupStateScheduled)
+		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateScheduled)
 
 		require.False(t, newObj.Status.Available)
 	})
@@ -103,7 +104,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)
-		require.Equal(t, newObj.Status.State, database.ArangoBackupStatePending)
+		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStatePending)
 		require.Equal(t, newObj.Status.Message, "backup already in process")
 	})
 }

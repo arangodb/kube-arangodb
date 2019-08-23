@@ -22,8 +22,4 @@
 
 package v1alpha
 
-type ArangoBackupExpansion interface{}
-
-type ArangoBackupPolicyExpansion interface{}
-
 type ArangoDeploymentExpansion interface{}

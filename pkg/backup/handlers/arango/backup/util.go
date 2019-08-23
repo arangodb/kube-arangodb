@@ -27,13 +27,13 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 
-func switchTemporaryError(err error, status database.ArangoBackupStatus) (database.ArangoBackupStatus, error) {
+func switchTemporaryError(err error, status backupApi.ArangoBackupStatus) (backupApi.ArangoBackupStatus, error) {
 	if checkTemporaryError(err) {
-		return database.ArangoBackupStatus{}, err
+		return backupApi.ArangoBackupStatus{}, err
 	}
 
 	return createFailedState(err, status), nil
@@ -43,18 +43,18 @@ func createFailMessage(state state.State, message string) string {
 	return fmt.Sprintf("Failed State %s: %s", state, message)
 }
 
-func createFailedState(err error, status database.ArangoBackupStatus) database.ArangoBackupStatus {
+func createFailedState(err error, status backupApi.ArangoBackupStatus) backupApi.ArangoBackupStatus {
 	newStatus := status.DeepCopy()
 
-	newStatus.ArangoBackupState = newState(database.ArangoBackupStateFailed, createFailMessage(status.State, err.Error()), nil)
+	newStatus.ArangoBackupState = newState(backupApi.ArangoBackupStateFailed, createFailMessage(status.State, err.Error()), nil)
 
 	newStatus.Available = false
 
 	return *newStatus
 }
 
-func newState(state state.State, message string, progress *database.ArangoBackupProgress) database.ArangoBackupState {
-	return database.ArangoBackupState{
+func newState(state state.State, message string, progress *backupApi.ArangoBackupProgress) backupApi.ArangoBackupState {
+	return backupApi.ArangoBackupState{
 		State: state,
 		Time:  meta.Now(),
 

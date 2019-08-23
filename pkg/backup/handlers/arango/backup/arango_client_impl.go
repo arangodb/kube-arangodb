@@ -26,8 +26,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/arangodb/go-driver"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -37,13 +39,13 @@ import (
 
 type arangoClientBackupImpl struct {
 	deployment *database.ArangoDeployment
-	backup     *database.ArangoBackup
+	backup     *backupApi.ArangoBackup
 	driver     driver.Client
 	kubecli    kubernetes.Interface
 }
 
 func newArangoClientBackupFactory(handler *handler) ArangoClientFactory {
-	return func(deployment *database.ArangoDeployment, backup *database.ArangoBackup) (ArangoBackupClient, error) {
+	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
 		ctx := context.Background()
 		client, err := arangod.CreateArangodDatabaseClient(ctx, handler.kubeClient.CoreV1(), deployment, false)
 		if err != nil {
@@ -71,10 +73,18 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
 	defer cancel()
 
-	id, resp, err := ac.driver.Backup().Create(ctx, &driver.BackupCreateOptions{
-		// Force: false,	// TODO
-		// Timeout: ,
-	})
+	co := driver.BackupCreateOptions{}
+
+	if opt := ac.backup.Spec.Options; opt != nil {
+		if force := opt.Force; force != nil {
+			co.Force = *force
+		}
+		if timeout := opt.Timeout; timeout != nil {
+			co.Timeout = time.Duration(*timeout * float32(time.Second))
+		}
+	}
+
+	id, resp, err := ac.driver.Backup().Create(ctx, &co)
 	if err != nil {
 		return ArangoBackupCreateResponse{}, err
 	}

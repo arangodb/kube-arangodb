@@ -27,22 +27,22 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_State_Scheduled_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStateScheduled)
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateScheduled)
 }
 
 func Test_State_Scheduled_Download(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateScheduled)
 
-	obj.Spec.Download = &database.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "Some URL",
 		},
 		ID: "id",
@@ -56,7 +56,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDownload)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateDownload)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -65,7 +65,7 @@ func Test_State_Scheduled_Create(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateScheduled)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -75,7 +75,7 @@ func Test_State_Scheduled_Create(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreate)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -84,9 +84,9 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateScheduled)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateScheduled)
 
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "test",
 	}
 
@@ -98,7 +98,7 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateCreate)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreate)
 
 	require.False(t, newObj.Status.Available)
 }

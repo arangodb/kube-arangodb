@@ -23,22 +23,22 @@
 package backup
 
 import (
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
 	notProgressStates = []state.State{
-		database.ArangoBackupStatePending,
-		database.ArangoBackupStateNone,
-		database.ArangoBackupStateFailed,
-		database.ArangoBackupStateDeleted,
-		database.ArangoBackupStateReady,
+		backupApi.ArangoBackupStatePending,
+		backupApi.ArangoBackupStateNone,
+		backupApi.ArangoBackupStateFailed,
+		backupApi.ArangoBackupStateDeleted,
+		backupApi.ArangoBackupStateReady,
 	}
 )
 
-func inProgress(backup *database.ArangoBackup) bool {
+func inProgress(backup *backupApi.ArangoBackup) bool {
 	for _, state := range notProgressStates {
 		if state == backup.Status.State {
 			return false
@@ -48,16 +48,16 @@ func inProgress(backup *database.ArangoBackup) bool {
 	return true
 }
 
-func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	_, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
 	}
 
 	// Ensure that only specified number of processes are running
-	backups, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
+	backups, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
 	if err != nil {
-		return database.ArangoBackupStatus{}, err
+		return backupApi.ArangoBackupStatus{}, err
 	}
 
 	count := 0
@@ -78,12 +78,12 @@ func statePendingHandler(h *handler, backup *database.ArangoBackup) (database.Ar
 	}
 
 	if count >= 1 {
-		return database.ArangoBackupStatus{
-			ArangoBackupState: newState(database.ArangoBackupStatePending, "backup already in process", nil),
+		return backupApi.ArangoBackupStatus{
+			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "backup already in process", nil),
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
-		ArangoBackupState: newState(database.ArangoBackupStateScheduled, "", nil),
+	return backupApi.ArangoBackupStatus{
+		ArangoBackupState: newState(backupApi.ArangoBackupStateScheduled, "", nil),
 	}, nil
 }

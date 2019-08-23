@@ -31,6 +31,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/require"
@@ -55,7 +56,7 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
 		Group:   database.SchemeGroupVersion.Group,
 		Version: database.SchemeGroupVersion.Version,
-		Kind:    database.ArangoBackupPolicyResourceKind,
+		Kind:    backupApi.ArangoBackupPolicyResourceKind,
 
 		Operation: o,
 
@@ -64,27 +65,27 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	}
 }
 
-func newItemFromBackupPolicy(operation operation.Operation, policy *database.ArangoBackupPolicy) operation.Item {
+func newItemFromBackupPolicy(operation operation.Operation, policy *backupApi.ArangoBackupPolicy) operation.Item {
 	return newItem(operation, policy.Namespace, policy.Name)
 }
 
-func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template database.ArangoBackupTemplate) *database.ArangoBackupPolicy {
-	return &database.ArangoBackupPolicy{
+func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template backupApi.ArangoBackupTemplate) *backupApi.ArangoBackupPolicy {
+	return &backupApi.ArangoBackupPolicy{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: database.SchemeGroupVersion.String(),
-			Kind:       database.ArangoBackupPolicyResourceKind,
+			Kind:       backupApi.ArangoBackupPolicyResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
 				database.SchemeGroupVersion.String(),
-				database.ArangoBackupPolicyResourcePlural,
+				backupApi.ArangoBackupPolicyResourcePlural,
 				namespace,
 				name),
 			UID: uuid.NewUUID(),
 		},
-		Spec: database.ArangoBackupPolicySpec{
+		Spec: backupApi.ArangoBackupPolicySpec{
 			Schedule: schedule,
 			DeploymentSelector: &meta.LabelSelector{
 				MatchLabels: selector,
@@ -94,16 +95,16 @@ func newArangoBackupPolicy(schedule, namespace, name string, selector map[string
 	}
 }
 
-func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *database.ArangoBackupPolicy) *database.ArangoBackupPolicy {
-	newPolicy, err := h.client.DatabaseV1alpha().ArangoBackupPolicies(policy.Namespace).Get(policy.Name, meta.GetOptions{})
+func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *backupApi.ArangoBackupPolicy) *backupApi.ArangoBackupPolicy {
+	newPolicy, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Get(policy.Name, meta.GetOptions{})
 	require.NoError(t, err)
 
 	return newPolicy
 }
 
-func createArangoBackupPolicy(t *testing.T, h *handler, policies ...*database.ArangoBackupPolicy) {
+func createArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
 	for _, policy := range policies {
-		_, err := h.client.DatabaseV1alpha().ArangoBackupPolicies(policy.Namespace).Create(policy)
+		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Create(policy)
 		require.NoError(t, err)
 	}
 }
@@ -136,14 +137,14 @@ func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.A
 	}
 }
 
-func listArangoBackups(t *testing.T, handler *handler, namespace string) []database.ArangoBackup {
-	result, err := handler.client.DatabaseV1alpha().ArangoBackups(namespace).List(meta.ListOptions{})
+func listArangoBackups(t *testing.T, handler *handler, namespace string) []backupApi.ArangoBackup {
+	result, err := handler.client.BackupV1alpha().ArangoBackups(namespace).List(meta.ListOptions{})
 	require.NoError(t, err)
 
 	return result.Items
 }
 
-func isInList(t *testing.T, backups []database.ArangoBackup, deployment *database.ArangoDeployment) {
+func isInList(t *testing.T, backups []backupApi.ArangoBackup, deployment *database.ArangoDeployment) {
 	for _, backup := range backups {
 		if backup.Spec.Deployment.Name == deployment.Name {
 			return

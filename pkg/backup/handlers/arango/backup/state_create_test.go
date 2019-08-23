@@ -27,20 +27,20 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_State_Create_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStateCreate)
-	wrapperConnectionIssues(t, database.ArangoBackupStateCreate)
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateCreate)
+	wrapperConnectionIssues(t, backupApi.ArangoBackupStateCreate)
 }
 
 func Test_State_Create_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -50,7 +50,7 @@ func Test_State_Create_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
 
 	require.NotNil(t, newObj.Status.Backup)
 
@@ -68,7 +68,7 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 	mock.errors.createForced = true
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -78,7 +78,7 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
 
 	require.NotNil(t, newObj.Status.Backup)
 
@@ -97,8 +97,8 @@ func Test_State_Create_Upload(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "test",
 	}
 
@@ -110,7 +110,7 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
 
 	require.NotNil(t, newObj.Status.Backup)
 
@@ -130,7 +130,7 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 		createError: errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -140,8 +140,8 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.Message, createFailMessage(database.ArangoBackupStateCreate, errorMsg))
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.Message, createFailMessage(backupApi.ArangoBackupStateCreate, errorMsg))
 
 	require.Nil(t, newObj.Status.Backup)
 
@@ -156,7 +156,7 @@ func Test_State_Create_TemporaryCreateFailed(t *testing.T) {
 		createError:      errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateCreate)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
 
 	// Act
 	createArangoDeployment(t, handler, deployment)

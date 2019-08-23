@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/rs/zerolog"
 )
 
@@ -42,7 +43,7 @@ type Context interface {
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetBackup receives information about a backup resource
-	GetBackup(backup string) (*api.ArangoBackup, error)
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }
 
 type BackupHandler struct {

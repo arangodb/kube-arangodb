@@ -25,7 +25,7 @@ package backup
 import (
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,10 +44,10 @@ func (h *handler) LifecyclePreStart() error {
 	}()
 
 	for {
-		_, err := h.client.DatabaseV1alpha().ArangoBackups("test").List(meta.ListOptions{})
+		_, err := h.client.BackupV1alpha().ArangoBackups("test").List(meta.ListOptions{})
 
 		if err != nil {
-			klog.Warningf("CR for %s not found: %s", v1alpha.ArangoBackupResourceKind, err.Error())
+			klog.Warningf("CR for %s not found: %s", backupApi.ArangoBackupResourceKind, err.Error())
 
 			time.Sleep(250 * time.Millisecond)
 			continue

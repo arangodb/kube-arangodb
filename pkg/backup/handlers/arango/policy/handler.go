@@ -33,6 +33,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/robfig/cron"
@@ -52,7 +53,7 @@ type handler struct {
 }
 
 func (*handler) Name() string {
-	return database.ArangoBackupPolicyResourceKind
+	return backupApi.ArangoBackupPolicyResourceKind
 }
 
 func (h *handler) Handle(item operation.Item) error {
@@ -62,7 +63,7 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Get Backup object. It also cover NotFound case
-	policy, err := h.client.DatabaseV1alpha().ArangoBackupPolicies(item.Namespace).Get(item.Name, meta.GetOptions{})
+	policy, err := h.client.BackupV1alpha().ArangoBackupPolicies(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -80,18 +81,18 @@ func (h *handler) Handle(item operation.Item) error {
 	policy.Status = status
 
 	// Update status on object
-	if _, err = h.client.DatabaseV1alpha().ArangoBackupPolicies(item.Namespace).UpdateStatus(policy); err != nil {
+	if _, err = h.client.BackupV1alpha().ArangoBackupPolicies(item.Namespace).UpdateStatus(policy); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (database.ArangoBackupPolicyStatus, error) {
+func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (backupApi.ArangoBackupPolicyStatus, error) {
 	if err := policy.Validate(); err != nil {
 		h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
 
-		return database.ArangoBackupPolicyStatus{
+		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("Validation error: %s", err.Error()),
 		}, nil
 	}
@@ -101,14 +102,14 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 		if err != nil {
 			h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
 
-			return database.ArangoBackupPolicyStatus{
+			return backupApi.ArangoBackupPolicyStatus{
 				Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
 			}, nil
 		}
 
 		next := expr.Next(time.Now())
 
-		return database.ArangoBackupPolicyStatus{
+		return backupApi.ArangoBackupPolicyStatus{
 			Scheduled: meta.Time{
 				Time: next,
 			},
@@ -135,30 +136,30 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 	if err != nil {
 		h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
 
-		return database.ArangoBackupPolicyStatus{
+		return backupApi.ArangoBackupPolicyStatus{
 			Scheduled: policy.Status.Scheduled,
 			Message:   fmt.Sprintf("deployments listing failed: %s", err.Error()),
 		}, nil
 	}
 
 	for _, deployment := range deployments.Items {
-		backup := policy.NewBackup(deployment.DeepCopy())
+		b := policy.NewBackup(deployment.DeepCopy())
 
-		if _, err := h.client.DatabaseV1alpha().ArangoBackups(backup.Namespace).Create(backup); err != nil {
+		if _, err := h.client.BackupV1alpha().ArangoBackups(b.Namespace).Create(b); err != nil {
 			h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
 
-			return database.ArangoBackupPolicyStatus{
+			return backupApi.ArangoBackupPolicyStatus{
 				Scheduled: policy.Status.Scheduled,
 				Message:   fmt.Sprintf("backup creation failed: %s", err.Error()),
 			}, nil
 		}
 
-		h.eventRecorder.Normal(policy, BackupCreated, "Created ArangoBackup: %s/%s", backup.Namespace, backup.Name)
+		h.eventRecorder.Normal(policy, BackupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
 	}
 
 	expr, err := cron.Parse(policy.Spec.Schedule)
 	if err != nil {
-		return database.ArangoBackupPolicyStatus{
+		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
 		}, nil
 	}
@@ -167,7 +168,7 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 
 	h.eventRecorder.Normal(policy, Rescheduled, "Rescheduled for: %s", next.String())
 
-	return database.ArangoBackupPolicyStatus{
+	return backupApi.ArangoBackupPolicyStatus{
 		Scheduled: meta.Time{
 			Time: next,
 		},
@@ -177,5 +178,5 @@ func (h *handler) processBackupPolicy(policy *database.ArangoBackupPolicy) (data
 func (*handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == database.SchemeGroupVersion.Group &&
 		item.Version == database.SchemeGroupVersion.Version &&
-		item.Kind == database.ArangoBackupPolicyResourceKind
+		item.Kind == backupApi.ArangoBackupPolicyResourceKind
 }

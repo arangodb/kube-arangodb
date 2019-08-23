@@ -59,8 +59,8 @@ func Test_Event_Handler(t *testing.T) {
 		},
 	}
 
-	cases := map[string]func(object meta.Object, reason, format string, a ...interface{}) {
-		core.EventTypeNormal: instance.Normal,
+	cases := map[string]func(object meta.Object, reason, format string, a ...interface{}){
+		core.EventTypeNormal:  instance.Normal,
 		core.EventTypeWarning: instance.Warning,
 	}
 

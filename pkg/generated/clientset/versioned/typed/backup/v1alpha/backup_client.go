@@ -23,28 +23,33 @@
 package v1alpha
 
 import (
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type DatabaseV1alphaInterface interface {
+type BackupV1alphaInterface interface {
 	RESTClient() rest.Interface
-	ArangoDeploymentsGetter
+	ArangoBackupsGetter
+	ArangoBackupPoliciesGetter
 }
 
-// DatabaseV1alphaClient is used to interact with features provided by the database.arangodb.com group.
-type DatabaseV1alphaClient struct {
+// BackupV1alphaClient is used to interact with features provided by the backup.arangodb.com group.
+type BackupV1alphaClient struct {
 	restClient rest.Interface
 }
 
-func (c *DatabaseV1alphaClient) ArangoDeployments(namespace string) ArangoDeploymentInterface {
-	return newArangoDeployments(c, namespace)
+func (c *BackupV1alphaClient) ArangoBackups(namespace string) ArangoBackupInterface {
+	return newArangoBackups(c, namespace)
 }
 
-// NewForConfig creates a new DatabaseV1alphaClient for the given config.
-func NewForConfig(c *rest.Config) (*DatabaseV1alphaClient, error) {
+func (c *BackupV1alphaClient) ArangoBackupPolicies(namespace string) ArangoBackupPolicyInterface {
+	return newArangoBackupPolicies(c, namespace)
+}
+
+// NewForConfig creates a new BackupV1alphaClient for the given config.
+func NewForConfig(c *rest.Config) (*BackupV1alphaClient, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -53,12 +58,12 @@ func NewForConfig(c *rest.Config) (*DatabaseV1alphaClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &DatabaseV1alphaClient{client}, nil
+	return &BackupV1alphaClient{client}, nil
 }
 
-// NewForConfigOrDie creates a new DatabaseV1alphaClient for the given config and
+// NewForConfigOrDie creates a new BackupV1alphaClient for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *DatabaseV1alphaClient {
+func NewForConfigOrDie(c *rest.Config) *BackupV1alphaClient {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -66,9 +71,9 @@ func NewForConfigOrDie(c *rest.Config) *DatabaseV1alphaClient {
 	return client
 }
 
-// New creates a new DatabaseV1alphaClient for the given RESTClient.
-func New(c rest.Interface) *DatabaseV1alphaClient {
-	return &DatabaseV1alphaClient{c}
+// New creates a new BackupV1alphaClient for the given RESTClient.
+func New(c rest.Interface) *BackupV1alphaClient {
+	return &BackupV1alphaClient{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -86,7 +91,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *DatabaseV1alphaClient) RESTClient() rest.Interface {
+func (c *BackupV1alphaClient) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

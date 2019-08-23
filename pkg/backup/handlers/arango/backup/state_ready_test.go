@@ -27,26 +27,26 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Ready_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStateReady)
-	wrapperConnectionIssues(t, database.ArangoBackupStateReady)
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateReady)
+	wrapperConnectionIssues(t, backupApi.ArangoBackupStateReady)
 }
 
 func Test_State_Ready_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -72,12 +72,12 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 		getError: errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -92,7 +92,7 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateDeleted, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateDeleted, newObj.Status.State)
 	require.False(t, newObj.Status.Available)
 }
 
@@ -104,12 +104,12 @@ func Test_State_Ready_TemporaryGetFailed(t *testing.T) {
 		getError:         errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -130,15 +130,15 @@ func Test_State_Ready_Upload(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "Any",
 	}
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -153,7 +153,7 @@ func Test_State_Ready_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateUpload, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateUpload, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 }
 
@@ -161,9 +161,9 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
-	obj.Spec.Download = &database.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "any",
 		},
 		ID: "some",
@@ -172,7 +172,7 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -187,7 +187,7 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateReady, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 }
 
@@ -195,8 +195,8 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "Any",
 	}
 
@@ -205,7 +205,7 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -221,7 +221,7 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateUpload, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateUpload, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 }
 
@@ -229,8 +229,8 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "Any",
 	}
 
@@ -239,7 +239,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -255,7 +255,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateReady, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 }
 
@@ -263,14 +263,14 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateReady)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -286,7 +286,7 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, database.ArangoBackupStateReady, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 	require.Nil(t, newObj.Status.Backup.Uploaded)
 }

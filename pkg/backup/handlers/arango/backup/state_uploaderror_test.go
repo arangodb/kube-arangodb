@@ -30,7 +30,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,9 +38,9 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
 
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "S3 URL",
 	}
 
@@ -49,7 +49,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -66,7 +66,7 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateUpload)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateUpload)
 
 	require.True(t, newObj.Status.Available)
 
@@ -77,9 +77,9 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 func Test_State_UploadError_Wait(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
 
-	obj.Spec.Upload = &database.ArangoBackupSpecOperation{
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
 		RepositoryURL: "S3 URL",
 	}
 
@@ -88,7 +88,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -106,7 +106,7 @@ func Test_State_UploadError_Wait(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateUploadError)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateUploadError)
 
 	require.True(t, newObj.Status.Available)
 	require.Equal(t, "message", newObj.Status.Message)
@@ -118,14 +118,14 @@ func Test_State_UploadError_Wait(t *testing.T) {
 func Test_State_UploadError_BackToReady(t *testing.T) {
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateUploadError)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploadError)
 
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
 	trueVar := true
 
-	obj.Status.Backup = &database.ArangoBackupDetails{
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
@@ -142,7 +142,7 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateReady)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
 
 	require.True(t, newObj.Status.Available)
 

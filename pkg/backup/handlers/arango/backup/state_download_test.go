@@ -25,24 +25,24 @@ package backup
 import (
 	"testing"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_State_Download_Common(t *testing.T) {
-	wrapperUndefinedDeployment(t, database.ArangoBackupStateDownload)
-	wrapperConnectionIssues(t, database.ArangoBackupStateDownload)
+	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateDownload)
+	wrapperConnectionIssues(t, backupApi.ArangoBackupStateDownload)
 }
 
 func Test_State_Download_Success(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownload)
 
-	obj.Spec.Download = &database.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
 		ID: "test",
@@ -56,7 +56,7 @@ func Test_State_Download_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateDownloading)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateDownloading)
 
 	require.NotNil(t, newObj.Status.Progress)
 	progresses := mock.getProgressIDs()
@@ -76,10 +76,10 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 		downloadError: errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownload)
 
-	obj.Spec.Download = &database.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
 		ID: "test",
@@ -93,7 +93,7 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStateFailed)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
 	require.Nil(t, newObj.Status.Progress)
 	progresses := mock.getProgressIDs()
@@ -112,10 +112,10 @@ func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 		downloadError:    errorMsg,
 	})
 
-	obj, deployment := newObjectSet(database.ArangoBackupStateDownload)
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownload)
 
-	obj.Spec.Download = &database.ArangoBackupSpecDownload{
-		ArangoBackupSpecOperation: database.ArangoBackupSpecOperation{
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
 		ID: "test",

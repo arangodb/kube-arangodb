@@ -26,10 +26,10 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
@@ -37,7 +37,7 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
 	if backup.Status.Backup == nil {
@@ -50,9 +50,9 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 			return switchTemporaryError(err, backup.Status)
 		}
 		// Go into deleted state
-		return database.ArangoBackupStatus{
-			ArangoBackupState: database.ArangoBackupState{
-				State: database.ArangoBackupStateDeleted,
+		return backupApi.ArangoBackupStatus{
+			ArangoBackupState: backupApi.ArangoBackupState{
+				State: backupApi.ArangoBackupStateDeleted,
 			},
 			Backup: backup.Status.Backup,
 		}, nil
@@ -60,9 +60,9 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 
 	// Check if upload flag was specified later in runtime
 	if backup.Spec.Upload != nil && backup.Status.Backup.Uploaded == nil {
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateUpload, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateUpload, "", nil),
 			Backup:            backup.Status.Backup,
 		}, nil
 	}
@@ -71,16 +71,16 @@ func stateReadyHandler(h *handler, backup *database.ArangoBackup) (database.Aran
 	if backup.Spec.Upload == nil && backup.Status.Backup.Uploaded != nil {
 		newBackup := backup.Status.Backup.DeepCopy()
 		newBackup.Uploaded = nil
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 			Backup:            newBackup,
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available:         true,
-		ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+		ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 		Backup:            backup.Status.Backup,
 	}, nil
 }

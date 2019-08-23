@@ -22,22 +22,6 @@
 
 package v1alpha
 
-// ArangoBackupListerExpansion allows custom methods to be added to
-// ArangoBackupLister.
-type ArangoBackupListerExpansion interface{}
-
-// ArangoBackupNamespaceListerExpansion allows custom methods to be added to
-// ArangoBackupNamespaceLister.
-type ArangoBackupNamespaceListerExpansion interface{}
-
-// ArangoBackupPolicyListerExpansion allows custom methods to be added to
-// ArangoBackupPolicyLister.
-type ArangoBackupPolicyListerExpansion interface{}
-
-// ArangoBackupPolicyNamespaceListerExpansion allows custom methods to be added to
-// ArangoBackupPolicyNamespaceLister.
-type ArangoBackupPolicyNamespaceListerExpansion interface{}
-
 // ArangoDeploymentListerExpansion allows custom methods to be added to
 // ArangoDeploymentLister.
 type ArangoDeploymentListerExpansion interface{}

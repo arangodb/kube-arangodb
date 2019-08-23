@@ -7,7 +7,7 @@ kind: ClusterRole
 metadata:
   name: {{ .Backup.User.RoleName }}
 rules:
-- apiGroups: ["database.arangodb.com"]
+- apiGroups: ["backup.arangodb.com"]
   resources: ["arangobackuppolicies", "arangobackups"]
   verbs: ["*"]
 
@@ -19,7 +19,7 @@ kind: ClusterRole
 metadata:
   name: {{ .Backup.Operator.RoleName }}
 rules:
-- apiGroups: ["database.arangodb.com"]
+- apiGroups: ["backup.arangodb.com"]
   resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status"]
   verbs: ["*"]
 

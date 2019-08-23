@@ -10,7 +10,7 @@ a `CustomResourceDefinition` created by the operator.
 
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
@@ -26,7 +26,7 @@ Create an ArangoBackup object for each ArangoBackup every 15 seconds
 
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
@@ -45,7 +45,7 @@ Create an ArangoBackup object for selected ArangoBackup every 15 seconds
 
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
@@ -62,7 +62,7 @@ Create an ArangoBackup object for each ArangoBackup every 15 seconds and upload 
 ## ArangoBackup Custom Resource Spec:
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"

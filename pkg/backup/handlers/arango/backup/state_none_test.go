@@ -25,7 +25,7 @@ package backup
 import (
 	"testing"
 
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +34,7 @@ func Test_State_None_Success(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	obj, _ := newObjectSet(database.ArangoBackupStateNone)
+	obj, _ := newObjectSet(backupApi.ArangoBackupStateNone)
 
 	// Act
 	createArangoBackup(t, handler, obj)
@@ -42,7 +42,7 @@ func Test_State_None_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, database.ArangoBackupStatePending)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStatePending)
 
 	require.False(t, newObj.Status.Available)
 }

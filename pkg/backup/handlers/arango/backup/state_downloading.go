@@ -28,10 +28,10 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
@@ -39,7 +39,7 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
 	if backup.Status.Progress == nil {
@@ -60,9 +60,9 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 	}
 
 	if details.Failed {
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available: false,
-			ArangoBackupState: newState(database.ArangoBackupStateDownloadError,
+			ArangoBackupState: newState(backupApi.ArangoBackupStateDownloadError,
 				fmt.Sprintf("Download failed with error: %s", details.FailMessage), nil),
 		}, nil
 	}
@@ -75,10 +75,10 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 
 		trueVar := true
 
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
-			Backup: &database.ArangoBackupDetails{
+			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
+			Backup: &backupApi.ArangoBackupDetails{
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
 				CreationTimestamp: meta.Now(),
@@ -87,10 +87,10 @@ func stateDownloadingHandler(h *handler, backup *database.ArangoBackup) (databas
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available: false,
-		ArangoBackupState: newState(database.ArangoBackupStateDownloading, "",
-			&database.ArangoBackupProgress{
+		ArangoBackupState: newState(backupApi.ArangoBackupStateDownloading, "",
+			&backupApi.ArangoBackupProgress{
 				JobID:    backup.Status.Progress.JobID,
 				Progress: fmt.Sprintf("%d%%", details.Progress),
 			}),

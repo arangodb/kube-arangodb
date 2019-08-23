@@ -29,11 +29,15 @@ import (
 )
 
 const (
-	ArangoDeploymentCRDName        = ArangoDeploymentResourcePlural + "." + groupName
-	ArangoDeploymentResourceKind   = "ArangoDeployment"
-	ArangoDeploymentResourcePlural = "arangodeployments"
+	ArangoBackupCRDName        = ArangoBackupResourcePlural + "." + groupName
+	ArangoBackupResourceKind   = "ArangoBackup"
+	ArangoBackupResourcePlural = "arangobackups"
 
-	groupName = "database.arangodb.com"
+	ArangoBackupPolicyCRDName        = ArangoBackupPolicyResourcePlural + "." + groupName
+	ArangoBackupPolicyResourceKind   = "ArangoBackupPolicy"
+	ArangoBackupPolicyResourcePlural = "arangobackuppolicies"
+
+	groupName = "backup.arangodb.com"
 )
 
 var (
@@ -42,7 +46,9 @@ var (
 
 	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
 
-	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
+	ArangoBackupShortNames = []string{"arangobackup"}
+
+	ArangoBackupPolicyShortNames = []string{"arangobackuppolicy"}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
@@ -53,8 +59,10 @@ func Resource(resource string) schema.GroupResource {
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
-		&ArangoDeployment{},
-		&ArangoDeploymentList{},
+		&ArangoBackup{},
+		&ArangoBackupList{},
+		&ArangoBackupPolicy{},
+		&ArangoBackupPolicyList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

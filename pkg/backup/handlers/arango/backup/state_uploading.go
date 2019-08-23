@@ -26,10 +26,10 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
@@ -37,7 +37,7 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
 	if backup.Status.Backup == nil {
@@ -54,9 +54,9 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 	}
 
 	if details.Failed {
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available: true,
-			ArangoBackupState: newState(database.ArangoBackupStateUploadError,
+			ArangoBackupState: newState(backupApi.ArangoBackupStateUploadError,
 				fmt.Sprintf("Upload failed with error: %s", details.FailMessage), nil),
 			Backup: backup.Status.Backup,
 		}, nil
@@ -69,17 +69,17 @@ func stateUploadingHandler(h *handler, backup *database.ArangoBackup) (database.
 
 		newDetails.Uploaded = &trueVar
 
-		return database.ArangoBackupStatus{
+		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(database.ArangoBackupStateReady, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 			Backup:            newDetails,
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available: true,
-		ArangoBackupState: newState(database.ArangoBackupStateUploading, "",
-			&database.ArangoBackupProgress{
+		ArangoBackupState: newState(backupApi.ArangoBackupStateUploading, "",
+			&backupApi.ArangoBackupProgress{
 				JobID:    backup.Status.Progress.JobID,
 				Progress: fmt.Sprintf("%d%%", details.Progress),
 			}),

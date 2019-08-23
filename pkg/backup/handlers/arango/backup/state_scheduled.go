@@ -23,22 +23,22 @@
 package backup
 
 import (
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateScheduledHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateScheduledHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	_, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
 	}
 
 	if backup.Spec.Download != nil {
-		return database.ArangoBackupStatus{
-			ArangoBackupState: newState(database.ArangoBackupStateDownload, "", nil),
+		return backupApi.ArangoBackupStatus{
+			ArangoBackupState: newState(backupApi.ArangoBackupStateDownload, "", nil),
 		}, nil
 	}
 
-	return database.ArangoBackupStatus{
-		ArangoBackupState: newState(database.ArangoBackupStateCreate, "", nil),
+	return backupApi.ArangoBackupStatus{
+		ArangoBackupState: newState(backupApi.ArangoBackupStateCreate, "", nil),
 	}, nil
 }

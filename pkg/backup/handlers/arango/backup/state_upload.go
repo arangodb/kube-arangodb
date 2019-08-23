@@ -26,10 +26,10 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.ArangoBackupStatus, error) {
+func stateUploadHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return createFailedState(err, backup.Status), nil
@@ -37,7 +37,7 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return database.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
 	}
 
 	if backup.Status.Backup == nil {
@@ -54,10 +54,10 @@ func stateUploadHandler(h *handler, backup *database.ArangoBackup) (database.Ara
 		return switchTemporaryError(err, backup.Status)
 	}
 
-	return database.ArangoBackupStatus{
+	return backupApi.ArangoBackupStatus{
 		Available: true,
-		ArangoBackupState: newState(database.ArangoBackupStateUploading, "",
-			&database.ArangoBackupProgress{
+		ArangoBackupState: newState(backupApi.ArangoBackupStateUploading, "",
+			&backupApi.ArangoBackupProgress{
 				JobID:    string(jobID),
 				Progress: "0%",
 			}),

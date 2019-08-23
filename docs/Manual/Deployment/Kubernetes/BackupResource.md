@@ -10,7 +10,7 @@ a `CustomResourceDefinition` created by the operator.
 ### Create simple Backup
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
@@ -28,7 +28,7 @@ Create Backup on ArangoDeployment named `my-deployment`
 
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
@@ -48,7 +48,7 @@ Create Backup on ArangoDeployment named `my-deployment` and upload it to `S3://t
 
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
@@ -66,7 +66,7 @@ Download Backup with id `backup-id` from `S3://test/kube-test`  on ArangoDeploym
 ## ArangoBackup Custom Resource Spec:
 
 ```yaml
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "backup.arangodb.com/v1alpha"
 kind: "ArangoBackup"
 metadata:
   name: "example-arangodb-backup"
@@ -251,9 +251,9 @@ Default: ""
 Status of the arangoBackup object. This field is managed by subresource and only by operator
 
 Advertised fields:
-- `.status.state` - current object state
 - `.spec.policyName` - optional name of the policy
 - `.spec.deployment.name` - name of the deployment
+- `.status.state` - current object state
 - `.status.message` - additional message for current state
 
 Required: true
@@ -291,7 +291,7 @@ Required: false
 
 Default: ""
 
-### `status.progress: string`
+### `status.progress: object`
 
 Progress info of the uploading and downloading process.
 
@@ -316,7 +316,7 @@ Required: true
 Default: "0%"
 
 
-### `status.backup: string`
+### `status.backup: object`
 
 ArangoDB Backup details.
 
@@ -364,7 +364,7 @@ Required: false
 
 Default: false
 
-#### `status.backup.createdAt: bool`
+#### `status.backup.createdAt: timestamp`
 
 ArangoDB Backup object creation time.
 
@@ -374,7 +374,7 @@ Default: now()
 
 ### `status.available: bool`
 
-Determines if we can recover from ArangoDB Backup.
+Determines if we can restore from ArangoDB Backup.
 
 Required: true
 
