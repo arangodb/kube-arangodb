@@ -37,10 +37,12 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
+// Starter interface used by Operator to start new GoRoutines
 type Starter interface {
 	Start(stopCh <-chan struct{})
 }
 
+// Operator interface for operator core functionality
 type Operator interface {
 	// Define prometheus collector interface
 	prometheus.Collector
@@ -57,6 +59,7 @@ type Operator interface {
 	ProcessItem(item operation.Item) error
 }
 
+// NewOperator creates new operator
 func NewOperator(name string) Operator {
 	o := &operator{
 		name:      name,

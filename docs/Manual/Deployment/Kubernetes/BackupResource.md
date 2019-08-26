@@ -63,6 +63,14 @@ spec:
 
 Download Backup with id `backup-id` from `S3://test/kube-test`  on ArangoDeployment named `my-deployment`
 
+## Advertised fields
+
+List of custom columns in CRD specification for Kubectl:
+- `.spec.policyName` - optional name of the policy
+- `.spec.deployment.name` - name of the deployment
+- `.status.state` - current object state
+- `.status.message` - additional message for current state
+
 ## ArangoBackup Custom Resource Spec:
 
 ```yaml
@@ -250,12 +258,6 @@ Default: ""
 
 Status of the arangoBackup object. This field is managed by subresource and only by operator
 
-Advertised fields:
-- `.spec.policyName` - optional name of the policy
-- `.spec.deployment.name` - name of the deployment
-- `.status.state` - current object state
-- `.status.message` - additional message for current state
-
 Required: true
 
 Default: {}
@@ -364,7 +366,7 @@ Required: false
 
 Default: false
 
-#### `status.backup.createdAt: timestamp`
+#### `status.backup.createdAt: TimeStamp`
 
 ArangoDB Backup object creation time.
 

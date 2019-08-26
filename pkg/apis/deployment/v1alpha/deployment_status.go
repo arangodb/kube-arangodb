@@ -80,6 +80,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.ExporterServiceName == other.ExporterServiceName &&
 		ds.ExporterServiceMonitorName == other.ExporterServiceMonitorName &&
 		ds.Images.Equal(other.Images) &&
+		ds.Restore.Equal(other.Restore) &&
 		ds.CurrentImage.Equal(other.CurrentImage) &&
 		ds.Members.Equal(other.Members) &&
 		ds.Conditions.Equal(other.Conditions) &&

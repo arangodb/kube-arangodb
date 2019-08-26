@@ -53,7 +53,7 @@ type handler struct {
 	client     arangoClientSet.Interface
 	kubeClient kubernetes.Interface
 
-	eventRecorder event.EventRecorderInstance
+	eventRecorder event.RecorderInstance
 
 	arangoClientFactory ArangoClientFactory
 	arangoClientTimeout time.Duration
@@ -85,7 +85,7 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Do not act on delete event, finalizer should be used
-	if item.Operation == operation.OperationDelete {
+	if item.Operation == operation.Delete {
 		return nil
 	}
 

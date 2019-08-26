@@ -29,12 +29,16 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Operation declares operation string representation
 type Operation string
 
 const (
-	OperationAdd    Operation = "ADD"
-	OperationUpdate Operation = "UPDATE"
-	OperationDelete Operation = "DELETE"
+	// Add define operation generated when object was created
+	Add Operation = "ADD"
+	// Update define operation generated when object was updated
+	Update Operation = "UPDATE"
+	// Delete define operation generated when object was deleted
+	Delete Operation = "DELETE"
 
 	emptyError            = "value %s cannot be empty"
 	invalidCharacterError = "character %s is not allowed into %s"
@@ -42,6 +46,7 @@ const (
 	separator = "/"
 )
 
+// NewItemFromString creates new item from String
 func NewItemFromString(itemString string) (Item, error) {
 	parts := strings.Split(itemString, "/")
 
@@ -52,11 +57,12 @@ func NewItemFromString(itemString string) (Item, error) {
 	return NewItem(Operation(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5])
 }
 
+// NewItemFromObject creates new item from Kubernetes Object
 func NewItemFromObject(operation Operation, group, version, kind string, object meta.Object) (Item, error) {
 	return NewItem(operation, group, version, kind, object.GetNamespace(), object.GetName())
 }
 
-// Creates new Item
+// NewItem creates new Item
 func NewItem(operation Operation, group, version, kind, namespace, name string) (Item, error) {
 	i := Item{
 		Operation: operation,

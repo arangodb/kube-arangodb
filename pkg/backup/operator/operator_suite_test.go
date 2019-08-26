@@ -75,7 +75,7 @@ func newMockHandler(name string, handle func(item operation.Item) error, canBeHa
 
 func randomItem() operation.Item {
 	return operation.Item{
-		Operation: operation.OperationAdd,
+		Operation: operation.Add,
 
 		Group:   randomString(5),
 		Version: randomString(2),

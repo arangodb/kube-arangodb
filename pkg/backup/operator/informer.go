@@ -56,13 +56,13 @@ func (r *resourceEventWrapper) push(o operation.Operation, obj interface{}) {
 }
 
 func (r *resourceEventWrapper) OnAdd(obj interface{}) {
-	r.push(operation.OperationAdd, obj)
+	r.push(operation.Add, obj)
 }
 
 func (r *resourceEventWrapper) OnUpdate(oldObj, newObj interface{}) {
-	r.push(operation.OperationUpdate, newObj)
+	r.push(operation.Update, newObj)
 }
 
 func (r *resourceEventWrapper) OnDelete(obj interface{}) {
-	r.push(operation.OperationDelete, obj)
+	r.push(operation.Delete, obj)
 }

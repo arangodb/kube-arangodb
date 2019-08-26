@@ -24,6 +24,7 @@ package operator
 
 import "github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
+// Handler define interface for operator actions
 type Handler interface {
 	Name() string
 

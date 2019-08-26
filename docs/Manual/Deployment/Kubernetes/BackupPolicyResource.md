@@ -140,7 +140,7 @@ Required: true
 
 Default: {}
 
-### `spec.scheduled: String`
+### `status.scheduled: TimeStamp`
 
 Next scheduled time
 
@@ -148,7 +148,7 @@ Required: true
 
 Default: ""
 
-### `spec.message: String`
+### `status.message: String`
 
 Message from the operator in case of failure - schedule not valid, ArangoBackupPolicy not valid
 

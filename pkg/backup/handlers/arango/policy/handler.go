@@ -41,15 +41,15 @@ import (
 )
 
 const (
-	BackupCreated = "ArangoBackupCreated"
-	PolicyError   = "Error"
-	Rescheduled   = "Rescheduled"
+	backupCreated = "ArangoBackupCreated"
+	policyError   = "Error"
+	rescheduled   = "Rescheduled"
 )
 
 type handler struct {
 	client        arangoClientSet.Interface
 	kubeClient    kubernetes.Interface
-	eventRecorder event.EventRecorderInstance
+	eventRecorder event.RecorderInstance
 }
 
 func (*handler) Name() string {
@@ -58,7 +58,7 @@ func (*handler) Name() string {
 
 func (h *handler) Handle(item operation.Item) error {
 	// Do not act on delete event, finalizers are used
-	if item.Operation == operation.OperationDelete {
+	if item.Operation == operation.Delete {
 		return nil
 	}
 
@@ -90,7 +90,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (backupApi.ArangoBackupPolicyStatus, error) {
 	if err := policy.Validate(); err != nil {
-		h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
+		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("Validation error: %s", err.Error()),
@@ -100,7 +100,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	if policy.Status.Scheduled.IsZero() {
 		expr, err := cron.Parse(policy.Spec.Schedule)
 		if err != nil {
-			h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
+			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 			return backupApi.ArangoBackupPolicyStatus{
 				Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
@@ -134,7 +134,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	deployments, err := h.client.DatabaseV1alpha().ArangoDeployments(policy.Namespace).List(listOptions)
 
 	if err != nil {
-		h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
+		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 		return backupApi.ArangoBackupPolicyStatus{
 			Scheduled: policy.Status.Scheduled,
@@ -146,7 +146,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		b := policy.NewBackup(deployment.DeepCopy())
 
 		if _, err := h.client.BackupV1alpha().ArangoBackups(b.Namespace).Create(b); err != nil {
-			h.eventRecorder.Warning(policy, PolicyError, "Policy Error: %s", err.Error())
+			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 			return backupApi.ArangoBackupPolicyStatus{
 				Scheduled: policy.Status.Scheduled,
@@ -154,7 +154,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 			}, nil
 		}
 
-		h.eventRecorder.Normal(policy, BackupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
+		h.eventRecorder.Normal(policy, backupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
 	}
 
 	expr, err := cron.Parse(policy.Spec.Schedule)
@@ -166,7 +166,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 
 	next := expr.Next(time.Now())
 
-	h.eventRecorder.Normal(policy, Rescheduled, "Rescheduled for: %s", next.String())
+	h.eventRecorder.Normal(policy, rescheduled, "Rescheduled for: %s", next.String())
 
 	return backupApi.ArangoBackupPolicyStatus{
 		Scheduled: meta.Time{

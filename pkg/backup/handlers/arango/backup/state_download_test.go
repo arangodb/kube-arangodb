@@ -52,7 +52,7 @@ func Test_State_Download_Success(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -89,7 +89,7 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -125,7 +125,7 @@ func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err := handler.Handle(newItemFromBackup(operation.OperationUpdate, obj))
+	err := handler.Handle(newItemFromBackup(operation.Update, obj))
 
 	// Assert
 	compareTemporaryState(t, err, errorMsg, handler, obj)

@@ -32,15 +32,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewEventRecorder(name string, kubeClientSet kubernetes.Interface) EventRecorder {
+// NewEventRecorder creates new event recorder
+func NewEventRecorder(name string, kubeClientSet kubernetes.Interface) Recorder {
 	return &eventRecorder{
 		kubeClientSet: kubeClientSet,
 		name:          name,
 	}
 }
 
-type EventRecorder interface {
-	NewInstance(group, version, kind string) EventRecorderInstance
+// Recorder event factory for kubernetes
+type Recorder interface {
+	NewInstance(group, version, kind string) RecorderInstance
 
 	event(group, version, kind string, object meta.Object, eventType, reason, message string)
 }
@@ -102,7 +104,7 @@ func (e *eventRecorder) event(group, version, kind string, object meta.Object, e
 		Msgf("Event send %s - %s - %s", eventType, reason, message)
 }
 
-func (e *eventRecorder) NewInstance(group, version, kind string) EventRecorderInstance {
+func (e *eventRecorder) NewInstance(group, version, kind string) RecorderInstance {
 	return &eventRecorderInstance{
 		group:   group,
 		version: version,
@@ -112,7 +114,8 @@ func (e *eventRecorder) NewInstance(group, version, kind string) EventRecorderIn
 	}
 }
 
-type EventRecorderInstance interface {
+// RecorderInstance represents instance of event recorder for specific kubernetes type
+type RecorderInstance interface {
 	Event(object meta.Object, eventType, reason, format string, a ...interface{})
 
 	Warning(object meta.Object, reason, format string, a ...interface{})
@@ -122,7 +125,7 @@ type EventRecorderInstance interface {
 type eventRecorderInstance struct {
 	group, version, kind string
 
-	eventRecorder EventRecorder
+	eventRecorder Recorder
 }
 
 func (e *eventRecorderInstance) Warning(object meta.Object, reason, format string, a ...interface{}) {

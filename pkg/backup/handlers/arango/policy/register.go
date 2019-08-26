@@ -32,13 +32,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func newEventInstance(eventRecorder event.EventRecorder) event.EventRecorderInstance {
+func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {
 	return eventRecorder.NewInstance(database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,
 		backupApi.ArangoBackupPolicyResourceKind)
 }
 
-func RegisterInformer(operator operator.Operator, recorder event.EventRecorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
+// RegisterInformer in operator
+func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Backup().V1alpha().ArangoBackupPolicies().Informer(),
 		database.SchemeGroupVersion.Group,
 		database.SchemeGroupVersion.Version,

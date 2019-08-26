@@ -28,8 +28,10 @@ var (
 	randomBase = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 )
 
+// StringList extended []string definition
 type StringList []string
 
+// Has return true if item is on the list
 func (s StringList) Has(i string) bool {
 	for _, obj := range s {
 		if obj == i {
@@ -39,16 +41,18 @@ func (s StringList) Has(i string) bool {
 	return false
 }
 
-func (s StringList) Append(i string) StringList {
-	return append(s, i)
+// Append add items to the list
+func (s StringList) Append(i ... string) StringList {
+	return append(s, i ...)
 }
 
-func (a StringList) Remove(i ...string) StringList {
-	r := make(StringList, 0, len(a))
+// Remove items from the list
+func (s StringList) Remove(i ...string) StringList {
+	r := make(StringList, 0, len(s))
 
 	strings := StringList(i)
 
-	for _, obj := range a {
+	for _, obj := range s {
 		if strings.Has(obj) {
 			continue
 		}
@@ -59,10 +63,12 @@ func (a StringList) Remove(i ...string) StringList {
 	return r
 }
 
+// RandomString generates random string
 func RandomString(n int) string {
 	return RandomStringFrom(n, randomBase)
 }
 
+// RandomStringFrom generates random string from base runes
 func RandomStringFrom(n int, base []rune) string {
 	runes := make([]rune, n)
 	for id := range runes {

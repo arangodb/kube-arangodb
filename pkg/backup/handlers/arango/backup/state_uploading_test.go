@@ -66,7 +66,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	t.Run("Restore percent", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -83,7 +83,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 			Progress: p,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -99,7 +99,7 @@ func Test_State_Uploading_Success(t *testing.T) {
 			Completed: true,
 		}
 
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -144,7 +144,7 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -184,7 +184,7 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -225,7 +225,7 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err = handler.Handle(newItemFromBackup(operation.OperationUpdate, obj))
+	err = handler.Handle(newItemFromBackup(operation.Update, obj))
 
 	// Assert
 	compareTemporaryState(t, err, errorMsg, handler, obj)

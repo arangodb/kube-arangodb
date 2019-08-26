@@ -46,14 +46,14 @@ func Test_OperationMatch(t *testing.T) {
 		{
 			TestName: "Only operation",
 
-			Operation: OperationAdd,
+			Operation: Add,
 
 			Error: fmt.Sprintf(emptyError, "version"),
 		},
 		{
 			TestName: "Missing object meta",
 
-			Operation: OperationAdd,
+			Operation: Add,
 
 			Group:   "test.example",
 			Version: "v1alpha",
@@ -64,7 +64,7 @@ func Test_OperationMatch(t *testing.T) {
 		{
 			TestName: "With name and namespace",
 
-			Operation: OperationAdd,
+			Operation: Add,
 
 			Group:   "test.example",
 			Version: "v1alpha",
@@ -76,7 +76,7 @@ func Test_OperationMatch(t *testing.T) {
 		{
 			TestName: "With empty namespace",
 
-			Operation: OperationAdd,
+			Operation: Add,
 
 			Group:   "test.example",
 			Version: "v1alpha",

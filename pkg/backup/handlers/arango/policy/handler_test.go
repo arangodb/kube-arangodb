@@ -35,12 +35,12 @@ func Test_ObjectNotFound(t *testing.T) {
 	// Arrange
 	handler := newFakeHandler()
 
-	i := newItem(operation.OperationAdd, "test", "test")
+	i := newItem(operation.Add, "test", "test")
 
 	actions := map[operation.Operation]bool{
-		operation.OperationAdd:    true,
-		operation.OperationUpdate: true,
-		operation.OperationDelete: true,
+		operation.Add:    true,
+		operation.Update: true,
+		operation.Delete: true,
 	}
 
 	// Act

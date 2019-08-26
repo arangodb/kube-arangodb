@@ -48,7 +48,7 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -67,7 +67,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -90,7 +90,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	createArangoBackup(t, handler, obj, obj2)
 
 	t.Run("First backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -100,7 +100,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 	})
 
 	t.Run("Second backup object", func(t *testing.T) {
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj2)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj2)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)

@@ -26,3 +26,17 @@ type DeploymentRestoreResult struct {
 	Message       string `json:"message,omitempty"`
 	Restored      bool   `json:"restored"`
 }
+
+func (dr *DeploymentRestoreResult) Equal(other *DeploymentRestoreResult) bool {
+	if dr == nil {
+		return other == nil
+	}
+
+	if other == nil {
+		return false
+	}
+
+	return dr.RequestedFrom == other.RequestedFrom &&
+		dr.Message == other.Message &&
+		dr.Restored == dr.Restored
+}

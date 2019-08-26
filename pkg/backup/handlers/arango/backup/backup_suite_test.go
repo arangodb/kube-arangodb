@@ -116,7 +116,7 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *back
 				namespace,
 				name),
 			UID:        uuid.NewUUID(),
-			Finalizers: database.FinalizersArangoBackup,
+			Finalizers: backupApi.FinalizersArangoBackup,
 		},
 		Spec: backupApi.ArangoBackupSpec{
 			Deployment: backupApi.ArangoBackupSpecDeployment{
@@ -180,7 +180,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -197,7 +197,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 
 		// Act
 		createArangoBackup(t, handler, obj)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
@@ -220,7 +220,7 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		err := handler.Handle(newItemFromBackup(operation.OperationUpdate, obj))
+		err := handler.Handle(newItemFromBackup(operation.Update, obj))
 
 		// Assert
 		require.Error(t, err)
@@ -242,7 +242,7 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		// Act
 		createArangoBackup(t, handler, obj)
 		createArangoDeployment(t, handler, deployment)
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.OperationUpdate, obj)))
+		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
