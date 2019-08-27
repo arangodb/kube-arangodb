@@ -51,6 +51,8 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		client:        client,
 		kubeClient:    kubeClient,
 		eventRecorder: newEventInstance(recorder),
+
+		operator: operator,
 	}
 
 	if err := operator.RegisterHandler(h); err != nil {

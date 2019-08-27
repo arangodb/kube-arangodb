@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
@@ -57,6 +59,8 @@ type handler struct {
 
 	arangoClientFactory ArangoClientFactory
 	arangoClientTimeout time.Duration
+
+	operator operator.Operator
 }
 
 func (h *handler) Name() string {

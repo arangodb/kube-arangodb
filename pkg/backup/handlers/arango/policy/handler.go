@@ -27,6 +27,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
@@ -50,6 +52,8 @@ type handler struct {
 	client        arangoClientSet.Interface
 	kubeClient    kubernetes.Interface
 	eventRecorder event.RecorderInstance
+
+	operator operator.Operator
 }
 
 func (*handler) Name() string {

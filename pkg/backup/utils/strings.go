@@ -42,8 +42,8 @@ func (s StringList) Has(i string) bool {
 }
 
 // Append add items to the list
-func (s StringList) Append(i ... string) StringList {
-	return append(s, i ...)
+func (s StringList) Append(i ...string) StringList {
+	return append(s, i...)
 }
 
 // Remove items from the list

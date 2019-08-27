@@ -188,7 +188,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		}
 	}
 	operatorName := "arangodb-backup-operator"
-	operator := backupOper.NewOperator(operatorName)
+	operator := backupOper.NewOperator(operatorName, o.Namespace)
 
 	rand.Seed(time.Now().Unix())
 

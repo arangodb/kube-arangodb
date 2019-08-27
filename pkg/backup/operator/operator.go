@@ -48,6 +48,7 @@ type Operator interface {
 	prometheus.Collector
 
 	Name() string
+	Namespace() string
 
 	Start(threadiness int, stopCh <-chan struct{}) error
 
@@ -60,9 +61,10 @@ type Operator interface {
 }
 
 // NewOperator creates new operator
-func NewOperator(name string) Operator {
+func NewOperator(name, namespace string) Operator {
 	o := &operator{
 		name:      name,
+		namespace: namespace,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
 
@@ -77,7 +79,8 @@ type operator struct {
 
 	started bool
 
-	name string
+	name      string
+	namespace string
 
 	informers []cache.SharedInformer
 	starters  []Starter
@@ -87,6 +90,10 @@ type operator struct {
 
 	// Implement prometheus collector
 	*prometheusMetrics
+}
+
+func (o *operator) Namespace() string {
+	return o.namespace
 }
 
 func (o *operator) Name() string {

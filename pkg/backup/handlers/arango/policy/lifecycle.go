@@ -29,7 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog"
 )
 
 var _ operator.LifecyclePreStart = &handler{}
@@ -44,10 +43,10 @@ func (h *handler) LifecyclePreStart() error {
 	}()
 
 	for {
-		_, err := h.client.BackupV1alpha().ArangoBackupPolicies("test").List(meta.ListOptions{})
+		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(h.operator.Namespace()).List(meta.ListOptions{})
 
 		if err != nil {
-			klog.Warningf("CR for %s not found: %s", backupApi.ArangoBackupPolicyResourceKind, err.Error())
+			log.Warn().Err(err).Msgf("CR for %s not found", backupApi.ArangoBackupPolicyResourceKind)
 
 			time.Sleep(250 * time.Millisecond)
 			continue
