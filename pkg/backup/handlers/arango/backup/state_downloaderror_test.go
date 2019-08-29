@@ -55,7 +55,7 @@ func Test_State_DownloadError_Reschedule(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateDownload)
+	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStatePending)
 
 	require.False(t, newObj.Status.Available)
 

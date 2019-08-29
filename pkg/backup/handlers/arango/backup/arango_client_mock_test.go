@@ -175,11 +175,11 @@ func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, err
 		return driver.BackupMeta{}, err
 	}
 
-	if meta, ok := m.backups[id]; !ok {
-		return driver.BackupMeta{}, fmt.Errorf("not found")
-	} else {
+	if meta, ok := m.backups[id]; ok {
 		return meta, nil
 	}
+
+	return driver.BackupMeta{}, fmt.Errorf("not found")
 }
 
 func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {

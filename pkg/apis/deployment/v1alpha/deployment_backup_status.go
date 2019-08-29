@@ -21,10 +21,18 @@
 //
 package v1alpha
 
+type DeploymentRestoreState string
+
+const (
+	DeploymentRestoreStateRestoring     DeploymentRestoreState = "Restoring"
+	DeploymentRestoreStateRestored      DeploymentRestoreState = "Restored"
+	DeploymentRestoreStateRestoreFailed DeploymentRestoreState = "RestoreFailed"
+)
+
 type DeploymentRestoreResult struct {
-	RequestedFrom string `json:"requestedFrom"`
-	Message       string `json:"message,omitempty"`
-	Restored      bool   `json:"restored"`
+	RequestedFrom string                 `json:"requestedFrom"`
+	State         DeploymentRestoreState `json:"state"`
+	Message       string                 `json:"message,omitempty"`
 }
 
 func (dr *DeploymentRestoreResult) Equal(other *DeploymentRestoreResult) bool {
@@ -38,5 +46,5 @@ func (dr *DeploymentRestoreResult) Equal(other *DeploymentRestoreResult) bool {
 
 	return dr.RequestedFrom == other.RequestedFrom &&
 		dr.Message == other.Message &&
-		dr.Restored == dr.Restored
+		dr.State == dr.State
 }

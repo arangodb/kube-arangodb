@@ -38,6 +38,7 @@ func newEventInstance(recorder event.Recorder) event.RecorderInstance {
 		backupApi.ArangoBackupResourceKind)
 }
 
+// RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Backup().V1alpha().ArangoBackups().Informer(),
 		database.SchemeGroupVersion.Group,

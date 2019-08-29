@@ -46,20 +46,36 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.Ar
 
 	_, err = client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
-		if IsTemporaryError(err) {
-			return switchTemporaryError(err, backup.Status)
+		if driver.IsNotFound(err) {
+			return backupApi.ArangoBackupStatus{
+				ArangoBackupState: backupApi.ArangoBackupState{
+					State: backupApi.ArangoBackupStateDeleted,
+				},
+				Backup: backup.Status.Backup,
+			}, nil
 		}
-		// Go into deleted state
-		return backupApi.ArangoBackupStatus{
-			ArangoBackupState: backupApi.ArangoBackupState{
-				State: backupApi.ArangoBackupStateDeleted,
-			},
-			Backup: backup.Status.Backup,
-		}, nil
+
+		// Other fail
+		return switchTemporaryError(err, backup.Status)
 	}
 
 	// Check if upload flag was specified later in runtime
-	if backup.Spec.Upload != nil && backup.Status.Backup.Uploaded == nil {
+	if backup.Spec.Upload != nil &&
+		(backup.Status.Backup.Uploaded == nil || (backup.Status.Backup.Uploaded != nil && !*backup.Status.Backup.Uploaded)) {
+		// Ensure that we can start upload process
+		running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
+		if err != nil {
+			return createFailedState(err, backup.Status), nil
+		}
+
+		if running {
+			return backupApi.ArangoBackupStatus{
+				Available:         true,
+				ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "Upload process queued", nil),
+				Backup:            backup.Status.Backup,
+			}, nil
+		}
+
 		return backupApi.ArangoBackupStatus{
 			Available:         true,
 			ArangoBackupState: newState(backupApi.ArangoBackupStateUpload, "", nil),

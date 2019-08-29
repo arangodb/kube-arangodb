@@ -24,11 +24,29 @@ package backup
 
 import (
 	"fmt"
+	"reflect"
+
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/rs/zerolog/log"
+
+	clientBackup "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
+)
+
+var (
+	progressStates = []state.State{
+		backupApi.ArangoBackupStateScheduled,
+		backupApi.ArangoBackupStateCreate,
+		backupApi.ArangoBackupStateDownload,
+		backupApi.ArangoBackupStateDownloading,
+		backupApi.ArangoBackupStateUpload,
+		backupApi.ArangoBackupStateUploading,
+	}
 )
 
 func switchTemporaryError(err error, status backupApi.ArangoBackupStatus) (backupApi.ArangoBackupStatus, error) {
@@ -44,6 +62,16 @@ func createFailMessage(state state.State, message string) string {
 }
 
 func createFailedState(err error, status backupApi.ArangoBackupStatus) backupApi.ArangoBackupStatus {
+	e := log.Error().Err(err).Str("type", reflect.TypeOf(err).String())
+	if c, ok := err.(utils.Causer); ok {
+		e = e.AnErr("caused", c.Cause()).Str("causedType", reflect.TypeOf(c.Cause()).String()).Str("causedError", fmt.Sprintf("%v", c.Cause()))
+
+		if a, ok := c.Cause().(driver.ArangoError); ok {
+			e = e.Str("aMsg", a.ErrorMessage).Int("aCode", a.Code).Int("aNum", a.ErrorNum).Str("aMsg", a.ErrorMessage).Bool("aTemp", a.Temporary())
+		}
+	}
+	e.Msgf("Error %v", err)
+
 	newStatus := status.DeepCopy()
 
 	newStatus.ArangoBackupState = newState(backupApi.ArangoBackupStateFailed, createFailMessage(status.State, err.Error()), nil)
@@ -62,4 +90,38 @@ func newState(state state.State, message string, progress *backupApi.ArangoBacku
 
 		Progress: progress,
 	}
+}
+
+func inProgress(backup *backupApi.ArangoBackup) bool {
+	for _, state := range progressStates {
+		if state == backup.Status.State {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoBackupInterface) (bool, error) {
+	backups, err := client.List(meta.ListOptions{})
+
+	if err != nil {
+		return false, err
+	}
+
+	for _, existingBackup := range backups.Items {
+		if existingBackup.Spec.Deployment.Name != backup.Spec.Deployment.Name {
+			continue
+		}
+
+		if existingBackup.Name == backup.Name {
+			continue
+		}
+
+		if inProgress(&existingBackup) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

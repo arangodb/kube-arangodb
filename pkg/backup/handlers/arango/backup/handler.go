@@ -25,6 +25,7 @@ package backup
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
@@ -47,11 +48,17 @@ import (
 const (
 	defaultArangoClientTimeout = 30 * time.Second
 
-	StateChange     = "StateChange"
+	// StateChange name of the event send when state changed
+	StateChange = "StateChange"
+
+	// FinalizerChange name of the event send when finalizer removed entry
 	FinalizerChange = "FinalizerChange"
 )
 
 type handler struct {
+	lock  sync.Mutex
+	locks map[string]*sync.Mutex
+
 	client     arangoClientSet.Interface
 	kubeClient kubernetes.Interface
 
@@ -108,48 +115,72 @@ func (h *handler) Handle(item operation.Item) error {
 		return nil
 	}
 
-	status, err := h.processArangoBackup(b.DeepCopy())
-	if err != nil {
-		return err
-	}
+	{
+		// Ensure that mutex exists
+		{
+			h.lock.Lock()
+			defer h.lock.Unlock()
 
-	// Nothing to update, objects are equal
-	if reflect.DeepEqual(b.Status, status) {
-		return nil
-	}
+			if h.locks == nil {
+				h.locks = map[string]*sync.Mutex{}
+			}
 
-	// Ensure that transit is possible
-	if err = backupApi.ArangoBackupStateMap.Transit(b.Status.State, status.State); err != nil {
-		return err
-	}
-
-	// Log message about state change
-	if b.Status.State != status.State {
-		if status.State == backupApi.ArangoBackupStateFailed {
-			h.eventRecorder.Warning(b, StateChange, "Transiting from %s to %s with error: %s",
-				b.Status.State,
-				status.State,
-				status.Message)
-		} else {
-			h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s",
-				b.Status.State,
-				status.State)
+			if _, ok := h.locks[item.Namespace]; !ok {
+				h.locks[item.Namespace] = &sync.Mutex{}
+			}
 		}
-	} else {
-		// Keep old time in case when object did not change
-		status.Time = b.Status.Time
-	}
 
-	b.Status = status
+		// Create lock per namespace to ensure that we are not using 2 goroutines in same time
+		h.locks[item.Namespace].Lock()
+		defer h.locks[item.Namespace].Unlock()
 
-	log.Debug().Msgf("Updating %s %s/%s",
-		item.Kind,
-		item.Namespace,
-		item.Name)
+		status, err := h.processArangoBackup(b.DeepCopy())
+		if err != nil {
+			log.Warn().Err(err).Msgf("Fail for %s %s/%s",
+				item.Kind,
+				item.Namespace,
+				item.Name)
+			return err
+		}
 
-	// Update status on object
-	if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).UpdateStatus(b); err != nil {
-		return err
+		// Nothing to update, objects are equal
+		if reflect.DeepEqual(b.Status, status) {
+			return nil
+		}
+
+		// Ensure that transit is possible
+		if err = backupApi.ArangoBackupStateMap.Transit(b.Status.State, status.State); err != nil {
+			return err
+		}
+
+		// Log message about state change
+		if b.Status.State != status.State {
+			if status.State == backupApi.ArangoBackupStateFailed {
+				h.eventRecorder.Warning(b, StateChange, "Transiting from %s to %s with error: %s",
+					b.Status.State,
+					status.State,
+					status.Message)
+			} else {
+				h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s",
+					b.Status.State,
+					status.State)
+			}
+		} else {
+			// Keep old time in case when object did not change
+			status.Time = b.Status.Time
+		}
+
+		b.Status = status
+
+		log.Debug().Msgf("Updating %s %s/%s",
+			item.Kind,
+			item.Namespace,
+			item.Name)
+
+		// Update status on object
+		if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).UpdateStatus(b); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -160,11 +191,11 @@ func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (backupApi
 		return createFailedState(err, backup.Status), nil
 	}
 
-	if f, ok := stateHolders[backup.Status.State]; !ok {
-		return backupApi.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
-	} else {
+	if f, ok := stateHolders[backup.Status.State]; ok {
 		return f(h, backup)
 	}
+
+	return backupApi.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {

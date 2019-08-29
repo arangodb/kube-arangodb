@@ -20,29 +20,18 @@
 // Author Adam Janikowski
 //
 
-package backup
+package utils
 
-import (
-	"time"
+// IntList extended []int definition
+type IntList []int
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-)
-
-const (
-	downloadDelay = time.Minute
-)
-
-func stateDownloadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
-	// Start again download
-	if backup.Status.Time.Time.Add(downloadDelay).Before(time.Now()) {
-		return backupApi.ArangoBackupStatus{
-			Available:         false,
-			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "", nil),
-		}, nil
+// Has check if int is in list
+func (i IntList) Has(expected int) bool {
+	for _, obj := range i {
+		if obj == expected {
+			return true
+		}
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available:         false,
-		ArangoBackupState: backup.Status.ArangoBackupState,
-	}, nil
+	return false
 }

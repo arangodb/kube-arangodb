@@ -23,7 +23,10 @@
 package backup
 
 import (
+	"sync"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
@@ -92,7 +95,7 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateDeleted, newObj.Status.State)
+	require.Equal(t, backupApi.ArangoBackupStateFailed, newObj.Status.State)
 	require.False(t, newObj.Status.Available)
 }
 
@@ -204,12 +207,14 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 	require.NoError(t, err)
 
 	trueVar := true
+	falseVar := false
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 		Downloaded:        &trueVar,
+		Uploaded:          &falseVar,
 	}
 	obj.Status.Available = true
 
@@ -289,4 +294,68 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
 	require.True(t, newObj.Status.Available)
 	require.Nil(t, newObj.Status.Backup.Uploaded)
+}
+
+func Test_State_Ready_KeepPendingWithForcedRunning(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	name := string(uuid.NewUUID())
+
+	deployment := newArangoDeployment(name, name)
+	size := 128
+	objects := make([]*backupApi.ArangoBackup, size)
+	for id := range objects {
+		backupMeta, err := mock.Create()
+		require.NoError(t, err)
+
+		obj := newArangoBackup(name, name, string(uuid.NewUUID()), backupApi.ArangoBackupStateReady)
+
+		obj.Status.Backup = &backupApi.ArangoBackupDetails{
+			ID:                string(backupMeta.ID),
+			Version:           backupMeta.Version,
+			CreationTimestamp: meta.Now(),
+		}
+		obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "s3://test",
+		}
+		obj.Status.Available = true
+
+		objects[id] = obj
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, objects...)
+
+	w := sync.WaitGroup{}
+	w.Add(size)
+	for _, backup := range objects {
+		go func(b *backupApi.ArangoBackup) {
+			defer w.Done()
+			require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, b)))
+		}(backup)
+	}
+
+	// Assert
+	w.Wait()
+
+	ready := 0
+	upload := 0
+
+	for _, object := range objects {
+		newObj := refreshArangoBackup(t, handler, object)
+
+		switch newObj.Status.State {
+		case backupApi.ArangoBackupStateReady:
+			ready++
+		case backupApi.ArangoBackupStateUpload:
+			upload++
+		default:
+			require.Fail(t, "Unknown state", newObj.Status.State)
+		}
+	}
+
+	require.Equal(t, 1, upload)
+	require.Equal(t, size-1, ready)
 }

@@ -24,29 +24,7 @@ package backup
 
 import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/state"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-var (
-	notProgressStates = []state.State{
-		backupApi.ArangoBackupStatePending,
-		backupApi.ArangoBackupStateNone,
-		backupApi.ArangoBackupStateFailed,
-		backupApi.ArangoBackupStateDeleted,
-		backupApi.ArangoBackupStateReady,
-	}
-)
-
-func inProgress(backup *backupApi.ArangoBackup) bool {
-	for _, state := range notProgressStates {
-		if state == backup.Status.State {
-			return false
-		}
-	}
-
-	return true
-}
 
 func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
 	_, err := h.getArangoDeploymentObject(backup)
@@ -54,30 +32,12 @@ func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.
 		return createFailedState(err, backup.Status), nil
 	}
 
-	// Ensure that only specified number of processes are running
-	backups, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
+	running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, err
+		return createFailedState(err, backup.Status), nil
 	}
 
-	count := 0
-	for _, presentBackup := range backups.Items {
-		if presentBackup.Name == backup.Name {
-			break
-		}
-
-		if presentBackup.Spec.Deployment.Name != backup.Spec.Deployment.Name {
-			break
-		}
-
-		if !inProgress(&presentBackup) {
-			continue
-		}
-
-		count++
-	}
-
-	if count >= 1 {
+	if running {
 		return backupApi.ArangoBackupStatus{
 			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "backup already in process", nil),
 		}, nil

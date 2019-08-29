@@ -24,29 +24,42 @@ package backup
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 )
 
+var (
+	temporaryErrorNum = utils.IntList{
+		1465, // Communication error with server
+	}
+
+	temporaryCodes = utils.IntList{
+		http.StatusServiceUnavailable,
+	}
+)
+
+// ArangoClientFactory factory type for creating clients
 type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error)
 
-type TemporaryErrorInterface interface {
-	Temporary() bool
-}
-
+// ArangoBackupProgress progress info
 type ArangoBackupProgress struct {
 	Progress          int
 	Failed, Completed bool
 	FailMessage       string
 }
 
+// ArangoBackupCreateResponse create response
 type ArangoBackupCreateResponse struct {
 	driver.BackupMeta
 	Forced bool
 }
 
+// ArangoBackupClient interface with backup functionality for database
 type ArangoBackupClient interface {
 	Create() (ArangoBackupCreateResponse, error)
 	Get(driver.BackupID) (driver.BackupMeta, error)
@@ -61,6 +74,7 @@ type ArangoBackupClient interface {
 	Delete(driver.BackupID) error
 }
 
+// NewTemporaryError created new temporary error
 func NewTemporaryError(format string, a ...interface{}) error {
 	return TemporaryError{
 		Message: fmt.Sprintf(format, a...),
@@ -76,6 +90,7 @@ func (t TemporaryError) Error() string {
 	return t.Message
 }
 
+// IsTemporaryError determined if error is type of TemporaryError
 func IsTemporaryError(err error) bool {
 	_, ok := err.(TemporaryError)
 	return ok
@@ -83,11 +98,23 @@ func IsTemporaryError(err error) bool {
 
 func checkTemporaryError(err error) bool {
 	if ok := IsTemporaryError(err); ok {
-		return ok
+		return true
 	}
 
-	if _, ok := err.(TemporaryErrorInterface); ok {
-		return ok
+	if v, ok := err.(utils.Temporary); ok {
+		if v.Temporary() {
+			return true
+		}
+	}
+
+	if v, ok := err.(driver.ArangoError); ok {
+		if temporaryErrorNum.Has(v.ErrorNum) || temporaryCodes.Has(v.Code) {
+			return true
+		}
+	}
+
+	if v, ok := err.(utils.Causer); ok {
+		return checkTemporaryError(v.Cause())
 	}
 
 	return false

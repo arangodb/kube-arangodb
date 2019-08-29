@@ -116,7 +116,10 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 		}
 	}
 
-	return driver.BackupMeta{}, fmt.Errorf("backup %s was not contained in list", backupID)
+	return driver.BackupMeta{}, driver.ArangoError{
+		ErrorMessage: fmt.Sprintf("backup %s was not contained in list", backupID),
+		Code:         404,
+	}
 }
 
 func (ac *arangoClientBackupImpl) getCredentialsFromSecret(secretName string) (interface{}, error) {

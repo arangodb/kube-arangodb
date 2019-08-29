@@ -99,7 +99,7 @@ status:
   progress:
     jobID: "id"
     progress: "10%"
-  Backup:
+  backup:
     id: "id"
     version: "3.6.0-dev"
     forced: true
@@ -170,10 +170,9 @@ Default: 30
 #### `spec.options.force: bool`
 
 Force flag for Backup creation request.
+If this value is set to true, backup is taken even if we are not able to acquire lock.
 
 Field is immutable.
-
-TODO: Point to ArangoDB documentation
 
 Required: false
 
@@ -191,9 +190,15 @@ Default: {}
 
 #### `spec.download.repositoryURL: string`
 
-Field is immutable.
+Field is immutable. Protocol needs to be defined in `spec.download.credentialsSecretName` if protocol is other than local.
 
-TODO: Point to the Backup API definition
+Mode protocols can be found [here](https://rclone.org/).
+
+Format: `<protocol>:/<path>`
+
+Examples:
+- `s3://my-bucket/test`
+- `azure://test`
 
 Required: true
 
@@ -201,11 +206,51 @@ Default: ""
 
 #### `spec.download.credentialsSecretName: string`
 
-Name of the secrets used while accessing repository
+Field is immutable. Name of the secret used while accessing repository
 
-Field is immutable.
+Secret structure:
 
-TODO: Point to the credential structure
+```yaml
+apiVersion: v1
+data:
+  token: <json token>
+kind: Secret
+metadata:
+  name: <name>
+type: Opaque
+```
+
+`JSON Token` options are described on the [rClone](https://rclone.org/) page.
+We can define more than one protocols at same time in one secret.
+
+This field is defined in json format:
+
+```json
+{
+  "<protocol>": {
+    "type":"<type>",
+    ...parameters
+    }
+}
+```
+
+AWS S3 example - based on [rClone S3](https://rclone.org/s3/) documentation and interactive process:
+
+```json
+{
+  "S3": {
+    "type": "s3", # Choose s3 type
+    "provider": "AWS", # Choose one of the providers
+    "env_auth": "false", # Define credentials in next step instead of using ENV
+    "access_key_id": "xxx",
+    "secret_access_key": "xxx",
+    "region": "eu-west-2", # Choose region
+    "acl": "private", # Set permissions on newly created object
+  }
+}
+```
+
+and you can from now use `S3://bucket/path`.
 
 Required: false
 
@@ -234,9 +279,7 @@ Default: {}
 
 #### `spec.upload.repositoryURL: string`
 
-Field is immutable.
-
-TODO: Point to the Backup API definition
+Same structure as `spec.download.repositoryURL`.
 
 Required: true
 
@@ -244,11 +287,7 @@ Default: ""
 
 #### `spec.upload.credentialsSecretName: string`
 
-Name of the secrets used while accessing repository
-
-Field is immutable.
-
-TODO: Point to the credential structure
+Same structure as `spec.download.credentialsSecretName`.
 
 Required: false
 

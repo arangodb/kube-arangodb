@@ -32,6 +32,10 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	progressError = "progress error"
+)
+
 func Test_State_Downloading_Common(t *testing.T) {
 	wrapperUndefinedDeployment(t, backupApi.ArangoBackupStateDownloading)
 	wrapperConnectionIssues(t, backupApi.ArangoBackupStateDownloading)
@@ -169,7 +173,7 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 
 func Test_State_Downloading_FailedProgress(t *testing.T) {
 	// Arrange
-	errorMsg := "progress error"
+	errorMsg := progressError
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		progressError: errorMsg,
 	})
@@ -216,7 +220,7 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 
 func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	// Arrange
-	errorMsg := "progress error"
+	errorMsg := progressError
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		isTemporaryError: true,
 		progressError:    errorMsg,

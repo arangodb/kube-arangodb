@@ -20,29 +20,14 @@
 // Author Adam Janikowski
 //
 
-package backup
+package utils
 
-import (
-	"time"
+// Causer define if error has another reason error
+type Causer interface {
+	Cause() error
+}
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-)
-
-const (
-	downloadDelay = time.Minute
-)
-
-func stateDownloadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
-	// Start again download
-	if backup.Status.Time.Time.Add(downloadDelay).Before(time.Now()) {
-		return backupApi.ArangoBackupStatus{
-			Available:         false,
-			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "", nil),
-		}, nil
-	}
-
-	return backupApi.ArangoBackupStatus{
-		Available:         false,
-		ArangoBackupState: backup.Status.ArangoBackupState,
-	}, nil
+// Temporary define if error implements temporary interface
+type Temporary interface {
+	Temporary() bool
 }

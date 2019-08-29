@@ -89,15 +89,27 @@ func (b *BackupHandler) CheckRestore() error {
 
 		// We have to trigger a restore operation
 		if status.Restore == nil || status.Restore.RequestedFrom != spec.GetRestoreFrom() {
-			err := b.restoreFrom(spec.GetRestoreFrom())
-
+			// Prepare message that we are starting restore
 			result := &api.DeploymentRestoreResult{
 				RequestedFrom: spec.GetRestoreFrom(),
-				Restored:      err == nil,
 			}
 
+			result.State = api.DeploymentRestoreStateRestoring
+
+			for i := 0; i < 100; i++ {
+				status, version := b.context.GetStatus()
+				status.Restore = result
+				b.context.UpdateStatus(status, version)
+			}
+
+			// Request restoring
+			err := b.restoreFrom(spec.GetRestoreFrom())
+
 			if err != nil {
+				result.State = api.DeploymentRestoreStateRestoreFailed
 				result.Message = err.Error()
+			} else {
+				result.State = api.DeploymentRestoreStateRestored
 			}
 
 			// try to update the status

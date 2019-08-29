@@ -46,7 +46,7 @@ func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backup
 	if backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
 		return backupApi.ArangoBackupStatus{
 			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateUpload, "", nil),
+			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
 			Backup:            backup.Status.Backup.DeepCopy(),
 		}, nil
 	}

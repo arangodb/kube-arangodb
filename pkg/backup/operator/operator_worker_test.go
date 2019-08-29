@@ -33,7 +33,7 @@ import (
 func Test_Worker_Empty(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name)
+	o := NewOperator(name, name)
 
 	stopCh := make(chan struct{})
 
@@ -53,7 +53,7 @@ func Test_Worker_Empty(t *testing.T) {
 func Test_Worker_CatchAll(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name)
+	o := NewOperator(name, name)
 
 	stopCh := make(chan struct{})
 
@@ -82,7 +82,7 @@ func Test_Worker_CatchAll(t *testing.T) {
 func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name)
+	o := NewOperator(name, name)
 
 	stopCh := make(chan struct{})
 
@@ -116,7 +116,7 @@ func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 func Test_Worker_EnsureObjectIsProcessedBySecondHandler(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name)
+	o := NewOperator(name, name)
 
 	stopCh := make(chan struct{})
 

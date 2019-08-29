@@ -30,6 +30,11 @@ import (
 	"testing"
 	"time"
 
+	backupClient "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
+
+	"github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
@@ -42,7 +47,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/dchest/uniuri"
-	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -223,7 +227,7 @@ func statBackupMeta(client driver.Client, backupID driver.BackupID) (bool, drive
 func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*backupApi.ArangoBackup, error) error, options *EnsureBackupOptions) (*backupApi.ArangoBackup, string, driver.BackupID) {
 	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment, options)
 	_, err := deploymentClient.BackupV1alpha().ArangoBackups(ns).Create(backup)
-	assert.NoError(t, err, "failed to create backup: %s", err)
+	require.NoError(t, err, "failed to create backup: %s", err)
 	name := backup.GetName()
 
 	backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, predicate)
@@ -257,6 +261,37 @@ func newDownload(ID string) *backupApi.ArangoBackupSpecDownload {
 			CredentialsSecretName: testBackupRemoteSecretName,
 		},
 		ID: ID,
+	}
+}
+
+func timeoutWaitForBackups(t *testing.T, backupClient backupClient.ArangoBackupInterface, labels metav1.LabelSelector, size int) func() error {
+	return func() error {
+		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		if err != nil {
+			return err
+		}
+
+		require.Len(t, backups.Items, size)
+
+		done := 0
+
+		for _, backup := range backups.Items {
+			switch backup.Status.State {
+			case backupApi.ArangoBackupStateFailed:
+				log.Error().Str("backup", backup.Name).Str("Message", backup.Status.Message).Msg("Failed")
+				require.Fail(t, "Backup object failed", backup.Status.Message)
+			case backupApi.ArangoBackupStateReady:
+				done++
+			}
+		}
+
+		log.Info().Int("expected", size).Int("done", done).Msg("Iteration")
+
+		if done == size {
+			return interrupt{}
+		}
+
+		return nil
 	}
 }
 
@@ -301,17 +336,17 @@ func TestBackupCluster(t *testing.T) {
 	// Create deployment
 	apiObject, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
-	assert.NoError(t, err, "failed to create deployment: %s", err)
+	require.NoError(t, err, "failed to create deployment: %s", err)
 
 	api2Object, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl2)
 	defer removeDeployment(deploymentClient, depl2.GetName(), ns)
-	assert.NoError(t, err, "failed to create deployment two: %s", err)
+	require.NoError(t, err, "failed to create deployment two: %s", err)
 
 	_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, deploymentIsReady())
-	assert.NoError(t, err, fmt.Sprintf("Deployment not running in time: %s", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment not running in time: %s", err))
 
 	_, err = waitUntilDeployment(deploymentClient, depl2.GetName(), ns, deploymentIsReady())
-	assert.NoError(t, err, fmt.Sprintf("Deployment two not running in time: %s", err))
+	require.NoError(t, err, fmt.Sprintf("Deployment two not running in time: %s", err))
 
 	ctx := context.Background()
 	databaseClient := mustNewArangodDatabaseClient(ctx, kubecli, apiObject, t, nil)
@@ -327,6 +362,31 @@ func TestBackupCluster(t *testing.T) {
 		depl2: database2Client,
 	}
 
+	t.Run("create-backups-on-multiple-databases", func(t *testing.T) {
+		size := 8
+		expected := size * len(deployments)
+		labels := metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"type": string(uuid.NewUUID()),
+			},
+		}
+
+		for id := 0; id < size; id++ {
+			for _, deployment := range deployments {
+				backup := newBackup(fmt.Sprintf("my-backup-%s-%s", deployment.GetName(), uniuri.NewLen(4)), deployment.GetName(), nil)
+
+				backup.Labels = labels.MatchLabels
+
+				_, err := backupClient.Create(backup)
+				require.NoError(t, err, "failed to create backup: %s", err)
+				defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+			}
+		}
+
+		err := timeout(time.Second, 30*time.Minute, timeoutWaitForBackups(t, backupClient, labels, expected))
+		require.NoError(t, err)
+	})
+
 	t.Run("create backup", func(t *testing.T) {
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		_, err := backupClient.Create(backup)
@@ -339,15 +399,15 @@ func TestBackupCluster(t *testing.T) {
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 	})
 
 	t.Run("create-upload backup", func(t *testing.T) {
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		_, err := backupClient.Create(backup)
-		assert.NoError(t, err, "failed to create backup: %s", err)
+		require.NoError(t, err, "failed to create backup: %s", err)
 		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
 
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
@@ -356,9 +416,9 @@ func TestBackupCluster(t *testing.T) {
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 		require.Nil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
@@ -377,9 +437,9 @@ func TestBackupCluster(t *testing.T) {
 		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		found, meta, err = statBackupMeta(databaseClient, driver.BackupID(backupID))
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 		require.NotNil(t, backup.Status.Backup.Uploaded, "Upload flag is nil")
 		require.Nil(t, backup.Status.Backup.Downloaded)
 	})
@@ -390,18 +450,18 @@ func TestBackupCluster(t *testing.T) {
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, id)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		// now remove the backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
-		assert.NoError(t, err, "Backup test failed: %s", err)
+		require.NoError(t, err, "Backup test failed: %s", err)
 
 		// check that the actual backup has been deleted
 		found, _, err = statBackupMeta(databaseClient, id)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("remove backup locally", func(t *testing.T) {
@@ -410,33 +470,162 @@ func TestBackupCluster(t *testing.T) {
 
 		// now remove the backup locally
 		err := databaseClient.Backup().Delete(nil, id)
-		assert.NoError(t, err, "Failed to delete backup: %s", err)
+		require.NoError(t, err, "Failed to delete backup: %s", err)
 
 		// wait for the backup to become unavailable
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
 	})
 
 	t.Run("handle existing backups", func(t *testing.T) {
 		// create a local backup manually
 		id, _, err := databaseClient.Backup().Create(nil, nil)
-		assert.NoError(t, err, "Creating backup failed: %s", err)
+		require.NoError(t, err, "Creating backup failed: %s", err)
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(id))
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
 
 		// create a backup resource manually with that id
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		backup.Status.Backup = &backupApi.ArangoBackupDetails{ID: string(id), Version: meta.Version}
 		_, err = backupClient.Create(backup)
-		assert.NoError(t, err, "failed to create backup: %s", err)
+		require.NoError(t, err, "failed to create backup: %s", err)
 		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
 
 		// wait until the backup becomes available
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
-		assert.NoError(t, err, "backup did not become available: %s", err)
-		assert.Equal(t, backupApi.ArangoBackupStateReady, backup.Status.State)
+		require.NoError(t, err, "backup did not become available: %s", err)
+		require.Equal(t, backupApi.ArangoBackupStateReady, backup.Status.State)
+	})
+
+	t.Run("create-multiple-restore-cycle", func(t *testing.T) {
+		type Book struct {
+			Title  string
+			Author string
+		}
+
+		ctx := context.Background()
+		// first add collections, insert data into the cluster
+		dbname := "backup-test-db-two"
+		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
+		require.NoError(t, err, "failed to create database: %s", err)
+
+		colname := "backup-test-col"
+		col, err := db.CreateCollection(ctx, colname, nil)
+		require.NoError(t, err, "failed to create collection: %s", err)
+
+		meta1, err := col.CreateDocument(ctx, &Book{Title: "My first Go-Program", Author: "Adam"})
+		require.NoError(t, err, "failed to create document: %s", err)
+
+		// Now create a backups, a lot of them
+		size := 8
+		labels := metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"type": string(uuid.NewUUID()),
+			},
+		}
+
+		for id := 0; id < size; id++ {
+			backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
+
+			backup.Labels = labels.MatchLabels
+
+			_, err := backupClient.Create(backup)
+			require.NoError(t, err, "failed to create backup: %s", err)
+			defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+		}
+
+		err = timeout(time.Second, 5*time.Minute, timeoutWaitForBackups(t, backupClient, labels, size))
+
+		require.NoError(t, err)
+
+		// Get first backup
+		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		require.NoError(t, err)
+		require.Len(t, backups.Items, size)
+
+		// Create backup from which we are gonna restore
+		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
+
+		backup.Labels = labels.MatchLabels
+
+		_, err = backupClient.Create(backup)
+		require.NoError(t, err, "failed to create backup: %s", err)
+		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+
+		name := backup.Name
+
+		err = timeout(time.Second, 5*time.Minute, timeoutWaitForBackups(t, backupClient, labels, size+1))
+
+		// insert yet another document
+		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
+		require.NoError(t, err, "failed to create document: %s", err)
+
+		// now restore the backup
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = util.NewString(string(name))
+		})
+		require.NoError(t, err, "Failed to update deployment: %s", err)
+
+		_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore != nil {
+				result := status.Restore
+
+				if result.RequestedFrom != name {
+					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
+				}
+
+				if result.State == api.DeploymentRestoreStateRestoreFailed {
+					t.Fatalf("Failed to restore backup: %s", result.Message)
+				}
+
+				if result.State == api.DeploymentRestoreStateRestored {
+					return nil
+				}
+
+				return fmt.Errorf("Not yet restored - staate %s", result.State)
+			}
+
+			return fmt.Errorf("Restore is not set on deployment")
+		})
+		require.NoError(t, err, "Deployment did not restore in time: %s", err)
+
+		// restore was completed, check if documents are there
+		found, err := col.DocumentExists(ctx, meta1.Key)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.True(t, found)
+
+		// second document should not exist
+		found, err = col.DocumentExists(ctx, meta2.Key)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.False(t, found)
+
+		// delete the RestoreFrom entry
+		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
+			spec.RestoreFrom = nil
+		})
+		require.NoError(t, err, "Failed to update deployment: %s", err)
+
+		// wait for it to be deleted in the status
+		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
+			status := depl.Status
+			if status.Restore == nil {
+				return nil
+			}
+
+			return fmt.Errorf("Restore is not set to nil")
+		})
+
+		// Assert that all of the backups are in valid state
+		backups, err = backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		require.NoError(t, err)
+		require.Len(t, backups.Items, size + 1)
+
+		for _, b := range backups.Items {
+			require.Equal(t, backupApi.ArangoBackupStateReady, b.Status.State, b.Status.Message)
+		}
 	})
 
 	t.Run("create-restore-cycle", func(t *testing.T) {
@@ -449,14 +638,14 @@ func TestBackupCluster(t *testing.T) {
 		// first add collections, insert data into the cluster
 		dbname := "backup-test-db"
 		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
-		assert.NoError(t, err, "failed to create database: %s", err)
+		require.NoError(t, err, "failed to create database: %s", err)
 
 		colname := "backup-test-col"
 		col, err := db.CreateCollection(ctx, colname, nil)
-		assert.NoError(t, err, "failed to create collection: %s", err)
+		require.NoError(t, err, "failed to create collection: %s", err)
 
 		meta1, err := col.CreateDocument(ctx, &Book{Title: "My first Go-Program", Author: "Adam"})
-		assert.NoError(t, err, "failed to create document: %s", err)
+		require.NoError(t, err, "failed to create document: %s", err)
 
 		// Now create a backup
 		_, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
@@ -464,13 +653,13 @@ func TestBackupCluster(t *testing.T) {
 
 		// insert yet another document
 		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
-		assert.NoError(t, err, "failed to create document: %s", err)
+		require.NoError(t, err, "failed to create document: %s", err)
 
 		// now restore the backup
 		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
 			spec.RestoreFrom = util.NewString(string(name))
 		})
-		assert.NoError(t, err, "Failed to update deployment: %s", err)
+		require.NoError(t, err, "Failed to update deployment: %s", err)
 
 		_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
 			status := depl.Status
@@ -481,32 +670,36 @@ func TestBackupCluster(t *testing.T) {
 					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
 				}
 
-				if !result.Restored {
+				if result.State == api.DeploymentRestoreStateRestoreFailed {
 					t.Fatalf("Failed to restore backup: %s", result.Message)
 				}
 
-				return nil
+				if result.State == api.DeploymentRestoreStateRestored {
+					return nil
+				}
+
+				return fmt.Errorf("Not yet restored - staate %s", result.State)
 			}
 
 			return fmt.Errorf("Restore is not set on deployment")
 		})
-		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+		require.NoError(t, err, "Deployment did not restore in time: %s", err)
 
 		// restore was completed, check if documents are there
 		found, err := col.DocumentExists(ctx, meta1.Key)
-		assert.NoError(t, err, "Failed to check if document exists: %s", err)
-		assert.True(t, found)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.True(t, found)
 
 		// second document should not exist
 		found, err = col.DocumentExists(ctx, meta2.Key)
-		assert.NoError(t, err, "Failed to check if document exists: %s", err)
-		assert.False(t, found)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.False(t, found)
 
 		// delete the RestoreFrom entry
 		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
 			spec.RestoreFrom = nil
 		})
-		assert.NoError(t, err, "Failed to update deployment: %s", err)
+		require.NoError(t, err, "Failed to update deployment: %s", err)
 
 		// wait for it to be deleted in the status
 		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
@@ -527,7 +720,7 @@ func TestBackupCluster(t *testing.T) {
 		_, err := updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
 			spec.RestoreFrom = util.NewString(name)
 		})
-		assert.NoError(t, err, "Failed to update deployment: %s", err)
+		require.NoError(t, err, "Failed to update deployment: %s", err)
 
 		depl, err := waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
 			status := depl.Status
@@ -538,18 +731,22 @@ func TestBackupCluster(t *testing.T) {
 					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
 				}
 
-				if result.Restored {
-					t.Fatalf("Backup has been restored!")
+				if result.State == api.DeploymentRestoreStateRestored {
+					t.Fatalf("Restore backup - not expected: %s", result.Message)
 				}
 
-				return nil
+				if result.State == api.DeploymentRestoreStateRestoreFailed {
+					return nil
+				}
+
+				return fmt.Errorf("Not yet restored - staate %s", result.State)
 			}
 
 			return fmt.Errorf("Restore is not set on deployment")
 		})
-		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+		require.NoError(t, err, "Deployment did not restore in time: %s", err)
 		require.NotNil(t, depl.Status.Restore)
-		assert.False(t, depl.Status.Restore.Restored)
+		require.Equal(t, api.DeploymentRestoreStateRestoreFailed, depl.Status.Restore.State)
 	})
 
 	t.Run("upload", func(t *testing.T) {
@@ -567,7 +764,7 @@ func TestBackupCluster(t *testing.T) {
 		require.NotNil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Uploaded)
+		require.True(t, *backup.Status.Backup.Uploaded)
 	})
 
 	t.Run("re-upload", func(t *testing.T) {
@@ -585,7 +782,7 @@ func TestBackupCluster(t *testing.T) {
 		require.NotNil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Uploaded)
+		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// Remove upload option
 		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
@@ -624,28 +821,28 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, id)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		require.NotNil(t, backup.Status.Backup)
 		require.NotNil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Uploaded)
+		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// After all remove backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
-		assert.NoError(t, err, "Backup test failed: %s", err)
+		require.NoError(t, err, "Backup test failed: %s", err)
 
 		// check that the actual backup has been deleted
 		found, _, err = statBackupMeta(databaseClient, id)
-		assert.False(t, found)
+		require.False(t, found)
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
@@ -653,19 +850,19 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// check that the backup is actually available
 		found, meta, err = statBackupMeta(databaseClient, id)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		require.NotNil(t, backup.Status.Backup)
 		require.Nil(t, backup.Status.Backup.Uploaded)
 		require.NotNil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Downloaded)
+		require.True(t, *backup.Status.Backup.Downloaded)
 	})
 
 	t.Run("upload-download-upload-cycle", func(t *testing.T) {
@@ -677,28 +874,28 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, id)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		require.NotNil(t, backup.Status.Backup)
 		require.NotNil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Uploaded)
+		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// After all remove backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
-		assert.NoError(t, err, "Backup test failed: %s", err)
+		require.NoError(t, err, "Backup test failed: %s", err)
 
 		// check that the actual backup has been deleted
 		found, _, err = statBackupMeta(databaseClient, id)
-		assert.False(t, found)
+		require.False(t, found)
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
@@ -706,19 +903,19 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// check that the backup is actually available
 		found, meta, err = statBackupMeta(databaseClient, id)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.True(t, found)
-		assert.Equal(t, meta.Version, backup.Status.Backup.Version)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.True(t, found)
+		require.Equal(t, meta.Version, backup.Status.Backup.Version)
 
 		require.NotNil(t, backup.Status.Backup)
 		require.Nil(t, backup.Status.Backup.Uploaded)
 		require.NotNil(t, backup.Status.Backup.Downloaded)
 
-		assert.True(t, *backup.Status.Backup.Downloaded)
+		require.True(t, *backup.Status.Backup.Downloaded)
 
 		// Add again upload flag
 		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
@@ -746,14 +943,14 @@ func TestBackupCluster(t *testing.T) {
 		// first add collections, insert data into the cluster
 		dbname := "backup-test-db-up-down"
 		db, err := databaseClient.CreateDatabase(ctx, dbname, nil)
-		assert.NoError(t, err, "failed to create database: %s", err)
+		require.NoError(t, err, "failed to create database: %s", err)
 
 		colname := "backup-test-col"
 		col, err := db.CreateCollection(ctx, colname, nil)
-		assert.NoError(t, err, "failed to create collection: %s", err)
+		require.NoError(t, err, "failed to create collection: %s", err)
 
 		meta1, err := col.CreateDocument(ctx, &Book{Title: "My first Go-Program", Author: "Adam"})
-		assert.NoError(t, err, "failed to create document: %s", err)
+		require.NoError(t, err, "failed to create document: %s", err)
 
 		// Now create a backup
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
@@ -761,25 +958,25 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// insert yet another document
 		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
-		assert.NoError(t, err, "failed to create document: %s", err)
+		require.NoError(t, err, "failed to create document: %s", err)
 
 		// now remove the backup locally
 		err = databaseClient.Backup().Delete(nil, id)
-		assert.NoError(t, err, "Failed to delete backup: %s", err)
+		require.NoError(t, err, "Failed to delete backup: %s", err)
 
 		// wait for the backup to become unavailable
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotAvailable, 30*time.Second)
-		assert.NoError(t, err, "Backup test failed: %s", err)
-		assert.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
+		require.NoError(t, err, "Backup test failed: %s", err)
+		require.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
 
 		// now remove the backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
-		assert.NoError(t, err, "Backup test failed: %s", err)
+		require.NoError(t, err, "Backup test failed: %s", err)
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
@@ -787,13 +984,13 @@ func TestBackupCluster(t *testing.T) {
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
-		assert.NoError(t, err, "backup did not become ready: %s", err)
+		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// now restore the backup
 		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
 			spec.RestoreFrom = util.NewString(string(name))
 		})
-		assert.NoError(t, err, "Failed to update deployment: %s", err)
+		require.NoError(t, err, "Failed to update deployment: %s", err)
 
 		_, err = waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
 			status := depl.Status
@@ -804,32 +1001,36 @@ func TestBackupCluster(t *testing.T) {
 					return fmt.Errorf("Wrong backup in RequestedFrom: %s, expected %s", result.RequestedFrom, name)
 				}
 
-				if !result.Restored {
+				if result.State == api.DeploymentRestoreStateRestoreFailed {
 					t.Fatalf("Failed to restore backup: %s", result.Message)
 				}
 
-				return nil
+				if result.State == api.DeploymentRestoreStateRestored {
+					return nil
+				}
+
+				return fmt.Errorf("Not yet restored - staate %s", result.State)
 			}
 
 			return fmt.Errorf("Restore is not set on deployment")
 		})
-		assert.NoError(t, err, "Deployment did not restore in time: %s", err)
+		require.NoError(t, err, "Deployment did not restore in time: %s", err)
 
 		// restore was completed, check if documents are there
 		found, err := col.DocumentExists(ctx, meta1.Key)
-		assert.NoError(t, err, "Failed to check if document exists: %s", err)
-		assert.True(t, found)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.True(t, found)
 
 		// second document should not exist
 		found, err = col.DocumentExists(ctx, meta2.Key)
-		assert.NoError(t, err, "Failed to check if document exists: %s", err)
-		assert.False(t, found)
+		require.NoError(t, err, "Failed to check if document exists: %s", err)
+		require.False(t, found)
 
 		// delete the RestoreFrom entry
 		_, err = updateDeployment(deploymentClient, depl.GetName(), ns, func(spec *api.DeploymentSpec) {
 			spec.RestoreFrom = nil
 		})
-		assert.NoError(t, err, "Failed to update deployment: %s", err)
+		require.NoError(t, err, "Failed to update deployment: %s", err)
 
 		// wait for it to be deleted in the status
 		waitUntilDeployment(deploymentClient, depl.GetName(), ns, func(depl *api.ArangoDeployment) error {
@@ -894,10 +1095,10 @@ func TestBackupCluster(t *testing.T) {
 
 				// check that the backup is actually available
 				found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
-				assert.NoError(t, err, "Backup test failed: %s", err)
-				assert.True(t, found)
-				assert.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
-				assert.Equal(t, depl.GetName(), currentBackup.Spec.Deployment.Name)
+				require.NoError(t, err, "Backup test failed: %s", err)
+				require.True(t, found)
+				require.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
+				require.Equal(t, depl.GetName(), currentBackup.Spec.Deployment.Name)
 			})
 		}
 
@@ -976,10 +1177,10 @@ func TestBackupCluster(t *testing.T) {
 
 						// check that the backup is actually available
 						found, meta, err := statBackupMeta(databaseClients[deployment], driver.BackupID(backupID))
-						assert.NoError(t, err, "Backup test failed: %s", err)
-						assert.True(t, found)
-						assert.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
-						assert.Equal(t, deployment.GetName(), currentBackup.Spec.Deployment.Name)
+						require.NoError(t, err, "Backup test failed: %s", err)
+						require.True(t, found)
+						require.Equal(t, meta.Version, currentBackup.Status.Backup.Version)
+						require.Equal(t, deployment.GetName(), currentBackup.Spec.Deployment.Name)
 					})
 				}
 			})

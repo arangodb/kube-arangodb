@@ -32,7 +32,7 @@ import (
 
 func Test_Flow_SuccessHappyPath(t *testing.T) {
 	// Arrange
-	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateNone)
 
@@ -83,17 +83,5 @@ func Test_Flow_SuccessHappyPath(t *testing.T) {
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
-	})
-
-	t.Run("Change from Ready to Deleted", func(t *testing.T) {
-		// Arrange
-		mock.errors.getError = errorString
-
-		// Act
-		require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
-
-		// Assert
-		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, backupApi.ArangoBackupStateDeleted, newObj.Status.State)
 	})
 }
