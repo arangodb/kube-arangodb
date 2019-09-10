@@ -47,13 +47,15 @@ func validatePullPolicy(v v1.PullPolicy) error {
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	Mode            *DeploymentMode `json:"mode,omitempty"`
-	Environment     *Environment    `json:"environment,omitempty"`
-	StorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
-	Image           *string         `json:"image,omitempty"`
-	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
-	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
-	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
+	Mode             *DeploymentMode `json:"mode,omitempty"`
+	Environment      *Environment    `json:"environment,omitempty"`
+	StorageEngine    *StorageEngine  `json:"storageEngine,omitempty"`
+	Image            *string         `json:"image,omitempty"`
+	ImagePullPolicy  *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []string        `json:"imagePullSecrets,omitempty"`
+	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
+	DisableIPv6      *bool           `json:"disableIPv6,omitempty"`
+
 	LocallyAttachedVolumes *bool 	`json:"locallyAttachedVolumes,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
