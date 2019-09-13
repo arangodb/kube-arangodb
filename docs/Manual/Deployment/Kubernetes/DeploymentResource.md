@@ -96,6 +96,10 @@ Possible values are:
 - `IfNotPresent` (default) to pull only when the image is not found on the node.
 - `Always` to always pull the image before using it.
 
+### `spec.imagePullSecrets: []string`
+
+This setting specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
+
 ### `spec.storageEngine: string`
 
 This setting specifies the type of storage engine used for all servers
