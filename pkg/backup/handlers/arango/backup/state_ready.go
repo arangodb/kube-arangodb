@@ -64,7 +64,7 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.Ar
 		// Ensure that we can start upload process
 		running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
 		if err != nil {
-			return createFailedState(err, backup.Status), nil
+			return backup.Status, nil
 		}
 
 		if running {
