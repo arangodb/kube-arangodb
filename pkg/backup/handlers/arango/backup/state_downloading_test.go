@@ -211,9 +211,8 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateFailed, newObj.Status.State)
-	require.Equal(t, createFailMessage(backupApi.ArangoBackupStateDownloading, errorMsg), newObj.Status.Message)
-	require.Nil(t, newObj.Status.Progress)
+	require.Equal(t, backupApi.ArangoBackupStateDownloading, newObj.Status.State)
+	require.NotNil(t, newObj.Status.Progress)
 
 	require.False(t, newObj.Status.Available)
 }
@@ -258,5 +257,8 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	err = handler.Handle(newItemFromBackup(operation.Update, obj))
 
 	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, backupApi.ArangoBackupStateDownloading, newObj.Status.State)
+
+	require.False(t, newObj.Status.Available)
 }

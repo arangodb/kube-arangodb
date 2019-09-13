@@ -95,8 +95,8 @@ func Test_State_Ready_GetFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateFailed, newObj.Status.State)
-	require.False(t, newObj.Status.Available)
+	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
+	require.True(t, newObj.Status.Available)
 }
 
 func Test_State_Ready_TemporaryGetFailed(t *testing.T) {
@@ -126,7 +126,9 @@ func Test_State_Ready_TemporaryGetFailed(t *testing.T) {
 	err = handler.Handle(newItemFromBackup(operation.Update, obj))
 
 	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
+	require.True(t, newObj.Status.Available)
 }
 
 func Test_State_Ready_Upload(t *testing.T) {

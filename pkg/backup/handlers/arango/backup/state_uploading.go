@@ -50,6 +50,9 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupAp
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
+		if driver.IsNotFound(err) {
+			return switchTemporaryError(err, backup.Status)
+		}
 		return backup.Status, nil
 	}
 

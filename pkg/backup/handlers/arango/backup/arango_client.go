@@ -125,5 +125,9 @@ func checkTemporaryError(err error) bool {
 		return true
 	}
 
+	if strings.Contains(err.Error(), "connection refused") {
+		return true
+	}
+
 	return false
 }

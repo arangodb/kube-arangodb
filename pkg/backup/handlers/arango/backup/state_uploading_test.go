@@ -176,6 +176,8 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 		CreationTimestamp: meta.Now(),
 	}
 
+	obj.Status.Available = true
+
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
 	}
@@ -188,11 +190,10 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateFailed, newObj.Status.State)
-	require.Equal(t, createFailMessage(backupApi.ArangoBackupStateUploading, errorMsg), newObj.Status.Message)
-	require.Nil(t, newObj.Status.Progress)
+	require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
+	require.NotNil(t, newObj.Status.Progress)
 
-	require.False(t, newObj.Status.Available)
+	require.True(t, newObj.Status.Available)
 }
 
 func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
@@ -217,6 +218,8 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 		CreationTimestamp: meta.Now(),
 	}
 
+	obj.Status.Available = true
+
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
 	}
@@ -228,5 +231,9 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	err = handler.Handle(newItemFromBackup(operation.Update, obj))
 
 	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
+	require.NotNil(t, newObj.Status.Progress)
+
+	require.True(t, newObj.Status.Available)
 }
