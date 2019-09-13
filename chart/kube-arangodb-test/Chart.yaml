@@ -1,0 +1,6 @@
+---
+
+name: kube-arangodb-test
+version: 1.0.0
+
+description: "ArangoDB Kubernetes Test Access"

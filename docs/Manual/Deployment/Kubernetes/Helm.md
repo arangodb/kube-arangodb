@@ -13,13 +13,10 @@ For example you can install the operator in a namespace other than
 
 The ArangoDB Kubernetes Operator is contained in two `helm` charts:
 
-- `kube-arangodb` which contains the operator for the `ArangoDeployment`
+- `kube-arangodb` which contains the operator for the `ArangoDeployment`, `ArangoLocalStorage`
   and `ArangoDeploymentReplication` resource types.
-- `kube-arangodb-storage` which contains the operator for the `ArangoLocalStorage`
-  resource type.
+- `kube-arangodb-crd` which contains the CRD for the `ArangoDeployment` and `ArangoDeploymentReplication` resource types.
 
-The `kube-arangodb-storage` only has to be installed if your Kubernetes cluster
-does not already provide `StorageClasses` that use locally attached SSDs.
 
 ## Configurable values for ArangoDB Kubernetes Operator
 
@@ -29,13 +26,13 @@ ArangoDB Kubernetes Operator with `helm`.
 Values are passed to `helm` using an `--set=<key>=<value>` argument passed
 to the `helm install` or `helm upgrade` command.
 
-### Values applicable to both charts
+### Values applicable to `kube-arangodb` chart
 
-| Key               | Type   | Description
-|-------------------|--------|-----|
-| Image             | string | Override the docker image used by the operators
-| ImagePullPolicy   | string | Override the image pull policy used by the operators. See [Updating Images](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for details.
-| RBAC.Create       | bool   | Set to `true` (default) to create roles & role bindings.
+| Key                        | Type   | Description
+|----------------------------|--------|-----|
+| operator.image             | string | Override the docker image used by the operators
+| operator.imagePullPolicy   | string | Override the image pull policy used by the operators. See [Updating Images](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for details.
+| RBAC.Create                | bool   | Set to `true` (default) to create roles & role bindings.
 
 ### Values applicable to the `kube-arangodb` chart
 

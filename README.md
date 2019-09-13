@@ -91,8 +91,8 @@ helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb.tgz
-# To use `ArangoLocalStorage`, also run
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb-storage.tgz
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb.tgz --set "operator.features.storage=true"
 ```
 
 ## Upgrading the operator using Helm
@@ -111,7 +111,6 @@ list` output:
 ```
 % helm list
 NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-intent-camel    	1       	Mon Apr  8 11:37:52 2019	DEPLOYED	kube-arangodb-storage-0.3.10-preview	           	default  
 steely-mule     	1       	Sun Mar 31 21:11:07 2019	DEPLOYED	kube-arangodb-crd-0.3.9             	           	default  
 vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
 ```
@@ -119,7 +118,6 @@ vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10
 So here, you would have to do
 
 ```bash
-helm delete intent-camel
 helm delete vetoed-ladybird
 ```
 
@@ -130,8 +128,8 @@ with `helm install` as normal:
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb.tgz
-# To use `ArangoLocalStorage`, also run
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb-storage.tgz
+# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.14/kube-arangodb.tgz --set "operator.features.storage=true"
 ```
 
 ## Building

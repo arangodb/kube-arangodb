@@ -31,11 +31,14 @@ DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
+HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
+         	       --name "$(NAME)" \
+         	       --set "operator.image=$(OPERATORIMAGE)" \
+         	       --set "operator.imagePullPolicy=Always" \
+         	       --namespace "$(DEPLOYMENTNAMESPACE)"
+
 ifndef LOCALONLY
 	PUSHIMAGES := 1
-	IMAGESHA256 := true
-else
-	IMAGESHA256 := false
 endif
 
 ifdef IMAGETAG
@@ -197,15 +200,64 @@ endif
 
 # Manifests
 
+.PHONY: manifests-crd
+manifests-crd: export CHART_NAME := kube-arangodb-crd
+manifests-crd: export NAME := crd
+manifests-crd:
+	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
+	@$(HELM_CMD) > "$(MANIFESTPATHCRD)"
+
+.PHONY: manifests-test
+manifests-test: export CHART_NAME := kube-arangodb-test
+manifests-test: export NAME := arangodb-test
+manifests-test:
+	@echo Building manifests for test - $(MANIFESTPATHTEST)
+	@$(HELM_CMD) > "$(MANIFESTPATHTEST)"
+
+.PHONY: manifests-operator-deployment
+manifests-operator-deployment: export CHART_NAME := kube-arangodb
+manifests-operator-deployment: export NAME := deployment
+manifests-operator-deployment:
+	@echo Building manifests for Operator Deployment - $(MANIFESTPATHDEPLOYMENT)
+	@$(HELM_CMD) \
+	     --set "rbac.scope=ClusterRole" \
+	     --set "operator.features.deployment=true" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=false"> "$(MANIFESTPATHDEPLOYMENT)"
+
+.PHONY: manifests-operator-deployment-replication
+manifests-operator-deployment-replication: export CHART_NAME := kube-arangodb
+manifests-operator-deployment-replication: export NAME := deployment-replication
+manifests-operator-deployment-replication:
+	@echo Building manifests for Operator Deployment Replication - $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	@$(HELM_CMD) \
+	     --set "rbac.scope=ClusterRole" \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=true" \
+	     --set "operator.features.storage=false"> "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
+
+.PHONY: manifests-operator-storage
+manifests-operator-storage: export CHART_NAME := kube-arangodb
+manifests-operator-storage: export NAME := storage
+manifests-operator-storage:
+	@echo Building manifests for Operator Storage - $(MANIFESTPATHSTORAGE)
+	@$(HELM_CMD) \
+	     --set "rbac.scope=ClusterRole" \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=true"> "$(MANIFESTPATHSTORAGE)"
+
+.PHONY: manifests-operator
+manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage
+
 .PHONY: manifests
-manifests: $(GOBUILDDIR)
-	@echo Building manifests
-	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
-		--output-suffix=$(MANIFESTSUFFIX) \
-		--image=$(OPERATORIMAGE) \
-		--image-sha256=$(IMAGESHA256) \
-		--namespace=$(DEPLOYMENTNAMESPACE) \
-		--allow-chaos=$(ALLOWCHAOS)
+manifests: manifests-crd manifests-operator manifests-test
+
+.PHONY: single-manifest
+single-manifest: $(GOBUILDDIR)
+	@echo Building single manifest
+	@$(HELM_CMD) > "$(ROOTDIR)/manifests/single$(MANIFESTSUFFIX).yaml"
+
 
 # Testing
 

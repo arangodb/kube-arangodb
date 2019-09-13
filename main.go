@@ -205,13 +205,23 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		AdminSecretName:    serverOptions.adminSecretName,
 		AllowAnonymous:     serverOptions.allowAnonymous,
 	}, server.Dependencies{
-		Log:                        logService.MustGetLogger("server"),
-		LivenessProbe:              &livenessProbe,
-		DeploymentProbe:            &deploymentProbe,
-		DeploymentReplicationProbe: &deploymentReplicationProbe,
-		StorageProbe:               &storageProbe,
-		Operators:                  o,
-		Secrets:                    secrets,
+		Log:                   logService.MustGetLogger("server"),
+		LivenessProbe:         &livenessProbe,
+		Deployment:            server.OperatorDependency{
+			Enabled: cfg.EnableDeployment,
+			Probe:   &deploymentProbe,
+		},
+		DeploymentReplication: server.OperatorDependency{
+			Enabled: cfg.EnableDeploymentReplication,
+			Probe:   &deploymentReplicationProbe,
+		},
+		Storage: server.OperatorDependency{
+			Enabled: cfg.EnableStorage,
+			Probe:   &storageProbe,
+		},
+		Operators:             o,
+
+		Secrets:               secrets,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {
