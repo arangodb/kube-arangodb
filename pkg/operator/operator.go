@@ -211,7 +211,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
 
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10 * time.Second, arangoInformer.WithNamespace(o.Namespace))
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 15 * time.Second, arangoInformer.WithNamespace(o.Namespace))
 
 	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)
@@ -227,7 +227,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	prometheus.MustRegister(operator)
 
-	operator.Start(4, stop)
+	operator.Start(8, stop)
 	o.Dependencies.BackupProbe.SetReady()
 
 	<-stop

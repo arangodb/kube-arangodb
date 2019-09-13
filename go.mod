@@ -89,7 +89,7 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	google.golang.org/api v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873 // indirect
 	google.golang.org/grpc v1.20.1 // indirect

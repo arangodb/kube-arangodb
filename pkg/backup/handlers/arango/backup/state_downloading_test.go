@@ -259,6 +259,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, backupApi.ArangoBackupStateDownloading, newObj.Status.State)
+	require.NotNil(t, newObj.Status.Progress)
 
 	require.False(t, newObj.Status.Available)
 }
