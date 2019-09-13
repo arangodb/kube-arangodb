@@ -24,7 +24,6 @@ package operator
 
 import (
 	"fmt"
-
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/rs/zerolog/log"
@@ -87,6 +86,13 @@ func (o *operator) processObject(obj interface{}) error {
 
 	if item, err = operation.NewItemFromString(key); err != nil {
 		o.workqueue.Forget(obj)
+		return nil
+	}
+
+	if item.Operation != operation.Update {
+		item.Operation = operation.Update
+		o.workqueue.Forget(obj)
+		o.workqueue.Add(item.String())
 		return nil
 	}
 

@@ -249,11 +249,6 @@ func (h *handler) Handle(item operation.Item) error {
 		return h.finalize(b)
 	}
 
-	// Do not act on delete event, finalizer should be used
-	if item.Operation == operation.Delete {
-		return nil
-	}
-
 	// Add finalizers
 	if !hasFinalizers(b) {
 		b.Finalizers = appendFinalizers(b)
@@ -297,9 +292,15 @@ func (h *handler) Handle(item operation.Item) error {
 		return err
 	}
 
+	status.Time = b.Status.Time
+
 	// Nothing to update, objects are equal
 	if reflect.DeepEqual(b.Status, status) {
 		return nil
+	}
+
+	if h.operator != nil {
+		h.operator.EnqueueItem(item)
 	}
 
 	// Ensure that transit is possible
@@ -309,6 +310,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Log message about state change
 	if b.Status.State != status.State {
+		status.Time = meta.Now()
 		if status.State == backupApi.ArangoBackupStateFailed {
 			h.eventRecorder.Warning(b, StateChange, "Transiting from %s to %s with error: %s",
 				b.Status.State,
@@ -319,9 +321,6 @@ func (h *handler) Handle(item operation.Item) error {
 				b.Status.State,
 				status.State)
 		}
-	} else {
-		// Keep old time in case when object did not change
-		status.Time = b.Status.Time
 	}
 
 	b.Status = status
