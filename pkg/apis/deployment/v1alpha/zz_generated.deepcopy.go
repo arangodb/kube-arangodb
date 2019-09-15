@@ -257,6 +257,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(v1.PullPolicy)
 		**out = **in
 	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.DowntimeAllowed != nil {
 		in, out := &in.DowntimeAllowed, &out.DowntimeAllowed
 		*out = new(bool)
