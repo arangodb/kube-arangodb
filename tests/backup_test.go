@@ -1050,7 +1050,7 @@ func TestBackupCluster(t *testing.T) {
 			MatchLabels: deplLabels,
 		})
 
-		policy := newBackupPolicy(depl.GetName(), "0/15 * * * * *", deplLabels, nil)
+		policy := newBackupPolicy(depl.GetName(), "*/1 * * * * *", deplLabels, nil)
 		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
@@ -1128,7 +1128,7 @@ func TestBackupCluster(t *testing.T) {
 			MatchLabels: labels,
 		})
 
-		policy := newBackupPolicy(depl.GetName(), "0/15 * * * * *", labels, nil)
+		policy := newBackupPolicy(depl.GetName(), "*/1 * * * * *", labels, nil)
 		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
