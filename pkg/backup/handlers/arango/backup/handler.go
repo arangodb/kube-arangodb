@@ -142,6 +142,12 @@ func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error
 
 func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment, backupMeta driver.BackupMeta, backups []backupApi.ArangoBackup) error {
 	for _, backup := range backups {
+		if download := backup.Spec.Download; download != nil {
+			if download.ID == string(backupMeta.ID) {
+				return nil
+			}
+		}
+
 		if backup.Status.Backup == nil {
 			continue
 		}

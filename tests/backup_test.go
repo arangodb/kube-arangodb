@@ -482,14 +482,30 @@ func TestBackupCluster(t *testing.T) {
 		// create a local backup manually
 		id, _, err := databaseClient.Backup().Create(nil, nil)
 		require.NoError(t, err, "Creating backup failed: %s", err)
-		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(id))
+		found, _, err := statBackupMeta(databaseClient, driver.BackupID(id))
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
 
 		// create a backup resource manually with that id
-		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
-		backup.Status.Backup = &backupApi.ArangoBackupDetails{ID: string(id), Version: meta.Version}
-		_, err = backupClient.Create(backup)
+		var backup *backupApi.ArangoBackup
+		err = timeout(3*time.Second, 2*time.Minute, func() error {
+			backups, err := backupClient.List(metav1.ListOptions{})
+			if err != nil {
+				return err
+			}
+
+			if len(backups.Items) == 0 {
+				return nil
+			}
+
+			if len(backups.Items) > 1 {
+				return fmt.Errorf("Too many backups")
+			}
+
+			backup = &backups.Items[0]
+
+			return interrupt{}
+		})
 		require.NoError(t, err, "failed to create backup: %s", err)
 		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
 
@@ -497,6 +513,9 @@ func TestBackupCluster(t *testing.T) {
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 		require.NoError(t, err, "backup did not become available: %s", err)
 		require.Equal(t, backupApi.ArangoBackupStateReady, backup.Status.State)
+		require.NotNil(t, backup.Status.Backup)
+		require.NotNil(t, backup.Status.Backup.Imported)
+		require.True(t, *backup.Status.Backup.Imported)
 	})
 
 	t.Run("create-multiple-restore-cycle", func(t *testing.T) {
@@ -1050,7 +1069,7 @@ func TestBackupCluster(t *testing.T) {
 			MatchLabels: deplLabels,
 		})
 
-		policy := newBackupPolicy(depl.GetName(), "*/1 * * * * *", deplLabels, nil)
+		policy := newBackupPolicy(depl.GetName(), "*/1 * * * *", deplLabels, nil)
 		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
@@ -1060,7 +1079,7 @@ func TestBackupCluster(t *testing.T) {
 		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
 
 		// Wait until 2 backups are created
-		err = timeout(5*time.Second, 2*time.Minute, func() error {
+		err = timeout(5*time.Second, 5*time.Minute, func() error {
 			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 
 			if err != nil {
@@ -1128,7 +1147,7 @@ func TestBackupCluster(t *testing.T) {
 			MatchLabels: labels,
 		})
 
-		policy := newBackupPolicy(depl.GetName(), "*/1 * * * * *", labels, nil)
+		policy := newBackupPolicy(depl.GetName(), "*/1 * * * *", labels, nil)
 		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
@@ -1138,7 +1157,7 @@ func TestBackupCluster(t *testing.T) {
 		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
 
 		// Wait until 2 backups are created
-		err = timeout(5*time.Second, 2*time.Minute, func() error {
+		err = timeout(5*time.Second, 5*time.Minute, func() error {
 			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
 
 			if err != nil {
