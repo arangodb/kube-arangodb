@@ -102,7 +102,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	}
 
 	if policy.Status.Scheduled.IsZero() {
-		expr, err := cron.Parse(policy.Spec.Schedule)
+		expr, err := cron.ParseStandard(policy.Spec.Schedule)
 		if err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
@@ -161,7 +161,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		h.eventRecorder.Normal(policy, backupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
 	}
 
-	expr, err := cron.Parse(policy.Spec.Schedule)
+	expr, err := cron.ParseStandard(policy.Spec.Schedule)
 	if err != nil {
 		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
