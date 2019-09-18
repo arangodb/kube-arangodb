@@ -95,6 +95,7 @@ spec:
     credentialsSecretName: "secret-name"
 status:
   state: "Ready"
+  time: "time"
   message: "Message details" -
   progress:
     jobID: "id"
@@ -324,6 +325,14 @@ Possible states:
 - "Deleted" - state when Backup was once in ready, but has been deleted
 - "Failed" - state for failure
 
+### `status.time: timestamp`
+
+Time in UTC when state of the ArangoBackup object changed.
+
+Required: true
+
+Default: ""
+
 ### `status.message: string`
 
 State message of the ArangoBackup object.
@@ -407,7 +416,7 @@ Default: false
 
 #### `status.backup.createdAt: TimeStamp`
 
-ArangoDB Backup object creation time.
+ArangoDB Backup object creation time in UTC.
 
 Required: true
 

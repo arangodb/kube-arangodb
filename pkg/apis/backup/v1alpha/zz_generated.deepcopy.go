@@ -162,7 +162,7 @@ func (in *ArangoBackupPolicyList) DeepCopyInto(out *ArangoBackupPolicyList) {
 	out.ListMeta = in.ListMeta
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]ArangoBackup, len(*in))
+		*out = make([]ArangoBackupPolicy, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

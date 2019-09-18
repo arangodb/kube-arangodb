@@ -15,12 +15,12 @@ kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
 spec:
-  schedule: "*/15 * * * * *"
+  schedule: "*/15 * * * *"
 ```
 
 Action:
 
-Create an ArangoBackup object for each ArangoBackup every 15 seconds
+Create an ArangoBackup object for each ArangoBackup every 15 minutes
 
 ### Create schedule for selected deployments
 
@@ -31,7 +31,7 @@ kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
 spec:
-  schedule: "*/15 * * * * *"
+  schedule: "*/15 * * * *"
   selector:
     matchLabels:
       labelName: "labelValue"
@@ -39,7 +39,7 @@ spec:
 
 Action:
 
-Create an ArangoBackup object for selected ArangoBackup every 15 seconds
+Create an ArangoBackup object for selected ArangoBackup every 15 minutes
 
 ### Create schedule for all deployments and upload
 
@@ -50,14 +50,14 @@ kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
 spec:
-  schedule: "*/15 * * * * *"
+  schedule: "*/15 * * * * "
   template:
       upload:
         repositoryURL: "s3:/..."
         credentialsSecretName: "secret-name"
 ```
 
-Create an ArangoBackup object for each ArangoBackup every 15 seconds and upload to repositoryURL
+Create an ArangoBackup object for each ArangoBackup every 15 minutes and upload to repositoryURL
 
 ## ArangoBackup Custom Resource Spec:
 
@@ -67,7 +67,7 @@ kind: "ArangoBackupPolicy"
 metadata:
   name: "example-arangodb-backup-policy"
 spec:
-  schedule: "*/15 * * * * *"
+  schedule: "*/15 * * * * "
   selector:
     matchLabels:
       labelName: "labelValue"
@@ -142,7 +142,7 @@ Default: {}
 
 ### `status.scheduled: TimeStamp`
 
-Next scheduled time
+Next scheduled time in UTC
 
 Required: true
 

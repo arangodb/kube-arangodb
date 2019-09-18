@@ -363,7 +363,7 @@ restore operation in the `restore` key.
 It will contain some of the following fields:
 - _requestedFrom_: name of the `ArangoBackup` used to restore from.
 - _message_: optional message explaining why the restore failed.
-- _state_: state indicating if the restore was successful or not. Possilbe values: `Restoring`, `Restored`, `RestoreFailed`
+- _state_: state indicating if the restore was successful or not. Possible values: `Restoring`, `Restored`, `RestoreFailed`
 
 If the `restoreFrom` key is removed from the spec, the `restore` key is deleted as well.
 
