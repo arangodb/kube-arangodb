@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: arango-deployment-replication-operator
-  namespace: test
+  namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
       helm.sh/chart: kube-arangodb-1.0.0
@@ -17,7 +17,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.0
@@ -37,7 +37,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.0
@@ -51,14 +51,14 @@ roleRef:
 subjects:
     - kind: ServiceAccount
       name: arango-deployment-replication-operator
-      namespace: test
+      namespace: default
 ---
 # Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.0
@@ -84,7 +84,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.0
@@ -98,14 +98,14 @@ roleRef:
 subjects:
     - kind: ServiceAccount
       name: arango-deployment-replication-operator
-      namespace: test
+      namespace: default
 ---
 # Source: kube-arangodb/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: arango-deployment-replication-operator
-  namespace: test
+  namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.0.0
@@ -131,7 +131,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: arango-deployment-replication-operator
-    namespace: test
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.0
@@ -171,7 +171,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: eu.gcr.io/hale-ivy-241313/kube-arangodb:dev
+                  image: arangodb/kube-arangodb@sha256:8de8cba7727bf4bf2b9f5ac943418afb4a139cfc51627a57a6e5febdbc8fbcb2
                   args:
                     - --operator.deployment-replication
                     - --chaos.allowed=false
