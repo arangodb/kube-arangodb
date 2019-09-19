@@ -35,11 +35,11 @@ type ArangoBackupStatus struct {
 }
 
 type ArangoBackupDetails struct {
-	ID                string    `json:"id"`
-	Version           string    `json:"version"`
-	Forced            *bool     `json:"forced,omitempty"`
-	Uploaded          *bool     `json:"uploaded,omitempty"`
-	Downloaded        *bool     `json:"downloaded,omitempty"`
-	Imported          *bool     `json:"imported,omitempty"`
-	CreationTimestamp meta.Time `json:"createdAt"`
+	ID                      string    `json:"id"`
+	Version                 string    `json:"version"`
+	PotentiallyInconsistent *bool     `json:"potentiallyInconsistent,omitempty"`
+	Uploaded                *bool     `json:"uploaded,omitempty"`
+	Downloaded              *bool     `json:"downloaded,omitempty"`
+	Imported                *bool     `json:"imported,omitempty"`
+	CreationTimestamp       meta.Time `json:"createdAt"`
 }

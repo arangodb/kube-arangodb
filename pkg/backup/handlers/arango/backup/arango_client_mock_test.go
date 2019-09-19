@@ -211,8 +211,8 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 	m.backups[id] = meta
 
 	return ArangoBackupCreateResponse{
-		BackupMeta: meta,
-		Forced:     m.errors.createForced,
+		BackupMeta:              meta,
+		PotentiallyInconsistent: m.errors.createForced,
 	}, nil
 }
 

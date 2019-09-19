@@ -80,8 +80,8 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 	co := driver.BackupCreateOptions{}
 
 	if opt := ac.backup.Spec.Options; opt != nil {
-		if force := opt.Force; force != nil {
-			co.Force = *force
+		if allowInconsistent := opt.AllowInconsistent; allowInconsistent != nil {
+			co.AllowInconsistent = *allowInconsistent
 		}
 		if timeout := opt.Timeout; timeout != nil {
 			co.Timeout = time.Duration(*timeout * float32(time.Second))
@@ -100,8 +100,8 @@ func (ac *arangoClientBackupImpl) Create() (ArangoBackupCreateResponse, error) {
 	}
 
 	return ArangoBackupCreateResponse{
-		Forced:     resp.Forced,
-		BackupMeta: meta,
+		PotentiallyInconsistent: resp.PotentiallyInconsistent,
+		BackupMeta:              meta,
 	}, nil
 }
 
