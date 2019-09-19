@@ -6,6 +6,7 @@ that you deploy in your Kubernetes cluster to:
 - Manage deployments of the ArangoDB database
 - Provide `PersistentVolumes` on local storage of your nodes for optimal storage performance.
 - Configure ArangoDB Datacenter to Datacenter replication
+- Manage ArangoDB database backups
 
 Each of these uses involves a different custom resource.
 
@@ -13,6 +14,8 @@ Each of these uses involves a different custom resource.
   create an ArangoDB database deployment.
 - Use an [`ArangoBackup` resource](./BackupResource.md) to
   create an ArangoDB backup.
+- Use an [`BackupPolicy Resource`](./BackupPolicyResource.md) to
+  create an ArangoDB backup policy.
 - Use an [`ArangoLocalStorage` resource](./StorageResource.md) to
   provide local `PersistentVolumes` for optimal I/O performance.
 - Use an [`ArangoDeploymentReplication` resource](./DeploymentReplicationResource.md) to
