@@ -18,7 +18,7 @@ require (
 	github.com/aktau/github-release v0.7.2 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
-	github.com/arangodb/go-driver v0.0.0-20190806145426-48dd51aa0940
+	github.com/arangodb/go-driver v0.0.0-20190917135832-4ec315b17bf0
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/bugagazavr/go-gitlab-client v0.0.0-20150830002541-e5999f934dc4 // indirect
@@ -89,7 +89,7 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	google.golang.org/api v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873 // indirect
 	google.golang.org/grpc v1.20.1 // indirect

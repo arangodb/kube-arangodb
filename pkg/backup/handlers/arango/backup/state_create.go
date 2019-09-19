@@ -53,8 +53,8 @@ func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.A
 		CreationTimestamp: meta.Now(),
 	}
 
-	if response.Forced {
-		details.Forced = &response.Forced
+	if response.PotentiallyInconsistent {
+		details.PotentiallyInconsistent = &response.PotentiallyInconsistent
 	}
 
 	return backupApi.ArangoBackupStatus{

@@ -57,7 +57,7 @@ type ArangoBackupProgress struct {
 // ArangoBackupCreateResponse create response
 type ArangoBackupCreateResponse struct {
 	driver.BackupMeta
-	Forced bool
+	PotentiallyInconsistent bool
 }
 
 // ArangoBackupClient interface with backup functionality for database

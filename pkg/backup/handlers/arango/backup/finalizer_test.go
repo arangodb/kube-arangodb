@@ -70,10 +70,10 @@ func Test_Finalizer_RemoveObject(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Forced:            &backupMeta.Forced,
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+		ID:                      string(backupMeta.ID),
+		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
+		Version:                 backupMeta.Version,
+		CreationTimestamp:       meta.Now(),
 	}
 
 	// Act
@@ -107,10 +107,10 @@ func Test_Finalizer_RemoveObject_WithoutFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Forced:            &backupMeta.Forced,
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+		ID:                      string(backupMeta.ID),
+		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
+		Version:                 backupMeta.Version,
+		CreationTimestamp:       meta.Now(),
 	}
 	obj.Finalizers = nil
 
@@ -148,10 +148,10 @@ func Test_Finalizer_RemoveObject_UnknownFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Forced:            &backupMeta.Forced,
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+		ID:                      string(backupMeta.ID),
+		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
+		Version:                 backupMeta.Version,
+		CreationTimestamp:       meta.Now(),
 	}
 
 	// Act
@@ -189,10 +189,10 @@ func Test_Finalizer_RemoveObject_MixedFinalizers(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Forced:            &backupMeta.Forced,
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+		ID:                      string(backupMeta.ID),
+		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
+		Version:                 backupMeta.Version,
+		CreationTimestamp:       meta.Now(),
 	}
 
 	// Act

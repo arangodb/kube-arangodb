@@ -42,8 +42,8 @@ type ArangoBackupSpecDeployment struct {
 }
 
 type ArangoBackupSpecOptions struct {
-	Timeout *float32 `json:"timeout,omitempty"`
-	Force   *bool    `json:"force,omitempty"`
+	Timeout           *float32 `json:"timeout,omitempty"`
+	AllowInconsistent *bool    `json:"allowInconsistent,omitempty"`
 }
 
 type ArangoBackupSpecOperation struct {

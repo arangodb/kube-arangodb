@@ -24,6 +24,7 @@ package operator
 
 import (
 	"fmt"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/rs/zerolog/log"

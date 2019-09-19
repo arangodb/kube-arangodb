@@ -168,9 +168,9 @@ Required: false
 
 Default: 30
 
-#### `spec.options.force: bool`
+#### `spec.options.allowInconsistent: bool`
 
-Force flag for Backup creation request.
+AllowInconsistent flag for Backup creation request.
 If this value is set to true, backup is taken even if we are not able to acquire lock.
 
 Field is immutable.
@@ -390,9 +390,9 @@ Required: true
 
 Default: ""
 
-#### `status.backup.forced: bool`
+#### `status.backup.potentiallyInconsistent: bool`
 
-ArangoDB Backup forced flag.
+ArangoDB Backup potentially inconsistent flag.
 
 Required: false
 

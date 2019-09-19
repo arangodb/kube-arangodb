@@ -60,7 +60,7 @@ func Test_State_Create_Success(t *testing.T) {
 	require.Equal(t, newObj.Status.Backup.ID, backups[0])
 	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
 
-	require.Nil(t, newObj.Status.Backup.Forced)
+	require.Nil(t, newObj.Status.Backup.PotentiallyInconsistent)
 }
 
 func Test_State_Create_SuccessForced(t *testing.T) {
@@ -88,8 +88,8 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 	require.Equal(t, newObj.Status.Backup.ID, backups[0])
 	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
 
-	require.NotNil(t, newObj.Status.Backup.Forced)
-	value := *newObj.Status.Backup.Forced
+	require.NotNil(t, newObj.Status.Backup.PotentiallyInconsistent)
+	value := *newObj.Status.Backup.PotentiallyInconsistent
 	require.True(t, value)
 }
 
