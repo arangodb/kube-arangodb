@@ -252,11 +252,9 @@ manifests-operator: manifests-operator-deployment manifests-operator-deployment-
 
 .PHONY: manifests
 manifests: manifests-crd manifests-operator manifests-test
-
-.PHONY: single-manifest
-single-manifest: $(GOBUILDDIR)
-	@echo Building single manifest
-	@$(HELM_CMD) > "$(ROOTDIR)/manifests/single$(MANIFESTSUFFIX).yaml"
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM) package "$(ROOTDIR)/chart/kube-arangodb" -d "$(ROOTDIR)/bin/charts" --save=false
+	@$(HELM) package "$(ROOTDIR)/chart/kube-arangodb-crd" -d "$(ROOTDIR)/bin/charts" --save=false
 
 
 # Testing
