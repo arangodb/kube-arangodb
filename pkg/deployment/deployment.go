@@ -344,7 +344,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	{
 		status, lastVersion := d.GetStatus()
 		if newAPIObject.Status.IsForceReload() {
-			log.Warn().Msg("PotentiallyInconsistent status reload!")
+			log.Warn().Msg("Forced status reload!")
 			status = newAPIObject.Status
 			status.ForceStatusReload = nil
 		}
