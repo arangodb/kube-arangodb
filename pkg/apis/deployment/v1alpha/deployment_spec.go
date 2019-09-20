@@ -56,7 +56,7 @@ type DeploymentSpec struct {
 	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
 	DisableIPv6      *bool           `json:"disableIPv6,omitempty"`
 
-	LocallyAttachedVolumes *bool 	`json:"locallyAttachedVolumes,omitempty"`
+	NetworkAttachedVolumes *bool     `json:"networkAttachedVolumes,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -126,9 +126,9 @@ func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
 }
 
-// IsLocallyAttachedVolumes returns the value of locallyAttachedVolumes, default true
-func (s DeploymentSpec) IsLocallyAttachedVolumes() bool {
-	return util.BoolOrDefault(s.LocallyAttachedVolumes, true)
+// IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default false
+func (s DeploymentSpec) IsNetworkAttachedVolumes() bool {
+	return util.BoolOrDefault(s.NetworkAttachedVolumes, false)
 }
 
 // GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
