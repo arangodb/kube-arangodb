@@ -272,8 +272,8 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.LocallyAttachedVolumes != nil {
-		in, out := &in.LocallyAttachedVolumes, &out.LocallyAttachedVolumes
+	if in.NetworkAttachedVolumes != nil {
+		in, out := &in.NetworkAttachedVolumes, &out.NetworkAttachedVolumes
 		*out = new(bool)
 		**out = **in
 	}

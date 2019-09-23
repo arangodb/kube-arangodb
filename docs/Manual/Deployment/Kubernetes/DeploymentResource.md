@@ -143,6 +143,20 @@ The encryption key cannot be changed after the cluster has been created.
 The secret specified by this setting, must have a data field named 'key' containing
 an encryption key that is exactly 32 bytes long.
 
+### `spec.networkAttachedVolumes: bool`
+
+The default of this option is `false`. If set to `true`, and the
+deployed ArangoDB version is new enough (>= 3.4.8 for 3.4 and >= 3.5.1
+for 3.5), a `ResignLeaderShip` operation
+will be triggered when a dbserver pod is evicted (rather than a
+`CleanOutServer` operation). Furthermore, the pod will simply be
+redeployed on a different node, rather than cleaned and retired and
+replaced by a new member. You must only set this option to `true` if
+your persistent volumes are "movable" in the sense that they can be
+mounted from a different k8s node, like in the case of network attached
+volumes. If your persistent volumes are tied to a specific pod, you
+must leave this option on `false`.
+
 ### `spec.externalAccess.type: string`
 
 This setting specifies the type of `Service` that will be created to provide

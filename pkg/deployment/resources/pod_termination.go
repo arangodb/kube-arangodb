@@ -157,7 +157,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			log.Warn().Err(err).Msg("Failed to get node for member")
 			return maskAny(err)
 		} else if node.Spec.Unschedulable {
-			if r.context.GetSpec().IsLocallyAttachedVolumes() || !resignJobAvailable {
+			if !r.context.GetSpec().IsNetworkAttachedVolumes() || !resignJobAvailable {
 				dbserverDataWillBeGone = true
 			}
 		}
