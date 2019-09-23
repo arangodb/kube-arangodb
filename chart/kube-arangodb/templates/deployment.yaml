@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ template "kube-arangodb.operatorName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- if .Values.operator.annotations }}
+    annotations:
+{{ toYaml .Values.operator.annotations | indent 8 }}
+{{- end }}
+    labels:
+        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+spec:
+    replicas: {{ .Values.operator.replicaCount }}
+    strategy:
+{{ toYaml .Values.operator.updateStrategy | indent 8 }}
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+            app.kubernetes.io/managed-by: {{ .Release.Service }}
+            app.kubernetes.io/instance: {{ .Release.Name }}
+            release: {{ .Release.Name }}
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+                helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+                app.kubernetes.io/managed-by: {{ .Release.Service }}
+                app.kubernetes.io/instance: {{ .Release.Name }}
+                release: {{ .Release.Name }}
+{{- if .Values.operator.annotations }}
+            annotations:
+{{ toYaml .Values.operator.annotations | indent 16 }}
+{{- end }}
+        spec:
+            serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: beta.kubernetes.io/arch
+                          operator: In
+                          values:
+                            - amd64
+            containers:
+                - name: operator
+                  imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
+                  image: {{ .Values.operator.image }}
+                  args:
+{{- if .Values.operator.features.deployment }}
+                    - --operator.deployment
+{{- end -}}
+{{ if .Values.operator.features.deploymentReplications }}
+                    - --operator.deployment-replication
+{{- end -}}
+{{ if .Values.operator.features.storage }}
+                    - --operator.storage
+{{- end }}
+                    - --chaos.allowed={{ .Values.operator.allowChaos }}
+                  env:
+                      - name: MY_POD_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      - name: MY_POD_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: MY_POD_IP
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+                  ports:
+                      - name: metrics
+                        containerPort: 8528
+                  securityContext:
+                    capabilities:
+                      drop:
+                        - 'ALL'
+{{- if .Values.operator.resources }}
+                  resources:
+{{ toYaml .Values.operator.resources | indent 22 }}
+{{- end }}
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+            tolerations:
+                - key: "node.kubernetes.io/unreachable"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+                - key: "node.kubernetes.io/not-ready"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5

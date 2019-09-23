@@ -1,42 +1,34 @@
-## test/rbac.yaml
-
-
-## Cluster role granting access to resources needed by the integration tests.
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: arango-operator-test
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["list"]
-- apiGroups: [""]
-  resources: ["pods", "services", "persistentvolumes", "persistentvolumeclaims", "secrets", "serviceaccounts", "pods/log"]
-  verbs: ["*"]
-- apiGroups: ["apps"]
-  resources: ["daemonsets", "deployments"]
-  verbs: ["*"]
-- apiGroups: ["scheduling.k8s.io"]
-  resources: ["priorityclasses"]
-  verbs: ["*"]
-
 ---
-
-## Bind the cluster role granting access to ArangoLocalStorage resources
-## to the default service account of the configured namespace.
-apiVersion: rbac.authorization.k8s.io/v1beta1
+# Source: kube-arangodb-test/templates/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+    name: arangodb-test
+    namespace: default
+    labels:
+        app.kubernetes.io/name: kube-arangodb-test
+        helm.sh/chart: kube-arangodb-test-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: arangodb-test
+        release: arangodb-test
+---
+# Source: kube-arangodb-test/templates/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-operator-test
-  namespace: default
+    name: kube-arangodb-test-arangodb-test
+    namespace: default
+    labels:
+        app.kubernetes.io/name: kube-arangodb-test
+        helm.sh/chart: kube-arangodb-test-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: arangodb-test
+        release: arangodb-test
 roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: arango-operator-test
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
 subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: default
-
-
-
+    - kind: ServiceAccount
+      name: arangodb-test
+      namespace: default

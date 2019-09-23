@@ -1,5 +1,1 @@
-arango-deployment-dev.yaml
-arango-deployment-replication-dev.yaml
-arango-storage-dev.yaml
-arango-test-dev.yaml
-arango-crd-dev.yaml
+*-dev.yaml

@@ -20,5 +20,6 @@ kubectl --namespace ${DEPLOYMENTNAMESPACE} \
     --env="TEST_NAMESPACE=${DEPLOYMENTNAMESPACE}" \
     --env="CLEANDEPLOYMENTS=${CLEANDEPLOYMENTS}" \
     --env="TESTDISABLEIPV6=${TESTDISABLEIPV6}" \
+    --serviceaccount=arangodb-test \
     -- \
     -test.v -test.timeout $TESTTIMEOUT $TESTLENGTHOPTIONS $TESTOPTIONS
