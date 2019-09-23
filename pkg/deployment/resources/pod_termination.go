@@ -141,8 +141,8 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	currentVersion := memberStatus.ArangoVersion
 	if currentVersion != "" {
 		if currentVersion.CompareTo("3.4.7") > 0 && currentVersion.CompareTo("3.5") < 0 {
-		  resignJobAvailable = true
-	  } else if currentVersion.CompareTo("3.5.0") > 0 {
+			resignJobAvailable = true
+		} else if currentVersion.CompareTo("3.5.0") > 0 {
 			resignJobAvailable = true
 		}
 	}
@@ -216,11 +216,16 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		// At this point we have to set CleanedOut to true,
 		// because we can no longer reason about the state in the agency and
 		// bringing back the dbserver again may result in an cleaned out server without us knowing
-		memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "Draining server failed", "")
-		memberStatus.CleanoutJobID = ""
-		if memberStatus.Phase == api.MemberPhaseDrain {
+		if dbserverDataWillBeGone {
+			memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "Draining server failed", "")
+			memberStatus.CleanoutJobID = ""
+			if memberStatus.Phase == api.MemberPhaseDrain {
+				memberStatus.Phase = api.MemberPhaseCreated
+			}
+		} else if memberStatus.Phase == api.MemberPhaseResign {
 			memberStatus.Phase = api.MemberPhaseCreated
 		}
+
 		if err := updateMember(memberStatus); err != nil {
 			return maskAny(err)
 		}
