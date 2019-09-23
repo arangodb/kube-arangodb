@@ -29,6 +29,7 @@ operator:
     deployment: true
     deploymentReplications: true
     storage: false
+    backup: false
 
 rbac:
   enabled: true

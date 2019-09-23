@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"testing"
 	"time"
 
@@ -47,13 +48,11 @@ func Test_State_UploadError_Reschedule(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          &trueVar,
+		Uploaded:          util.NewBool(true),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(-2 * downloadDelay)
@@ -86,13 +85,11 @@ func Test_State_UploadError_Wait(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          &trueVar,
+		Uploaded:          util.NewBool(true),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
@@ -123,13 +120,11 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          &trueVar,
+		Uploaded:          util.NewBool(true),
 	}
 
 	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)

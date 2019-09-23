@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
@@ -68,9 +69,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupAp
 	if details.Completed {
 		newDetails := backup.Status.Backup.DeepCopy()
 
-		trueVar := true
-
-		newDetails.Uploaded = &trueVar
+		newDetails.Uploaded = util.NewBool(true)
 
 		return backupApi.ArangoBackupStatus{
 			Available:         true,

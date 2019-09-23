@@ -46,5 +46,5 @@ func (dr *DeploymentRestoreResult) Equal(other *DeploymentRestoreResult) bool {
 
 	return dr.RequestedFrom == other.RequestedFrom &&
 		dr.Message == other.Message &&
-		dr.State == dr.State
+		dr.State == other.State
 }

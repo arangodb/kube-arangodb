@@ -1,6 +1,6 @@
 # ArangoBackupPolicy Custom Resource
 
-The ArangoBackupPolicy represents schedule definition for creating ArangoBackup objects by operator.
+The ArangoBackupPolicy represents schedule definition for creating ArangoBackup Custom Resources by operator.
 This deployment specification is a `CustomResource` following
 a `CustomResourceDefinition` created by the operator.
 
@@ -20,7 +20,7 @@ spec:
 
 Action:
 
-Create an ArangoBackup object for each ArangoBackup every 15 minutes
+Create an ArangoBackup Custom Resource for each ArangoBackup every 15 minutes
 
 ### Create schedule for selected deployments
 
@@ -39,7 +39,7 @@ spec:
 
 Action:
 
-Create an ArangoBackup object for selected ArangoBackup every 15 minutes
+Create an ArangoBackup Custom Resource for selected ArangoBackup every 15 minutes
 
 ### Create schedule for all deployments and upload
 
@@ -57,7 +57,7 @@ spec:
         credentialsSecretName: "secret-name"
 ```
 
-Create an ArangoBackup object for each ArangoBackup every 15 minutes and upload to repositoryURL
+Create an ArangoBackup Custom Resource for each ArangoBackup every 15 minutes and upload to repositoryURL
 
 ## ArangoBackup Custom Resource Spec:
 
@@ -86,7 +86,7 @@ status:
 
 ## `spec: Object`
 
-Spec of the ArangoBackupPolicy object
+Spec of the ArangoBackupPolicy Custom Resource
 
 Required: true
 
@@ -102,7 +102,7 @@ Default: ""
 
 ### `spec.selector: Object`
 
-Selector definition. Parser from https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#LabelSelector
+Selector definition for selecting matching ArangoBackup Custom Resources. Parser from https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#LabelSelector
 
 Required: false
 
@@ -110,7 +110,7 @@ Default: {}
 
 ### `spec.template: ArangoBackupTemplate`
 
-Template for the ArangoBackup object
+Template for the ArangoBackup Custom Resource
 
 Required: false
 
@@ -134,7 +134,7 @@ Default: {}
 
 ## `status: Object`
 
-Status of the ArangoBackupPolicy object managed by operator
+Status of the ArangoBackupPolicy Custom Resource managed by operator
 
 Required: true
 

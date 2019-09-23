@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"reflect"
 	"sync"
 	"time"
@@ -51,6 +52,8 @@ import (
 
 const (
 	defaultArangoClientTimeout = 30 * time.Second
+	retryCount = 25
+	retryDelay = time.Second
 
 	// StateChange name of the event send when state changed
 	StateChange = "StateChange"
@@ -175,14 +178,12 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		return err
 	}
 
-	trueVar := true
-
 	backup.Status = backupApi.ArangoBackupStatus{
 		Backup: &backupApi.ArangoBackupDetails{
 			ID:                string(backupMeta.ID),
 			Version:           backupMeta.Version,
 			CreationTimestamp: meta.Now(),
-			Imported:          &trueVar,
+			Imported:          util.NewBool(true),
 		},
 		Available: true,
 		ArangoBackupState: backupApi.ArangoBackupState{
@@ -204,7 +205,7 @@ func (h *handler) Name() string {
 }
 
 func (h *handler) updateBackupStatus(b *backupApi.ArangoBackup) error {
-	return utils.Retry(25, time.Second, func() error {
+	return utils.Retry(retryCount, retryDelay, func() error {
 		backup, err := h.client.BackupV1alpha().ArangoBackups(b.Namespace).Get(b.Name, meta.GetOptions{})
 		if err != nil {
 			return err

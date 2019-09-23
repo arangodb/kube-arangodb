@@ -34,13 +34,12 @@ import (
 	"github.com/jessevdk/go-assets"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	v1 "k8s.io/api/core/v1"
 )
 
 // Config settings for the Server
@@ -109,13 +108,13 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		certBytes, found := s.Data[v1.TLSCertKey]
+		certBytes, found := s.Data[core.TLSCertKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", v1.TLSCertKey, cfg.TLSSecretName))
+			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
 		}
-		keyBytes, found := s.Data[v1.TLSPrivateKeyKey]
+		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", v1.TLSPrivateKeyKey, cfg.TLSSecretName))
+			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
 		}
 		cert = string(certBytes)
 		key = string(keyBytes)

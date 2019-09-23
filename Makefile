@@ -245,7 +245,8 @@ manifests-operator-deployment: helm
 	@$(HELM_CMD) \
 	     --set "operator.features.deployment=true" \
 	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=false" > "$(MANIFESTPATHDEPLOYMENT)"
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENT)"
 
 .PHONY: manifests-operator-deployment-replication
 manifests-operator-deployment-replication: export CHART_NAME := kube-arangodb
@@ -255,7 +256,8 @@ manifests-operator-deployment-replication: helm
 	@$(HELM_CMD) \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=true" \
-	     --set "operator.features.storage=false" > "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
 
 .PHONY: manifests-operator-storage
 manifests-operator-storage: export CHART_NAME := kube-arangodb
@@ -265,10 +267,23 @@ manifests-operator-storage: helm
 	@$(HELM_CMD) \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=true" > "$(MANIFESTPATHSTORAGE)"
+	     --set "operator.features.storage=true" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHSTORAGE)"
+
+.PHONY: manifests-operator-backup
+manifests-operator-backup: export CHART_NAME := kube-arangodb
+manifests-operator-backup: export NAME := backup
+manifests-operator-backup: helm
+	@echo Building manifests for Operator Backup - $(MANIFESTPATHSTORAGE)
+	@$(HELM_CMD) \
+	     --set "rbac.scope=ClusterRole" \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=true" > "$(MANIFESTPATHBACKUP)"
 
 .PHONY: manifests-operator
-manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage
+manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage manifests-operator-backup
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd
@@ -290,9 +305,9 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
 	go test $(TESTVERBOSEOPTIONS) \
+		$(REPOPATH)/pkg/apis/backup/v1alpha \
 		$(REPOPATH)/pkg/apis/deployment/v1alpha \
 		$(REPOPATH)/pkg/apis/replication/v1alpha \
-		$(REPOPATH)/pkg/apis/backup/v1alpha \
 		$(REPOPATH)/pkg/apis/storage/v1alpha \
 		$(REPOPATH)/pkg/deployment/reconcile \
 		$(REPOPATH)/pkg/deployment/resources \

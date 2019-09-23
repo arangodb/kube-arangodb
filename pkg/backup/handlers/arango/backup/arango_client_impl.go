@@ -185,9 +185,9 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 	}
 
 	var ret ArangoBackupProgress
-	completedCount := 0
-	total := 0
-	done := 0
+	var completedCount int
+	var total int
+	var done int
 
 	for _, status := range report.DBServers {
 		total += status.Progress.Total

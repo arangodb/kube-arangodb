@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -73,8 +74,6 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (backup
 			return switchTemporaryError(err, backup.Status)
 		}
 
-		trueVar := true
-
 		return backupApi.ArangoBackupStatus{
 			Available:         true,
 			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
@@ -82,7 +81,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (backup
 				ID:                string(backupMeta.ID),
 				Version:           backupMeta.Version,
 				CreationTimestamp: meta.Now(),
-				Downloaded:        &trueVar,
+				Downloaded:        util.NewBool(true),
 			},
 		}, nil
 	}

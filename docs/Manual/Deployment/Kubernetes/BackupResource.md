@@ -1,6 +1,6 @@
 # ArangoBackup Custom Resource
 
-The ArangoDB Backup Operator creates and maintains ArangoDB Backups
+The ArangoBackup Operator creates and maintains ArangoBackups
 in a Kubernetes cluster, given a Backup specification.
 This deployment specification is a `CustomResource` following
 a `CustomResourceDefinition` created by the operator.
@@ -38,11 +38,13 @@ spec:
     name: "my-deployment"
   upload:
     repositoryURL: "S3://test/kube-test"
+    credentialsSecretName: "my-s3-rclone-credentials"
 ```
 
 Action:
 
-Create Backup on ArangoDeployment named `my-deployment` and upload it to `S3://test/kube-test`
+Create Backup on ArangoDeployment named `my-deployment` and upload it to `S3://test/kube-test`.
+
 
 ### Download Backup
 
@@ -58,17 +60,22 @@ spec:
     name: "my-deployment"
   download:
     repositoryURL: "S3://test/kube-test"
+    credentialsSecretName: "my-s3-rclone-credentials"
     id: "backup-id"
 ```
 
 Download Backup with id `backup-id` from `S3://test/kube-test`  on ArangoDeployment named `my-deployment`
+
+### Restore
+
+Information about restoring can be found in [ArangoDeployment](./DeploymentResource.md).
 
 ## Advertised fields
 
 List of custom columns in CRD specification for Kubectl:
 - `.spec.policyName` - optional name of the policy
 - `.spec.deployment.name` - name of the deployment
-- `.status.state` - current object state
+- `.status.state` - current ArangoBackup Custom Resource state
 - `.status.message` - additional message for current state
 
 ## ArangoBackup Custom Resource Spec:
@@ -112,7 +119,7 @@ status:
 
 ## `spec: Object`
 
-Spec of the ArangoBackup object.
+Spec of the ArangoBackup Custom Resource.
 
 Required: true
 
@@ -130,7 +137,7 @@ Default: {}
 
 #### `spec.deployment.name: String`
 
-Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup object.
+Name of the ArangoDeployment Custom Resource within same namespace as ArangoBackup Custom Resource.
 
 Field is immutable.
 
@@ -140,7 +147,7 @@ Default: ""
 
 #### `spec.policyName: String`
 
-Name of the ArangoBackupPolicy which created this object
+Name of the ArangoBackupPolicy which created this Custom Resource
 
 Field is immutable.
 
@@ -246,7 +253,7 @@ AWS S3 example - based on [rClone S3](https://rclone.org/s3/) documentation and 
     "access_key_id": "xxx",
     "secret_access_key": "xxx",
     "region": "eu-west-2", # Choose region
-    "acl": "private", # Set permissions on newly created object
+    "acl": "private", # Set permissions on newly created remote object
   }
 }
 ```
@@ -259,7 +266,7 @@ Default: ""
 
 #### `spec.download.id: string`
 
-ID of the ArangoDB Backup to be downloaded.
+ID of the ArangoBackup to be downloaded.
 
 Field is immutable.
 
@@ -272,7 +279,7 @@ Default: ""
 Backup upload settings.
 
 This field can be removed and created again with different values. This operation will trigger upload again.
-Fields in object are immutable.
+Fields in Custom Resource Spec Upload are immutable.
 
 Required: false
 
@@ -296,7 +303,7 @@ Default: ""
 
 ## `status: Object`
 
-Status of the arangoBackup object. This field is managed by subresource and only by operator
+Status of the ArangoBackup Custom Resource. This field is managed by subresource and only by operator
 
 Required: true
 
@@ -312,7 +319,7 @@ Default: ""
 
 Possible states:
 - "" - default state, changed to "Pending"
-- "Pending" - state in which object is queued. If Backup is possible changed to "Scheduled"
+- "Pending" - state in which Custom Resource is queued. If Backup is possible changed to "Scheduled"
 - "Scheduled" - state which will start create/download process
 - "Download" - state in which download request will be created on ArangoDB
 - "DownloadError" - state when download failed
@@ -327,7 +334,7 @@ Possible states:
 
 ### `status.time: timestamp`
 
-Time in UTC when state of the ArangoBackup object changed.
+Time in UTC when state of the ArangoBackup Custom Resource changed.
 
 Required: true
 
@@ -335,7 +342,7 @@ Default: ""
 
 ### `status.message: string`
 
-State message of the ArangoBackup object.
+State message of the ArangoBackup Custom Resource.
 
 Required: false
 
@@ -368,7 +375,7 @@ Default: "0%"
 
 ### `status.backup: object`
 
-ArangoDB Backup details.
+ArangoBackup details.
 
 Required: true
 
@@ -376,7 +383,7 @@ Default: {}
 
 #### `status.backup.id: string`
 
-ArangoDB Backup ID.
+ArangoBackup ID.
 
 Required: true
 
@@ -384,7 +391,7 @@ Default: ""
 
 #### `status.backup.version: string`
 
-ArangoDB Backup version.
+ArangoBackup version.
 
 Required: true
 
@@ -392,7 +399,7 @@ Default: ""
 
 #### `status.backup.potentiallyInconsistent: bool`
 
-ArangoDB Backup potentially inconsistent flag.
+ArangoBackup potentially inconsistent flag.
 
 Required: false
 
@@ -400,7 +407,7 @@ Default: false
 
 #### `status.backup.uploaded: bool`
 
-Determines if ArangoDB Backup has been uploaded.
+Determines if ArangoBackup has been uploaded.
 
 Required: false
 
@@ -408,7 +415,7 @@ Default: false
 
 #### `status.backup.downloaded: bool`
 
-Determines if ArangoDB Backup has been downloaded.
+Determines if ArangoBackup has been downloaded.
 
 Required: false
 
@@ -416,7 +423,7 @@ Default: false
 
 #### `status.backup.createdAt: TimeStamp`
 
-ArangoDB Backup object creation time in UTC.
+ArangoBackup Custom Resource creation time in UTC.
 
 Required: true
 
@@ -424,7 +431,7 @@ Default: now()
 
 ### `status.available: bool`
 
-Determines if we can restore from ArangoDB Backup.
+Determines if we can restore from ArangoBackup.
 
 Required: true
 

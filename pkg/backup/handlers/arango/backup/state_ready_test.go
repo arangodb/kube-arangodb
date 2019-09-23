@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"sync"
 	"testing"
 
@@ -208,15 +209,12 @@ func Test_State_Ready_DoUploadDownloadedBackup(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-	falseVar := false
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Downloaded:        &trueVar,
-		Uploaded:          &falseVar,
+		Downloaded:        util.NewBool(true),
+		Uploaded:          util.NewBool(false),
 	}
 	obj.Status.Available = true
 
@@ -244,13 +242,11 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          &trueVar,
+		Uploaded:          util.NewBool(true),
 	}
 	obj.Status.Available = true
 
@@ -275,13 +271,11 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	backupMeta, err := mock.Create()
 	require.NoError(t, err)
 
-	trueVar := true
-
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
 		ID:                string(backupMeta.ID),
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
-		Uploaded:          &trueVar,
+		Uploaded:          util.NewBool(true),
 	}
 	obj.Status.Available = true
 
