@@ -276,7 +276,6 @@ manifests-operator-backup: export NAME := backup
 manifests-operator-backup: helm
 	@echo Building manifests for Operator Backup - $(MANIFESTPATHSTORAGE)
 	@$(HELM_CMD) \
-	     --set "rbac.scope=ClusterRole" \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=false" \
 	     --set "operator.features.storage=false" \

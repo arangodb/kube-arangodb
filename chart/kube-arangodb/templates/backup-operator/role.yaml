@@ -14,7 +14,7 @@ metadata:
         release: {{ .Release.Name }}
 rules:
     - apiGroups: [""]
-      resources: ["pods", "services"]
+      resources: ["pods", "services", "endpoints"]
       verbs: ["get", "update"]
     - apiGroups: [""]
       resources: ["secrets"]
@@ -23,8 +23,10 @@ rules:
       resources: ["deployments", "replicasets"]
       verbs: ["get"]
     - apiGroups: ["backup.arangodb.com"]
-      resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status" , "arangodeployments"]
+      resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status"]
       verbs: ["*"]
-
+    - apiGroups: ["database.arangodb.com"]
+      resources: ["arangodeployments"]
+      verbs: ["get", "list", "watch"]
 {{- end }}
 {{- end }}
