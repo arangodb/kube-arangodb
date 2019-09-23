@@ -26,35 +26,95 @@ ArangoDB Kubernetes Operator with `helm`.
 Values are passed to `helm` using an `--set=<key>=<value>` argument passed
 to the `helm install` or `helm upgrade` command.
 
-### Values applicable to `kube-arangodb` chart
+### `operator.image`
 
-| Key                        | Type   | Description
-|----------------------------|--------|-----|
-| operator.image             | string | Override the docker image used by the operators
-| operator.imagePullPolicy   | string | Override the image pull policy used by the operators. See [Updating Images](https://kubernetes.io/docs/concepts/containers/images/#updating-images) for details.
-| RBAC.Create                | bool   | Set to `true` (default) to create roles & role bindings.
+Image used for the ArangoDB Operator.
 
-### Values applicable to the `kube-arangodb` chart
+Default: `arangodb/kube-arangodb:latest`
 
-| Key               | Type   | Description
-|-------------------|--------|-----|
-| Deployment.Create | bool   | Set to `true` (default) to deploy the `ArangoDeployment` operator
-| Deployment.User.ServiceAccountName | string | Name of the `ServiceAccount` that is the subject of the `RoleBinding` of users of the `ArangoDeployment` operator
-| Deployment.Operator.ServiceAccountName | string | Name of the `ServiceAccount` used to run the `ArangoDeployment` operator
-| Deployment.Operator.ServiceType | string | Type of `Service` created for the dashboard of the `ArangoDeployment` operator
-| Deployment.AllowChaos | bool | Set to `true` to allow the introduction of chaos. **Only use for testing, never for production!** Defaults to `false`.
-| DeploymentReplication.Create | bool   | Set to `true` (default) to deploy the `ArangoDeploymentReplication` operator
-| DeploymentReplication.User.ServiceAccountName | string | Name of the `ServiceAccount` that is the subject of the `RoleBinding` of users of the `ArangoDeploymentReplication` operator
-| DeploymentReplication.Operator.ServiceAccountName | string | Name of the `ServiceAccount` used to run the `ArangoDeploymentReplication` operator
-| DeploymentReplication.Operator.ServiceType | string | Type of `Service` created for the dashboard of the `ArangoDeploymentReplication` operator
+### `operator.imagePullPolicy`
 
-### Values applicable to the `kube-arangodb-storage` chart
+Image pull policy for Operator images.
 
-| Key               | Type   | Description
-|-------------------|--------|-----|
-| Storage.User.ServiceAccountName | string | Name of the `ServiceAccount` that is the subject of the `RoleBinding` of users of the `ArangoLocalStorage` operator
-| Storage.Operator.ServiceAccountName | string | Name of the `ServiceAccount` used to run the `ArangoLocalStorage` operator
-| Storage.Operator.ServiceType | string | Type of `Service` created for the dashboard of the `ArangoLocalStorage` operator
+Default: `IfNotPresent`
+
+### `operator.imagePullSecrets`
+
+List of the Image Pull Secrets for Operator images.
+
+Default: `[]string`
+
+### `operator.service.type`
+
+Type of the Operator service.
+
+Default: `ClusterIP`
+
+### `operator.annotations`
+
+Annotations passed to the Operator Deployment definition.
+
+Default: `[]string`
+
+### `operator.resources.limits.cpu`
+
+CPU limits for operator pods.
+
+Default: `1`
+
+### `operator.resources.limits.memory`
+
+Memory limits for operator pods.
+
+Default: `256Mi`
+
+### `operator.resources.requested.cpu`
+
+Requested CPI by Operator pods.
+
+Default: `250m`
+
+### `operator.resources.requested.memory`
+
+Requested memory for operator pods.
+
+Default: `256Mi`
+
+### `operator.replicaCount`
+
+Replication count for Operator deployment.
+
+Default: `2`
+
+### `operator.updateStrategy`
+
+Update strategy for operator pod.
+
+Default: `Recreate`
+
+### `operator.features.deployment`
+
+Define if ArangoDeployment Operator should be enabled.
+
+Default: `true`
+
+### `operator.features.deploymentReplications`
+
+Define if ArangoDeploymentReplications Operator should be enabled.
+
+Default: `true`
+
+### `operator.features.storage`
+
+Define if ArangoLocalStorage Operator should be enabled.
+
+Default: `false`
+
+### `rbac.enabled`
+
+Define if RBAC should be enabled.
+
+Default: `true`
 
 ## Alternate namespaces
 
