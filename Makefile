@@ -274,7 +274,7 @@ manifests-operator-storage: helm
 manifests-operator-backup: export CHART_NAME := kube-arangodb
 manifests-operator-backup: export NAME := backup
 manifests-operator-backup: helm
-	@echo Building manifests for Operator Backup - $(MANIFESTPATHSTORAGE)
+	@echo Building manifests for Operator Backup - $(MANIFESTPATHBACKUP)
 	@$(HELM_CMD) \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=false" \
