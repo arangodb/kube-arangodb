@@ -136,6 +136,7 @@ endif
 ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
 ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
+.DEFAULT_GOAL := all
 .PHONY: all
 all: check-vars verify-generated build
 
