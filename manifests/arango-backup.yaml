@@ -1,0 +1,261 @@
+---
+# Source: kube-arangodb/templates/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: arango-backup-operator
+  namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+  labels:
+      app.kubernetes.io/name: kube-arangodb
+      helm.sh/chart: kube-arangodb-1.0.0
+      app.kubernetes.io/managed-by: Tiller
+      app.kubernetes.io/instance: backup
+      release: backup
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    name: arango-backup-operator-rbac-backup
+    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: backup
+        release: backup
+rules:
+    - apiGroups: ["apiextensions.k8s.io"]
+      resources: ["customresourcedefinitions"]
+      verbs: ["get", "list", "watch"]
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+    name: arango-backup-operator-rbac-storage
+    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: backup
+        release: backup
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: arango-backup-operator-rbac-backup
+subjects:
+    - kind: ServiceAccount
+      name: arango-backup-operator
+      namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+---
+# Source: kube-arangodb/templates/backup-operator/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: arango-backup-operator-rbac-backup
+    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: backup
+        release: backup
+rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "endpoints"]
+      verbs: ["get", "update"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "replicasets"]
+      verbs: ["get"]
+    - apiGroups: ["backup.arangodb.com"]
+      resources: ["arangobackuppolicies", "arangobackuppolicies/status", "arangobackups", "arangobackups/status"]
+      verbs: ["*"]
+    - apiGroups: ["database.arangodb.com"]
+      resources: ["arangodeployments"]
+      verbs: ["get", "list", "watch"]
+---
+# Source: kube-arangodb/templates/backup-operator/role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+    name: arango-backup-operator-rbac-backup
+    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: backup
+        release: backup
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: arango-backup-operator-rbac-backup
+subjects:
+    - kind: ServiceAccount
+      name: arango-backup-operator
+      namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+---
+# Source: kube-arangodb/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: arango-backup-operator
+  namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.0.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: backup
+    release: backup
+spec:
+  ports:
+    - name: server
+      port: 8528
+      protocol: TCP
+      targetPort: 8528
+  selector:
+    app.kubernetes.io/name: kube-arangodb
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: backup
+    release: backup
+    role: leader
+  type: ClusterIP
+---
+# Source: kube-arangodb/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: arango-backup-operator
+    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    labels:
+        app.kubernetes.io/name: kube-arangodb
+        helm.sh/chart: kube-arangodb-1.0.0
+        app.kubernetes.io/managed-by: Tiller
+        app.kubernetes.io/instance: backup
+        release: backup
+spec:
+    replicas: 2
+    strategy:
+        type: Recreate
+        
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: kube-arangodb
+            app.kubernetes.io/managed-by: Tiller
+            app.kubernetes.io/instance: backup
+            release: backup
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: kube-arangodb
+                helm.sh/chart: kube-arangodb-1.0.0
+                app.kubernetes.io/managed-by: Tiller
+                app.kubernetes.io/instance: backup
+                release: backup
+        spec:
+            serviceAccountName: arango-backup-operator
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: beta.kubernetes.io/arch
+                          operator: In
+                          values:
+                            - amd64
+            containers:
+                - name: operator
+                  imagePullPolicy: Always
+                  image: eu.gcr.io/hale-ivy-241313/kube-arangodb:dev
+                  args:
+
+                    - --operator.backup
+                    - --chaos.allowed=false
+                  env:
+                      - name: MY_POD_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      - name: MY_POD_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: MY_POD_IP
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+                  ports:
+                      - name: metrics
+                        containerPort: 8528
+                  securityContext:
+                    capabilities:
+                      drop:
+                        - 'ALL'
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8528
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+            tolerations:
+                - key: "node.kubernetes.io/unreachable"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+                - key: "node.kubernetes.io/not-ready"
+                  operator: "Exists"
+                  effect: "NoExecute"
+                  tolerationSeconds: 5
+
+---
+# Source: kube-arangodb/templates/deployment-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
+
+---
+# Source: kube-arangodb/templates/storage-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/storage-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/storage-operator/crd.yaml
+
+---
+# Source: kube-arangodb/templates/storage-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/storage-operator/role.yaml
+

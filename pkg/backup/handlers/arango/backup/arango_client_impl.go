@@ -121,7 +121,7 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 	}
 
 	return driver.BackupMeta{}, driver.ArangoError{
-		ErrorMessage: fmt.Sprintf("backup %s was not contained in list", backupID),
+		ErrorMessage: fmt.Sprintf("backup %s was not found", backupID),
 		Code:         404,
 	}
 }

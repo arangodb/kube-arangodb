@@ -114,7 +114,7 @@ Default: `false`
 
 Define if ArangoBackup Operator should be enabled.
 
-Default: `true`
+Default: `false`
 
 ### `rbac.enabled`
 
