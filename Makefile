@@ -31,10 +31,23 @@ DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
+HELM ?= $(shell which helm)
+
+.PHONY: helm
+helm:
+ifeq ($(HELM),)
+	$(error Before templating you need to install helm in PATH or export helm binary using "export HELM=<path to helm>")
+endif
+
+HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
+                           -d "$(ROOTDIR)/bin/charts" \
+                           --save=false
+
 HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --name "$(NAME)" \
          	       --set "operator.image=$(OPERATORIMAGE)" \
          	       --set "operator.imagePullPolicy=Always" \
+         	       --set "operator.resources=null" \
          	       --namespace "$(DEPLOYMENTNAMESPACE)"
 
 ifndef LOCALONLY
@@ -203,59 +216,64 @@ endif
 .PHONY: manifests-crd
 manifests-crd: export CHART_NAME := kube-arangodb-crd
 manifests-crd: export NAME := crd
-manifests-crd:
+manifests-crd: helm
 	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
 	@$(HELM_CMD) > "$(MANIFESTPATHCRD)"
 
 .PHONY: manifests-test
 manifests-test: export CHART_NAME := kube-arangodb-test
 manifests-test: export NAME := arangodb-test
-manifests-test:
+manifests-test: helm
 	@echo Building manifests for test - $(MANIFESTPATHTEST)
 	@$(HELM_CMD) > "$(MANIFESTPATHTEST)"
 
 .PHONY: manifests-operator-deployment
 manifests-operator-deployment: export CHART_NAME := kube-arangodb
 manifests-operator-deployment: export NAME := deployment
-manifests-operator-deployment:
+manifests-operator-deployment: helm
 	@echo Building manifests for Operator Deployment - $(MANIFESTPATHDEPLOYMENT)
 	@$(HELM_CMD) \
-	     --set "rbac.scope=ClusterRole" \
 	     --set "operator.features.deployment=true" \
 	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=false"> "$(MANIFESTPATHDEPLOYMENT)"
+	     --set "operator.features.storage=false" > "$(MANIFESTPATHDEPLOYMENT)"
 
 .PHONY: manifests-operator-deployment-replication
 manifests-operator-deployment-replication: export CHART_NAME := kube-arangodb
 manifests-operator-deployment-replication: export NAME := deployment-replication
-manifests-operator-deployment-replication:
+manifests-operator-deployment-replication: helm
 	@echo Building manifests for Operator Deployment Replication - $(MANIFESTPATHDEPLOYMENTREPLICATION)
 	@$(HELM_CMD) \
-	     --set "rbac.scope=ClusterRole" \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=true" \
-	     --set "operator.features.storage=false"> "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
+	     --set "operator.features.storage=false" > "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
 
 .PHONY: manifests-operator-storage
 manifests-operator-storage: export CHART_NAME := kube-arangodb
 manifests-operator-storage: export NAME := storage
-manifests-operator-storage:
+manifests-operator-storage: helm
 	@echo Building manifests for Operator Storage - $(MANIFESTPATHSTORAGE)
 	@$(HELM_CMD) \
-	     --set "rbac.scope=ClusterRole" \
 	     --set "operator.features.deployment=false" \
 	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=true"> "$(MANIFESTPATHSTORAGE)"
+	     --set "operator.features.storage=true" > "$(MANIFESTPATHSTORAGE)"
 
 .PHONY: manifests-operator
 manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage
 
-.PHONY: manifests
-manifests: manifests-crd manifests-operator manifests-test
+.PHONY: chart-crd
+chart-crd: export CHART_NAME := kube-arangodb-crd
+chart-crd: helm
 	@mkdir -p "$(ROOTDIR)/bin/charts"
-	@$(HELM) package "$(ROOTDIR)/chart/kube-arangodb" -d "$(ROOTDIR)/bin/charts" --save=false
-	@$(HELM) package "$(ROOTDIR)/chart/kube-arangodb-crd" -d "$(ROOTDIR)/bin/charts" --save=false
+	@$(HELM_PACKAGE_CMD)
 
+.PHONY: chart-operator
+chart-operator: export CHART_NAME := kube-arangodb
+chart-operator: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+.PHONY: manifests
+manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-operator
 
 # Testing
 
