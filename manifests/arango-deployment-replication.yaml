@@ -234,6 +234,12 @@ spec:
 # Source: kube-arangodb/templates/deployment-operator/cluster-role.yaml
 
 ---
+# Source: kube-arangodb/templates/deployment-operator/default-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/default-role.yaml
+
+---
 # Source: kube-arangodb/templates/deployment-operator/role-binding.yaml
 
 ---
