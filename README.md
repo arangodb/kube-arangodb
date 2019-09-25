@@ -66,6 +66,19 @@ Feature-wise production readiness table:
 | Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
 | User sidecar containers      | 0.3.11                                | new - alpha               |                   |
 
+## Release notes for 0.3.16
+
+In this release we have reworked the Helm charts. One notable change is
+that we now create a new service account specifically for the operator.
+The actual deployment still runs by default under the `default` service
+account unless one changes that. Note that the service account under
+which the ArangoDB runs needs a small set of extra permissions. For
+the `default` service account we grant them when the operator is
+deployed. If you use another service account you have to grant these
+permissions yourself. See
+[here](docs/Manual/Deployment/Kubernetes/DeploymentResource.md#specgroupserviceaccountname-string)
+for details.
+
 ## Installation of latest release using Kubectl
 
 ```bash
