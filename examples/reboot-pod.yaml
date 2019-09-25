@@ -3,27 +3,23 @@ apiVersion: v1
 metadata:
   name: kube-reboot-pod
 spec:
-  restartPolicy: OnFailure
-  serviceAccountName: default
+  restartPolicy: Never
+  serviceAccountName: arango-deployment-operator-reboot
   containers:
-    - image: arangodb/kube-arangodb:0.3.10
+    - image: arangodb/kube-arangodb:0.3.16
       name: reboot
       command: ["arangodb_operator", "reboot"]
       args:
-        - --deployment-name=my-rebooted-depl
-        - --image-name=arangodb/arangodb:3.4.3
+        - --deployment-name=my-arangodb-cluster
+        - --image-name=arangodb/enterprise:3.4.8
         - --license-secret-name=arangodb-license-key
         - --coordinators=3
-        - pvc-5f98090b-4417-11e9-9423-42010aa401d7
-        - pvc-60119ef4-4417-11e9-9423-42010aa401d7
-        - pvc-60c8c3d8-4417-11e9-9423-42010aa401d7
-        - pvc-6142d36a-4417-11e9-9423-42010aa401d7
-        - pvc-61bce8a5-4417-11e9-9423-42010aa401d7
-        - pvc-62928477-4417-11e9-9423-42010aa401d7
-        - pvc-630c8f56-4417-11e9-9423-42010aa401d7
-        - pvc-63680b68-4417-11e9-9423-42010aa401d7
-        - pvc-63a52558-4417-11e9-9423-42010aa401d7
-        - pvc-6400be5b-4417-11e9-9423-42010aa401d7
+        - pvc-9aa241f7-df94-11e9-b74c-42010aac0044
+        - pvc-9b1c76eb-df94-11e9-b74c-42010aac0044
+        - pvc-9b966437-df94-11e9-b74c-42010aac0044
+        - pvc-9c4d60d8-df94-11e9-b74c-42010aac0044
+        - pvc-9d0480e4-df94-11e9-b74c-42010aac0044
+        - pvc-9d418fb3-df94-11e9-b74c-42010aac0044
       env:
         - name: MY_POD_NAMESPACE
           valueFrom:
@@ -33,3 +29,71 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: arango-deployment-operator-reboot
+  namespace: default
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: arango-deployment-operator-reboot
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets"]
+    verbs: ["*"]
+  - apiGroups: ["database.arangodb.com"]
+    resources: ["arangodeployments"]
+    verbs: ["*"]
+
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: arango-deployment-operator-reboot
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: arango-deployment-operator-reboot
+subjects:
+  - kind: ServiceAccount
+    name: arango-deployment-operator-reboot
+    namespace: default
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-deployment-operator-reboot
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["*"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-deployment-operator-reboot
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployment-operator-reboot
+subjects:
+  - kind: ServiceAccount
+    name: arango-deployment-operator-reboot
+    namespace: default
