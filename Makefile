@@ -366,6 +366,10 @@ endif
 patch-readme:
 	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
 
+.PHONY: patch-chart
+patch-chart:
+	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
+
 .PHONY: changelog
 changelog:
 	docker run --rm \
