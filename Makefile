@@ -201,7 +201,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		$(DASHBOARDBUILDIMAGE)
 	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-$(BIN): $(SOURCES) dashboard/assets.go
+$(BIN): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
 
