@@ -7,7 +7,7 @@ metadata:
   namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
-      helm.sh/chart: kube-arangodb-1.0.0
+      helm.sh/chart: kube-arangodb-0.3.16
       app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: deployment
       release: deployment
@@ -20,7 +20,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -43,7 +43,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -64,7 +64,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -81,7 +81,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -110,7 +110,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -131,7 +131,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -152,7 +152,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.0.0
+    helm.sh/chart: kube-arangodb-0.3.16
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -178,7 +178,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -197,7 +197,7 @@ spec:
         metadata:
             labels:
                 app.kubernetes.io/name: kube-arangodb
-                helm.sh/chart: kube-arangodb-1.0.0
+                helm.sh/chart: kube-arangodb-0.3.16
                 app.kubernetes.io/managed-by: Tiller
                 app.kubernetes.io/instance: deployment
                 release: deployment
@@ -215,7 +215,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: arangodb/kube-arangodb@sha256:8de8cba7727bf4bf2b9f5ac943418afb4a139cfc51627a57a6e5febdbc8fbcb2
+                  image: arangodb/kube-arangodb:0.3.16
                   args:
                     - --operator.deployment
                     - --chaos.allowed=false
@@ -239,14 +239,6 @@ spec:
                     capabilities:
                       drop:
                         - 'ALL'
-                  resources:
-                      limits:
-                        cpu: 1
-                        memory: 256Mi
-                      requests:
-                        cpu: 250m
-                        memory: 256Mi
-                      
                   livenessProbe:
                       httpGet:
                           path: /health
