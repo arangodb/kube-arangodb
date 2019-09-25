@@ -480,10 +480,26 @@ and `iops` is not forwarded to the pods resource requirements.
 ### `spec.<group>.serviceAccountName: string`
 
 This setting specifies the `serviceAccountName` for the `Pods` created
-for each server of this group.
+for each server of this group. If empty, it defaults to using the
+`default` service account.
 
 Using an alternative `ServiceAccount` is typically used to separate access rights.
-The ArangoDB deployments do not require any special rights.
+The ArangoDB deployments need some very minimal access rights. With the
+deployment of the operator, we grant the following rights for the `default`
+service account:
+
+```
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+```
+
+If you are using a different service account, please grant these rights
+to that service account.
 
 ### `spec.<group>.priorityClassName: string`
 
