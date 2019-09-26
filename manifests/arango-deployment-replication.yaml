@@ -4,10 +4,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: arango-deployment-replication-operator
-  namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+  namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
-      helm.sh/chart: kube-arangodb-1.0.0
+      helm.sh/chart: kube-arangodb-0.3.16
       app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: deployment-replication
       release: deployment-replication
@@ -17,10 +17,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -37,10 +37,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -51,17 +51,17 @@ roleRef:
 subjects:
     - kind: ServiceAccount
       name: arango-deployment-replication-operator
-      namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+      namespace: default
 ---
 # Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -84,10 +84,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
     name: arango-deployment-replication-operator-rbac-deployment-replication
-    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -98,17 +98,17 @@ roleRef:
 subjects:
     - kind: ServiceAccount
       name: arango-deployment-replication-operator
-      namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+      namespace: default
 ---
 # Source: kube-arangodb/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: arango-deployment-replication-operator
-  namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+  namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.0.0
+    helm.sh/chart: kube-arangodb-0.3.16
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -131,10 +131,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: arango-deployment-replication-operator
-    namespace: test-5b1f38d8-de96-11e9-8b7f-03470cd26e75
+    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-0.3.16
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -153,7 +153,7 @@ spec:
         metadata:
             labels:
                 app.kubernetes.io/name: kube-arangodb
-                helm.sh/chart: kube-arangodb-1.0.0
+                helm.sh/chart: kube-arangodb-0.3.16
                 app.kubernetes.io/managed-by: Tiller
                 app.kubernetes.io/instance: deployment-replication
                 release: deployment-replication
@@ -171,7 +171,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: eu.gcr.io/hale-ivy-241313/kube-arangodb:dev
+                  image: arangodb/kube-arangodb:0.3.16
                   args:
                     - --operator.deployment-replication
 
@@ -237,6 +237,12 @@ spec:
 
 ---
 # Source: kube-arangodb/templates/deployment-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/default-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/deployment-operator/default-role.yaml
 
 ---
 # Source: kube-arangodb/templates/deployment-operator/role-binding.yaml

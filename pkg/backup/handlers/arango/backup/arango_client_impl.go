@@ -147,7 +147,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 
 	uploadSpec := ac.backup.Spec.Upload
 	if uploadSpec == nil {
-		return "", fmt.Errorf("upload was called but not upload spec was given")
+		return "", fmt.Errorf("upload was called but no upload spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(uploadSpec.CredentialsSecretName)
