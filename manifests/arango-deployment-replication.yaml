@@ -168,6 +168,9 @@ spec:
                           operator: In
                           values:
                             - amd64
+            hostNetwork: false
+            hostPID: false
+            hostIPC: false
             containers:
                 - name: operator
                   imagePullPolicy: Always
@@ -192,9 +195,12 @@ spec:
                       - name: metrics
                         containerPort: 8528
                   securityContext:
-                    capabilities:
-                      drop:
-                        - 'ALL'
+                      privileged: false
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                          drop:
+                              - 'ALL'
                   livenessProbe:
                       httpGet:
                           path: /health
