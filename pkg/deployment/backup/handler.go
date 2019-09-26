@@ -86,7 +86,6 @@ func (b *BackupHandler) CheckRestore() error {
 	status, version := b.context.GetStatus()
 
 	if spec.HasRestoreFrom() {
-
 		// We have to trigger a restore operation
 		if status.Restore == nil || status.Restore.RequestedFrom != spec.GetRestoreFrom() {
 			// Prepare message that we are starting restore
@@ -119,6 +118,8 @@ func (b *BackupHandler) CheckRestore() error {
 				b.context.UpdateStatus(status, version)
 			}
 		}
+
+		return nil
 	}
 
 	if status.Restore == nil {

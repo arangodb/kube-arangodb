@@ -25,6 +25,7 @@ package operator
 import (
 	"context"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"math/rand"
 	"time"
 
@@ -119,16 +120,16 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 // Run the operator
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
-		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment, o.Dependencies.DeploymentProbe)
+		go o.runLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
 	}
 	if o.Config.EnableDeploymentReplication {
-		go o.runLeaderElection("arango-deployment-replication-operator", o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+		go o.runLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 	}
 	if o.Config.EnableStorage {
-		go o.runLeaderElection("arango-storage-operator", o.onStartStorage, o.Dependencies.StorageProbe)
+		go o.runLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
 	}
 	if o.Config.EnableBackup {
-		go o.runLeaderElection("arango-backup-operator", o.onStartBackup, o.Dependencies.BackupProbe)
+		go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 	}
 	// Wait until process terminates
 	<-context.TODO().Done()
@@ -211,7 +212,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
 
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 15 * time.Second, arangoInformer.WithNamespace(o.Namespace))
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10 * time.Second, arangoInformer.WithNamespace(o.Namespace))
 
 	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)

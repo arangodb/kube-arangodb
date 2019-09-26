@@ -47,7 +47,7 @@ import (
 // When the leader election is was won once, but then the leadership is lost, the process is killed.
 // The given ready probe is set, as soon as this process became the leader, or a new leader
 // is detected.
-func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
+func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.KubeCli
 	log := o.log.With().Str("lock-name", lockName).Logger()
@@ -80,7 +80,7 @@ func (o *Operator) runLeaderElection(lockName string, onStart func(stop <-chan s
 			OnStartedLeading: func(ctx context.Context) {
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 				readyProbe.SetReady()
-				if err := o.setRoleLabel(log, constants.LabelRoleLeader); err != nil {
+				if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
 					log.Error().Msg("Cannot set leader role on Pod. Terminating process")
 					os.Exit(2)
 				}
@@ -134,7 +134,7 @@ func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Obje
 }
 
 // setRoleLabel sets a label with key `role` and given value in the pod metadata.
-func (o *Operator) setRoleLabel(log zerolog.Logger, role string) error {
+func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 	ns := o.Config.Namespace
 	kubecli := o.Dependencies.KubeCli
 	pods := kubecli.CoreV1().Pods(ns)
@@ -151,7 +151,7 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, role string) error {
 		if labels == nil {
 			labels = make(map[string]string)
 		}
-		labels[constants.LabelRole] = role
+		labels[label] = role
 		pod.ObjectMeta.SetLabels(labels)
 		if _, err := pods.Update(pod); k8sutil.IsConflict(err) {
 			// Retry it
