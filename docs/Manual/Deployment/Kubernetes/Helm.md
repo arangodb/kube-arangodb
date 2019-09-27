@@ -110,6 +110,12 @@ Define if ArangoLocalStorage Operator should be enabled.
 
 Default: `false`
 
+### `operator.features.backup`
+
+Define if ArangoBackup Operator should be enabled.
+
+Default: `false`
+
 ### `rbac.enabled`
 
 Define if RBAC should be enabled.

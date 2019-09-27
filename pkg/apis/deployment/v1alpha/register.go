@@ -29,17 +29,19 @@ import (
 )
 
 const (
+	ArangoDeploymentCRDName        = ArangoDeploymentResourcePlural + "." + groupName
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
 	ArangoDeploymentResourcePlural = "arangodeployments"
-	groupName                      = "database.arangodb.com"
+
+	groupName = "database.arangodb.com"
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion         = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoDeploymentCRDName    = ArangoDeploymentResourcePlural + "." + groupName
+	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
+
 	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
 )
 

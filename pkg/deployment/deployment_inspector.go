@@ -190,6 +190,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
 		}
 
+		if err := d.backup.CheckRestore(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Restore operation failed", err, d.apiObject))
+		}
+
 		// At the end of the inspect, we cleanup terminated pods.
 		if x, err := d.resources.CleanupTerminatedPods(); err != nil {
 			hasError = true

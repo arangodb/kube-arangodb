@@ -11,6 +11,8 @@ Each of these uses involves a different custom resource.
 
 - Use an [`ArangoDeployment` resource](./DeploymentResource.md) to
   create an ArangoDB database deployment.
+- Use an [`ArangoBackup` resource](./BackupResource.md) to
+  create an ArangoDB backup.
 - Use an [`ArangoLocalStorage` resource](./StorageResource.md) to
   provide local `PersistentVolumes` for optimal I/O performance.
 - Use an [`ArangoDeploymentReplication` resource](./DeploymentReplicationResource.md) to

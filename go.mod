@@ -18,7 +18,7 @@ require (
 	github.com/aktau/github-release v0.7.2 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
-	github.com/arangodb/go-driver v0.0.0-20190802095550-7a2c11a3ff12
+	github.com/arangodb/go-driver v0.0.0-20190917135832-4ec315b17bf0
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/bugagazavr/go-gitlab-client v0.0.0-20150830002541-e5999f934dc4 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815 // indirect
 	github.com/dustin/go-broadcast v0.0.0-20171205050544-f664265f5a66 // indirect
-	github.com/evanphx/json-patch v4.2.0+incompatible // indirect
+	github.com/evanphx/json-patch v4.2.0+incompatible
 	github.com/ewoutp/go-gitlab-client v0.0.0-20150214183219-6e4464cd3221 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
@@ -50,6 +50,7 @@ require (
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/gophercloud/gophercloud v0.0.0-20190504011306-6f9faf57fddc // indirect
+	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/helm/helm v2.14.3+incompatible // indirect
@@ -65,10 +66,12 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
+	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.0.0
 	github.com/pulcy/pulsar v0.0.0-20180915062927-71ea24b0ec2f // indirect
+	github.com/robfig/cron v1.2.0
 	github.com/rs/zerolog v1.14.3
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect

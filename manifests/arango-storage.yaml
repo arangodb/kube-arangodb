@@ -206,6 +206,7 @@ spec:
                   image: arangodb/kube-arangodb:0.3.16
                   args:
                     - --operator.storage
+
                     - --chaos.allowed=false
                   env:
                       - name: MY_POD_NAMESPACE
@@ -250,6 +251,18 @@ spec:
                   operator: "Exists"
                   effect: "NoExecute"
                   tolerationSeconds: 5
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role.yaml
 
 ---
 # Source: kube-arangodb/templates/deployment-operator/cluster-role-binding.yaml

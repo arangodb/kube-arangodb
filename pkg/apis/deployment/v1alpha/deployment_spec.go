@@ -56,7 +56,9 @@ type DeploymentSpec struct {
 	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
 	DisableIPv6      *bool           `json:"disableIPv6,omitempty"`
 
-	NetworkAttachedVolumes *bool     `json:"networkAttachedVolumes,omitempty"`
+        NetworkAttachedVolumes *bool     `json:"networkAttachedVolumes,omitempty"`
+
+	RestoreFrom     *string         `json:"restoreFrom,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -76,6 +78,16 @@ type DeploymentSpec struct {
 	Chaos ChaosSpec `json:"chaos"`
 
 	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
+}
+
+// GetRestoreFrom returns the restore from string or empty string if not set
+func (s *DeploymentSpec) GetRestoreFrom() string {
+	return util.StringOrDefault(s.RestoreFrom)
+}
+
+// HasRestoreFrom returns true if RestoreFrom is set
+func (s *DeploymentSpec) HasRestoreFrom() bool {
+	return s.RestoreFrom != nil
 }
 
 // Equal compares two DeploymentSpec

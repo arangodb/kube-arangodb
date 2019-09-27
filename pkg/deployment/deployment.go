@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/backup"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
@@ -108,6 +109,7 @@ type Deployment struct {
 	reconciler                *reconcile.Reconciler
 	resilience                *resilience.Resilience
 	resources                 *resources.Resources
+	backup                    *backup.BackupHandler
 	chaosMonkey               *chaos.Monkey
 	syncClientCache           client.ClientCache
 	haveServiceMonitorCRD     bool
@@ -130,6 +132,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	d.resilience = resilience.NewResilience(deps.Log, d)
 	d.resources = resources.NewResources(deps.Log, d)
+	d.backup = backup.NewHandler(deps.Log, d)
 	if d.status.last.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()

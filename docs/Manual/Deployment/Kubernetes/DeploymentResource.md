@@ -371,6 +371,22 @@ The default is `false`.
 
 This setting cannot be changed after the deployment has been created.
 
+### `spec.restoreFrom: string`
+
+This setting specifies a `ArangoBackup` resource name the cluster should be restored from.
+
+After a restore or failure to do so, the status of the deployment contains information about the
+restore operation in the `restore` key.
+
+It will contain some of the following fields:
+- _requestedFrom_: name of the `ArangoBackup` used to restore from.
+- _message_: optional message explaining why the restore failed.
+- _state_: state indicating if the restore was successful or not. Possible values: `Restoring`, `Restored`, `RestoreFailed`
+
+If the `restoreFrom` key is removed from the spec, the `restore` key is deleted as well.
+
+A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
+
 ### `spec.license.secretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains

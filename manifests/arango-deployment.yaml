@@ -98,6 +98,9 @@ rules:
     - apiGroups: ["policy"]
       resources: ["poddisruptionbudgets"]
       verbs: ["get", "create", "delete"]
+    - apiGroups: ["backup.arangodb.com"]
+      resources: ["arangobackuppolicies", "arangobackups"]
+      verbs: ["get", "list", "watch"]
     - apiGroups: ["monitoring.coreos.com"]
       resources: ["servicemonitors"]
       verbs: ["get", "create", "delete"]
@@ -218,6 +221,7 @@ spec:
                   image: arangodb/kube-arangodb:0.3.16
                   args:
                     - --operator.deployment
+
                     - --chaos.allowed=false
                   env:
                       - name: MY_POD_NAMESPACE
@@ -262,6 +266,18 @@ spec:
                   operator: "Exists"
                   effect: "NoExecute"
                   tolerationSeconds: 5
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role-binding.yaml
+
+---
+# Source: kube-arangodb/templates/backup-operator/role.yaml
 
 ---
 # Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
