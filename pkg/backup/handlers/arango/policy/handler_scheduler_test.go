@@ -253,3 +253,38 @@ func Test_Reschedule(t *testing.T) {
 		require.Equal(t, 3, newPolicy.Status.Scheduled.Minute())
 	})
 }
+
+func Test_Validate(t *testing.T) {
+	acceptedSchedules := []string{
+		"0 0 * * MON,TUE,WED,THU,FRI",
+		"* * * * *",
+	}
+
+	for _, c := range acceptedSchedules {
+		t.Run(c, func(t *testing.T) {
+			// Arrange
+			handler := newFakeHandler()
+
+			name := string(uuid.NewUUID())
+			namespace := string(uuid.NewUUID())
+
+			selectors := map[string]string{
+				"SELECTOR": string(uuid.NewUUID()),
+			}
+
+			policy := newArangoBackupPolicy(c, namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+
+			require.NoError(t, policy.Validate())
+
+			// Act
+			createArangoBackupPolicy(t, handler, policy)
+
+			require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+
+			// Assert
+			newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+			require.Empty(t, newPolicy.Status.Message)
+			require.NotEmpty(t, newPolicy.Status.Scheduled)
+		})
+	}
+}
