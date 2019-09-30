@@ -109,6 +109,13 @@ func createArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.A
 	}
 }
 
+func updateArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
+	for _, policy := range policies {
+		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Update(policy)
+		require.NoError(t, err)
+	}
+}
+
 func newArangoDeployment(namespace string, labels map[string]string) *database.ArangoDeployment {
 	name := string(uuid.NewUUID())
 	return &database.ArangoDeployment{

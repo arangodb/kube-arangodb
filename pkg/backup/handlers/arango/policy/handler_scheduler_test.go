@@ -201,3 +201,55 @@ func Test_Scheduler_Valid_MultipleObject_Selector(t *testing.T) {
 	require.NotNil(t, backups[1].Spec.PolicyName)
 	require.Equal(t, policy.Name, *backups[1].Spec.PolicyName)
 }
+
+func Test_Reschedule(t *testing.T) {
+	// Arrange
+	handler := newFakeHandler()
+
+	name := string(uuid.NewUUID())
+	namespace := string(uuid.NewUUID())
+
+	selectors := map[string]string{
+		"SELECTOR": string(uuid.NewUUID()),
+	}
+
+	policy := newArangoBackupPolicy("* 13 * * *", namespace, name, selectors, backupApi.ArangoBackupTemplate{})
+
+	// Act
+	createArangoBackupPolicy(t, handler, policy)
+
+	t.Run("First schedule", func(t *testing.T) {
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+
+		// Assert
+		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+		require.Empty(t, newPolicy.Status.Message)
+
+		require.Equal(t, 13, newPolicy.Status.Scheduled.Hour())
+	})
+
+	t.Run("First schedule - second iteration", func(t *testing.T) {
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+
+		// Assert
+		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+		require.Empty(t, newPolicy.Status.Message)
+
+		require.Equal(t, 13, newPolicy.Status.Scheduled.Hour())
+	})
+
+	t.Run("Change schedule", func(t *testing.T) {
+		policy = refreshArangoBackupPolicy(t, handler, policy)
+		policy.Spec.Schedule = "3 3 * * *"
+		updateArangoBackupPolicy(t, handler, policy)
+
+		require.NoError(t, handler.Handle(newItemFromBackupPolicy(operation.Update, policy)))
+
+		// Assert
+		newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+		require.Empty(t, newPolicy.Status.Message)
+
+		require.Equal(t, 3, newPolicy.Status.Scheduled.Hour())
+		require.Equal(t, 3, newPolicy.Status.Scheduled.Minute())
+	})
+}
