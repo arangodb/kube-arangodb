@@ -309,7 +309,7 @@ func compareBackup(t *testing.T, meta driver.BackupMeta, backup *backupApi.Arang
 	require.NotNil(t, backup.Status.Backup)
 	require.Equal(t, meta.Version, backup.Status.Backup.Version)
 	require.True(t, meta.SizeInBytes > 0)
-	require.True(t, meta.NumberOfDBServers == 3)
+	require.True(t, meta.NumberOfDBServers == 2)
 	require.True(t, meta.SizeInBytes == backup.Status.Backup.SizeInBytes)
 	require.True(t, meta.NumberOfDBServers == backup.Status.Backup.NumberOfDBServers)
 }
