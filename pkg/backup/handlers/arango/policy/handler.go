@@ -101,17 +101,19 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		}, nil
 	}
 
+	now := time.Now()
+
+	expr, err := cron.ParseStandard(policy.Spec.Schedule)
+	if err != nil {
+		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
+
+		return backupApi.ArangoBackupPolicyStatus{
+			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
+		}, nil
+	}
+
 	if policy.Status.Scheduled.IsZero() {
-		expr, err := cron.ParseStandard(policy.Spec.Schedule)
-		if err != nil {
-			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
-
-			return backupApi.ArangoBackupPolicyStatus{
-				Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
-			}, nil
-		}
-
-		next := expr.Next(time.Now())
+		next := expr.Next(now)
 
 		return backupApi.ArangoBackupPolicyStatus{
 			Scheduled: meta.Time{
@@ -121,7 +123,19 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	}
 
 	// Check if schedule is required
-	if policy.Status.Scheduled.Unix() > time.Now().Unix() {
+	if policy.Status.Scheduled.Unix() > now.Unix() {
+		// check if we need to update schedule in case that string changed
+		// in other case schedule string will be updated after scheduling objects
+		next := expr.Next(now)
+
+		if next != policy.Status.Scheduled.Time {
+			return backupApi.ArangoBackupPolicyStatus{
+				Scheduled: meta.Time{
+					Time: next,
+				},
+			}, nil
+		}
+
 		return policy.Status, nil
 	}
 
@@ -159,13 +173,6 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		}
 
 		h.eventRecorder.Normal(policy, backupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
-	}
-
-	expr, err := cron.ParseStandard(policy.Spec.Schedule)
-	if err != nil {
-		return backupApi.ArangoBackupPolicyStatus{
-			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
-		}, nil
 	}
 
 	next := expr.Next(time.Now())
