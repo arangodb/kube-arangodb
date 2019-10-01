@@ -1,5 +1,7 @@
 # Change Log
 
+- Disable scaling buttons if scaling is not possible.
+
 ## [0.3.16](https://github.com/arangodb/kube-arangodb/tree/0.3.16) (2019-09-25)
 - Revised helm charts.
 - Use separate service account for operator.
