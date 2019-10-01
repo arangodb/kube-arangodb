@@ -45,11 +45,7 @@ var (
 	ghRepo      string // Github repository name to create release in
 	binFolder   string // Folder containing binaries
 
-	binaries = map[string]string{
-		"kube-arangodb.tgz":         "charts/kube-arangodb.tgz",
-		"kube-arangodb-storage.tgz": "charts/kube-arangodb-storage.tgz",
-		"kube-arangodb-crd.tgz":     "charts/kube-arangodb-crd.tgz",
-	}
+	binaries map[string]string
 )
 
 func init() {
@@ -66,14 +62,24 @@ func main() {
 	ensureGithubToken()
 	checkCleanRepo()
 	version := bumpVersion(releaseType)
+	binaries = map[string]string{
+		fmt.Sprintf("kube-arangodb-%s.tgz", version):         fmt.Sprintf("charts/kube-arangodb-%s.tgz", version),
+		fmt.Sprintf("kube-arangodb-crd-%s.tgz", version):     fmt.Sprintf("charts/kube-arangodb-crd-%s.tgz", version),
+	}
 	make("clean", nil)
+	make("patch-readme", nil)
+	make("patch-chart", map[string]string{
+		"ALLOWCHAOS":      "false",
+		"DOCKERNAMESPACE": "arangodb",
+		"IMAGETAG":        version,
+		"MANIFESTSUFFIX":  "-",
+	})
 	make("all", map[string]string{
 		"ALLOWCHAOS":      "false",
 		"DOCKERNAMESPACE": "arangodb",
 		"IMAGETAG":        version,
 		"MANIFESTSUFFIX":  "-",
 	})
-	make("patch-readme", nil)
 	make("build-ghrelease", nil)
 	createSHA256Sums()
 	gitCommitAll(fmt.Sprintf("Updated manifest to %s", version)) // Commit manifest

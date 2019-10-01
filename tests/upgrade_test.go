@@ -109,6 +109,15 @@ func TestUpgradeClusterRocksDB346Cto347C(t *testing.T) {
 	})
 }
 
+func TestUpgradeClusterRocksDB348Eto351E(t *testing.T) {
+	runUpgradeTest(t, &upgradeTest{
+		fromVersion: "3.4.8",
+		toVersion:   "3.5.1",
+		toImage:     "arangodb/enterprise-preview",
+		shortTest:   true,
+	})
+}
+
 type upgradeTest struct {
 	fromVersion string
 	toVersion   string

@@ -1,0 +1,9 @@
+---
+
+name: kube-arangodb-crd
+version: 0.3.16
+
+description: "ArangoDB Kubernetes Custom Resource Definitions"
+tillerVersion: ">2.7"
+
+appVersion: 3.5.0

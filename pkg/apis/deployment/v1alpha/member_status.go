@@ -59,7 +59,7 @@ type MemberStatus struct {
 	SideCarSpecs map[string]v1.Container `json:"sidecars-specs,omitempty"`
 	// ArangoVersion holds the ArangoDB version in member
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
-	//ImageId holds the members ArangoDB image ID
+	// ImageId holds the members ArangoDB image ID
 	ImageID string `json:"image-id,omitempty"`
 }
 

@@ -24,7 +24,12 @@ package operator
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"math/rand"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -36,12 +41,19 @@ import (
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
+	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"
+	backupOper "github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
+	"k8s.io/client-go/rest"
+
+	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 )
 
 const (
@@ -75,6 +87,7 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
+	EnableBackup                bool
 	AllowChaos                  bool
 }
 
@@ -88,6 +101,7 @@ type Dependencies struct {
 	DeploymentProbe            *probe.ReadyProbe
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
+	BackupProbe                *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -106,13 +120,16 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 // Run the operator
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
-		go o.runLeaderElection("arango-deployment-operator", o.onStartDeployment, o.Dependencies.DeploymentProbe)
+		go o.runLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
 	}
 	if o.Config.EnableDeploymentReplication {
-		go o.runLeaderElection("arango-deployment-replication-operator", o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+		go o.runLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 	}
 	if o.Config.EnableStorage {
-		go o.runLeaderElection("arango-storage-operator", o.onStartStorage, o.Dependencies.StorageProbe)
+		go o.runLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+	}
+	if o.Config.EnableBackup {
+		go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 	}
 	// Wait until process terminates
 	<-context.TODO().Done()
@@ -121,7 +138,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(true, false, false); err == nil {
+		if err := o.waitForCRD(true, false, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -135,7 +152,7 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
 func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, true, false); err == nil {
+		if err := o.waitForCRD(false, true, false, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -149,7 +166,7 @@ func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	for {
-		if err := o.waitForCRD(false, false, true); err == nil {
+		if err := o.waitForCRD(false, false, true, false); err == nil {
 			break
 		} else {
 			log.Error().Err(err).Msg("Resource initialization failed")
@@ -158,4 +175,61 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 		}
 	}
 	o.runLocalStorages(stop)
+}
+
+// onStartBackup starts the backup operator and run till given channel is closed.
+func (o *Operator) onStartBackup(stop <-chan struct{}) {
+	for {
+		if err := o.waitForCRD(false, false, false, true); err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
+		}
+	}
+	operatorName := "arangodb-backup-operator"
+	operator := backupOper.NewOperator(operatorName, o.Namespace)
+
+	rand.Seed(time.Now().Unix())
+
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
+	restClient, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	arangoClientSet, err := arangoClientSet.NewForConfig(restClient)
+	if err != nil {
+		panic(err)
+	}
+
+	kubeClientSet, err := kubernetes.NewForConfig(restClient)
+	if err != nil {
+		panic(err)
+	}
+
+	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
+
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10 * time.Second, arangoInformer.WithNamespace(o.Namespace))
+
+	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err = operator.RegisterStarter(arangoInformer); err != nil {
+		panic(err)
+	}
+
+	prometheus.MustRegister(operator)
+
+	operator.Start(8, stop)
+	o.Dependencies.BackupProbe.SetReady()
+
+	<-stop
 }

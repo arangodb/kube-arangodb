@@ -96,6 +96,10 @@ Possible values are:
 - `IfNotPresent` (default) to pull only when the image is not found on the node.
 - `Always` to always pull the image before using it.
 
+### `spec.imagePullSecrets: []string`
+
+This setting specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
+
 ### `spec.storageEngine: string`
 
 This setting specifies the type of storage engine used for all servers
@@ -138,6 +142,20 @@ The encryption key cannot be changed after the cluster has been created.
 
 The secret specified by this setting, must have a data field named 'key' containing
 an encryption key that is exactly 32 bytes long.
+
+### `spec.networkAttachedVolumes: bool`
+
+The default of this option is `false`. If set to `true`, and the
+deployed ArangoDB version is new enough (>= 3.4.8 for 3.4 and >= 3.5.1
+for 3.5), a `ResignLeaderShip` operation
+will be triggered when a dbserver pod is evicted (rather than a
+`CleanOutServer` operation). Furthermore, the pod will simply be
+redeployed on a different node, rather than cleaned and retired and
+replaced by a new member. You must only set this option to `true` if
+your persistent volumes are "movable" in the sense that they can be
+mounted from a different k8s node, like in the case of network attached
+volumes. If your persistent volumes are tied to a specific pod, you
+must leave this option on `false`.
 
 ### `spec.externalAccess.type: string`
 
@@ -353,6 +371,22 @@ The default is `false`.
 
 This setting cannot be changed after the deployment has been created.
 
+### `spec.restoreFrom: string`
+
+This setting specifies a `ArangoBackup` resource name the cluster should be restored from.
+
+After a restore or failure to do so, the status of the deployment contains information about the
+restore operation in the `restore` key.
+
+It will contain some of the following fields:
+- _requestedFrom_: name of the `ArangoBackup` used to restore from.
+- _message_: optional message explaining why the restore failed.
+- _state_: state indicating if the restore was successful or not. Possible values: `Restoring`, `Restored`, `RestoreFailed`
+
+If the `restoreFrom` key is removed from the spec, the `restore` key is deleted as well.
+
+A new restore attempt is made if and only if either in the status restore is not set or if spec.restoreFrom and status.requestedFrom are different.
+
 ### `spec.license.secretName: string`
 
 This setting specifies the name of a kubernetes `Secret` that contains
@@ -462,10 +496,26 @@ and `iops` is not forwarded to the pods resource requirements.
 ### `spec.<group>.serviceAccountName: string`
 
 This setting specifies the `serviceAccountName` for the `Pods` created
-for each server of this group.
+for each server of this group. If empty, it defaults to using the
+`default` service account.
 
 Using an alternative `ServiceAccount` is typically used to separate access rights.
-The ArangoDB deployments do not require any special rights.
+The ArangoDB deployments need some very minimal access rights. With the
+deployment of the operator, we grant the following rights for the `default`
+service account:
+
+```
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+```
+
+If you are using a different service account, please grant these rights
+to that service account.
 
 ### `spec.<group>.priorityClassName: string`
 

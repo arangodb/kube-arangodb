@@ -57,9 +57,9 @@ func (s *Server) handleGetOperators(c *gin.Context) {
 	result := operatorsResponse{
 		PodName:               s.cfg.PodName,
 		Namespace:             s.cfg.Namespace,
-		Deployment:            s.deps.DeploymentProbe.IsReady(),
-		DeploymentReplication: s.deps.DeploymentReplicationProbe.IsReady(),
-		Storage:               s.deps.StorageProbe.IsReady(),
+		Deployment:            s.deps.Deployment.Probe.IsReady(),
+		DeploymentReplication: s.deps.DeploymentReplication.Probe.IsReady(),
+		Storage:               s.deps.Storage.Probe.IsReady(),
 		Other:                 s.deps.Operators.FindOtherOperators(),
 	}
 	s.deps.Log.Info().Interface("result", result).Msg("handleGetOperators")

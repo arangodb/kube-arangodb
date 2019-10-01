@@ -22,4 +22,5 @@ kubectl --namespace ${DEPLOYMENTNAMESPACE} \
     --arango-sync-test-image=${ARANOSYNCTESTIMAGEID} \
     --license-key-secret-name=arangodb-jenkins-license-key \
     --namespace=${DEPLOYMENTNAMESPACE} \
+    --serviceaccount=arangodb-test \
     --test-args="${TESTARGS}"

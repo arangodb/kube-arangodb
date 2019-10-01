@@ -1,6 +1,19 @@
 # Change Log
 
-## [0.3.13]() (2019-08-02)
+## [0.3.16](https://github.com/arangodb/kube-arangodb/tree/0.3.16) (2019-09-25)
+- Revised helm charts.
+- Use separate service account for operator.
+- Support for ResignLeadership job.
+- Allow to set ImagePullSecrets in pods.
+- Bug fixes.
+
+## [0.3.15]() (never released, only previews existed)
+
+## [0.3.14](https://github.com/arangodb/kube-arangodb/tree/0.3.14) (2019-08-07)
+- Bug fixes for custom sidecars.
+- More tests
+
+## [0.3.13](https://github.com/arangodb/kube-arangodb/tree/0.3.13) (2019-08-02)
 - Added side car changed to pod rotation criterium
 - Added ArangoDB version and image id to member status
 - Fix bug with MemberOfCluster condition

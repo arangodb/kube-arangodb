@@ -497,7 +497,7 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 }
 
 // newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string, nodeSelector map[string]string) v1.Pod {
+func newPod(deploymentName, ns, role, id, podName string, imagePullSecrets []string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string, nodeSelector map[string]string) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -514,6 +514,18 @@ func newPod(deploymentName, ns, role, id, podName string, finalizers []string, t
 			NodeSelector:       nodeSelector,
 		},
 	}
+
+	// Add ImagePullSecrets
+	if imagePullSecrets != nil {
+		imagePullSecretsReference := make([]v1.LocalObjectReference, len(imagePullSecrets))
+		for id := range imagePullSecrets {
+			imagePullSecretsReference[id] = v1.LocalObjectReference{
+				Name: imagePullSecrets[id],
+			}
+		}
+		p.Spec.ImagePullSecrets = imagePullSecretsReference
+	}
+
 	return p
 }
 
@@ -530,7 +542,8 @@ type ArangodbExporterContainerConf struct {
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, podName, pvcName, image, lifecycleImage, alpineImage string, imagePullPolicy v1.PullPolicy,
+	role, id, podName, pvcName, image, lifecycleImage, alpineImage string,
+	imagePullPolicy v1.PullPolicy, imagePullSecrets []string,
 	engine string, requireUUID bool, terminationGracePeriod time.Duration,
 	args []string, env map[string]EnvValue, finalizers []string,
 	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
@@ -538,7 +551,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
 
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, imagePullSecrets, finalizers, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
@@ -688,12 +701,13 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
+func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string,
+	imagePullPolicy v1.PullPolicy, imagePullSecrets []string,
 	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
 	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
 	podPriorityClassName string, resources v1.ResourceRequirements, sidecars []v1.Container) error {
 	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
+	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, imagePullSecrets, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
 	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 
