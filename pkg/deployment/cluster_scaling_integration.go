@@ -220,7 +220,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	if spec.DBServers.GetMaxCount() == spec.DBServers.GetMinCount() {
 		dbserverCountPtr = nil
 	} else {
-		dbserverCountPtr = &coordinatorCount
+		dbserverCountPtr = &dbserverCount
 	}
 
 	ci.lastNumberOfServers.mutex.Lock()
