@@ -34,12 +34,64 @@ type ArangoBackupStatus struct {
 	Available         bool                 `json:"available"`
 }
 
+func (a *ArangoBackupStatus) Equal(b *ArangoBackupStatus) bool {
+	if a == b {
+		return true
+	}
+
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
+
+	return a.ArangoBackupState.Equal(&b.ArangoBackupState) &&
+		a.Backup.Equal(b.Backup) &&
+		a.Available == b.Available
+}
+
 type ArangoBackupDetails struct {
 	ID                      string    `json:"id"`
 	Version                 string    `json:"version"`
 	PotentiallyInconsistent *bool     `json:"potentiallyInconsistent,omitempty"`
+	SizeInBytes             uint64    `json:"sizeInBytes,omitempty"`
+	NumberOfDBServers       uint      `json:"numberOfDBServers,omitempty"`
 	Uploaded                *bool     `json:"uploaded,omitempty"`
 	Downloaded              *bool     `json:"downloaded,omitempty"`
 	Imported                *bool     `json:"imported,omitempty"`
 	CreationTimestamp       meta.Time `json:"createdAt"`
+}
+
+func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {
+	if a == b {
+		return true
+	}
+
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
+
+	return a.ID == b.ID &&
+		a.Version == b.Version &&
+		a.SizeInBytes == b.SizeInBytes &&
+		a.NumberOfDBServers == b.NumberOfDBServers &&
+		a.CreationTimestamp.Equal(&b.CreationTimestamp) &&
+		compareBoolPointer(a.PotentiallyInconsistent, b.PotentiallyInconsistent) &&
+		compareBoolPointer(a.Uploaded, b.Uploaded) &&
+		compareBoolPointer(a.Downloaded, b.Downloaded) &&
+		compareBoolPointer(a.Imported, b.Imported)
+}
+
+func compareBoolPointer(a, b * bool) bool {
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
+
+	if a == b {
+		return true
+	}
+
+	if *a == *b {
+		return true
+	}
+
+	return false
 }

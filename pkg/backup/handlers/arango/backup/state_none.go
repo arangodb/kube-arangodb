@@ -26,8 +26,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateNoneHandler(*handler, *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
-	return backupApi.ArangoBackupStatus{
-		ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "", nil),
-	}, nil
+func stateNoneHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStatePending, ""))
 }

@@ -23,39 +23,37 @@
 package backup
 
 import (
-	"fmt"
-
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
 
 	if backup.Status.Backup == nil {
-		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .status.backup")
 	}
 
-	_, err = client.Get(driver.BackupID(backup.Status.Backup.ID))
+	backupMeta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
 		if driver.IsNotFound(err) {
-			return backupApi.ArangoBackupStatus{
-				ArangoBackupState: backupApi.ArangoBackupState{
-					State: backupApi.ArangoBackupStateDeleted,
-				},
-				Backup: backup.Status.Backup,
-			}, nil
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateDeleted, ""),
+				updateStatusAvailable(false),
+			)
 		}
 
-		return backup.Status, nil
+		return wrapUpdateStatus(backup,
+			updateStatusAvailable(true),
+		)
 	}
 
 	// Check if upload flag was specified later in runtime
@@ -64,38 +62,35 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.Ar
 		// Ensure that we can start upload process
 		running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
 		if err != nil {
-			return backup.Status, nil
+			return nil, err
 		}
 
 		if running {
-			return backupApi.ArangoBackupStatus{
-				Available:         true,
-				ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "Upload process queued", nil),
-				Backup:            backup.Status.Backup,
-			}, nil
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateReady, "Upload process queued"),
+				updateStatusBackup(backupMeta),
+				updateStatusAvailable(true),
+			)
 		}
 
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateUpload, "", nil),
-			Backup:            backup.Status.Backup,
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateUpload, ""),
+			updateStatusBackup(backupMeta),
+			updateStatusAvailable(true),
+		)
 	}
 
-	// Remove old upload flag
 	if backup.Spec.Upload == nil && backup.Status.Backup.Uploaded != nil {
-		newBackup := backup.Status.Backup.DeepCopy()
-		newBackup.Uploaded = nil
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-			Backup:            newBackup,
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateReady, ""),
+			updateStatusBackup(backupMeta),
+			updateStatusBackupUpload(nil),
+			updateStatusAvailable(true),
+		)
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available:         true,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-		Backup:            backup.Status.Backup,
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusBackup(backupMeta),
+		updateStatusAvailable(true),
+	)
 }

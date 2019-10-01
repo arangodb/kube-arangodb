@@ -25,6 +25,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"os"
 	"strings"
 	"testing"
@@ -199,9 +200,18 @@ func newBackupPolicy(name, schedule string, labels map[string]string, options *E
 }
 
 func skipIfBackupUnavailable(t *testing.T, client driver.Client) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	if _, err := client.Backup().List(ctx, nil); err != nil {
+	err := utils.Retry(10, time.Second, func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if _, err := client.Backup().List(ctx, nil); err != nil {
+			t.Logf("Backup API not yet ready: %s", err.Error())
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		t.Skipf("Backup API not available: %s", err.Error())
 	}
 }
@@ -293,6 +303,15 @@ func timeoutWaitForBackups(t *testing.T, backupClient backupClient.ArangoBackupI
 
 		return nil
 	}
+}
+
+func compareBackup(t *testing.T, meta driver.BackupMeta, backup *backupApi.ArangoBackup) {
+	require.NotNil(t, backup.Status.Backup)
+	require.Equal(t, meta.Version, backup.Status.Backup.Version)
+	require.True(t, meta.SizeInBytes > 0)
+	require.True(t, meta.NumberOfDBServers == 3)
+	require.True(t, meta.SizeInBytes == backup.Status.Backup.SizeInBytes)
+	require.True(t, meta.NumberOfDBServers == backup.Status.Backup.NumberOfDBServers)
 }
 
 func TestBackupCluster(t *testing.T) {
@@ -401,7 +420,7 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
-		require.Equal(t, meta.Version, backup.Status.Backup.Version)
+		compareBackup(t, meta, backup)
 	})
 
 	t.Run("create-upload backup", func(t *testing.T) {
@@ -418,7 +437,7 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(backupID))
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
-		require.Equal(t, meta.Version, backup.Status.Backup.Version)
+		compareBackup(t, meta, backup)
 		require.Nil(t, backup.Status.Backup.Uploaded)
 		require.Nil(t, backup.Status.Backup.Downloaded)
 
@@ -439,7 +458,7 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err = statBackupMeta(databaseClient, driver.BackupID(backupID))
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
-		require.Equal(t, meta.Version, backup.Status.Backup.Version)
+		compareBackup(t, meta, backup)
 		require.NotNil(t, backup.Status.Backup.Uploaded, "Upload flag is nil")
 		require.Nil(t, backup.Status.Backup.Downloaded)
 	})
@@ -452,7 +471,7 @@ func TestBackupCluster(t *testing.T) {
 		found, meta, err := statBackupMeta(databaseClient, id)
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
-		require.Equal(t, meta.Version, backup.Status.Backup.Version)
+		compareBackup(t, meta, backup)
 
 		// now remove the backup
 		backupClient.Delete(name, &metav1.DeleteOptions{})
@@ -482,7 +501,7 @@ func TestBackupCluster(t *testing.T) {
 		// create a local backup manually
 		id, _, err := databaseClient.Backup().Create(nil, nil)
 		require.NoError(t, err, "Creating backup failed: %s", err)
-		found, _, err := statBackupMeta(databaseClient, driver.BackupID(id))
+		found, meta, err := statBackupMeta(databaseClient, driver.BackupID(id))
 		require.NoError(t, err, "Backup test failed: %s", err)
 		require.True(t, found)
 
@@ -513,7 +532,7 @@ func TestBackupCluster(t *testing.T) {
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 		require.NoError(t, err, "backup did not become available: %s", err)
 		require.Equal(t, backupApi.ArangoBackupStateReady, backup.Status.State)
-		require.NotNil(t, backup.Status.Backup)
+		compareBackup(t, meta, backup)
 		require.NotNil(t, backup.Status.Backup.Imported)
 		require.True(t, *backup.Status.Backup.Imported)
 	})

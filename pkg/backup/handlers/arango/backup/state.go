@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 
-type stateHolder func(handler *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error)
+type stateHolder func(handler *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error)
 
 var (
 	stateHolders = map[state.State]stateHolder{

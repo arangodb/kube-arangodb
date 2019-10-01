@@ -24,7 +24,9 @@ package backup
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
@@ -42,14 +44,17 @@ func newMockArangoClientBackupErrorFactory(err error) ArangoClientFactory {
 	}
 }
 
-func newMockArangoClientBackupFactory(mock *mockArangoClientBackup) ArangoClientFactory {
+func newMockArangoClientBackupFactory(mock *mockArangoClientBackupState) ArangoClientFactory {
 	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
-		return mock, nil
+		return &mockArangoClientBackup{
+			backup: backup,
+			state:  mock,
+		}, nil
 	}
 }
 
-func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoClientBackup {
-	return &mockArangoClientBackup{
+func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoClientBackupState {
+	return &mockArangoClientBackupState{
 		backups:    map[driver.BackupID]driver.BackupMeta{},
 		progresses: map[driver.BackupTransferJobID]ArangoBackupProgress{},
 		errors:     errors,
@@ -57,13 +62,10 @@ func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoC
 }
 
 type mockErrorsArangoClientBackup struct {
-	createError, listError, getError, uploadError, downloadError, progressError, existsError, deleteError, abortError string
-	isTemporaryError                                                                                                  bool
-
-	createForced bool
+	createError, listError, getError, uploadError, downloadError, progressError, existsError, deleteError, abortError error
 }
 
-type mockArangoClientBackup struct {
+type mockArangoClientBackupState struct {
 	lock sync.Mutex
 
 	backups    map[driver.BackupID]driver.BackupMeta
@@ -72,121 +74,115 @@ type mockArangoClientBackup struct {
 	errors mockErrorsArangoClientBackup
 }
 
-func (m *mockArangoClientBackup) List() (map[driver.BackupID]driver.BackupMeta, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+type mockArangoClientBackup struct {
+	backup *backupApi.ArangoBackup
+	state *mockArangoClientBackupState
+}
 
-	if err := m.newError(m.errors.listError); err != nil {
-		return nil, err
+func (m *mockArangoClientBackup) List() (map[driver.BackupID]driver.BackupMeta, error) {
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
+
+	if m.state.errors.listError != nil {
+		return nil, m.state.errors.listError
 	}
 
-	return m.backups, nil
+	return m.state.backups, nil
 }
 
 func (m *mockArangoClientBackup) Abort(d driver.BackupTransferJobID) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.abortError); err != nil {
-		return err
+	if m.state.errors.abortError != nil {
+		return m.state.errors.abortError
 	}
 
-	if _, ok := m.progresses[d]; ok {
-		delete(m.progresses, d)
+	if _, ok := m.state.progresses[d]; ok {
+		delete(m.state.progresses, d)
 	}
 
 	return nil
 }
 
 func (m *mockArangoClientBackup) Exists(id driver.BackupID) (bool, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.existsError); err != nil {
-		return false, err
+	if m.state.errors.existsError != nil {
+		return false, m.state.errors.existsError
 	}
 
-	_, ok := m.backups[id]
+	_, ok := m.state.backups[id]
 
 	return ok, nil
 }
 
 func (m *mockArangoClientBackup) Delete(id driver.BackupID) error {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.deleteError); err != nil {
-		return err
+	if m.state.errors.deleteError != nil {
+		return m.state.errors.deleteError
 	}
 
-	if _, ok := m.backups[id]; ok {
-		delete(m.backups, id)
+	if _, ok := m.state.backups[id]; ok {
+		delete(m.state.backups, id)
 	}
 
 	return nil
 }
 
-func (m *mockArangoClientBackup) newError(msg string) error {
-	if msg == "" {
-		return nil
-	}
-
-	if m.errors.isTemporaryError {
-		return NewTemporaryError(msg)
-	}
-	return fmt.Errorf(msg)
-}
-
 func (m *mockArangoClientBackup) Download(driver.BackupID) (driver.BackupTransferJobID, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.downloadError); err != nil {
-		return "", err
+	if m.state.errors.downloadError != nil {
+		return "", m.state.errors.downloadError
 	}
 
 	id := driver.BackupTransferJobID(uuid.NewUUID())
 
-	m.progresses[id] = ArangoBackupProgress{}
+	m.state.progresses[id] = ArangoBackupProgress{}
 
 	return id, nil
 }
 
 func (m *mockArangoClientBackup) Progress(id driver.BackupTransferJobID) (ArangoBackupProgress, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.progressError); err != nil {
-		return ArangoBackupProgress{}, err
+	if m.state.errors.progressError != nil {
+		return ArangoBackupProgress{}, m.state.errors.progressError
 	}
 
-	return m.progresses[id], nil
+	return m.state.progresses[id], nil
 }
 
 func (m *mockArangoClientBackup) Upload(driver.BackupID) (driver.BackupTransferJobID, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.uploadError); err != nil {
-		return "", err
+	if m.state.errors.uploadError != nil {
+		return "", m.state.errors.uploadError
 	}
 
 	id := driver.BackupTransferJobID(uuid.NewUUID())
 
-	m.progresses[id] = ArangoBackupProgress{}
+	m.state.progresses[id] = ArangoBackupProgress{}
 
 	return id, nil
 }
 
 func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.getError); err != nil {
-		return driver.BackupMeta{}, err
+	if m.state.errors.getError != nil {
+		return driver.BackupMeta{}, m.state.errors.getError
 	}
 
-	if meta, ok := m.backups[id]; ok {
+	if meta, ok := m.state.backups[id]; ok {
 		return meta, nil
 	}
 
@@ -194,32 +190,47 @@ func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, err
 }
 
 func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.state.lock.Lock()
+	defer m.state.lock.Unlock()
 
-	if err := m.newError(m.errors.createError); err != nil {
-		return ArangoBackupCreateResponse{}, err
+	if m.state.errors.createError != nil {
+		return ArangoBackupCreateResponse{}, m.state.errors.createError
 	}
 
 	id := driver.BackupID(uuid.NewUUID())
 
-	meta := driver.BackupMeta{
-		ID:      id,
-		Version: mockVersion,
+	inconsistent := false
+
+	if m.backup != nil {
+		if m.backup.Spec.Options != nil {
+			if m.backup.Spec.Options.AllowInconsistent != nil {
+				inconsistent = *m.backup.Spec.Options.AllowInconsistent
+			}
+		}
 	}
 
-	m.backups[id] = meta
+	meta := driver.BackupMeta{
+		ID:                      id,
+		Version:                 mockVersion,
+		NumberOfDBServers:       uint(rand.Uint32()),
+		DateTime:                time.Now(),
+		SizeInBytes:             rand.Uint64(),
+		PotentiallyInconsistent: inconsistent,
+		NumberOfFiles:           uint(rand.Uint32()),
+	}
+
+	m.state.backups[id] = meta
 
 	return ArangoBackupCreateResponse{
 		BackupMeta:              meta,
-		PotentiallyInconsistent: m.errors.createForced,
+		PotentiallyInconsistent: meta.PotentiallyInconsistent,
 	}, nil
 }
 
 func (m *mockArangoClientBackup) getIDs() []string {
-	ret := make([]string, 0, len(m.backups))
+	ret := make([]string, 0, len(m.state.backups))
 
-	for key := range m.backups {
+	for key := range m.state.backups {
 		ret = append(ret, string(key))
 	}
 
@@ -227,9 +238,9 @@ func (m *mockArangoClientBackup) getIDs() []string {
 }
 
 func (m *mockArangoClientBackup) getProgressIDs() []string {
-	ret := make([]string, 0, len(m.progresses))
+	ret := make([]string, 0, len(m.state.progresses))
 
-	for key := range m.progresses {
+	for key := range m.state.progresses {
 		ret = append(ret, string(key))
 	}
 

@@ -114,6 +114,8 @@ status:
     uploaded: true
     downloaded: true
     createdAt: "time"
+    sizeInBytes: 1
+    numberOfDBServers: 3
   available: true
 ```
 
@@ -428,6 +430,22 @@ ArangoBackup Custom Resource creation time in UTC.
 Required: true
 
 Default: now()
+
+#### `status.backup.sizeInBytes: uint64`
+
+Size of the Backup in ArangoDB.
+
+Required: true
+
+Default: 0
+
+#### `status.backup.numberOfDBServers: uint`
+
+Cluster size of the Backup in ArangoDB.
+
+Required: true
+
+Default: 0
 
 ### `status.available: bool`
 

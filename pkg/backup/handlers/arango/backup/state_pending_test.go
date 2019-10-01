@@ -55,9 +55,11 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateFailed, false)
 
-	require.Equal(t, newObj.Status.Message, createFailMessage(backupApi.ArangoBackupStatePending, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
+	require.Equal(t, newObj.Status.Message,
+		createStateMessage(backupApi.ArangoBackupStatePending, backupApi.ArangoBackupStateFailed,
+			fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 }
 
 func Test_State_Pending_OneBackupObject(t *testing.T) {
@@ -74,9 +76,7 @@ func Test_State_Pending_OneBackupObject(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateScheduled)
-
-	require.False(t, newObj.Status.Available)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
 }
 
 func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
@@ -97,9 +97,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateScheduled)
-
-		require.False(t, newObj.Status.Available)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateScheduled, false)
 	})
 
 	t.Run("Second backup object", func(t *testing.T) {
@@ -107,7 +105,7 @@ func Test_State_Pending_MultipleBackupObjectWithLimitation(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj2)
-		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStatePending)
+		checkBackup(t, newObj, backupApi.ArangoBackupStatePending, false)
 		require.Equal(t, newObj.Status.Message, "backup already in process")
 	})
 }

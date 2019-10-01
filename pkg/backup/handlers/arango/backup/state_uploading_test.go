@@ -24,13 +24,13 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/go-driver"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/stretchr/testify/require"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_State_Uploading_Common(t *testing.T) {
@@ -45,17 +45,16 @@ func Test_State_Uploading_Success(t *testing.T) {
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
 
-	backupMeta, err := mock.Create()
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
 	require.NoError(t, err)
 
 	progress, err := mock.Upload(backupMeta.ID)
 	require.NoError(t, err)
 
-	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
-	}
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
@@ -70,16 +69,14 @@ func Test_State_Uploading_Success(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateUploading, true)
 		require.Equal(t, fmt.Sprintf("%d%%", 0), newObj.Status.Progress.Progress)
 		require.Equal(t, obj.Status.Progress.JobID, newObj.Status.Progress.JobID)
-
-		require.True(t, newObj.Status.Available)
 	})
 
 	t.Run("Restore percent after update", func(t *testing.T) {
 		p := 55
-		mock.progresses[progress] = ArangoBackupProgress{
+		mock.state.progresses[progress] = ArangoBackupProgress{
 			Progress: p,
 		}
 
@@ -87,15 +84,13 @@ func Test_State_Uploading_Success(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateUploading, true)
 		require.Equal(t, fmt.Sprintf("%d%%", p), newObj.Status.Progress.Progress)
 		require.Equal(t, string(progress), newObj.Status.Progress.JobID)
-
-		require.True(t, newObj.Status.Available)
 	})
 
 	t.Run("Finished", func(t *testing.T) {
-		mock.progresses[progress] = ArangoBackupProgress{
+		mock.state.progresses[progress] = ArangoBackupProgress{
 			Completed: true,
 		}
 
@@ -103,10 +98,9 @@ func Test_State_Uploading_Success(t *testing.T) {
 
 		// Assert
 		newObj := refreshArangoBackup(t, handler, obj)
-		require.Equal(t, backupApi.ArangoBackupStateReady, newObj.Status.State)
+		checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 		require.Nil(t, newObj.Status.Progress)
 
-		require.True(t, newObj.Status.Available)
 		require.NotNil(t, newObj.Status.Backup.Uploaded)
 		require.True(t, *newObj.Status.Backup.Uploaded)
 	})
@@ -118,23 +112,22 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
 
-	backupMeta, err := mock.Create()
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
 	require.NoError(t, err)
 
 	progress, err := mock.Upload(backupMeta.ID)
 	require.NoError(t, err)
 
 	errorMsg := errorString
-	mock.progresses[progress] = ArangoBackupProgress{
+	mock.state.progresses[progress] = ArangoBackupProgress{
 		Failed:      true,
 		FailMessage: errorMsg,
 	}
 
-	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
-	}
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
@@ -148,35 +141,37 @@ func Test_State_Uploading_FailedUpload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateUploadError, newObj.Status.State)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 	require.Equal(t, fmt.Sprintf("Upload failed with error: %s", errorMsg), newObj.Status.Message)
 	require.Nil(t, newObj.Status.Progress)
-
-	require.True(t, newObj.Status.Available)
 }
 
-func Test_State_Uploading_FailedProgress(t *testing.T) {
+func Test_StateUploading_FailedProgress(t *testing.T) {
 	// Arrange
-	errorMsg := "progress error"
+	error := newFatalErrorf("error")
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		progressError: errorMsg,
+		progressError: error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
 
-	backupMeta, err := mock.Create()
+	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	progress, err := mock.Upload(backupMeta.ID)
+	backupMeta, err := mock.Get(createResponse.ID)
 	require.NoError(t, err)
 
-	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+	progress, err := mock.Download(backupMeta.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
 	}
-
-	obj.Status.Available = true
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
@@ -186,39 +181,39 @@ func Test_State_Uploading_FailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+	require.EqualError(t, handler.Handle(newItemFromBackup(operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
-	require.NotNil(t, newObj.Status.Progress)
-
-	require.True(t, newObj.Status.Available)
+	require.Equal(t, obj.Status, newObj.Status)
 }
 
 func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	// Arrange
-	errorMsg := "progress error"
+	error := newTemporaryErrorf("error")
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		isTemporaryError: true,
-		progressError:    errorMsg,
+		progressError: error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
 
-	backupMeta, err := mock.Create()
+	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	progress, err := mock.Upload(backupMeta.ID)
+	backupMeta, err := mock.Get(createResponse.ID)
 	require.NoError(t, err)
 
-	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
-		Version:           backupMeta.Version,
-		CreationTimestamp: meta.Now(),
+	progress, err := mock.Download(backupMeta.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
 	}
-
-	obj.Status.Available = true
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
 		JobID: string(progress),
@@ -228,12 +223,55 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err = handler.Handle(newItemFromBackup(operation.Update, obj))
+	require.EqualError(t, handler.Handle(newItemFromBackup(operation.Update, obj)), error.Error())
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, backupApi.ArangoBackupStateUploading, newObj.Status.State)
-	require.NotNil(t, newObj.Status.Progress)
+	require.Equal(t, obj.Status, newObj.Status)
+}
 
-	require.True(t, newObj.Status.Available)
+func Test_State_Uploading_NotFoundProgress(t *testing.T) {
+	// Arrange
+	error := driver.ArangoError{
+		Code: 404,
+	}
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		progressError: error,
+	})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUploading)
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	progress, err := mock.Download(backupMeta.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	obj.Spec.Download = &backupApi.ArangoBackupSpecDownload{
+		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "S3 URL",
+		},
+		ID: string(backupMeta.ID),
+	}
+
+	obj.Status.Progress = &backupApi.ArangoBackupProgress{
+		JobID: string(progress),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
+	require.Equal(t, fmt.Sprintf("job with id %s does not exist anymore", progress), newObj.Status.Message)
+	require.Nil(t, newObj.Status.Progress)
 }

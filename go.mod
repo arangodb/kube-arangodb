@@ -18,7 +18,7 @@ require (
 	github.com/aktau/github-release v0.7.2 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
-	github.com/arangodb/go-driver v0.0.0-20190917135832-4ec315b17bf0
+	github.com/arangodb/go-driver v0.0.0-20191001090752-e07a8fe34b53
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/bugagazavr/go-gitlab-client v0.0.0-20150830002541-e5999f934dc4 // indirect
@@ -62,6 +62,7 @@ require (
 	github.com/juju/errgo v0.0.0-20140925100237-08cceb5d0b53 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227 // indirect
+	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect

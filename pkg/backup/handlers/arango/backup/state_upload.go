@@ -23,44 +23,51 @@
 package backup
 
 import (
-	"fmt"
-
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateUploadHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateUploadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
 
 	if backup.Status.Backup == nil {
-		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .status.backup")
 	}
 
 	meta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
 	if err != nil {
-		return switchTemporaryError(err, backup.Status)
+		if driver.IsNotFound(err) {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateDeleted, ""),
+				updateStatusAvailable(false),
+			)
+		}
+
+		return nil, newTemporaryError(err)
 	}
 
 	jobID, err := client.Upload(meta.ID)
 	if err != nil {
-		return switchTemporaryError(err, backup.Status)
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateUploadError,
+				"Upload failed with error: %s", err.Error()),
+			cleanStatusJob(),
+			updateStatusBackupUpload(nil),
+			updateStatusAvailable(true),
+		)
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available: true,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateUploading, "",
-			&backupApi.ArangoBackupProgress{
-				JobID:    string(jobID),
-				Progress: "0%",
-			}),
-		Backup: backup.Status.Backup,
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateUploading, ""),
+		updateStatusJob(string(jobID), "0%"),
+		updateStatusAvailable(true),
+	)
 }

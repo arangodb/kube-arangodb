@@ -26,24 +26,22 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	_, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	if running {
-		return backupApi.ArangoBackupStatus{
-			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "backup already in process", nil),
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStatePending, "backup already in process"))
 	}
 
-	return backupApi.ArangoBackupStatus{
-		ArangoBackupState: newState(backupApi.ArangoBackupStateScheduled, "", nil),
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateScheduled, ""))
 }

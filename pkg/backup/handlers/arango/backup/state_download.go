@@ -23,43 +23,53 @@
 package backup
 
 import (
-	"fmt"
-
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateDownloadHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateDownloadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
 
 	if backup.Spec.Download == nil {
-		return createFailedState(fmt.Errorf("missing field .spec.download"), backup.Status), nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateDownloadError,
+				"missing field .spec.download"),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+		)
 	}
 
 	if backup.Spec.Download.ID == "" {
-		return createFailedState(fmt.Errorf("missing field .spec.download.id"), backup.Status), nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateDownloadError,
+				"missing field .spec.download.id"),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+		)
 	}
 
 	jobID, err := client.Download(driver.BackupID(backup.Spec.Download.ID))
 	if err != nil {
-		return switchTemporaryError(err, backup.Status)
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateDownloadError,
+				"missing field .spec.download.id"),
+			cleanStatusJob(),
+			updateStatusAvailable(false),
+		)
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available: false,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateDownloading, "",
-			&backupApi.ArangoBackupProgress{
-				JobID:    string(jobID),
-				Progress: "0%",
-			}),
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateDownloading, ""),
+		updateStatusJob(string(jobID), "0%"),
+		updateStatusAvailable(false),
+	)
 }

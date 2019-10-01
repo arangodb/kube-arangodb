@@ -23,43 +23,42 @@
 package backup
 
 import (
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateCreateHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
-
-	var details *backupApi.ArangoBackupDetails
-
-	// Try to recover old backup. If old backup is missing go into deleted state
 
 	response, err := client.Create()
 	if err != nil {
-		return switchTemporaryError(err, backup.Status)
+		return nil, err
 	}
 
-	details = &backupApi.ArangoBackupDetails{
-		ID:                string(response.ID),
-		Version:           response.Version,
-		CreationTimestamp: meta.Now(),
+	backupMeta, err := client.Get(response.ID)
+	if err != nil {
+		if driver.IsNotFound(err) {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateFailed,
+					"backup is not present after creation"),
+				cleanStatusJob(),
+			)
+		}
+
+		return nil, newFatalError(err)
 	}
 
-	if response.PotentiallyInconsistent {
-		details.PotentiallyInconsistent = &response.PotentiallyInconsistent
-	}
-
-	return backupApi.ArangoBackupStatus{
-		Available:         true,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-		Backup:            details,
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateReady,""),
+		updateStatusAvailable(true),
+		updateStatusBackup(backupMeta),
+	)
 }

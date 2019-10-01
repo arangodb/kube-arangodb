@@ -28,6 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
@@ -68,6 +69,10 @@ func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
 }
 
 func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
+	lock := h.getDeploymentMutex(backup.Namespace, backup.Spec.Deployment.Name)
+	lock.Lock()
+	defer lock.Unlock()
+
 	if backup.Status.Backup == nil {
 		// No details passed, object can be removed
 		return nil
@@ -80,7 +85,33 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 			return nil
 		}
 
+		if c, ok := err.(utils.Causer); ok {
+			if errors.IsNotFound(c.Cause()) {
+				return nil
+			}
+		}
+
 		return err
+	}
+
+	backups, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, existingBackup := range backups.Items {
+		if existingBackup.Name == backup.Name {
+			continue
+		}
+
+		if existingBackup.Status.Backup == nil {
+			continue
+		}
+
+		// This backup is still in use
+		if existingBackup.Status.Backup.ID == backup.Status.Backup.ID {
+			return nil
+		}
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)

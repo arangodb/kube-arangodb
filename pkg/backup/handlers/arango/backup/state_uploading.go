@@ -30,61 +30,59 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
 
 	if backup.Status.Backup == nil {
-		return createFailedState(fmt.Errorf("backup details are missing"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .status.backup")
 	}
 
 	if backup.Status.Progress == nil {
-		return createFailedState(fmt.Errorf("backup progress details are missing"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .status.progress")
 	}
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
 		if driver.IsNotFound(err) {
-			return switchTemporaryError(err, backup.Status)
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateUploadError,
+					"job with id %s does not exist anymore", backup.Status.Progress.JobID),
+				cleanStatusJob(),
+				updateStatusAvailable(true),
+			)
 		}
-		return backup.Status, nil
+		return nil, newTemporaryError(err)
 	}
 
 	if details.Failed {
-		return backupApi.ArangoBackupStatus{
-			Available: true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateUploadError,
-				fmt.Sprintf("Upload failed with error: %s", details.FailMessage), nil),
-			Backup: backup.Status.Backup,
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateUploadError,
+				"Upload failed with error: %s", details.FailMessage),
+			cleanStatusJob(),
+			updateStatusAvailable(true),
+		)
 	}
 
 	if details.Completed {
-		newDetails := backup.Status.Backup.DeepCopy()
-
-		newDetails.Uploaded = util.NewBool(true)
-
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-			Backup:            newDetails,
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateReady, ""),
+			cleanStatusJob(),
+			updateStatusBackupUpload(util.NewBool(true)),
+			updateStatusAvailable(true),
+		)
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available: true,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateUploading, "",
-			&backupApi.ArangoBackupProgress{
-				JobID:    backup.Status.Progress.JobID,
-				Progress: fmt.Sprintf("%d%%", details.Progress),
-			}),
-		Backup: backup.Status.Backup,
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateUploading,""),
+		updateStatusAvailable(true),
+		updateStatusJob(backup.Status.Progress.JobID, fmt.Sprintf("%d%%", details.Progress)),
+	)
 }

@@ -56,14 +56,12 @@ func Test_State_Download_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateDownloading)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateDownloading, false)
 
 	require.NotNil(t, newObj.Status.Progress)
 	progresses := mock.getProgressIDs()
 	require.Len(t, progresses, 1)
 	require.Equal(t, progresses[0], newObj.Status.Progress.JobID)
-
-	require.False(t, newObj.Status.Available)
 
 	require.Nil(t, newObj.Status.Backup)
 }
@@ -71,9 +69,9 @@ func Test_State_Download_Success(t *testing.T) {
 // Check version
 func Test_State_Download_DownloadFailed(t *testing.T) {
 	// Arrange
-	errorMsg := "download error"
+	error := newFatalErrorf("error")
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		downloadError: errorMsg,
+		downloadError: error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownload)
@@ -93,23 +91,20 @@ func Test_State_Download_DownloadFailed(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateDownloadError, false)
 
 	require.Nil(t, newObj.Status.Progress)
 	progresses := mock.getProgressIDs()
 	require.Len(t, progresses, 0)
-
-	require.False(t, newObj.Status.Available)
 
 	require.Nil(t, newObj.Status.Backup)
 }
 
 func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 	// Arrange
-	errorMsg := "download error"
-	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		isTemporaryError: true,
-		downloadError:    errorMsg,
+	error := newTemporaryErrorf("error")
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		downloadError:    error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDownload)
@@ -125,8 +120,15 @@ func Test_State_Download_TemporaryDownloadFailed(t *testing.T) {
 	createArangoDeployment(t, handler, deployment)
 	createArangoBackup(t, handler, obj)
 
-	err := handler.Handle(newItemFromBackup(operation.Update, obj))
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
 
 	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateDownloadError, false)
+
+	require.Nil(t, newObj.Status.Progress)
+	progresses := mock.getProgressIDs()
+	require.Len(t, progresses, 0)
+
+	require.Nil(t, newObj.Status.Backup)
 }

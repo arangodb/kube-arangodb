@@ -26,19 +26,18 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateScheduledHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateScheduledHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	// If unable to get ArangoDeployment go into Failed state
 	_, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	if backup.Spec.Download != nil {
-		return backupApi.ArangoBackupStatus{
-			ArangoBackupState: newState(backupApi.ArangoBackupStateDownload, "", nil),
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateDownload, ""))
 	}
 
-	return backupApi.ArangoBackupStatus{
-		ArangoBackupState: newState(backupApi.ArangoBackupStateCreate, "", nil),
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateCreate, ""))
 }

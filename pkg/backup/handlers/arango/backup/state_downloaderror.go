@@ -32,17 +32,12 @@ const (
 	downloadDelay = time.Minute
 )
 
-func stateDownloadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateDownloadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	// Start again download
 	if backup.Status.Time.Time.Add(downloadDelay).Before(time.Now()) {
-		return backupApi.ArangoBackupStatus{
-			Available:         false,
-			ArangoBackupState: newState(backupApi.ArangoBackupStatePending, "", nil),
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStatePending, ""))
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available:         false,
-		ArangoBackupState: backup.Status.ArangoBackupState,
-	}, nil
+	return wrapUpdateStatus(backup)
 }

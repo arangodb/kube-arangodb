@@ -41,22 +41,24 @@ const (
 	ArangoBackupStateReady         state.State = "Ready"
 	ArangoBackupStateDeleted       state.State = "Deleted"
 	ArangoBackupStateFailed        state.State = "Failed"
+	ArangoBackupStateUnavailable   state.State = "Unavailable"
 )
 
 var ArangoBackupStateMap = state.Map{
-	ArangoBackupStateNone:          {ArangoBackupStatePending, ArangoBackupStateFailed},
+	ArangoBackupStateNone:          {ArangoBackupStatePending},
 	ArangoBackupStatePending:       {ArangoBackupStateScheduled, ArangoBackupStateFailed},
 	ArangoBackupStateScheduled:     {ArangoBackupStateDownload, ArangoBackupStateCreate, ArangoBackupStateFailed},
-	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed},
+	ArangoBackupStateDownload:      {ArangoBackupStateDownloading, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloading:   {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateDownloadError},
 	ArangoBackupStateDownloadError: {ArangoBackupStatePending, ArangoBackupStateFailed},
 	ArangoBackupStateCreate:        {ArangoBackupStateReady, ArangoBackupStateFailed},
-	ArangoBackupStateUpload:        {ArangoBackupStateUploading, ArangoBackupStateFailed},
+	ArangoBackupStateUpload:        {ArangoBackupStateUploading, ArangoBackupStateFailed, ArangoBackupStateDeleted, ArangoBackupStateUploadError},
 	ArangoBackupStateUploading:     {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
 	ArangoBackupStateUploadError:   {ArangoBackupStateFailed, ArangoBackupStateReady},
 	ArangoBackupStateReady:         {ArangoBackupStateDeleted, ArangoBackupStateFailed, ArangoBackupStateUpload},
 	ArangoBackupStateDeleted:       {ArangoBackupStateFailed},
 	ArangoBackupStateFailed:        {ArangoBackupStatePending},
+	ArangoBackupStateUnavailable:   {ArangoBackupStateReady},
 }
 
 type ArangoBackupState struct {
@@ -72,7 +74,35 @@ type ArangoBackupState struct {
 	Progress *ArangoBackupProgress `json:"progress,omitempty"`
 }
 
+func (a *ArangoBackupState) Equal(b *ArangoBackupState) bool {
+	if a == b {
+		return true
+	}
+
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
+
+	return a.State == b.State &&
+		a.Time.Equal(&b.Time) &&
+		a.Message == b.Message &&
+		a.Progress.Equal(b.Progress)
+}
+
 type ArangoBackupProgress struct {
 	JobID    string `json:"jobID"`
 	Progress string `json:"progress"`
+}
+
+func (a *ArangoBackupProgress) Equal(b *ArangoBackupProgress) bool {
+	if a == b {
+		return true
+	}
+
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
+
+	return a.JobID == b.JobID &&
+		a.Progress == b.Progress
 }

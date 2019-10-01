@@ -100,7 +100,7 @@ func Test_Errors_Temporary(t *testing.T) {
 	// Act
 	for testName, c := range checks {
 		t.Run(testName, func(t *testing.T) {
-			res := checkTemporaryError(c.err)
+			res := isTemporaryError(c.err)
 			if c.temporary {
 				require.True(t, res)
 			} else {
