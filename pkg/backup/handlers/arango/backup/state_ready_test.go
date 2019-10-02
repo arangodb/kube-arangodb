@@ -210,6 +210,7 @@ func Test_State_Ready_Upload(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUpload, true)
+	compareBackupMeta(t, backupMeta, newObj)
 }
 
 func Test_State_Ready_DownloadDoNothing(t *testing.T) {
@@ -243,6 +244,7 @@ func Test_State_Ready_DownloadDoNothing(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+	compareBackupMeta(t, backupMeta, newObj)
 	require.NotNil(t, newObj.Status.Backup.Downloaded)
 	require.True(t, *newObj.Status.Backup.Downloaded)
 }
@@ -308,6 +310,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+	compareBackupMeta(t, backupMeta, newObj)
 	require.NotNil(t, newObj.Status.Backup.Uploaded)
 	require.True(t, *newObj.Status.Backup.Uploaded)
 }

@@ -56,7 +56,7 @@ var ArangoBackupStateMap = state.Map{
 	ArangoBackupStateUploading:     {ArangoBackupStateReady, ArangoBackupStateFailed, ArangoBackupStateUploadError},
 	ArangoBackupStateUploadError:   {ArangoBackupStateFailed, ArangoBackupStateReady},
 	ArangoBackupStateReady:         {ArangoBackupStateDeleted, ArangoBackupStateFailed, ArangoBackupStateUpload},
-	ArangoBackupStateDeleted:       {ArangoBackupStateFailed},
+	ArangoBackupStateDeleted:       {ArangoBackupStateFailed, ArangoBackupStateReady},
 	ArangoBackupStateFailed:        {ArangoBackupStatePending},
 	ArangoBackupStateUnavailable:   {ArangoBackupStateReady},
 }

@@ -23,9 +23,32 @@
 package backup
 
 import (
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
 func stateDeletedHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	return wrapUpdateStatus(backup)
+	deployment, err := h.getArangoDeploymentObject(backup)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := h.arangoClientFactory(deployment, backup)
+	if err != nil {
+		return nil, newTemporaryError(err)
+	}
+
+	if backup.Status.Backup != nil {
+		backupMeta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
+		if err == nil {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateReady, ""),
+				updateStatusAvailable(true),
+				updateStatusBackup(backupMeta),
+			)
+		}
+	}
+
+	return wrapUpdateStatus(backup,
+		updateStatusAvailable(false))
 }
