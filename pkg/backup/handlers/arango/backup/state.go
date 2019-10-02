@@ -44,5 +44,6 @@ var (
 		backupApi.ArangoBackupStateReady:         stateReadyHandler,
 		backupApi.ArangoBackupStateDeleted:       stateDeletedHandler,
 		backupApi.ArangoBackupStateFailed:        stateFailedHandler,
+		backupApi.ArangoBackupStateUnavailable:   stateUnavailableHandler,
 	}
 )

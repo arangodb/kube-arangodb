@@ -66,6 +66,36 @@ func Test_State_Ready_Success(t *testing.T) {
 	compareBackupMeta(t, backupMeta, newObj)
 }
 
+func Test_State_Ready_Unavailable(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	backupMeta.Available = false
+
+	mock.state.backups[createResponse.ID] = backupMeta
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUnavailable, false)
+	compareBackupMeta(t, backupMeta, newObj)
+}
+
 func Test_State_Ready_Success_Update(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})

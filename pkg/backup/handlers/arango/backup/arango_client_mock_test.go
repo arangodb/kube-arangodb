@@ -217,6 +217,7 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 		SizeInBytes:             rand.Uint64(),
 		PotentiallyInconsistent: inconsistent,
 		NumberOfFiles:           uint(rand.Uint32()),
+		Available:               true,
 	}
 
 	m.state.backups[id] = meta
