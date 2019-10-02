@@ -333,6 +333,7 @@ Possible states:
 - "Ready" - state when Backup is finished
 - "Deleted" - state when Backup was once in ready, but has been deleted
 - "Failed" - state for failure
+- "Unavailable" - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 
 ### `status.time: timestamp`
 
