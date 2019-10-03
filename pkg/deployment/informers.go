@@ -24,7 +24,7 @@ package deployment
 
 import (
 	"k8s.io/api/core/v1"
-	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -143,7 +143,10 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				if _, ok := getSecret(newObj); ok {
+				if newSecret, ok := getSecret(newObj); ok {
+					if oldSecret, ok := oldObj.(*v1.Secret); ok {
+						d.ChangeUserPassword(oldSecret, newSecret)
+					}
 					d.triggerInspection()
 				}
 			},

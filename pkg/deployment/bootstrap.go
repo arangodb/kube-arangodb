@@ -32,9 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	driver "github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/go-driver"
 )
 
 const (
@@ -91,12 +89,9 @@ func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, u
 
 		return token, nil
 	} else if err == nil {
-		user, ok := auth.Data[constants.SecretUsername]
-		if ok && string(user) == username {
-			pass, ok := auth.Data[constants.SecretPassword]
-			if ok {
-				return string(pass), nil
-			}
+		user, pass, err := k8sutil.GetSecretAuthCredentials(auth)
+		if err == nil && user == username {
+			return pass, nil
 		}
 		return "", fmt.Errorf("invalid secret format in secret %s", secretName)
 	} else {
