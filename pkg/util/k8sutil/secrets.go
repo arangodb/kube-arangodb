@@ -302,14 +302,18 @@ func GetBasicAuthSecret(secrets SecretInterface, secretName string) (string, str
 	if err != nil {
 		return "", "", maskAny(err)
 	}
-	// Load `ca.crt` field
-	username, found := s.Data[constants.SecretUsername]
+	return GetSecretAuthCredentials(s)
+}
+
+// GetSecretAuthCredentials returns username and password from the secret
+func GetSecretAuthCredentials(secret *v1.Secret) (string, string, error) {
+	username, found := secret.Data[constants.SecretUsername]
 	if !found {
-		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secretName))
+		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
 	}
-	password, found := s.Data[constants.SecretPassword]
+	password, found := secret.Data[constants.SecretPassword]
 	if !found {
-		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secretName))
+		return "", "", maskAny(fmt.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
 	}
 	return string(username), string(password), nil
 }
