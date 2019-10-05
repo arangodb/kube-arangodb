@@ -34,11 +34,13 @@ type SecretHashes struct {
 	TLSCA string `json:"tls-ca,omitempty"`
 	// SyncTLSCA contains the hash of the sync.tls.caSecretName secret
 	SyncTLSCA string `json:"sync-tls-ca,omitempty"`
+	// User's map contains hashes for each user
+	Users map[string]string `json:"users,omitempty"`
 }
 
 // Equal compares two SecretHashes
 func (sh *SecretHashes) Equal(other *SecretHashes) bool {
-	if sh == nil || other == nil {
+	if other == nil {
 		return false
 	} else if sh == other {
 		return true
@@ -47,5 +49,40 @@ func (sh *SecretHashes) Equal(other *SecretHashes) bool {
 	return sh.AuthJWT == other.AuthJWT &&
 		sh.RocksDBEncryptionKey == other.RocksDBEncryptionKey &&
 		sh.TLSCA == other.TLSCA &&
-		sh.SyncTLSCA == other.SyncTLSCA
+		sh.SyncTLSCA == other.SyncTLSCA &&
+		isStringMapEqual(sh.Users, other.Users)
+}
+
+// NewEmptySecretHashes creates new empty structure
+func NewEmptySecretHashes() *SecretHashes {
+	sh := &SecretHashes{}
+	sh.Users = make(map[string]string)
+	return sh
+}
+
+func isStringMapEqual(first map[string]string, second map[string]string) bool {
+	if first == nil && second == nil {
+		return true
+	}
+
+	if first == nil || second == nil {
+		return false
+	}
+
+	if len(first) != len(second) {
+		return false
+	}
+
+	for key, valueF := range first {
+		valueS, ok := second[key]
+		if !ok {
+			return false
+		}
+
+		if valueF != valueS {
+			return false
+		}
+	}
+
+	return true
 }

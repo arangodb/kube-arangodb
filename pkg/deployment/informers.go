@@ -143,10 +143,7 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				if newSecret, ok := getSecret(newObj); ok {
-					if oldSecret, ok := oldObj.(*v1.Secret); ok {
-						d.ChangeUserPassword(oldSecret, newSecret)
-					}
+				if _, ok := getSecret(newObj); ok {
 					d.triggerInspection()
 				}
 			},
