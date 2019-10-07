@@ -89,7 +89,7 @@ func (r *Resources) ValidateSecretHashes() error {
 				Msg("Secret has changed.")
 			if actionHashChanged != nil {
 				if err := actionHashChanged(r.context, secret); err != nil {
-					log.Debug().Msg("Failed to change secret hash")
+					log.Debug().Msgf("failed to change secret. hash-changed-action returned error: %v", err)
 					return false, nil
 				}
 
@@ -244,9 +244,14 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 	user, err := client.User(ctx, username)
 	if err != nil {
 		if driver.IsNotFound(err) {
-			// TODO if there is no user in the database?
-			//  should we delete secret and secret hash in status.secretHashes.users.<username>?
-			return nil
+			options := &driver.UserOptions{
+				Password: password,
+				Active:   new(bool),
+			}
+			*options.Active = true
+
+			_, err = client.CreateUser(ctx, username, options)
+			return maskAny(err)
 		}
 		return err
 	}
