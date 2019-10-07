@@ -23,11 +23,8 @@
 package backup
 
 import (
-	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"net/http"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
@@ -75,59 +72,4 @@ type ArangoBackupClient interface {
 	Delete(driver.BackupID) error
 
 	List() (map[driver.BackupID]driver.BackupMeta, error)
-}
-
-// NewTemporaryError created new temporary error
-func NewTemporaryError(format string, a ...interface{}) error {
-	return TemporaryError{
-		Message: fmt.Sprintf(format, a...),
-	}
-}
-
-// TemporaryError defines error which will not update ArangoBackup object status
-type TemporaryError struct {
-	Message string
-}
-
-func (t TemporaryError) Error() string {
-	return t.Message
-}
-
-// IsTemporaryError determined if error is type of TemporaryError
-func IsTemporaryError(err error) bool {
-	_, ok := err.(TemporaryError)
-	return ok
-}
-
-func checkTemporaryError(err error) bool {
-	if ok := IsTemporaryError(err); ok {
-		return true
-	}
-
-	if v, ok := err.(utils.Temporary); ok {
-		if v.Temporary() {
-			return true
-		}
-	}
-
-	if v, ok := err.(driver.ArangoError); ok {
-		if temporaryErrorNum.Has(v.ErrorNum) || temporaryCodes.Has(v.Code) {
-			return true
-		}
-	}
-
-	if v, ok := err.(utils.Causer); ok {
-		return checkTemporaryError(v.Cause())
-	}
-
-	// Check error string
-	if strings.Contains(err.Error(), "context deadline exceeded") {
-		return true
-	}
-
-	if strings.Contains(err.Error(), "connection refused") {
-		return true
-	}
-
-	return false
 }

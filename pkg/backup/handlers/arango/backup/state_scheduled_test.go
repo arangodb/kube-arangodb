@@ -56,9 +56,7 @@ func Test_State_Scheduled_Download(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateDownload)
-
-	require.False(t, newObj.Status.Available)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateDownload, false)
 }
 
 func Test_State_Scheduled_Create(t *testing.T) {
@@ -75,9 +73,7 @@ func Test_State_Scheduled_Create(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreate)
-
-	require.False(t, newObj.Status.Available)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateCreate, false)
 }
 
 func Test_State_Scheduled_Upload(t *testing.T) {
@@ -98,7 +94,5 @@ func Test_State_Scheduled_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateCreate)
-
-	require.False(t, newObj.Status.Available)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateCreate, false)
 }

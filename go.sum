@@ -71,6 +71,12 @@ github.com/arangodb/go-driver v0.0.0-20190806145426-48dd51aa0940 h1:CWLm7jOfT3v3
 github.com/arangodb/go-driver v0.0.0-20190806145426-48dd51aa0940/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
 github.com/arangodb/go-driver v0.0.0-20190917135832-4ec315b17bf0 h1:OZAHgwP/X6eJlm33G94lo32j82acWZZvB2d/hbSAbTs=
 github.com/arangodb/go-driver v0.0.0-20190917135832-4ec315b17bf0/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
+github.com/arangodb/go-driver v0.0.0-20191001090752-e07a8fe34b53 h1:gKOy8ZeLmAMWoCfZtXAwTpl9S3UxHjv8l4T96BvuXoQ=
+github.com/arangodb/go-driver v0.0.0-20191001090752-e07a8fe34b53/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
+github.com/arangodb/go-driver v0.0.0-20191002081852-02f5e9c3a694 h1:Cn68e0b50vTJqku80erSNWddXixyyvzVOy7cgb4MKYw=
+github.com/arangodb/go-driver v0.0.0-20191002081852-02f5e9c3a694/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
+github.com/arangodb/go-driver v0.0.0-20191002124627-11b6bfc64f67 h1:Nmcpj1EUYYOs3x/4F/4GH2nA8ooxkInWjOmbyOlw4bQ=
+github.com/arangodb/go-driver v0.0.0-20191002124627-11b6bfc64f67/go.mod h1:5nMxlcbN6PHA05uGUw2EH6PIQHvdRVTrg/S/GM8jG4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5ttxi/Ygh/39vialtypE23p9KI7P0J2qtoqUV4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21/go.mod h1:RkPIG6JJ2pcJUoymc18NxAJGraZd+iAEVnOTDjZey/w=
 github.com/arangodb/go-velocypack v0.0.0-20190129082528-7896a965b4ad h1:Ah+VRYUWLuqgbfnDyuC8IrIe8XFzpt9tBVVnPGFNTJ8=
@@ -414,6 +420,8 @@ github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe h1:W/GaMY0y69G4cFl
 github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227 h1:KIaAZ/V+/0/6BOULrmBQ9T1ed8BkKqGIjIKW923nJuo=
 github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227/go.mod h1:ruMr5t05gVho4tuDv0PbI0Bb8nOxc/5Y6JzRHe/yfA0=
+github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a h1:+J2gw7Bw77w/fbK7wnNJJDKmw1IbWft2Ul5BzrG1Qm8=
+github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a/go.mod h1:M1qoD/MqPgTZIk0EWKB38wE28ACRfVcn+cU08jyArI0=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.1 h1:G1f5SKeVxmagw/IyvzvtZE4Gybcc4Tr1tf7I8z0XgOg=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=

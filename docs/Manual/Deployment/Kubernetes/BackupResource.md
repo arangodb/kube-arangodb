@@ -114,6 +114,8 @@ status:
     uploaded: true
     downloaded: true
     createdAt: "time"
+    sizeInBytes: 1
+    numberOfDBServers: 3
   available: true
 ```
 
@@ -331,6 +333,7 @@ Possible states:
 - "Ready" - state when Backup is finished
 - "Deleted" - state when Backup was once in ready, but has been deleted
 - "Failed" - state for failure
+- "Unavailable" - state when Backup is not available on the ArangoDB. It can happen in case of upgrades, node restarts etc.
 
 ### `status.time: timestamp`
 
@@ -428,6 +431,22 @@ ArangoBackup Custom Resource creation time in UTC.
 Required: true
 
 Default: now()
+
+#### `status.backup.sizeInBytes: uint64`
+
+Size of the Backup in ArangoDB.
+
+Required: true
+
+Default: 0
+
+#### `status.backup.numberOfDBServers: uint`
+
+Cluster size of the Backup in ArangoDB.
+
+Required: true
+
+Default: 0
 
 ### `status.available: bool`
 

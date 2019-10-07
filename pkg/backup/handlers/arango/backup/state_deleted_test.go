@@ -46,4 +46,31 @@ func Test_State_Deleted(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status, obj.Status)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateDeleted, false)
+}
+
+func Test_State_Deleted_Recover(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateDeleted)
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+	compareBackupMeta(t, backupMeta, newObj)
 }

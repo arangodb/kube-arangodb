@@ -32,28 +32,14 @@ const (
 	uploadDelay = time.Minute
 )
 
-func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
-	// After upload removal go into Ready status
-	if backup.Spec.Upload == nil {
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-			Backup:            backup.Status.Backup.DeepCopy(),
-		}, nil
+func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	if backup.Spec.Upload == nil || backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateReady, ""),
+			cleanStatusJob(),
+			updateStatusAvailable(true))
 	}
 
-	// Start again upload
-	if backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-			Backup:            backup.Status.Backup.DeepCopy(),
-		}, nil
-	}
-
-	return backupApi.ArangoBackupStatus{
-		Available:         true,
-		ArangoBackupState: backup.Status.ArangoBackupState,
-		Backup:            backup.Status.Backup.DeepCopy(),
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusAvailable(true))
 }

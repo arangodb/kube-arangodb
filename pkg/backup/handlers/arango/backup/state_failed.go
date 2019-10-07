@@ -26,6 +26,6 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateFailedHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
-	return backup.Status, nil
+func stateFailedHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+	return wrapUpdateStatus(backup)
 }

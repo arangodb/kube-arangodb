@@ -103,9 +103,8 @@ func Test_State_UploadError_Wait(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateUploadError)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 
-	require.True(t, newObj.Status.Available)
 	require.Equal(t, "message", newObj.Status.Message)
 
 	require.NotNil(t, newObj.Status.Backup)
@@ -137,9 +136,7 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
-
-	require.True(t, newObj.Status.Available)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 
 	require.NotNil(t, newObj.Status.Backup)
 	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)

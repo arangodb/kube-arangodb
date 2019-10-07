@@ -25,7 +25,6 @@ package backup
 import (
 	"fmt"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"reflect"
 	"sync"
 	"time"
 
@@ -178,19 +177,12 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		return err
 	}
 
-	backup.Status = backupApi.ArangoBackupStatus{
-		Backup: &backupApi.ArangoBackupDetails{
-			ID:                string(backupMeta.ID),
-			Version:           backupMeta.Version,
-			CreationTimestamp: meta.Now(),
-			Imported:          util.NewBool(true),
-		},
-		Available: true,
-		ArangoBackupState: backupApi.ArangoBackupState{
-			Time:  meta.Now(),
-			State: backupApi.ArangoBackupStateReady,
-		},
-	}
+	status := updateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateReady, ""),
+		updateStatusBackup(backupMeta),
+		updateStatusBackupImported(util.NewBool(true)))
+
+	backup.Status = *status
 
 	err = h.updateBackupStatus(backup)
 	if err != nil {
@@ -288,6 +280,15 @@ func (h *handler) Handle(item operation.Item) error {
 				return err
 			}
 		}
+
+		b, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+
+			return err
+		}
 	}
 
 	status, err := h.processArangoBackup(b.DeepCopy())
@@ -296,13 +297,22 @@ func (h *handler) Handle(item operation.Item) error {
 			item.Kind,
 			item.Namespace,
 			item.Name)
-		return err
+
+		cError := switchError(err)
+
+		if _, ok := cError.(temporaryError); ok {
+			return cError
+		}
+
+		status, _ = setFailedState(b, cError)
 	}
 
-	status.Time = b.Status.Time
+	if status == nil {
+		return nil
+	}
 
 	// Nothing to update, objects are equal
-	if reflect.DeepEqual(b.Status, status) {
+	if b.Status.Equal(status) {
 		return nil
 	}
 
@@ -317,7 +327,6 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Log message about state change
 	if b.Status.State != status.State {
-		status.Time = meta.Now()
 		if status.State == backupApi.ArangoBackupStateFailed {
 			h.eventRecorder.Warning(b, StateChange, "Transiting from %s to %s with error: %s",
 				b.Status.State,
@@ -330,7 +339,7 @@ func (h *handler) Handle(item operation.Item) error {
 		}
 	}
 
-	b.Status = status
+	b.Status = *status
 
 	log.Debug().Msgf("Updating %s %s/%s",
 		item.Kind,
@@ -345,16 +354,16 @@ func (h *handler) Handle(item operation.Item) error {
 	return nil
 }
 
-func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	if err := backup.Validate(); err != nil {
-		return createFailedState(err, backup.Status), nil
+		return setFailedState(backup, err)
 	}
 
 	if f, ok := stateHolders[backup.Status.State]; ok {
 		return f(h, backup)
 	}
 
-	return backupApi.ArangoBackupStatus{}, fmt.Errorf("state %s is not supported", backup.Status.State)
+	return nil, fmt.Errorf("state %s is not supported", backup.Status.State)
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {
@@ -365,8 +374,19 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 
 func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*database.ArangoDeployment, error) {
 	if backup.Spec.Deployment.Name == "" {
-		return nil, fmt.Errorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
+		return nil, newFatalErrorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
 	}
 
-	return h.client.DatabaseV1alpha().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
+	obj, err := h.client.DatabaseV1alpha().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
+	if err == nil {
+		return obj, nil
+	}
+
+	// Check if object is not found
+	if errors.IsNotFound(err) {
+		return nil, newFatalError(err)
+	}
+
+	// Otherwise it is connection issue - mark as temporary
+	return nil, newTemporaryError(err)
 }

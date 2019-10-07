@@ -26,72 +26,79 @@ import (
 	"fmt"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (backupApi.ArangoBackupStatus, error) {
+func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
-		return createFailedState(err, backup.Status), nil
+		return nil, err
 	}
 
 	client, err := h.arangoClientFactory(deployment, backup)
 	if err != nil {
-		return backupApi.ArangoBackupStatus{}, NewTemporaryError("unable to create client: %s", err.Error())
+		return nil, newTemporaryError(err)
 	}
 
 	if backup.Status.Progress == nil {
-		return createFailedState(fmt.Errorf("backup progress details are missing"), backup.Status), nil
+		return nil, newFatalErrorf("backup progress details are missing")
 	}
 
 	if backup.Spec.Download == nil {
-		return createFailedState(fmt.Errorf("missing field .spec.download"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .spec.download")
 	}
 
 	if backup.Spec.Download.ID == "" {
-		return createFailedState(fmt.Errorf("missing field .spec.download.id"), backup.Status), nil
+		return nil, newFatalErrorf("missing field .spec.download.id")
 	}
 
 	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
 	if err != nil {
-		return backup.Status, nil
+		if driver.IsNotFound(err) {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateDownloadError,
+					"job with id %s does not exist anymore", backup.Status.Progress.JobID),
+				cleanStatusJob(),
+				)
+		}
+
+		return nil, newTemporaryError(err)
 	}
 
 	if details.Failed {
-		return backupApi.ArangoBackupStatus{
-			Available: false,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateDownloadError,
-				fmt.Sprintf("Download failed with error: %s", details.FailMessage), nil),
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateDownloadError,
+				"Download failed with error: %s", details.FailMessage),
+			cleanStatusJob(),
+		)
 	}
 
 	if details.Completed {
 		backupMeta, err := client.Get(driver.BackupID(backup.Spec.Download.ID))
 		if err != nil {
-			return switchTemporaryError(err, backup.Status)
+			if driver.IsNotFound(err) {
+				return wrapUpdateStatus(backup,
+					updateStatusState(backupApi.ArangoBackupStateDownloadError,
+						"backup is not present after download"),
+					cleanStatusJob(),
+				)
+			}
+
+			return nil, newTemporaryError(err)
 		}
 
-		return backupApi.ArangoBackupStatus{
-			Available:         true,
-			ArangoBackupState: newState(backupApi.ArangoBackupStateReady, "", nil),
-			Backup: &backupApi.ArangoBackupDetails{
-				ID:                string(backupMeta.ID),
-				Version:           backupMeta.Version,
-				CreationTimestamp: meta.Now(),
-				Downloaded:        util.NewBool(true),
-			},
-		}, nil
+		return wrapUpdateStatus(backup,
+			updateStatusState(backupApi.ArangoBackupStateReady,""),
+			updateStatusAvailable(true),
+			updateStatusBackup(backupMeta),
+			updateStatusBackupDownload(util.NewBool(true)),
+			cleanStatusJob(),
+		)
 	}
 
-	return backupApi.ArangoBackupStatus{
-		Available: false,
-		ArangoBackupState: newState(backupApi.ArangoBackupStateDownloading, "",
-			&backupApi.ArangoBackupProgress{
-				JobID:    backup.Status.Progress.JobID,
-				Progress: fmt.Sprintf("%d%%", details.Progress),
-			}),
-	}, nil
+	return wrapUpdateStatus(backup,
+		updateStatusState(backupApi.ArangoBackupStateDownloading,""),
+		updateStatusJob(backup.Status.Progress.JobID, fmt.Sprintf("%d%%", details.Progress)),
+	)
 }

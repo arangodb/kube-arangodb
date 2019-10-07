@@ -23,13 +23,7 @@
 package backup
 
 import (
-	"fmt"
-	"reflect"
 	"strings"
-
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
-	"github.com/rs/zerolog/log"
 
 	clientBackup "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
 
@@ -50,49 +44,6 @@ var (
 	}
 )
 
-func switchTemporaryError(err error, status backupApi.ArangoBackupStatus) (backupApi.ArangoBackupStatus, error) {
-	if checkTemporaryError(err) {
-		return backupApi.ArangoBackupStatus{}, err
-	}
-
-	return createFailedState(err, status), nil
-}
-
-func createFailMessage(state state.State, message string) string {
-	return fmt.Sprintf("Failed State %s: %s", state, message)
-}
-
-func createFailedState(err error, status backupApi.ArangoBackupStatus) backupApi.ArangoBackupStatus {
-	e := log.Error().Err(err).Str("type", reflect.TypeOf(err).String())
-	if c, ok := err.(utils.Causer); ok {
-		e = e.AnErr("caused", c.Cause()).Str("causedType", reflect.TypeOf(c.Cause()).String()).Str("causedError", fmt.Sprintf("%v", c.Cause()))
-
-		if a, ok := c.Cause().(driver.ArangoError); ok {
-			e = e.Str("aMsg", a.ErrorMessage).Int("aCode", a.Code).Int("aNum", a.ErrorNum).Str("aMsg", a.ErrorMessage).Bool("aTemp", a.Temporary())
-		}
-	}
-	e.Msgf("Error %v", err)
-
-	newStatus := status.DeepCopy()
-
-	newStatus.ArangoBackupState = newState(backupApi.ArangoBackupStateFailed, createFailMessage(status.State, err.Error()), nil)
-
-	newStatus.Available = false
-
-	return *newStatus
-}
-
-func newState(state state.State, message string, progress *backupApi.ArangoBackupProgress) backupApi.ArangoBackupState {
-	return backupApi.ArangoBackupState{
-		State: state,
-		Time:  meta.Now(),
-
-		Message: message,
-
-		Progress: progress,
-	}
-}
-
 func inProgress(backup *backupApi.ArangoBackup) bool {
 	for _, state := range progressStates {
 		if state == backup.Status.State {
@@ -107,7 +58,7 @@ func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoB
 	backups, err := client.List(meta.ListOptions{})
 
 	if err != nil {
-		return false, err
+		return false, newTemporaryError(err)
 	}
 
 	for _, existingBackup := range backups.Items {

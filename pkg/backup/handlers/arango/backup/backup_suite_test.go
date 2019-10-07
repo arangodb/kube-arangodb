@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/go-driver"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
@@ -62,7 +63,10 @@ func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler, *mockA
 	mock := newMockArangoClientBackup(errors)
 	handler.arangoClientFactory = newMockArangoClientBackupFactory(mock)
 
-	return handler, mock
+	return handler, &mockArangoClientBackup{
+		backup: nil,
+		state:  mock,
+	}
 }
 
 func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoDeployment) {
@@ -77,7 +81,7 @@ func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoD
 
 func compareTemporaryState(t *testing.T, err error, errorMsg string, handler *handler, obj *backupApi.ArangoBackup) {
 	require.Error(t, err)
-	require.True(t, IsTemporaryError(err))
+	require.True(t, isTemporaryError(err))
 	require.EqualError(t, err, errorMsg)
 
 	newObj := refreshArangoBackup(t, handler, obj)
@@ -170,6 +174,21 @@ func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.A
 	}
 }
 
+func compareBackupMeta(t *testing.T, backupMeta driver.BackupMeta, backup *backupApi.ArangoBackup) {
+	require.NotNil(t, backup.Status.Backup)
+	require.Equal(t, string(backupMeta.ID), backup.Status.Backup.ID)
+	require.Equal(t, backupMeta.PotentiallyInconsistent, *backup.Status.Backup.PotentiallyInconsistent)
+	require.Equal(t, backupMeta.SizeInBytes, backup.Status.Backup.SizeInBytes)
+	require.Equal(t, backupMeta.DateTime.UTC().Unix(), backup.Status.Backup.CreationTimestamp.Time.UTC().Unix())
+	require.Equal(t, backupMeta.NumberOfDBServers, backup.Status.Backup.NumberOfDBServers)
+	require.Equal(t, backupMeta.Version, backup.Status.Backup.Version)
+}
+
+func checkBackup(t *testing.T, backup *backupApi.ArangoBackup, state state.State, available bool) {
+	require.Equal(t, state, backup.Status.State)
+	require.Equal(t, available, backup.Status.Available)
+}
+
 func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 	t.Run("Empty Name", func(t *testing.T) {
 		// Arrange
@@ -186,7 +205,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, createFailMessage(state, "deployment name can not be empty"))
+		require.Equal(t, newObj.Status.Message, createStateMessage(state, backupApi.ArangoBackupStateFailed, "deployment name can not be empty"))
 	})
 
 	t.Run("Missing Deployment", func(t *testing.T) {
@@ -203,7 +222,7 @@ func wrapperUndefinedDeployment(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
+		require.Equal(t, newObj.Status.Message, createStateMessage(state, backupApi.ArangoBackupStateFailed, fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
 	})
 }
 
@@ -224,7 +243,7 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 
 		// Assert
 		require.Error(t, err)
-		require.True(t, IsTemporaryError(err))
+		require.True(t, isTemporaryError(err))
 
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, state)
@@ -248,7 +267,7 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, createFailMessage(state, fmt.Sprintf("backup details are missing")))
+		require.Equal(t, newObj.Status.Message, createStateMessage(state, backupApi.ArangoBackupStateFailed, fmt.Sprintf("missing field .status.backup")))
 
 	})
 }

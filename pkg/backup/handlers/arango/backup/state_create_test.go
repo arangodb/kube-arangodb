@@ -23,6 +23,8 @@
 package backup
 
 import (
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
@@ -50,25 +52,25 @@ func Test_State_Create_Success(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
-
-	require.NotNil(t, newObj.Status.Backup)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Backup.ID, backups[0])
-	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
+	backupMeta, err := mock.Get(driver.BackupID(backups[0]))
+	require.NoError(t, err)
 
-	require.Nil(t, newObj.Status.Backup.PotentiallyInconsistent)
+	compareBackupMeta(t, backupMeta, newObj)
 }
 
 func Test_State_Create_SuccessForced(t *testing.T) {
 	// Arrange
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
-	mock.errors.createForced = true
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
+	obj.Spec.Options = &backupApi.ArangoBackupSpecOptions{
+		AllowInconsistent: util.NewBool(true),
+	}
 
 	// Act
 	createArangoDeployment(t, handler, deployment)
@@ -78,19 +80,17 @@ func Test_State_Create_SuccessForced(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
-
-	require.NotNil(t, newObj.Status.Backup)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Backup.ID, backups[0])
-	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
+	backupMeta, err := mock.Get(driver.BackupID(backups[0]))
+	require.NoError(t, err)
 
+	compareBackupMeta(t, backupMeta, newObj)
 	require.NotNil(t, newObj.Status.Backup.PotentiallyInconsistent)
-	value := *newObj.Status.Backup.PotentiallyInconsistent
-	require.True(t, value)
+	require.True(t, *newObj.Status.Backup.PotentiallyInconsistent)
 }
 
 func Test_State_Create_Upload(t *testing.T) {
@@ -110,24 +110,22 @@ func Test_State_Create_Upload(t *testing.T) {
 
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateReady)
-
-	require.NotNil(t, newObj.Status.Backup)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
 
 	backups := mock.getIDs()
 	require.Len(t, backups, 1)
 
-	require.Equal(t, newObj.Status.Backup.ID, backups[0])
-	require.Equal(t, newObj.Status.Backup.Version, mockVersion)
+	backupMeta, err := mock.Get(driver.BackupID(backups[0]))
+	require.NoError(t, err)
 
-	require.True(t, newObj.Status.Available)
+	compareBackupMeta(t, backupMeta, newObj)
 }
 
 func Test_State_Create_CreateFailed(t *testing.T) {
 	// Arrange
-	errorMsg := "create error"
+	error := newFatalErrorf("error")
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		createError: errorMsg,
+		createError: error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
@@ -141,7 +139,7 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
-	require.Equal(t, newObj.Status.Message, createFailMessage(backupApi.ArangoBackupStateCreate, errorMsg))
+	require.Equal(t, newObj.Status.Message, createStateMessage(backupApi.ArangoBackupStateCreate, backupApi.ArangoBackupStateFailed, error.Error()))
 
 	require.Nil(t, newObj.Status.Backup)
 
@@ -150,10 +148,9 @@ func Test_State_Create_CreateFailed(t *testing.T) {
 
 func Test_State_Create_TemporaryCreateFailed(t *testing.T) {
 	// Arrange
-	errorMsg := "create error"
+	error := newTemporaryErrorf("error")
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		isTemporaryError: true,
-		createError:      errorMsg,
+		createError: error,
 	})
 
 	obj, deployment := newObjectSet(backupApi.ArangoBackupStateCreate)
@@ -163,7 +160,10 @@ func Test_State_Create_TemporaryCreateFailed(t *testing.T) {
 	createArangoBackup(t, handler, obj)
 
 	err := handler.Handle(newItemFromBackup(operation.Update, obj))
+	require.EqualError(t, err, error.Error())
 
 	// Assert
-	compareTemporaryState(t, err, errorMsg, handler, obj)
+	newObj := refreshArangoBackup(t, handler, obj)
+
+	require.Equal(t, obj.Status, newObj.Status)
 }

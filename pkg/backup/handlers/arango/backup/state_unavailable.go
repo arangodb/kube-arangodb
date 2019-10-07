@@ -27,7 +27,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 )
 
-func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
+func stateUnavailableHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		}
 
 		return wrapUpdateStatus(backup,
-			updateStatusAvailable(true),
+			updateStatusAvailable(false),
 		)
 	}
 
@@ -64,41 +64,9 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		)
 	}
 
-	// Check if upload flag was specified later in runtime
-	if backup.Spec.Upload != nil &&
-		(backup.Status.Backup.Uploaded == nil || (backup.Status.Backup.Uploaded != nil && !*backup.Status.Backup.Uploaded)) {
-		// Ensure that we can start upload process
-		running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
-		if err != nil {
-			return nil, err
-		}
-
-		if running {
-			return wrapUpdateStatus(backup,
-				updateStatusState(backupApi.ArangoBackupStateReady, "Upload process queued"),
-				updateStatusBackup(backupMeta),
-				updateStatusAvailable(true),
-			)
-		}
-
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateUpload, ""),
-			updateStatusBackup(backupMeta),
-			updateStatusAvailable(true),
-		)
-	}
-
-	if backup.Spec.Upload == nil && backup.Status.Backup.Uploaded != nil {
-		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateReady, ""),
-			updateStatusBackup(backupMeta),
-			updateStatusBackupUpload(nil),
-			updateStatusAvailable(true),
-		)
-	}
-
 	return wrapUpdateStatus(backup,
 		updateStatusBackup(backupMeta),
+		updateStatusState(backupApi.ArangoBackupStateReady, ""),
 		updateStatusAvailable(true),
 	)
 }
