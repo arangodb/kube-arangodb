@@ -40,7 +40,7 @@ type SecretHashes struct {
 
 // Equal compares two SecretHashes
 func (sh *SecretHashes) Equal(other *SecretHashes) bool {
-	if other == nil {
+	if sh == nil || other == nil {
 		return false
 	} else if sh == other {
 		return true
