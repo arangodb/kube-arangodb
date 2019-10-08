@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -124,6 +126,17 @@ func TestSecretHashesRootUser(t *testing.T) {
 	}, deploymentReadyTimeout)
 	if err != nil {
 		t.Fatalf("%v", err)
+	}
+
+	// Check if password changed
+	auth := driver.BasicAuthentication(api.UserNameRoot, "1")
+	_, err = client.Connection().SetAuthentication(auth)
+	if err != nil {
+		t.Fatalf("The password for user '%s' has not been changed: %v", api.UserNameRoot, err)
+	}
+	_, err = client.Version(context.Background())
+	if err != nil {
+		t.Fatalf("can not get version after the password has been changed")
 	}
 
 	//Cleanup

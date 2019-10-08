@@ -90,7 +90,7 @@ func (r *Resources) ValidateSecretHashes() error {
 			if actionHashChanged != nil {
 				if err := actionHashChanged(r.context, secret); err != nil {
 					log.Debug().Msgf("failed to change secret. hash-changed-action returned error: %v", err)
-					return false, nil
+					return true, nil
 				}
 
 				if err := setExpectedHash(hash); err != nil {
