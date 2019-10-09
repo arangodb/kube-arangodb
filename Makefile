@@ -308,7 +308,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/apis/deployment/v1alpha \
 		$(REPOPATH)/pkg/apis/replication/v1alpha \
 		$(REPOPATH)/pkg/apis/storage/v1alpha \
-		$(REPOPATH)/pkg/deployment/...
+		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
 		$(REPOPATH)/pkg/util/k8sutil \
 		$(REPOPATH)/pkg/util/k8sutil/test \
