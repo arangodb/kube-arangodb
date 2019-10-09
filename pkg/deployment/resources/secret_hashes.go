@@ -193,12 +193,9 @@ func (r *Resources) ValidateSecretHashes() error {
 				dst.Users[username] = h
 			}))
 		}
-		hashOK, err := validate(string(secretName), getExpectedHash, setExpectedHash, changeUserPassword)
-		if err != nil {
-			return maskAny(err)
-		} else if !hashOK {
-			badSecretNames = append(badSecretNames, string(secretName))
-		}
+
+		// If password changes it should not be set that deployment in 'SecretsChanged' state
+		validate(string(secretName), getExpectedHash, setExpectedHash, changeUserPassword)
 	}
 
 	if len(badSecretNames) > 0 {

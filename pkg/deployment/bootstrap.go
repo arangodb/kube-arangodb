@@ -35,10 +35,6 @@ import (
 	"github.com/arangodb/go-driver"
 )
 
-const (
-	rootUserName = "root"
-)
-
 // EnsureBootstrap executes the bootstrap once as soon as the deployment becomes ready
 func (d *Deployment) EnsureBootstrap() error {
 
@@ -79,7 +75,9 @@ func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, u
 	if auth, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Create new one
 		tokenData := make([]byte, 32)
-		rand.Read(tokenData)
+		if _, err = rand.Read(tokenData); err != nil {
+			return "", err
+		}
 		token := hex.EncodeToString(tokenData)
 		owner := d.GetAPIObject().AsOwner()
 
