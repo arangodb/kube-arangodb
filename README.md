@@ -65,6 +65,15 @@ Feature-wise production readiness table:
 | Volume Claim Templates       | 0.3.11                                | new - alpha               |                   |
 | Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
 | User sidecar containers      | 0.3.11                                | new - alpha               |                   |
+| Support for ResignLeadership | 0.3.16                                | new - alpha               |                   |
+| Hot backup                   | 0.4.0                                 | new - alpha               | needs ArangoDB    |
+|                              |                                       |                           | >= 3.5.1          |
+
+## Release notes for 0.4.0
+
+In this release we have amended the Helm charts again. The same comments
+as for 0.3.16 apply. Furthermore, 0.4.0 is the first version to support
+hot backups.
 
 ## Release notes for 0.3.16
 
