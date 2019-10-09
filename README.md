@@ -100,12 +100,12 @@ upgrades.
 
 ```bash
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.16/kube-arangodb-crd-0.3.16.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.4.0/kube-arangodb-crd-0.4.0.tgz
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.16/kube-arangodb-0.3.16.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.4.0/kube-arangodb-0.4.0.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/0.3.16/kube-arangodb-0.3.16.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/0.4.0/kube-arangodb-0.4.0.tgz --set "operator.features.storage=true"
 ```
 
 ## Upgrading the operator using Helm
