@@ -32,13 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	driver "github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-)
-
-const (
-	rootUserName = "root"
+	"github.com/arangodb/go-driver"
 )
 
 // EnsureBootstrap executes the bootstrap once as soon as the deployment becomes ready
@@ -81,7 +75,9 @@ func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, u
 	if auth, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Create new one
 		tokenData := make([]byte, 32)
-		rand.Read(tokenData)
+		if _, err = rand.Read(tokenData); err != nil {
+			return "", err
+		}
 		token := hex.EncodeToString(tokenData)
 		owner := d.GetAPIObject().AsOwner()
 
@@ -91,12 +87,9 @@ func (d *Deployment) ensureUserPasswordSecret(secrets k8sutil.SecretInterface, u
 
 		return token, nil
 	} else if err == nil {
-		user, ok := auth.Data[constants.SecretUsername]
-		if ok && string(user) == username {
-			pass, ok := auth.Data[constants.SecretPassword]
-			if ok {
-				return string(pass), nil
-			}
+		user, pass, err := k8sutil.GetSecretAuthCredentials(auth)
+		if err == nil && user == username {
+			return pass, nil
 		}
 		return "", fmt.Errorf("invalid secret format in secret %s", secretName)
 	} else {
