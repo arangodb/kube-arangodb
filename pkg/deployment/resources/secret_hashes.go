@@ -182,6 +182,13 @@ func (r *Resources) ValidateSecretHashes() error {
 		if secretName.IsNone() || secretName.IsAuto() {
 			continue
 		}
+
+		_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetNamespace()).Get(string(secretName), metav1.GetOptions{})
+		if k8sutil.IsNotFound(err) {
+			// do nothing when secret was deleted
+			continue
+		}
+
 		getExpectedHash := func() string {
 			if v, ok := getHashes().Users[username]; ok {
 				return v
