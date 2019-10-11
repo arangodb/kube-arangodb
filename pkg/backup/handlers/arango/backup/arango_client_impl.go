@@ -202,6 +202,8 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 			completedCount++
 		case driver.TransferAcknowledged:
 		case driver.TransferStarted:
+		case "": // Temporary solution for downloading for bigger cluster
+			completedCount++
 		default:
 			return ArangoBackupProgress{}, fmt.Errorf("Unknown transfere status: %s", status.Status)
 		}
