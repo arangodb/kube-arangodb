@@ -209,14 +209,17 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 		}
 	}
 
+	servers := uint(rand.Uint32())
+
 	meta := driver.BackupMeta{
 		ID:                      id,
 		Version:                 mockVersion,
-		NumberOfDBServers:       uint(rand.Uint32()),
+		NumberOfDBServers:       servers,
 		DateTime:                time.Now(),
 		SizeInBytes:             rand.Uint64(),
 		PotentiallyInconsistent: inconsistent,
 		NumberOfFiles:           uint(rand.Uint32()),
+		NumberOfPiecesPresent:   servers,
 		Available:               true,
 	}
 

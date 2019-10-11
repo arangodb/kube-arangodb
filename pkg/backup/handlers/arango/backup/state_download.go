@@ -61,7 +61,7 @@ func stateDownloadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupAp
 	if err != nil {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateDownloadError,
-				"missing field .spec.download.id"),
+				"Download failed with error: %s", err.Error()),
 			cleanStatusJob(),
 			updateStatusAvailable(false),
 		)

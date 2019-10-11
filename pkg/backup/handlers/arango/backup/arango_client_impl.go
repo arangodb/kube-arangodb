@@ -109,7 +109,8 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
 	defer cancel()
 
-	list, err := ac.driver.Backup().List(ctx, &driver.BackupListOptions{ID: backupID})
+	// list, err := ac.driver.Backup().List(ctx, &driver.BackupListOptions{ID: backupID})
+	list, err := ac.driver.Backup().List(ctx, nil)
 	if err != nil {
 		return driver.BackupMeta{}, err
 	}

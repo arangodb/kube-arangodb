@@ -56,7 +56,7 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		)
 	}
 
-	if backupMeta.Available == false {
+	if !backupMeta.Available || backupMeta.NumberOfDBServers != backupMeta.NumberOfPiecesPresent {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateUnavailable, ""),
 			updateStatusBackup(backupMeta),
