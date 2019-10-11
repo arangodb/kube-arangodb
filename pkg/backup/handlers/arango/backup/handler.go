@@ -333,9 +333,16 @@ func (h *handler) Handle(item operation.Item) error {
 				status.State,
 				status.Message)
 		} else {
-			h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s",
-				b.Status.State,
-				status.State)
+			if status.Message != "" {
+				h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s with message: %s",
+					b.Status.State,
+					status.State,
+					status.Message)
+			} else {
+				h.eventRecorder.Normal(b, StateChange, "Transiting from %s to %s",
+					b.Status.State,
+					status.State)
+			}
 		}
 	}
 

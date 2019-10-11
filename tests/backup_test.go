@@ -324,6 +324,10 @@ func TestBackupCluster(t *testing.T) {
 	backupPolicyClient := deploymentClient.BackupV1alpha().ArangoBackupPolicies(ns)
 	backupClient := deploymentClient.BackupV1alpha().ArangoBackups(ns)
 
+	cmd := []string{
+		"--backup.api-enabled=jwt",
+	}
+
 	// Prepare deployment config
 	deplLabels := map[string]string{
 		"COMMON": "1",
@@ -333,7 +337,10 @@ func TestBackupCluster(t *testing.T) {
 	depl := newDeployment("test-backup-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl.Spec.DBServers.Count = util.NewInt(2)
+	depl.Spec.DBServers.Args = cmd
 	depl.Spec.Coordinators.Count = util.NewInt(2)
+	depl.Spec.Coordinators.Args = cmd
+	depl.Spec.Agents.Args = cmd
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 	depl.Labels = deplLabels
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
@@ -347,7 +354,10 @@ func TestBackupCluster(t *testing.T) {
 	depl2 := newDeployment("test-backup-two-" + uniuri.NewLen(4))
 	depl2.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 	depl2.Spec.DBServers.Count = util.NewInt(2)
+	depl2.Spec.DBServers.Args = cmd
 	depl2.Spec.Coordinators.Count = util.NewInt(2)
+	depl2.Spec.Coordinators.Args = cmd
+	depl2.Spec.Agents.Args = cmd
 	depl2.Spec.SetDefaults(depl2.GetName()) // this must be last
 	depl2.Labels = depl2Labels
 	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
