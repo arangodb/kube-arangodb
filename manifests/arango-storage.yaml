@@ -203,6 +203,9 @@ spec:
             hostNetwork: false
             hostPID: false
             hostIPC: false
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
             containers:
                 - name: operator
                   imagePullPolicy: Always
