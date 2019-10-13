@@ -28,7 +28,7 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile
-DOCKERTESTFILE := Dockerfile.test
+DOCKERTESTFILE := tests/Dockerfile
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
 HELM ?= $(shell which helm)
@@ -106,8 +106,6 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-TESTBINNAME := $(PROJECT)_test
-TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release
@@ -118,9 +116,6 @@ TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 300m
-endif
-ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
@@ -170,7 +165,7 @@ build: docker docker-ubi manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -215,23 +210,25 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		$(DASHBOARDBUILDIMAGE)
 	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-$(BIN): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
+.PHONY: docker-generic
+docker-generic: check-vars $(SOURCES) dashboard/assets.go VERSION
+	docker build -f $(DOCKERFILE) \
+		--build-arg VERSION=${VERSION_MAJOR_MINOR_PATCH} \
+		--build-arg COMMIT=$(COMMIT) \
+		--build-arg IMAGE=$(BASE_IMAGE) \
+		-t $(OPERATOR_IMAGE_TAG) .
+ifdef PUSHIMAGES
+	docker push $(OPERATOR_IMAGE_TAG)
+endif
 
 .PHONY: docker
-docker: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
-ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
-endif
+docker:
+	${MAKE} -B BASE_IMAGE=scratch OPERATOR_IMAGE_TAG=$(OPERATORIMAGE) docker-generic
 
 .PHONY: docker-ubi
-docker-ubi: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE) .
-ifdef PUSHIMAGES
-	docker push $(OPERATORUBIIMAGE)
-endif
+docker-ubi:
+	${MAKE} -B BASE_IMAGE=$(BASEUBIIMAGE) OPERATOR_IMAGE_TAG=$(OPERATORUBIIMAGE) docker-generic
+
 
 # Manifests
 
@@ -312,29 +309,16 @@ chart-operator: helm
 manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-operator
 
 # Testing
-
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test $(TESTVERBOSEOPTIONS) \
-		$(REPOPATH)/pkg/apis/backup/... \
-		$(REPOPATH)/pkg/apis/deployment/... \
-		$(REPOPATH)/pkg/apis/replication/... \
-		$(REPOPATH)/pkg/apis/storage/... \
-		$(REPOPATH)/pkg/deployment/... \
-		$(REPOPATH)/pkg/storage \
-		$(REPOPATH)/pkg/util/k8sutil \
-		$(REPOPATH)/pkg/util/k8sutil/test \
-		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation \
-		$(REPOPATH)/pkg/backup/...
-
-$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
-
+ifdef VERBOSE
+	docker build --build-arg VERBOSE=-v -f Dockerfile.unittest .
+else
+	docker build -f Dockerfile.unittest .
+endif
 
 .PHONY: docker-test
-docker-test: $(TESTBIN)
+docker-test: check-vars $(GOBUILDDIR) $(SOURCES)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
 .PHONY: run-upgrade-tests
