@@ -13,7 +13,7 @@ RUN go mod download
 
 
 
-# Compile Golang kube-arangodb sources with downloaded dependencies
+# Compile Golang integration tests for kube-arangodb sources with downloaded dependencies
 FROM downloader AS builder
 
 COPY tests /app/tests
