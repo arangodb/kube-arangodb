@@ -23,9 +23,9 @@
 package v1alpha
 
 import (
-	"github.com/magiconair/properties/assert"
-
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSecretHashes_Equal(t *testing.T) {
