@@ -23,18 +23,19 @@
 package k8sutil
 
 import (
-	"k8s.io/api/apps/v1beta2"
-	"k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // GetPodOwner returns the ReplicaSet that owns the given Pod.
 // If the Pod has no owner of the owner is not a ReplicaSet, nil is returned.
-func GetPodOwner(kubecli kubernetes.Interface, pod *v1.Pod, ns string) (*v1beta2.ReplicaSet, error) {
+func GetPodOwner(kubecli kubernetes.Interface, pod *v1.Pod, ns string) (*appsv1.ReplicaSet, error) {
 	for _, ref := range pod.GetOwnerReferences() {
 		if ref.Kind == "ReplicaSet" {
-			rSets := kubecli.AppsV1beta2().ReplicaSets(pod.GetNamespace())
+			rSets := kubecli.AppsV1().ReplicaSets(pod.GetNamespace())
 			rSet, err := rSets.Get(ref.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, maskAny(err)
@@ -47,10 +48,10 @@ func GetPodOwner(kubecli kubernetes.Interface, pod *v1.Pod, ns string) (*v1beta2
 
 // GetReplicaSetOwner returns the Deployment that owns the given ReplicaSet.
 // If the ReplicaSet has no owner of the owner is not a Deployment, nil is returned.
-func GetReplicaSetOwner(kubecli kubernetes.Interface, rSet *v1beta2.ReplicaSet, ns string) (*v1beta2.Deployment, error) {
+func GetReplicaSetOwner(kubecli kubernetes.Interface, rSet *appsv1.ReplicaSet, ns string) (*appsv1.Deployment, error) {
 	for _, ref := range rSet.GetOwnerReferences() {
 		if ref.Kind == "Deployment" {
-			depls := kubecli.AppsV1beta2().Deployments(rSet.GetNamespace())
+			depls := kubecli.AppsV1().Deployments(rSet.GetNamespace())
 			depl, err := depls.Get(ref.Name, metav1.GetOptions{})
 			if err != nil {
 				return nil, maskAny(err)
