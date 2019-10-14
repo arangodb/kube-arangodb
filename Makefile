@@ -294,18 +294,7 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test $(TESTVERBOSEOPTIONS) \
-		$(REPOPATH)/pkg/apis/backup/v1alpha \
-		$(REPOPATH)/pkg/apis/deployment/v1alpha \
-		$(REPOPATH)/pkg/apis/replication/v1alpha \
-		$(REPOPATH)/pkg/apis/storage/v1alpha \
-		$(REPOPATH)/pkg/deployment/... \
-		$(REPOPATH)/pkg/storage \
-		$(REPOPATH)/pkg/util/k8sutil \
-		$(REPOPATH)/pkg/util/k8sutil/test \
-		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation \
-		$(REPOPATH)/pkg/backup/...
+	docker build -f Dockerfile.unittest .
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
