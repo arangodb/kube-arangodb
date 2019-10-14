@@ -28,7 +28,7 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile
-DOCKERTESTFILE := Dockerfile.test
+DOCKERTESTFILE := tests/Dockerfile
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
 HELM ?= $(shell which helm)
@@ -101,8 +101,6 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-TESTBINNAME := $(PROJECT)_test
-TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release
@@ -317,13 +315,9 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/validation \
 		$(REPOPATH)/pkg/backup/...
 
-$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
-
 
 .PHONY: docker-test
-docker-test: $(TESTBIN)
+docker-test: check-vars $(GOBUILDDIR) $(SOURCES)
 	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
 
 .PHONY: run-upgrade-tests
