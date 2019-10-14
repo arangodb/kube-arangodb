@@ -17,12 +17,13 @@ func TestIsVersionSet(t *testing.T) {
 	c := client.MustNewInCluster()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
-	expectedVersion := "3.3.17"
+
+	expectedVersion := driver.Version("3.3.17")
 	// Prepare deployment config
 	depl := newDeployment("test-auth-sng-def-" + uniuri.NewLen(4))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 	depl.Spec.SetDefaults(depl.GetName())
-	depl.Spec.Image = util.NewString("arangodb/arangodb:" + expectedVersion)
+	depl.Spec.Image = util.NewString("arangodb/arangodb:" + string(expectedVersion))
 	// Create deployment
 	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
 	if err != nil {
@@ -40,7 +41,7 @@ func TestIsVersionSet(t *testing.T) {
 		t.Fatalf("single member is empty")
 	}
 
-	if string(single[0].ArangoVersion) != expectedVersion {
+	if single[0].ArangoVersion.CompareTo(expectedVersion) != 0 {
 		t.Fatalf("version %s has not been set for the single member status", expectedVersion)
 	}
 
@@ -50,8 +51,8 @@ func TestIsVersionSet(t *testing.T) {
 
 	// Wait for single server available with a valid database version
 	err = waitUntilVersionUp(client, func(version driver.VersionInfo) error {
-		if string(version.Version) != expectedVersion {
-			t.Fatalf("database version %v is not equal expected version %v", string(version.Version), version)
+		if version.Version.CompareTo(expectedVersion) != 0 {
+			t.Fatalf("database version %s is not equal expected version %s", version.Version, version)
 		}
 		return nil
 	})
