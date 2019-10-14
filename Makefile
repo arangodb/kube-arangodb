@@ -114,9 +114,6 @@ ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 300m
 endif
-ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v
-endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
@@ -303,19 +300,11 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test $(TESTVERBOSEOPTIONS) \
-		$(REPOPATH)/pkg/apis/backup/v1alpha \
-		$(REPOPATH)/pkg/apis/deployment/v1alpha \
-		$(REPOPATH)/pkg/apis/replication/v1alpha \
-		$(REPOPATH)/pkg/apis/storage/v1alpha \
-		$(REPOPATH)/pkg/deployment/reconcile \
-		$(REPOPATH)/pkg/deployment/resources \
-		$(REPOPATH)/pkg/storage \
-		$(REPOPATH)/pkg/util/k8sutil \
-		$(REPOPATH)/pkg/util/k8sutil/test \
-		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation \
-		$(REPOPATH)/pkg/backup/...
+ifdef VERBOSE
+	docker build --build-arg VERBOSE=-v -f Dockerfile.unittest .
+else
+	docker build -f Dockerfile.unittest .
+endif
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
