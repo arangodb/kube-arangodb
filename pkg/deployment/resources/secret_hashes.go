@@ -114,11 +114,17 @@ func (r *Resources) ValidateSecretHashes() error {
 		if status.SecretHashes == nil {
 			status.SecretHashes = api.NewEmptySecretHashes()
 		}
+		if status.SecretHashes.Users == nil {
+			status.SecretHashes.Users = make(map[string]string)
+		}
 		return status.SecretHashes
 	}
 	updateHashes := func(updater func(*api.SecretHashes)) error {
 		if status.SecretHashes == nil {
 			status.SecretHashes = api.NewEmptySecretHashes()
+		}
+		if status.SecretHashes.Users == nil {
+			status.SecretHashes.Users = make(map[string]string)
 		}
 		updater(status.SecretHashes)
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
