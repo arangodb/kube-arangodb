@@ -1,4 +1,4 @@
-FROM golang:1.12.9-alpine
+FROM golang:1.12.9-alpine AS downloader
 
 # git is required by 'go mod'
 RUN apk add git
@@ -10,10 +10,13 @@ COPY go.sum .
 # It is done only once unless go.mod has been changed
 RUN go mod download
 
+FROM downloader
+
 COPY pkg /app/pkg
 COPY dashboard /app/dashboard
 
-RUN CGO_ENABLED=0 go test -v \
+ARG VERBOSE
+RUN CGO_ENABLED=0 go test ${VERBOSE} \
    ./pkg/apis/... \
    ./pkg/backup/... \
    ./pkg/deployment/... \

@@ -109,9 +109,6 @@ ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
 	TESTTIMEOUT := 300m
 endif
-ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v
-endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
@@ -294,7 +291,11 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
+ifdef VERBOSE
+	docker build --build-arg VERBOSE=-v -f Dockerfile.unittest .
+else
 	docker build -f Dockerfile.unittest .
+endif
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
