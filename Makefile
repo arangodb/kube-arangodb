@@ -24,10 +24,6 @@ GOPATH := $(GOBUILDDIR)
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
-DOCKERFILE := Dockerfile
-DOCKERTESTFILE := Dockerfile.test
-DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
-
 HELM ?= $(shell which helm)
 
 .PHONY: helm
@@ -96,8 +92,6 @@ ifndef ALLOWCHAOS
 	ALLOWCHAOS := true
 endif
 
-TESTBINNAME := $(PROJECT)_test
-TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release
@@ -204,7 +198,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 
 .PHONY: docker
 docker: check-vars $(SOURCES) dashboard/assets.go VERSION
-	docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) -f Dockerfile -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
@@ -297,14 +291,10 @@ else
 	docker build -f Dockerfile.unittest .
 endif
 
-$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
-
 
 .PHONY: docker-test
-docker-test: $(TESTBIN)
-	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
+docker-test: check-vars $(GOBUILDDIR) $(SOURCES)
+	docker build --quiet -f tests/Dockerfile -t $(TESTIMAGE) .
 
 .PHONY: run-upgrade-tests
 run-upgrade-tests:
@@ -356,7 +346,7 @@ $(DURATIONTESTBIN): $(SOURCES)
 
 .PHONY: docker-duration-test
 docker-duration-test: $(DURATIONTESTBIN)
-	docker build --quiet -f $(DOCKERDURATIONTESTFILE) -t $(DURATIONTESTIMAGE) .
+	docker build --quiet -f tests/duration/Dockerfile -t $(DURATIONTESTIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(DURATIONTESTIMAGE)
 endif
