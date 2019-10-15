@@ -24,10 +24,6 @@ GOPATH := $(GOBUILDDIR)
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
-DOCKERFILE := Dockerfile
-DOCKERTESTFILE := tests/Dockerfile
-DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
-
 HELM ?= $(shell which helm)
 
 .PHONY: helm
@@ -205,7 +201,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 
 .PHONY: docker
 docker: check-vars $(SOURCES) dashboard/assets.go VERSION
-	docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) -f Dockerfile -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
@@ -308,7 +304,7 @@ run-unit-tests: $(SOURCES)
 
 .PHONY: docker-test
 docker-test: check-vars $(GOBUILDDIR) $(SOURCES)
-	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
+	docker build --quiet -f tests/Dockerfile -t $(TESTIMAGE) .
 
 .PHONY: run-upgrade-tests
 run-upgrade-tests:
@@ -360,7 +356,7 @@ $(DURATIONTESTBIN): $(SOURCES)
 
 .PHONY: docker-duration-test
 docker-duration-test: $(DURATIONTESTBIN)
-	docker build --quiet -f $(DOCKERDURATIONTESTFILE) -t $(DURATIONTESTIMAGE) .
+	docker build --quiet -f tests/duration/Dockerfile -t $(DURATIONTESTIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(DURATIONTESTIMAGE)
 endif
