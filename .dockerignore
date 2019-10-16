@@ -2,5 +2,7 @@
 .git
 .gobuild
 docs
+pkg
 tools
 deps
+dashboard
