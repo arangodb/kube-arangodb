@@ -14,9 +14,6 @@ metadata:
         release: {{ .Release.Name }}
 rules:
     - apiGroups: [""]
-      resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
-      verbs: ["*"]
-    - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get", "update"]
     - apiGroups: [""]
