@@ -23,16 +23,11 @@
 package resources
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/arangodb/go-driver"
-
-	v1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -49,14 +44,10 @@ func (r *Resources) ValidateSecretHashes() error {
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
-	validate := func(secretName string,
-		getExpectedHash func() string,
-		setExpectedHash func(string) error,
-		actionHashChanged func(Context, *v1.Secret) error) (bool, error) {
-
+	validate := func(secretName string, getExpectedHash func() string, setExpectedHash func(string) error) (bool, error) {
 		log := r.log.With().Str("secret-name", secretName).Logger()
 		expectedHash := getExpectedHash()
-		secret, hash, err := r.getSecretHash(secretName)
+		hash, err := r.getSecretHash(secretName)
 		if expectedHash == "" {
 			// No hash set yet, try to fill it
 			if k8sutil.IsNotFound(err) {
@@ -87,18 +78,6 @@ func (r *Resources) ValidateSecretHashes() error {
 				Str("expected-hash", expectedHash).
 				Str("new-hash", hash).
 				Msg("Secret has changed.")
-			if actionHashChanged != nil {
-				if err := actionHashChanged(r.context, secret); err != nil {
-					log.Debug().Msgf("failed to change secret. hash-changed-action returned error: %v", err)
-					return true, nil
-				}
-
-				if err := setExpectedHash(hash); err != nil {
-					log.Debug().Msg("Failed to change secret hash")
-					return true, maskAny(err)
-				}
-				return true, nil
-			}
 			// This is not good, return false so SecretsChanged condition will be set.
 			return false, nil
 		}
@@ -112,13 +91,13 @@ func (r *Resources) ValidateSecretHashes() error {
 	status, lastVersion := r.context.GetStatus()
 	getHashes := func() *api.SecretHashes {
 		if status.SecretHashes == nil {
-			status.SecretHashes = api.NewEmptySecretHashes()
+			status.SecretHashes = &api.SecretHashes{}
 		}
 		return status.SecretHashes
 	}
 	updateHashes := func(updater func(*api.SecretHashes)) error {
 		if status.SecretHashes == nil {
-			status.SecretHashes = api.NewEmptySecretHashes()
+			status.SecretHashes = &api.SecretHashes{}
 		}
 		updater(status.SecretHashes)
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
@@ -135,7 +114,7 @@ func (r *Resources) ValidateSecretHashes() error {
 		setExpectedHash := func(h string) error {
 			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
 		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -147,7 +126,7 @@ func (r *Resources) ValidateSecretHashes() error {
 		setExpectedHash := func(h string) error {
 			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
 		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -159,7 +138,7 @@ func (r *Resources) ValidateSecretHashes() error {
 		setExpectedHash := func(h string) error {
 			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.TLSCA = h }))
 		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
@@ -171,38 +150,11 @@ func (r *Resources) ValidateSecretHashes() error {
 		setExpectedHash := func(h string) error {
 			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.SyncTLSCA = h }))
 		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash); err != nil {
 			return maskAny(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
 		}
-	}
-
-	for username, secretName := range spec.Bootstrap.PasswordSecretNames {
-		if secretName.IsNone() || secretName.IsAuto() {
-			continue
-		}
-
-		_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetNamespace()).Get(string(secretName), metav1.GetOptions{})
-		if k8sutil.IsNotFound(err) {
-			// do nothing when secret was deleted
-			continue
-		}
-
-		getExpectedHash := func() string {
-			if v, ok := getHashes().Users[username]; ok {
-				return v
-			}
-			return ""
-		}
-		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) {
-				dst.Users[username] = h
-			}))
-		}
-
-		// If password changes it should not be set that deployment in 'SecretsChanged' state
-		validate(string(secretName), getExpectedHash, setExpectedHash, changeUserPassword)
 	}
 
 	if len(badSecretNames) > 0 {
@@ -233,47 +185,13 @@ func (r *Resources) ValidateSecretHashes() error {
 	return nil
 }
 
-func changeUserPassword(c Context, secret *v1.Secret) error {
-	username, password, err := k8sutil.GetSecretAuthCredentials(secret)
-	if err != nil {
-		return nil
-	}
-
-	ctx := context.Background()
-	client, err := c.GetDatabaseClient(ctx)
-	if err != nil {
-		return maskAny(err)
-	}
-
-	user, err := client.User(ctx, username)
-	if err != nil {
-		if driver.IsNotFound(err) {
-			options := &driver.UserOptions{
-				Password: password,
-				Active:   new(bool),
-			}
-			*options.Active = true
-
-			_, err = client.CreateUser(ctx, username, options)
-			return maskAny(err)
-		}
-		return err
-	}
-
-	err = user.Update(ctx, driver.UserOptions{
-		Password: password,
-	})
-
-	return maskAny(err)
-}
-
 // getSecretHash fetches a secret with given name and returns a hash over its value.
-func (r *Resources) getSecretHash(secretName string) (*v1.Secret, string, error) {
+func (r *Resources) getSecretHash(secretName string) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	s, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
 	if err != nil {
-		return nil, "", maskAny(err)
+		return "", maskAny(err)
 	}
 	// Create hash of value
 	rows := make([]string, 0, len(s.Data))
@@ -285,5 +203,5 @@ func (r *Resources) getSecretHash(secretName string) (*v1.Secret, string, error)
 	data := strings.Join(rows, "\n")
 	rawHash := sha256.Sum256([]byte(data))
 	hash := fmt.Sprintf("%0x", rawHash)
-	return s, hash, nil
+	return hash, nil
 }

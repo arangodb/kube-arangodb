@@ -48,9 +48,6 @@ metadata:
         app.kubernetes.io/instance: storage
         release: storage
 rules:
-    - apiGroups: [""]
-      resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
-      verbs: ["*"]
     - apiGroups: ["apiextensions.k8s.io"]
       resources: ["customresourcedefinitions"]
       verbs: ["get"]
@@ -98,6 +95,9 @@ metadata:
         app.kubernetes.io/instance: storage
         release: storage
 rules:
+    - apiGroups: [""]
+      resources: ["persistentvolumes", "persistentvolumeclaims", "endpoints", "events", "services"]
+      verbs: ["*"]
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get", "update"]
