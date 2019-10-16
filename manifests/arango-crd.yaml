@@ -6,7 +6,7 @@ metadata:
     name: arangobackuppolicies.backup.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.0
+        helm.sh/chart: kube-arangodb-crd-0.4.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -47,7 +47,7 @@ metadata:
     name: arangobackups.backup.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.0
+        helm.sh/chart: kube-arangodb-crd-0.4.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -107,7 +107,7 @@ metadata:
     name: arangodeploymentreplications.replication.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.0
+        helm.sh/chart: kube-arangodb-crd-0.4.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -130,7 +130,7 @@ metadata:
     name: arangodeployments.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.0
+        helm.sh/chart: kube-arangodb-crd-0.4.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
