@@ -109,15 +109,16 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 	ctx, cancel := context.WithTimeout(context.Background(), defaultArangoClientTimeout)
 	defer cancel()
 
-	list, err := ac.driver.Backup().List(ctx, &driver.BackupListOptions{ID: backupID})
+	// list, err := ac.driver.Backup().List(ctx, &driver.BackupListOptions{ID: backupID})
+	list, err := ac.driver.Backup().List(ctx, nil)
 	if err != nil {
 		return driver.BackupMeta{}, err
 	}
 
-	for id, meta := range list {
-		if id == backupID {
-			return meta, nil
-		}
+	meta, ok := list[backupID]
+
+	if ok {
+		return meta, nil
 	}
 
 	return driver.BackupMeta{}, driver.ArangoError{
@@ -201,12 +202,15 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 			completedCount++
 		case driver.TransferAcknowledged:
 		case driver.TransferStarted:
+		case "":
+			completedCount++
 		default:
 			return ArangoBackupProgress{}, fmt.Errorf("Unknown transfere status: %s", status.Status)
 		}
 	}
 
-	ret.Completed = completedCount == len(report.DBServers)
+	// Check if all defined servers are completed and total number of files is greater than 0 (there is at least 1 file per server)
+	ret.Completed = completedCount == len(report.DBServers) && total > 0
 	if total != 0 {
 		ret.Progress = (100 * done) / total
 	}
