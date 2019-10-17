@@ -6,7 +6,7 @@ import (
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
@@ -21,7 +21,7 @@ import (
 
 const (
 	operatorTestDeploymentName string = "arango-deployment-operator"
-	oldOperatorTestImage       string = "arangodb/kube-arangodb:0.3.7"
+	oldOperatorTestImage       string = "arangodb/kube-arangodb:0.3.16"
 )
 
 func TestOperatorUpgradeFrom038(t *testing.T) {
