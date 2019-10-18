@@ -24,7 +24,7 @@ package reconcile
 
 import (
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -43,7 +43,7 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 	var plan api.Plan
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
-			if len(plan) > 0 {
+			if !plan.IsEmpty() {
 				// Only 1 change at a time
 				continue
 			}
@@ -66,51 +66,36 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 					Msg("Failed to get PVC")
 				continue
 			}
-			replacementNeeded := false
+
 			if util.StringOrDefault(pvc.Spec.StorageClassName) != storageClassName && storageClassName != "" {
 				// Storageclass has changed
-				log.Debug().Str("pod-name", m.PodName).
+				log.Info().Str("pod-name", m.PodName).
 					Str("pvc-storage-class", util.StringOrDefault(pvc.Spec.StorageClassName)).
 					Str("group-storage-class", storageClassName).Msg("Storage class has changed - pod needs replacement")
-				replacementNeeded = true
-			}
-			rotationNeeded := false
-			if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
-				rotationNeeded = true
-			}
-			if replacementNeeded {
-				if group != api.ServerGroupAgents && group != api.ServerGroupDBServers {
-					// Only agents & dbservers are allowed to change their storage class.
-					createEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
-					continue
-				} else {
-					if group != api.ServerGroupAgents {
-						plan = append(plan,
-							// Scale up, so we're sure that a new member is available
-							api.NewAction(api.ActionTypeAddMember, group, ""),
-							api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
-						)
-					}
-					if group == api.ServerGroupDBServers {
-						plan = append(plan,
-							// Cleanout
-							api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
-						)
-					}
+
+				if group == api.ServerGroupDBServers {
 					plan = append(plan,
-						// Shutdown & remove the server
+						api.NewAction(api.ActionTypeDisableClusterScaling, group, ""),
+						api.NewAction(api.ActionTypeAddMember, group, ""),
+						api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
+						api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
 						api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
 						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+						api.NewAction(api.ActionTypeEnableClusterScaling, group, ""),
 					)
-					if group == api.ServerGroupAgents {
-						plan = append(plan,
-							// Scale up, so we're adding the removed agent (note: with the old ID)
-							api.NewAction(api.ActionTypeAddMember, group, m.ID),
-							api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID),
-						)
-					}
+				} else if group == api.ServerGroupAgents {
+					plan = append(plan,
+						api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
+						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+						api.NewAction(api.ActionTypeAddMember, group, m.ID),
+						api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID),
+					)
+				} else {
+					// Only agents & dbservers are allowed to change their storage class.
+					createEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
-			} else if rotationNeeded {
+			} else if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
+				// rotation needed
 				plan = createRotateMemberPlan(log, m, group, "Filesystem resize pending")
 			}
 		}

@@ -69,7 +69,7 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 				return nil
 			}
 
-			if len(newPlan) > 0 {
+			if !newPlan.IsEmpty() {
 				// Only rotate/upgrade 1 pod at a time
 				continue
 			}
@@ -91,7 +91,7 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 
 	if upgradeNotAllowed {
 		context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion, fromLicense, toLicense))
-	} else if len(newPlan) > 0 {
+	} else if !newPlan.IsEmpty() {
 		if clusterReadyForUpgrade(context) {
 			// Use the new plan
 			return newPlan

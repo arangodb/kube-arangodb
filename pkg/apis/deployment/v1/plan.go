@@ -52,6 +52,10 @@ const (
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
+	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators
+	ActionTypeDisableClusterScaling ActionType = "ScalingDisabled"
+	// ActionTypeEnableClusterScaling turns on scaling DBservers and coordinators
+	ActionTypeEnableClusterScaling ActionType = "ScalingEnabled"
 )
 
 const (
@@ -133,4 +137,9 @@ func (p Plan) Equal(other Plan) bool {
 	}
 
 	return true
+}
+
+// IsEmpty checks if plan is empty
+func (p Plan) IsEmpty() bool {
+	return len(p) == 0
 }

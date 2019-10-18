@@ -28,7 +28,7 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -101,4 +101,8 @@ type Context interface {
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
+	// DisableScalingCluster disables scaling DBservers and coordinators
+	DisableScalingCluster() error
+	// EnableScalingCluster enables scaling DBservers and coordinators
+	EnableScalingCluster() error
 }

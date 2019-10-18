@@ -23,10 +23,13 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
@@ -540,4 +543,18 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	}
 	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
 	return
+}
+
+// SetNumberOfServers adjust number of DBservers and coordinators in arangod
+func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
+	c, err := d.clientCache.GetDatabase(ctx)
+	if err != nil {
+		return maskAny(err)
+	}
+
+	err = arangod.SetNumberOfServers(ctx, c.Connection(), noCoordinators, noDBServers)
+	if err != nil {
+		return maskAny(err)
+	}
+	return nil
 }
