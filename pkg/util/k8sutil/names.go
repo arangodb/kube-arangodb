@@ -74,11 +74,9 @@ func stripArangodPrefix(id string) string {
 // complies with kubernetes name requirements.
 // If the name is to long or contains invalid characters,
 // if will be adjusted and a hash with be added.
-func FixupResourceName(name string, maxLength ...int) string {
+func FixupResourceName(name string) string {
 	maxLen := 63
-	if len(maxLength) > 0 {
-		maxLen = maxLength[0]
-	}
+
 	sb := strings.Builder{}
 	needHash := len(name) > maxLen
 	for _, ch := range name {
