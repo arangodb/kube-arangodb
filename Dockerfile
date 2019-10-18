@@ -1,4 +1,5 @@
-FROM scratch 
+ARG IMAGE=scratch
+FROM ${IMAGE}
 
 ADD bin/arangodb_operator /usr/bin/
 

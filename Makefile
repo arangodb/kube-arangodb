@@ -78,8 +78,13 @@ ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
 
+BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.0
+
 ifndef OPERATORIMAGE
 	OPERATORIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)
+endif
+ifndef OPERATORUBIIMAGE
+	OPERATORUBIIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)-ubi
 endif
 ifndef TESTIMAGE
 	TESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-test$(IMAGESUFFIX)
@@ -219,6 +224,13 @@ docker: check-vars $(BIN)
 	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
+endif
+
+.PHONY: docker-ubi
+docker-ubi: check-vars $(BIN)
+	docker build -f $(DOCKERFILE) --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE) .
+ifdef PUSHIMAGES
+	docker push $(OPERATORUBIIMAGE)
 endif
 
 # Manifests
