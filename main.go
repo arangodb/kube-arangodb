@@ -35,7 +35,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -43,7 +43,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/client"
-	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
 	"github.com/arangodb/kube-arangodb/pkg/server"
@@ -208,9 +208,9 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		AdminSecretName:    serverOptions.adminSecretName,
 		AllowAnonymous:     serverOptions.allowAnonymous,
 	}, server.Dependencies{
-		Log:                   logService.MustGetLogger("server"),
-		LivenessProbe:         &livenessProbe,
-		Deployment:            server.OperatorDependency{
+		Log:           logService.MustGetLogger("server"),
+		LivenessProbe: &livenessProbe,
+		Deployment: server.OperatorDependency{
 			Enabled: cfg.EnableDeployment,
 			Probe:   &deploymentProbe,
 		},
@@ -226,9 +226,9 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 			Enabled: cfg.EnableBackup,
 			Probe:   &backupProbe,
 		},
-		Operators:             o,
+		Operators: o,
 
-		Secrets:               secrets,
+		Secrets: secrets,
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {
@@ -328,6 +328,6 @@ func createRecorder(log zerolog.Logger, kubecli kubernetes.Interface, name, name
 	combinedScheme := runtime.NewScheme()
 	scheme.AddToScheme(combinedScheme)
 	v1.AddToScheme(combinedScheme)
-	appsv1beta2.AddToScheme(combinedScheme)
+	appsv1.AddToScheme(combinedScheme)
 	return eventBroadcaster.NewRecorder(combinedScheme, v1.EventSource{Component: name})
 }
