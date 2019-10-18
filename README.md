@@ -33,8 +33,8 @@ covers individual newer features separately.
 
 | Platform             | Kubernetes version | ArangoDB version | ArangoDB K8s Operator Version | State | Production ready | Remarks               |
 |----------------------|--------------------|------------------|-------------------------------|-------|------------------|-----------------------|
-| Google GKE           | 1.10               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
-| Google GKE           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
+| Google GKE           | 1.12               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
+| Google GKE           | 1.13               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
 | Amazon EKS           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
 | Pivotal PKS          | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
 | IBM Cloud            | 1.11               | >= 3.4.5         |          >= 0.3.11            | Runs  | Yes              |                       |
