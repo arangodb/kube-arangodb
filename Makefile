@@ -166,7 +166,7 @@ fmt:
 	                  $(ROOTDIR)/pkg/backup/...
 
 .PHONY: build
-build: docker manifests
+build: docker docker-ubi manifests
 
 .PHONY: clean
 clean:
