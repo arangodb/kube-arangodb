@@ -324,7 +324,7 @@ Your release is named 'illocutionary-whippet'.
 
 You can now deploy ArangoDeployment & ArangoDeploymentReplication resources.
 
-See https://docs.arangodb.com/devel/Manual/Tutorials/Kubernetes/
+See https://www.arangodb.com/docs/stable/tutorials-kubernetes.html
 for how to get started.
 ```
 - As unlike cloud k8s offerings no file volume infrastructure exists, we need to still deploy the storage operator chart:
@@ -383,7 +383,7 @@ helm install \
 
   You can now deploy an ArangoLocalStorage resource.
 
-  See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
+  See https://www.arangodb.com/docs/stable/deployment-kubernetes-storage-resource.html
   for further instructions.
 
 ```
