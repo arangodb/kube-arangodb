@@ -24,7 +24,7 @@ package backup
 
 import (
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -61,7 +61,7 @@ func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
 			i)
 	}
 
-	if _, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).Update(backup); err != nil {
+	if _, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Update(backup); err != nil {
 		return err
 	}
 
@@ -94,7 +94,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 		return err
 	}
 
-	backups, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
+	backups, err := h.client.BackupV1().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
 	if err != nil {
 		return err
 	}

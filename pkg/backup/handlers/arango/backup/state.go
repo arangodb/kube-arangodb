@@ -23,7 +23,7 @@
 package backup
 
 import (
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 )
 

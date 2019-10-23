@@ -24,7 +24,7 @@ package backup
 
 import (
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
@@ -73,7 +73,7 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 	if backup.Spec.Upload != nil &&
 		(backup.Status.Backup.Uploaded == nil || (backup.Status.Backup.Uploaded != nil && !*backup.Status.Backup.Uploaded)) {
 		// Ensure that we can start upload process
-		running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
+		running, err := isBackupRunning(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
 		if err != nil {
 			return nil, err
 		}

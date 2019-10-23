@@ -31,7 +31,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // NewWaitForMemberUpAction creates a new Action that implements the given

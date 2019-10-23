@@ -23,7 +23,7 @@
 package backup
 
 import (
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
@@ -32,7 +32,7 @@ func statePendingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi
 		return nil, err
 	}
 
-	running, err := isBackupRunning(backup, h.client.BackupV1alpha().ArangoBackups(backup.Namespace))
+	running, err := isBackupRunning(backup, h.client.BackupV1().ArangoBackups(backup.Namespace))
 	if err != nil {
 		return nil, err
 	}

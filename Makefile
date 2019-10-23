@@ -196,7 +196,7 @@ update-generated:
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha backup:v1alpha" \
+		"deployment:v1alpha deployment:v1 replication:v1alpha replication:v1 storage:v1alpha backup:v1alpha backup:v1" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -316,10 +316,10 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
 	go test $(TESTVERBOSEOPTIONS) \
-		$(REPOPATH)/pkg/apis/backup/v1alpha \
-		$(REPOPATH)/pkg/apis/deployment/v1alpha \
-		$(REPOPATH)/pkg/apis/replication/v1alpha \
-		$(REPOPATH)/pkg/apis/storage/v1alpha \
+		$(REPOPATH)/pkg/apis/backup/... \
+		$(REPOPATH)/pkg/apis/deployment/... \
+		$(REPOPATH)/pkg/apis/replication/... \
+		$(REPOPATH)/pkg/apis/storage/... \
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
 		$(REPOPATH)/pkg/util/k8sutil \

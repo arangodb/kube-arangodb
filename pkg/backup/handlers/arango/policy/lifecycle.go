@@ -23,9 +23,9 @@
 package policy
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"time"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,10 +43,10 @@ func (h *handler) LifecyclePreStart() error {
 	}()
 
 	for {
-		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(h.operator.Namespace()).List(meta.ListOptions{})
+		_, err := h.client.BackupV1().ArangoBackupPolicies(h.operator.Namespace()).List(meta.ListOptions{})
 
 		if err != nil {
-			log.Warn().Err(err).Msgf("CR for %s not found", backupApi.ArangoBackupPolicyResourceKind)
+			log.Warn().Err(err).Msgf("CR for %s not found", backup.ArangoBackupPolicyResourceKind)
 
 			time.Sleep(250 * time.Millisecond)
 			continue

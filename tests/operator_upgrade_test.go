@@ -9,7 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -48,7 +48,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	if _, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl); err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
 	defer removeDeployment(c, depl.GetName(), ns)

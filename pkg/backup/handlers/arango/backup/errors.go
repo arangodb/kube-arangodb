@@ -31,11 +31,11 @@ import (
 
 func newTemporaryError(err error) error {
 	return temporaryError{
-		Causer:err,
+		Causer: err,
 	}
 }
 
-func newTemporaryErrorf(format string, a ... interface{}) error {
+func newTemporaryErrorf(format string, a ...interface{}) error {
 	return newTemporaryError(fmt.Errorf(format, a...))
 }
 
@@ -53,11 +53,11 @@ func (t temporaryError) Error() string {
 
 func newFatalError(err error) error {
 	return fatalError{
-		Causer:err,
+		Causer: err,
 	}
 }
 
-func newFatalErrorf(format string, a ... interface{}) error {
+func newFatalErrorf(format string, a ...interface{}) error {
 	return newFatalError(fmt.Errorf(format, a...))
 }
 

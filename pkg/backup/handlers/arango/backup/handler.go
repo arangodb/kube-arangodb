@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"sync"
 	"time"
@@ -43,16 +44,16 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	defaultArangoClientTimeout = 30 * time.Second
-	retryCount = 25
-	retryDelay = time.Second
+	retryCount                 = 25
+	retryDelay                 = time.Second
 
 	// StateChange name of the event send when state changed
 	StateChange = "StateChange"
@@ -99,7 +100,7 @@ func (h *handler) start(stopCh <-chan struct{}) {
 }
 
 func (h *handler) refresh() error {
-	deployments, err := h.client.DatabaseV1alpha().ArangoDeployments(h.operator.Namespace()).List(meta.ListOptions{})
+	deployments, err := h.client.DatabaseV1().ArangoDeployments(h.operator.Namespace()).List(meta.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error
 		return err
 	}
 
-	backups, err := h.client.BackupV1alpha().ArangoBackups(deployment.Namespace).List(meta.ListOptions{})
+	backups, err := h.client.BackupV1().ArangoBackups(deployment.Namespace).List(meta.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -172,7 +173,7 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		},
 	}
 
-	_, err := h.client.BackupV1alpha().ArangoBackups(backup.Namespace).Create(backup)
+	_, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Create(backup)
 	if err != nil {
 		return err
 	}
@@ -193,19 +194,19 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 }
 
 func (h *handler) Name() string {
-	return backupApi.ArangoBackupResourceKind
+	return backup.ArangoBackupResourceKind
 }
 
 func (h *handler) updateBackupStatus(b *backupApi.ArangoBackup) error {
 	return utils.Retry(retryCount, retryDelay, func() error {
-		backup, err := h.client.BackupV1alpha().ArangoBackups(b.Namespace).Get(b.Name, meta.GetOptions{})
+		backup, err := h.client.BackupV1().ArangoBackups(b.Namespace).Get(b.Name, meta.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		backup.Status = b.Status
 
-		_, err = h.client.BackupV1alpha().ArangoBackups(b.Namespace).UpdateStatus(backup)
+		_, err = h.client.BackupV1().ArangoBackups(b.Namespace).UpdateStatus(backup)
 		return err
 	})
 }
@@ -229,7 +230,7 @@ func (h *handler) getDeploymentMutex(namespace, deployment string) *sync.Mutex {
 
 func (h *handler) Handle(item operation.Item) error {
 	// Get Backup object. It also cover NotFound case
-	b, err := h.client.BackupV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil
@@ -256,7 +257,7 @@ func (h *handler) Handle(item operation.Item) error {
 			item.Namespace,
 			item.Name)
 
-		if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).Update(b); err != nil {
+		if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(b); err != nil {
 			return err
 		}
 
@@ -270,18 +271,18 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Add owner reference
 	if b.OwnerReferences == nil || len(b.OwnerReferences) == 0 {
-		deployment, err := h.client.DatabaseV1alpha().ArangoDeployments(b.Namespace).Get(b.Spec.Deployment.Name, meta.GetOptions{})
+		deployment, err := h.client.DatabaseV1().ArangoDeployments(b.Namespace).Get(b.Spec.Deployment.Name, meta.GetOptions{})
 		if err == nil {
 			b.OwnerReferences = []meta.OwnerReference{
 				deployment.AsOwner(),
 			}
 
-			if _, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).Update(b); err != nil {
+			if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(b); err != nil {
 				return err
 			}
 		}
 
-		b, err = h.client.BackupV1alpha().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+		b, err = h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return nil
@@ -374,9 +375,9 @@ func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (*backupAp
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {
-	return item.Group == database.SchemeGroupVersion.Group &&
-		item.Version == database.SchemeGroupVersion.Version &&
-		item.Kind == backupApi.ArangoBackupResourceKind
+	return item.Group == backupApi.SchemeGroupVersion.Group &&
+		item.Version == backupApi.SchemeGroupVersion.Version &&
+		item.Kind == backup.ArangoBackupResourceKind
 }
 
 func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*database.ArangoDeployment, error) {
@@ -384,7 +385,7 @@ func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*da
 		return nil, newFatalErrorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
 	}
 
-	obj, err := h.client.DatabaseV1alpha().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
+	obj, err := h.client.DatabaseV1().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
 	if err == nil {
 		return obj, nil
 	}

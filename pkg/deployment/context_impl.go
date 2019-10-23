@@ -36,8 +36,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -46,7 +46,7 @@ import (
 
 // GetBackup receives information about a backup resource
 func (d *Deployment) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
-	return d.deps.DatabaseCRCli.BackupV1alpha().ArangoBackups(d.Namespace()).Get(backup, metav1.GetOptions{})
+	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(backup, metav1.GetOptions{})
 }
 
 // GetAPIObject returns the deployment as k8s object.

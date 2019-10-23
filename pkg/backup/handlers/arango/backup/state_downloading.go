@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
@@ -60,7 +60,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 				updateStatusState(backupApi.ArangoBackupStateDownloadError,
 					"job with id %s does not exist anymore", backup.Status.Progress.JobID),
 				cleanStatusJob(),
-				)
+			)
 		}
 
 		return nil, newTemporaryError(err)
@@ -89,7 +89,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 		}
 
 		return wrapUpdateStatus(backup,
-			updateStatusState(backupApi.ArangoBackupStateReady,""),
+			updateStatusState(backupApi.ArangoBackupStateReady, ""),
 			updateStatusAvailable(true),
 			updateStatusBackup(backupMeta),
 			updateStatusBackupDownload(util.NewBool(true)),
@@ -98,7 +98,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 	}
 
 	return wrapUpdateStatus(backup,
-		updateStatusState(backupApi.ArangoBackupStateDownloading,""),
+		updateStatusState(backupApi.ArangoBackupStateDownloading, ""),
 		updateStatusJob(backup.Status.Progress.JobID, fmt.Sprintf("%d%%", details.Progress)),
 	)
 }

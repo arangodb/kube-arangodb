@@ -32,7 +32,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/assert"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	corev1 "k8s.io/api/core/v1"
@@ -74,7 +74,7 @@ func TestPVCExists(t *testing.T) {
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
 	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
@@ -108,7 +108,7 @@ func TestPVCResize(t *testing.T) {
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	defer removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
@@ -195,7 +195,7 @@ func TestPVCTemplateResize(t *testing.T) {
 	deploymentTemplate.Spec.DBServers.VolumeClaimTemplate.Spec.Resources.Requests[corev1.ResourceStorage] = size08GB
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
 	defer removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 

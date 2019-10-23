@@ -24,7 +24,7 @@ package backup
 
 import (
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func stateUnavailableHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {

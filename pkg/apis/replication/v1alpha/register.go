@@ -23,24 +23,22 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	ArangoDeploymentReplicationResourceKind   = "ArangoDeploymentReplication"
-	ArangoDeploymentReplicationResourcePlural = "arangodeploymentreplications"
-	groupName                                 = "replication.database.arangodb.com"
+	ArangoDeploymentReplicationVersion = "v1alpha"
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion                    = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-	ArangoDeploymentReplicationCRDName    = ArangoDeploymentReplicationResourcePlural + "." + groupName
-	ArangoDeploymentReplicationShortNames = []string{"arangorepl"}
+	SchemeGroupVersion = schema.GroupVersion{Group: replication.ArangoDeploymentReplicationGroupName,
+		Version: ArangoDeploymentReplicationVersion}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource

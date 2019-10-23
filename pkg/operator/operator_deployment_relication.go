@@ -24,12 +24,13 @@ package operator
 
 import (
 	"fmt"
+	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 
 	"github.com/pkg/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -48,8 +49,8 @@ var (
 func (o *Operator) runDeploymentReplications(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		o.log,
-		o.Dependencies.CRCli.ReplicationV1alpha().RESTClient(),
-		api.ArangoDeploymentReplicationResourcePlural,
+		o.Dependencies.CRCli.ReplicationV1().RESTClient(),
+		replication2.ArangoDeploymentReplicationResourcePlural,
 		o.Config.Namespace,
 		&api.ArangoDeploymentReplication{},
 		cache.ResourceEventHandlerFuncs{

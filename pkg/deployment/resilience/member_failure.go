@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver/agency"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 

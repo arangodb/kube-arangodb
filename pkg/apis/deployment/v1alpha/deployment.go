@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,7 +54,7 @@ func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
-		Kind:       ArangoDeploymentResourceKind,
+		Kind:       deployment.ArangoDeploymentResourceKind,
 		Name:       d.Name,
 		UID:        d.UID,
 		Controller: &trueVar,

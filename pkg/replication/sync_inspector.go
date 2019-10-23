@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/arangodb/arangosync-client/client"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 )
 
 // inspectDeploymentReplication inspects the entire deployment replication

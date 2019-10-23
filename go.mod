@@ -9,7 +9,6 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
-
 )
 
 require (
@@ -61,6 +60,7 @@ require (
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/juju/errgo v0.0.0-20140925100237-08cceb5d0b53 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/magiconair/properties v1.8.0
 	github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a // indirect
 	github.com/mattn/go-colorable v0.1.1 // indirect

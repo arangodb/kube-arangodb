@@ -24,6 +24,7 @@ package policy
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"reflect"
 	"time"
 
@@ -35,8 +36,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/robfig/cron"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,7 +57,7 @@ type handler struct {
 }
 
 func (*handler) Name() string {
-	return backupApi.ArangoBackupPolicyResourceKind
+	return backup.ArangoBackupPolicyResourceKind
 }
 
 func (h *handler) Handle(item operation.Item) error {
@@ -67,7 +67,7 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Get Backup object. It also cover NotFound case
-	policy, err := h.client.BackupV1alpha().ArangoBackupPolicies(item.Namespace).Get(item.Name, meta.GetOptions{})
+	policy, err := h.client.BackupV1().ArangoBackupPolicies(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (h *handler) Handle(item operation.Item) error {
 	policy.Status = status
 
 	// Update status on object
-	if _, err = h.client.BackupV1alpha().ArangoBackupPolicies(item.Namespace).UpdateStatus(policy); err != nil {
+	if _, err = h.client.BackupV1().ArangoBackupPolicies(item.Namespace).UpdateStatus(policy); err != nil {
 		return err
 	}
 
@@ -149,7 +149,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		listOptions.LabelSelector = meta.FormatLabelSelector(policy.Spec.DeploymentSelector)
 	}
 
-	deployments, err := h.client.DatabaseV1alpha().ArangoDeployments(policy.Namespace).List(listOptions)
+	deployments, err := h.client.DatabaseV1().ArangoDeployments(policy.Namespace).List(listOptions)
 
 	if err != nil {
 		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
@@ -163,7 +163,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	for _, deployment := range deployments.Items {
 		b := policy.NewBackup(deployment.DeepCopy())
 
-		if _, err := h.client.BackupV1alpha().ArangoBackups(b.Namespace).Create(b); err != nil {
+		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(b); err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 			return backupApi.ArangoBackupPolicyStatus{
@@ -187,7 +187,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 }
 
 func (*handler) CanBeHandled(item operation.Item) bool {
-	return item.Group == database.SchemeGroupVersion.Group &&
-		item.Version == database.SchemeGroupVersion.Version &&
-		item.Kind == backupApi.ArangoBackupPolicyResourceKind
+	return item.Group == backupApi.SchemeGroupVersion.Group &&
+		item.Version == backupApi.SchemeGroupVersion.Version &&
+		item.Kind == backup.ArangoBackupPolicyResourceKind
 }

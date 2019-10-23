@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	backupClient "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1alpha"
+	backupClient "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -39,8 +39,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -56,7 +56,7 @@ var backupAPIAvailable *bool
 func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*backupApi.ArangoBackup, error) error, timeout ...time.Duration) (*backupApi.ArangoBackup, error) {
 	var result *backupApi.ArangoBackup
 	op := func() error {
-		obj, err := ci.BackupV1alpha().ArangoBackups(ns).Get(name, metav1.GetOptions{})
+		obj, err := ci.BackupV1().ArangoBackups(ns).Get(name, metav1.GetOptions{})
 		result = obj
 		if predicate != nil {
 			if err := predicate(obj, err); err != nil {
@@ -236,7 +236,7 @@ func statBackupMeta(client driver.Client, backupID driver.BackupID) (bool, drive
 
 func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*backupApi.ArangoBackup, error) error, options *EnsureBackupOptions) (*backupApi.ArangoBackup, string, driver.BackupID) {
 	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment, options)
-	_, err := deploymentClient.BackupV1alpha().ArangoBackups(ns).Create(backup)
+	_, err := deploymentClient.BackupV1().ArangoBackups(ns).Create(backup)
 	require.NoError(t, err, "failed to create backup: %s", err)
 	name := backup.GetName()
 
@@ -321,8 +321,8 @@ func TestBackupCluster(t *testing.T) {
 	deploymentClient := kubeArangoClient.MustNewInCluster()
 	ns := getNamespace(t)
 
-	backupPolicyClient := deploymentClient.BackupV1alpha().ArangoBackupPolicies(ns)
-	backupClient := deploymentClient.BackupV1alpha().ArangoBackups(ns)
+	backupPolicyClient := deploymentClient.BackupV1().ArangoBackupPolicies(ns)
+	backupClient := deploymentClient.BackupV1().ArangoBackups(ns)
 
 	cmd := []string{
 		"--backup.api-enabled=jwt",
@@ -363,11 +363,11 @@ func TestBackupCluster(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 
 	// Create deployment
-	apiObject, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
 	require.NoError(t, err, "failed to create deployment: %s", err)
 
-	api2Object, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl2)
+	api2Object, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl2)
 	defer removeDeployment(deploymentClient, depl2.GetName(), ns)
 	require.NoError(t, err, "failed to create deployment two: %s", err)
 

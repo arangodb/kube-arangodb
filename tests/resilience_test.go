@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -57,7 +57,7 @@ func TestResiliencePod(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestResiliencePod(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -174,7 +174,7 @@ func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -197,7 +197,7 @@ func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -267,7 +267,7 @@ func TestResiliencePVDBServer(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -290,7 +290,7 @@ func TestResiliencePVDBServer(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -371,7 +371,7 @@ func TestResilienceService(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -394,7 +394,7 @@ func TestResilienceService(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}

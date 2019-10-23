@@ -23,9 +23,9 @@
 package resources
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	coreosv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	clientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -151,7 +151,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 	// Check if the service monitor is ours, otherwise we do not touch it:
 	found := false
 	for _, owner := range servMon.ObjectMeta.OwnerReferences {
-		if owner.Kind == v1alpha.ArangoDeploymentResourceKind &&
+		if owner.Kind == deployment.ArangoDeploymentResourceKind &&
 			owner.Name == deploymentName {
 			found = true
 			break

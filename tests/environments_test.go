@@ -31,7 +31,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -75,7 +75,7 @@ func TestEnvironmentProduction(t *testing.T) {
 	}
 
 	// Create deployment
-	if _, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl); err != nil {
 		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}

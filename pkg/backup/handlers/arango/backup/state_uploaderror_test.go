@@ -31,7 +31,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/stretchr/testify/require"
 )
 

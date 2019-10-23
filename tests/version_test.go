@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -25,7 +25,7 @@ func TestIsVersionSet(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 	depl.Spec.Image = util.NewString("arangodb/arangodb:" + string(expectedVersion))
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

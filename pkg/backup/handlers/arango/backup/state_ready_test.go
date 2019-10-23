@@ -31,7 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -358,7 +358,7 @@ func Test_State_Ready_DoNotReUploadBackup(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Uploaded:   util.NewBool(true),
+		Uploaded: util.NewBool(true),
 	})
 
 	// Act
@@ -388,7 +388,7 @@ func Test_State_Ready_RemoveUploadedFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = createBackupFromMeta(backupMeta, &backupApi.ArangoBackupDetails{
-		Uploaded:   util.NewBool(true),
+		Uploaded: util.NewBool(true),
 	})
 
 	// Act

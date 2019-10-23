@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"testing"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -58,7 +58,7 @@ func TestResourcesChangeLimitsCluster(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 

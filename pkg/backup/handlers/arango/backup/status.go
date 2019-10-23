@@ -25,7 +25,7 @@ package backup
 import (
 	"fmt"
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,11 +33,11 @@ import (
 
 type updateStatusFunc func(status *backupApi.ArangoBackupStatus)
 
-func wrapUpdateStatus(backup *backupApi.ArangoBackup, update ... updateStatusFunc) (*backupApi.ArangoBackupStatus, error) {
+func wrapUpdateStatus(backup *backupApi.ArangoBackup, update ...updateStatusFunc) (*backupApi.ArangoBackupStatus, error) {
 	return updateStatus(backup, update...), nil
 }
 
-func updateStatus(backup *backupApi.ArangoBackup, update ... updateStatusFunc) *backupApi.ArangoBackupStatus {
+func updateStatus(backup *backupApi.ArangoBackup, update ...updateStatusFunc) *backupApi.ArangoBackupStatus {
 	s := backup.Status.DeepCopy()
 
 	for _, u := range update {
@@ -47,7 +47,7 @@ func updateStatus(backup *backupApi.ArangoBackup, update ... updateStatusFunc) *
 	return s
 }
 
-func updateStatusState(state state.State, template string, a ... interface{}) updateStatusFunc {
+func updateStatusState(state state.State, template string, a ...interface{}) updateStatusFunc {
 	return func(status *backupApi.ArangoBackupStatus) {
 		if status.State != state {
 			status.Time = v1.Now()
