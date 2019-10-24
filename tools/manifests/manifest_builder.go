@@ -205,7 +205,7 @@ You can now deploy ArangoDeployment resources.
 You can now deploy ArangoDeploymentReplication resources.
 {{- end }}
 
-See https://docs.arangodb.com/devel/Manual/Tutorials/Kubernetes/
+See https://www.arangodb.com/docs/stable/tutorials-kubernetes.html
 for how to get started.
 `
 	kubeArangoDBStorageNotesText = `
@@ -215,7 +215,7 @@ Your release is named '{{ .Release.Name }}'.
 
 You can now deploy an ArangoLocalStorage resource.
 
-See https://docs.arangodb.com/devel/Manual/Deployment/Kubernetes/StorageResource.html
+See https://www.arangodb.com/docs/stable/deployment-kubernetes-storage-resource.html
 for further instructions.
 `
 	kubeArangoDBCRDNotesText = `

@@ -97,7 +97,7 @@ collection and see the details about shards. Please keep in
 mind that this has to be done **for each database** separately!
 
 Obviously, this might be tedious and calls for automation. Therefore, there
-are APIs for this. The first one is [Cluster Health](../../../HTTP/Cluster/Health.html):
+are APIs for this. The first one is [Cluster Health](https://www.arangodb.com/docs/stable/http/cluster-health.html):
 
 ```
 POST /_admin/cluster/health
@@ -163,7 +163,7 @@ curl -k https://arangodb.9hoeffer.de:8529/_admin/cluster/health --user root: | j
 ```
 
 For the shards being in sync there is the
-[Cluster Inventory](../../../HTTP/Replications/ReplicationDump.html#return-cluster-inventory-of-collections-and-indexes)
+[Cluster Inventory](https://www.arangodb.com/docs/stable/http/replications-replication-dump.html#return-cluster-inventory-of-collections-and-indexes)
 API call:
 
 ```
@@ -446,7 +446,7 @@ above.
 Finally, it is likely that the shard distribution in the "new" cluster
 is not balanced out. In particular, the new _DBSserver_ is not automatically
 used to store shards. We recommend to
-[re-balance](../../Administration/Cluster/README.md#movingrebalancing-shards) the shard distribution,
+[re-balance](https://www.arangodb.com/docs/stable/administration-cluster.html#movingrebalancing-shards) the shard distribution,
 either manually by moving shards or by using the _Rebalance Shards_
 button in the _Shards_ tab under _NODES_ in the web UI. This redistribution can take
 some time again and progress can be monitored in the UI.

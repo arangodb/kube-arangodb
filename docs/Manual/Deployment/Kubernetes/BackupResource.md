@@ -202,7 +202,7 @@ Default: {}
 
 Field is immutable. Protocol needs to be defined in `spec.download.credentialsSecretName` if protocol is other than local.
 
-Mode protocols can be found [here](https://rclone.org/).
+Mode protocols can be found at [rclone.org](https://rclone.org/).
 
 Format: `<protocol>:/<path>`
 
@@ -230,7 +230,7 @@ metadata:
 type: Opaque
 ```
 
-`JSON Token` options are described on the [rClone](https://rclone.org/) page.
+`JSON Token` options are described on the [Rclone](https://rclone.org/) page.
 We can define more than one protocols at same time in one secret.
 
 This field is defined in json format:
@@ -244,7 +244,7 @@ This field is defined in json format:
 }
 ```
 
-AWS S3 example - based on [rClone S3](https://rclone.org/s3/) documentation and interactive process:
+AWS S3 example - based on [Rclone S3](https://rclone.org/s3/) documentation and interactive process:
 
 ```json
 {
