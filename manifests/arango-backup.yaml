@@ -171,6 +171,19 @@ spec:
                           operator: In
                           values:
                             - amd64
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  - labelSelector:
+                      matchExpressions:
+                        - key: app.kubernetes.io/name
+                          operator: In
+                          values:
+                            - kube-arangodb
+                        - key: app.kubernetes.io/instance
+                          operator: In
+                          values:
+                            - backup
+                    topologyKey: "kubernetes.io/hostname"
             hostNetwork: false
             hostPID: false
             hostIPC: false
