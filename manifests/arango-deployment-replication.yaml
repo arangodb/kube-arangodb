@@ -168,6 +168,21 @@ spec:
                           operator: In
                           values:
                             - amd64
+              podAntiAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 100
+                    podAffinityTerm:
+                      topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchExpressions:
+                          - key: app.kubernetes.io/name
+                            operator: In
+                            values:
+                              - kube-arangodb
+                          - key: app.kubernetes.io/instance
+                            operator: In
+                            values:
+                              - deployment-replication
             hostNetwork: false
             hostPID: false
             hostIPC: false
