@@ -201,18 +201,20 @@ spec:
                           values:
                             - amd64
               podAntiAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  - labelSelector:
-                      matchExpressions:
-                        - key: app.kubernetes.io/name
-                          operator: In
-                          values:
-                            - kube-arangodb
-                        - key: app.kubernetes.io/instance
-                          operator: In
-                          values:
-                            - storage
-                    topologyKey: "kubernetes.io/hostname"
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 100
+                    podAffinityTerm:
+                      topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchExpressions:
+                          - key: app.kubernetes.io/name
+                            operator: In
+                            values:
+                              - kube-arangodb
+                          - key: app.kubernetes.io/instance
+                            operator: In
+                            values:
+                              - storage
             hostNetwork: false
             hostPID: false
             hostIPC: false
