@@ -23,78 +23,167 @@
 package k8sutil
 
 import (
+	"errors"
 	"testing"
 
-	"k8s.io/api/storage/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/storage/v1"
+	er "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
+	k8stesting "k8s.io/client-go/testing"
 )
 
-// StorageClassIsDefault returns true if the given storage class is marked default,
-// false otherwise.
 func TestStorageClassIsDefault(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
+		Name         string
 		StorageClass v1.StorageClass
 		IsDefault    bool
 	}{
-		// final annotation
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{},
+		{
+			Name: "Storage class without annotations",
+			StorageClass: v1.StorageClass{
+				ObjectMeta: metav1.ObjectMeta{},
 			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[0]: "false",
+			IsDefault: false,
+		},
+		{
+			Name: "Storage class with empty annotations",
+			StorageClass: v1.StorageClass{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{},
 				},
 			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[0]: "foo",
+			IsDefault: false,
+		},
+		{
+			Name: "Storage class without default",
+			StorageClass: v1.StorageClass{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						annStorageClassIsDefault: "false",
+					},
 				},
 			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[0]: "true",
+			IsDefault: false,
+		},
+		{
+			Name: "Storage class with invalid value in annotation",
+			StorageClass: v1.StorageClass{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						annStorageClassIsDefault: "foo",
+					},
 				},
 			},
-		}, true},
-		// beta annotation
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{},
-			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[1]: "false",
+			IsDefault: false,
+		},
+		{
+			Name: "Default storage class exits",
+			StorageClass: v1.StorageClass{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						annStorageClassIsDefault: "true",
+					},
 				},
 			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[1]: "foo",
-				},
-			},
-		}, false},
-		{v1.StorageClass{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					annStorageClassIsDefault[1]: "true",
-				},
-			},
-		}, true},
+			IsDefault: true,
+		},
 	}
-	for _, test := range tests {
-		result := StorageClassIsDefault(&test.StorageClass)
-		if result != test.IsDefault {
-			t.Errorf("StorageClassIsDefault failed. Expected %v, got %v for %#v", test.IsDefault, result, test.StorageClass)
-		}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			result := StorageClassIsDefault(&testCase.StorageClass)
+			assert.Equal(t, testCase.IsDefault, result, "StorageClassIsDefault failed. Expected %v, got %v for %#v",
+				testCase.IsDefault, result, testCase.StorageClass)
+		})
 	}
+}
+
+func TestPatchStorageClassIsDefault(t *testing.T) {
+	// Arrange
+	resourceName := "storageclasses"
+	testCases := []struct {
+		Name              string
+		StorageClassName  string
+		ExpectedErr       error
+		Reactor           func(action k8stesting.Action) (handled bool, ret runtime.Object, err error)
+		ReactorActionVerb string
+	}{
+		{
+			Name:             "Set storage class is set to default",
+			StorageClassName: "test",
+		},
+		{
+			Name:             "Storage class does not exist",
+			StorageClassName: "invalid",
+			ExpectedErr:      er.NewNotFound(v1.Resource(resourceName), "invalid"),
+		},
+		{
+			Name:             "Can not get storage class from kubernetes",
+			StorageClassName: "test",
+			Reactor: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil, retry.Permanent(errors.New("test"))
+			},
+			ReactorActionVerb: "get",
+			ExpectedErr:       errors.New("test"),
+		},
+		{
+			Name:             "Can not update storage class",
+			StorageClassName: "test",
+			Reactor: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil, errors.New("test")
+			},
+			ReactorActionVerb: "update",
+			ExpectedErr:       errors.New("test"),
+		},
+		{
+			Name:             "Can not update Storage class due to permanent conflict",
+			StorageClassName: "test",
+			Reactor: func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				return true, nil,
+					retry.Permanent(er.NewConflict(v1.Resource(resourceName), "test", nil))
+			},
+			ReactorActionVerb: "update",
+			ExpectedErr:       er.NewConflict(v1.Resource(resourceName), "test", nil),
+		},
+	}
+
+	for _, testCase := range testCases {
+		//nolint:scopelint
+		t.Run(testCase.Name, func(t *testing.T) {
+			// Arrange
+			var err error
+
+			clientSet := fake.NewSimpleClientset()
+			storageSet := clientSet.StorageV1()
+			_, err = storageSet.StorageClasses().Create(&v1.StorageClass{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test",
+				},
+			})
+			require.NoError(t, err)
+
+			if testCase.Reactor != nil {
+				clientSet.PrependReactor(testCase.ReactorActionVerb, resourceName, testCase.Reactor)
+			}
+
+			// Act
+			err = PatchStorageClassIsDefault(storageSet, testCase.StorageClassName, true)
+
+			// Assert
+			if testCase.ExpectedErr != nil {
+				require.EqualError(t, err, testCase.ExpectedErr.Error())
+				return
+			}
+
+			assert.NoError(t, err)
+		})
+	}
+
 }

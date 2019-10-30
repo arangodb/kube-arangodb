@@ -188,14 +188,9 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 	labels := LabelsForDeployment(deploymentName, role)
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   svcName,
-			Labels: labels,
-			Annotations: map[string]string{
-				// This annotation is deprecated, PublishNotReadyAddresses is
-				// used instead. We leave the annotation in for a while.
-				// See https://github.com/kubernetes/kubernetes/pull/49061
-				TolerateUnreadyEndpointsAnnotation: strconv.FormatBool(publishNotReadyAddresses),
-			},
+			Name:        svcName,
+			Labels:      labels,
+			Annotations: map[string]string{},
 		},
 		Spec: v1.ServiceSpec{
 			Type:                     serviceType,
