@@ -26,6 +26,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	"net"
 	"os"
 	"reflect"
@@ -48,8 +50,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	cl "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -246,7 +248,7 @@ func newReplication(name string) *rapi.ArangoDeploymentReplication {
 	repl := &rapi.ArangoDeploymentReplication{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rapi.SchemeGroupVersion.String(),
-			Kind:       rapi.ArangoDeploymentReplicationResourceKind,
+			Kind:       replication.ArangoDeploymentReplicationResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
@@ -262,7 +264,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 	depl := &api.ArangoDeployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: api.SchemeGroupVersion.String(),
-			Kind:       api.ArangoDeploymentResourceKind,
+			Kind:       deployment.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
@@ -297,7 +299,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, predicate func(*api.ArangoDeployment) error, timeout ...time.Duration) (*api.ArangoDeployment, error) {
 	var result *api.ArangoDeployment
 	op := func() error {
-		obj, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		obj, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -571,7 +573,7 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 	for start := time.Now(); time.Since(start) < 600*time.Second; {
 
 		// Fetch latest status so we know all member details
-		apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get deployment: %v", err)
 		}
@@ -643,12 +645,12 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 func updateDeployment(cli versioned.Interface, deploymentName, ns string, update func(*api.DeploymentSpec)) (*api.ArangoDeployment, error) {
 	for {
 		// Get current version
-		current, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		current, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 		update(&current.Spec)
-		current, err = cli.DatabaseV1alpha().ArangoDeployments(ns).Update(current)
+		current, err = cli.DatabaseV1().ArangoDeployments(ns).Update(current)
 		if k8sutil.IsConflict(err) {
 			// Retry
 		} else if err != nil {
@@ -660,7 +662,7 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
-	if err := cli.DatabaseV1alpha().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.DatabaseV1().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -668,7 +670,7 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 
 // removeReplication removes a deployment
 func removeReplication(cli versioned.Interface, replicationName, ns string) error {
-	if err := cli.ReplicationV1alpha().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil

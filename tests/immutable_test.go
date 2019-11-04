@@ -31,7 +31,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 )
 
@@ -50,7 +50,7 @@ func TestImmutableFields(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

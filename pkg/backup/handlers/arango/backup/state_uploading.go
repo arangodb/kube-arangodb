@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
@@ -81,7 +81,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 	}
 
 	return wrapUpdateStatus(backup,
-		updateStatusState(backupApi.ArangoBackupStateUploading,""),
+		updateStatusState(backupApi.ArangoBackupStateUploading, ""),
 		updateStatusAvailable(true),
 		updateStatusJob(backup.Status.Progress.JobID, fmt.Sprintf("%d%%", details.Progress)),
 	)

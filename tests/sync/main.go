@@ -22,8 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	dapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	dapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -139,7 +139,7 @@ func newArangoSyncTestJob(ns, name string) *batchv1.Job {
 
 func waitForSyncDeploymentReady(ctx context.Context, ns, name string, kubecli kubernetes.Interface, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		deployment, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(name, metav1.GetOptions{})
+		deployment, err := c.DatabaseV1().ArangoDeployments(ns).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -167,15 +167,15 @@ func setupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c vers
 	dstSpec := newSyncDeployment(namespace, dstDeploymentName, false)
 	srcSpec := newSyncDeployment(namespace, srcDeploymentName, true)
 
-	if _, err := c.DatabaseV1alpha().ArangoDeployments(namespace).Create(srcSpec); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(srcSpec); err != nil {
 		return err
 	}
-	if _, err := c.DatabaseV1alpha().ArangoDeployments(namespace).Create(dstSpec); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(dstSpec); err != nil {
 		return err
 	}
 
 	replSpec := newReplication(namespace, replicationResourceName)
-	if _, err := c.ReplicationV1alpha().ArangoDeploymentReplications(namespace).Create(replSpec); err != nil {
+	if _, err := c.ReplicationV1().ArangoDeploymentReplications(namespace).Create(replSpec); err != nil {
 		return err
 	}
 
@@ -196,7 +196,7 @@ func setupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c vers
 
 func waitForReplicationGone(ns, name string, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := c.ReplicationV1alpha().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := c.ReplicationV1().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
@@ -207,7 +207,7 @@ func waitForReplicationGone(ns, name string, c versioned.Interface) error {
 
 func waitForDeploymentGone(ns, name string, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := c.DatabaseV1().ArangoDeployments(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
@@ -217,7 +217,7 @@ func waitForDeploymentGone(ns, name string, c versioned.Interface) error {
 }
 
 func removeReplicationWaitForCompletion(ns, name string, c versioned.Interface) error {
-	if err := c.ReplicationV1alpha().ArangoDeploymentReplications(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
+	if err := c.ReplicationV1().ArangoDeploymentReplications(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
@@ -230,7 +230,7 @@ func removeReplicationWaitForCompletion(ns, name string, c versioned.Interface) 
 }
 
 func removeDeploymentWaitForCompletion(ns, name string, c versioned.Interface) error {
-	if err := c.DatabaseV1alpha().ArangoDeployments(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
+	if err := c.DatabaseV1().ArangoDeployments(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}

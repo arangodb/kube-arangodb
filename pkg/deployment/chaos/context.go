@@ -25,7 +25,7 @@ package chaos
 import (
 	"k8s.io/api/core/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // Context provides methods to the chaos package.

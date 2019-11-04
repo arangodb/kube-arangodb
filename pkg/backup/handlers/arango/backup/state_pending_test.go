@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"sync"
 	"testing"
 
@@ -31,8 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,7 +59,7 @@ func Test_State_Pending_CheckNamespaceIsolation(t *testing.T) {
 
 	require.Equal(t, newObj.Status.Message,
 		createStateMessage(backupApi.ArangoBackupStatePending, backupApi.ArangoBackupStateFailed,
-			fmt.Sprintf("%s \"%s\" not found", database.ArangoDeploymentCRDName, obj.Name)))
+			fmt.Sprintf("%s \"%s\" not found", deploymentType.ArangoDeploymentCRDName, obj.Name)))
 }
 
 func Test_State_Pending_OneBackupObject(t *testing.T) {

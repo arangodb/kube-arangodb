@@ -36,7 +36,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/backup"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
@@ -297,7 +297,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	current, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -382,7 +382,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 
 	// Send update to API server
 	ns := d.apiObject.GetNamespace()
-	depls := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns)
+	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns)
 	update := d.apiObject.DeepCopy()
 	attempt := 0
 	for {
@@ -435,7 +435,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 		update.Spec = newSpec
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(update)
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -445,7 +445,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -485,7 +485,7 @@ func (d *Deployment) reportFailedStatus() {
 			return maskAny(err)
 		}
 
-		depl, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
+		depl, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:

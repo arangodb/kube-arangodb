@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver"
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
@@ -76,7 +76,7 @@ type mockArangoClientBackupState struct {
 
 type mockArangoClientBackup struct {
 	backup *backupApi.ArangoBackup
-	state *mockArangoClientBackupState
+	state  *mockArangoClientBackupState
 }
 
 func (m *mockArangoClientBackup) List() (map[driver.BackupID]driver.BackupMeta, error) {

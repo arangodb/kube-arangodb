@@ -28,7 +28,7 @@ import (
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -51,7 +51,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context) error {
 	log := d.deps.Log
 	var removalList []string
 
-	depls := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.GetNamespace())
+	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
 	updated, err := depls.Get(d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		return maskAny(err)
@@ -92,7 +92,7 @@ func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerol
 
 // removeDeploymentFinalizers removes the given finalizers from the given PVC.
 func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, depl *api.ArangoDeployment, finalizers []string) error {
-	depls := cli.DatabaseV1alpha().ArangoDeployments(depl.GetNamespace())
+	depls := cli.DatabaseV1().ArangoDeployments(depl.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := depls.Get(depl.GetName(), metav1.GetOptions{})
 		if err != nil {

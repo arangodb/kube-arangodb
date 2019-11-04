@@ -25,7 +25,7 @@ package v1alpha
 import (
 	"fmt"
 
-	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

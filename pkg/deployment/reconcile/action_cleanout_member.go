@@ -27,7 +27,7 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"

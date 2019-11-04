@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func Test_State_Unavailable_Common(t *testing.T) {

@@ -29,7 +29,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // Deployment is the API implemented by an ArangoDeployment.

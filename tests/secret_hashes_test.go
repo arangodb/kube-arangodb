@@ -30,7 +30,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -54,7 +54,7 @@ func TestSecretHashesRootUser(t *testing.T) {
 	depl.Spec.Bootstrap.PasswordSecretNames[api.UserNameRoot] = api.PasswordSecretNameAuto
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestSecretHashesRootUser(t *testing.T) {
 
 	err = retry.Retry(func() error {
 		// check if root secret hash has changed
-		depl, err = c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		depl, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get deployment: %v", err)
 		}

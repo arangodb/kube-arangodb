@@ -24,6 +24,8 @@ package policy
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
@@ -31,8 +33,8 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,9 +56,9 @@ func newFakeHandler() *handler {
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   database.SchemeGroupVersion.Group,
-		Version: database.SchemeGroupVersion.Version,
-		Kind:    backupApi.ArangoBackupPolicyResourceKind,
+		Group:   backupApi.SchemeGroupVersion.Group,
+		Version: backupApi.SchemeGroupVersion.Version,
+		Kind:    backup.ArangoBackupPolicyResourceKind,
 
 		Operation: o,
 
@@ -72,15 +74,15 @@ func newItemFromBackupPolicy(operation operation.Operation, policy *backupApi.Ar
 func newArangoBackupPolicy(schedule, namespace, name string, selector map[string]string, template backupApi.ArangoBackupTemplate) *backupApi.ArangoBackupPolicy {
 	return &backupApi.ArangoBackupPolicy{
 		TypeMeta: meta.TypeMeta{
-			APIVersion: database.SchemeGroupVersion.String(),
-			Kind:       backupApi.ArangoBackupPolicyResourceKind,
+			APIVersion: backupApi.SchemeGroupVersion.String(),
+			Kind:       backup.ArangoBackupPolicyResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
-				database.SchemeGroupVersion.String(),
-				backupApi.ArangoBackupPolicyResourcePlural,
+				backupApi.SchemeGroupVersion.String(),
+				backup.ArangoBackupPolicyResourcePlural,
 				namespace,
 				name),
 			UID: uuid.NewUUID(),
@@ -96,7 +98,7 @@ func newArangoBackupPolicy(schedule, namespace, name string, selector map[string
 }
 
 func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *backupApi.ArangoBackupPolicy) *backupApi.ArangoBackupPolicy {
-	newPolicy, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Get(policy.Name, meta.GetOptions{})
+	newPolicy, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Get(policy.Name, meta.GetOptions{})
 	require.NoError(t, err)
 
 	return newPolicy
@@ -104,14 +106,14 @@ func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *backupApi.Arang
 
 func createArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
 	for _, policy := range policies {
-		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Create(policy)
+		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Create(policy)
 		require.NoError(t, err)
 	}
 }
 
 func updateArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
 	for _, policy := range policies {
-		_, err := h.client.BackupV1alpha().ArangoBackupPolicies(policy.Namespace).Update(policy)
+		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Update(policy)
 		require.NoError(t, err)
 	}
 }
@@ -120,15 +122,15 @@ func newArangoDeployment(namespace string, labels map[string]string) *database.A
 	name := string(uuid.NewUUID())
 	return &database.ArangoDeployment{
 		TypeMeta: meta.TypeMeta{
-			APIVersion: database.SchemeGroupVersion.String(),
-			Kind:       database.ArangoDeploymentResourceKind,
+			APIVersion: backupApi.SchemeGroupVersion.String(),
+			Kind:       deployment.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			SelfLink: fmt.Sprintf("/api/%s/%s/%s/%s",
-				database.SchemeGroupVersion.String(),
-				database.ArangoDeploymentResourcePlural,
+				backupApi.SchemeGroupVersion.String(),
+				deployment.ArangoDeploymentResourcePlural,
 				namespace,
 				name),
 			UID:    uuid.NewUUID(),
@@ -139,13 +141,13 @@ func newArangoDeployment(namespace string, labels map[string]string) *database.A
 
 func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
 	for _, deployment := range deployments {
-		_, err := h.client.DatabaseV1alpha().ArangoDeployments(deployment.Namespace).Create(deployment)
+		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(deployment)
 		require.NoError(t, err)
 	}
 }
 
 func listArangoBackups(t *testing.T, handler *handler, namespace string) []backupApi.ArangoBackup {
-	result, err := handler.client.BackupV1alpha().ArangoBackups(namespace).List(meta.ListOptions{})
+	result, err := handler.client.BackupV1().ArangoBackups(namespace).List(meta.ListOptions{})
 	require.NoError(t, err)
 
 	return result.Items

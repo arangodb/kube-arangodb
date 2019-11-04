@@ -38,8 +38,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
 	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"

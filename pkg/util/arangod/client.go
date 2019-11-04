@@ -37,7 +37,7 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 

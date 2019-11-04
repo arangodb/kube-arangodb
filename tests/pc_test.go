@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -20,7 +20,7 @@ import (
 func waitForPriorityOfServerGroup(kube kubernetes.Interface, c versioned.Interface, depl, ns string, group api.ServerGroup, priority int32) error {
 	return retry.Retry(func() error {
 
-		apiObject, err := c.DatabaseV1alpha().ArangoDeployments(ns).Get(depl, metav1.GetOptions{})
+		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -94,7 +94,7 @@ func TestPriorityClasses(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

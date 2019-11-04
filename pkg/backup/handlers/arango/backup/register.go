@@ -23,8 +23,8 @@
 package backup
 
 import (
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -33,17 +33,17 @@ import (
 )
 
 func newEventInstance(recorder event.Recorder) event.RecorderInstance {
-	return recorder.NewInstance(database.SchemeGroupVersion.Group,
-		database.SchemeGroupVersion.Version,
-		backupApi.ArangoBackupResourceKind)
+	return recorder.NewInstance(backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupResourceKind)
 }
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Backup().V1alpha().ArangoBackups().Informer(),
-		database.SchemeGroupVersion.Group,
-		database.SchemeGroupVersion.Version,
-		backupApi.ArangoBackupResourceKind); err != nil {
+	if err := operator.RegisterInformer(informer.Backup().V1().ArangoBackups().Informer(),
+		backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupResourceKind); err != nil {
 		return err
 	}
 

@@ -31,7 +31,7 @@ import (
 	"github.com/dchest/uniuri"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -71,7 +71,7 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	depl.Spec.Image = util.NewString("arangodb/arangodb:3.3.13") // Note: 3.3.13 is the first version supporting the cursor forwarding feature.
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

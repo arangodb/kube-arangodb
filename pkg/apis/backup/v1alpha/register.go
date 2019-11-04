@@ -23,32 +23,21 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	ArangoBackupCRDName        = ArangoBackupResourcePlural + "." + groupName
-	ArangoBackupResourceKind   = "ArangoBackup"
-	ArangoBackupResourcePlural = "arangobackups"
-
-	ArangoBackupPolicyCRDName        = ArangoBackupPolicyResourcePlural + "." + groupName
-	ArangoBackupPolicyResourceKind   = "ArangoBackupPolicy"
-	ArangoBackupPolicyResourcePlural = "arangobackuppolicies"
-
-	groupName = "backup.arangodb.com"
+	ArangoBackupVersion = "v1alpha"
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion = schema.GroupVersion{Group: groupName, Version: "v1alpha"}
-
-	ArangoBackupShortNames = []string{"arangobackup"}
-
-	ArangoBackupPolicyShortNames = []string{"arangobackuppolicy"}
+	SchemeGroupVersion = schema.GroupVersion{Group: backup.ArangoBackupGroupName, Version: ArangoBackupVersion}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
