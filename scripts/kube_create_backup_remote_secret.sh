@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 NS=$1
 
@@ -12,7 +12,14 @@ if [ -z "$2" ]; then
     exit 0
 fi
 
-SECRET=$(echo -n $2 | base64 -w 0)
+case $(uname) in
+    Darwin)
+        SECRET=$(echo -n $2 | base64 -b 0)
+        ;;
+    *)
+        SECRET=$(echo -n $2 | base64 -w 0)
+        ;;
+esac
 
 kubectl apply -f - <<EOF
 apiVersion: v1
