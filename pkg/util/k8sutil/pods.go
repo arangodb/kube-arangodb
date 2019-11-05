@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -272,9 +274,9 @@ func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
 	}
 }
 
-// arangodInitContainer creates a container configured to
-// initalize a UUID file.
+// arangodInitContainer creates a container configured to initialize a UUID file.
 func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool) v1.Container {
+
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
 	var command string
@@ -301,6 +303,12 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 		Image:           alpineImage,
 		VolumeMounts:    arangodVolumeMounts(),
 		SecurityContext: SecurityContextWithoutCapabilities(),
+		Resources: v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"cpu":    resource.MustParse("100m"),
+				"memory": resource.MustParse("10Mi"),
+			},
+		},
 	}
 	return c
 }
@@ -619,7 +627,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 
 	// Add UUID init container
 	if alpineImage != "" {
-		p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
+		p.Spec.InitContainers = append(p.Spec.InitContainers,
+			arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
 	}
 
 	// Add volume
