@@ -400,11 +400,11 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 	return c
 }
 
-func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+func arangodbexporterContainer(exporter *ArangodbExporterContainerConf) v1.Container {
 	c := v1.Container{
-		Command:         append([]string{"/app/arangodb-exporter"}, args...),
+		Command:         append([]string{"/app/arangodb-exporter"}, exporter.Args...),
 		Name:            ExporterContainerName,
-		Image:           image,
+		Image:           exporter.Image,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Ports: []v1.ContainerPort{
 			{
@@ -413,13 +413,14 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources: exporter.Resources,
 		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
-	for k, v := range env {
+	for k, v := range exporter.Env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
 	}
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
+	if exporter.LivenessProbe != nil {
+		c.LivenessProbe = exporter.LivenessProbe.Create()
 	}
 	return c
 }
@@ -541,6 +542,7 @@ type ArangodbExporterContainerConf struct {
 	JWTTokenSecretName string
 	LivenessProbe      *HTTPProbeConfig
 	Image              string
+	Resources          v1.ResourceRequirements
 }
 
 // CreateArangodPod creates a Pod that runs `arangod`.
@@ -593,7 +595,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 
 	// Add arangodb exporter container
 	if exporter != nil {
-		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
+		c = arangodbexporterContainer(exporter)
 		if exporter.JWTTokenSecretName != "" {
 			c.VolumeMounts = append(c.VolumeMounts, exporterJWTVolumeMounts()...)
 		}

@@ -457,6 +457,11 @@ See above, this is the name of the Docker image for the ArangoDB
 exporter to expose metrics. If empty, the same image as for the main
 deployment is used.
 
+### `spec.metrics.resources: ResourceRequirements`
+
+This setting specifies the resources required by metrics container. This includes requests and limits.
+See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container for details.
+
 ### `spec.<group>.count: number`
 
 This setting specifies the number of servers to start for the given group.

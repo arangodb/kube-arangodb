@@ -645,6 +645,7 @@ func (in *MetricsSpec) DeepCopyInto(out *MetricsSpec) {
 		**out = **in
 	}
 	in.Authentication.DeepCopyInto(&out.Authentication)
+	in.Resources.DeepCopyInto(&out.Resources)
 	return
 }
 
