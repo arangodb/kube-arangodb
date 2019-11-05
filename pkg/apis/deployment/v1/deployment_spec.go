@@ -70,6 +70,7 @@ type DeploymentSpec struct {
 	Sync           SyncSpec           `json:"sync"`
 	License        LicenseSpec        `json:"license"`
 	Metrics        MetricsSpec        `json:"metrics"`
+	Lifecycle      LifecycleSpec      `json:"lifecycle,omitempty"`
 
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`
@@ -278,6 +279,7 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	s.SyncMasters.SetDefaultsFrom(source.SyncMasters)
 	s.SyncWorkers.SetDefaultsFrom(source.SyncWorkers)
 	s.Metrics.SetDefaultsFrom(source.Metrics)
+	s.Lifecycle.SetDefaultsFrom(source.Lifecycle)
 	s.Chaos.SetDefaultsFrom(source.Chaos)
 	s.Bootstrap.SetDefaultsFrom(source.Bootstrap)
 }

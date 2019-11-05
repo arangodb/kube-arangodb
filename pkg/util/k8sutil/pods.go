@@ -486,7 +486,7 @@ func newLifecycle() (*v1.Lifecycle, []v1.EnvVar, []v1.Volume, error) {
 
 // initLifecycleContainer creates an init-container to copy the lifecycle binary
 // to a shared volume.
-func initLifecycleContainer(image string) (v1.Container, error) {
+func initLifecycleContainer(image string, resources *v1.ResourceRequirements) (v1.Container, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return v1.Container{}, maskAny(err)
@@ -498,6 +498,9 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 		ImagePullPolicy: v1.PullIfNotPresent,
 		VolumeMounts:    lifecycleVolumeMounts(),
 		SecurityContext: SecurityContextWithoutCapabilities(),
+	}
+	if resources != nil {
+		resources.DeepCopyInto(&c.Resources)
 	}
 	return c, nil
 }
@@ -549,13 +552,13 @@ type ArangodbExporterContainerConf struct {
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, podName, pvcName, image, lifecycleImage, alpineImage string,
-	imagePullPolicy v1.PullPolicy, imagePullSecrets []string,
-	engine string, requireUUID bool, terminationGracePeriod time.Duration,
-	args []string, env map[string]EnvValue, finalizers []string,
-	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
+	role, id, podName, pvcName, image, lifecycleImage string, lifecycleResources *v1.ResourceRequirements,
+	alpineImage string, imagePullPolicy v1.PullPolicy, imagePullSecrets []string, engine string, requireUUID bool,
+	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, finalizers []string,
+	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration,
+	serviceAccountName string, tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string,
+	nodeSelector map[string]string, podPriorityClassName string, resources v1.ResourceRequirements,
+	exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
 
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, imagePullSecrets, finalizers, tolerations, serviceAccountName, nodeSelector)
@@ -567,7 +570,7 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	var lifecycleEnvVars []v1.EnvVar
 	var lifecycleVolumes []v1.Volume
 	if lifecycleImage != "" {
-		c, err := initLifecycleContainer(lifecycleImage)
+		c, err := initLifecycleContainer(lifecycleImage, lifecycleResources)
 		if err != nil {
 			return maskAny(err)
 		}
@@ -709,11 +712,14 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 // CreateArangoSyncPod creates a Pod that runs `arangosync`.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string,
-	imagePullPolicy v1.PullPolicy, imagePullSecrets []string,
-	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, sidecars []v1.Container) error {
+func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName,
+	image, lifecycleImage string, lifecycleResources *v1.ResourceRequirements, imagePullPolicy v1.PullPolicy,
+	imagePullSecrets []string, terminationGracePeriod time.Duration, args []string, env map[string]EnvValue,
+	livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
+	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string,
+	nodeSelector map[string]string, podPriorityClassName string, resources v1.ResourceRequirements,
+	sidecars []v1.Container) error {
+
 	// Prepare basic pod
 	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, imagePullSecrets, nil, tolerations, serviceAccountName, nodeSelector)
 	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
@@ -724,7 +730,7 @@ func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, dep
 	var lifecycleEnvVars []v1.EnvVar
 	var lifecycleVolumes []v1.Volume
 	if lifecycleImage != "" {
-		c, err := initLifecycleContainer(lifecycleImage)
+		c, err := initLifecycleContainer(lifecycleImage, lifecycleResources)
 		if err != nil {
 			return maskAny(err)
 		}
