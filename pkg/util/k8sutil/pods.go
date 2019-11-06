@@ -96,6 +96,17 @@ func IsPodReady(pod *v1.Pod) bool {
 	return condition != nil && condition.Status == v1.ConditionTrue
 }
 
+// GetPodByName returns pod if it exists among the pods' list
+// Returns false if not found.
+func GetPodByName(pods []v1.Pod, podName string) (v1.Pod, bool) {
+	for _, pod := range pods {
+		if pod.GetName() == podName {
+			return pod, true
+		}
+	}
+	return v1.Pod{}, false
+}
+
 // IsPodSucceeded returns true if the arangodb container of the pod
 // has terminated with exit code 0.
 func IsPodSucceeded(pod *v1.Pod) bool {
@@ -305,8 +316,8 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 		SecurityContext: SecurityContextWithoutCapabilities(),
 		Resources: v1.ResourceRequirements{
 			Requests: v1.ResourceList{
-				"cpu":    resource.MustParse("100m"),
-				"memory": resource.MustParse("10Mi"),
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resource.MustParse("10Mi"),
 			},
 		},
 	}
@@ -421,7 +432,7 @@ func arangodbexporterContainer(exporter *ArangodbExporterContainerConf) v1.Conta
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		Resources: exporter.Resources,
+		Resources: ExtractPodResourceRequirement(exporter.Resources),
 		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	for k, v := range exporter.Env {
@@ -508,7 +519,7 @@ func initLifecycleContainer(image string, resources *v1.ResourceRequirements) (v
 		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	if resources != nil {
-		resources.DeepCopyInto(&c.Resources)
+		c.Resources = ExtractPodResourceRequirement(*resources)
 	}
 	return c, nil
 }

@@ -22,9 +22,7 @@
 
 package k8sutil
 
-import (
-	"k8s.io/api/core/v1"
-)
+import v1 "k8s.io/api/core/v1"
 
 // GetContainerByName returns the container in the given pod with the given name.
 // Returns false if not found.
@@ -35,4 +33,21 @@ func GetContainerByName(p *v1.Pod, name string) (v1.Container, bool) {
 		}
 	}
 	return v1.Container{}, false
+}
+
+// IsResourceRequirementsChanged returns true if the resource requirements have changed.
+func IsResourceRequirementsChanged(wanted, given v1.ResourceRequirements) bool {
+	checkList := func(wanted, given v1.ResourceList) bool {
+		for k, v := range wanted {
+			if gv, ok := given[k]; !ok {
+				return true
+			} else if v.Cmp(gv) != 0 {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
 }
