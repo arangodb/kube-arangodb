@@ -26,8 +26,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	"net"
 	"os"
 	"reflect"
@@ -36,6 +34,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -292,6 +293,15 @@ func newDeployment(name string) *api.ArangoDeployment {
 	}
 
 	return depl
+}
+
+// waitUntilDeployment waits until a deployment members are ready with given name in given namespace
+func waitUntilDeploymentMembers(cli versioned.Interface, deploymentName, ns string, cb api.ServerGroupFunc,
+	timeout ...time.Duration) (*api.ArangoDeployment, error) {
+
+	return waitUntilDeployment(cli, deploymentName, ns, func(d *api.ArangoDeployment) error {
+		return d.ForeachServerGroup(cb, &d.Status)
+	}, timeout...)
 }
 
 // waitUntilDeployment waits until a deployment with given name in given namespace
