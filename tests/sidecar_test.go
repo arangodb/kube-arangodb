@@ -100,8 +100,9 @@ func (s *sideCarTest) ClearGroupSideCars(group string) {
 // TestSideCars tests side car functionality
 func TestSideCars(t *testing.T) {
 	runSideCarTest(t, &sideCarTest{
-		version: "3.4.7",
-		name:    "sidecar-tests",
+		version:  "3.4.7",
+		imageTag: "3.4.7",
+		name:     "sidecar-tests",
 	})
 }
 
