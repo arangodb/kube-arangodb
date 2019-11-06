@@ -56,9 +56,12 @@ type DeploymentSpec struct {
 	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
 	DisableIPv6      *bool           `json:"disableIPv6,omitempty"`
 
-        NetworkAttachedVolumes *bool     `json:"networkAttachedVolumes,omitempty"`
+	NetworkAttachedVolumes *bool `json:"networkAttachedVolumes,omitempty"`
 
-	RestoreFrom     *string         `json:"restoreFrom,omitempty"`
+	// Annotations specified the annotations added to Pods in this group.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	RestoreFrom *string `json:"restoreFrom,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -103,6 +106,11 @@ func (s DeploymentSpec) GetMode() DeploymentMode {
 // GetEnvironment returns the value of environment.
 func (s DeploymentSpec) GetEnvironment() Environment {
 	return EnvironmentOrDefault(s.Environment)
+}
+
+// GetAnnotations returns the annotations of this group
+func (s DeploymentSpec) GetAnnotations() map[string]string {
+	return s.Annotations
 }
 
 // GetStorageEngine returns the value of storageEngine.

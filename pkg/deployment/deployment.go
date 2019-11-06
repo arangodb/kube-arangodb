@@ -244,6 +244,10 @@ func (d *Deployment) run() {
 		log.Info().Msg("start running...")
 	}
 
+	if err := d.resources.EnsureAnnotations(); err != nil {
+		log.Warn().Err(err).Msg("unable to update annotations")
+	}
+
 	d.lookForServiceMonitorCRD()
 
 	inspectionInterval := maxInspectionInterval
