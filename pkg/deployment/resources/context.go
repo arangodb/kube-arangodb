@@ -40,7 +40,7 @@ type ServerGroupIterator interface {
 	// If the callback returns an error, this error is returned and no other server
 	// groups are processed.
 	// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
-	ForeachServerGroup(cb func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error, status *api.DeploymentStatus) error
+	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
 // Context provides all functions needed by the Resources service

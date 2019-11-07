@@ -121,7 +121,7 @@ func TestAddingMetrics(t *testing.T) {
 	})
 	require.NoErrorf(t, err, "failed to change resource requirements for metrics")
 	t.Log("Updated deployment by changing metrics")
-	_, err = waitUntilDeploymentMembers(c, deployment.GetName(), ns, resourcesRequirementsExporterCheck, 7*time.Minute)
+	_, err = waitUntilDeploymentMembers(c, deployment.GetName(), ns, resourcesRequirementsExporterCheck, 20*time.Minute)
 	require.NoError(t, err)
 
 	err = waitUntilArangoDeploymentHealthy(deployment, DBClient, kubecli, "")
