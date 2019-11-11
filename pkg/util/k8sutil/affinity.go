@@ -23,7 +23,7 @@
 package k8sutil
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,6 +32,21 @@ import (
 // affinityWithRole contains the role to configure affinity with.
 func createAffinity(deploymentName, role string, required bool, affinityWithRole string) *v1.Affinity {
 	a := &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+				NodeSelectorTerms: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "beta.kubernetes.io/arch",
+								Operator: "In",
+								Values:   []string{"amd64"},
+							},
+						},
+					},
+				},
+			},
+		},
 		PodAntiAffinity: &v1.PodAntiAffinity{},
 	}
 	labels := LabelsForDeployment(deploymentName, role)
@@ -72,5 +87,6 @@ func createAffinity(deploymentName, role string, required bool, affinityWithRole
 			})
 		}
 	}
+
 	return a
 }
