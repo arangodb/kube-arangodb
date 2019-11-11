@@ -52,6 +52,8 @@ type ServerGroupSpec struct {
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	// Annotations specified the annotations added to Pods in this group.
+	Annotations map[string]string `json:"annotations,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 	// NodeSelector speficies a set of selectors for nodes
@@ -131,6 +133,11 @@ func (s ServerGroupSpec) GetMaxCount() int {
 // GetNodeSelector returns the selectors for nodes of this group
 func (s ServerGroupSpec) GetNodeSelector() map[string]string {
 	return s.NodeSelector
+}
+
+// GetAnnotations returns the annotations of this group
+func (s ServerGroupSpec) GetAnnotations() map[string]string {
+	return s.Annotations
 }
 
 // GetArgs returns the value of args.

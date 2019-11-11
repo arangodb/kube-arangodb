@@ -27,7 +27,7 @@ package v1
 import (
 	time "time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -270,7 +270,7 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	}
 	if in.ImagePullPolicy != nil {
 		in, out := &in.ImagePullPolicy, &out.ImagePullPolicy
-		*out = new(v1.PullPolicy)
+		*out = new(corev1.PullPolicy)
 		**out = **in
 	}
 	if in.ImagePullSecrets != nil {
@@ -292,6 +292,13 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		in, out := &in.NetworkAttachedVolumes, &out.NetworkAttachedVolumes
 		*out = new(bool)
 		**out = **in
+	}
+	if in.Annotations != nil {
+		in, out := &in.Annotations, &out.Annotations
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	if in.RestoreFrom != nil {
 		in, out := &in.RestoreFrom, &out.RestoreFrom
@@ -563,7 +570,7 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 	}
 	if in.SideCarSpecs != nil {
 		in, out := &in.SideCarSpecs, &out.SideCarSpecs
-		*out = make(map[string]v1.Container, len(*in))
+		*out = make(map[string]corev1.Container, len(*in))
 		for key, val := range *in {
 			(*out)[key] = *val.DeepCopy()
 		}
@@ -834,9 +841,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
-		*out = make([]v1.Toleration, len(*in))
+		*out = make([]corev1.Toleration, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Annotations != nil {
+		in, out := &in.Annotations, &out.Annotations
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
 		}
 	}
 	if in.ServiceAccountName != nil {
@@ -858,12 +872,12 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 	}
 	if in.VolumeClaimTemplate != nil {
 		in, out := &in.VolumeClaimTemplate, &out.VolumeClaimTemplate
-		*out = new(v1.PersistentVolumeClaim)
+		*out = new(corev1.PersistentVolumeClaim)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
-		*out = make([]v1.Container, len(*in))
+		*out = make([]corev1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

@@ -172,6 +172,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			d.CreateEvent(k8sutil.NewErrorEvent("PDB creation failed", err, d.apiObject))
 		}
 
+		if err := d.resources.EnsureAnnotations(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Annotation update failed", err, d.apiObject))
+		}
+
 		// Create access packages
 		if err := d.createAccessPackages(); err != nil {
 			hasError = true

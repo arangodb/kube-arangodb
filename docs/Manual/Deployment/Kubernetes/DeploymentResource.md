@@ -100,6 +100,10 @@ Possible values are:
 
 This setting specifies the list of image pull secrets for the docker image to use for all ArangoDB servers.
 
+### `spec.annotations: map[string]string`
+
+This setting set specified annotations to all ArangoDeployment owned resources (pods, services, PVC's, PDB's).
+
 ### `spec.storageEngine: string`
 
 This setting specifies the type of storage engine used for all servers
@@ -516,6 +520,10 @@ rules:
 
 If you are using a different service account, please grant these rights
 to that service account.
+
+### `spec.<group>.annotations: map[string]string`
+
+This setting set annotations overrides for pods in this group. Annotations are merged with `spec.annotations`.
 
 ### `spec.<group>.priorityClassName: string`
 
