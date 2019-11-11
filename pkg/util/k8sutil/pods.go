@@ -340,7 +340,8 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		VolumeMounts: arangodVolumeMounts(),
+		VolumeMounts:    arangodVolumeMounts(),
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	if noFilterResources {
 		c.Resources = resources // if volumeclaimtemplate is specified
@@ -381,7 +382,8 @@ func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []str
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		Resources: resources,
+		Resources:       resources,
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -824,4 +826,12 @@ func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav
 		return maskAny(err)
 	}
 	return nil
+}
+
+func SecurityContextWithoutCapabilities() *v1.SecurityContext {
+	return &v1.SecurityContext{
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"all"},
+		},
+	}
 }

@@ -25,11 +25,12 @@ package tests
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 
 	backupClient "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 
@@ -434,6 +435,8 @@ func TestBackupCluster(t *testing.T) {
 	})
 
 	t.Run("create-upload backup", func(t *testing.T) {
+		skipOrRemotePath(t)
+
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
 		_, err := backupClient.Create(backup)
 		require.NoError(t, err, "failed to create backup: %s", err)
@@ -669,7 +672,7 @@ func TestBackupCluster(t *testing.T) {
 		// Assert that all of the backups are in valid state
 		backups, err = backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
 		require.NoError(t, err)
-		require.Len(t, backups.Items, size + 1)
+		require.Len(t, backups.Items, size+1)
 
 		for _, b := range backups.Items {
 			require.Equal(t, backupApi.ArangoBackupStateReady, b.Status.State, b.Status.Message)

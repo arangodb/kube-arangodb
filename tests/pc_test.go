@@ -36,7 +36,7 @@ func waitForPriorityOfServerGroup(kube kubernetes.Interface, c versioned.Interfa
 			}
 
 			if *pod.Spec.Priority != priority {
-				return fmt.Errorf("Wrong pod priority, expected %d, found %d", priority, pod.Spec.Priority)
+				return fmt.Errorf("Wrong pod priority, expected %d, found %d", priority, *pod.Spec.Priority)
 			}
 		}
 
