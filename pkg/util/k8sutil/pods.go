@@ -297,9 +297,10 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 			"-c",
 			command,
 		},
-		Name:         name,
-		Image:        alpineImage,
-		VolumeMounts: arangodVolumeMounts(),
+		Name:            name,
+		Image:           alpineImage,
+		VolumeMounts:    arangodVolumeMounts(),
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	return c
 }
@@ -412,6 +413,7 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -494,6 +496,7 @@ func initLifecycleContainer(image string) (v1.Container, error) {
 		Image:           image,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		VolumeMounts:    lifecycleVolumeMounts(),
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	return c, nil
 }
@@ -574,7 +577,8 @@ func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deploy
 	}
 
 	// Add arangod container
-	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources, vct != nil)
+	c :=
+		arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources, vct != nil)
 	if tlsKeyfileSecretName != "" {
 		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
 	}
@@ -831,7 +835,7 @@ func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav
 func SecurityContextWithoutCapabilities() *v1.SecurityContext {
 	return &v1.SecurityContext{
 		Capabilities: &v1.Capabilities{
-			Drop: []v1.Capability{"all"},
+			Drop: []v1.Capability{"ALL"},
 		},
 	}
 }
