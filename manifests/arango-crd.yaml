@@ -6,7 +6,7 @@ metadata:
     name: arangobackuppolicies.backup.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.1
+        helm.sh/chart: kube-arangodb-crd-0.4.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -35,9 +35,16 @@ spec:
             - arangobp
         singular: arangobackuppolicy
     scope: Namespaced
-    version: v1alpha
     subresources:
         status: {}
+    version: v1
+    versions:
+      - name: v1
+        served: true
+        storage: true
+      - name: v1alpha
+        served: true
+        storage: false
 
 ---
 # Source: kube-arangodb-crd/templates/backup.yaml
@@ -47,7 +54,7 @@ metadata:
     name: arangobackups.backup.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.1
+        helm.sh/chart: kube-arangodb-crd-0.4.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -96,9 +103,16 @@ spec:
             - arangobackup
         singular: arangobackup
     scope: Namespaced
-    version: v1alpha
     subresources:
         status: {}
+    version: v1
+    versions:
+      - name: v1
+        served: true
+        storage: true
+      - name: v1alpha
+        served: true
+        storage: false
 ---
 # Source: kube-arangodb-crd/templates/deployment-replications.yaml
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -107,7 +121,7 @@ metadata:
     name: arangodeploymentreplications.replication.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.1
+        helm.sh/chart: kube-arangodb-crd-0.4.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -121,7 +135,14 @@ spec:
             - arangorepl
         singular: arangodeploymentreplication
     scope: Namespaced
-    version: v1alpha
+    version: v1
+    versions:
+      - name: v1
+        served: true
+        storage: true
+      - name: v1alpha
+        served: true
+        storage: false
 ---
 # Source: kube-arangodb-crd/templates/deployment.yaml
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -130,7 +151,7 @@ metadata:
     name: arangodeployments.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-0.4.1
+        helm.sh/chart: kube-arangodb-crd-0.4.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -145,4 +166,11 @@ spec:
             - arango
         singular: arangodeployment
     scope: Namespaced
-    version: v1alpha
+    version: v1
+    versions:
+      - name: v1
+        served: true
+        storage: true
+      - name: v1alpha
+        served: true
+        storage: false
