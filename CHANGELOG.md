@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.2](https://github.com/arangodb/kube-arangodb/tree/0.4.2) (2019-11-12)
+- AntiAffinity for operator pods.
+- Add CRD API v1 with support for v1alpha.
+- Allow to set annotations in ArangoDeployment resources.
+- Add UBI based image.
+
 ## [0.4.0](https://github.com/arangodb/kube-arangodb/tree/0.4.0) (2019-10-09)
 - Further helm chart fixes for linter.
 - Support hot backup.
