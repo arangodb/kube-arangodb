@@ -223,11 +223,11 @@ endif
 
 .PHONY: docker
 docker:
-	${MAKE} -B BASE_IMAGE=scratch OPERATOR_IMAGE_TAG=$(OPERATORIMAGE) docker-generic
+	${MAKE} BASE_IMAGE=scratch OPERATOR_IMAGE_TAG=$(OPERATORIMAGE) docker-generic
 
 .PHONY: docker-ubi
 docker-ubi:
-	${MAKE} -B BASE_IMAGE=$(BASEUBIIMAGE) OPERATOR_IMAGE_TAG=$(OPERATORUBIIMAGE) docker-generic
+	${MAKE} BASE_IMAGE=$(BASEUBIIMAGE) OPERATOR_IMAGE_TAG=$(OPERATORUBIIMAGE) docker-generic
 
 
 # Manifests
