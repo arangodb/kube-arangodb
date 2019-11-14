@@ -27,10 +27,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// createAffinity creates pod anti-affinity for the given role.
+// CreateAffinity creates pod anti-affinity for the given role.
 // role contains the name of the role to configure any-affinity with.
 // affinityWithRole contains the role to configure affinity with.
-func createAffinity(deploymentName, role string, required bool, affinityWithRole string) *v1.Affinity {
+func CreateAffinity(deploymentName, role string, required bool, affinityWithRole string) *v1.Affinity {
 	a := &v1.Affinity{
 		NodeAffinity: &v1.NodeAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{

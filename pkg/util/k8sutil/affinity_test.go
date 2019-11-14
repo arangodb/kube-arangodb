@@ -31,7 +31,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCreateAffinity tests createAffinity
 func TestCreateAffinity(t *testing.T) {
 	expectedNodeAffinity := &v1.NodeAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
@@ -49,7 +48,7 @@ func TestCreateAffinity(t *testing.T) {
 		},
 	}
 	// Required
-	a := createAffinity("test", "role", true, "")
+	a := CreateAffinity("test", "role", true, "")
 	assert.Nil(t, a.PodAffinity)
 	require.NotNil(t, a.PodAntiAffinity)
 	require.Len(t, a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 1)
@@ -62,7 +61,7 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Require & affinity with role dbserver
-	a = createAffinity("test", "role", true, "dbserver")
+	a = CreateAffinity("test", "role", true, "dbserver")
 	require.NotNil(t, a.PodAffinity)
 	require.Len(t, a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 1)
 	assert.Len(t, a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, 0)
@@ -84,7 +83,7 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Not Required
-	a = createAffinity("test", "role", false, "")
+	a = CreateAffinity("test", "role", false, "")
 	assert.Nil(t, a.PodAffinity)
 	require.NotNil(t, a.PodAntiAffinity)
 	assert.Len(t, a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 0)
@@ -97,7 +96,7 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Not Required & affinity with role dbserver
-	a = createAffinity("test", "role", false, "dbserver")
+	a = CreateAffinity("test", "role", false, "dbserver")
 	require.NotNil(t, a.PodAffinity)
 	require.Len(t, a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, 1)
 	assert.Len(t, a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 0)

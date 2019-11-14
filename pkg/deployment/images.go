@@ -35,14 +35,21 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-const (
-	dockerPullableImageIDPrefix_ = "docker-pullable://"
-)
+type ImageUpdatePod struct {
+	spec  api.DeploymentSpec
+	image string
+}
+
+type ArangoDImageUpdateContainer struct {
+	spec  api.DeploymentSpec
+	image string
+}
 
 type imagesBuilder struct {
 	APIObject      k8sutil.APIObject
@@ -182,26 +189,130 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
 		"--log.output=+",
 	}
-	terminationGracePeriod := time.Second * 30
-	tolerations := make([]v1.Toleration, 0, 2)
-	shortDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Second * 5}
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur))
-	tolerations = k8sutil.AddTolerationIfNotFound(tolerations, k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
-	serviceAccountName := ""
 
-	env := make(map[string]k8sutil.EnvValue)
-	if ib.Spec.License.HasSecretName() {
-		env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-			SecretName: ib.Spec.License.GetSecretName(),
-			SecretKey:  constants.SecretKeyToken,
-		}
+	imagePod := ImageUpdatePod{
+		spec:  ib.Spec,
+		image: image,
 	}
-	if err := k8sutil.CreateArangodPod(ib.KubeCli, true, ib.APIObject, role, id, podName, "", image, "", "", ib.Spec.GetImagePullPolicy(), ib.Spec.ImagePullSecrets, "", false, terminationGracePeriod, args, env, nil, nil, nil,
-		tolerations, serviceAccountName, "", "", "", nil, "", v1.ResourceRequirements{}, nil, nil, nil); err != nil {
+
+	if err := resources.CreateArangoPod(ib.KubeCli, ib.APIObject, role, id, podName, args, &imagePod); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}
 	// Come back soon to inspect the pod
 	return true, nil
+}
+
+func (a *ArangoDImageUpdateContainer) GetExecutor() string {
+	return resources.ArangoDExecutor
+}
+
+func (a *ArangoDImageUpdateContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
+	return nil, nil, nil
+}
+
+func (a *ArangoDImageUpdateContainer) GetResourceRequirements() v1.ResourceRequirements {
+	return v1.ResourceRequirements{
+		Limits:   make(v1.ResourceList),
+		Requests: make(v1.ResourceList),
+	}
+}
+
+func (a *ArangoDImageUpdateContainer) GetImage() string {
+	return a.image
+}
+
+func (a *ArangoDImageUpdateContainer) GetEnvs() []v1.EnvVar {
+	env := make([]v1.EnvVar, 0)
+
+	if a.spec.License.HasSecretName() {
+		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+			a.spec.License.GetSecretName(), constants.SecretKeyToken))
+	}
+
+	if len(env) > 0 {
+		return env
+	}
+
+	return nil
+}
+
+func (a *ArangoDImageUpdateContainer) GetLifecycle() (*v1.Lifecycle, error) {
+	return nil, nil
+}
+
+func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() v1.PullPolicy {
+	return a.spec.GetImagePullPolicy()
+}
+
+func (i *ImageUpdatePod) Init(pod *v1.Pod) {
+	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
+	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
+}
+
+func (i *ImageUpdatePod) GetImagePullSecrets() []string {
+	return i.spec.ImagePullSecrets
+}
+
+func (i *ImageUpdatePod) GetContainerCreator() k8sutil.ContainerCreator {
+	return &ArangoDImageUpdateContainer{
+		spec:  i.spec,
+		image: i.image,
+	}
+}
+
+func (i *ImageUpdatePod) GetAffinityRole() string {
+	return ""
+}
+
+func (i *ImageUpdatePod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
+	var volumes []v1.Volume
+	var volumeMounts []v1.VolumeMount
+
+	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
+
+	return volumes, volumeMounts
+}
+
+func (i *ImageUpdatePod) GetSidecars(*v1.Pod) {
+	return
+}
+
+func (i *ImageUpdatePod) GetInitContainers() ([]v1.Container, error) {
+	return nil, nil
+}
+
+func (i *ImageUpdatePod) GetFinalizers() []string {
+	return nil
+}
+
+func (i *ImageUpdatePod) GetTolerations() []v1.Toleration {
+
+	shortDur := k8sutil.TolerationDuration{
+		Forever:  false,
+		TimeSpan: time.Second * 5,
+	}
+
+	tolerations := make([]v1.Toleration, 0, 2)
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
+		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
+		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeUnreachable, shortDur))
+	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
+		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeAlphaUnreachable, shortDur))
+
+	return tolerations
+}
+
+func (i *ImageUpdatePod) IsDeploymentMode() bool {
+	return true
+}
+
+func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
+	return nil
+}
+
+func (i *ImageUpdatePod) GetServiceAccountName() string {
+	return ""
 }

@@ -177,14 +177,7 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 				},
 			},
 			Volumes: []corev1.Volume{
-				corev1.Volume{
-					Name: "data",
-					VolumeSource: corev1.VolumeSource{
-						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-							ClaimName: claimname,
-						},
-					},
-				},
+				k8sutil.CreateVolumeWithPersitantVolumeClaim("data", claimname),
 			},
 		},
 	}

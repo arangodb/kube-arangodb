@@ -72,7 +72,9 @@ func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface,
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec, secretName string, ownerRef *metav1.OwnerReference) error {
+func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec,
+	secretName string, ownerRef *metav1.OwnerReference) error {
+
 	log = log.With().Str("secret", secretName).Logger()
 	// Load alt names
 	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
