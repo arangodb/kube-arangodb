@@ -1081,7 +1081,7 @@ func TestEnsurePods(t *testing.T) {
 							Ports: createTestPorts(),
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
-								k8sutil.LifecycleVolumeMounts(),
+								k8sutil.LifecycleVolumeMount(),
 							},
 							Lifecycle:       createTestLifecycle(),
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
@@ -1167,7 +1167,7 @@ func TestEnsurePods(t *testing.T) {
 							Ports: createTestPorts(),
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
-								k8sutil.LifecycleVolumeMounts(),
+								k8sutil.LifecycleVolumeMount(),
 							},
 							Lifecycle:       createTestLifecycle(),
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
@@ -1277,7 +1277,7 @@ func TestEnsurePods(t *testing.T) {
 							},
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
-								k8sutil.LifecycleVolumeMounts(),
+								k8sutil.LifecycleVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
 								k8sutil.RocksdbEncryptionVolumeMount(),
 								k8sutil.ClusterJWTVolumeMount(),
@@ -1749,7 +1749,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								k8sutil.LifecycleVolumeMounts(),
+								k8sutil.LifecycleVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
 								k8sutil.ClientAuthCACertificateVolumeMount(),
 								k8sutil.MasterJWTVolumeMount(),
@@ -1846,7 +1846,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 							VolumeMounts: []v1.VolumeMount{
-								k8sutil.LifecycleVolumeMounts(),
+								k8sutil.LifecycleVolumeMount(),
 								k8sutil.MasterJWTVolumeMount(),
 							},
 						},
@@ -2293,7 +2293,7 @@ func createTestLifecycleContainer() v1.Container {
 		Image:   testImageLifecycle,
 		Command: []string{binaryPath, "lifecycle", "copy", "--target", "/lifecycle/tools"},
 		VolumeMounts: []v1.VolumeMount{
-			k8sutil.LifecycleVolumeMounts(),
+			k8sutil.LifecycleVolumeMount(),
 		},
 		ImagePullPolicy: "IfNotPresent",
 		SecurityContext: &v1.SecurityContext{

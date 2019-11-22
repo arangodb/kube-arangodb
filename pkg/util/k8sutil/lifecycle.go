@@ -27,7 +27,7 @@ func InitLifecycleContainer(image string) (v1.Container, error) {
 		Image:           image,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		VolumeMounts: []v1.VolumeMount{
-			LifecycleVolumeMounts(),
+			LifecycleVolumeMount(),
 		},
 		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
@@ -61,8 +61,8 @@ func GetLifecycleEnv() []v1.EnvVar {
 	}
 }
 
-// LifecycleVolumeMounts creates a volume mount structure for shared lifecycle emptyDir.
-func LifecycleVolumeMounts() v1.VolumeMount {
+// LifecycleVolumeMount creates a volume mount structure for shared lifecycle emptyDir.
+func LifecycleVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      lifecycleVolumeName,
 		MountPath: lifecycleVolumeMountDir,

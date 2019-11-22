@@ -131,7 +131,7 @@ func (m *MemberSyncPod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
 
 	if m.resources.context.GetLifecycleImage() != "" {
 		volumes = append(volumes, k8sutil.LifecycleVolume())
-		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMounts())
+		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
 	}
 
 	if m.tlsKeyfileSecretName != "" {

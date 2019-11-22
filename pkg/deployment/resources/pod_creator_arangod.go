@@ -172,7 +172,7 @@ func (m *MemberArangoDPod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
 	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
 
 	if m.resources.context.GetLifecycleImage() != "" {
-		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMounts())
+		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
 	}
 
 	if m.status.PersistentVolumeClaimName != "" {
