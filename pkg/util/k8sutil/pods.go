@@ -54,13 +54,6 @@ const (
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
 
-// EnvValue is a helper structure for environment variable sources.
-type EnvValue struct {
-	Value      string // If set, the environment value gets this value
-	SecretName string // If set, the environment value gets its value from a secret with this name
-	SecretKey  string // Key inside secret to fill into the envvar. Only relevant is SecretName is set.
-}
-
 type PodCreator interface {
 	Init(*v1.Pod)
 	GetVolumes() ([]v1.Volume, []v1.VolumeMount)
@@ -84,27 +77,6 @@ type ContainerCreator interface {
 	GetImagePullPolicy() v1.PullPolicy
 	GetImage() string
 	GetEnvs() []v1.EnvVar
-}
-
-// CreateEnvVar creates an EnvVar structure for given key from given EnvValue.
-func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
-	ev := v1.EnvVar{
-		Name: key,
-	}
-	if ev.Value != "" {
-		ev.Value = v.Value
-	} else if v.SecretName != "" {
-		//return CreateEnvSecretKeySelector(key, v.SecretName, v.SecretKey)
-		ev.ValueFrom = &v1.EnvVarSource{
-			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: v.SecretName,
-				},
-				Key: v.SecretKey,
-			},
-		}
-	}
-	return ev
 }
 
 // IsPodReady returns true if the PodReady condition on
@@ -316,6 +288,10 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("10Mi"),
 			},
+			Limits: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resource.MustParse("50Mi"),
+			},
 		},
 		VolumeMounts: []v1.VolumeMount{
 			ArangodVolumeMount(),
@@ -379,33 +355,6 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 	}, nil
 }
 
-func ArangodbExporterContainer(exporter *ArangodbExporterContainerConf) v1.Container {
-	c := v1.Container{
-		Name:    ExporterContainerName,
-		Image:   exporter.Image,
-		Command: append([]string{"/app/arangodb-exporter"}, exporter.Args...),
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "exporter",
-				ContainerPort: int32(ArangoExporterPort),
-				Protocol:      v1.ProtocolTCP,
-			},
-		},
-		Resources:       ExtractPodResourceRequirement(exporter.Resources),
-		ImagePullPolicy: v1.PullIfNotPresent,
-		SecurityContext: SecurityContextWithoutCapabilities(),
-	}
-
-	for k, v := range exporter.Env {
-		c.Env = append(c.Env, v.CreateEnvVar(k))
-	}
-	if exporter.LivenessProbe != nil {
-		c.LivenessProbe = exporter.LivenessProbe.Create()
-	}
-
-	return c
-}
-
 // NewPod creates a basic Pod for given settings.
 func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.Pod {
 
@@ -439,16 +388,6 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 	}
 
 	return p
-}
-
-// ArangodbExporterContainerConf contains configuration of the exporter container
-type ArangodbExporterContainerConf struct {
-	Args               []string
-	Env                map[string]EnvValue
-	JWTTokenSecretName string
-	LivenessProbe      *HTTPProbeConfig
-	Image              string
-	Resources          v1.ResourceRequirements
 }
 
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
