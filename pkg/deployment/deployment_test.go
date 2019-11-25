@@ -169,6 +169,11 @@ func TestEnsurePods(t *testing.T) {
 		},
 	}
 
+	emptyResources := v1.ResourceRequirements{
+		Limits:   make(v1.ResourceList),
+		Requests: make(v1.ResourceList),
+	}
+
 	sidecarName1 := "sidecar1"
 	sidecarName2 := "sidecar2"
 
@@ -1029,7 +1034,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						testCreateExporterContainer(false),
+						testCreateExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1041,13 +1046,79 @@ func TestEnsurePods(t *testing.T) {
 			},
 		},
 		{
-			Name: "DBserver Pod with metrics exporter and lifecycle init container",
+			Name: "DBserver Pod with metrics exporter which contains resource requirements",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS:            noTLS,
+					Metrics: api.MetricsSpec{
+						Enabled: util.NewBool(true),
+						Image:   util.NewString(testExporterImage),
+						Authentication: api.MetricsAuthenticationSpec{
+							JWTTokenSecretName: util.NewString(testExporterToken),
+						},
+						Resources: resourcesUnfiltered,
+					},
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						DBServers: api.MemberStatusList{
+							firstDBServerStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+			},
+			ExpectedEvent: "member dbserver is created",
+			ExpectedPod: v1.Pod{
+				Spec: v1.PodSpec{
+					Volumes: []v1.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
+					},
+					Containers: []v1.Container{
+						{
+							Name:    k8sutil.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
+							Ports:   createTestPorts(),
+							VolumeMounts: []v1.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							ImagePullPolicy: v1.PullIfNotPresent,
+							SecurityContext: &v1.SecurityContext{
+								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
+							},
+						},
+						testCreateExporterContainer(false, k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
+					},
+					RestartPolicy:                 v1.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupDBServersString + "-" + firstDBServerStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "DBserver Pod with lifecycle init container which contains resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image:          util.NewString(testImage),
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					Metrics:        metricsSpec,
+					Lifecycle: api.LifecycleSpec{
+						Resources: resourcesUnfiltered,
+					},
 				},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
@@ -1075,7 +1146,7 @@ func TestEnsurePods(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []v1.Container{
-						createTestLifecycleContainer(),
+						createTestLifecycleContainer(k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
 					},
 					Containers: []v1.Container{
 						{
@@ -1100,7 +1171,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						testCreateExporterContainer(false),
+						testCreateExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1147,7 +1218,7 @@ func TestEnsurePods(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []v1.Container{
-						createTestLifecycleContainer(),
+						createTestLifecycleContainer(emptyResources),
 						createTestAlpineContainer(firstDBServerStatus.ID, false),
 					},
 					Containers: []v1.Container{
@@ -1173,7 +1244,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						testCreateExporterContainer(false),
+						testCreateExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1239,7 +1310,7 @@ func TestEnsurePods(t *testing.T) {
 						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []v1.Container{
-						createTestLifecycleContainer(),
+						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []v1.Container{
 						{
@@ -1269,7 +1340,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ClusterJWTVolumeMount(),
 							},
 						},
-						testCreateExporterContainer(true),
+						testCreateExporterContainer(true, emptyResources),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1324,10 +1395,7 @@ func TestEnsurePods(t *testing.T) {
 							Command:         createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, true, false),
 							Ports:           createTestPorts(),
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Resources: v1.ResourceRequirements{
-								Limits:   make(v1.ResourceList),
-								Requests: make(v1.ResourceList),
-							},
+							Resources:       emptyResources,
 							SecurityContext: &v1.SecurityContext{
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
@@ -1697,7 +1765,7 @@ func TestEnsurePods(t *testing.T) {
 							testDeploymentName+"-sync-jwt"),
 					},
 					InitContainers: []v1.Container{
-						createTestLifecycleContainer(),
+						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []v1.Container{
 						{
@@ -1793,7 +1861,7 @@ func TestEnsurePods(t *testing.T) {
 						k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, testDeploymentName+"-sync-jwt"),
 					},
 					InitContainers: []v1.Container{
-						createTestLifecycleContainer(),
+						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []v1.Container{
 						{
@@ -2257,7 +2325,7 @@ func createTestExporterLivenessProbe(secure bool) *v1.Probe {
 	}.Create()
 }
 
-func createTestLifecycleContainer() v1.Container {
+func createTestLifecycleContainer(resources v1.ResourceRequirements) v1.Container {
 	binaryPath, _ := os.Executable()
 
 	return v1.Container{
@@ -2268,10 +2336,7 @@ func createTestLifecycleContainer() v1.Container {
 			k8sutil.LifecycleVolumeMount(),
 		},
 		ImagePullPolicy: "IfNotPresent",
-		Resources: v1.ResourceRequirements{
-			Limits:   make(v1.ResourceList),
-			Requests: make(v1.ResourceList),
-		},
+		Resources:       resources,
 		SecurityContext: &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 		},
@@ -2302,7 +2367,7 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
 }
 
-func testCreateExporterContainer(secure bool) v1.Container {
+func testCreateExporterContainer(secure bool, resources v1.ResourceRequirements) v1.Container {
 	return v1.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   testExporterImage,
@@ -2311,10 +2376,7 @@ func testCreateExporterContainer(secure bool) v1.Container {
 		VolumeMounts: []v1.VolumeMount{
 			k8sutil.ExporterJWTVolumeMount(),
 		},
-		Resources: v1.ResourceRequirements{
-			Limits:   make(v1.ResourceList),
-			Requests: make(v1.ResourceList),
-		},
+		Resources:       resources,
 		LivenessProbe:   createTestExporterLivenessProbe(secure),
 		ImagePullPolicy: v1.PullIfNotPresent,
 		SecurityContext: &v1.SecurityContext{
