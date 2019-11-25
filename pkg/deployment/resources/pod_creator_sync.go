@@ -120,6 +120,10 @@ func (a *ArangoSyncContainer) GetEnvs() []v1.EnvVar {
 	return nil
 }
 
+func (a *ArangoSyncContainer) GetSecurityContext() *v1.SecurityContext {
+	return k8sutil.SecurityContextWithCapabilities(a.groupSpec.AdditionalCapabilities)
+}
+
 func (m *MemberSyncPod) GetAffinityRole() string {
 	if m.group == api.ServerGroupSyncWorkers {
 		return api.ServerGroupDBServers.AsRole()

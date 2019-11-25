@@ -901,6 +901,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.AdditionalCapabilities != nil {
+		in, out := &in.AdditionalCapabilities, &out.AdditionalCapabilities
+		*out = make([]v1.Capability, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

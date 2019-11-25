@@ -245,6 +245,10 @@ func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() v1.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (a *ArangoDImageUpdateContainer) GetSecurityContext() *v1.SecurityContext {
+	return k8sutil.SecurityContextWithoutCapabilities()
+}
+
 func (i *ImageUpdatePod) Init(pod *v1.Pod) {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds

@@ -297,7 +297,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 	return depl
 }
 
-// waitUntilDeployment waits until a deployment members are ready with given name in given namespace
+// waitUntilDeploymentMembers waits until a deployment members are ready with given name in given namespace
 func waitUntilDeploymentMembers(cli versioned.Interface, deploymentName, ns string, cb api.ServerGroupFunc,
 	timeout ...time.Duration) (*api.ArangoDeployment, error) {
 

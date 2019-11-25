@@ -77,6 +77,7 @@ type ContainerCreator interface {
 	GetImagePullPolicy() v1.PullPolicy
 	GetImage() string
 	GetEnvs() []v1.EnvVar
+	GetSecurityContext() *v1.SecurityContext
 }
 
 // IsPodReady returns true if the PodReady condition on
@@ -351,7 +352,7 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 		ReadinessProbe:  readiness,
 		Lifecycle:       lifecycle,
 		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
-		SecurityContext: SecurityContextWithoutCapabilities(),
+		SecurityContext: containerCreator.GetSecurityContext(),
 	}, nil
 }
 
@@ -401,12 +402,18 @@ func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav
 	return nil
 }
 
-func SecurityContextWithoutCapabilities() *v1.SecurityContext {
+// SecurityContextWithCapabilities turns off all capabilities afterward turns on chosen capabilities
+func SecurityContextWithCapabilities(add []v1.Capability) *v1.SecurityContext {
 	return &v1.SecurityContext{
 		Capabilities: &v1.Capabilities{
 			Drop: []v1.Capability{"ALL"},
+			Add:  add,
 		},
 	}
+}
+
+func SecurityContextWithoutCapabilities() *v1.SecurityContext {
+	return SecurityContextWithCapabilities(nil)
 }
 
 func CreateVolumeEmptyDir(name string) v1.Volume {

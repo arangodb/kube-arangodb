@@ -249,6 +249,10 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		return true, "Resource Requirements changed"
 	}
 
+	if IsAdditionalCapabilitiesChanged(groupSpec.AdditionalCapabilities, c.SecurityContext.Capabilities.Add) {
+		return true, "capabilities have been changed"
+	}
+
 	var memberStatus, _, _ = status.Members.MemberStatusByPodName(p.GetName())
 	if memberStatus.SideCarSpecs == nil {
 		memberStatus.SideCarSpecs = make(map[string]v1.Container)
@@ -334,4 +338,27 @@ func getContainerArgs(c v1.Container) []string {
 		return c.Command[1:]
 	}
 	return c.Args
+}
+
+func IsAdditionalCapabilitiesChanged(capSpecList, capCurrentList []v1.Capability) bool {
+
+	if len(capSpecList) != len(capCurrentList) {
+		return true
+	}
+
+	for _, capSpec := range capSpecList {
+		var found bool
+
+		for _, capCurrent := range capCurrentList {
+			if capSpec == capCurrent {
+				found = true
+				break
+			}
+		}
+		if found == false {
+			return true
+		}
+	}
+
+	return false
 }

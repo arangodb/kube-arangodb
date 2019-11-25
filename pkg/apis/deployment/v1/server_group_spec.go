@@ -66,6 +66,8 @@ type ServerGroupSpec struct {
 	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
+	// AdditionalCapabilities specify a list of additional capabilities to be added to arangod container
+	AdditionalCapabilities []v1.Capability `json:"additionalCapabilities,omitempty`
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group
@@ -330,6 +332,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 	if s.VolumeClaimTemplate == nil {
 		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
+	}
+	if s.AdditionalCapabilities == nil {
+		s.AdditionalCapabilities = source.AdditionalCapabilities
 	}
 }
 

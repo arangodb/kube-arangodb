@@ -138,6 +138,10 @@ func (a *ArangoDContainer) GetImagePullPolicy() v1.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (a *ArangoDContainer) GetSecurityContext() *v1.SecurityContext {
+	return k8sutil.SecurityContextWithCapabilities(a.groupSpec.AdditionalCapabilities)
+}
+
 func (m *MemberArangoDPod) Init(pod *v1.Pod) {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds

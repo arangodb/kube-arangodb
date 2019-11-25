@@ -1046,6 +1046,62 @@ func TestEnsurePods(t *testing.T) {
 			},
 		},
 		{
+			Name: "DBserver Pod with chosen capabilities",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS:            noTLS,
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						DBServers: api.MemberStatusList{
+							firstDBServerStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.ArangoDeployment.Spec.DBServers.AdditionalCapabilities = []v1.Capability{"SYS_PTRACE", "NET_BIND_SERVICE"}
+				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
+			},
+			ExpectedEvent: "member dbserver is created",
+			ExpectedPod: v1.Pod{
+				Spec: v1.PodSpec{
+					Volumes: []v1.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+					},
+					Containers: []v1.Container{
+						{
+							Name:    k8sutil.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
+							Ports:   createTestPorts(),
+							VolumeMounts: []v1.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							ImagePullPolicy: v1.PullIfNotPresent,
+							SecurityContext: &v1.SecurityContext{
+								Capabilities: &v1.Capabilities{
+									Add:  []v1.Capability{"SYS_PTRACE", "NET_BIND_SERVICE"},
+									Drop: []v1.Capability{"ALL"},
+								},
+							},
+						},
+					},
+					RestartPolicy:                 v1.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupDBServersString + "-" + firstDBServerStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
+						false, ""),
+				},
+			},
+		},
+		{
 			Name: "DBserver Pod with metrics exporter which contains resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
