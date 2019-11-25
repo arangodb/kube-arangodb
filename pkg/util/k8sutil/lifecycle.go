@@ -38,20 +38,24 @@ const (
 )
 
 // InitLifecycleContainer creates an init-container to copy the lifecycle binary to a shared volume.
-func InitLifecycleContainer(image string) (v1.Container, error) {
+func InitLifecycleContainer(image string, resources *v1.ResourceRequirements) (v1.Container, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return v1.Container{}, maskAny(err)
 	}
 	c := v1.Container{
-		Command:         append([]string{binaryPath}, "lifecycle", "copy", "--target", lifecycleVolumeMountDir),
-		Name:            initLifecycleContainerName,
-		Image:           image,
-		ImagePullPolicy: v1.PullIfNotPresent,
+		Name:    initLifecycleContainerName,
+		Image:   image,
+		Command: append([]string{binaryPath}, "lifecycle", "copy", "--target", lifecycleVolumeMountDir),
 		VolumeMounts: []v1.VolumeMount{
 			LifecycleVolumeMount(),
 		},
+		ImagePullPolicy: v1.PullIfNotPresent,
 		SecurityContext: SecurityContextWithoutCapabilities(),
+	}
+
+	if resources != nil {
+		c.Resources = ExtractPodResourceRequirement(*resources)
 	}
 	return c, nil
 }

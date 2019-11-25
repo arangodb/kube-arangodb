@@ -162,9 +162,9 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *v1.Pod) {
-	if m.exporter != nil {
+	if m.exporter != nil { //TODO  move exporter
 		// Metrics sidecar
-		c := k8sutil.ArangodbexporterContainer(m.exporter.Image, m.exporter.Args, m.exporter.Env, m.exporter.LivenessProbe)
+		c := k8sutil.ArangodbExporterContainer(m.exporter)
 
 		if m.exporter.JWTTokenSecretName != "" {
 			c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
@@ -245,7 +245,7 @@ func (m *MemberArangoDPod) GetInitContainers() ([]v1.Container, error) {
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage)
+		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources)
 		if err != nil {
 			return nil, err
 		}

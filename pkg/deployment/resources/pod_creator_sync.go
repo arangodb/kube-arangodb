@@ -195,7 +195,7 @@ func (m *MemberSyncPod) GetInitContainers() ([]v1.Container, error) {
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage)
+		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources)
 		if err != nil {
 			return nil, err
 		}

@@ -70,6 +70,7 @@ const (
 	testServiceAccountName        = "testServiceAccountName"
 	testPriorityClassName         = "testPriority"
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
+	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
 	testImageAlpine               = "alpine:3.7"
 )
 
@@ -149,7 +150,7 @@ func TestEnsurePods(t *testing.T) {
 
 	metricsSpec := api.MetricsSpec{
 		Enabled: util.NewBool(true),
-		Image:   util.NewString("arangodb/arangodb-exporter:0.1.6"),
+		Image:   util.NewString(testExporterImage),
 		Authentication: api.MetricsAuthenticationSpec{
 			JWTTokenSecretName: util.NewString(testExporterToken),
 		},
@@ -1028,20 +1029,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						{
-							Name:    k8sutil.ExporterContainerName,
-							Image:   "arangodb/arangodb-exporter:0.1.6",
-							Command: createTestExporterCommand(false),
-							Ports:   createTestExporterPorts(),
-							VolumeMounts: []v1.VolumeMount{
-								k8sutil.ExporterJWTVolumeMount(),
-							},
-							LivenessProbe:   createTestExporterLivenessProbe(false),
-							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
-						},
+						testCreateExporterContainer(false),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1112,20 +1100,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						{
-							Name:    k8sutil.ExporterContainerName,
-							Image:   "arangodb/arangodb-exporter:0.1.6",
-							Command: createTestExporterCommand(false),
-							Ports:   createTestExporterPorts(),
-							VolumeMounts: []v1.VolumeMount{
-								k8sutil.ExporterJWTVolumeMount(),
-							},
-							LivenessProbe:   createTestExporterLivenessProbe(false),
-							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
-						},
+						testCreateExporterContainer(false),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1198,20 +1173,7 @@ func TestEnsurePods(t *testing.T) {
 								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 							},
 						},
-						{
-							Name:    k8sutil.ExporterContainerName,
-							Image:   "arangodb/arangodb-exporter:0.1.6",
-							Command: createTestExporterCommand(false),
-							Ports:   createTestExporterPorts(),
-							VolumeMounts: []v1.VolumeMount{
-								k8sutil.ExporterJWTVolumeMount(),
-							},
-							LivenessProbe:   createTestExporterLivenessProbe(false),
-							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
-						},
+						testCreateExporterContainer(false),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1259,6 +1221,8 @@ func TestEnsurePods(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(true,
 					authorization, k8sutil.ArangoPort)
+				testCase.ExpectedPod.Spec.Containers[1].VolumeMounts = append(
+					testCase.ExpectedPod.Spec.Containers[1].VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 			},
 			config: Config{
 				LifecycleImage: testImageLifecycle,
@@ -1305,21 +1269,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ClusterJWTVolumeMount(),
 							},
 						},
-						{
-							Name:    k8sutil.ExporterContainerName,
-							Image:   "arangodb/arangodb-exporter:0.1.6",
-							Command: createTestExporterCommand(true),
-							Ports:   createTestExporterPorts(),
-							VolumeMounts: []v1.VolumeMount{
-								k8sutil.ExporterJWTVolumeMount(),
-								k8sutil.TlsKeyfileVolumeMount(),
-							},
-							LivenessProbe:   createTestExporterLivenessProbe(true),
-							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
-						},
+						testCreateExporterContainer(true),
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -2318,6 +2268,10 @@ func createTestLifecycleContainer() v1.Container {
 			k8sutil.LifecycleVolumeMount(),
 		},
 		ImagePullPolicy: "IfNotPresent",
+		Resources: v1.ResourceRequirements{
+			Limits:   make(v1.ResourceList),
+			Requests: make(v1.ResourceList),
+		},
 		SecurityContext: &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
 		},
@@ -2346,4 +2300,25 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
+}
+
+func testCreateExporterContainer(secure bool) v1.Container {
+	return v1.Container{
+		Name:    k8sutil.ExporterContainerName,
+		Image:   testExporterImage,
+		Command: createTestExporterCommand(secure),
+		Ports:   createTestExporterPorts(),
+		VolumeMounts: []v1.VolumeMount{
+			k8sutil.ExporterJWTVolumeMount(),
+		},
+		Resources: v1.ResourceRequirements{
+			Limits:   make(v1.ResourceList),
+			Requests: make(v1.ResourceList),
+		},
+		LivenessProbe:   createTestExporterLivenessProbe(secure),
+		ImagePullPolicy: v1.PullIfNotPresent,
+		SecurityContext: &v1.SecurityContext{
+			Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
+		},
+	}
 }

@@ -628,6 +628,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 					JWTTokenSecretName: spec.Metrics.GetJWTTokenSecretName(),
 					LivenessProbe:      createExporterLivenessProbe(spec.IsSecure()),
 					Image:              image,
+					Resources:          spec.Metrics.Resources,
 				}
 			}
 		}

@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -40,7 +40,7 @@ type ServerGroupIterator interface {
 	// If the callback returns an error, this error is returned and no other server
 	// groups are processed.
 	// Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
-	ForeachServerGroup(cb func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error, status *api.DeploymentStatus) error
+	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
 // Context provides all functions needed by the Resources service

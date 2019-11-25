@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -110,6 +112,17 @@ func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
 func IsPodReady(pod *v1.Pod) bool {
 	condition := getPodCondition(&pod.Status, v1.PodReady)
 	return condition != nil && condition.Status == v1.ConditionTrue
+}
+
+// GetPodByName returns pod if it exists among the pods' list
+// Returns false if not found.
+func GetPodByName(pods []v1.Pod, podName string) (v1.Pod, bool) {
+	for _, pod := range pods {
+		if pod.GetName() == podName {
+			return pod, true
+		}
+	}
+	return v1.Pod{}, false
 }
 
 // IsPodSucceeded returns true if the arangodb container of the pod
@@ -291,13 +304,19 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 		command = fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile)
 	}
 	c := v1.Container{
+		Name:  name,
+		Image: alpineImage,
 		Command: []string{
 			"/bin/sh",
 			"-c",
 			command,
 		},
-		Name:  name,
-		Image: alpineImage,
+		Resources: v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resource.MustParse("10Mi"),
+			},
+		},
 		VolumeMounts: []v1.VolumeMount{
 			ArangodVolumeMount(),
 		},
@@ -360,12 +379,11 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 	}, nil
 }
 
-func ArangodbexporterContainer(image string, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+func ArangodbExporterContainer(exporter *ArangodbExporterContainerConf) v1.Container {
 	c := v1.Container{
-		Command:         append([]string{"/app/arangodb-exporter"}, args...),
-		Name:            ExporterContainerName,
-		Image:           image,
-		ImagePullPolicy: v1.PullIfNotPresent,
+		Name:    ExporterContainerName,
+		Image:   exporter.Image,
+		Command: append([]string{"/app/arangodb-exporter"}, exporter.Args...),
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "exporter",
@@ -373,14 +391,18 @@ func ArangodbexporterContainer(image string, args []string, env map[string]EnvVa
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		Resources:       ExtractPodResourceRequirement(exporter.Resources),
+		ImagePullPolicy: v1.PullIfNotPresent,
 		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
-	for k, v := range env {
+
+	for k, v := range exporter.Env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
 	}
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
+	if exporter.LivenessProbe != nil {
+		c.LivenessProbe = exporter.LivenessProbe.Create()
 	}
+
 	return c
 }
 
@@ -426,6 +448,7 @@ type ArangodbExporterContainerConf struct {
 	JWTTokenSecretName string
 	LivenessProbe      *HTTPProbeConfig
 	Image              string
+	Resources          v1.ResourceRequirements
 }
 
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
