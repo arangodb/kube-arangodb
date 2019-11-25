@@ -43,6 +43,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type optionPair struct {
@@ -256,7 +257,8 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, agents api.MemberStatusList, id string) []string {
+func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
+	groupSpec api.ServerGroupSpec, id string) []string {
 	options := make([]optionPair, 0, 64)
 	var runCmd string
 	var port int
@@ -401,9 +403,6 @@ func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.Serve
 				return nil, maskAny(err)
 			}
 			authorization = "bearer " + token
-			if err != nil {
-				return nil, maskAny(err)
-			}
 		} else if group == api.ServerGroupSyncMasters {
 			// Fall back to JWT secret
 			secretData, err := r.getSyncJWTSecret(spec)
@@ -477,8 +476,8 @@ func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.Serv
 	return probeCfg, nil
 }
 
-// createPodFinalizers creates a list of finalizers for a pod created for the given group.
-func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
+// CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
+func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
 	switch group {
 	case api.ServerGroupAgents:
 		return []string{constants.FinalizerPodAgencyServing}
@@ -489,8 +488,8 @@ func (r *Resources) createPodFinalizers(group api.ServerGroup) []string {
 	}
 }
 
-// createPodTolerations creates a list of tolerations for a pod created for the given group.
-func (r *Resources) createPodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []v1.Toleration {
+// CreatePodTolerations creates a list of tolerations for a pod created for the given group.
+func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []v1.Toleration {
 	notReadyDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
 	unreachableDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
 	switch group {
@@ -548,17 +547,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		return maskAny(fmt.Errorf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
-	lifecycleImage := r.context.GetLifecycleImage()
-	alpineImage := r.context.GetAlpineImage()
-	terminationGracePeriod := group.DefaultTerminationGracePeriod()
-	tolerations := r.createPodTolerations(group, groupSpec)
-	serviceAccountName := groupSpec.GetServiceAccountName()
 
 	// Update pod name
 	role := group.AsRole()
 	roleAbbr := group.AsRoleAbbreviated()
-	podSuffix := createPodSuffix(spec)
-	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, podSuffix)
+
+	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
 	newPhase := api.MemberPhaseCreated
 	// Select image
 	var imageInfo api.ImageInfo
@@ -587,15 +581,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			newPhase = api.MemberPhaseUpgrading
 		}
 		args := createArangodArgs(apiObject, spec, group, status.Members.Agents, m.ID, version, autoUpgrade)
-		env := make(map[string]k8sutil.EnvValue)
-		livenessProbe, err := r.createLivenessProbe(spec, group)
-		if err != nil {
-			return maskAny(err)
-		}
-		readinessProbe, err := r.createReadinessProbe(spec, group, version)
-		if err != nil {
-			return maskAny(err)
-		}
+
 		tlsKeyfileSecretName := ""
 		if spec.IsSecure() {
 			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
@@ -626,19 +612,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
 					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
-			} else {
-				env[constants.EnvArangodJWTSecret] = k8sutil.EnvValue{
-					SecretName: spec.Authentication.GetJWTSecretName(),
-					SecretKey:  constants.SecretKeyToken,
-				}
-			}
-
-		}
-
-		if spec.License.HasSecretName() {
-			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-				SecretName: spec.License.GetSecretName(),
-				SecretKey:  constants.SecretKeyToken,
 			}
 		}
 
@@ -659,12 +632,20 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
-		engine := spec.GetStorageEngine().AsArangoArgument()
-		requireUUID := group == api.ServerGroupDBServers && m.IsInitialized
-		finalizers := r.createPodFinalizers(group)
-		if err := k8sutil.CreateArangodPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, m.PersistentVolumeClaimName, imageInfo.ImageID, lifecycleImage, alpineImage, spec.GetImagePullPolicy(), spec.ImagePullSecrets,
-			engine, requireUUID, terminationGracePeriod, args, env, finalizers, livenessProbe, readinessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, rocksdbEncryptionSecretName,
-			clusterJWTSecretName, groupSpec.GetNodeSelector(), groupSpec.PriorityClassName, groupSpec.Resources, exporter, groupSpec.GetSidecars(), groupSpec.VolumeClaimTemplate); err != nil {
+		memberPod := MemberArangoDPod{
+			status:                      m,
+			tlsKeyfileSecretName:        tlsKeyfileSecretName,
+			rocksdbEncryptionSecretName: rocksdbEncryptionSecretName,
+			clusterJWTSecretName:        clusterJWTSecretName,
+			exporter:                    exporter,
+			groupSpec:                   groupSpec,
+			spec:                        spec,
+			group:                       group,
+			resources:                   r,
+			imageInfo:                   imageInfo,
+		}
+
+		if err := CreateArangoPod(kubecli, apiObject, role, m.ID, m.PodName, args, &memberPod); err != nil {
 			return maskAny(err)
 		}
 
@@ -733,31 +714,21 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, status.Members.Agents, m.ID)
-		env := make(map[string]k8sutil.EnvValue)
-		if spec.Sync.Monitoring.GetTokenSecretName() != "" {
-			env[constants.EnvArangoSyncMonitoringToken] = k8sutil.EnvValue{
-				SecretName: spec.Sync.Monitoring.GetTokenSecretName(),
-				SecretKey:  constants.SecretKeyToken,
-			}
+		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m.ID)
+
+		memberSyncPod := MemberSyncPod{
+			tlsKeyfileSecretName:   tlsKeyfileSecretName,
+			clientAuthCASecretName: clientAuthCASecretName,
+			masterJWTSecretName:    masterJWTSecretName,
+			clusterJWTSecretName:   clusterJWTSecretName,
+			groupSpec:              groupSpec,
+			spec:                   spec,
+			group:                  group,
+			resources:              r,
+			image:                  imageID,
 		}
-		if spec.License.HasSecretName() {
-			env[constants.EnvArangoLicenseKey] = k8sutil.EnvValue{
-				SecretName: spec.License.GetSecretName(),
-				SecretKey:  constants.SecretKeyToken,
-			}
-		}
-		livenessProbe, err := r.createLivenessProbe(spec, group)
-		if err != nil {
-			return maskAny(err)
-		}
-		affinityWithRole := ""
-		if group == api.ServerGroupSyncWorkers {
-			affinityWithRole = api.ServerGroupDBServers.AsRole()
-		}
-		if err := k8sutil.CreateArangoSyncPod(kubecli, spec.IsDevelopment(), apiObject, role, m.ID, m.PodName, imageID, lifecycleImage, spec.GetImagePullPolicy(), spec.ImagePullSecrets, terminationGracePeriod, args, env,
-			livenessProbe, tolerations, serviceAccountName, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole, groupSpec.GetNodeSelector(),
-			groupSpec.PriorityClassName, groupSpec.Resources, groupSpec.GetSidecars()); err != nil {
+
+		if err := CreateArangoPod(kubecli, apiObject, role, m.ID, m.PodName, args, &memberSyncPod); err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
@@ -781,12 +752,49 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	return nil
 }
 
+// CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
+// If the pod already exists, nil is returned.
+// If another error occurs, that error is returned.
+func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, role, id, podName string,
+	args []string, podCreator k8sutil.PodCreator) error {
+
+	// Prepare basic pod
+	p := k8sutil.NewPod(deployment.GetName(), role, id, podName, podCreator)
+
+	podCreator.Init(&p)
+
+	if initContainers, err := podCreator.GetInitContainers(); err != nil {
+		return maskAny(err)
+	} else if initContainers != nil {
+		p.Spec.InitContainers = append(p.Spec.InitContainers, initContainers...)
+	}
+
+	c, err := k8sutil.NewContainer(args, podCreator.GetContainerCreator())
+	if err != nil {
+		return maskAny(err)
+	}
+
+	p.Spec.Volumes, c.VolumeMounts = podCreator.GetVolumes()
+	p.Spec.Containers = append(p.Spec.Containers, c)
+	podCreator.GetSidecars(&p)
+
+	// Add (anti-)affinity
+	p.Spec.Affinity = k8sutil.CreateAffinity(deployment.GetName(), role, !podCreator.IsDeploymentMode(),
+		podCreator.GetAffinityRole())
+
+	if err := k8sutil.CreatePod(kubecli, &p, deployment.GetNamespace(), deployment.AsOwner()); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // EnsurePods creates all Pods listed in member status
 func (r *Resources) EnsurePods() error {
 	iterator := r.context.GetServerGroupIterator()
-	status, _ := r.context.GetStatus()
+	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
-	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
+
+	createPodMember := func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhaseNone {
 				continue
@@ -800,13 +808,16 @@ func (r *Resources) EnsurePods() error {
 			}
 		}
 		return nil
-	}, &status); err != nil {
+	}
+
+	if err := iterator.ForeachServerGroup(createPodMember, &deploymentStatus); err != nil {
 		return maskAny(err)
 	}
+
 	return nil
 }
 
-func createPodSuffix(spec api.DeploymentSpec) string {
+func CreatePodSuffix(spec api.DeploymentSpec) string {
 	raw, _ := json.Marshal(spec)
 	hash := sha1.Sum(raw)
 	return fmt.Sprintf("%0x", hash)[:6]

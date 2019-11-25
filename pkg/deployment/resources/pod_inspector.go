@@ -285,7 +285,7 @@ func (r *Resources) GetExpectedPodArguments(apiObject metav1.Object, deplSpec ap
 	}
 	if group.IsArangosync() {
 		groupSpec := deplSpec.GetServerGroupSpec(group)
-		return createArangoSyncArgs(apiObject, deplSpec, group, groupSpec, agents, id)
+		return createArangoSyncArgs(apiObject, deplSpec, group, groupSpec, id)
 	}
 	return nil
 }
