@@ -48,8 +48,8 @@ The basis tests are executed on every platform with various images:
 
 Run the following tests with the following images:
 
-- Community 3.3.10
-- Enterprise 3.3.10
+- Community <Version>
+- Enterprise <Version>
 
 For every tests, one of these images can be chosen, as long as each image
 is used in a test at least once.
