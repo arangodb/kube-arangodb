@@ -8,28 +8,11 @@ on Kubernetes clusters.
 To get started, follow the Installation instructions below and/or
 read the [tutorial](./docs/Manual/Tutorials/Kubernetes/README.md).
 
-## State
+## Production Readiness State
 
-The ArangoDB Kubernetes Operator is still in **development**.
+Kube-ArangoDB is generally production ready.
 
-Running ArangoDB deployments (single, active-failover or cluster)
-is reasonably stable, and we're in the process of validating
-production readiness of various Kubernetes platforms.
-
-The feature set of the ArangoDB Kubernetes Operator is close to what
-it is intended to be.
-
-[Documentation](./docs/README.md)
-
-### Production readiness state
-
-Beginning with Version 0.3.11 we maintain a production readiness
-state for individual new features, since we expect that new
-features will first be released with an "alpha" or "beta" readiness
-state and over time move to full "production readiness".
-
-The following table has the general readiness state, the table below
-covers individual newer features separately.
+The following table has the general readiness state across different tested platforms.
 
 | Platform             | Kubernetes version | ArangoDB version | ArangoDB K8s Operator Version | State | Production ready | Remarks               |
 |----------------------|--------------------|------------------|-------------------------------|-------|------------------|-----------------------|
@@ -52,34 +35,34 @@ covers individual newer features separately.
 | Docker for Mac Edge  | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
 | Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No    |                  |                       |
 
-Feature-wise production readiness table:
+### Feature Availability 
+
+Beginning with Version 0.3.11 we maintain a production readiness
+state for individual new features, since we expect that new
+features will first be released with an "alpha" or "beta" readiness
+state and over time move to full "production readiness".
 
 | Feature                      | ArangoDB K8s Operator Version         | Production Readiness      | Remarks           |
 |------------------------------|---------------------------------------|---------------------------|-------------------|
 | Pod Disruption Budgets       | 0.3.10                                | new - alpha               |                   |
 |                              | 0.3.11                                | beta                      |                   |
+|                              | 0.4.0                                 | production ready          |                   |
 | Volume Resizing              | 0.3.10                                | new - beta                |                   |
 |                              | 0.3.11                                | beta                      |                   |
 | Disabling of liveness probes | 0.3.10                                | new - beta                |                   |
 |                              | 0.3.11                                | production ready          |                   |
 | Volume Claim Templates       | 0.3.11                                | new - alpha               |                   |
+|                              | 0.4.0                                 | production ready          |                   |
 | Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
+|                              | 0.4.0                                 | production ready          |                   |
 | User sidecar containers      | 0.3.11                                | new - alpha               |                   |
+|                              | 0.4.0                                 | production ready          |                   |
+| [Hot Backup (EE feature)](https://www.arangodb.com/2019/10/arangodb-hot-backup-creating-consistent-cluster-wide-snapshots/      | 0.4.0                                | production ready              |                   |
+| Annotations Customization     | 0.4.2                                 | production ready          |                   |
 
-## Release notes for 0.3.16
+## Deployment 
 
-In this release we have reworked the Helm charts. One notable change is
-that we now create a new service account specifically for the operator.
-The actual deployment still runs by default under the `default` service
-account unless one changes that. Note that the service account under
-which the ArangoDB runs needs a small set of extra permissions. For
-the `default` service account we grant them when the operator is
-deployed. If you use another service account you have to grant these
-permissions yourself. See
-[here](docs/Manual/Deployment/Kubernetes/DeploymentResource.md#specgroupserviceaccountname-string)
-for details.
-
-## Installation of latest release using Kubectl
+### Using Kubectl
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.4.2/manifests/arango-crd.yaml
@@ -93,7 +76,18 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/0.4.2/
 This procedure can also be used for upgrades and will not harm any
 running ArangoDB deployments.
 
-## Installation of latest release using Helm
+### Using Helm v2
+
+In the 0.3.16 release we have reworked the Helm charts. One notable change is
+that we now create a new service account specifically for the operator.
+The actual deployment still runs by default under the `default` service
+account unless one changes that. Note that the service account under
+which the ArangoDB runs needs a small set of extra permissions. For
+the `default` service account we grant them when the operator is
+deployed. If you use another service account you have to grant these
+permissions yourself. See
+[here](docs/Manual/Deployment/Kubernetes/DeploymentResource.md#specgroupserviceaccountname-string)
+for details.
 
 Only use this procedure for a new install of the operator. See below for
 upgrades.
@@ -108,7 +102,7 @@ helm install https://github.com/arangodb/kube-arangodb/releases/download/0.4.2/k
 helm install https://github.com/arangodb/kube-arangodb/releases/download/0.4.2/kube-arangodb-0.4.2.tgz --set "operator.features.storage=true"
 ```
 
-## Upgrading the operator using Helm
+### Upgrading using Helm v2
 
 To upgrade the operator to the latest version with Helm, you have to
 delete the previous deployment and then install the latest. **HOWEVER**:
