@@ -127,7 +127,7 @@ func (c *FakeArangoLocalStorages) DeleteCollection(options *v1.DeleteOptions, li
 // Patch applies the patch and returns the patched arangoLocalStorage.
 func (c *FakeArangoLocalStorages) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha.ArangoLocalStorage, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(arangolocalstoragesResource, name, data, subresources...), &v1alpha.ArangoLocalStorage{})
+		Invokes(testing.NewRootPatchSubresourceAction(arangolocalstoragesResource, name, pt, data, subresources...), &v1alpha.ArangoLocalStorage{})
 	if obj == nil {
 		return nil, err
 	}

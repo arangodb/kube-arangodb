@@ -33,8 +33,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/arangosync/client"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	"github.com/arangodb/arangosync-client/client"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -190,7 +190,7 @@ func (dr *DeploymentReplication) run() {
 // handleArangoDeploymentReplicationUpdatedEvent is called when the deployment replication is updated by the user.
 func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(event *deploymentReplicationEvent) error {
 	log := dr.deps.Log.With().Str("deployoment-replication", event.DeploymentReplication.GetName()).Logger()
-	repls := dr.deps.CRCli.ReplicationV1alpha().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
+	repls := dr.deps.CRCli.ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	// Get the most recent version of the deployment replication from the API server
 	current, err := repls.Get(dr.apiObject.GetName(), metav1.GetOptions{})
@@ -251,7 +251,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 
 	// Send update to API server
 	log := dr.deps.Log
-	repls := dr.deps.CRCli.ReplicationV1alpha().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
+	repls := dr.deps.CRCli.ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 	update := dr.apiObject.DeepCopy()
 	attempt := 0
 	for {
@@ -285,7 +285,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 // On success, d.apiObject is updated.
 func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationSpec) error {
 	log := dr.deps.Log
-	repls := dr.deps.CRCli.ReplicationV1alpha().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
+	repls := dr.deps.CRCli.ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	// Send update to API server
 	update := dr.apiObject.DeepCopy()
@@ -330,7 +330,7 @@ func (dr *DeploymentReplication) failOnError(err error, msg string) {
 func (dr *DeploymentReplication) reportFailedStatus() {
 	log := dr.deps.Log
 	log.Info().Msg("local storage failed. Reporting failed reason...")
-	repls := dr.deps.CRCli.ReplicationV1alpha().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
+	repls := dr.deps.CRCli.ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	op := func() error {
 		dr.status.Phase = api.DeploymentReplicationPhaseFailed

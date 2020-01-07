@@ -23,27 +23,28 @@
 package operator
 
 import (
-	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
 )
 
 // waitForCRD waits for the CustomResourceDefinition (created externally)
 // to be ready.
-func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage bool) error {
+func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage, enableBackup bool) error {
 	log := o.log
 
 	if enableDeployment {
 		log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
-		if err := crd.WaitCRDReady(o.KubeExtCli, deplapi.ArangoDeploymentCRDName); err != nil {
+		if err := crd.WaitCRDReady(o.KubeExtCli, deployment.ArangoDeploymentCRDName); err != nil {
 			return maskAny(err)
 		}
 	}
 
 	if enableDeploymentReplication {
 		log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
-		if err := crd.WaitCRDReady(o.KubeExtCli, replapi.ArangoDeploymentReplicationCRDName); err != nil {
+		if err := crd.WaitCRDReady(o.KubeExtCli, replication.ArangoDeploymentReplicationCRDName); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -51,6 +52,13 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 	if enableStorage {
 		log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
 		if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
+			return maskAny(err)
+		}
+	}
+
+	if enableBackup {
+		log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
+		if err := crd.WaitCRDReady(o.KubeExtCli, backup.ArangoBackupCRDName); err != nil {
 			return maskAny(err)
 		}
 	}

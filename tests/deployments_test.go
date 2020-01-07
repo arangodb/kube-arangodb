@@ -32,7 +32,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 )
 
@@ -82,7 +82,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	require.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
@@ -123,11 +123,11 @@ func TestMultiDeployment(t *testing.T) {
 	depl2.Spec.SetDefaults(depl2.GetName()) // this must be last
 
 	// Create deployments
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl1)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl1)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 	defer deferedCleanupDeployment(c, depl1.GetName(), ns)
 
-	_, err = c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl2)
+	_, err = c.DatabaseV1().ArangoDeployments(ns).Create(depl2)
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 

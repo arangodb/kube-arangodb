@@ -33,7 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -51,7 +51,7 @@ func TestChangeArgsAgents(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestChangeArgsDBServer(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

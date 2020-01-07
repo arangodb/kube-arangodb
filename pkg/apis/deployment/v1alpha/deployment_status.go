@@ -22,7 +22,9 @@
 
 package v1alpha
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
@@ -37,6 +39,12 @@ type DeploymentStatus struct {
 	// SyncServiceName holds the name of the Service a client can use (inside the k8s cluster)
 	// to access syncmasters (only set when dc2dc synchronization is enabled).
 	SyncServiceName string `json:"syncServiceName,omitempty"`
+
+	ExporterServiceName string `json:"exporterServiceName,omitempty"`
+
+	ExporterServiceMonitorName string `json:"exporterServiceMonitorName,omitempty"`
+
+	Restore *DeploymentRestoreResult `json:"restore,omitempty"`
 
 	// Images holds a list of ArangoDB images with their ID and ArangoDB version.
 	Images ImageInfoList `json:"arangodb-images,omitempty"`
@@ -69,7 +77,10 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Reason == other.Reason &&
 		ds.ServiceName == other.ServiceName &&
 		ds.SyncServiceName == other.SyncServiceName &&
+		ds.ExporterServiceName == other.ExporterServiceName &&
+		ds.ExporterServiceMonitorName == other.ExporterServiceMonitorName &&
 		ds.Images.Equal(other.Images) &&
+		ds.Restore.Equal(other.Restore) &&
 		ds.CurrentImage.Equal(other.CurrentImage) &&
 		ds.Members.Equal(other.Members) &&
 		ds.Conditions.Equal(other.Conditions) &&

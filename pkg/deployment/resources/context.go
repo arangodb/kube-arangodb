@@ -27,7 +27,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"

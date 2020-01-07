@@ -32,7 +32,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 )
 
@@ -49,7 +49,7 @@ func TestCursorSingle(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestCursorActiveFailover(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestCursorCluster(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -302,7 +302,7 @@ func runCursorTests(t *testing.T, client driver.Client) {
 		queryTestContext{driver.WithQueryCache(nil), false},
 		queryTestContext{driver.WithQueryCache(nil, true), false},
 		queryTestContext{driver.WithQueryCache(nil, false), false},
-		queryTestContext{driver.WithQueryMemoryLimit(nil, 60000), false},
+		queryTestContext{driver.WithQueryMemoryLimit(nil, 600000), false},
 		queryTestContext{driver.WithQueryTTL(nil, time.Minute), false},
 		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true},
 		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true},

@@ -1,10 +1,46 @@
 # Change Log
 
-## [0.3.11](---) (XXXX-XX-XX)
+## [0.4.2](https://github.com/arangodb/kube-arangodb/tree/0.4.2) (2019-11-12)
+- AntiAffinity for operator pods.
+- Add CRD API v1 with support for v1alpha.
+- Allow to set annotations in ArangoDeployment resources.
+- Add UBI based image.
+
+## [0.4.0](https://github.com/arangodb/kube-arangodb/tree/0.4.0) (2019-10-09)
+- Further helm chart fixes for linter.
+- Support hot backup.
+- Disable scaling buttons if scaling is not possible.
+
+## [0.3.16](https://github.com/arangodb/kube-arangodb/tree/0.3.16) (2019-09-25)
+- Revised helm charts.
+- Use separate service account for operator.
+- Support for ResignLeadership job.
+- Allow to set ImagePullSecrets in pods.
+- Bug fixes.
+
+## [0.3.15]() (never released, only previews existed)
+
+## [0.3.14](https://github.com/arangodb/kube-arangodb/tree/0.3.14) (2019-08-07)
+- Bug fixes for custom sidecars.
+- More tests
+
+## [0.3.13](https://github.com/arangodb/kube-arangodb/tree/0.3.13) (2019-08-02)
+- Added side car changed to pod rotation criterium
+- Added ArangoDB version and image id to member status
+- Fix bug with MemberOfCluster condition
+- Added test for resource change
+
+## [0.3.12](https://github.com/arangodb/kube-arangodb/tree/0.3.12) (2019-07-04)
+- Limit source IP ranges for external services
+
+## [0.3.11](https://github.com/arangodb/kube-arangodb/tree/0.3.11) (2019-06-07)
 - Introduced volume claim templates for all server groups that require volume.
 - Added arangodb-exporter support as sidecar to all arangodb pods.
 - Fixed a bug in the case that all coordinators failed.
-
+- Increase some timeouts in cluster observation.
+- Ignore connection errors when removing servers.
+- Switch to go 1.12 and modules.
+- User sidecars.
 
 ## [0.3.10](https://github.com/arangodb/kube-arangodb/tree/0.3.10) (2019-04-04)
 - Added Pod Disruption Budgets for all server groups in production mode.

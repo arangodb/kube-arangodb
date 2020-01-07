@@ -24,36 +24,28 @@ package k8sutil
 
 import (
 	"fmt"
-	"math"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const (
-	InitDataContainerName           = "init-data"
-	InitLifecycleContainerName      = "init-lifecycle"
 	ServerContainerName             = "server"
 	ExporterContainerName           = "exporter"
-	arangodVolumeName               = "arangod-data"
-	tlsKeyfileVolumeName            = "tls-keyfile"
-	lifecycleVolumeName             = "lifecycle"
-	clientAuthCAVolumeName          = "client-auth-ca"
-	clusterJWTSecretVolumeName      = "cluster-jwt"
-	masterJWTSecretVolumeName       = "master-jwt"
-	rocksdbEncryptionVolumeName     = "rocksdb-encryption"
-	exporterJWTVolumeName           = "exporter-jwt"
+	ArangodVolumeName               = "arangod-data"
+	TlsKeyfileVolumeName            = "tls-keyfile"
+	ClientAuthCAVolumeName          = "client-auth-ca"
+	ClusterJWTSecretVolumeName      = "cluster-jwt"
+	MasterJWTSecretVolumeName       = "master-jwt"
+	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
+	ExporterJWTVolumeName           = "exporter-jwt"
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
-	JWTSecretFileVolumeMountDir     = "/secrets/jwt"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
-	LifecycleVolumeMountDir         = "/lifecycle/tools"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
@@ -67,6 +59,31 @@ type EnvValue struct {
 	SecretKey  string // Key inside secret to fill into the envvar. Only relevant is SecretName is set.
 }
 
+type PodCreator interface {
+	Init(*v1.Pod)
+	GetVolumes() ([]v1.Volume, []v1.VolumeMount)
+	GetSidecars(*v1.Pod)
+	GetInitContainers() ([]v1.Container, error)
+	GetFinalizers() []string
+	GetTolerations() []v1.Toleration
+	GetNodeSelector() map[string]string
+	GetServiceAccountName() string
+	GetAffinityRole() string
+	GetContainerCreator() ContainerCreator
+	GetImagePullSecrets() []string
+	IsDeploymentMode() bool
+}
+
+type ContainerCreator interface {
+	GetExecutor() string
+	GetProbes() (*v1.Probe, *v1.Probe, error)
+	GetResourceRequirements() v1.ResourceRequirements
+	GetLifecycle() (*v1.Lifecycle, error)
+	GetImagePullPolicy() v1.PullPolicy
+	GetImage() string
+	GetEnvs() []v1.EnvVar
+}
+
 // CreateEnvVar creates an EnvVar structure for given key from given EnvValue.
 func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
 	ev := v1.EnvVar{
@@ -75,6 +92,7 @@ func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
 	if ev.Value != "" {
 		ev.Value = v.Value
 	} else if v.SecretName != "" {
+		//return CreateEnvSecretKeySelector(key, v.SecretName, v.SecretKey)
 		ev.ValueFrom = &v1.EnvVarSource{
 			SecretKeyRef: &v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
@@ -199,82 +217,63 @@ func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
 	return CreatePodName(deploymentName, role, id, "-tls-keyfile")
 }
 
-// lifecycleVolumeMounts creates a volume mount structure for shared lifecycle emptyDir.
-func lifecycleVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{Name: lifecycleVolumeName, MountPath: LifecycleVolumeMountDir},
+// ArangodVolumeMount creates a volume mount structure for arangod.
+func ArangodVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      ArangodVolumeName,
+		MountPath: ArangodVolumeMountDir,
 	}
 }
 
-// arangodVolumeMounts creates a volume mount structure for arangod.
-func arangodVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{Name: arangodVolumeName, MountPath: ArangodVolumeMountDir},
+// TlsKeyfileVolumeMount creates a volume mount structure for a TLS keyfile.
+func TlsKeyfileVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      TlsKeyfileVolumeName,
+		MountPath: TLSKeyfileVolumeMountDir,
 	}
 }
 
-// tlsKeyfileVolumeMounts creates a volume mount structure for a TLS keyfile.
-func tlsKeyfileVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      tlsKeyfileVolumeName,
-			MountPath: TLSKeyfileVolumeMountDir,
-		},
+// ClientAuthCACertificateVolumeMount creates a volume mount structure for a client-auth CA certificate (ca.crt).
+func ClientAuthCACertificateVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      ClientAuthCAVolumeName,
+		MountPath: ClientAuthCAVolumeMountDir,
 	}
 }
 
-// clientAuthCACertificateVolumeMounts creates a volume mount structure for a client-auth CA certificate (ca.crt).
-func clientAuthCACertificateVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      clientAuthCAVolumeName,
-			MountPath: ClientAuthCAVolumeMountDir,
-		},
+// MasterJWTVolumeMount creates a volume mount structure for a master JWT secret (token).
+func MasterJWTVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      MasterJWTSecretVolumeName,
+		MountPath: MasterJWTSecretVolumeMountDir,
 	}
 }
 
-// masterJWTVolumeMounts creates a volume mount structure for a master JWT secret (token).
-func masterJWTVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      masterJWTSecretVolumeName,
-			MountPath: MasterJWTSecretVolumeMountDir,
-		},
+// ClusterJWTVolumeMount creates a volume mount structure for a cluster JWT secret (token).
+func ClusterJWTVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      ClusterJWTSecretVolumeName,
+		MountPath: ClusterJWTSecretVolumeMountDir,
 	}
 }
 
-// clusterJWTVolumeMounts creates a volume mount structure for a cluster JWT secret (token).
-func clusterJWTVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      clusterJWTSecretVolumeName,
-			MountPath: ClusterJWTSecretVolumeMountDir,
-		},
+func ExporterJWTVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      ExporterJWTVolumeName,
+		MountPath: ExporterJWTVolumeMountDir,
 	}
 }
 
-func exporterJWTVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      exporterJWTVolumeName,
-			MountPath: ExporterJWTVolumeMountDir,
-		},
+// RocksdbEncryptionVolumeMount creates a volume mount structure for a RocksDB encryption key.
+func RocksdbEncryptionVolumeMount() v1.VolumeMount {
+	return v1.VolumeMount{
+		Name:      RocksdbEncryptionVolumeName,
+		MountPath: RocksDBEncryptionVolumeMountDir,
 	}
 }
 
-// rocksdbEncryptionVolumeMounts creates a volume mount structure for a RocksDB encryption key.
-func rocksdbEncryptionVolumeMounts() []v1.VolumeMount {
-	return []v1.VolumeMount{
-		{
-			Name:      rocksdbEncryptionVolumeName,
-			MountPath: RocksDBEncryptionVolumeMountDir,
-		},
-	}
-}
-
-// arangodInitContainer creates a container configured to
-// initalize a UUID file.
-func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool) v1.Container {
+// ArangodInitContainer creates a container configured to initalize a UUID file.
+func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool) v1.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
 	var command string
@@ -297,9 +296,12 @@ func arangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 			"-c",
 			command,
 		},
-		Name:         name,
-		Image:        alpineImage,
-		VolumeMounts: arangodVolumeMounts(),
+		Name:  name,
+		Image: alpineImage,
+		VolumeMounts: []v1.VolumeMount{
+			ArangodVolumeMount(),
+		},
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	return c
 }
@@ -324,15 +326,23 @@ func ExtractPodResourceRequirement(resources v1.ResourceRequirements) v1.Resourc
 	}
 }
 
-// arangodContainer creates a container configured to run `arangod`.
-func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements, noFilterResources bool) v1.Container {
-	c := v1.Container{
-		Command:         append([]string{"/usr/sbin/arangod"}, args...),
-		Name:            ServerContainerName,
-		Image:           image,
-		ImagePullPolicy: imagePullPolicy,
-		Lifecycle:       lifecycle,
+// NewContainer creates a container for specified creator
+func NewContainer(args []string, containerCreator ContainerCreator) (v1.Container, error) {
+
+	liveness, readiness, err := containerCreator.GetProbes()
+	if err != nil {
+		return v1.Container{}, err
+	}
+
+	lifecycle, err := containerCreator.GetLifecycle()
+	if err != nil {
+		return v1.Container{}, err
+	}
+
+	return v1.Container{
+		Name:    ServerContainerName,
+		Image:   containerCreator.GetImage(),
+		Command: append([]string{containerCreator.GetExecutor()}, args...),
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "server",
@@ -340,64 +350,17 @@ func arangodContainer(image string, imagePullPolicy v1.PullPolicy, args []string
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
-		VolumeMounts: arangodVolumeMounts(),
-	}
-	if noFilterResources {
-		c.Resources = resources // if volumeclaimtemplate is specified
-	} else {
-		c.Resources = ExtractPodResourceRequirement(resources) // Storage is handled via pvcs
-	}
-
-	for k, v := range env {
-		c.Env = append(c.Env, v.CreateEnvVar(k))
-	}
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
-	}
-	if readinessProbe != nil {
-		c.ReadinessProbe = readinessProbe.Create()
-	}
-	if lifecycle != nil {
-		c.Env = append(c.Env, lifecycleEnvVars...)
-		c.VolumeMounts = append(c.VolumeMounts, lifecycleVolumeMounts()...)
-	}
-
-	return c
-}
-
-// arangosyncContainer creates a container configured to run `arangosync`.
-func arangosyncContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig,
-	lifecycle *v1.Lifecycle, lifecycleEnvVars []v1.EnvVar, resources v1.ResourceRequirements) v1.Container {
-	c := v1.Container{
-		Command:         append([]string{"/usr/sbin/arangosync"}, args...),
-		Name:            ServerContainerName,
-		Image:           image,
-		ImagePullPolicy: imagePullPolicy,
+		Env:             containerCreator.GetEnvs(),
+		Resources:       containerCreator.GetResourceRequirements(),
+		LivenessProbe:   liveness,
+		ReadinessProbe:  readiness,
 		Lifecycle:       lifecycle,
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "server",
-				ContainerPort: int32(ArangoPort),
-				Protocol:      v1.ProtocolTCP,
-			},
-		},
-		Resources: resources,
-	}
-	for k, v := range env {
-		c.Env = append(c.Env, v.CreateEnvVar(k))
-	}
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
-	}
-	if lifecycle != nil {
-		c.Env = append(c.Env, lifecycleEnvVars...)
-		c.VolumeMounts = append(c.VolumeMounts, lifecycleVolumeMounts()...)
-	}
-
-	return c
+		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
+		SecurityContext: SecurityContextWithoutCapabilities(),
+	}, nil
 }
 
-func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
+func ArangodbexporterContainer(image string, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
 	c := v1.Container{
 		Command:         append([]string{"/app/arangodb-exporter"}, args...),
 		Name:            ExporterContainerName,
@@ -410,6 +373,7 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
+		SecurityContext: SecurityContextWithoutCapabilities(),
 	}
 	for k, v := range env {
 		c.Env = append(c.Env, v.CreateEnvVar(k))
@@ -420,100 +384,38 @@ func arangodbexporterContainer(image string, imagePullPolicy v1.PullPolicy, args
 	return c
 }
 
-// newLifecycle creates a lifecycle structure with preStop handler.
-func newLifecycle() (*v1.Lifecycle, []v1.EnvVar, []v1.Volume, error) {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return nil, nil, nil, maskAny(err)
-	}
-	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
-	lifecycle := &v1.Lifecycle{
-		PreStop: &v1.Handler{
-			Exec: &v1.ExecAction{
-				Command: append([]string{exePath}, "lifecycle", "preStop"),
-			},
-		},
-	}
-	envVars := []v1.EnvVar{
-		v1.EnvVar{
-			Name: constants.EnvOperatorPodName,
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.name",
-				},
-			},
-		},
-		v1.EnvVar{
-			Name: constants.EnvOperatorPodNamespace,
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "metadata.namespace",
-				},
-			},
-		},
-		v1.EnvVar{
-			Name: constants.EnvOperatorNodeName,
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "spec.nodeName",
-				},
-			},
-		},
-		v1.EnvVar{
-			Name: constants.EnvOperatorNodeNameArango,
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{
-					FieldPath: "spec.nodeName",
-				},
-			},
-		},
-	}
-	vols := []v1.Volume{
-		v1.Volume{
-			Name: lifecycleVolumeName,
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		},
-	}
-	return lifecycle, envVars, vols, nil
-}
+// NewPod creates a basic Pod for given settings.
+func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.Pod {
 
-// initLifecycleContainer creates an init-container to copy the lifecycle binary
-// to a shared volume.
-func initLifecycleContainer(image string) (v1.Container, error) {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return v1.Container{}, maskAny(err)
-	}
-	c := v1.Container{
-		Command:         append([]string{binaryPath}, "lifecycle", "copy", "--target", LifecycleVolumeMountDir),
-		Name:            InitLifecycleContainerName,
-		Image:           image,
-		ImagePullPolicy: v1.PullIfNotPresent,
-		VolumeMounts:    lifecycleVolumeMounts(),
-	}
-	return c, nil
-}
-
-// newPod creates a basic Pod for given settings.
-func newPod(deploymentName, ns, role, id, podName string, finalizers []string, tolerations []v1.Toleration, serviceAccountName string, nodeSelector map[string]string) v1.Pod {
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       podName,
 			Labels:     LabelsForDeployment(deploymentName, role),
-			Finalizers: finalizers,
+			Finalizers: podCreator.GetFinalizers(),
 		},
 		Spec: v1.PodSpec{
 			Hostname:           hostname,
 			Subdomain:          CreateHeadlessServiceName(deploymentName),
 			RestartPolicy:      v1.RestartPolicyNever,
-			Tolerations:        tolerations,
-			ServiceAccountName: serviceAccountName,
-			NodeSelector:       nodeSelector,
+			Tolerations:        podCreator.GetTolerations(),
+			ServiceAccountName: podCreator.GetServiceAccountName(),
+			NodeSelector:       podCreator.GetNodeSelector(),
 		},
 	}
+
+	// Add ImagePullSecrets
+	imagePullSecrets := podCreator.GetImagePullSecrets()
+	if imagePullSecrets != nil {
+		imagePullSecretsReference := make([]v1.LocalObjectReference, len(imagePullSecrets))
+		for id := range imagePullSecrets {
+			imagePullSecretsReference[id] = v1.LocalObjectReference{
+				Name: imagePullSecrets[id],
+			}
+		}
+		p.Spec.ImagePullSecrets = imagePullSecretsReference
+	}
+
 	return p
 }
 
@@ -526,288 +428,78 @@ type ArangodbExporterContainerConf struct {
 	Image              string
 }
 
-// CreateArangodPod creates a Pod that runs `arangod`.
+// CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangodPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject,
-	role, id, podName, pvcName, image, lifecycleImage, alpineImage string, imagePullPolicy v1.PullPolicy,
-	engine string, requireUUID bool, terminationGracePeriod time.Duration,
-	args []string, env map[string]EnvValue, finalizers []string,
-	livenessProbe *HTTPProbeConfig, readinessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, rocksdbEncryptionSecretName string, clusterJWTSecretName string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, exporter *ArangodbExporterContainerConf, sidecars []v1.Container, vct *v1.PersistentVolumeClaim) error {
-
-	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, finalizers, tolerations, serviceAccountName, nodeSelector)
-	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
-	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-
-	// Add lifecycle container
-	var lifecycle *v1.Lifecycle
-	var lifecycleEnvVars []v1.EnvVar
-	var lifecycleVolumes []v1.Volume
-	if lifecycleImage != "" {
-		c, err := initLifecycleContainer(lifecycleImage)
-		if err != nil {
-			return maskAny(err)
-		}
-		p.Spec.InitContainers = append(p.Spec.InitContainers, c)
-		lifecycle, lifecycleEnvVars, lifecycleVolumes, err = newLifecycle()
-		if err != nil {
-			return maskAny(err)
-		}
-	}
-
-	// Add arangod container
-	c := arangodContainer(image, imagePullPolicy, args, env, livenessProbe, readinessProbe, lifecycle, lifecycleEnvVars, resources, vct != nil)
-	if tlsKeyfileSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
-	}
-	if rocksdbEncryptionSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, rocksdbEncryptionVolumeMounts()...)
-	}
-	if clusterJWTSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
-	}
-
-	p.Spec.Containers = append(p.Spec.Containers, c)
-
-	// Add arangodb exporter container
-	if exporter != nil {
-		c = arangodbexporterContainer(exporter.Image, imagePullPolicy, exporter.Args, exporter.Env, exporter.LivenessProbe)
-		if exporter.JWTTokenSecretName != "" {
-			c.VolumeMounts = append(c.VolumeMounts, exporterJWTVolumeMounts()...)
-		}
-		if tlsKeyfileSecretName != "" {
-			c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
-		}
-		p.Spec.Containers = append(p.Spec.Containers, c)
-		p.Labels[LabelKeyArangoExporter] = "yes"
-	}
-
-	// Add sidecars
-	if len(sidecars) > 0 {
-		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
-	}
-
-	// Add priorityClassName
-	p.Spec.PriorityClassName = podPriorityClassName
-
-	// Add UUID init container
-	if alpineImage != "" {
-		p.Spec.InitContainers = append(p.Spec.InitContainers, arangodInitContainer("uuid", id, engine, alpineImage, requireUUID))
-	}
-
-	// Add volume
-	if pvcName != "" {
-		// Create PVC
-		vol := v1.Volume{
-			Name: arangodVolumeName,
-			VolumeSource: v1.VolumeSource{
-				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvcName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	} else {
-		// Create emptydir volume
-		vol := v1.Volume{
-			Name: arangodVolumeName,
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// TLS keyfile secret mount (if any)
-	if tlsKeyfileSecretName != "" {
-		vol := v1.Volume{
-			Name: tlsKeyfileVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsKeyfileSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// RocksDB encryption secret mount (if any)
-	if rocksdbEncryptionSecretName != "" {
-		vol := v1.Volume{
-			Name: rocksdbEncryptionVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: rocksdbEncryptionSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Exporter Token Mount
-	if exporter != nil && exporter.JWTTokenSecretName != "" {
-		vol := v1.Volume{
-			Name: exporterJWTVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: exporter.JWTTokenSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Cluster JWT secret mount (if any)
-	if clusterJWTSecretName != "" {
-		vol := v1.Volume{
-			Name: clusterJWTSecretVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: clusterJWTSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Lifecycle volumes (if any)
-	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
-
-	// Add (anti-)affinity
-	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, "")
-
-	if err := createPod(kubecli, &p, deployment.GetNamespace(), deployment.AsOwner()); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// CreateArangoSyncPod creates a Pod that runs `arangosync`.
-// If the pod already exists, nil is returned.
-// If another error occurs, that error is returned.
-func CreateArangoSyncPod(kubecli kubernetes.Interface, developmentMode bool, deployment APIObject, role, id, podName, image, lifecycleImage string, imagePullPolicy v1.PullPolicy,
-	terminationGracePeriod time.Duration, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig, tolerations []v1.Toleration, serviceAccountName string,
-	tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName, affinityWithRole string, nodeSelector map[string]string,
-	podPriorityClassName string, resources v1.ResourceRequirements, sidecars []v1.Container) error {
-	// Prepare basic pod
-	p := newPod(deployment.GetName(), deployment.GetNamespace(), role, id, podName, nil, tolerations, serviceAccountName, nodeSelector)
-	terminationGracePeriodSeconds := int64(math.Ceil(terminationGracePeriod.Seconds()))
-	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-
-	// Add lifecycle container
-	var lifecycle *v1.Lifecycle
-	var lifecycleEnvVars []v1.EnvVar
-	var lifecycleVolumes []v1.Volume
-	if lifecycleImage != "" {
-		c, err := initLifecycleContainer(lifecycleImage)
-		if err != nil {
-			return maskAny(err)
-		}
-		p.Spec.InitContainers = append(p.Spec.InitContainers, c)
-		lifecycle, lifecycleEnvVars, lifecycleVolumes, err = newLifecycle()
-		if err != nil {
-			return maskAny(err)
-		}
-	}
-
-	// Lifecycle volumes (if any)
-	p.Spec.Volumes = append(p.Spec.Volumes, lifecycleVolumes...)
-
-	// Add arangosync container
-	c := arangosyncContainer(image, imagePullPolicy, args, env, livenessProbe, lifecycle, lifecycleEnvVars, resources)
-	if tlsKeyfileSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, tlsKeyfileVolumeMounts()...)
-	}
-	if clientAuthCASecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, clientAuthCACertificateVolumeMounts()...)
-	}
-	if masterJWTSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, masterJWTVolumeMounts()...)
-	}
-	if clusterJWTSecretName != "" {
-		c.VolumeMounts = append(c.VolumeMounts, clusterJWTVolumeMounts()...)
-	}
-	p.Spec.Containers = append(p.Spec.Containers, c)
-
-	// Add sidecars
-	if len(sidecars) > 0 {
-		p.Spec.Containers = append(p.Spec.Containers, sidecars...)
-	}
-
-	// Add priorityClassName
-	p.Spec.PriorityClassName = podPriorityClassName
-
-	// TLS keyfile secret mount (if any)
-	if tlsKeyfileSecretName != "" {
-		vol := v1.Volume{
-			Name: tlsKeyfileVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsKeyfileSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Client Authentication certificate secret mount (if any)
-	if clientAuthCASecretName != "" {
-		vol := v1.Volume{
-			Name: clientAuthCAVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: clientAuthCASecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Master JWT secret mount (if any)
-	if masterJWTSecretName != "" {
-		vol := v1.Volume{
-			Name: masterJWTSecretVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: masterJWTSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Cluster JWT secret mount (if any)
-	if clusterJWTSecretName != "" {
-		vol := v1.Volume{
-			Name: clusterJWTSecretVolumeName,
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: clusterJWTSecretName,
-				},
-			},
-		}
-		p.Spec.Volumes = append(p.Spec.Volumes, vol)
-	}
-
-	// Add (anti-)affinity
-	p.Spec.Affinity = createAffinity(deployment.GetName(), role, !developmentMode, affinityWithRole)
-
-	if err := createPod(kubecli, &p, deployment.GetNamespace(), deployment.AsOwner()); err != nil {
-		return maskAny(err)
-	}
-	return nil
-}
-
-// createPod adds an owner to the given pod and calls the k8s api-server to created it.
-// If the pod already exists, nil is returned.
-// If another error occurs, that error is returned.
-func createPod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
+func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
 	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
 	if _, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}
 	return nil
+}
+
+func SecurityContextWithoutCapabilities() *v1.SecurityContext {
+	return &v1.SecurityContext{
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+}
+
+func CreateVolumeEmptyDir(name string) v1.Volume {
+	return v1.Volume{
+		Name: name,
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}
+}
+
+func CreateVolumeWithSecret(name, secretName string) v1.Volume {
+	return v1.Volume{
+		Name: name,
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: secretName,
+			},
+		},
+	}
+}
+
+func CreateVolumeWithPersitantVolumeClaim(name, claimName string) v1.Volume {
+	return v1.Volume{
+		Name: name,
+		VolumeSource: v1.VolumeSource{
+			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+				ClaimName: claimName,
+			},
+		},
+	}
+}
+
+func CreateEnvFieldPath(name, fieldPath string) v1.EnvVar {
+	return v1.EnvVar{
+		Name: name,
+		ValueFrom: &v1.EnvVarSource{
+			FieldRef: &v1.ObjectFieldSelector{
+				FieldPath: fieldPath,
+			},
+		},
+	}
+}
+
+func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) v1.EnvVar {
+	return v1.EnvVar{
+		Name:  name,
+		Value: "",
+		ValueFrom: &v1.EnvVarSource{
+			SecretKeyRef: &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: SecretKeyName,
+				},
+				Key: secretKey,
+			},
+		},
+	}
 }

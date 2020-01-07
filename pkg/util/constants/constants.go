@@ -54,6 +54,7 @@ const (
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
+	BackupLabelRole = "backup/role"
 	LabelRole       = "role"
 	LabelRoleLeader = "leader"
 )

@@ -1,0 +1,35 @@
+---
+
+operator:
+  image: arangodb/kube-arangodb:0.4.2
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+  service:
+    type: ClusterIP
+
+  annotations: {}
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  replicaCount: 2
+
+  updateStrategy:
+    type: Recreate
+
+  allowChaos: false
+
+  features:
+    deployment: true
+    deploymentReplications: true
+    storage: false
+    backup: false
+
+rbac:
+  enabled: true

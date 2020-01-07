@@ -27,12 +27,27 @@ import time "time"
 type ServerGroup int
 
 const (
+	ServerGroupUnknown      ServerGroup = 0
 	ServerGroupSingle       ServerGroup = 1
 	ServerGroupAgents       ServerGroup = 2
 	ServerGroupDBServers    ServerGroup = 3
 	ServerGroupCoordinators ServerGroup = 4
 	ServerGroupSyncMasters  ServerGroup = 5
 	ServerGroupSyncWorkers  ServerGroup = 6
+
+	ServerGroupSingleString       = "single"
+	ServerGroupAgentsString       = "agent"
+	ServerGroupDBServersString    = "dbserver"
+	ServerGroupCoordinatorsString = "coordinator"
+	ServerGroupSyncMastersString  = "syncmaster"
+	ServerGroupSyncWorkersString  = "syncworker"
+
+	ServerGroupSingleAbbreviatedString       = "sngl"
+	ServerGroupAgentsAbbreviatedString       = "agnt"
+	ServerGroupDBServersAbbreviatedString    = "prmr"
+	ServerGroupCoordinatorsAbbreviatedString = "crdn"
+	ServerGroupSyncMastersAbbreviatedString  = "syma"
+	ServerGroupSyncWorkersAbbreviatedString  = "sywo"
 )
 
 var (
@@ -51,17 +66,17 @@ var (
 func (g ServerGroup) AsRole() string {
 	switch g {
 	case ServerGroupSingle:
-		return "single"
+		return ServerGroupSingleString
 	case ServerGroupAgents:
-		return "agent"
+		return ServerGroupAgentsString
 	case ServerGroupDBServers:
-		return "dbserver"
+		return ServerGroupDBServersString
 	case ServerGroupCoordinators:
-		return "coordinator"
+		return ServerGroupCoordinatorsString
 	case ServerGroupSyncMasters:
-		return "syncmaster"
+		return ServerGroupSyncMastersString
 	case ServerGroupSyncWorkers:
-		return "syncworker"
+		return ServerGroupSyncWorkersString
 	default:
 		return "?"
 	}
@@ -71,17 +86,17 @@ func (g ServerGroup) AsRole() string {
 func (g ServerGroup) AsRoleAbbreviated() string {
 	switch g {
 	case ServerGroupSingle:
-		return "sngl"
+		return ServerGroupSingleAbbreviatedString
 	case ServerGroupAgents:
-		return "agnt"
+		return ServerGroupAgentsAbbreviatedString
 	case ServerGroupDBServers:
-		return "prmr"
+		return ServerGroupDBServersAbbreviatedString
 	case ServerGroupCoordinators:
-		return "crdn"
+		return ServerGroupCoordinatorsAbbreviatedString
 	case ServerGroupSyncMasters:
-		return "syma"
+		return ServerGroupSyncMastersAbbreviatedString
 	case ServerGroupSyncWorkers:
-		return "sywo"
+		return ServerGroupSyncWorkersAbbreviatedString
 	default:
 		return "?"
 	}
@@ -138,5 +153,45 @@ func (g ServerGroup) IsExportMetrics() bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// ServerGroupFromAbbreviatedRole returns ServerGroup from abbreviated role
+func ServerGroupFromAbbreviatedRole(label string) ServerGroup {
+	switch label {
+	case ServerGroupSingleAbbreviatedString:
+		return ServerGroupSingle
+	case ServerGroupAgentsAbbreviatedString:
+		return ServerGroupAgents
+	case ServerGroupDBServersAbbreviatedString:
+		return ServerGroupDBServers
+	case ServerGroupCoordinatorsAbbreviatedString:
+		return ServerGroupCoordinators
+	case ServerGroupSyncMastersAbbreviatedString:
+		return ServerGroupSyncMasters
+	case ServerGroupSyncWorkersAbbreviatedString:
+		return ServerGroupSyncWorkers
+	default:
+		return ServerGroupUnknown
+	}
+}
+
+// ServerGroupFromAbbreviatedRole returns ServerGroup from role
+func ServerGroupFromRole(label string) ServerGroup {
+	switch label {
+	case ServerGroupSingleString:
+		return ServerGroupSingle
+	case ServerGroupAgentsString:
+		return ServerGroupAgents
+	case ServerGroupDBServersString:
+		return ServerGroupDBServers
+	case ServerGroupCoordinatorsString:
+		return ServerGroupCoordinators
+	case ServerGroupSyncMastersString:
+		return ServerGroupSyncMasters
+	case ServerGroupSyncWorkersString:
+		return ServerGroupSyncWorkers
+	default:
+		return ServerGroupUnknown
 	}
 }

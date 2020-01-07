@@ -32,7 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -43,7 +43,7 @@ import (
 // waitUntilReplicationNotFound waits until a replication resource is deleted
 func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := cli.Replication().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
@@ -71,7 +71,7 @@ func TestSyncSimple(t *testing.T) {
 	depla.Spec.Sync.ExternalAccess.AccessPackageSecretNames = []string{apname}
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depla)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depla)
 	if err != nil {
 		t.Fatalf("Create deployment a failed: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestSyncSimple(t *testing.T) {
 	deplb.Spec.Sync.ExternalAccess.Type = api.NewExternalAccessType(api.ExternalAccessTypeNone)
 
 	// Create deployment
-	_, err = c.DatabaseV1alpha().ArangoDeployments(ns).Create(deplb)
+	_, err = c.DatabaseV1().ArangoDeployments(ns).Create(deplb)
 	if err != nil {
 		t.Fatalf("Create deployment b failed: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestSyncSimple(t *testing.T) {
 	repl.Spec.Source.Authentication.KeyfileSecretName = util.NewString(apname)
 	repl.Spec.Source.TLS.CASecretName = util.NewString(apname)
 	repl.Spec.Destination.DeploymentName = util.NewString(deplb.GetName())
-	_, err = c.ReplicationV1alpha().ArangoDeploymentReplications(ns).Create(repl)
+	_, err = c.ReplicationV1().ArangoDeploymentReplications(ns).Create(repl)
 	if err != nil {
 		t.Fatalf("Create replication resource failed: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestSyncToggleEnabled(t *testing.T) {
 	depl.Spec.Image = util.NewString(img)
 
 	// Create deployment
-	_, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

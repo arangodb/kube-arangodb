@@ -27,8 +27,8 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/golang/glog"
 	"github.com/rs/zerolog"
 )
 
@@ -50,8 +50,6 @@ type Service interface {
 	MustSetLevel(name, level string)
 	// ConfigureRootLogger calls the given callback to modify the root logger.
 	ConfigureRootLogger(cb func(rootLog zerolog.Logger) zerolog.Logger)
-	// CaptureGLog configures glog to write to the given logger
-	CaptureGLog(log zerolog.Logger)
 }
 
 // loggingService implements Service
@@ -65,8 +63,9 @@ type loggingService struct {
 // NewRootLogger creates a new zerolog logger with default settings.
 func NewRootLogger() zerolog.Logger {
 	return zerolog.New(zerolog.ConsoleWriter{
-		Out:     os.Stdout,
-		NoColor: true,
+		Out:        os.Stdout,
+		TimeFormat: time.RFC3339Nano,
+		NoColor:    true,
 	}).With().Timestamp().Logger()
 }
 
@@ -94,24 +93,6 @@ func (s *loggingService) ConfigureRootLogger(cb func(rootLog zerolog.Logger) zer
 	defer s.mutex.Unlock()
 
 	s.rootLog = cb(s.rootLog)
-}
-
-// CaptureGLog configures glog to write to the given logger
-func (s *loggingService) CaptureGLog(log zerolog.Logger) {
-	glog.RedirectOutput(func(level glog.LogLevel, msg string) {
-		var e *zerolog.Event
-		switch level {
-		case glog.LogLevelWarning:
-			e = log.WithLevel(zerolog.WarnLevel)
-		case glog.LogLevelError:
-			e = log.WithLevel(zerolog.ErrorLevel)
-		case glog.LogLevelFatal:
-			e = log.WithLevel(zerolog.FatalLevel)
-		default:
-			e = log.WithLevel(zerolog.InfoLevel)
-		}
-		e.Msg(msg)
-	})
 }
 
 // MustGetLogger creates a logger with given name

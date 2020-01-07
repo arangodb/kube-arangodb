@@ -36,6 +36,8 @@ const (
 	MemberPhaseCleanOut MemberPhase = "CleanOut"
 	// MemberPhaseDrain indicates that a dbserver is in the process of being cleaned out as result of draining a node
 	MemberPhaseDrain MemberPhase = "Drain"
+	// MemberPhaseResign indicates that a dbserver is in the process of resigning for a shutdown
+	MemberPhaseResign MemberPhase = "Resign"
 	// MemberPhaseShuttingDown indicates that a member is shutting down
 	MemberPhaseShuttingDown MemberPhase = "ShuttingDown"
 	// MemberPhaseRotating indicates that a member is being rotated

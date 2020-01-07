@@ -26,29 +26,22 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/api/storage/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
+	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
 var (
-	annStorageClassIsDefault = []string{
-		// Make sure first entry is the one we'll put in
-		"storageclass.kubernetes.io/is-default-class",
-		"storageclass.beta.kubernetes.io/is-default-class",
-	}
+	annStorageClassIsDefault = "storageclass.kubernetes.io/is-default-class"
 )
 
 // StorageClassIsDefault returns true if the given storage class is marked default,
 // false otherwise.
 func StorageClassIsDefault(sc *v1.StorageClass) bool {
-	for _, key := range annStorageClassIsDefault {
-		if value, found := sc.GetObjectMeta().GetAnnotations()[key]; found {
-			if boolValue, err := strconv.ParseBool(value); err == nil && boolValue {
-				return true
-			}
+	if value, found := sc.GetObjectMeta().GetAnnotations()[annStorageClassIsDefault]; found {
+		if boolValue, err := strconv.ParseBool(value); err == nil && boolValue {
+			return true
 		}
 	}
 	return false
@@ -70,11 +63,9 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		if ann == nil {
 			ann = make(map[string]string)
 		}
-		for _, key := range annStorageClassIsDefault {
-			delete(ann, key)
-		}
-		ann[annStorageClassIsDefault[0]] = strconv.FormatBool(isDefault)
+		ann[annStorageClassIsDefault] = strconv.FormatBool(isDefault)
 		current.SetAnnotations(ann)
+
 		// Save StorageClass
 		if _, err := stcs.Update(current); IsConflict(err) {
 			// StorageClass has been modified since we read it

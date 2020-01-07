@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -47,13 +47,21 @@ func validatePullPolicy(v v1.PullPolicy) error {
 
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
-	Mode            *DeploymentMode `json:"mode,omitempty"`
-	Environment     *Environment    `json:"environment,omitempty"`
-	StorageEngine   *StorageEngine  `json:"storageEngine,omitempty"`
-	Image           *string         `json:"image,omitempty"`
-	ImagePullPolicy *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
-	DowntimeAllowed *bool           `json:"downtimeAllowed,omitempty"`
-	DisableIPv6     *bool           `json:"disableIPv6,omitempty"`
+	Mode             *DeploymentMode `json:"mode,omitempty"`
+	Environment      *Environment    `json:"environment,omitempty"`
+	StorageEngine    *StorageEngine  `json:"storageEngine,omitempty"`
+	Image            *string         `json:"image,omitempty"`
+	ImagePullPolicy  *v1.PullPolicy  `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []string        `json:"imagePullSecrets,omitempty"`
+	DowntimeAllowed  *bool           `json:"downtimeAllowed,omitempty"`
+	DisableIPv6      *bool           `json:"disableIPv6,omitempty"`
+
+	NetworkAttachedVolumes *bool `json:"networkAttachedVolumes,omitempty"`
+
+	// Annotations specified the annotations added to Pods in this group.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	RestoreFrom *string `json:"restoreFrom,omitempty"`
 
 	ExternalAccess ExternalAccessSpec `json:"externalAccess"`
 	RocksDB        RocksDBSpec        `json:"rocksdb"`
@@ -72,7 +80,17 @@ type DeploymentSpec struct {
 
 	Chaos ChaosSpec `json:"chaos"`
 
-	Bootstrap BootstrapSpec `json:"bootstrap",omitempty`
+	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
+}
+
+// GetRestoreFrom returns the restore from string or empty string if not set
+func (s *DeploymentSpec) GetRestoreFrom() string {
+	return util.StringOrDefault(s.RestoreFrom)
+}
+
+// HasRestoreFrom returns true if RestoreFrom is set
+func (s *DeploymentSpec) HasRestoreFrom() bool {
+	return s.RestoreFrom != nil
 }
 
 // Equal compares two DeploymentSpec
@@ -88,6 +106,11 @@ func (s DeploymentSpec) GetMode() DeploymentMode {
 // GetEnvironment returns the value of environment.
 func (s DeploymentSpec) GetEnvironment() Environment {
 	return EnvironmentOrDefault(s.Environment)
+}
+
+// GetAnnotations returns the annotations of this group
+func (s DeploymentSpec) GetAnnotations() map[string]string {
+	return s.Annotations
 }
 
 // GetStorageEngine returns the value of storageEngine.
@@ -121,6 +144,11 @@ func (s DeploymentSpec) IsDowntimeAllowed() bool {
 // IsDisableIPv6 returns the value of disableIPv6.
 func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
+}
+
+// IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default false
+func (s DeploymentSpec) IsNetworkAttachedVolumes() bool {
+	return util.BoolOrDefault(s.NetworkAttachedVolumes, false)
 }
 
 // GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6
@@ -159,6 +187,25 @@ func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {
 		return s.SyncWorkers
 	default:
 		return ServerGroupSpec{}
+	}
+}
+
+// UpdateServerGroupSpec returns the server group spec (from this
+// deployment spec) for the given group.
+func (s *DeploymentSpec) UpdateServerGroupSpec(group ServerGroup, gspec ServerGroupSpec) {
+	switch group {
+	case ServerGroupSingle:
+		s.Single = gspec
+	case ServerGroupAgents:
+		s.Agents = gspec
+	case ServerGroupDBServers:
+		s.DBServers = gspec
+	case ServerGroupCoordinators:
+		s.Coordinators = gspec
+	case ServerGroupSyncMasters:
+		s.SyncMasters = gspec
+	case ServerGroupSyncWorkers:
+		s.SyncWorkers = gspec
 	}
 }
 

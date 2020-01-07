@@ -26,7 +26,7 @@ import (
 	"context"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // Context provides methods to the resilience package.

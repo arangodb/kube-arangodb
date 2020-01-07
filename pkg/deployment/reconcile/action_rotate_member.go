@@ -26,7 +26,7 @@ import (
 	"context"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -89,6 +89,7 @@ func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Update status
 	m.Phase = api.MemberPhaseRotating
+
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, maskAny(err)
 	}

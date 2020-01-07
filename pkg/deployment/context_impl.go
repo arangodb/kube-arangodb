@@ -28,20 +28,26 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/arangodb/arangosync/client"
-	"github.com/arangodb/arangosync/tasks"
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog/log"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
+
+// GetBackup receives information about a backup resource
+func (d *Deployment) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(backup, metav1.GetOptions{})
+}
 
 // GetAPIObject returns the deployment as k8s object.
 func (d *Deployment) GetAPIObject() k8sutil.APIObject {
@@ -82,6 +88,11 @@ func (d *Deployment) GetPhase() api.DeploymentPhase {
 // GetSpec returns the current specification
 func (d *Deployment) GetSpec() api.DeploymentSpec {
 	return d.apiObject.Spec
+}
+
+// GetDeploymentHealth returns a copy of the latest known state of cluster health
+func (d *Deployment) GetDeploymentHealth() (driver.ClusterHealth, error) {
+	return d.resources.GetDeploymentHealth()
 }
 
 // GetStatus returns the current status of the deployment
@@ -245,7 +256,7 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 func (d *Deployment) DeletePod(podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.Core().Pods(ns).Delete(podName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return maskAny(err)
 	}
@@ -260,7 +271,7 @@ func (d *Deployment) CleanupPod(p v1.Pod) error {
 	ns := p.GetNamespace()
 	options := metav1.NewDeleteOptions(0)
 	options.Preconditions = metav1.NewUIDPreconditions(string(p.GetUID()))
-	if err := d.deps.KubeCli.Core().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return maskAny(err)
 	}
@@ -291,7 +302,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 func (d *Deployment) DeletePvc(pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.Core().PersistentVolumeClaims(ns).Delete(pvcName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return maskAny(err)
 	}

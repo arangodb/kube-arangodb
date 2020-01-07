@@ -25,14 +25,30 @@ package k8sutil
 import (
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestCreateAffinity tests createAffinity
 func TestCreateAffinity(t *testing.T) {
+	expectedNodeAffinity := &v1.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+			NodeSelectorTerms: []v1.NodeSelectorTerm{
+				{
+					MatchExpressions: []v1.NodeSelectorRequirement{
+						{
+							Key:      "beta.kubernetes.io/arch",
+							Operator: "In",
+							Values:   []string{"amd64"},
+						},
+					},
+				},
+			},
+		},
+	}
 	// Required
-	a := createAffinity("test", "role", true, "")
+	a := CreateAffinity("test", "role", true, "")
 	assert.Nil(t, a.PodAffinity)
 	require.NotNil(t, a.PodAntiAffinity)
 	require.Len(t, a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 1)
@@ -42,9 +58,10 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "role", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Require & affinity with role dbserver
-	a = createAffinity("test", "role", true, "dbserver")
+	a = CreateAffinity("test", "role", true, "dbserver")
 	require.NotNil(t, a.PodAffinity)
 	require.Len(t, a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 1)
 	assert.Len(t, a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, 0)
@@ -53,6 +70,7 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "dbserver", a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	require.NotNil(t, a.PodAntiAffinity)
 	require.Len(t, a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 1)
@@ -62,9 +80,10 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "role", a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Not Required
-	a = createAffinity("test", "role", false, "")
+	a = CreateAffinity("test", "role", false, "")
 	assert.Nil(t, a.PodAffinity)
 	require.NotNil(t, a.PodAntiAffinity)
 	assert.Len(t, a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 0)
@@ -74,9 +93,10 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "role", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	// Not Required & affinity with role dbserver
-	a = createAffinity("test", "role", false, "dbserver")
+	a = CreateAffinity("test", "role", false, "dbserver")
 	require.NotNil(t, a.PodAffinity)
 	require.Len(t, a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, 1)
 	assert.Len(t, a.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, 0)
@@ -85,6 +105,7 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "dbserver", a.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 
 	require.NotNil(t, a.PodAntiAffinity)
 	require.Len(t, a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, 1)
@@ -94,4 +115,5 @@ func TestCreateAffinity(t *testing.T) {
 	assert.Equal(t, "test", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["arango_deployment"])
 	assert.Equal(t, "arangodb", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["app"])
 	assert.Equal(t, "role", a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchLabels["role"])
+	assert.Equal(t, expectedNodeAffinity, a.NodeAffinity)
 }

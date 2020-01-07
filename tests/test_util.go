@@ -26,19 +26,22 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	"net"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/arangosync/client"
-	"github.com/arangodb/arangosync/tasks"
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
 	vst "github.com/arangodb/go-driver/vst"
 	vstProtocol "github.com/arangodb/go-driver/vst/protocol"
@@ -47,8 +50,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
-	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	cl "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -157,7 +161,8 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 	return image
 }
 
-const TestEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+const testEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
+const testBackupRemoteSecretName = "arangodb-backup-remote-secret"
 
 func getEnterpriseLicenseKey() string {
 	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
@@ -243,7 +248,7 @@ func newReplication(name string) *rapi.ArangoDeploymentReplication {
 	repl := &rapi.ArangoDeploymentReplication{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rapi.SchemeGroupVersion.String(),
-			Kind:       rapi.ArangoDeploymentReplicationResourceKind,
+			Kind:       replication.ArangoDeploymentReplicationResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
@@ -259,7 +264,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 	depl := &api.ArangoDeployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: api.SchemeGroupVersion.String(),
-			Kind:       api.ArangoDeploymentResourceKind,
+			Kind:       deployment.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(name),
@@ -267,7 +272,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 		Spec: api.DeploymentSpec{
 			ImagePullPolicy: util.NewPullPolicy(v1.PullAlways),
 			License: api.LicenseSpec{
-				SecretName: util.NewString(TestEnterpriseLicenseKeySecretName),
+				SecretName: util.NewString(testEnterpriseLicenseKeySecretName),
 			},
 		},
 	}
@@ -294,7 +299,7 @@ func newDeployment(name string) *api.ArangoDeployment {
 func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, predicate func(*api.ArangoDeployment) error, timeout ...time.Duration) (*api.ArangoDeployment, error) {
 	var result *api.ArangoDeployment
 	op := func() error {
-		obj, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		obj, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -323,6 +328,56 @@ func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate 
 	var result *v1.Secret
 	op := func() error {
 		obj, err := cli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+		if err != nil {
+			result = nil
+			return maskAny(err)
+		}
+		result = obj
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
+// waitUntilService waits until a service with given name in given
+// namespace exists and has reached a state where the given predicate
+// returns nil.
+func waitUntilService(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Service) error, timeout time.Duration) (*v1.Service, error) {
+	var result *v1.Service
+	op := func() error {
+		obj, err := cli.CoreV1().Services(ns).Get(serviceName, metav1.GetOptions{})
+		if err != nil {
+			result = nil
+			return maskAny(err)
+		}
+		result = obj
+		if predicate != nil {
+			if err := predicate(obj); err != nil {
+				return maskAny(err)
+			}
+		}
+		return nil
+	}
+	if err := retry.Retry(op, timeout); err != nil {
+		return nil, maskAny(err)
+	}
+	return result, nil
+}
+
+// waitUntilEndpoints waits until an endpoints resource with given name
+// in given namespace exists and has reached a state where the given
+// predicate returns nil.
+func waitUntilEndpoints(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Endpoints) error, timeout time.Duration) (*v1.Endpoints, error) {
+	var result *v1.Endpoints
+	op := func() error {
+		obj, err := cli.CoreV1().Endpoints(ns).Get(serviceName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -508,6 +563,55 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 	}
 }
 
+// clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
+func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+
+	c := cl.MustNewInCluster()
+	ns := getNamespace(t)
+
+	var noGood int
+	for start := time.Now(); time.Since(start) < 600*time.Second; {
+
+		// Fetch latest status so we know all member details
+		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Failed to get deployment: %v", err)
+		}
+
+		// How many pods not matching
+		noGood = 0
+
+		// Check member after another
+		apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+			for _, m := range *status {
+				if len(m.SideCarSpecs) != len(spec.GetSidecars()) {
+					noGood++
+					continue
+				}
+				for _, scar := range spec.GetSidecars() {
+					mcar, found := m.SideCarSpecs[scar.Name]
+					if found {
+						if !reflect.DeepEqual(mcar, scar) {
+							noGood++
+						}
+					} else {
+						noGood++
+					}
+				}
+			}
+			return nil
+		}, &apiObject.Status)
+
+		if noGood == 0 {
+			return nil
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	return maskAny(fmt.Errorf("%d pods with unmatched sidecars", noGood))
+}
+
 // clusterHealthEqualsSpec returns nil when the given health matches
 // with the given deployment spec.
 func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) error {
@@ -541,12 +645,12 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 func updateDeployment(cli versioned.Interface, deploymentName, ns string, update func(*api.DeploymentSpec)) (*api.ArangoDeployment, error) {
 	for {
 		// Get current version
-		current, err := cli.Database().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		current, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 		update(&current.Spec)
-		current, err = cli.Database().ArangoDeployments(ns).Update(current)
+		current, err = cli.DatabaseV1().ArangoDeployments(ns).Update(current)
 		if k8sutil.IsConflict(err) {
 			// Retry
 		} else if err != nil {
@@ -558,7 +662,7 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
-	if err := cli.Database().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.DatabaseV1().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -566,7 +670,7 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 
 // removeReplication removes a deployment
 func removeReplication(cli versioned.Interface, replicationName, ns string) error {
-	if err := cli.Replication().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -712,4 +816,41 @@ func testServerRole(ctx context.Context, client driver.Client, expectedRole driv
 		return maskAny(err)
 	}
 	return nil
+}
+
+func getPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.ArangoDeployment) map[string]metav1.Time {
+	ns := getNamespace(t)
+	podCreationTimes := make(map[string]metav1.Time)
+	depl.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+		fmt.Printf("Looking at group %s with %d pods...\n", group.AsRole(), len(*status))
+		for _, m := range *status {
+			// Get pod:
+			fmt.Printf("Looking at pod %s...\n", m.PodName)
+			pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+			// Simply ignore error and skip pod:
+			if err == nil {
+				fmt.Printf("Found creation time of %v for pod %s\n", pod.GetCreationTimestamp(), m.PodName)
+				podCreationTimes[m.PodName] = pod.GetCreationTimestamp()
+			} else {
+				fmt.Printf("Could not get pod %s error: %v\n", m.PodName, err)
+			}
+		}
+		return nil
+	}, &depl.Status)
+	return podCreationTimes
+}
+
+func checkPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.ArangoDeployment, times map[string]metav1.Time) {
+	foundTimes := getPodCreationTimes(t, kubecli, depl)
+	for name, timestamp := range times {
+		ti, found := foundTimes[name]
+		if !found {
+			t.Errorf("Did not find pod %s any more in creation time check!", name)
+		} else if ti != timestamp {
+			t.Errorf("Pod %s has been rotated unexpectedly in creation time check!", name)
+		}
+	}
+	if len(foundTimes) != len(times) {
+		t.Errorf("Number of pods found (%d) in creation time check does not match expected %d!", len(foundTimes), len(times))
+	}
 }

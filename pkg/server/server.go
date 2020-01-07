@@ -29,12 +29,12 @@ import (
 	"strings"
 	"time"
 
-	certificates "github.com/arangodb-helper/go-certificates"
+	"github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
-	assets "github.com/jessevdk/go-assets"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/jessevdk/go-assets"
+	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
@@ -54,15 +54,21 @@ type Config struct {
 	AllowAnonymous     bool   // If set, anonymous access to dashboard is allowed
 }
 
+type OperatorDependency struct {
+	Enabled bool
+	Probe *probe.ReadyProbe
+}
+
 // Dependencies of the Server
 type Dependencies struct {
-	Log                        zerolog.Logger
-	LivenessProbe              *probe.LivenessProbe
-	DeploymentProbe            *probe.ReadyProbe
-	DeploymentReplicationProbe *probe.ReadyProbe
-	StorageProbe               *probe.ReadyProbe
-	Operators                  Operators
-	Secrets                    corev1.SecretInterface
+	Log                   zerolog.Logger
+	LivenessProbe         *probe.LivenessProbe
+	Deployment            OperatorDependency
+	DeploymentReplication OperatorDependency
+	Storage               OperatorDependency
+	Backup                OperatorDependency
+	Operators             Operators
+	Secrets               corev1.SecretInterface
 }
 
 // Operators is the API provided to the server for accessing the various operators.
@@ -102,13 +108,13 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		if err != nil {
 			return nil, maskAny(err)
 		}
-		certBytes, found := s.Data[v1.TLSCertKey]
+		certBytes, found := s.Data[core.TLSCertKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", v1.TLSCertKey, cfg.TLSSecretName))
+			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
 		}
-		keyBytes, found := s.Data[v1.TLSPrivateKeyKey]
+		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", v1.TLSPrivateKeyKey, cfg.TLSSecretName))
+			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
 		}
 		cert = string(certBytes)
 		key = string(keyBytes)
@@ -144,12 +150,25 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	}
 
 	// Build router
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.GET("/health", gin.WrapF(deps.LivenessProbe.LivenessHandler))
-	r.GET("/ready/deployment", gin.WrapF(deps.DeploymentProbe.ReadyHandler))
-	r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplicationProbe.ReadyHandler))
-	r.GET("/ready/storage", gin.WrapF(deps.StorageProbe.ReadyHandler))
+
+	var readyProbes []*probe.ReadyProbe
+	if deps.Deployment.Enabled {
+		r.GET("/ready/deployment", gin.WrapF(deps.Deployment.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Deployment.Probe)
+	}
+	if deps.DeploymentReplication.Enabled {
+		r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplication.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.DeploymentReplication.Probe)
+	}
+	if deps.Storage.Enabled {
+		r.GET("/ready/storage", gin.WrapF(deps.Storage.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Storage.Probe)
+	}
+	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
 	r.POST("/login", s.auth.handleLogin)
 	api := r.Group("/api", s.auth.checkAuthentication)
@@ -207,4 +226,17 @@ func createTLSConfig(cert, key string) (*tls.Config, error) {
 		Certificates: []tls.Certificate{c},
 	}
 	return result, nil
+}
+
+func ready(probes ... *probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		for _, probe := range probes  {
+			if !probe.IsReady() {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
 }

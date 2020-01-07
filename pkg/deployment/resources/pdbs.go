@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,7 +84,7 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int) error {
 	deplname := r.context.GetAPIObject().GetName()
 	pdbname := PDBNameForGroup(deplname, group)
-	pdbcli := r.context.GetKubeCli().Policy().PodDisruptionBudgets(r.context.GetNamespace())
+	pdbcli := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace())
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

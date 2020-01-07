@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -285,7 +285,7 @@ func (r *Resources) GetExpectedPodArguments(apiObject metav1.Object, deplSpec ap
 	}
 	if group.IsArangosync() {
 		groupSpec := deplSpec.GetServerGroupSpec(group)
-		return createArangoSyncArgs(apiObject, deplSpec, group, groupSpec, agents, id)
+		return createArangoSyncArgs(apiObject, deplSpec, group, groupSpec, id)
 	}
 	return nil
 }

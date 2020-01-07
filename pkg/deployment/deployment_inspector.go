@@ -26,7 +26,7 @@ import (
 	"context"
 	"time"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -55,7 +55,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
 	// Check deployment still exists
-	updated, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(deploymentName, metav1.GetOptions{})
+	updated, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(deploymentName, metav1.GetOptions{})
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")
@@ -152,6 +152,13 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
 		}
+		if d.haveServiceMonitorCRD {
+			if err := d.resources.EnsureServiceMonitor(); err != nil {
+				hasError = true
+				d.CreateEvent(k8sutil.NewErrorEvent("Service monitor creation failed", err, d.apiObject))
+			}
+		}
+
 		if err := d.resources.EnsurePVCs(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
@@ -163,6 +170,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		if err := d.resources.EnsurePDBs(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("PDB creation failed", err, d.apiObject))
+		}
+
+		if err := d.resources.EnsureAnnotations(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Annotation update failed", err, d.apiObject))
 		}
 
 		// Create access packages
@@ -181,6 +193,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		if err := d.resources.CleanupRemovedMembers(); err != nil {
 			hasError = true
 			d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
+		}
+
+		if err := d.backup.CheckRestore(); err != nil {
+			hasError = true
+			d.CreateEvent(k8sutil.NewErrorEvent("Restore operation failed", err, d.apiObject))
 		}
 
 		// At the end of the inspect, we cleanup terminated pods.
@@ -207,4 +224,9 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 // triggerInspection ensures that an inspection is run soon.
 func (d *Deployment) triggerInspection() {
 	d.inspectTrigger.Trigger()
+}
+
+// triggerCRDInspection ensures that an inspection is run soon.
+func (d *Deployment) triggerCRDInspection() {
+	d.inspectCRDTrigger.Trigger()
 }

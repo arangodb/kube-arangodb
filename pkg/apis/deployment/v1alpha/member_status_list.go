@@ -41,7 +41,7 @@ func (l MemberStatusList) Equal(other MemberStatusList) bool {
 	}
 
 	for i := 0; i < len(l); i++ {
-		o, found := l.ElementByID(l[i].ID)
+		o, found := other.ElementByID(l[i].ID)
 		if !found {
 			return false
 		}

@@ -30,8 +30,8 @@ import (
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/arangosync/client"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	"github.com/arangodb/arangosync-client/client"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -98,7 +98,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 	// Inspect deployment deletion state in source
 	abort := dr.status.CancelFailures > maxCancelFailures
-	depls := dr.deps.CRCli.DatabaseV1alpha().ArangoDeployments(p.GetNamespace())
+	depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
@@ -167,7 +167,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 // removeDeploymentReplicationFinalizers removes the given finalizers from the given DeploymentReplication.
 func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
-	repls := crcli.ReplicationV1alpha().ArangoDeploymentReplications(p.GetNamespace())
+	repls := crcli.ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		result, err := repls.Get(p.GetName(), metav1.GetOptions{})
 		if err != nil {

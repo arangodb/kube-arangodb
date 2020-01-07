@@ -28,14 +28,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/arangodb/arangosync/client"
+	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/backup"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
@@ -59,6 +61,7 @@ type Config struct {
 type Dependencies struct {
 	Log           zerolog.Logger
 	KubeCli       kubernetes.Interface
+	KubeExtCli    apiextensionsclient.Interface
 	DatabaseCRCli versioned.Interface
 	EventRecorder record.EventRecorder
 }
@@ -98,6 +101,7 @@ type Deployment struct {
 	stopped int32
 
 	inspectTrigger            trigger.Trigger
+	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               *clientCache
 	recentInspectionErrors    int
@@ -105,8 +109,10 @@ type Deployment struct {
 	reconciler                *reconcile.Reconciler
 	resilience                *resilience.Resilience
 	resources                 *resources.Resources
+	backup                    *backup.BackupHandler
 	chaosMonkey               *chaos.Monkey
 	syncClientCache           client.ClientCache
+	haveServiceMonitorCRD     bool
 }
 
 // New creates a new Deployment from the given API object.
@@ -126,6 +132,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	d.resilience = resilience.NewResilience(deps.Log, d)
 	d.resources = resources.NewResources(deps.Log, d)
+	d.backup = backup.NewHandler(deps.Log, d)
 	if d.status.last.AcceptedSpec == nil {
 		// We've validated the spec, so let's use it from now.
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
@@ -136,6 +143,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	go d.listenForPVCEvents(d.stopCh)
 	go d.listenForSecretEvents(d.stopCh)
 	go d.listenForServiceEvents(d.stopCh)
+	go d.listenForCRDEvents(d.stopCh)
 	if apiObject.Spec.GetMode() == api.DeploymentModeCluster {
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
@@ -201,6 +209,13 @@ func (d *Deployment) run() {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create services", err, d.GetAPIObject()))
 		}
 
+		// Create service monitor
+		if d.haveServiceMonitorCRD {
+			if err := d.resources.EnsureServiceMonitor(); err != nil {
+				d.CreateEvent(k8sutil.NewErrorEvent("Failed to create service monitor", err, d.GetAPIObject()))
+			}
+		}
+
 		// Create members
 		if err := d.createInitialMembers(d.apiObject); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
@@ -228,6 +243,12 @@ func (d *Deployment) run() {
 		}
 		log.Info().Msg("start running...")
 	}
+
+	if err := d.resources.EnsureAnnotations(); err != nil {
+		log.Warn().Err(err).Msg("unable to update annotations")
+	}
+
+	d.lookForServiceMonitorCRD()
 
 	inspectionInterval := maxInspectionInterval
 	for {
@@ -258,6 +279,8 @@ func (d *Deployment) run() {
 			inspectionInterval = d.inspectDeployment(inspectionInterval)
 			log.Debug().Str("interval", inspectionInterval.String()).Msg("...inspected deployment")
 
+		case <-d.inspectCRDTrigger.Done():
+			d.lookForServiceMonitorCRD()
 		case <-d.updateDeploymentTrigger.Done():
 			inspectionInterval = minInspectionInterval
 			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
@@ -278,7 +301,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	current, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -363,7 +386,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 
 	// Send update to API server
 	ns := d.apiObject.GetNamespace()
-	depls := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns)
+	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns)
 	update := d.apiObject.DeepCopy()
 	attempt := 0
 	for {
@@ -416,7 +439,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 		update.Spec = newSpec
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Update(update)
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(update)
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -426,7 +449,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -466,7 +489,7 @@ func (d *Deployment) reportFailedStatus() {
 			return maskAny(err)
 		}
 
-		depl, err := d.deps.DatabaseCRCli.DatabaseV1alpha().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
+		depl, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
@@ -491,4 +514,30 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 		return false
 	}
 	return ownerRefs[0].UID == d.apiObject.UID
+}
+
+// lookForServiceMonitorCRD checks if there is a CRD for the ServiceMonitor
+// CR and sets the flag haveServiceMonitorCRD accordingly. This is called
+// once at creation time of the deployment and then always if the CRD
+// informer is triggered.
+func (d *Deployment) lookForServiceMonitorCRD() {
+	_, err := d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+	log := d.deps.Log
+	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
+	if err == nil {
+		if !d.haveServiceMonitorCRD {
+			log.Info().Msgf("...have discovered ServiceMonitor CRD")
+		}
+		d.haveServiceMonitorCRD = true
+		d.triggerInspection()
+		return
+	} else if k8sutil.IsNotFound(err) {
+		if d.haveServiceMonitorCRD {
+			log.Info().Msgf("...ServiceMonitor CRD no longer there")
+		}
+		d.haveServiceMonitorCRD = false
+		return
+	}
+	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
+	return
 }

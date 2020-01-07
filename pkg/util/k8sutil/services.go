@@ -29,13 +29,14 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ServiceInterface has methods to work with Service resources.
 type ServiceInterface interface {
 	Create(*v1.Service) (*v1.Service, error)
+	Update(*v1.Service) (*v1.Service, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	Get(name string, options metav1.GetOptions) (*v1.Service, error)
 }
@@ -64,6 +65,45 @@ func CreateSyncMasterClientServiceName(deploymentName string) string {
 	return deploymentName + "-sync"
 }
 
+// CreateExporterClientServiceName returns the name of the service used by arangodb-exporter clients for the given
+// deployment name.
+func CreateExporterClientServiceName(deploymentName string) string {
+	return deploymentName + "-exporter"
+}
+
+// CreateExporterService
+func CreateExporterService(svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+	deploymentName := deployment.GetName()
+	svcName := CreateExporterClientServiceName(deploymentName)
+
+	selectorLabels := LabelsForExporterServiceSelector(deploymentName)
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   svcName,
+			Labels: LabelsForExporterService(deploymentName),
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: v1.ClusterIPNone,
+			Ports: []v1.ServicePort{
+				v1.ServicePort{
+					Name:     "exporter",
+					Protocol: v1.ProtocolTCP,
+					Port:     ArangoExporterPort,
+				},
+			},
+			Selector: selectorLabels,
+		},
+	}
+	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
+	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
+		return svcName, false, nil
+	} else if err != nil {
+		return svcName, false, maskAny(err)
+	}
+	return svcName, true, nil
+}
+
 // CreateHeadlessService prepares and creates a headless service in k8s, used to provide a stable
 // DNS name for all pods.
 // If the service already exists, nil is returned.
@@ -81,7 +121,7 @@ func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owne
 	}
 	publishNotReadyAddresses := true
 	serviceType := v1.ServiceTypeClusterIP
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, maskAny(err)
 	}
@@ -110,7 +150,7 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 	}
 	serviceType := v1.ServiceTypeClusterIP
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, maskAny(err)
 	}
@@ -121,7 +161,7 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, deployment metav1.Object, serviceType v1.ServiceType, port, nodePort int, loadBalancerIP string, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, deployment metav1.Object, serviceType v1.ServiceType, port, nodePort int, loadBalancerIP string, loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	ports := []v1.ServicePort{
 		v1.ServicePort{
@@ -132,7 +172,7 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 		},
 	}
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, maskAny(err)
 	}
@@ -144,18 +184,13 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
 func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string, serviceType v1.ServiceType,
-	ports []v1.ServicePort, loadBalancerIP string, publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
+	ports []v1.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string, publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   svcName,
-			Labels: labels,
-			Annotations: map[string]string{
-				// This annotation is deprecated, PublishNotReadyAddresses is
-				// used instead. We leave the annotation in for a while.
-				// See https://github.com/kubernetes/kubernetes/pull/49061
-				TolerateUnreadyEndpointsAnnotation: strconv.FormatBool(publishNotReadyAddresses),
-			},
+			Name:        svcName,
+			Labels:      labels,
+			Annotations: map[string]string{},
 		},
 		Spec: v1.ServiceSpec{
 			Type:                     serviceType,
@@ -164,6 +199,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 			ClusterIP:                clusterIP,
 			PublishNotReadyAddresses: publishNotReadyAddresses,
 			LoadBalancerIP:           loadBalancerIP,
+			LoadBalancerSourceRanges: loadBalancerSourceRanges,
 		},
 	}
 	addOwnerRefToObject(svc.GetObjectMeta(), &owner)

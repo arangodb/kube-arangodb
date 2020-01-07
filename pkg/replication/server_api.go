@@ -23,7 +23,7 @@
 package replication
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 )
 

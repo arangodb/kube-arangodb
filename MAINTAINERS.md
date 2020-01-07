@@ -1,5 +1,13 @@
 # Maintainer Instructions
 
+## Before
+
+To run templating models HELM needs to be installed. We are supporting HELM 2.14+
+
+Helm URL: https://github.com/helm/helm/releases/tag/v2.14.3
+
+You can install HELM in PATH or set HELM path before running make - `export HELM=<path to helm>`
+
 ## Running tests
 
 To run the entire test set, first set the following environment variables:
@@ -11,7 +19,7 @@ To run the entire test set, first set the following environment variables:
     default is `arangodb/arangodb:latest`
   - `ENTERPRISEIMAGE` to the name of an enterprise image, you want to
     test, if not set, some tests are skipped
-  - `ARANGO_LICENSE_KEY` to the enterpise license key
+  - `ENTERPRISELICENSE` to the enterpise license key
   - `KUBECONFIG` to the path to some k8s configuration with
     credentials, this indicates which cluster to use
 

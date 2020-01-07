@@ -173,17 +173,11 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 							},
 						},
 					},
+					SecurityContext: k8sutil.SecurityContextWithoutCapabilities(),
 				},
 			},
 			Volumes: []corev1.Volume{
-				corev1.Volume{
-					Name: "data",
-					VolumeSource: corev1.VolumeSource{
-						PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-							ClaimName: claimname,
-						},
-					},
-				},
+				k8sutil.CreateVolumeWithPersitantVolumeClaim("data", claimname),
 			},
 		},
 	}
@@ -361,7 +355,7 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 
 	for _, info := range agnt {
 		depl.Status.Members.Agents = append(depl.Status.Members.Agents, deplv1alpha.MemberStatus{
-			ID: info.UUID,
+			ID:                        info.UUID,
 			PersistentVolumeClaimName: info.Claim,
 			PodName:                   k8sutil.CreatePodName(deplname, deplv1alpha.ServerGroupAgents.AsRole(), info.UUID, "-rbt"),
 		})
@@ -369,7 +363,7 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 
 	for _, info := range prmr {
 		depl.Status.Members.DBServers = append(depl.Status.Members.DBServers, deplv1alpha.MemberStatus{
-			ID: info.UUID,
+			ID:                        info.UUID,
 			PersistentVolumeClaimName: info.Claim,
 			PodName:                   k8sutil.CreatePodName(deplname, deplv1alpha.ServerGroupDBServers.AsRole(), info.UUID, "-rbt"),
 		})

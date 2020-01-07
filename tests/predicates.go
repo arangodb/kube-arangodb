@@ -25,7 +25,11 @@ package tests
 import (
 	"fmt"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	v1 "k8s.io/api/core/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // deploymentIsReady creates a predicate that returns nil when the deployment is in
@@ -39,5 +43,46 @@ func deploymentIsReady() func(*api.ArangoDeployment) error {
 			return nil
 		}
 		return fmt.Errorf("Expected Ready condition to be set, it is not")
+	}
+}
+
+func resourcesRequireRotation(wanted, given v1.ResourceRequirements) bool {
+	checkList := func(wanted, given v1.ResourceList) bool {
+		for k, v := range wanted {
+			if gv, ok := given[k]; !ok {
+				return true
+			} else if v.Cmp(gv) != 0 {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
+}
+
+func resourcesAsRequested(kubecli kubernetes.Interface, ns string) func(obj *api.ArangoDeployment) error {
+	return func(obj *api.ArangoDeployment) error {
+		return obj.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
+
+			for _, m := range *status {
+				pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+				if err != nil {
+					return err
+				}
+
+				c, found := k8sutil.GetContainerByName(pod, k8sutil.ServerContainerName)
+				if !found {
+					return fmt.Errorf("Container not found: %s", m.PodName)
+				}
+
+				if resourcesRequireRotation(spec.Resources, c.Resources) {
+					return fmt.Errorf("Container of Pod %s need rotation", m.PodName)
+				}
+			}
+
+			return nil
+		}, nil)
 	}
 }

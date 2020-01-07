@@ -10,8 +10,8 @@ Before the test, record the following parameters for the platform the test is ex
 
 - Name of the platform
 - Version of the platform
-- Upstream Kubernetes version used by the platform (run `kubctrl version`)
-- Number of nodes used by the Kubernetes cluster (run `kubectrl get node`)
+- Upstream Kubernetes version used by the platform (run `kubectl version`)
+- Number of nodes used by the Kubernetes cluster (run `kubectl get node`)
 - `StorageClasses` provided by the platform (run `kubectl get storageclass`)
 - Does the platform use RBAC? (run `kubectl describe clusterrolebinding`)
 - Does the platform support services of type `LoadBalancer`?
@@ -48,8 +48,8 @@ The basis tests are executed on every platform with various images:
 
 Run the following tests with the following images:
 
-- Community 3.3.10
-- Enterprise 3.3.10
+- Community <Version>
+- Enterprise <Version>
 
 For every tests, one of these images can be chosen, as long as each image
 is used in a test at least once.
@@ -228,10 +228,10 @@ Change the value of `spec.dbservers.count` from 4 to 2.
 - [ ] Three dbservers are removed (one by one)
 - [ ] The deployment must yield 9 `Pods`
 
-Change the value of `spec.coordinators.count` from 4 to 1.
+Change the value of `spec.coordinators.count` from 4 to 2.
 
 - [ ] Three coordinators are removed (one by one)
-- [ ] The deployment must yield 6 `Pods`
+- [ ] The deployment must yield 7 `Pods`
 
 ### Test 4a: Create cluster deployment with `ArangoLocalStorage` provided volumes
 

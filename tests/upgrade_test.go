@@ -28,7 +28,7 @@ import (
 	"testing"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	kubeArangoClient "github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
@@ -83,27 +83,37 @@ func TestUpgradeActiveFailoverRocksDB33to34(t *testing.T) {
 // 	upgradeSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB, "arangodb/arangodb:3.3.16", "arangodb/arangodb:3.3.17")
 // }
 
-func TestUpgradeClusterRocksDB3322Cto342C(t *testing.T) {
+func TestUpgradeClusterRocksDB3322Cto346C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.22",
-		toVersion:   "3.4.2-1",
+		toVersion:   "3.4.6-1",
+		toImageTag:  "3.4.6.1",
 		shortTest:   true,
 	})
 }
 
-func TestUpgradeClusterRocksDB3316Cto3322C(t *testing.T) {
+func TestUpgradeClusterRocksDB3316Cto3323C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
 		fromVersion: "3.3.16",
-		toVersion:   "3.3.22",
+		toVersion:   "3.3.23",
 		shortTest:   false,
 	})
 }
 
-func TestUpgradeClusterRocksDB341Cto342C(t *testing.T) {
+func TestUpgradeClusterRocksDB346Cto347C(t *testing.T) {
 	runUpgradeTest(t, &upgradeTest{
-		fromVersion: "3.4.1",
-		toImageTag:  "3.4.2",
-		toVersion:   "3.4.2-1",
+		fromVersion:  "3.4.6-1",
+		fromImageTag: "3.4.6.1",
+		toVersion:    "3.4.7",
+		shortTest:    true,
+	})
+}
+
+func TestUpgradeClusterRocksDB348Eto351E(t *testing.T) {
+	runUpgradeTest(t, &upgradeTest{
+		fromVersion: "3.4.8",
+		toVersion:   "3.5.1",
+		toImage:     "arangodb/enterprise-preview",
 		shortTest:   true,
 	})
 }
@@ -125,6 +135,9 @@ type upgradeTest struct {
 	toImage    string
 	toImageTag string
 
+	toEnterprise   bool
+	fromEnterprise bool
+
 	name      string
 	shortTest bool
 }
@@ -145,6 +158,9 @@ type UpgradeTest interface {
 
 func (u *upgradeTest) FromImage() string {
 	imageName := "arangodb/arangodb"
+	if u.fromEnterprise {
+		imageName = "arangodb/enterprise"
+	}
 	if u.fromImage != "" {
 		imageName = u.fromImage
 	}
@@ -157,6 +173,9 @@ func (u *upgradeTest) FromImage() string {
 
 func (u *upgradeTest) ToImage() string {
 	imageName := "arangodb/arangodb"
+	if u.toEnterprise {
+		imageName = "arangodb/enterprise"
+	}
 	if u.toImage != "" {
 		imageName = u.toImage
 	}
@@ -218,7 +237,7 @@ func runUpgradeTest(t *testing.T, spec UpgradeTest) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := c.DatabaseV1alpha().ArangoDeployments(ns).Create(depl)
+	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

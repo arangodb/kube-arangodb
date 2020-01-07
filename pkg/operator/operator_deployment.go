@@ -24,12 +24,13 @@ package operator
 
 import (
 	"fmt"
+	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	"github.com/pkg/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -48,8 +49,8 @@ var (
 func (o *Operator) runDeployments(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		o.log,
-		o.Dependencies.CRCli.DatabaseV1alpha().RESTClient(),
-		api.ArangoDeploymentResourcePlural,
+		o.Dependencies.CRCli.DatabaseV1().RESTClient(),
+		deploymentType.ArangoDeploymentResourcePlural,
 		o.Config.Namespace,
 		&api.ArangoDeployment{},
 		cache.ResourceEventHandlerFuncs{
@@ -212,6 +213,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 			Str("deployment", apiObject.GetName()).
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,
+		KubeExtCli:    o.Dependencies.KubeExtCli,
 		DatabaseCRCli: o.Dependencies.CRCli,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}

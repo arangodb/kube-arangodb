@@ -31,7 +31,7 @@ import (
 	"github.com/rs/zerolog"
 
 	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
@@ -69,15 +69,12 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		}
 		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
-				return false, maskAny(errors.Wrapf(err, "Failed to remove server from cluster: %#v", err))
+				a.log.Err(err).Str("member-id", m.ID).Msgf("Failed to remove server from cluster")
+				// ignore this error, maybe all coordinators are failed and no connction to cluster is possible
 			} else if driver.IsPreconditionFailed(err) {
-				cluster, err := client.Cluster(ctx)
+				health, err := a.actionCtx.GetDeploymentHealth()
 				if err != nil {
-					return false, maskAny(errors.Wrapf(err, "Failed to obtain cluster: %#v", err))
-				}
-				health, err := cluster.Health(ctx)
-				if err != nil {
-					return false, maskAny(errors.Wrapf(err, "Failed to obtain cluster health: %#v", err))
+					return false, maskAny(errors.Wrapf(err, "failed to get cluster health"))
 				}
 				// We don't care if not found
 				if record, ok := health.Health[driver.ServerID(m.ID)]; ok {

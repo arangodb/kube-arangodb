@@ -30,9 +30,8 @@ const (
 	ArangoExporterPort   = 9101
 
 	// K8s constants
-	ClusterIPNone                      = "None"
-	TolerateUnreadyEndpointsAnnotation = "service.alpha.kubernetes.io/tolerate-unready-endpoints"
-	TopologyKeyHostname                = "kubernetes.io/hostname"
+	ClusterIPNone       = "None"
+	TopologyKeyHostname = "kubernetes.io/hostname"
 
 	// Internal constants
 	ImageIDAndVersionRole = "id" // Role use by identification pods

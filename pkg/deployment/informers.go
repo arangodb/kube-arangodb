@@ -24,6 +24,7 @@ package deployment
 
 import (
 	"k8s.io/api/core/v1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -192,6 +193,26 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 				if s, ok := getService(obj); ok && d.isOwnerOf(s) {
 					d.triggerInspection()
 				}
+			},
+		})
+
+	rw.Run(stopCh)
+}
+
+// listenForCRDEvents keep listening for changes in CRDs until the given channel is closed.
+func (d *Deployment) listenForCRDEvents(stopCh <-chan struct{}) {
+	rw := k8sutil.NewResourceWatcher(
+		d.deps.Log,
+		d.deps.KubeExtCli.ApiextensionsV1beta1().RESTClient(),
+		"customresourcedefinitions",
+		"",
+		&v1beta1.CustomResourceDefinition{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				d.triggerCRDInspection()
+			},
+			DeleteFunc: func(obj interface{}) {
+				d.triggerCRDInspection()
 			},
 		})
 

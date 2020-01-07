@@ -27,20 +27,36 @@ GOVERSION := 1.10.0-alpine
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
-DOCKERFILE := Dockerfile 
+DOCKERFILE := Dockerfile
 DOCKERTESTFILE := Dockerfile.test
 DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
-ifndef LOCALONLY 
-	PUSHIMAGES := 1
-	IMAGESHA256 := true
-else
-	IMAGESHA256 := false
+HELM ?= $(shell which helm)
+
+.PHONY: helm
+helm:
+ifeq ($(HELM),)
+	$(error Before templating you need to install helm in PATH or export helm binary using "export HELM=<path to helm>")
 endif
 
-ifdef IMAGETAG 
+HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
+                           -d "$(ROOTDIR)/bin/charts" \
+                           --save=false
+
+HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
+         	       --name "$(NAME)" \
+         	       --set "operator.image=$(OPERATORIMAGE)" \
+         	       --set "operator.imagePullPolicy=Always" \
+         	       --set "operator.resources=null" \
+         	       --namespace "$(DEPLOYMENTNAMESPACE)"
+
+ifndef LOCALONLY
+	PUSHIMAGES := 1
+endif
+
+ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
-else 
+else
 	IMAGESUFFIX := :dev
 endif
 
@@ -55,14 +71,20 @@ endif
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
+MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
 
+BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.0
+
 ifndef OPERATORIMAGE
 	OPERATORIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)
+endif
+ifndef OPERATORUBIIMAGE
+	OPERATORUBIIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)-ubi
 endif
 ifndef TESTIMAGE
 	TESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-test$(IMAGESUFFIX)
@@ -88,17 +110,17 @@ TESTBINNAME := $(PROJECT)_test
 TESTBIN := $(BINDIR)/$(TESTBINNAME)
 DURATIONTESTBINNAME := $(PROJECT)_duration_test
 DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
-RELEASE := $(GOBUILDDIR)/bin/release 
-GHRELEASE := $(GOBUILDDIR)/bin/github-release 
+RELEASE := $(GOBUILDDIR)/bin/release
+GHRELEASE := $(GOBUILDDIR)/bin/github-release
 
 TESTLENGTHOPTIONS := -test.short
 TESTTIMEOUT := 30m
 ifeq ($(LONG), 1)
 	TESTLENGTHOPTIONS :=
-	TESTTIMEOUT := 180m
+	TESTTIMEOUT := 300m
 endif
 ifdef VERBOSE
-	TESTVERBOSEOPTIONS := -v 
+	TESTVERBOSEOPTIONS := -v
 endif
 
 SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
@@ -120,19 +142,35 @@ endif
 ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
 ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
+.DEFAULT_GOAL := all
 .PHONY: all
-all: verify-generated build
+all: check-vars verify-generated build
+
+.PHONY: compile
+compile:	check-vars build
+
+# allall  is now obsolete
+.PHONY: allall
+allall: all
 
 #
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
+.PHONY: fmt
+fmt:
+	golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all --enable=deadcode --enable=gocyclo \
+	                  --enable=golint --enable=varcheck --enable=structcheck --enable=maligned --enable=errcheck \
+	                  --enable=dupl --enable=ineffassign --enable=interfacer --enable=unconvert --enable=goconst \
+	                  --enable=gosec --enable=megacheck --exclude-use-default=false \
+	                  $(ROOTDIR)/pkg/backup/...
+
 .PHONY: build
-build: check-vars docker manifests
+build: docker docker-ubi manifests
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(GOBUILDDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
 
 .PHONY: check-vars
 check-vars:
@@ -142,74 +180,23 @@ ifndef DOCKERNAMESPACE
 endif
 	@echo "Using docker namespace: $(DOCKERNAMESPACE)"
 
-.PHONY: deps
-deps:
-	@${MAKE} -B -s $(GOBUILDDIR)
-
-$(GOBUILDDIR):
-	# Build pulsar & go-assets-builder from vendor
-	@mkdir -p $(GOBUILDDIR)
-	@ln -sf $(VENDORDIR) $(GOBUILDDIR)/src
-	@GOPATH=$(GOBUILDDIR) go install github.com/pulcy/pulsar
-	@GOPATH=$(GOBUILDDIR) go install github.com/jessevdk/go-assets-builder
-	@rm -Rf $(GOBUILDDIR)/src
-	# Prepare .gobuild directory
-	@mkdir -p $(ORGDIR)
-	@rm -f $(REPODIR) && ln -sf ../../../.. $(REPODIR)
-	GOPATH=$(GOBUILDDIR) $(PULSAR) go flatten -V $(VENDORDIR)
-	# Note: Next library is not vendored, since we always want the latest version
-	GOPATH=$(GOBUILDDIR) go get github.com/arangodb/go-upgrade-rules
-
-$(CACHEVOL):
-	@docker volume create $(CACHEVOL)
-
 .PHONY: update-vendor
 update-vendor:
-	@mkdir -p $(GOBUILDDIR)
-	@GOPATH=$(GOBUILDDIR) go get github.com/pulcy/pulsar
-	@rm -Rf $(VENDORDIR)
-	@mkdir -p $(VENDORDIR)
-	@git clone https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.14.1 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
-	@$(PULSAR) go vendor -V $(VENDORDIR) \
-		k8s.io/client-go/... \
-		k8s.io/gengo/args \
-		k8s.io/apiextensions-apiserver \
-		github.com/aktau/github-release \
-		github.com/arangodb-helper/go-certificates \
-		github.com/arangodb/go-driver \
-		github.com/cenkalti/backoff \
-		github.com/coreos/go-semver/semver \
-		github.com/dchest/uniuri \
-		github.com/dgrijalva/jwt-go \
-		github.com/gin-gonic/gin \
-		github.com/jessevdk/go-assets-builder \
-		github.com/julienschmidt/httprouter \
-		github.com/pkg/errors \
-		github.com/prometheus/client_golang/prometheus \
-		github.com/pulcy/pulsar \
-		github.com/rs/zerolog \
-		github.com/spf13/cobra \
-		github.com/stretchr/testify
-	@$(PULSAR) go flatten -V $(VENDORDIR) $(VENDORDIR)
-	@${MAKE} -B -s clean
-	# Manually restore arangosync vendor with: git checkout deps/github.com/arangodb/arangosync
+
 
 .PHONY: update-generated
-update-generated: $(GOBUILDDIR) 
-	@docker build $(SRCDIR)/tools/codegen --build-arg GOVERSION=$(GOVERSION) -t k8s-codegen
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOBIN=/usr/code/.gobuild/bin \
-		-w /usr/code/ \
-		k8s-codegen \
-		"./deps/k8s.io/code-generator/generate-groups.sh"  \
+update-generated:
+	@rm -fr $(ORGDIR)
+	@mkdir -p $(ORGDIR)
+	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
+	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
 		"all" \
 		"github.com/arangodb/kube-arangodb/pkg/generated" \
 		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1alpha replication:v1alpha storage:v1alpha" \
+		"deployment:v1alpha deployment:v1 replication:v1alpha replication:v1 storage:v1alpha backup:v1alpha backup:v1" \
 		--go-header-file "./tools/codegen/boilerplate.go.txt" \
 		$(VERIFYARGS)
 
@@ -226,85 +213,125 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
 		$(DASHBOARDBUILDIMAGE)
-	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-$(BIN): $(GOBUILDDIR) $(CACHEVOL) $(SOURCES) dashboard/assets.go
+$(BIN): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(BINNAME) $(REPOPATH)
-
-
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
 
 .PHONY: docker
 docker: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) -t $(OPERATORIMAGE) .
+	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
 
-# Manifests 
+.PHONY: docker-ubi
+docker-ubi: check-vars $(BIN)
+	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE) .
+ifdef PUSHIMAGES
+	docker push $(OPERATORUBIIMAGE)
+endif
+
+# Manifests
+
+.PHONY: manifests-crd
+manifests-crd: export CHART_NAME := kube-arangodb-crd
+manifests-crd: export NAME := crd
+manifests-crd: helm
+	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
+	@$(HELM_CMD) > "$(MANIFESTPATHCRD)"
+
+.PHONY: manifests-test
+manifests-test: export CHART_NAME := kube-arangodb-test
+manifests-test: export NAME := arangodb-test
+manifests-test: helm
+	@echo Building manifests for test - $(MANIFESTPATHTEST)
+	@$(HELM_CMD) > "$(MANIFESTPATHTEST)"
+
+.PHONY: manifests-operator-deployment
+manifests-operator-deployment: export CHART_NAME := kube-arangodb
+manifests-operator-deployment: export NAME := deployment
+manifests-operator-deployment: helm
+	@echo Building manifests for Operator Deployment - $(MANIFESTPATHDEPLOYMENT)
+	@$(HELM_CMD) \
+	     --set "operator.features.deployment=true" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENT)"
+
+.PHONY: manifests-operator-deployment-replication
+manifests-operator-deployment-replication: export CHART_NAME := kube-arangodb
+manifests-operator-deployment-replication: export NAME := deployment-replication
+manifests-operator-deployment-replication: helm
+	@echo Building manifests for Operator Deployment Replication - $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	@$(HELM_CMD) \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=true" \
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
+
+.PHONY: manifests-operator-storage
+manifests-operator-storage: export CHART_NAME := kube-arangodb
+manifests-operator-storage: export NAME := storage
+manifests-operator-storage: helm
+	@echo Building manifests for Operator Storage - $(MANIFESTPATHSTORAGE)
+	@$(HELM_CMD) \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=true" \
+	     --set "operator.features.backup=false" > "$(MANIFESTPATHSTORAGE)"
+
+.PHONY: manifests-operator-backup
+manifests-operator-backup: export CHART_NAME := kube-arangodb
+manifests-operator-backup: export NAME := backup
+manifests-operator-backup: helm
+	@echo Building manifests for Operator Backup - $(MANIFESTPATHBACKUP)
+	@$(HELM_CMD) \
+	     --set "operator.features.deployment=false" \
+	     --set "operator.features.deploymentReplications=false" \
+	     --set "operator.features.storage=false" \
+	     --set "operator.features.backup=true" > "$(MANIFESTPATHBACKUP)"
+
+.PHONY: manifests-operator
+manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage manifests-operator-backup
+
+.PHONY: chart-crd
+chart-crd: export CHART_NAME := kube-arangodb-crd
+chart-crd: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+.PHONY: chart-operator
+chart-operator: export CHART_NAME := kube-arangodb
+chart-operator: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
 
 .PHONY: manifests
-manifests: $(GOBUILDDIR)
-	@echo Building manifests
-	GOPATH=$(GOBUILDDIR) go run $(ROOTDIR)/tools/manifests/manifest_builder.go \
-		--output-suffix=$(MANIFESTSUFFIX) \
-		--image=$(OPERATORIMAGE) \
-		--image-sha256=$(IMAGESHA256) \
-		--namespace=$(DEPLOYMENTNAMESPACE) \
-		--allow-chaos=$(ALLOWCHAOS)
+manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-operator
 
 # Testing
 
 .PHONY: run-unit-tests
-run-unit-tests: $(GOBUILDDIR) $(SOURCES)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go test $(TESTVERBOSEOPTIONS) \
-			$(REPOPATH)/pkg/apis/deployment/v1alpha \
-			$(REPOPATH)/pkg/apis/replication/v1alpha \
-			$(REPOPATH)/pkg/apis/storage/v1alpha \
-			$(REPOPATH)/pkg/deployment/reconcile \
-			$(REPOPATH)/pkg/deployment/resources \
-			$(REPOPATH)/pkg/storage \
-			$(REPOPATH)/pkg/util/k8sutil \
-			$(REPOPATH)/pkg/util/k8sutil/test \
-			$(REPOPATH)/pkg/util/probe \
-			$(REPOPATH)/pkg/util/validation 
+run-unit-tests: $(SOURCES)
+	go test $(TESTVERBOSEOPTIONS) \
+		$(REPOPATH)/pkg/apis/backup/... \
+		$(REPOPATH)/pkg/apis/deployment/... \
+		$(REPOPATH)/pkg/apis/replication/... \
+		$(REPOPATH)/pkg/apis/storage/... \
+		$(REPOPATH)/pkg/deployment/... \
+		$(REPOPATH)/pkg/storage \
+		$(REPOPATH)/pkg/util/k8sutil \
+		$(REPOPATH)/pkg/util/k8sutil/test \
+		$(REPOPATH)/pkg/util/probe \
+		$(REPOPATH)/pkg/util/validation \
+		$(REPOPATH)/pkg/backup/...
 
 $(TESTBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go test -c -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(TESTBINNAME) $(REPOPATH)/tests
+	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
+
 
 .PHONY: docker-test
 docker-test: $(TESTBIN)
@@ -327,9 +354,11 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
 
 .PHONY: run-tests
 run-tests: docker-test
@@ -345,25 +374,16 @@ endif
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
 	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
 	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' $(TESTTIMEOUT) $(TESTLENGTHOPTIONS) $(TESTOPTIONS)
+	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
+	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)' '$(TEST_REMOTE_REPOSITORY)'
 
-$(DURATIONTESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
+$(DURATIONTESTBIN): $(SOURCES)
+	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
+
 
 .PHONY: docker-duration-test
 docker-duration-test: $(DURATIONTESTBIN)
@@ -385,6 +405,10 @@ endif
 .PHONY: patch-readme
 patch-readme:
 	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch-chart
+patch-chart:
+	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
 
 .PHONY: changelog
 changelog:
@@ -420,12 +444,12 @@ $(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
 .PHONY: build-ghrelease
 build-ghrelease: $(GHRELEASE)
 
-$(GHRELEASE): $(GOBUILDDIR) 
+$(GHRELEASE): $(GOBUILDDIR)
 	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
 
 .PHONY: release-patch
 release-patch: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch
 
 .PHONY: release-minor
 release-minor: $(RELEASE)
@@ -433,7 +457,7 @@ release-minor: $(RELEASE)
 
 .PHONY: release-major
 release-major: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major 
+	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major
 
 ## Kubernetes utilities
 
@@ -446,6 +470,7 @@ delete-operator:
 	kubectl delete -f $(MANIFESTPATHTEST) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
+	kubectl delete -f $(MANIFESTPATHBACKUP) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
 
@@ -455,25 +480,15 @@ redeploy-operator: delete-operator manifests
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
+	kubectl apply -f $(MANIFESTPATHBACKUP)
 	kubectl apply -f $(MANIFESTPATHTEST)
-	kubectl get pods 
+	kubectl get pods
 
 ## ArangoSync Tests
 
 $(ARANGOSYNCTESTCTRLBIN): $(GOBUILDDIR) $(SOURCES)
 	@mkdir -p $(BINDIR)
-	docker run \
-		--rm \
-		-v $(SRCDIR):/usr/code \
-		-v $(CACHEVOL):/usr/gocache \
-		-e GOCACHE=/usr/gocache \
-		-e GOPATH=/usr/code/.gobuild \
-		-e GOOS=linux \
-		-e GOARCH=amd64 \
-		-e CGO_ENABLED=0 \
-		-w /usr/code/ \
-		golang:$(GOVERSION) \
-		go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o /usr/code/bin/$(ARANGOSYNCTESTCTRLBINNAME) $(REPOPATH)/tests/sync
+	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(ARANGOSYNCTESTCTRLBIN) $(REPOPATH)/tests/sync
 
 .PHONY: check-sync-vars
 check-sync-vars:
