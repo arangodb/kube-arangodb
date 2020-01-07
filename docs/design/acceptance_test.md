@@ -32,7 +32,7 @@ Deploy the following ArangoDB operators:
 - `ArangoDeploymentReplication` operator
 - `ArangoLocalStorage` operator
 
-To do so, follow the [instructions in the manual](../Manual/Deployment/Kubernetes/Usage.md).
+To do so, follow the [instructions in the documentation](https://www.arangodb.com/docs/stable/deployment-kubernetes-usage.html).
 
 ### `PersistentVolume` provider
 
