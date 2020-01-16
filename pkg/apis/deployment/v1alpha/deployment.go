@@ -49,6 +49,8 @@ type ArangoDeployment struct {
 	Status            DeploymentStatus `json:"status"`
 }
 
+type ServerGroupFunc func(ServerGroup, ServerGroupSpec, *MemberStatusList) error
+
 // AsOwner creates an OwnerReference for the given deployment
 func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
 	trueVar := true
@@ -67,7 +69,7 @@ func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
 // If the callback returns an error, this error is returned and no other server
 // groups are processed.
 // Groups are processed in this order: agents, single, dbservers, coordinators, syncmasters, syncworkers
-func (d *ArangoDeployment) ForeachServerGroup(cb func(group ServerGroup, spec ServerGroupSpec, status *MemberStatusList) error, status *DeploymentStatus) error {
+func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *DeploymentStatus) error {
 	if status == nil {
 		status = &d.Status
 	}

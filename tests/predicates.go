@@ -25,7 +25,6 @@ package tests
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,22 +45,6 @@ func deploymentIsReady() func(*api.ArangoDeployment) error {
 	}
 }
 
-func resourcesRequireRotation(wanted, given v1.ResourceRequirements) bool {
-	checkList := func(wanted, given v1.ResourceList) bool {
-		for k, v := range wanted {
-			if gv, ok := given[k]; !ok {
-				return true
-			} else if v.Cmp(gv) != 0 {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	return checkList(wanted.Limits, given.Limits) || checkList(wanted.Requests, given.Requests)
-}
-
 func resourcesAsRequested(kubecli kubernetes.Interface, ns string) func(obj *api.ArangoDeployment) error {
 	return func(obj *api.ArangoDeployment) error {
 		return obj.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
@@ -77,7 +60,7 @@ func resourcesAsRequested(kubecli kubernetes.Interface, ns string) func(obj *api
 					return fmt.Errorf("Container not found: %s", m.PodName)
 				}
 
-				if resourcesRequireRotation(spec.Resources, c.Resources) {
+				if k8sutil.IsResourceRequirementsChanged(spec.Resources, c.Resources) {
 					return fmt.Errorf("Container of Pod %s need rotation", m.PodName)
 				}
 			}

@@ -24,6 +24,7 @@ package v1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // MetricsAuthenticationSpec contains spec for authentication with arangodb
@@ -37,6 +38,7 @@ type MetricsSpec struct {
 	Enabled        *bool                     `json:"enabled,omitempty"`
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
+	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
 }
 
 // IsEnabled returns whether metrics are enabled or not
@@ -85,6 +87,8 @@ func (s *MetricsSpec) SetDefaultsFrom(source MetricsSpec) {
 	if s.Authentication.JWTTokenSecretName == nil {
 		s.Authentication.JWTTokenSecretName = util.NewStringOrNil(source.Authentication.JWTTokenSecretName)
 	}
+	setDefaultsFromResourceList(&s.Resources.Limits, source.Resources.Limits)
+	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 }
 
 // Validate the given spec

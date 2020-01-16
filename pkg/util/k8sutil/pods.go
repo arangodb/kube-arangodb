@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -51,13 +53,6 @@ const (
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
-
-// EnvValue is a helper structure for environment variable sources.
-type EnvValue struct {
-	Value      string // If set, the environment value gets this value
-	SecretName string // If set, the environment value gets its value from a secret with this name
-	SecretKey  string // Key inside secret to fill into the envvar. Only relevant is SecretName is set.
-}
 
 type PodCreator interface {
 	Init(*v1.Pod)
@@ -84,32 +79,22 @@ type ContainerCreator interface {
 	GetEnvs() []v1.EnvVar
 }
 
-// CreateEnvVar creates an EnvVar structure for given key from given EnvValue.
-func (v EnvValue) CreateEnvVar(key string) v1.EnvVar {
-	ev := v1.EnvVar{
-		Name: key,
-	}
-	if ev.Value != "" {
-		ev.Value = v.Value
-	} else if v.SecretName != "" {
-		//return CreateEnvSecretKeySelector(key, v.SecretName, v.SecretKey)
-		ev.ValueFrom = &v1.EnvVarSource{
-			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: v.SecretName,
-				},
-				Key: v.SecretKey,
-			},
-		}
-	}
-	return ev
-}
-
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *v1.Pod) bool {
 	condition := getPodCondition(&pod.Status, v1.PodReady)
 	return condition != nil && condition.Status == v1.ConditionTrue
+}
+
+// GetPodByName returns pod if it exists among the pods' list
+// Returns false if not found.
+func GetPodByName(pods []v1.Pod, podName string) (v1.Pod, bool) {
+	for _, pod := range pods {
+		if pod.GetName() == podName {
+			return pod, true
+		}
+	}
+	return v1.Pod{}, false
 }
 
 // IsPodSucceeded returns true if the arangodb container of the pod
@@ -291,13 +276,23 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 		command = fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile)
 	}
 	c := v1.Container{
+		Name:  name,
+		Image: alpineImage,
 		Command: []string{
 			"/bin/sh",
 			"-c",
 			command,
 		},
-		Name:  name,
-		Image: alpineImage,
+		Resources: v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resource.MustParse("10Mi"),
+			},
+			Limits: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resource.MustParse("50Mi"),
+			},
+		},
 		VolumeMounts: []v1.VolumeMount{
 			ArangodVolumeMount(),
 		},
@@ -360,30 +355,6 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 	}, nil
 }
 
-func ArangodbexporterContainer(image string, args []string, env map[string]EnvValue, livenessProbe *HTTPProbeConfig) v1.Container {
-	c := v1.Container{
-		Command:         append([]string{"/app/arangodb-exporter"}, args...),
-		Name:            ExporterContainerName,
-		Image:           image,
-		ImagePullPolicy: v1.PullIfNotPresent,
-		Ports: []v1.ContainerPort{
-			{
-				Name:          "exporter",
-				ContainerPort: int32(ArangoExporterPort),
-				Protocol:      v1.ProtocolTCP,
-			},
-		},
-		SecurityContext: SecurityContextWithoutCapabilities(),
-	}
-	for k, v := range env {
-		c.Env = append(c.Env, v.CreateEnvVar(k))
-	}
-	if livenessProbe != nil {
-		c.LivenessProbe = livenessProbe.Create()
-	}
-	return c
-}
-
 // NewPod creates a basic Pod for given settings.
 func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.Pod {
 
@@ -417,15 +388,6 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 	}
 
 	return p
-}
-
-// ArangodbExporterContainerConf contains configuration of the exporter container
-type ArangodbExporterContainerConf struct {
-	Args               []string
-	Env                map[string]EnvValue
-	JWTTokenSecretName string
-	LivenessProbe      *HTTPProbeConfig
-	Image              string
 }
 
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.

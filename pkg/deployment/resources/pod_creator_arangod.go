@@ -41,7 +41,6 @@ type MemberArangoDPod struct {
 	tlsKeyfileSecretName        string
 	rocksdbEncryptionSecretName string
 	clusterJWTSecretName        string
-	exporter                    *k8sutil.ArangodbExporterContainerConf
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
 	group                       api.ServerGroup
@@ -162,11 +161,17 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *v1.Pod) {
-	if m.exporter != nil {
-		// Metrics sidecar
-		c := k8sutil.ArangodbexporterContainer(m.exporter.Image, m.exporter.Args, m.exporter.Env, m.exporter.LivenessProbe)
 
-		if m.exporter.JWTTokenSecretName != "" {
+	if isMetricsEnabledForGroup(m.spec, m.group) {
+		image := m.spec.GetImage()
+		if m.spec.Metrics.HasImage() {
+			image = m.spec.Metrics.GetImage()
+		}
+
+		c := ArangodbExporterContainer(image, createExporterArgs(m.spec.IsSecure()),
+			createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources)
+
+		if m.spec.Metrics.GetJWTTokenSecretName() != "" {
 			c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 		}
 
@@ -218,9 +223,12 @@ func (m *MemberArangoDPod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
 		volumeMounts = append(volumeMounts, k8sutil.RocksdbEncryptionVolumeMount())
 	}
 
-	if m.exporter != nil && m.exporter.JWTTokenSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, m.exporter.JWTTokenSecretName)
-		volumes = append(volumes, vol)
+	if isMetricsEnabledForGroup(m.spec, m.group) {
+		token := m.spec.Metrics.GetJWTTokenSecretName()
+		if token != "" {
+			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			volumes = append(volumes, vol)
+		}
 	}
 
 	if m.clusterJWTSecretName != "" {
@@ -245,7 +253,7 @@ func (m *MemberArangoDPod) GetInitContainers() ([]v1.Container, error) {
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage)
+		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources)
 		if err != nil {
 			return nil, err
 		}
@@ -280,4 +288,8 @@ func (m *MemberArangoDPod) GetContainerCreator() k8sutil.ContainerCreator {
 		imageInfo: m.imageInfo,
 		groupSpec: m.groupSpec,
 	}
+}
+
+func isMetricsEnabledForGroup(spec api.DeploymentSpec, group api.ServerGroup) bool {
+	return spec.Metrics.IsEnabled() && group.IsExportMetrics()
 }

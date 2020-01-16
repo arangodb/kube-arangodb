@@ -331,34 +331,6 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
-func createExporterArgs(isSecure bool) []string {
-	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := make([]optionPair, 0, 64)
-	scheme := "http"
-	if isSecure {
-		scheme = "https"
-	}
-	options = append(options,
-		optionPair{"--arangodb.jwt-file", tokenpath},
-		optionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
-	)
-	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if isSecure {
-		options = append(options,
-			optionPair{"--ssl.keyfile", keyPath},
-		)
-	}
-	args := make([]string, 0, 2+len(options))
-	sort.Slice(options, func(i, j int) bool {
-		return options[i].CompareTo(options[j]) < 0
-	})
-	for _, o := range options {
-		args = append(args, o.Key+"="+o.Value)
-	}
-
-	return args
-}
-
 // createLivenessProbe creates configuration for a liveness probe of a server in the given group.
 func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
 	groupspec := spec.GetServerGroupSpec(group)
@@ -524,16 +496,6 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func createExporterLivenessProbe(isSecure bool) *k8sutil.HTTPProbeConfig {
-	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath: "/",
-		Port:      k8sutil.ArangoExporterPort,
-		Secure:    isSecure,
-	}
-
-	return probeCfg
-}
-
 // createPodForMember creates all Pods listed in member status
 func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once) error {
 	kubecli := r.context.GetKubeCli()
@@ -615,29 +577,11 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
-		var exporter *k8sutil.ArangodbExporterContainerConf
-
-		if spec.Metrics.IsEnabled() {
-			if group.IsExportMetrics() {
-				image := spec.GetImage()
-				if spec.Metrics.HasImage() {
-					image = spec.Metrics.GetImage()
-				}
-				exporter = &k8sutil.ArangodbExporterContainerConf{
-					Args:               createExporterArgs(spec.IsSecure()),
-					JWTTokenSecretName: spec.Metrics.GetJWTTokenSecretName(),
-					LivenessProbe:      createExporterLivenessProbe(spec.IsSecure()),
-					Image:              image,
-				}
-			}
-		}
-
 		memberPod := MemberArangoDPod{
 			status:                      m,
 			tlsKeyfileSecretName:        tlsKeyfileSecretName,
 			rocksdbEncryptionSecretName: rocksdbEncryptionSecretName,
 			clusterJWTSecretName:        clusterJWTSecretName,
-			exporter:                    exporter,
 			groupSpec:                   groupSpec,
 			spec:                        spec,
 			group:                       group,
