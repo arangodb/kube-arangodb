@@ -23,9 +23,14 @@
 package reconcile
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +43,101 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-type testContext struct{}
+type testContext struct {
+	Pods             []v1.Pod
+	ErrPods          error
+	ArangoDeployment *api.ArangoDeployment
+	PVC              *v1.PersistentVolumeClaim
+	PVCErr           error
+	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetAPIObject() k8sutil.APIObject {
+	if c.ArangoDeployment == nil {
+		return &api.ArangoDeployment{}
+	}
+	return c.ArangoDeployment
+}
+
+func (c *testContext) GetSpec() api.DeploymentSpec {
+	return c.ArangoDeployment.Spec
+}
+
+func (c *testContext) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+	c.ArangoDeployment.Status = status
+	return nil
+}
+
+func (c *testContext) UpdateMember(member api.MemberStatus) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
+	panic("implement me")
+}
+
+func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+	panic("implement me")
+}
+
+func (c *testContext) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
+	panic("implement me")
+}
+
+func (c *testContext) GetAgency(ctx context.Context) (agency.Agency, error) {
+	panic("implement me")
+}
+
+func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
+	panic("implement me")
+}
+
+func (c *testContext) CreateMember(group api.ServerGroup, id string) (string, error) {
+	panic("implement me")
+}
+
+func (c *testContext) DeletePod(podName string) error {
+	panic("implement me")
+}
+
+func (c *testContext) DeletePvc(pvcName string) error {
+	panic("implement me")
+}
+
+func (c *testContext) RemovePodFinalizers(podName string) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetOwnedPods() ([]v1.Pod, error) {
+	if c.ErrPods != nil {
+		return nil, c.ErrPods
+	}
+
+	if c.Pods == nil {
+		return make([]v1.Pod, 0), c.ErrPods
+	}
+	return c.Pods, c.ErrPods
+}
+
+func (c *testContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+	panic("implement me")
+}
+
+func (c *testContext) DeleteSecret(secretName string) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
+	panic("implement me")
+}
+
+func (c *testContext) DisableScalingCluster() error {
+	panic("implement me")
+}
+
+func (c *testContext) EnableScalingCluster() error {
+	panic("implement me")
+}
 
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 // the given member.
@@ -55,12 +154,12 @@ func (c *testContext) GetTLSCA(secretName string) (string, string, bool, error) 
 // CreateEvent creates a given event.
 // On error, the error is logged.
 func (c *testContext) CreateEvent(evt *k8sutil.Event) {
-	// not implemented
+	c.RecordedEvent = evt
 }
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
 func (c *testContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
-	return nil, maskAny(fmt.Errorf("Not implemented"))
+	return c.PVC, c.PVCErr
 }
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
@@ -79,7 +178,7 @@ func (c *testContext) InvalidateSyncStatus() {}
 
 // GetStatus returns the current status of the deployment
 func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
-	return api.DeploymentStatus{}, 0
+	return c.ArangoDeployment.Status, 0
 }
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
@@ -298,4 +397,333 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	assert.Equal(t, api.ServerGroupDBServers, newPlan[2].Group)
 	assert.Equal(t, api.ServerGroupCoordinators, newPlan[3].Group)
 	assert.Equal(t, api.ServerGroupCoordinators, newPlan[4].Group)
+}
+
+type LastLogRecord struct {
+	msg string
+}
+
+func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+	l.msg = msg
+}
+
+func TestCreatePlan(t *testing.T) {
+	// Arrange
+	threeCoordinators := api.MemberStatusList{
+		{
+			ID: "1",
+		},
+		{
+			ID: "2",
+		},
+		{
+			ID: "3",
+		},
+	}
+	twoAgents := api.MemberStatusList{
+		{
+			ID: "1",
+		},
+		{
+			ID: "2",
+		},
+	}
+	threeDBServers := api.MemberStatusList{
+		{
+			ID: "1",
+		},
+		{
+			ID: "2",
+		},
+		{
+			ID: "3",
+		},
+	}
+
+	deploymentTemplate := &api.ArangoDeployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test_depl",
+			Namespace: "test",
+		},
+		Spec: api.DeploymentSpec{
+			Mode: api.NewMode(api.DeploymentModeCluster),
+			TLS: api.TLSSpec{
+				CASecretName: util.NewString(api.CASecretNameDisabled),
+			},
+		},
+		Status: api.DeploymentStatus{
+			Members: api.DeploymentStatusMembers{
+				DBServers:    threeDBServers,
+				Coordinators: threeCoordinators,
+				Agents:       twoAgents,
+			},
+		},
+	}
+	deploymentTemplate.Spec.SetDefaults("createPlanTest")
+
+	testCases := []struct {
+		Name          string
+		context       *testContext
+		Helper        func(*api.ArangoDeployment)
+		ExpectedError error
+		ExpectedPlan  api.Plan
+		ExpectedLog   string
+		ExpectedEvent *k8sutil.Event
+	}{
+		{
+			Name: "Can not get pods",
+			context: &testContext{
+				ErrPods: errors.New("fake error"),
+			},
+			ExpectedError: errors.New("fake error"),
+			ExpectedLog:   "Failed to get owned pods",
+		},
+		{
+			Name: "Can not create plan for single deployment",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+			},
+			ExpectedPlan: []api.Action{},
+		},
+		{
+			Name: "Can not create plan for not created member",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseNone
+			},
+			ExpectedPlan: []api.Action{},
+		},
+		{
+			Name: "Can not create plan without PVC name",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				//ad.Status.Members.DBServers[0].PersistentVolumeClaimName = ""
+			},
+			ExpectedPlan: []api.Action{},
+		},
+		{
+			Name: "Getting PVC from kubernetes failed",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				PVCErr:           errors.New("fake error"),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = "pvc_test"
+			},
+			ExpectedLog: "Failed to get PVC",
+		},
+		{
+			Name: "Change Storage for DBServers",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				PVC: &v1.PersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(3),
+					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
+						Spec: v1.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("newStorage"),
+						},
+					},
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = "pvc_test"
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeDisableClusterScaling, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeEnableClusterScaling, api.ServerGroupDBServers, ""),
+			},
+			ExpectedLog: "Storage class has changed - pod needs replacement",
+		},
+		{
+			Name: "Change Storage for Agents with deprecated storage class name",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				PVC: &v1.PersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Agents = api.ServerGroupSpec{
+					Count:            util.NewInt(2),
+					StorageClassName: util.NewString("newStorage"),
+				}
+				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
+			},
+			ExpectedLog: "Storage class has changed - pod needs replacement",
+		},
+		{
+			Name: "Storage for Coordinators is not possible",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				PVC: &v1.PersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Coordinators = api.ServerGroupSpec{
+					Count: util.NewInt(3),
+					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
+						Spec: v1.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("newStorage"),
+						},
+					},
+				}
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = "pvc_test"
+			},
+			ExpectedPlan: []api.Action{},
+			ExpectedLog:  "Storage class has changed - pod needs replacement",
+			ExpectedEvent: &k8sutil.Event{
+				Type:    v1.EventTypeNormal,
+				Reason:  "Coordinator Member StorageClass Cannot Change",
+				Message: "Member 1 with role coordinator should use a different StorageClass, but is cannot because: Not supported",
+			},
+		},
+		{
+			Name: "Create rotation plan",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+				PVC: &v1.PersistentVolumeClaim{
+					Spec: v1.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+					Status: v1.PersistentVolumeClaimStatus{
+						Conditions: []v1.PersistentVolumeClaimCondition{
+							{
+								Type:   v1.PersistentVolumeClaimFileSystemResizePending,
+								Status: v1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Agents = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
+						Spec: v1.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("oldStorage"),
+						},
+					},
+				}
+				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
+			},
+			ExpectedLog: "Creating rotation plan",
+		},
+		{
+			Name: "Member in failed state",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Agents = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.Agents[0].Phase = api.MemberPhaseFailed
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
+			},
+			ExpectedLog: "Creating member replacement plan because member has failed",
+		},
+		{
+			Name: "Scale down DBservers",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].Conditions = api.ConditionList{
+					{
+						Type:   api.ConditionTypeCleanedOut,
+						Status: v1.ConditionTrue,
+					},
+				}
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
+			},
+			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
+		},
+	}
+
+	for _, testCase := range testCases {
+		//nolint:scopelint
+		t.Run(testCase.Name, func(t *testing.T) {
+			// Arrange
+			h := &LastLogRecord{}
+			logger := zerolog.New(ioutil.Discard).Hook(h)
+			r := NewReconciler(logger, testCase.context)
+
+			// Act
+			if testCase.Helper != nil {
+				testCase.Helper(testCase.context.ArangoDeployment)
+			}
+			err := r.CreatePlan()
+
+			// Assert
+			if testCase.ExpectedEvent != nil {
+				require.NotNil(t, testCase.context.RecordedEvent)
+				require.Equal(t, testCase.ExpectedEvent.Type, testCase.context.RecordedEvent.Type)
+				require.Equal(t, testCase.ExpectedEvent.Message, testCase.context.RecordedEvent.Message)
+				require.Equal(t, testCase.ExpectedEvent.Reason, testCase.context.RecordedEvent.Reason)
+			}
+			if len(testCase.ExpectedLog) > 0 {
+				require.Equal(t, testCase.ExpectedLog, h.msg)
+			}
+			if testCase.ExpectedError != nil {
+				assert.EqualError(t, err, testCase.ExpectedError.Error())
+				return
+			}
+
+			require.NoError(t, err)
+			status, _ := testCase.context.GetStatus()
+			require.Len(t, status.Plan, len(testCase.ExpectedPlan))
+			for i, v := range testCase.ExpectedPlan {
+				assert.Equal(t, v.Type, status.Plan[i].Type)
+				assert.Equal(t, v.Group, status.Plan[i].Group)
+			}
+		})
+	}
 }

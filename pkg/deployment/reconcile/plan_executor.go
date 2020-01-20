@@ -183,6 +183,10 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewRenewTLSCACertificateAction(log, action, actionCtx)
 	case api.ActionTypeSetCurrentImage:
 		return NewSetCurrentImageAction(log, action, actionCtx)
+	case api.ActionTypeDisableClusterScaling:
+		return NewDisableScalingCluster(log, action, actionCtx)
+	case api.ActionTypeEnableClusterScaling:
+		return NewEnableScalingCluster(log, action, actionCtx)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}

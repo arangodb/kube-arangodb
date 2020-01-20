@@ -90,7 +90,10 @@ type ActionContext interface {
 	InvalidateSyncStatus()
 	// GetSpec returns a copy of the spec
 	GetSpec() api.DeploymentSpec
-
+	// DisableScalingCluster disables scaling DBservers and coordinators
+	DisableScalingCluster() error
+	// EnableScalingCluster enables scaling DBservers and coordinators
+	EnableScalingCluster() error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -304,4 +307,14 @@ func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
 // InvalidateSyncStatus resets the sync state to false and triggers an inspection
 func (ac *actionContext) InvalidateSyncStatus() {
 	ac.context.InvalidateSyncStatus()
+}
+
+// DisableScalingCluster disables scaling DBservers and coordinators
+func (ac *actionContext) DisableScalingCluster() error {
+	return ac.context.DisableScalingCluster()
+}
+
+// EnableScalingCluster enables scaling DBservers and coordinators
+func (ac *actionContext) EnableScalingCluster() error {
+	return ac.context.EnableScalingCluster()
 }

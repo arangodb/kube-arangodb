@@ -418,3 +418,11 @@ func (d *Deployment) GetShardSyncStatus() bool {
 func (d *Deployment) InvalidateSyncStatus() {
 	d.resources.InvalidateSyncStatus()
 }
+
+func (d *Deployment) DisableScalingCluster() error {
+	return d.clusterScalingIntegration.DisableScalingCluster()
+}
+
+func (d *Deployment) EnableScalingCluster() error {
+	return d.clusterScalingIntegration.EnableScalingCluster()
+}

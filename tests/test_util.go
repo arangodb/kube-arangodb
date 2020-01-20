@@ -38,6 +38,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 
+	"github.com/stretchr/testify/require"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -302,6 +304,18 @@ func waitUntilDeploymentMembers(cli versioned.Interface, deploymentName, ns stri
 	return waitUntilDeployment(cli, deploymentName, ns, func(d *api.ArangoDeployment) error {
 		return d.ForeachServerGroup(cb, &d.Status)
 	}, timeout...)
+}
+
+func newDeploymentWithValidation(name string, adjustDeployment func(*api.ArangoDeployment)) (*api.ArangoDeployment, error) {
+	deployment := newDeployment(name)
+	adjustDeployment(deployment)
+
+	deployment.Spec.SetDefaults(deployment.GetName())
+	if err := deployment.Spec.Validate(); err != nil {
+		return nil, err
+	}
+
+	return deployment, nil
 }
 
 // waitUntilDeployment waits until a deployment with given name in given namespace
@@ -678,7 +692,7 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 	return nil
 }
 
-// removeReplication removes a deployment
+// removeReplication removes a replication
 func removeReplication(cli versioned.Interface, replicationName, ns string) error {
 	if err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
@@ -862,5 +876,78 @@ func checkPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api
 	}
 	if len(foundTimes) != len(times) {
 		t.Errorf("Number of pods found (%d) in creation time check does not match expected %d!", len(foundTimes), len(times))
+	}
+}
+
+type DocumentGenerator struct {
+	kubecli           kubernetes.Interface
+	deployment        *api.ArangoDeployment
+	collectionName    string
+	numberOfShards    uint32
+	numberOfDocuments uint32
+	documentsMeta     driver.DocumentMetaSlice
+}
+
+func NewDocumentGenerator(kubecli kubernetes.Interface, deployment *api.ArangoDeployment,
+	collectionName string, numberOfShards, numberOfDocuments uint32) *DocumentGenerator {
+	return &DocumentGenerator{
+		kubecli:           kubecli,
+		deployment:        deployment,
+		collectionName:    collectionName,
+		numberOfShards:    numberOfShards,
+		numberOfDocuments: numberOfDocuments,
+	}
+}
+
+func (d *DocumentGenerator) generate(t *testing.T, generator func(int) interface{}) {
+
+	opts := &driver.CreateCollectionOptions{
+		NumberOfShards: int(d.numberOfShards),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	DBClient := mustNewArangodDatabaseClient(ctx, d.kubecli, d.deployment, t, nil)
+	db, err := DBClient.Database(ctx, "_system")
+	require.NoError(t, err, "failed to get database")
+
+	collection, err := db.CreateCollection(context.Background(), d.collectionName, opts)
+	require.NoError(t, err, "failed to create collection")
+
+	d.documentsMeta = make(driver.DocumentMetaSlice, d.numberOfDocuments)
+	items := make([]interface{}, int(d.numberOfDocuments))
+	for i := 0; i < int(d.numberOfDocuments); i++ {
+		items[i] = generator(i)
+	}
+
+	var errorSlice driver.ErrorSlice
+	errorSliceExpected := make(driver.ErrorSlice, int(d.numberOfDocuments))
+	d.documentsMeta, errorSlice, err = collection.CreateDocuments(context.Background(), items)
+	require.NoError(t, err, "failed to create documents")
+	require.Equal(t, errorSlice, errorSliceExpected)
+	return
+}
+
+func (d *DocumentGenerator) check(t *testing.T) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	DBClient := mustNewArangodDatabaseClient(ctx, d.kubecli, d.deployment, t, nil)
+	db, err := DBClient.Database(ctx, "_system")
+	require.NoError(t, err, "failed to get database")
+
+	collection, err := db.Collection(context.Background(), d.collectionName)
+	require.NoError(t, err, "failed to create collection")
+
+	count, err := collection.Count(context.Background())
+	require.NoError(t, err, "failed to get number of documents in the collection")
+	require.Equal(t, int64(len(d.documentsMeta)), count, "number of documents are not equal")
+
+	for _, m := range d.documentsMeta {
+		exist, err := collection.DocumentExists(context.Background(), m.Key)
+		require.NoError(t, err, "failed to create document")
+		require.Equal(t, true, exist, "document does not exits")
 	}
 }

@@ -26,7 +26,6 @@ import (
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -51,7 +50,7 @@ func (d *Reconciler) CreatePlan() error {
 	// Get all current pods
 	pods, err := d.context.GetOwnedPods()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get owned pods")
+		d.log.Debug().Err(err).Msg("Failed to get owned pods")
 		return maskAny(err)
 	}
 
@@ -86,7 +85,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
 	context PlanBuilderContext) (api.Plan, bool) {
-	if len(currentPlan) > 0 {
+	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, false
 	}
@@ -97,7 +96,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
-			if m.Phase == api.MemberPhaseFailed && len(plan) == 0 {
+			if m.Phase == api.MemberPhaseFailed && plan.IsEmpty() {
 				log.Debug().
 					Str("id", m.ID).
 					Str("role", group.AsRole()).
@@ -117,7 +116,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
-		if len(plan) == 0 && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+		if plan.IsEmpty() && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
@@ -130,27 +129,27 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	}
 
 	// Check for scale up/down
-	if len(plan) == 0 {
+	if plan.IsEmpty() {
 		plan = createScaleMemeberPlan(log, spec, status)
 	}
 
 	// Check for the need to rotate one or more members
-	if len(plan) == 0 {
+	if plan.IsEmpty() {
 		plan = createRotateOrUpgradePlan(log, apiObject, spec, status, context, pods)
 	}
 
 	// Check for the need to rotate TLS certificate of a members
-	if len(plan) == 0 {
+	if plan.IsEmpty() {
 		plan = createRotateTLSServerCertificatePlan(log, spec, status, context.GetTLSKeyfile)
 	}
 
 	// Check for changes storage classes or requirements
-	if len(plan) == 0 {
+	if plan.IsEmpty() {
 		plan = createRotateServerStoragePlan(log, apiObject, spec, status, context.GetPvc, context.CreateEvent)
 	}
 
 	// Check for the need to rotate TLS CA certificate and all members
-	if len(plan) == 0 {
+	if plan.IsEmpty() {
 		plan = createRotateTLSCAPlan(log, apiObject, spec, status, context.GetTLSCA, context.CreateEvent)
 	}
 

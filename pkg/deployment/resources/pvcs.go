@@ -49,17 +49,22 @@ func (r *Resources) EnsurePVCs() error {
 	pvcs := k8sutil.NewPersistentVolumeClaimCache(kubecli.CoreV1().PersistentVolumeClaims(ns))
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			if m.PersistentVolumeClaimName != "" {
-				if _, err := pvcs.Get(m.PersistentVolumeClaimName, metav1.GetOptions{}); err != nil {
-					storageClassName := spec.GetStorageClassName()
-					role := group.AsRole()
-					resources := spec.Resources
-					vct := spec.VolumeClaimTemplate
-					finalizers := r.createPVCFinalizers(group)
-					if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
-						return maskAny(err)
-					}
+			if m.PersistentVolumeClaimName == "" {
+				continue
+			}
+
+			_, err := pvcs.Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+			if k8sutil.IsNotFound(err) {
+				storageClassName := spec.GetStorageClassName()
+				role := group.AsRole()
+				resources := spec.Resources
+				vct := spec.VolumeClaimTemplate
+				finalizers := r.createPVCFinalizers(group)
+				if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
+					return maskAny(err)
 				}
+			} else if err != nil {
+				return maskAny(err)
 			}
 		}
 		return nil

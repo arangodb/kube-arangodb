@@ -49,6 +49,10 @@ type clusterScalingIntegration struct {
 		arangod.NumberOfServers
 		mutex sync.Mutex
 	}
+	scaleEnabled struct {
+		mutex   sync.Mutex
+		enabled bool
+	}
 }
 
 const (
@@ -57,10 +61,12 @@ const (
 
 // newClusterScalingIntegration creates a new clusterScalingIntegration.
 func newClusterScalingIntegration(depl *Deployment) *clusterScalingIntegration {
-	return &clusterScalingIntegration{
+	ci := &clusterScalingIntegration{
 		log:  depl.deps.Log,
 		depl: depl,
 	}
+	ci.scaleEnabled.enabled = true
+	return ci
 }
 
 // SendUpdateToCluster records the given spec to be sended to the cluster.
@@ -70,37 +76,61 @@ func (ci *clusterScalingIntegration) SendUpdateToCluster(spec api.DeploymentSpec
 	ci.pendingUpdate.spec = &spec
 }
 
+// checkScalingCluster checks if inspection
+// returns true if inspection occurred
+func (ci *clusterScalingIntegration) checkScalingCluster(expectSuccess bool) bool {
+	ci.scaleEnabled.mutex.Lock()
+	defer ci.scaleEnabled.mutex.Unlock()
+
+	if !ci.scaleEnabled.enabled {
+		// Check if it is possible to turn on scaling without any issue
+		status, _ := ci.depl.GetStatus()
+		if status.Plan.IsEmpty() && ci.setNumberOfServers() == nil {
+			// Scaling should be enabled because there is no Plan.
+			// It can happen when the enabling action fails
+			ci.scaleEnabled.enabled = true
+		}
+	}
+
+	if ci.depl.GetPhase() != api.DeploymentPhaseRunning || !ci.scaleEnabled.enabled {
+		// Deployment must be in running state and scaling must be enabled
+		return false
+	}
+
+	// Update cluster with our state
+	ctx := context.Background()
+	//expectSuccess := *goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
+	safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
+	if err != nil {
+		if expectSuccess {
+			ci.log.Debug().Err(err).Msg("Cluster update failed")
+		}
+	} else if safeToAskCluster {
+		// Inspect once
+		if err := ci.inspectCluster(ctx, expectSuccess); err != nil {
+			if expectSuccess {
+				ci.log.Debug().Err(err).Msg("Cluster inspection failed")
+			}
+		} else {
+			return true
+		}
+	}
+	return false
+}
+
 // listenForClusterEvents keep listening for changes entered in the UI of the cluster.
 func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct{}) {
 	start := time.Now()
 	goodInspections := 0
 	for {
-		delay := time.Second * 2
+		expectSuccess := goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
 
-		// Is deployment in running state
-		if ci.depl.GetPhase() == api.DeploymentPhaseRunning {
-			// Update cluster with our state
-			ctx := context.Background()
-			expectSuccess := goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
-			safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
-			if err != nil {
-				if expectSuccess {
-					ci.log.Debug().Err(err).Msg("Cluster update failed")
-				}
-			} else if safeToAskCluster {
-				// Inspect once
-				if err := ci.inspectCluster(ctx, expectSuccess); err != nil {
-					if expectSuccess {
-						ci.log.Debug().Err(err).Msg("Cluster inspection failed")
-					}
-				} else {
-					goodInspections++
-				}
-			}
+		if ci.checkScalingCluster(expectSuccess) {
+			goodInspections++
 		}
 
 		select {
-		case <-time.After(delay):
+		case <-time.After(time.Second * 2):
 			// Continue
 		case <-stopCh:
 			// We're done
@@ -200,11 +230,6 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	}
 
 	log := ci.log
-	c, err := ci.depl.clientCache.GetDatabase(ctx)
-	if err != nil {
-		return false, maskAny(err)
-	}
-
 	var coordinatorCountPtr *int
 	var dbserverCountPtr *int
 
@@ -223,13 +248,11 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 		dbserverCountPtr = &dbserverCount
 	}
 
-	ci.lastNumberOfServers.mutex.Lock()
-	lastNumberOfServers := ci.lastNumberOfServers.NumberOfServers
-	ci.lastNumberOfServers.mutex.Unlock()
+	lastNumberOfServers := ci.GetLastNumberOfServers()
 
 	// This is to prevent unneseccary updates that may override some values written by the WebUI (in the case of a update loop)
 	if coordinatorCount != lastNumberOfServers.GetCoordinators() || dbserverCount != lastNumberOfServers.GetDBServers() {
-		if err := arangod.SetNumberOfServers(ctx, c.Connection(), coordinatorCountPtr, dbserverCountPtr); err != nil {
+		if err := ci.depl.SetNumberOfServers(ctx, coordinatorCountPtr, dbserverCountPtr); err != nil {
 			if expectSuccess {
 				log.Debug().Err(err).Msg("Failed to set number of servers")
 			}
@@ -252,4 +275,51 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	ci.lastNumberOfServers.Coordinators = &coordinatorCount
 	ci.lastNumberOfServers.DBServers = &dbserverCount
 	return safeToAskCluster, nil
+}
+
+// GetLastNumberOfServers returns the last number of servers
+func (ci *clusterScalingIntegration) GetLastNumberOfServers() arangod.NumberOfServers {
+	ci.lastNumberOfServers.mutex.Lock()
+	defer ci.lastNumberOfServers.mutex.Unlock()
+
+	return ci.lastNumberOfServers.NumberOfServers
+}
+
+// DisableScalingCluster disables scaling DBservers and coordinators
+func (ci *clusterScalingIntegration) DisableScalingCluster() error {
+	ci.scaleEnabled.mutex.Lock()
+	defer ci.scaleEnabled.mutex.Unlock()
+
+	// Turn off scaling DBservers and coordinators in arangoDB for the UI
+	ctx := context.Background()
+	if err := ci.depl.SetNumberOfServers(ctx, nil, nil); err != nil {
+		return maskAny(err)
+	}
+
+	ci.scaleEnabled.enabled = false
+	return nil
+}
+
+// EnableScalingCluster enables scaling DBservers and coordinators
+func (ci *clusterScalingIntegration) EnableScalingCluster() error {
+	ci.scaleEnabled.mutex.Lock()
+	defer ci.scaleEnabled.mutex.Unlock()
+
+	if ci.scaleEnabled.enabled {
+		return nil
+	}
+
+	if err := ci.setNumberOfServers(); err != nil {
+		return maskAny(err)
+	}
+	ci.scaleEnabled.enabled = true
+	return nil
+}
+
+func (ci *clusterScalingIntegration) setNumberOfServers() error {
+	ctx := context.Background()
+	spec := ci.depl.GetSpec()
+	numOfCoordinators := spec.Coordinators.GetCount()
+	numOfDBServers := spec.DBServers.GetCount()
+	return ci.depl.SetNumberOfServers(ctx, &numOfCoordinators, &numOfDBServers)
 }
