@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,22 +17,13 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
-package reconcile
-
-import "time"
+package agency
 
 const (
-	addMemberTimeout             = time.Minute * 5
-	cleanoutMemberTimeout        = time.Hour * 12
-	removeMemberTimeout          = time.Minute * 15
-	recreateMemberTimeout        = time.Minute * 15
-	renewTLSCertificateTimeout   = time.Minute * 30
-	renewTLSCACertificateTimeout = time.Minute * 30
-	rotateMemberTimeout          = time.Minute * 15
-	shutdownMemberTimeout        = time.Minute * 30
-	upgradeMemberTimeout         = time.Hour * 6
-	waitForMemberUpTimeout       = time.Minute * 15
+	ArangoKey = "/arango"
+	PlanKey = ArangoKey + "/Plan"
+	PlanCollectionsKey = PlanKey + "/Collections"
 )

@@ -36,6 +36,8 @@ const (
 	ActionTypeAddMember ActionType = "AddMember"
 	// ActionTypeRemoveMember causes a member to be removed.
 	ActionTypeRemoveMember ActionType = "RemoveMember"
+	// ActionTypeRecreateMember recreates member. Used when member is still owner of some shards.
+	ActionTypeRecreateMember ActionType = "RecreateMember"
 	// ActionTypeCleanOutMember causes a member to be cleaned out (dbserver only).
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.

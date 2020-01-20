@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/arangodb/go-driver/agency"
 
@@ -70,6 +71,9 @@ type ActionContext interface {
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(pvcName string) error
+	// GetPvc returns PVC info about PVC with given name in the namespace
+	// of the deployment.
+	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	RemovePodFinalizers(podName string) error
@@ -108,6 +112,10 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
+	return ac.context.GetPvc(pvcName)
 }
 
 // Gets the specified mode of deployment

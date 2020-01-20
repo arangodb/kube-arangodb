@@ -25,6 +25,7 @@ package deployment
 import (
 	"context"
 	"fmt"
+	agencyData "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"net"
 	"strconv"
 
@@ -425,4 +426,20 @@ func (d *Deployment) DisableScalingCluster() error {
 
 func (d *Deployment) EnableScalingCluster() error {
 	return d.clusterScalingIntegration.EnableScalingCluster()
+}
+
+// GetAgencyPlan returns agency plan
+func (d *Deployment) GetAgencyData(ctx context.Context, keys ... string) (*agencyData.Agency, error) {
+	a, err := d.GetAgency(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var data agencyData.Agency
+
+	if err = a.ReadKey(ctx, keys, &data); err != nil {
+		return nil, err
+	}
+
+	return &data, err
 }

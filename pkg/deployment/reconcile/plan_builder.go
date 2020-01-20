@@ -23,6 +23,10 @@
 package reconcile
 
 import (
+	goContext "context"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"time"
+
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/rs/zerolog"
@@ -90,29 +94,73 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		return currentPlan, false
 	}
 
+	// Fetch agency plan
+	agencyCtx, agencyCancel := goContext.WithTimeout(goContext.Background(), time.Minute)
+	defer agencyCancel()
+	agencyPlan, agencyErr := context.GetAgencyData(agencyCtx, agency.PlanCollectionsKey)
+
 	// Check for various scenario's
 	var plan api.Plan
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
-			if m.Phase == api.MemberPhaseFailed && plan.IsEmpty() {
-				log.Debug().
-					Str("id", m.ID).
-					Str("role", group.AsRole()).
-					Msg("Creating member replacement plan because member has failed")
-				newID := ""
-				if group == api.ServerGroupAgents {
-					newID = m.ID // Agents cannot (yet) be replaced with new IDs
-				}
-				plan = append(plan,
-					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-					api.NewAction(api.ActionTypeAddMember, group, newID),
-				)
+			if m.Phase != api.MemberPhaseFailed || len(plan) > 0 {
+				continue
 			}
+
+			memberLog := log.Debug().Str("id", m.ID).Str("role", group.AsRole())
+
+			if group == api.ServerGroupDBServers && spec.GetMode() == api.DeploymentModeCluster {
+				// Do pre check for DBServers. If agency is down DBServers should not be touch
+				if agencyErr != nil {
+					continue
+				}
+
+				if agencyPlan == nil {
+					memberLog.Msg("AgencyPlan is nil")
+					continue
+				}
+
+				if agencyPlan.Arango == nil {
+					memberLog.Msg("AgencyPlan.arango is nil")
+					continue
+				}
+
+				if agencyPlan.Arango.Plan == nil {
+					memberLog.Msg("AgencyPlan.arango.Plan is nil")
+					continue
+				}
+
+				if agencyPlan.Arango.Plan.IsDBServerInPlan(m.ID) {
+					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
+					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully ")
+					plan = append(plan,
+						api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+					continue
+				}
+
+				// Everything is fine, proceed
+			}
+
+			memberLog.Msg("Creating member replacement plan because member has failed")
+			newID := ""
+			if group == api.ServerGroupAgents {
+				newID = m.ID // Agents cannot (yet) be replaced with new IDs
+			}
+			plan = append(plan,
+				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+				api.NewAction(api.ActionTypeAddMember, group, newID),
+			)
 		}
 		return nil
 	})
+
+	// Ensure that we were able to get agency info
+	if len(plan) == 0 && agencyErr != nil {
+		log.Err(agencyErr).Msg("unable to build further plan without access to agency")
+		return plan, false
+	}
 
 	// Check for cleaned out dbserver in created state
 	for _, m := range status.Members.DBServers {
