@@ -1,6 +1,6 @@
 # Change Log
 
-## [Devel]
+## Master
 - Add Maintenance mode annotation for ArangoDeployment
 
 ## [0.4.2](https://github.com/arangodb/kube-arangodb/tree/0.4.2) (2019-11-12)
