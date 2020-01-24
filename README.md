@@ -31,26 +31,19 @@ state and over time move to full "production readiness".
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-| Platform             | Kubernetes version | ArangoDB version | ArangoDB K8s Operator Version | State | Production ready | Remarks               |
-|----------------------|--------------------|------------------|-------------------------------|-------|------------------|-----------------------|
-| Google GKE           | 1.12               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
-| Google GKE           | 1.13               | >= 3.3.13        |                               | Runs  | Yes              | Don't use micro nodes |
-| Amazon EKS           | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| Pivotal PKS          | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| IBM Cloud            | 1.11               | >= 3.4.5         |          >= 0.3.11            | Runs  | Yes              |                       |
-| IBM Cloud            | 1.12               | >= 3.4.5         |          >= 0.3.11            | Runs  | Yes              |                       |
-| IBM Cloud            | 1.13               | >= 3.4.6.1       |          >= 0.3.11            | Runs  | Yes              |                       |
-| Amazon & Kops        | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
-| Azure AKS            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
-| OpenShift            | 1.10               | >= 3.3.13        |                               | Runs  | No               |                       |
-| Bare metal (kubeadm) | 1.10               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| Bare metal (kubeadm) | 1.11               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| Bare metal (kubeadm) | 1.12               | >= 3.3.13        |                               | Runs  | In progress      |                       |
-| Bare metal (kubeadm) | 1.13               | >= 3.3.13        |                               | Runs  | Yes              |                       |
-| Bare metal (kubeadm) | 1.14               | >= 3.3.13        |                               | Runs  | In progress      |                       |
-| Minikube             | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
-| Docker for Mac Edge  | 1.10               | >= 3.3.13        |                               | Runs  | Not intended     |                       |
-| Scaleway Kubernetes  | 1.10               | >= 3.3.13        | ?                             | No    |                  |                       |
+| Platform            | Kubernetes Version | ArangoDB Version | ArangoDB Operator Version | State       | Remarks               | Provider Remarks                   |
+|---------------------|--------------------|------------------|---------------------------|-------------|-----------------------|------------------------------------|
+| Google GKE          | 1.14               | >= 3.3.13        |                           | Production  | Don't use micro nodes |                                    |
+| Google GKE          | 1.15               | >= 3.3.13        |                           | Production  | Don't use micro nodes |                                    |
+| Azure AKS           | 1.14               | >= 3.3.13        |                           | Production  |                       |                                    |
+| Azure AKS           | 1.15               | >= 3.3.13        |                           | Production  |                       |                                    |
+| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production  |                       | [Amazon EKS](./docs/providers/aws) |
+| IBM Cloud           | 1.14               | >= 3.4.6.1       | >= 0.3.11                 | Production  |                       |                                    |
+| OpenShift           | 3.11               | >= 3.3.13        |                           | Production  |                       |                                    |
+| OpenShift           | 4.2                | >= 3.3.13        |                           | In Progress |                       |                                    |
+| BareMetal (kubeadm) | 1.14               | >= 3.3.13        |                           | Production  |                       |                                    |
+| Minikube            | 1.14               | >= 3.3.13        |                           | Devel Only  |                       |                                    |
+| Other               | 1.14               | >= 3.3.13        |                           | Devel Only  |                       |                                    |
 
 Feature-wise production readiness table:
 
