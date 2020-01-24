@@ -37,7 +37,7 @@ covers individual newer features separately.
 | Google GKE          | 1.15               | >= 3.3.13        |                           | Production  | Don't use micro nodes |                                    |
 | Azure AKS           | 1.14               | >= 3.3.13        |                           | Production  |                       |                                    |
 | Azure AKS           | 1.15               | >= 3.3.13        |                           | Production  |                       |                                    |
-| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production  |                       | [Amazon EKS](./docs/providers/aws) |
+| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production  |                       | [Amazon EKS](./docs/providers/eks) |
 | IBM Cloud           | 1.14               | >= 3.4.6.1       | >= 0.3.11                 | Production  |                       |                                    |
 | OpenShift           | 3.11               | >= 3.3.13        |                           | Production  |                       |                                    |
 | OpenShift           | 4.2                | >= 3.3.13        |                           | In Progress |                       |                                    |
