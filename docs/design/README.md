@@ -8,3 +8,4 @@
 - [Scaling](./scaling.md)
 - [Status](./status.md)
 - [Upgrading](./upgrading.md)
+- [Maintenance](./maintenance.md)
