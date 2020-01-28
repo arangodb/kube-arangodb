@@ -167,6 +167,8 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewAddMemberAction(log, action, actionCtx)
 	case api.ActionTypeRemoveMember:
 		return NewRemoveMemberAction(log, action, actionCtx)
+	case api.ActionTypeRecreateMember:
+		return NewRecreateMemberAction(log, action, actionCtx)
 	case api.ActionTypeCleanOutMember:
 		return NewCleanOutMemberAction(log, action, actionCtx)
 	case api.ActionTypeShutdownMember:

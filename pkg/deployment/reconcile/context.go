@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -105,4 +104,8 @@ type Context interface {
 	DisableScalingCluster() error
 	// EnableScalingCluster enables scaling DBservers and coordinators
 	EnableScalingCluster() error
+	// GetAgencyData object for key path
+	GetAgencyData(ctx context.Context, i interface{}, keyParts ... string) error
 }
+
+

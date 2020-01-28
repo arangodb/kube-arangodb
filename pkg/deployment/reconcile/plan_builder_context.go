@@ -23,6 +23,7 @@
 package reconcile
 
 import (
+	"context"
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -52,6 +53,8 @@ type PlanBuilderContext interface {
 	InvalidateSyncStatus()
 	// GetStatus returns the current status of the deployment
 	GetStatus() (api.DeploymentStatus, int32)
+	// GetAgencyData object for key path
+	GetAgencyData(ctx context.Context, i interface{}, keyParts ... string) error
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

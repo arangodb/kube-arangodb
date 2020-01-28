@@ -426,3 +426,17 @@ func (d *Deployment) DisableScalingCluster() error {
 func (d *Deployment) EnableScalingCluster() error {
 	return d.clusterScalingIntegration.EnableScalingCluster()
 }
+
+// GetAgencyPlan returns agency plan
+func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts ... string) error {
+	a, err := d.GetAgency(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = a.ReadKey(ctx, keyParts, i); err != nil {
+		return err
+	}
+
+	return err
+}
