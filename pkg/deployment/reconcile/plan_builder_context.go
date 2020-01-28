@@ -26,7 +26,6 @@ import (
 	"context"
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	agencyData "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,8 +53,8 @@ type PlanBuilderContext interface {
 	InvalidateSyncStatus()
 	// GetStatus returns the current status of the deployment
 	GetStatus() (api.DeploymentStatus, int32)
-	// GetAgencyData returns fetched keys for agency data
-	GetAgencyData(ctx context.Context, keys ... string) (*agencyData.Agency, error)
+	// GetAgencyData object for key path
+	GetAgencyData(ctx context.Context, i interface{}, keyParts ... string) error
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

@@ -23,7 +23,7 @@
 package agency
 
 const (
-	ArangoKey = "/arango"
-	PlanKey = ArangoKey + "/Plan"
-	PlanCollectionsKey = PlanKey + "/Collections"
+	ArangoKey = "arango"
+	PlanKey = "Plan"
+	PlanCollectionsKey = "Collections"
 )

@@ -59,11 +59,6 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("expecting member to be present in list, but it is not")
 	}
 
-	if m.Phase == api.MemberPhaseFailed {
-		// Change cluster phase to ensure it wont be removed
-		m.Phase = api.MemberPhaseNone
-	}
-
 	_, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
 	if err != nil {
 		if kubeErrors.IsNotFound(err) {
@@ -71,6 +66,11 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		}
 
 		return false, maskAny(err)
+	}
+
+	if m.Phase == api.MemberPhaseFailed {
+		// Change cluster phase to ensure it wont be removed
+		m.Phase = api.MemberPhaseNone
 	}
 
 	if err = a.actionCtx.UpdateMember(m); err != nil {

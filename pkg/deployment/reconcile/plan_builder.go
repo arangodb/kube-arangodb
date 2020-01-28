@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	goContext "context"
+	"fmt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"time"
 
@@ -82,6 +83,27 @@ func (d *Reconciler) CreatePlan() error {
 	return nil
 }
 
+func fetchAgency(log zerolog.Logger,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) (*agency.ArangoPlanDatabases,  error) {
+	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
+		return nil, nil
+	} else if status.Members.Agents.MembersReady() > 0 {
+		agencyCtx, agencyCancel := goContext.WithTimeout(goContext.Background(), time.Minute)
+		defer agencyCancel()
+
+		ret := &agency.ArangoPlanDatabases{}
+
+		if err := context.GetAgencyData(agencyCtx, ret, agency.ArangoKey, agency.PlanKey, agency.PlanCollectionsKey); err != nil {
+			return nil, err
+		}
+
+		return ret, nil
+	} else {
+		return nil, fmt.Errorf("not able to read from agency when agency is down")
+	}
+}
+
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
@@ -95,9 +117,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	}
 
 	// Fetch agency plan
-	agencyCtx, agencyCancel := goContext.WithTimeout(goContext.Background(), time.Minute)
-	defer agencyCancel()
-	agencyPlan, agencyErr := context.GetAgencyData(agencyCtx, agency.PlanCollectionsKey)
+	agencyPlan, agencyErr := fetchAgency(log, spec, status, context)
 
 	// Check for various scenario's
 	var plan api.Plan
@@ -109,11 +129,12 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 				continue
 			}
 
-			memberLog := log.Debug().Str("id", m.ID).Str("role", group.AsRole())
+			memberLog := log.Info().Str("id", m.ID).Str("role", group.AsRole())
 
 			if group == api.ServerGroupDBServers && spec.GetMode() == api.DeploymentModeCluster {
 				// Do pre check for DBServers. If agency is down DBServers should not be touch
 				if agencyErr != nil {
+					memberLog.Msg("Error in agency")
 					continue
 				}
 
@@ -122,19 +143,9 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 					continue
 				}
 
-				if agencyPlan.Arango == nil {
-					memberLog.Msg("AgencyPlan.arango is nil")
-					continue
-				}
-
-				if agencyPlan.Arango.Plan == nil {
-					memberLog.Msg("AgencyPlan.arango.Plan is nil")
-					continue
-				}
-
-				if agencyPlan.Arango.Plan.IsDBServerInPlan(m.ID) {
+				if agencyPlan.IsDBServerInDatabases(m.ID) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
-					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully ")
+					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,
 						api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
 					continue

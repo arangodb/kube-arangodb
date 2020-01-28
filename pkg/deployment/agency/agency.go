@@ -22,28 +22,6 @@
 
 package agency
 
-type Agency struct {
-	Arango *Arango `json:"arango,omitempty"`
-}
-
-type Arango struct {
-	Plan *ArangoPlan `json:"Plan,omitempty"`
-}
-
-type ArangoPlan struct {
-	Databases ArangoPlanDatabases `json:"Collections"`
-}
-
-func (a *ArangoPlan) IsDBServerInPlan(name string) bool {
-	for _, db := range a.Databases {
-		if db.IsDBServerInCollections(name) {
-			return true
-		}
-	}
-
-	return false
-}
-
 type ArangoPlanDatabases map[string]ArangoPlanCollections
 
 func (a ArangoPlanDatabases) IsDBServerInDatabases(name string) bool {
