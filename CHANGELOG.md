@@ -1,6 +1,6 @@
 # Change Log
 
-## Master
+## [0.4.3](https://github.com/arangodb/kube-arangodb/tree/0.4.3) (2020-01-31)
 - Prevent DBServer deletion if there are any shards active on it
 - Add Maintenance mode annotation for ArangoDeployment
 
