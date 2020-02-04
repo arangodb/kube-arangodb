@@ -21,6 +21,7 @@
 package resources
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -59,19 +60,19 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sut
 
 func createExporterArgs(isSecure bool) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := make([]optionPair, 0, 64)
+	options := make([]pod.OptionPair, 0, 64)
 	scheme := "http"
 	if isSecure {
 		scheme = "https"
 	}
 	options = append(options,
-		optionPair{"--arangodb.jwt-file", tokenpath},
-		optionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
+		pod.OptionPair{"--arangodb.jwt-file", tokenpath},
+		pod.OptionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if isSecure {
 		options = append(options,
-			optionPair{"--ssl.keyfile", keyPath},
+			pod.OptionPair{"--ssl.keyfile", keyPath},
 		)
 	}
 	args := make([]string, 0, 2+len(options))
