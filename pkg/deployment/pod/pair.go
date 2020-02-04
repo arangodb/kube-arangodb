@@ -41,6 +41,6 @@ func (o OptionPair) CompareTo(other OptionPair) int {
 	return strings.Compare(o.Value, other.Value)
 }
 
-func NewOptionPair(pairs...OptionPair) []OptionPair {
+func NewOptionPair(pairs ...OptionPair) []OptionPair {
 	return pairs
 }

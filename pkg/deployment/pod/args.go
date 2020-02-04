@@ -28,10 +28,10 @@ import (
 )
 
 type Input struct {
-	Deployment deploymentApi.DeploymentSpec
-	GroupSpec deploymentApi.ServerGroupSpec
-	Group deploymentApi.ServerGroup
-	Version driver.Version
+	Deployment  deploymentApi.DeploymentSpec
+	GroupSpec   deploymentApi.ServerGroupSpec
+	Group       deploymentApi.ServerGroup
+	Version     driver.Version
 	AutoUpgrade bool
 }
 

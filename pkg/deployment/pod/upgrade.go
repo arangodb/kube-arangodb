@@ -28,7 +28,7 @@ func AutoUpgrade() ArgumentsBuilder {
 	return autoUpgradeArgs{}
 }
 
-type autoUpgradeArgs struct {}
+type autoUpgradeArgs struct{}
 
 func (u autoUpgradeArgs) Create(i Input) []OptionPair {
 	if !i.AutoUpgrade {
@@ -44,4 +44,3 @@ func (u autoUpgradeArgs) Create(i Input) []OptionPair {
 
 	return NewOptionPair(OptionPair{"--database.auto-upgrade", "true"})
 }
-
