@@ -50,27 +50,27 @@ type probes struct {
 // probeMap defines default values and if Probe can be enabled
 var probeMap = map[api.ServerGroup]probes{
 	api.ServerGroupSingle: {
-		liveness: newProbe(true, true),
+		liveness:  newProbe(true, true),
 		readiness: newProbe(true, true),
 	},
 	api.ServerGroupAgents: {
-		liveness: newProbe(true, true),
+		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
 	api.ServerGroupDBServers: {
-		liveness: newProbe(true, true),
+		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
 	api.ServerGroupCoordinators: {
-		liveness: newProbe(false, false),
+		liveness:  newProbe(false, false),
 		readiness: newProbe(true, true),
 	},
 	api.ServerGroupSyncMasters: {
-		liveness: newProbe(true, true),
+		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
 	api.ServerGroupSyncWorkers: {
-		liveness: newProbe(true, true),
+		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
 }

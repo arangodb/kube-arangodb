@@ -139,27 +139,27 @@ func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.Se
 func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
-			liveness: r.probeBuilderLivenessCore,
+			liveness:  r.probeBuilderLivenessCore,
 			readiness: r.probeBuilderReadinessCore,
 		},
 		api.ServerGroupAgents: {
-			liveness: r.probeBuilderLivenessCore,
+			liveness:  r.probeBuilderLivenessCore,
 			readiness: nilProbeBuilder,
 		},
 		api.ServerGroupDBServers: {
-			liveness: r.probeBuilderLivenessCore,
+			liveness:  r.probeBuilderLivenessCore,
 			readiness: nilProbeBuilder,
 		},
 		api.ServerGroupCoordinators: {
-			liveness: nilProbeBuilder,
+			liveness:  nilProbeBuilder,
 			readiness: r.probeBuilderReadinessCore,
 		},
 		api.ServerGroupSyncMasters: {
-			liveness: r.probeBuilderLivenessSync,
+			liveness:  r.probeBuilderLivenessSync,
 			readiness: nilProbeBuilder,
 		},
 		api.ServerGroupSyncWorkers: {
-			liveness: r.probeBuilderLivenessSync,
+			liveness:  r.probeBuilderLivenessSync,
 			readiness: nilProbeBuilder,
 		},
 	}

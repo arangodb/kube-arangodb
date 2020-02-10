@@ -23,28 +23,27 @@
 package reconcile
 
 import (
+	"testing"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
-	"testing"
 )
 
 func TestPlanBuilderProbes(t *testing.T) {
 	type testCase struct {
-		probe pod.Probe
+		probe              pod.Probe
 		groupProbeDisabled *bool
-		groupProbeSpec *api.ServerGroupProbeSpec
-		containerProbe *core.Probe
+		groupProbeSpec     *api.ServerGroupProbeSpec
+		containerProbe     *core.Probe
 
 		result bool
 	}
 
 	testCases := map[string]testCase{
-		"Defaults": {
-
-		},
+		"Defaults": {},
 		"Disable created probe": {
 			containerProbe: &core.Probe{},
 
@@ -109,7 +108,7 @@ func TestPlanBuilderProbes(t *testing.T) {
 			},
 
 			containerProbe: &core.Probe{
-					TimeoutSeconds: 10,
+				TimeoutSeconds: 10,
 			},
 		},
 	}
