@@ -117,6 +117,48 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 		)
 	}
 
+	// Default+AutoUpgrade deployment for 3.6.0
+	{
+		apiObject := &api.ArangoDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "name",
+				Namespace: "ns",
+			},
+			Spec: api.DeploymentSpec{
+				Mode: api.NewMode(api.DeploymentModeCluster),
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		agents := api.MemberStatusList{
+			api.MemberStatus{ID: "a1"},
+			api.MemberStatus{ID: "a2"},
+			api.MemberStatus{ID: "a3"},
+		}
+		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupCoordinators, agents, "id1", "3.6.0", true)
+		assert.Equal(t,
+			[]string{
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
+				"--cluster.my-address=ssl://name-coordinator-id1.name-int.ns.svc:8529",
+				"--cluster.my-role=COORDINATOR",
+				"--cluster.upgrade=online",
+				"--database.directory=/data",
+				"--foxx.queues=true",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret-keyfile=/secrets/cluster/jwt/token",
+				"--server.statistics=true",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
 	// Default+TLS disabled deployment
 	{
 		apiObject := &api.ArangoDeployment{

@@ -40,16 +40,22 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
+var _ PlanBuilderContext = &testContext{}
+
 type testContext struct {
-	Pods             []v1.Pod
+	Pods             []core.Pod
 	ErrPods          error
 	ArangoDeployment *api.ArangoDeployment
-	PVC              *v1.PersistentVolumeClaim
+	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error {
+	return nil
 }
 
 func (c *testContext) GetAPIObject() k8sutil.APIObject {
@@ -108,13 +114,13 @@ func (c *testContext) RemovePodFinalizers(podName string) error {
 	panic("implement me")
 }
 
-func (c *testContext) GetOwnedPods() ([]v1.Pod, error) {
+func (c *testContext) GetOwnedPods() ([]core.Pod, error) {
 	if c.ErrPods != nil {
 		return nil, c.ErrPods
 	}
 
 	if c.Pods == nil {
-		return make([]v1.Pod, 0), c.ErrPods
+		return make([]core.Pod, 0), c.ErrPods
 	}
 	return c.Pods, c.ErrPods
 }
@@ -158,7 +164,7 @@ func (c *testContext) CreateEvent(evt *k8sutil.Event) {
 }
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
-func (c *testContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
+func (c *testContext) GetPvc(pvcName string) (*core.PersistentVolumeClaim, error) {
 	return c.PVC, c.PVCErr
 }
 
@@ -179,6 +185,22 @@ func (c *testContext) InvalidateSyncStatus() {}
 // GetStatus returns the current status of the deployment
 func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
 	return c.ArangoDeployment.Status, 0
+}
+
+func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
+	for i := 0; i < count; i++ {
+		require.NoError(t, status.Members.Add(api.MemberStatus{
+			ID: fmt.Sprintf("AGNT-%d", i),
+			PodName: fmt.Sprintf("agnt-depl-xxx-%d", i),
+			Phase: api.MemberPhaseCreated,
+			Conditions: []api.Condition{
+				{
+					Type:   api.ConditionTypeReady,
+					Status: core.ConditionTrue,
+				},
+			},
+		}, api.ServerGroupAgents))
+	}
 }
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
@@ -249,6 +271,8 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
+	addAgentsToStatus(t, &status, 3)
+
 	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
@@ -314,6 +338,8 @@ func TestCreatePlanClusterScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
+	addAgentsToStatus(t, &status, 3)
+
 	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
@@ -420,14 +446,6 @@ func TestCreatePlan(t *testing.T) {
 			ID: "3",
 		},
 	}
-	twoAgents := api.MemberStatusList{
-		{
-			ID: "1",
-		},
-		{
-			ID: "2",
-		},
-	}
 	threeDBServers := api.MemberStatusList{
 		{
 			ID: "1",
@@ -455,10 +473,10 @@ func TestCreatePlan(t *testing.T) {
 			Members: api.DeploymentStatusMembers{
 				DBServers:    threeDBServers,
 				Coordinators: threeCoordinators,
-				Agents:       twoAgents,
 			},
 		},
 	}
+	addAgentsToStatus(t, &deploymentTemplate.Status, 3)
 	deploymentTemplate.Spec.SetDefaults("createPlanTest")
 
 	testCases := []struct {
@@ -525,8 +543,8 @@ func TestCreatePlan(t *testing.T) {
 			Name: "Change Storage for DBServers",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &v1.PersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
+				PVC: &core.PersistentVolumeClaim{
+					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
@@ -534,8 +552,8 @@ func TestCreatePlan(t *testing.T) {
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
 					Count: util.NewInt(3),
-					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
-						Spec: v1.PersistentVolumeClaimSpec{
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
 							StorageClassName: util.NewString("newStorage"),
 						},
 					},
@@ -558,8 +576,8 @@ func TestCreatePlan(t *testing.T) {
 			Name: "Change Storage for Agents with deprecated storage class name",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &v1.PersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
+				PVC: &core.PersistentVolumeClaim{
+					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
@@ -584,8 +602,8 @@ func TestCreatePlan(t *testing.T) {
 			Name: "Storage for Coordinators is not possible",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &v1.PersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
+				PVC: &core.PersistentVolumeClaim{
+					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
@@ -593,8 +611,8 @@ func TestCreatePlan(t *testing.T) {
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Coordinators = api.ServerGroupSpec{
 					Count: util.NewInt(3),
-					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
-						Spec: v1.PersistentVolumeClaimSpec{
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
 							StorageClassName: util.NewString("newStorage"),
 						},
 					},
@@ -605,7 +623,7 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{},
 			ExpectedLog:  "Storage class has changed - pod needs replacement",
 			ExpectedEvent: &k8sutil.Event{
-				Type:    v1.EventTypeNormal,
+				Type:    core.EventTypeNormal,
 				Reason:  "Coordinator Member StorageClass Cannot Change",
 				Message: "Member 1 with role coordinator should use a different StorageClass, but is cannot because: Not supported",
 			},
@@ -614,15 +632,15 @@ func TestCreatePlan(t *testing.T) {
 			Name: "Create rotation plan",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &v1.PersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
+				PVC: &core.PersistentVolumeClaim{
+					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
-					Status: v1.PersistentVolumeClaimStatus{
-						Conditions: []v1.PersistentVolumeClaimCondition{
+					Status: core.PersistentVolumeClaimStatus{
+						Conditions: []core.PersistentVolumeClaimCondition{
 							{
-								Type:   v1.PersistentVolumeClaimFileSystemResizePending,
-								Status: v1.ConditionTrue,
+								Type:   core.PersistentVolumeClaimFileSystemResizePending,
+								Status: core.ConditionTrue,
 							},
 						},
 					},
@@ -631,8 +649,8 @@ func TestCreatePlan(t *testing.T) {
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
 					Count: util.NewInt(2),
-					VolumeClaimTemplate: &v1.PersistentVolumeClaim{
-						Spec: v1.PersistentVolumeClaimSpec{
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
 							StorageClassName: util.NewString("oldStorage"),
 						},
 					},
@@ -676,7 +694,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].Conditions = api.ConditionList{
 					{
 						Type:   api.ConditionTypeCleanedOut,
-						Status: v1.ConditionTrue,
+						Status: core.ConditionTrue,
 					},
 				}
 			},

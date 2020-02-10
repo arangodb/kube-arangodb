@@ -26,12 +26,12 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"net"
 	"net/url"
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -45,22 +45,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-type optionPair struct {
-	Key   string
-	Value string
-}
-
-// CompareTo returns -1 if o < other, 0 if o == other, 1 otherwise
-func (o optionPair) CompareTo(other optionPair) int {
-	rc := strings.Compare(o.Key, other.Key)
-	if rc < 0 {
-		return -1
-	} else if rc > 0 {
-		return 1
-	}
-	return strings.Compare(o.Value, other.Value)
-}
 
 func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
@@ -83,8 +67,16 @@ func versionHasJWTSecretKeyfile(v driver.Version) bool {
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version, autoUpgrade bool) []string {
-	options := make([]optionPair, 0, 64)
+	options := make([]pod.OptionPair, 0, 64)
 	svrSpec := deplSpec.GetServerGroupSpec(group)
+
+	i := pod.Input{
+		Deployment:  deplSpec,
+		Group:       group,
+		GroupSpec:   svrSpec,
+		Version:     version,
+		AutoUpgrade: autoUpgrade,
+	}
 
 	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
 	scheme := "tcp"
@@ -92,48 +84,48 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		scheme = "ssl"
 	}
 	options = append(options,
-		optionPair{"--server.endpoint", fmt.Sprintf("%s://%s:%d", scheme, deplSpec.GetListenAddr(), k8sutil.ArangoPort)},
+		pod.OptionPair{"--server.endpoint", fmt.Sprintf("%s://%s:%d", scheme, deplSpec.GetListenAddr(), k8sutil.ArangoPort)},
 	)
 
 	// Authentication
 	if deplSpec.IsAuthenticated() {
 		// With authentication
 		options = append(options,
-			optionPair{"--server.authentication", "true"},
+			pod.OptionPair{"--server.authentication", "true"},
 		)
 		if versionHasJWTSecretKeyfile(version) {
 			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options = append(options,
-				optionPair{"--server.jwt-secret-keyfile", keyPath},
+				pod.OptionPair{"--server.jwt-secret-keyfile", keyPath},
 			)
 		} else {
 			options = append(options,
-				optionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
+				pod.OptionPair{"--server.jwt-secret", "$(" + constants.EnvArangodJWTSecret + ")"},
 			)
 		}
 	} else {
 		// Without authentication
 		options = append(options,
-			optionPair{"--server.authentication", "false"},
+			pod.OptionPair{"--server.authentication", "false"},
 		)
 	}
 
 	// Storage engine
 	options = append(options,
-		optionPair{"--server.storage-engine", deplSpec.GetStorageEngine().AsArangoArgument()},
+		pod.OptionPair{"--server.storage-engine", deplSpec.GetStorageEngine().AsArangoArgument()},
 	)
 
 	// Logging
 	options = append(options,
-		optionPair{"--log.level", "INFO"},
+		pod.OptionPair{"--log.level", "INFO"},
 	)
 
 	// TLS
 	if deplSpec.IsSecure() {
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		options = append(options,
-			optionPair{"--ssl.keyfile", keyPath},
-			optionPair{"--ssl.ecdh-curve", ""}, // This way arangod accepts curves other than P256 as well.
+			pod.OptionPair{"--ssl.keyfile", keyPath},
+			pod.OptionPair{"--ssl.ecdh-curve", ""}, // This way arangod accepts curves other than P256 as well.
 		)
 		/*if bsCfg.SslKeyFile != "" {
 			if bsCfg.SslCAFile != "" {
@@ -147,89 +139,84 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 	if deplSpec.RocksDB.IsEncrypted() {
 		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
 		options = append(options,
-			optionPair{"--rocksdb.encryption-keyfile", keyPath},
+			pod.OptionPair{"--rocksdb.encryption-keyfile", keyPath},
 		)
 	}
 
 	options = append(options,
-		optionPair{"--database.directory", k8sutil.ArangodVolumeMountDir},
-		optionPair{"--log.output", "+"},
+		pod.OptionPair{"--database.directory", k8sutil.ArangodVolumeMountDir},
+		pod.OptionPair{"--log.output", "+"},
 	)
 
-	// Auto upgrade?
-	if autoUpgrade {
-		options = append(options,
-			optionPair{"--database.auto-upgrade", "true"},
-		)
-	}
+	options = append(options, pod.AutoUpgrade().Create(i)...)
 
 	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(version)
 
 	/*	if config.ServerThreads != 0 {
 		options = append(options,
-			optionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
+			pod.OptionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
 	}*/
 	/*if config.DebugCluster {
 		options = append(options,
-			optionPair{"--log.level", "startup=trace"})
+			pod.OptionPair{"--log.level", "startup=trace"})
 	}*/
 	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id), strconv.Itoa(k8sutil.ArangoPort))
 	addAgentEndpoints := false
 	switch group {
 	case api.ServerGroupAgents:
 		options = append(options,
-			optionPair{"--agency.disaster-recovery-id", id},
-			optionPair{"--agency.activate", "true"},
-			optionPair{"--agency.my-address", myTCPURL},
-			optionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.GetCount())},
-			optionPair{"--agency.supervision", "true"},
-			optionPair{"--foxx.queues", "false"},
-			optionPair{"--server.statistics", "false"},
+			pod.OptionPair{"--agency.disaster-recovery-id", id},
+			pod.OptionPair{"--agency.activate", "true"},
+			pod.OptionPair{"--agency.my-address", myTCPURL},
+			pod.OptionPair{"--agency.size", strconv.Itoa(deplSpec.Agents.GetCount())},
+			pod.OptionPair{"--agency.supervision", "true"},
+			pod.OptionPair{"--foxx.queues", "false"},
+			pod.OptionPair{"--server.statistics", "false"},
 		)
 		for _, p := range agents {
 			if p.ID != id {
 				dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), p.ID)
 				options = append(options,
-					optionPair{"--agency.endpoint", fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))},
+					pod.OptionPair{"--agency.endpoint", fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))},
 				)
 			}
 		}
 	case api.ServerGroupDBServers:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-address", myTCPURL},
-			optionPair{"--cluster.my-role", "PRIMARY"},
-			optionPair{"--foxx.queues", "false"},
-			optionPair{"--server.statistics", "true"},
+			pod.OptionPair{"--cluster.my-address", myTCPURL},
+			pod.OptionPair{"--cluster.my-role", "PRIMARY"},
+			pod.OptionPair{"--foxx.queues", "false"},
+			pod.OptionPair{"--server.statistics", "true"},
 		)
 	case api.ServerGroupCoordinators:
 		addAgentEndpoints = true
 		options = append(options,
-			optionPair{"--cluster.my-address", myTCPURL},
-			optionPair{"--cluster.my-role", "COORDINATOR"},
-			optionPair{"--foxx.queues", "true"},
-			optionPair{"--server.statistics", "true"},
+			pod.OptionPair{"--cluster.my-address", myTCPURL},
+			pod.OptionPair{"--cluster.my-role", "COORDINATOR"},
+			pod.OptionPair{"--foxx.queues", "true"},
+			pod.OptionPair{"--server.statistics", "true"},
 		)
 		if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
 			options = append(options,
-				optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
+				pod.OptionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 			)
 		}
 	case api.ServerGroupSingle:
 		options = append(options,
-			optionPair{"--foxx.queues", "true"},
-			optionPair{"--server.statistics", "true"},
+			pod.OptionPair{"--foxx.queues", "true"},
+			pod.OptionPair{"--server.statistics", "true"},
 		)
 		if deplSpec.GetMode() == api.DeploymentModeActiveFailover {
 			addAgentEndpoints = true
 			options = append(options,
-				optionPair{"--replication.automatic-failover", "true"},
-				optionPair{"--cluster.my-address", myTCPURL},
-				optionPair{"--cluster.my-role", "SINGLE"},
+				pod.OptionPair{"--replication.automatic-failover", "true"},
+				pod.OptionPair{"--cluster.my-address", myTCPURL},
+				pod.OptionPair{"--cluster.my-role", "SINGLE"},
 			)
 			if deplSpec.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
 				options = append(options,
-					optionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
+					pod.OptionPair{"--cluster.my-advertised-endpoint", deplSpec.ExternalAccess.GetAdvertisedEndpoint()},
 				)
 			}
 		}
@@ -238,7 +225,7 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 		for _, p := range agents {
 			dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), p.ID)
 			options = append(options,
-				optionPair{"--cluster.agency-endpoint",
+				pod.OptionPair{"--cluster.agency-endpoint",
 					fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))},
 			)
 		}
@@ -259,22 +246,22 @@ func createArangodArgs(apiObject metav1.Object, deplSpec api.DeploymentSpec, gro
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
 func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
 	groupSpec api.ServerGroupSpec, id string) []string {
-	options := make([]optionPair, 0, 64)
+	options := make([]pod.OptionPair, 0, 64)
 	var runCmd string
 	var port int
 
 	/*if config.DebugCluster {
 		options = append(options,
-			optionPair{"--log.level", "debug"})
+			pod.OptionPair{"--log.level", "debug"})
 	}*/
 	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		options = append(options,
-			optionPair{"--monitoring.token", "$(" + constants.EnvArangoSyncMonitoringToken + ")"},
+			pod.OptionPair{"--monitoring.token", "$(" + constants.EnvArangoSyncMonitoringToken + ")"},
 		)
 	}
 	masterSecretPath := filepath.Join(k8sutil.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	options = append(options,
-		optionPair{"--master.jwt-secret", masterSecretPath},
+		pod.OptionPair{"--master.jwt-secret", masterSecretPath},
 	)
 	var masterEndpoint []string
 	switch group {
@@ -285,14 +272,14 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options = append(options,
-			optionPair{"--server.keyfile", keyPath},
-			optionPair{"--server.client-cafile", clientCAPath},
-			optionPair{"--mq.type", "direct"},
+			pod.OptionPair{"--server.keyfile", keyPath},
+			pod.OptionPair{"--server.client-cafile", clientCAPath},
+			pod.OptionPair{"--mq.type", "direct"},
 		)
 		if spec.IsAuthenticated() {
 			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options = append(options,
-				optionPair{"--cluster.jwt-secret", clusterSecretPath},
+				pod.OptionPair{"--cluster.jwt-secret", clusterSecretPath},
 			)
 		}
 		dbServiceName := k8sutil.CreateDatabaseClientServiceName(apiObject.GetName())
@@ -301,7 +288,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 			scheme = "https"
 		}
 		options = append(options,
-			optionPair{"--cluster.endpoint", fmt.Sprintf("%s://%s:%d", scheme, dbServiceName, k8sutil.ArangoPort)})
+			pod.OptionPair{"--cluster.endpoint", fmt.Sprintf("%s://%s:%d", scheme, dbServiceName, k8sutil.ArangoPort)})
 	case api.ServerGroupSyncWorkers:
 		runCmd = "worker"
 		port = k8sutil.ArangoSyncWorkerPort
@@ -310,12 +297,12 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	}
 	for _, ep := range masterEndpoint {
 		options = append(options,
-			optionPair{"--master.endpoint", ep})
+			pod.OptionPair{"--master.endpoint", ep})
 	}
 	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id), strconv.Itoa(port))
 	options = append(options,
-		optionPair{"--server.endpoint", serverEndpoint},
-		optionPair{"--server.port", strconv.Itoa(port)},
+		pod.OptionPair{"--server.endpoint", serverEndpoint},
+		pod.OptionPair{"--server.port", strconv.Itoa(port)},
 	)
 
 	args := make([]string, 0, 2+len(options)+len(groupSpec.Args))
