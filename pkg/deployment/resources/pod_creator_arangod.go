@@ -64,12 +64,12 @@ func (a *ArangoDContainer) GetExecutor() string {
 func (a *ArangoDContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
 	var liveness, readiness *v1.Probe
 
-	probeLivenessConfig, err := a.resources.createLivenessProbe(a.spec, a.group)
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.createReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
 		return nil, nil, err
 	}

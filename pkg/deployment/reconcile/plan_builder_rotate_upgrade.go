@@ -23,6 +23,7 @@
 package reconcile
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"reflect"
 	"strings"
 
@@ -31,13 +32,13 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
 func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, context PlanBuilderContext, pods []v1.Pod) api.Plan {
+	status api.DeploymentStatus, context PlanBuilderContext, pods []core.Pod) api.Plan {
 
 	var newPlan api.Plan
 	var upgradeNotAllowed bool
@@ -104,7 +105,7 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(log zerolog.Logger, p v1.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+func podNeedsUpgrading(log zerolog.Logger, p core.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
 	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
 		specImageInfo, found := images.GetByImage(spec.GetImage())
 		if !found {
@@ -174,7 +175,7 @@ func podNeedsUpgrading(log zerolog.Logger, p v1.Pod, spec api.DeploymentSpec, im
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+func podNeedsRotation(log zerolog.Logger, p core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, id string,
 	context PlanBuilderContext) (bool, string) {
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -238,7 +239,7 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 	}
 
 	// Check resource requirements
-	var resources v1.ResourceRequirements
+	var resources core.ResourceRequirements
 	if groupSpec.HasVolumeClaimTemplate() {
 		resources = groupSpec.Resources // If there is a volume claim template compare all resources
 	} else {
@@ -251,12 +252,12 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 
 	var memberStatus, _, _ = status.Members.MemberStatusByPodName(p.GetName())
 	if memberStatus.SideCarSpecs == nil {
-		memberStatus.SideCarSpecs = make(map[string]v1.Container)
+		memberStatus.SideCarSpecs = make(map[string]core.Container)
 	}
 
 	// Check for missing side cars in
 	for _, specSidecar := range groupSpec.GetSidecars() {
-		var stateSidecar v1.Container
+		var stateSidecar core.Container
 		if stateSidecar, found = memberStatus.SideCarSpecs[specSidecar.Name]; !found {
 			return true, "Sidecar " + specSidecar.Name + " not found in running pod " + p.GetName()
 		}
@@ -278,6 +279,80 @@ func podNeedsRotation(log zerolog.Logger, p v1.Pod, apiObject metav1.Object, spe
 		}
 	}
 
+	// Check for probe changes
+
+	// Readiness
+	if rotate, reason := compareProbes(pod.ReadinessSpec(group),
+		groupSpec.GetProbesSpec().GetReadinessProbeDisabled(),
+		groupSpec.GetProbesSpec().ReadinessProbeSpec,
+		c.ReadinessProbe); rotate {
+		return rotate, reason
+	}
+
+	// Liveness
+	if rotate, reason := compareProbes(pod.LivenessSpec(group),
+		groupSpec.GetProbesSpec().LivenessProbeDisabled,
+		groupSpec.GetProbesSpec().LivenessProbeSpec,
+		c.LivenessProbe); rotate {
+		return rotate, reason
+	}
+
+	return false, ""
+}
+
+func compareProbes(probe pod.Probe, groupProbeDisabled *bool, groupProbeSpec *api.ServerGroupProbeSpec, containerProbe *core.Probe) (bool, string) {
+	if !probe.CanBeEnabled {
+		if containerProbe != nil {
+			return true, "Probe needs to be disabled"
+		}
+		// Nothing to do - we cannot enable probe and probe is disabled
+		return false, ""
+	}
+
+	enabled := probe.EnabledByDefault
+
+	if groupProbeDisabled != nil {
+		enabled = !*groupProbeDisabled
+	}
+
+	if enabled && containerProbe == nil {
+		// We expected probe to be enabled but it is disabled in container
+		return true, "Enabling probe"
+	}
+
+	if !enabled {
+		if containerProbe != nil {
+			// We expected probe to be disabled but it is enabled in container
+			return true, "Disabling probe"
+		}
+
+		// Nothing to do - probe is disabled and it should stay as it is
+		return false, ""
+	}
+
+	if groupProbeSpec.GetTimeoutSeconds(containerProbe.TimeoutSeconds) != containerProbe.TimeoutSeconds {
+		return true, "Timeout seconds does not match"
+	}
+
+	if groupProbeSpec.GetPeriodSeconds(containerProbe.PeriodSeconds) != containerProbe.PeriodSeconds {
+		return true, "Period seconds does not match"
+	}
+
+	// Recreate probe if timeout seconds are different
+	if groupProbeSpec.GetInitialDelaySeconds(containerProbe.InitialDelaySeconds) != containerProbe.InitialDelaySeconds {
+		return true, "Initial delay seconds does not match"
+	}
+
+	// Recreate probe if timeout seconds are different
+	if groupProbeSpec.GetFailureThreshold(containerProbe.FailureThreshold) != containerProbe.FailureThreshold {
+		return true, "Failure threshold does not match"
+	}
+
+	// Recreate probe if timeout seconds are different
+	if groupProbeSpec.GetSuccessThreshold(containerProbe.SuccessThreshold) != containerProbe.SuccessThreshold {
+		return true, "Success threshold does not match"
+	}
+
 	return false, ""
 }
 
@@ -291,7 +366,7 @@ func clusterReadyForUpgrade(context PlanBuilderContext) bool {
 }
 
 // sideCarRequireRotation checks if side car requires rotation including default parameters
-func sideCarRequireRotation(wanted, given *v1.Container) bool {
+func sideCarRequireRotation(wanted, given *core.Container) bool {
 	return !reflect.DeepEqual(wanted, given)
 }
 
@@ -329,7 +404,7 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	return plan
 }
 
-func getContainerArgs(c v1.Container) []string {
+func getContainerArgs(c core.Container) []string {
 	if len(c.Command) >= 1 {
 		return c.Command[1:]
 	}

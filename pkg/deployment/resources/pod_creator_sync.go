@@ -41,7 +41,7 @@ type ArangoSyncContainer struct {
 	spec      api.DeploymentSpec
 	group     api.ServerGroup
 	resources *Resources
-	image     string
+	imageInfo api.ImageInfo
 }
 
 type MemberSyncPod struct {
@@ -53,7 +53,7 @@ type MemberSyncPod struct {
 	spec                   api.DeploymentSpec
 	group                  api.ServerGroup
 	resources              *Resources
-	image                  string
+	imageInfo              api.ImageInfo
 }
 
 func (a *ArangoSyncContainer) GetExecutor() string {
@@ -61,16 +61,27 @@ func (a *ArangoSyncContainer) GetExecutor() string {
 }
 
 func (a *ArangoSyncContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
-	livenessProbe, err := a.resources.createLivenessProbe(a.spec, a.group)
+	var liveness, readiness *v1.Probe
+
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if livenessProbe != nil {
-		return livenessProbe.Create(), nil, nil
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return nil, nil, nil
+	if probeLivenessConfig != nil {
+		liveness = probeLivenessConfig.Create()
+	}
+
+	if probeReadinessConfig != nil {
+		readiness = probeReadinessConfig.Create()
+	}
+
+	return liveness, readiness, nil
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() v1.ResourceRequirements {
@@ -89,7 +100,7 @@ func (a *ArangoSyncContainer) GetImagePullPolicy() v1.PullPolicy {
 }
 
 func (a *ArangoSyncContainer) GetImage() string {
-	return a.image
+	return a.imageInfo.Image
 }
 
 func (a *ArangoSyncContainer) GetEnvs() []v1.EnvVar {
@@ -219,7 +230,7 @@ func (m *MemberSyncPod) GetContainerCreator() k8sutil.ContainerCreator {
 		spec:      m.spec,
 		group:     m.group,
 		resources: m.resources,
-		image:     m.image,
+		imageInfo: m.imageInfo,
 	}
 }
 

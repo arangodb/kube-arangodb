@@ -76,6 +76,30 @@ func IntOrDefault(input *int, defaultValue ...int) int {
 	return *input
 }
 
+// New32Int returns a reference to an int with given value.
+func NewInt32(input int32) *int32 {
+	return &input
+}
+
+// New32IntOrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewInt32OrNil(input *int32) *int32 {
+	if input == nil {
+		return nil
+	}
+	return NewInt32(*input)
+}
+
+// Int32OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func Int32OrDefault(input *int32, defaultValue ...int32) int32 {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return 0
+	}
+	return *input
+}
+
 // NewBool returns a reference to a bool with given value.
 func NewBool(input bool) *bool {
 	return &input
