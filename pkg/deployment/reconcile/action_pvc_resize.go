@@ -24,6 +24,9 @@ package reconcile
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -53,47 +56,54 @@ type actionPVCResize struct {
 func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 	log := a.log
 	group := a.action.Group
+	groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(group)
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
+		return true, nil
 	}
-	// Remove finalizers, so Kubernetes will quickly terminate the pod
-	if err := a.actionCtx.RemovePodFinalizers(m.PodName); err != nil {
-		return false, maskAny(err)
-	}
-	if group.IsArangod() {
-		// Invoke shutdown endpoint
-		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, maskAny(err)
-		}
-		removeFromCluster := false
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
-		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
-			// Shutdown failed. Let's check if we're already done
-			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
-				// We're done
-				return true, nil
-			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, maskAny(err)
-		}
-	} else if group.IsArangosync() {
-		// Terminate pod
-		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, maskAny(err)
-		}
-	}
-	// Update status
-	m.Phase = api.MemberPhaseRotating
 
-	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+	if m.PersistentVolumeClaimName == "" {
+		// Nothing to do, PVC is empty
+		return true, nil
 	}
-	return false, nil
+
+	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	}
+
+	var res core.ResourceList
+	if groupSpec.HasVolumeClaimTemplate() {
+		res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+	} else {
+		res = groupSpec.Resources.Requests
+	}
+
+	if requestedSize, ok := res[core.ResourceStorage]; ok {
+		if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
+			cmp := volumeSize.Cmp(requestedSize)
+			if cmp < 0 {
+				pvc.Spec.Resources.Requests[core.ResourceStorage] = requestedSize
+				if err := a.actionCtx.UpdatePvc(pvc); err != nil {
+					return false, err
+				}
+
+				return false, nil
+			}else if cmp < 0 {
+				log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+					Msg("Volume size should not shrink")
+				a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
+				return false, nil
+			}
+		}
+	}
+
+	return true, nil
 }
 
 // CheckProgress checks the progress of the action.
@@ -106,27 +116,40 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		log.Error().Msg("No such member")
 		return true, false, nil
 	}
-	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		// Pod is not yet terminated
-		return false, false, nil
+
+	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return true,false, nil
+		}
+
+		return false, true, err
 	}
-	// Pod is terminated, we can now remove it
-	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-		return false, false, maskAny(err)
+
+	pv, err := a.actionCtx.GetPv(pvc.Spec.VolumeName)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return true,false, nil
+		}
+
+		return false, true, err
 	}
-	// Pod is now gone, update the member status
-	m.Phase = api.MemberPhaseNone
-	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
-	m.CleanoutJobID = ""
-	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, false, maskAny(err)
+
+	if requestedSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
+		if volumeSize, ok := pv.Spec.Capacity[core.ResourceStorage]; ok {
+			cmp := volumeSize.Cmp(requestedSize)
+			if cmp == 0 {
+				return true, false, nil
+			}
+		}
 	}
-	return true, false, nil
+
+	return false, false, nil
 }
 
 // Timeout returns the amount of time after which this action will timeout.
 func (a *actionPVCResize) Timeout() time.Duration {
-	return rotateMemberTimeout
+	return pvcResizeTimeout
 }
 
 // Return the MemberID used / created in this action

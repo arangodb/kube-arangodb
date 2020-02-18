@@ -29,7 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	apiv1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -58,7 +57,6 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
-	spec := r.context.GetSpec()
 	for _, p := range pvcs {
 		// PVC belongs to this deployment, update metric
 		inspectedPVCsCounters.WithLabelValues(deploymentName).Inc()
@@ -93,22 +91,4 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 	}
 
 	return nextInterval, nil
-}
-
-func compareResourceList(wanted, given apiv1.ResourceList) bool {
-	for k, v := range wanted {
-		if gv, ok := given[k]; !ok {
-			return true
-		} else if v.Cmp(gv) != 0 {
-			return true
-		}
-	}
-
-	for k := range given {
-		if _, ok := wanted[k]; !ok {
-			return true
-		}
-	}
-
-	return false
 }

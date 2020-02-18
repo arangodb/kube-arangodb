@@ -113,7 +113,6 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 							} else if cmp > 0 {
 								log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
 									Msg("Volume size should not shrink")
-								r.context.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(r.context.GetAPIObject(), p.Name))
 							}
 						}
 					}
@@ -131,6 +130,12 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 	case api.PVCResizeModeRuntime:
 		return api.Plan{
 			api.NewAction(api.ActionTypePVCResize, group, memberID),
+		}
+	case api.PVCResizeModeRotate:
+		return api.Plan{
+			api.NewAction(api.ActionTypeRotateMember, group, memberID),
+			api.NewAction(api.ActionTypePVCResize, group, memberID),
+			api.NewAction(api.ActionTypeWaitForMemberUp, group, memberID),
 		}
 	default:
 		log.Error().Str("server-group", group.AsRole()).Str("mode", mode.String()).
