@@ -189,6 +189,8 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewDisableScalingCluster(log, action, actionCtx)
 	case api.ActionTypeEnableClusterScaling:
 		return NewEnableScalingCluster(log, action, actionCtx)
+	case api.ActionTypePVCResize:
+		return NewPVCResizeAction(log, action, actionCtx)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}

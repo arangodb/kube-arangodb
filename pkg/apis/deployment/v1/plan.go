@@ -58,6 +58,8 @@ const (
 	ActionTypeDisableClusterScaling ActionType = "ScalingDisabled"
 	// ActionTypeEnableClusterScaling turns on scaling DBservers and coordinators
 	ActionTypeEnableClusterScaling ActionType = "ScalingEnabled"
+	// ActionTypePVCResize resize event for PVC
+	ActionTypePVCResize ActionType = "PVCResize"
 )
 
 const (
