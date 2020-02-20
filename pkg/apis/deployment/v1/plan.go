@@ -44,6 +44,10 @@ const (
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
+	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.
+	ActionTypeRotateStartMember ActionType = "RotateStartMember"
+	// ActionTypeRotateMember causes a member to be restored.
+	ActionTypeRotateStopMember ActionType = "RotateStopMember"
 	// ActionTypeUpgradeMember causes a member to be shutdown and have it's pod removed, restarted with AutoUpgrade option, waited until termination and the restarted again.
 	ActionTypeUpgradeMember ActionType = "UpgradeMember"
 	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
@@ -60,6 +64,8 @@ const (
 	ActionTypeEnableClusterScaling ActionType = "ScalingEnabled"
 	// ActionTypePVCResize resize event for PVC
 	ActionTypePVCResize ActionType = "PVCResize"
+	// ActionTypePVCResized waits for PVC to resize for defined time
+	ActionTypePVCResized ActionType = "PVCResized"
 )
 
 const (

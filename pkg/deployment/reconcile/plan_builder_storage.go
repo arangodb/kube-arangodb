@@ -133,8 +133,10 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 		}
 	case api.PVCResizeModeRotate:
 		return api.Plan{
-			api.NewAction(api.ActionTypeRotateMember, group, memberID),
+			api.NewAction(api.ActionTypeRotateStartMember, group, memberID),
 			api.NewAction(api.ActionTypePVCResize, group, memberID),
+			api.NewAction(api.ActionTypePVCResized, group, memberID),
+			api.NewAction(api.ActionTypeRotateStopMember, group, memberID),
 			api.NewAction(api.ActionTypeWaitForMemberUp, group, memberID),
 		}
 	default:

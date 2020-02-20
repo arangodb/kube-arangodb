@@ -35,8 +35,8 @@ import (
 
 // NewRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func NewPVCResizeAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionPVCResize{
+func NewPVCResizedAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	return &actionPVCResized{
 		log:       log,
 		action:    action,
 		actionCtx: actionCtx,
@@ -44,7 +44,7 @@ func NewPVCResizeAction(log zerolog.Logger, action api.Action, actionCtx ActionC
 }
 
 // actionRotateMember implements an RotateMember.
-type actionPVCResize struct {
+type actionPVCResized struct {
 	log       zerolog.Logger
 	action    api.Action
 	actionCtx ActionContext
@@ -53,62 +53,13 @@ type actionPVCResize struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
-	log := a.log
-	group := a.action.Group
-	groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(group)
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
-	if !ok {
-		log.Error().Msg("No such member")
-		return true, nil
-	}
-
-	if m.PersistentVolumeClaimName == "" {
-		// Nothing to do, PVC is empty
-		return true, nil
-	}
-
-	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return true, nil
-		}
-
-		return false, err
-	}
-
-	var res core.ResourceList
-	if groupSpec.HasVolumeClaimTemplate() {
-		res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
-	} else {
-		res = groupSpec.Resources.Requests
-	}
-
-	if requestedSize, ok := res[core.ResourceStorage]; ok {
-		if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-			cmp := volumeSize.Cmp(requestedSize)
-			if cmp < 0 {
-				pvc.Spec.Resources.Requests[core.ResourceStorage] = requestedSize
-				if err := a.actionCtx.UpdatePvc(pvc); err != nil {
-					return false, err
-				}
-
-				return false, nil
-			}else if cmp > 0 {
-				log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-					Msg("Volume size should not shrink")
-				a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
-				return false, nil
-			}
-		}
-	}
-
-	return true, nil
+func (a *actionPVCResized) Start(ctx context.Context) (bool, error) {
+	return false, nil
 }
 
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
-func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
 	log := a.log
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
@@ -126,17 +77,13 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		return false, true, err
 	}
 
-	pv, err := a.actionCtx.GetPv(pvc.Spec.VolumeName)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return true,false, nil
-		}
-
-		return false, true, err
+	// If we are pending for FS to be resized - we need to proceed with mounting of PVC
+	if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
+		return true, false, nil
 	}
 
 	if requestedSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-		if volumeSize, ok := pv.Spec.Capacity[core.ResourceStorage]; ok {
+		if volumeSize, ok := pvc.Status.Capacity[core.ResourceStorage]; ok {
 			cmp := volumeSize.Cmp(requestedSize)
 			if cmp >= 0 {
 				return true, false, nil
@@ -148,11 +95,11 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 }
 
 // Timeout returns the amount of time after which this action will timeout.
-func (a *actionPVCResize) Timeout() time.Duration {
-	return pvcResizeTimeout
+func (a *actionPVCResized) Timeout() time.Duration {
+	return pvcResizedTimeout
 }
 
 // Return the MemberID used / created in this action
-func (a *actionPVCResize) MemberID() string {
+func (a *actionPVCResized) MemberID() string {
 	return a.action.MemberID
 }
