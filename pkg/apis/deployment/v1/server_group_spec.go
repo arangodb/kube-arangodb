@@ -72,37 +72,101 @@ type ServerGroupSpec struct {
 type ServerGroupProbesSpec struct {
 	// LivenessProbeDisabled if true livenessProbes are disabled
 	LivenessProbeDisabled *bool `json:"livenessProbeDisabled,omitempty"`
-	// LivenessProbeDisabled if specified the given probes is used as liveness probe
-	//LivenessProbeOverride *v1.Probe `json:"LivenessProbeOverride,omitempty"`
-	// LivenessProbeDisabled if true readinessProbes are disabled
-	ReadinessProbeDisabled *bool `json:"ReadinessProbeDisabled,omitempty"`
-	// ReadinessProbeOverride if specified the given probes is used as readiness probe
-	//ReadinessProbeOverride *v1.Probe `json:"ReadinessProbeOverride,omitempty"`
+	// LivenessProbeSpec override liveness probe configuration
+	LivenessProbeSpec *ServerGroupProbeSpec `json:"livenessProbeSpec,omitempty"`
+
+	// OldReadinessProbeDisabled if true readinessProbes are disabled
+	//
+	// Deprecated: This field is deprecated, keept only for backward compatibility.
+	OldReadinessProbeDisabled *bool `json:"ReadinessProbeDisabled,omitempty"`
+	// ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
+	ReadinessProbeDisabled *bool `json:"readinessProbeDisabled,omitempty"`
+	// ReadinessProbeSpec override readiness probe configuration
+	ReadinessProbeSpec *ServerGroupProbeSpec `json:"readinessProbeSpec,omitempty"`
 }
 
-// // HasLivenessProbeOverride returns true if a livenessprobe override is set
-// func (s ServerGroupProbesSpec) HasLivenessProbeOverride() bool {
-// 	return s.LivenessProbeOverride != nil
-// }
+// GetReadinessProbeDisabled returns in proper manner readiness probe flag with backward compatibility.
+func (s ServerGroupProbesSpec) GetReadinessProbeDisabled() *bool {
+	if s.OldReadinessProbeDisabled != nil {
+		return s.OldReadinessProbeDisabled
+	}
 
-// // HasReadinessProbeOverride returns true if a readinessprobe override is set
-// func (s ServerGroupProbesSpec) HasReadinessProbeOverride() bool {
-// 	return s.ReadinessProbeOverride != nil
-// }
+	return s.ReadinessProbeDisabled
+}
+
+// ServerGroupProbeSpec
+type ServerGroupProbeSpec struct {
+	InitialDelaySeconds *int32 `json:"initialDelaySeconds,omitempty"`
+	PeriodSeconds       *int32 `json:"periodSeconds,omitempty"`
+	TimeoutSeconds      *int32 `json:"timeoutSeconds,omitempty"`
+	SuccessThreshold    *int32 `json:"successThreshold,omitempty"`
+	FailureThreshold    *int32 `json:"failureThreshold,omitempty"`
+}
+
+// GetInitialDelaySeconds return InitialDelaySeconds valid value. In case if InitialDelaySeconds is nil default is returned.
+func (s *ServerGroupProbeSpec) GetInitialDelaySeconds(d int32) int32 {
+	if s == nil || s.InitialDelaySeconds == nil {
+		return d // Default Kubernetes value
+	}
+
+	return *s.InitialDelaySeconds
+}
+
+// GetPeriodSeconds return PeriodSeconds valid value. In case if PeriodSeconds is nil default is returned.
+func (s *ServerGroupProbeSpec) GetPeriodSeconds(d int32) int32 {
+	if s == nil || s.PeriodSeconds == nil {
+		return d
+	}
+
+	if *s.PeriodSeconds <= 0 {
+		return 1 // Value 0 is not allowed
+	}
+
+	return *s.PeriodSeconds
+}
+
+// GetTimeoutSeconds return TimeoutSeconds valid value. In case if TimeoutSeconds is nil default is returned.
+func (s *ServerGroupProbeSpec) GetTimeoutSeconds(d int32) int32 {
+	if s == nil || s.TimeoutSeconds == nil {
+		return d
+	}
+
+	if *s.TimeoutSeconds <= 0 {
+		return 1 // Value 0 is not allowed
+	}
+
+	return *s.TimeoutSeconds
+}
+
+// GetSuccessThreshold return SuccessThreshold valid value. In case if SuccessThreshold is nil default is returned.
+func (s *ServerGroupProbeSpec) GetSuccessThreshold(d int32) int32 {
+	if s == nil || s.SuccessThreshold == nil {
+		return d
+	}
+
+	if *s.SuccessThreshold <= 0 {
+		return 1 // Value 0 is not allowed
+	}
+
+	return *s.SuccessThreshold
+}
+
+// GetFailureThreshold return FailureThreshold valid value. In case if FailureThreshold is nil default is returned.
+func (s *ServerGroupProbeSpec) GetFailureThreshold(d int32) int32 {
+	if s == nil || s.FailureThreshold == nil {
+		return d
+	}
+
+	if *s.FailureThreshold <= 0 {
+		return 1 // Value 0 is not allowed
+	}
+
+	return *s.FailureThreshold
+}
 
 // GetSidecars returns a list of sidecars the use wish to add
 func (s ServerGroupSpec) GetSidecars() []v1.Container {
 	return s.Sidecars
-}
-
-// IsLivenessProbeDisabled returns true if liveness probes are disabled
-func (s ServerGroupProbesSpec) IsLivenessProbeDisabled() bool {
-	return util.BoolOrDefault(s.LivenessProbeDisabled)
-}
-
-// IsReadinessProbeDisabled returns true if readiness probes are disabled
-func (s ServerGroupProbesSpec) IsReadinessProbeDisabled() bool {
-	return util.BoolOrDefault(s.ReadinessProbeDisabled)
 }
 
 // HasVolumeClaimTemplate returns whether there is a volumeClaimTemplate or not

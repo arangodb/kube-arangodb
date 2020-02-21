@@ -36,7 +36,6 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -318,123 +317,6 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
-// createLivenessProbe creates configuration for a liveness probe of a server in the given group.
-func (r *Resources) createLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup) (*k8sutil.HTTPProbeConfig, error) {
-	groupspec := spec.GetServerGroupSpec(group)
-
-	if groupspec.HasProbesSpec() {
-		probesspec := groupspec.GetProbesSpec()
-		if probesspec.IsLivenessProbeDisabled() {
-			return nil, nil
-		}
-	}
-
-	switch group {
-	case api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupDBServers:
-		authorization := ""
-		if spec.IsAuthenticated() {
-			secretData, err := r.getJWTSecret(spec)
-			if err != nil {
-				return nil, maskAny(err)
-			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
-			if err != nil {
-				return nil, maskAny(err)
-			}
-		}
-		return &k8sutil.HTTPProbeConfig{
-			LocalPath:     "/_api/version",
-			Secure:        spec.IsSecure(),
-			Authorization: authorization,
-		}, nil
-	case api.ServerGroupCoordinators:
-		return nil, nil
-	case api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers:
-		authorization := ""
-		port := k8sutil.ArangoSyncMasterPort
-		if group == api.ServerGroupSyncWorkers {
-			port = k8sutil.ArangoSyncWorkerPort
-		}
-		if spec.Sync.Monitoring.GetTokenSecretName() != "" {
-			// Use monitoring token
-			token, err := r.getSyncMonitoringToken(spec)
-			if err != nil {
-				return nil, maskAny(err)
-			}
-			authorization = "bearer " + token
-		} else if group == api.ServerGroupSyncMasters {
-			// Fall back to JWT secret
-			secretData, err := r.getSyncJWTSecret(spec)
-			if err != nil {
-				return nil, maskAny(err)
-			}
-			authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
-			if err != nil {
-				return nil, maskAny(err)
-			}
-		} else {
-			// Don't have a probe
-			return nil, nil
-		}
-		return &k8sutil.HTTPProbeConfig{
-			LocalPath:     "/_api/version",
-			Secure:        spec.IsSecure(),
-			Authorization: authorization,
-			Port:          port,
-		}, nil
-	default:
-		return nil, nil
-	}
-}
-
-// createReadinessProbe creates configuration for a readiness probe of a server in the given group.
-func (r *Resources) createReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
-	groupspec := spec.GetServerGroupSpec(group)
-
-	if groupspec.HasProbesSpec() {
-		probesspec := groupspec.GetProbesSpec()
-		if probesspec.IsReadinessProbeDisabled() {
-			return nil, nil
-		}
-	}
-
-	if group != api.ServerGroupSingle && group != api.ServerGroupCoordinators {
-		return nil, nil
-	}
-
-	localPath := "/_api/version"
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		localPath = "/_admin/echo"
-	}
-
-	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		localPath = "/_admin/server/availability"
-	}
-
-	authorization := ""
-	if spec.IsAuthenticated() {
-		secretData, err := r.getJWTSecret(spec)
-		if err != nil {
-			return nil, maskAny(err)
-		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{localPath})
-		if err != nil {
-			return nil, maskAny(err)
-		}
-	}
-	probeCfg := &k8sutil.HTTPProbeConfig{
-		LocalPath:           localPath,
-		Secure:              spec.IsSecure(),
-		Authorization:       authorization,
-		InitialDelaySeconds: 2,
-		PeriodSeconds:       2,
-	}
-
-	return probeCfg, nil
-}
-
 // CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
 func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
 	switch group {
@@ -597,9 +479,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			return maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
-		imageID := imageInfo.ImageID
+		imageInfo := imageInfo
 		if spec.Sync.HasSyncImage() {
-			imageID = spec.Sync.GetSyncImage()
+			imageInfo.Image = spec.Sync.GetSyncImage()
 		}
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
@@ -656,7 +538,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			spec:                   spec,
 			group:                  group,
 			resources:              r,
-			image:                  imageID,
+			imageInfo:              imageInfo,
 		}
 
 		if err := CreateArangoPod(kubecli, apiObject, role, m.ID, m.PodName, args, &memberSyncPod); err != nil {
