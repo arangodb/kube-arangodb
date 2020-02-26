@@ -1,5 +1,10 @@
 # Change Log
 
+## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add new VolumeResize mode to be compatible with Azure flow
+- Allow to customize probe configuration options
+- Add new upgrade flag for ArangoDB 3.6.0<=
+
 ## [0.4.3](https://github.com/arangodb/kube-arangodb/tree/0.4.3) (2020-01-31)
 - Prevent DBServer deletion if there are any shards active on it
 - Add Maintenance mode annotation for ArangoDeployment
