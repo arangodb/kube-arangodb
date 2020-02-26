@@ -26,7 +26,7 @@ type PVCResizeMode string
 
 const (
 	PVCResizeModeRuntime PVCResizeMode = "runtime"
-	PVCResizeModeRotate PVCResizeMode = "rotate"
+	PVCResizeModeRotate  PVCResizeMode = "rotate"
 )
 
 func (p *PVCResizeMode) Get() PVCResizeMode {

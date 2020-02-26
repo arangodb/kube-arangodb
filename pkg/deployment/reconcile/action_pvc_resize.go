@@ -24,10 +24,11 @@ package reconcile
 
 import (
 	"context"
+	"time"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -94,7 +95,7 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 				}
 
 				return false, nil
-			}else if cmp > 0 {
+			} else if cmp > 0 {
 				log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
 					Msg("Volume size should not shrink")
 				a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
@@ -120,7 +121,7 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return true,false, nil
+			return true, false, nil
 		}
 
 		return false, true, err
@@ -129,7 +130,7 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 	pv, err := a.actionCtx.GetPv(pvc.Spec.VolumeName)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return true,false, nil
+			return true, false, nil
 		}
 
 		return false, true, err
