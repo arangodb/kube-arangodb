@@ -54,6 +54,14 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) UpdatePvc(pvc *core.PersistentVolumeClaim) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetPv(pvName string) (*core.PersistentVolume, error) {
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error {
 	return nil
 }
