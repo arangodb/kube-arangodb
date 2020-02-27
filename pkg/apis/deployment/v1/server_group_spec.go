@@ -64,6 +64,8 @@ type ServerGroupSpec struct {
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// VolumeClaimTemplate specifies a template for volume claims
 	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	// VolumeResizeMode specified resize mode for pvc
+	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
 }

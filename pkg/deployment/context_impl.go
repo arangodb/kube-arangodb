@@ -25,6 +25,7 @@ package deployment
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"net"
 	"strconv"
 
@@ -307,6 +308,31 @@ func (d *Deployment) DeletePvc(pvcName string) error {
 		return maskAny(err)
 	}
 	return nil
+}
+
+// UpdatePvc updated a persistent volume claim in the namespace
+// of the deployment. If the pvc does not exist, the error is ignored.
+func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
+	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(pvc)
+	if err == nil {
+		return nil
+	}
+
+	if errors.IsNotFound(err) {
+		return nil
+	}
+
+	return maskAny(err)
+}
+
+// GetPv returns PV info about PV with given name.
+func (d *Deployment) GetPv(pvName string) (*v1.PersistentVolume, error) {
+	pv, err := d.GetKubeCli().CoreV1().PersistentVolumes().Get(pvName, metav1.GetOptions{})
+	if err == nil {
+		return pv, nil
+	}
+
+	return nil, maskAny(err)
 }
 
 // GetOwnedPods returns a list of all pods owned by the deployment.

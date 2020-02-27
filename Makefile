@@ -221,14 +221,15 @@ $(BIN): $(SOURCES) dashboard/assets.go VERSION
 
 .PHONY: docker
 docker: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
+	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORIMAGE)
 endif
 
 .PHONY: docker-ubi
 docker-ubi: check-vars $(BIN)
-	docker build -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE) .
+	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
+	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORUBIIMAGE)
 endif

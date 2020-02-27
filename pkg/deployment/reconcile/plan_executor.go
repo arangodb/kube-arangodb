@@ -175,6 +175,10 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewShutdownMemberAction(log, action, actionCtx)
 	case api.ActionTypeRotateMember:
 		return NewRotateMemberAction(log, action, actionCtx)
+	case api.ActionTypeRotateStartMember:
+		return NewRotateStartMemberAction(log, action, actionCtx)
+	case api.ActionTypeRotateStopMember:
+		return NewRotateStopMemberAction(log, action, actionCtx)
 	case api.ActionTypeUpgradeMember:
 		return NewUpgradeMemberAction(log, action, actionCtx)
 	case api.ActionTypeWaitForMemberUp:
@@ -189,6 +193,10 @@ func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, actio
 		return NewDisableScalingCluster(log, action, actionCtx)
 	case api.ActionTypeEnableClusterScaling:
 		return NewEnableScalingCluster(log, action, actionCtx)
+	case api.ActionTypePVCResize:
+		return NewPVCResizeAction(log, action, actionCtx)
+	case api.ActionTypePVCResized:
+		return NewPVCResizedAction(log, action, actionCtx)
 	default:
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}

@@ -25,9 +25,9 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
@@ -40,6 +40,8 @@ import (
 // ActionContext provides methods to the Action implementations
 // to control their context.
 type ActionContext interface {
+	// GetAPIObject returns the deployment as k8s object.
+	GetAPIObject() k8sutil.APIObject
 	// Gets the specified mode of deployment
 	GetMode() api.DeploymentMode
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
@@ -53,6 +55,9 @@ type ActionContext interface {
 	GetAgency(ctx context.Context) (agency.Agency, error)
 	// GetSyncServerClient returns a cached client for a specific arangosync server.
 	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
+	// CreateEvent creates a given event.
+	// On error, the error is logged.
+	CreateEvent(evt *k8sutil.Event)
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
 	// Returns member status, true when found, or false
@@ -74,6 +79,11 @@ type ActionContext interface {
 	// GetPvc returns PVC info about PVC with given name in the namespace
 	// of the deployment.
 	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
+	// GetPv returns PV info about PV with given name.
+	GetPv(pvName string) (*v1.PersistentVolume, error)
+	// UpdatePvc update PVC with given name in the namespace
+	// of the deployment.
+	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	RemovePodFinalizers(podName string) error
@@ -103,7 +113,7 @@ type ActionContext interface {
 // newActionContext creates a new ActionContext implementation.
 func newActionContext(log zerolog.Logger, context Context) ActionContext {
 	return &actionContext{
-		log:     log,
+		log:      log,
 		context: context,
 	}
 }
@@ -112,6 +122,22 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) GetPv(pvName string) (*v1.PersistentVolume, error) {
+	return ac.context.GetPv(pvName)
+}
+
+func (ac *actionContext) GetAPIObject() k8sutil.APIObject {
+	return ac.context.GetAPIObject()
+}
+
+func (ac *actionContext) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
+	return ac.context.UpdatePvc(pvc)
+}
+
+func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
+	ac.context.CreateEvent(evt)
 }
 
 func (ac *actionContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
