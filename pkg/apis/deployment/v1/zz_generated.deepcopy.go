@@ -950,6 +950,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(corev1.PersistentVolumeClaim)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.VolumeResizeMode != nil {
+		in, out := &in.VolumeResizeMode, &out.VolumeResizeMode
+		*out = new(PVCResizeMode)
+		**out = **in
+	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
 		*out = make([]corev1.Container, len(*in))
