@@ -68,6 +68,71 @@ type ServerGroupSpec struct {
 	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
+	// SecurityContext specifies security context for group
+	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
+}
+
+// ServerGroupSpecSecurityContext contains specification for pod security context
+type ServerGroupSpecSecurityContext struct {
+	// DropAllCapabilities specifies if capabilities should be dropped for this pod containers
+	//
+	// Deprecated: This field is added for backward compatibility. Will be removed in 1.0.0.
+	DropAllCapabilities *bool `json:"dropAllCapabilities,omitempty"`
+	// AddCapabilities add new capabilities to containers
+	AddCapabilities []v1.Capability `json:"addCapabilities,omitempty"`
+}
+
+// GetDropAllCapabilities returns flag if capabilities should be dropped
+//
+// Deprecated: This function is added for backward compatibility. Will be removed in 1.0.0.
+func (s *ServerGroupSpecSecurityContext) GetDropAllCapabilities() bool {
+	if s == nil {
+		return true
+	}
+
+	if s.DropAllCapabilities == nil {
+		return true
+	}
+
+	return *s.DropAllCapabilities
+}
+
+// GetAddCapabilities add capabilities to pod context
+func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []v1.Capability {
+	if s == nil {
+		return nil
+	}
+
+	if s.AddCapabilities == nil {
+		return nil
+	}
+
+	return s.AddCapabilities
+}
+
+// NewSecurityContext creates new security context
+func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *v1.SecurityContext {
+	r := &v1.SecurityContext{}
+
+	capabilities := &v1.Capabilities{}
+
+	if s.GetDropAllCapabilities() {
+		capabilities.Drop = []v1.Capability{
+			"ALL",
+		}
+	}
+
+	if caps := s.GetAddCapabilities(); caps != nil {
+		capabilities.Add = []v1.Capability{}
+
+		for _, capability := range caps {
+			capabilities.Add = append(capabilities.Add, capability)
+		}
+	}
+
+	r.Capabilities = capabilities
+
+	return r
 }
 
 // ServerGroupProbesSpec contains specification for probes for pods of the server group

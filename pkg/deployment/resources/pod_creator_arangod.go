@@ -61,6 +61,10 @@ func (a *ArangoDContainer) GetExecutor() string {
 	return ArangoDExecutor
 }
 
+func (a *ArangoDContainer) GetSecurityContext() *v1.SecurityContext {
+	return a.groupSpec.SecurityContext.NewSecurityContext()
+}
+
 func (a *ArangoDContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
 	var liveness, readiness *v1.Probe
 
@@ -169,7 +173,8 @@ func (m *MemberArangoDPod) GetSidecars(pod *v1.Pod) {
 		}
 
 		c := ArangodbExporterContainer(image, createExporterArgs(m.spec.IsSecure()),
-			createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources)
+			createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources,
+			m.groupSpec.SecurityContext.NewSecurityContext())
 
 		if m.spec.Metrics.GetJWTTokenSecretName() != "" {
 			c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
@@ -253,7 +258,8 @@ func (m *MemberArangoDPod) GetInitContainers() ([]v1.Container, error) {
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources)
+		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
+			m.groupSpec.SecurityContext.NewSecurityContext())
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +271,8 @@ func (m *MemberArangoDPod) GetInitContainers() ([]v1.Container, error) {
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, alpineImage, requireUUID)
+		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, alpineImage, requireUUID,
+			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
 	}
 

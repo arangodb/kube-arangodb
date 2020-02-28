@@ -173,7 +173,6 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 							},
 						},
 					},
-					SecurityContext: k8sutil.SecurityContextWithoutCapabilities(),
 				},
 			},
 			Volumes: []corev1.Volume{
