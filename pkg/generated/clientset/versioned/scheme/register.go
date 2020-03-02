@@ -24,11 +24,8 @@ package scheme
 
 import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	backupv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	databasev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -41,11 +38,8 @@ var Scheme = runtime.NewScheme()
 var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
-	backupv1alpha.AddToScheme,
 	backupv1.AddToScheme,
-	databasev1alpha.AddToScheme,
 	databasev1.AddToScheme,
-	replicationv1alpha.AddToScheme,
 	replicationv1.AddToScheme,
 	storagev1alpha.AddToScheme,
 }

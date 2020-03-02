@@ -24,14 +24,11 @@ package backup
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/backup/v1"
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/backup/v1alpha"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.
 type Interface interface {
-	// V1alpha provides access to shared informers for resources in V1alpha.
-	V1alpha() v1alpha.Interface
 	// V1 provides access to shared informers for resources in V1.
 	V1() v1.Interface
 }
@@ -45,11 +42,6 @@ type group struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &group{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
-}
-
-// V1alpha returns a new v1alpha.Interface.
-func (g *group) V1alpha() v1alpha.Interface {
-	return v1alpha.New(g.factory, g.namespace, g.tweakListOptions)
 }
 
 // V1 returns a new v1.Interface.
