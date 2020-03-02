@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [0.4.5](https://github.com/arangodb/kube-arangodb/tree/0.4.5) (2020-03-02)
 - Add Customizable SecurityContext for ArangoDeployment pods
 
 ## [0.4.4](https://github.com/arangodb/kube-arangodb/tree/0.4.4) (2020-02-27)
