@@ -207,6 +207,11 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		plan = createRotateServerStoragePlan(log, apiObject, spec, status, context.GetPvc, context.CreateEvent)
 	}
 
+	// Adjust security
+	if plan.IsEmpty() {
+		plan = createRotateServerSecurityPlan(log, spec, status, pods)
+	}
+
 	// Check for the need to rotate TLS CA certificate and all members
 	if plan.IsEmpty() {
 		plan = createRotateTLSCAPlan(log, apiObject, spec, status, context.GetTLSCA, context.CreateEvent)

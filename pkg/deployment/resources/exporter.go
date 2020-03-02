@@ -33,7 +33,7 @@ import (
 
 // ArangodbExporterContainer creates metrics container
 func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sutil.HTTPProbeConfig,
-	resources v1.ResourceRequirements) v1.Container {
+	resources v1.ResourceRequirements, securityContext *v1.SecurityContext) v1.Container {
 
 	c := v1.Container{
 		Name:    k8sutil.ExporterContainerName,
@@ -48,7 +48,7 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sut
 		},
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
 		ImagePullPolicy: v1.PullIfNotPresent,
-		SecurityContext: k8sutil.SecurityContextWithoutCapabilities(),
+		SecurityContext: securityContext,
 	}
 
 	if livenessProbe != nil {

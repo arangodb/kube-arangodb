@@ -1,6 +1,9 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add Customizable SecurityContext for ArangoDeployment pods
+
+## [0.4.4](https://github.com/arangodb/kube-arangodb/tree/0.4.4) (2020-02-27)
 - Add new VolumeResize mode to be compatible with Azure flow
 - Allow to customize probe configuration options
 - Add new upgrade flag for ArangoDB 3.6.0<=

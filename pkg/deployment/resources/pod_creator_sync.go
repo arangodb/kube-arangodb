@@ -60,6 +60,10 @@ func (a *ArangoSyncContainer) GetExecutor() string {
 	return ArangoSyncExecutor
 }
 
+func (a *ArangoSyncContainer) GetSecurityContext() *v1.SecurityContext {
+	return a.groupSpec.SecurityContext.NewSecurityContext()
+}
+
 func (a *ArangoSyncContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
 	var liveness, readiness *v1.Probe
 
@@ -206,7 +210,8 @@ func (m *MemberSyncPod) GetInitContainers() ([]v1.Container, error) {
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources)
+		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
+			m.groupSpec.SecurityContext.NewSecurityContext())
 		if err != nil {
 			return nil, err
 		}

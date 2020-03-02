@@ -305,6 +305,10 @@ func (i *ImageUpdatePod) GetTolerations() []v1.Toleration {
 	return tolerations
 }
 
+func (a *ArangoDImageUpdateContainer) GetSecurityContext() *v1.SecurityContext {
+	return nil
+}
+
 func (i *ImageUpdatePod) IsDeploymentMode() bool {
 	return true
 }

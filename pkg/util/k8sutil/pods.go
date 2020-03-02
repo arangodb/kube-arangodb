@@ -77,6 +77,7 @@ type ContainerCreator interface {
 	GetImagePullPolicy() v1.PullPolicy
 	GetImage() string
 	GetEnvs() []v1.EnvVar
+	GetSecurityContext() *v1.SecurityContext
 }
 
 // IsPodReady returns true if the PodReady condition on
@@ -258,7 +259,7 @@ func RocksdbEncryptionVolumeMount() v1.VolumeMount {
 }
 
 // ArangodInitContainer creates a container configured to initalize a UUID file.
-func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool) v1.Container {
+func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool, securityContext *v1.SecurityContext) v1.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
 	var command string
@@ -296,7 +297,7 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 		VolumeMounts: []v1.VolumeMount{
 			ArangodVolumeMount(),
 		},
-		SecurityContext: SecurityContextWithoutCapabilities(),
+		SecurityContext: securityContext,
 	}
 	return c
 }
@@ -351,7 +352,7 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 		ReadinessProbe:  readiness,
 		Lifecycle:       lifecycle,
 		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
-		SecurityContext: SecurityContextWithoutCapabilities(),
+		SecurityContext: containerCreator.GetSecurityContext(),
 	}, nil
 }
 
@@ -399,14 +400,6 @@ func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav
 		return maskAny(err)
 	}
 	return nil
-}
-
-func SecurityContextWithoutCapabilities() *v1.SecurityContext {
-	return &v1.SecurityContext{
-		Capabilities: &v1.Capabilities{
-			Drop: []v1.Capability{"ALL"},
-		},
-	}
 }
 
 func CreateVolumeEmptyDir(name string) v1.Volume {
