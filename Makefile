@@ -407,6 +407,13 @@ endif
 patch-readme:
 	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
 
+.PHONY: patch-examples
+patch-examples:
+	$(ROOTDIR)/scripts/patch_examples.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch-release
+patch-release: patch-readme patch-examples
+
 .PHONY: patch-chart
 patch-chart:
 	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
