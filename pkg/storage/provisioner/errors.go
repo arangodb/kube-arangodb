@@ -1,5 +1,5 @@
 //
-// Copyright 2017 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // The Programs (which include both the software and documentation) contain
 // proprietary information of ArangoDB GmbH; they are provided under a license
