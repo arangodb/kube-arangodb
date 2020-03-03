@@ -33,7 +33,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	deplv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
+	deplv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	extclient "github.com/arangodb/kube-arangodb/pkg/client"
 	acli "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -330,19 +330,19 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 		}
 	}
 
-	depl := deplv1alpha.ArangoDeployment{
+	depl := deplv1.ArangoDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: deplname,
 		},
-		Spec: deplv1alpha.DeploymentSpec{
+		Spec: deplv1.DeploymentSpec{
 			Image: util.NewString(arangoimage),
-			Coordinators: deplv1alpha.ServerGroupSpec{
+			Coordinators: deplv1.ServerGroupSpec{
 				Count: util.NewInt(rebootOptions.Coordinators),
 			},
-			Agents: deplv1alpha.ServerGroupSpec{
+			Agents: deplv1.ServerGroupSpec{
 				Count: util.NewInt(len(agnt)),
 			},
-			DBServers: deplv1alpha.ServerGroupSpec{
+			DBServers: deplv1.ServerGroupSpec{
 				Count: util.NewInt(len(prmr)),
 			},
 		},
@@ -353,22 +353,22 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 	}
 
 	for _, info := range agnt {
-		depl.Status.Members.Agents = append(depl.Status.Members.Agents, deplv1alpha.MemberStatus{
+		depl.Status.Members.Agents = append(depl.Status.Members.Agents, deplv1.MemberStatus{
 			ID:                        info.UUID,
 			PersistentVolumeClaimName: info.Claim,
-			PodName:                   k8sutil.CreatePodName(deplname, deplv1alpha.ServerGroupAgents.AsRole(), info.UUID, "-rbt"),
+			PodName:                   k8sutil.CreatePodName(deplname, deplv1.ServerGroupAgents.AsRole(), info.UUID, "-rbt"),
 		})
 	}
 
 	for _, info := range prmr {
-		depl.Status.Members.DBServers = append(depl.Status.Members.DBServers, deplv1alpha.MemberStatus{
+		depl.Status.Members.DBServers = append(depl.Status.Members.DBServers, deplv1.MemberStatus{
 			ID:                        info.UUID,
 			PersistentVolumeClaimName: info.Claim,
-			PodName:                   k8sutil.CreatePodName(deplname, deplv1alpha.ServerGroupDBServers.AsRole(), info.UUID, "-rbt"),
+			PodName:                   k8sutil.CreatePodName(deplname, deplv1.ServerGroupDBServers.AsRole(), info.UUID, "-rbt"),
 		})
 	}
 
-	if _, err := cli.DatabaseV1alpha().ArangoDeployments(ns).Create(&depl); err != nil {
+	if _, err := cli.DatabaseV1().ArangoDeployments(ns).Create(&depl); err != nil {
 		return errors.Wrap(err, "failed to create ArangoDeployment")
 	}
 

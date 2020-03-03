@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,26 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
-// +k8s:deepcopy-gen=package
-// +groupName=database.arangodb.com
-package v1alpha
+package main
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"runtime"
+)
+
+func init() {
+	cmdMain.AddCommand(cmdVersion)
+}
+
+var cmdVersion = &cobra.Command{
+	Use: "version",
+	Run: versionRun,
+}
+
+func versionRun(cmd *cobra.Command, args []string) {
+	println(fmt.Sprintf("Version: %s, Build: %s, Go: %s", projectVersion, projectBuild, runtime.Version()))
+}

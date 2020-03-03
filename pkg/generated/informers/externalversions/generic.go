@@ -26,12 +26,9 @@ import (
 	"fmt"
 
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1alpha"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	deploymentv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1alpha"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	replicationv1alpha "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1alpha"
-	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -68,30 +65,16 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1.SchemeGroupVersion.WithResource("arangobackuppolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1().ArangoBackupPolicies().Informer()}, nil
 
-		// Group=backup.arangodb.com, Version=v1alpha
-	case v1alpha.SchemeGroupVersion.WithResource("arangobackups"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1alpha().ArangoBackups().Informer()}, nil
-	case v1alpha.SchemeGroupVersion.WithResource("arangobackuppolicies"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1alpha().ArangoBackupPolicies().Informer()}, nil
-
 		// Group=database.arangodb.com, Version=v1
 	case deploymentv1.SchemeGroupVersion.WithResource("arangodeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoDeployments().Informer()}, nil
-
-		// Group=database.arangodb.com, Version=v1alpha
-	case deploymentv1alpha.SchemeGroupVersion.WithResource("arangodeployments"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1alpha().ArangoDeployments().Informer()}, nil
 
 		// Group=replication.database.arangodb.com, Version=v1
 	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V1().ArangoDeploymentReplications().Informer()}, nil
 
-		// Group=replication.database.arangodb.com, Version=v1alpha
-	case replicationv1alpha.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V1alpha().ArangoDeploymentReplications().Informer()}, nil
-
 		// Group=storage.arangodb.com, Version=v1alpha
-	case storagev1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"):
+	case v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Storage().V1alpha().ArangoLocalStorages().Informer()}, nil
 
 	}

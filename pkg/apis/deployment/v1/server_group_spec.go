@@ -76,7 +76,7 @@ type ServerGroupSpec struct {
 type ServerGroupSpecSecurityContext struct {
 	// DropAllCapabilities specifies if capabilities should be dropped for this pod containers
 	//
-	// Deprecated: This field is added for backward compatibility. Will be removed in 1.0.0.
+	// Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 	DropAllCapabilities *bool `json:"dropAllCapabilities,omitempty"`
 	// AddCapabilities add new capabilities to containers
 	AddCapabilities []v1.Capability `json:"addCapabilities,omitempty"`
@@ -84,7 +84,7 @@ type ServerGroupSpecSecurityContext struct {
 
 // GetDropAllCapabilities returns flag if capabilities should be dropped
 //
-// Deprecated: This function is added for backward compatibility. Will be removed in 1.0.0.
+// Deprecated: This function is added for backward compatibility. Will be removed in 1.1.0.
 func (s *ServerGroupSpecSecurityContext) GetDropAllCapabilities() bool {
 	if s == nil {
 		return true
