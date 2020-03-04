@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ func main() {
 		fmt.Sprintf("kube-arangodb-crd-%s.tgz", version):     fmt.Sprintf("charts/kube-arangodb-crd-%s.tgz", version),
 	}
 	make("clean", nil)
-	make("patch-readme", nil)
+	make("patch-release", nil)
 	make("patch-chart", map[string]string{
 		"ALLOWCHAOS":      "false",
 		"DOCKERNAMESPACE": "arangodb",

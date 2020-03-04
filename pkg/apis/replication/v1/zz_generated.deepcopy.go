@@ -3,7 +3,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ func (in *ArangoDeploymentReplication) DeepCopyObject() runtime.Object {
 func (in *ArangoDeploymentReplicationList) DeepCopyInto(out *ArangoDeploymentReplicationList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ArangoDeploymentReplication, len(*in))

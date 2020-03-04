@@ -316,7 +316,7 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test $(TESTVERBOSEOPTIONS) \
+	go test --count=1 $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/apis/backup/... \
 		$(REPOPATH)/pkg/apis/deployment/... \
 		$(REPOPATH)/pkg/apis/replication/... \
@@ -406,6 +406,13 @@ endif
 .PHONY: patch-readme
 patch-readme:
 	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch-examples
+patch-examples:
+	$(ROOTDIR)/scripts/patch_examples.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch-release
+patch-release: patch-readme patch-examples
 
 .PHONY: patch-chart
 patch-chart:

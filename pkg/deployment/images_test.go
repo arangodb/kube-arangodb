@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2019 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,6 +63,8 @@ func TestEnsureImages(t *testing.T) {
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
 	hostname := testDeploymentName + "-" + k8sutil.ImageIDAndVersionRole + "-" + id
 
+	var securityContext api.ServerGroupSpecSecurityContext
+
 	testCases := []testCaseImageUpdate{
 		{
 			Name: "Image has not been changed",
@@ -99,9 +101,7 @@ func TestEnsureImages(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
+							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
@@ -148,9 +148,7 @@ func TestEnsureImages(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 							},
 							ImagePullPolicy: v1.PullIfNotPresent,
-							SecurityContext: &v1.SecurityContext{
-								Capabilities: &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
-							},
+							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
