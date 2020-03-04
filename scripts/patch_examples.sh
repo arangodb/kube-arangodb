@@ -16,7 +16,7 @@ function replaceInFile {
     local FILE=$2
     case $(uname) in
         Darwin)
-            sed -r "${EXPR}" -i "" ${FILE}
+            sed -E -e  "${EXPR}" -i "" ${FILE}
             ;;
         *)
             sed -E -i --expression "${EXPR}" ${FILE}
@@ -28,5 +28,6 @@ FILES=$(find ./examples -type f -name '*.yaml')
 
 for FILE in ${FILES}; do
   replaceInFile "s@arangodb/arangodb:[0-9]+\\.[0-9]+\\.[0-9]+@arangodb/arangodb:${ARANGODB_VERSION}@g" ${FILE}
+  replaceInFile "s@arangodb/enterprise:[0-9]+\\.[0-9]+\\.[0-9]+@arangodb/enterprise:${ARANGODB_VERSION}@g" ${FILE}
   replaceInFile "s@arangodb/kube-arangodb:[0-9]+\\.[0-9]+\\.[0-9]+@arangodb/kube-arangodb:${VERSION}@g" ${FILE}
 done

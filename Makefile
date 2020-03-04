@@ -316,7 +316,7 @@ manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test $(TESTVERBOSEOPTIONS) \
+	go test --count=1 $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/apis/backup/... \
 		$(REPOPATH)/pkg/apis/deployment/... \
 		$(REPOPATH)/pkg/apis/replication/... \

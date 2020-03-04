@@ -305,10 +305,6 @@ func (i *ImageUpdatePod) GetTolerations() []v1.Toleration {
 	return tolerations
 }
 
-func (a *ArangoDImageUpdateContainer) GetSecurityContext() *v1.SecurityContext {
-	return nil
-}
-
 func (i *ImageUpdatePod) IsDeploymentMode() bool {
 	return true
 }
@@ -319,4 +315,10 @@ func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
 
 func (i *ImageUpdatePod) GetServiceAccountName() string {
 	return ""
+}
+
+func (a *ArangoDImageUpdateContainer) GetSecurityContext() *v1.SecurityContext {
+	// Default security context
+	var v api.ServerGroupSpecSecurityContext
+	return v.NewSecurityContext()
 }
