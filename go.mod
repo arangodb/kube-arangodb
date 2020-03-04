@@ -14,6 +14,7 @@ replace (
 
 require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/aktau/github-release v0.7.2 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
 	github.com/arangodb/go-driver v0.0.0-20191002124627-11b6bfc64f67
@@ -47,7 +48,9 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
+	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
