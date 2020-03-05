@@ -41,7 +41,7 @@ func IsChildResource(kind, name, namespace string, resource meta.Object) bool {
 
 	ownerRef := resource.GetOwnerReferences()
 
-	if ownerRef == nil || len(ownerRef) == 0 {
+	if len(ownerRef) == 0 {
 		return false
 	}
 

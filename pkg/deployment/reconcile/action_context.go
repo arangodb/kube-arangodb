@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -113,7 +114,7 @@ type ActionContext interface {
 // newActionContext creates a new ActionContext implementation.
 func newActionContext(log zerolog.Logger, context Context) ActionContext {
 	return &actionContext{
-		log:      log,
+		log:     log,
 		context: context,
 	}
 }

@@ -98,9 +98,7 @@ func (m *mockArangoClientBackup) Abort(d driver.BackupTransferJobID) error {
 		return m.state.errors.abortError
 	}
 
-	if _, ok := m.state.progresses[d]; ok {
-		delete(m.state.progresses, d)
-	}
+	delete(m.state.progresses, d)
 
 	return nil
 }
@@ -126,9 +124,7 @@ func (m *mockArangoClientBackup) Delete(id driver.BackupID) error {
 		return m.state.errors.deleteError
 	}
 
-	if _, ok := m.state.backups[id]; ok {
-		delete(m.state.backups, id)
-	}
+	delete(m.state.backups, id)
 
 	return nil
 }

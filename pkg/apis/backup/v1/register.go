@@ -37,7 +37,6 @@ var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-
 	SchemeGroupVersion = schema.GroupVersion{Group: backup.ArangoBackupGroupName, Version: ArangoBackupVersion}
 )
 

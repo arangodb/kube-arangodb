@@ -362,12 +362,3 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 
 	retry.Retry(op, time.Hour*24*365)
 }
-
-// isOwnerOf returns true if the given object belong to this local storage.
-func (dr *DeploymentReplication) isOwnerOf(obj metav1.Object) bool {
-	ownerRefs := obj.GetOwnerReferences()
-	if len(ownerRefs) < 1 {
-		return false
-	}
-	return ownerRefs[0].UID == dr.apiObject.UID
-}

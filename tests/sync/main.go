@@ -12,6 +12,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+
 	sync "github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -58,7 +62,7 @@ func newDeployment(ns, name string) *dapi.ArangoDeployment {
 	return &dapi.ArangoDeployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: dapi.SchemeGroupVersion.String(),
-			Kind:       dapi.ArangoDeploymentResourceKind,
+			Kind:       deployment.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -105,7 +109,7 @@ func newReplication(ns, name string) *rapi.ArangoDeploymentReplication {
 	return &rapi.ArangoDeploymentReplication{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rapi.SchemeGroupVersion.String(),
-			Kind:       rapi.ArangoDeploymentReplicationResourceKind,
+			Kind:       replication.ArangoDeploymentReplicationResourceKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

@@ -24,9 +24,10 @@ package policy
 
 import (
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"reflect"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 

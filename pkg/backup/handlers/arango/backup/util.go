@@ -71,7 +71,7 @@ func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoB
 			(existingBackup.Status.State == backupApi.ArangoBackupStateUpload || existingBackup.Status.State == backupApi.ArangoBackupStateUploading) {
 			if backupUpload := backup.Status.Backup; backupUpload != nil {
 				if existingBackupUpload := existingBackup.Status.Backup; existingBackupUpload != nil {
-					if strings.ToLower(backupUpload.ID) == strings.ToLower(existingBackupUpload.ID) {
+					if strings.EqualFold(backupUpload.ID, existingBackupUpload.ID) {
 						return true, nil
 					}
 				}

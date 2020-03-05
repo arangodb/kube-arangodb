@@ -23,9 +23,10 @@
 package backup
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"testing"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 

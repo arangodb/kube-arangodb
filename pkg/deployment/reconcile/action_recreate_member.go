@@ -25,8 +25,9 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 	"time"
+
+	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/rs/zerolog"
 

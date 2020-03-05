@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes/typed/core/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type coreV1 struct {

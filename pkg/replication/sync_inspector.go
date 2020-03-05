@@ -90,9 +90,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 					} else {
 						if isIncomingEndpoint {
 							// Destination is correctly configured
-							if dr.status.Conditions.Update(api.ConditionTypeConfigured, true, "Active", "Destination syncmaster is configured correctly and active") {
-								updateStatusNeeded = true
-							}
+							dr.status.Conditions.Update(api.ConditionTypeConfigured, true, "Active", "Destination syncmaster is configured correctly and active")
 							// Fetch shard status
 							dr.status.Destination = createEndpointStatus(destStatus, "")
 							updateStatusNeeded = true
@@ -203,11 +201,6 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 		nextInterval = maxInspectionInterval
 	}
 	return nextInterval
-}
-
-// triggerInspection ensures that an inspection is run soon.
-func (dr *DeploymentReplication) triggerInspection() {
-	dr.inspectTrigger.Trigger()
 }
 
 // isIncomingEndpoint returns true when given sync status's endpoint

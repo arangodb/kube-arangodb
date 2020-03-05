@@ -80,7 +80,7 @@ func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {
 		compareBoolPointer(a.Imported, b.Imported)
 }
 
-func compareBoolPointer(a, b * bool) bool {
+func compareBoolPointer(a, b *bool) bool {
 	if a == nil && b != nil || a != nil && b == nil {
 		return false
 	}

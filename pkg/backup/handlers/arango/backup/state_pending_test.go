@@ -24,9 +24,10 @@ package backup
 
 import (
 	"fmt"
-	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"sync"
 	"testing"
+
+	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 

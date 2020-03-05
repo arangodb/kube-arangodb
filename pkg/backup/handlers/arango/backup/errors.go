@@ -24,9 +24,10 @@ package backup
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
-	"strings"
 )
 
 func newTemporaryError(err error) error {

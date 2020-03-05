@@ -28,7 +28,7 @@ import (
 
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/ghodss/yaml"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"

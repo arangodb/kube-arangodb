@@ -23,8 +23,9 @@
 package policy
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/rs/zerolog/log"

@@ -23,7 +23,7 @@
 package storage
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
