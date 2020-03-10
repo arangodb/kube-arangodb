@@ -168,6 +168,9 @@ GOLANGCI_ENABLED=deadcode gocyclo golint varcheck structcheck maligned errcheck 
 .PHONY: fmt
 fmt:
 	@goimports -w $(SOURCES)
+
+.PHONY: linter
+linter: fmt
 	@golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all \
 	                  $(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE) ) \
 	                  --exclude-use-default=false \
