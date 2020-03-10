@@ -8,4 +8,5 @@
 - [Scaling](./scaling.md)
 - [Status](./status.md)
 - [Upgrading](./upgrading.md)
+- [Rotating Pods](./rotating.md)
 - [Maintenance](./maintenance.md)
