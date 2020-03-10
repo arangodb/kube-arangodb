@@ -24,6 +24,7 @@ package deployment
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -70,7 +71,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	} else {
 		// Check if maintenance annotation is set
 		if updated != nil && updated.Annotations != nil {
-			if v, ok := updated.Annotations[api.ArangoDeploymentPodMaintenanceAnnotation]; ok && v == "true" {
+			if v, ok := updated.Annotations[deployment.ArangoDeploymentPodMaintenanceAnnotation]; ok && v == "true" {
 				// Disable checks if we will enter maintenance mode
 				log.Info().Str("deployment", deploymentName).Msg("Deployment in maintenance mode")
 				return nextInterval

@@ -23,6 +23,8 @@
 package reconcile
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"reflect"
 	"strings"
 
@@ -94,8 +96,8 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 			}
 
 			if pod.Annotations != nil {
-				if _, ok := pod.Annotations[api.ArangoDeploymentPodRotateAnnotation]; ok {
-					createRotateMemberPlan(log, m, group, "Rotation flag present")
+				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
+					newPlan = createRotateMemberPlan(log, m, group, "Rotation flag present")
 				}
 			}
 		}
