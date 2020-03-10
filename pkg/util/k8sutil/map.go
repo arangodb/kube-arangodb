@@ -23,7 +23,7 @@
 package k8sutil
 
 import (
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"regexp"
 )
 
@@ -55,7 +55,7 @@ func init() {
 
 func isFilteredBlockedAnnotation(key string) bool {
 	switch key {
-	case v1.ArangoDeploymentPodRotateAnnotation:
+	case deployment.ArangoDeploymentPodRotateAnnotation:
 		return true
 	default:
 		return false

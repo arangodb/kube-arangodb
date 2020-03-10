@@ -20,7 +20,7 @@
 // Author Adam Janikowski
 //
 
-package v1
+package deployment
 
 const (
 	ArangoDeploymentAnnotationPrefix         = "deployment.arangodb.com"
