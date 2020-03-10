@@ -22,11 +22,14 @@
 
 package k8sutil
 
-import "regexp"
+import (
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"regexp"
+)
 
 const (
 	kubernetesAnnotationMatch = ".*kubernetes\\.io/.*"
-	arangoAnnotationMatch     = ".*arangodb\\.com/"
+	arangoAnnotationMatch     = ".*arangodb\\.com/.*"
 )
 
 var (
@@ -48,6 +51,29 @@ func init() {
 	}
 
 	arangoAnnotationRegex = r
+}
+
+func isFilteredBlockedAnnotation(key string) bool {
+	switch key {
+	case v1.ArangoDeploymentPodRotateAnnotation:
+		return true
+	default:
+		return false
+	}
+}
+
+func filterBlockedAnnotations(m map[string]string) map[string]string {
+	n := map[string]string{}
+
+	for key, value := range m {
+		if isFilteredBlockedAnnotation(key) {
+			continue
+		}
+
+		n[key] = value
+	}
+
+	return n
 }
 
 // MergeAnnotations into one annotations map
@@ -114,7 +140,12 @@ func filterActualAnnotations(actual, expected map[string]string) map[string]stri
 
 // CompareAnnotations will compare annotations, but will ignore secured annotations which are present in
 // actual but not specified in expected map
+// It will also filter out blocked annotations
 func CompareAnnotations(actual, expected map[string]string) bool {
+	return compareAnnotations(filterBlockedAnnotations(actual), filterBlockedAnnotations(expected))
+}
+
+func compareAnnotations(actual, expected map[string]string) bool {
 	actualFiltered := filterActualAnnotations(actual, expected)
 
 	if actualFiltered == nil && expected == nil {

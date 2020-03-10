@@ -87,6 +87,17 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
 			}
+
+			if !newPlan.IsEmpty() {
+				// Only rotate/upgrade 1 pod at a time
+				continue
+			}
+
+			if pod.Annotations != nil {
+				if _, ok := pod.Annotations[api.ArangoDeploymentPodRotateAnnotation]; ok {
+					createRotateMemberPlan(log, m, group, "Rotation flag present")
+				}
+			}
 		}
 		return nil
 	})
