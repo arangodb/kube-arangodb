@@ -25,7 +25,7 @@ package replication
 const (
 	ArangoDeploymentReplicationResourceKind   = "ArangoDeploymentReplication"
 	ArangoDeploymentReplicationResourcePlural = "arangodeploymentreplications"
-	ArangoDeploymentReplicationGroupName                                 = "replication.database.arangodb.com"
+	ArangoDeploymentReplicationGroupName      = "replication.database.arangodb.com"
 )
 
 var (

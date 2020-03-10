@@ -25,8 +25,9 @@ package reconcile
 import (
 	goContext "context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
 	driver "github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
@@ -85,7 +86,7 @@ func (d *Reconciler) CreatePlan() error {
 
 func fetchAgency(log zerolog.Logger,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	context PlanBuilderContext) (*agency.ArangoPlanDatabases,  error) {
+	context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
 	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
 		return nil, nil
 	} else if status.Members.Agents.MembersReady() > 0 {

@@ -108,11 +108,11 @@ func (d *Deployment) bootstrapUserPassword(client driver.Client, secrets k8sutil
 	}
 
 	// Obtain the user
-	if user, err := client.User(nil, username); driver.IsNotFound(err) {
-		_, err := client.CreateUser(nil, username, &driver.UserOptions{Password: password})
+	if user, err := client.User(context.TODO(), username); driver.IsNotFound(err) {
+		_, err := client.CreateUser(context.TODO(), username, &driver.UserOptions{Password: password})
 		return maskAny(err)
 	} else if err == nil {
-		return maskAny(user.Update(nil, driver.UserOptions{
+		return maskAny(user.Update(context.TODO(), driver.UserOptions{
 			Password: password,
 		}))
 	} else {

@@ -24,10 +24,11 @@ package operator
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"math/rand"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -212,7 +213,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
 
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10 * time.Second, arangoInformer.WithNamespace(o.Namespace))
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
 	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)

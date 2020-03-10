@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/state"
@@ -116,14 +117,6 @@ func setFailedState(backup *backupApi.ArangoBackup, err error) (*backupApi.Arang
 
 func createStateMessage(from, to state.State, message string) string {
 	return fmt.Sprintf("Transiting from %s to %s: %s", from, to, message)
-}
-
-func switchTemporaryError(backup *backupApi.ArangoBackup, err error) (*backupApi.ArangoBackupStatus, error) {
-	if _, ok := err.(temporaryError); ok {
-		return nil, err
-	}
-
-	return setFailedState(backup, err)
 }
 
 func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBackupDetails) *backupApi.ArangoBackupDetails {

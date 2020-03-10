@@ -21,10 +21,11 @@
 package resources
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"path/filepath"
 	"sort"
 	"strconv"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

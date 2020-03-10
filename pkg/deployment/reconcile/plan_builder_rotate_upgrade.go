@@ -23,9 +23,10 @@
 package reconcile
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"reflect"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"

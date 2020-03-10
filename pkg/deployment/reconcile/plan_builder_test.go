@@ -198,9 +198,9 @@ func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
 func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
 	for i := 0; i < count; i++ {
 		require.NoError(t, status.Members.Add(api.MemberStatus{
-			ID: fmt.Sprintf("AGNT-%d", i),
+			ID:      fmt.Sprintf("AGNT-%d", i),
 			PodName: fmt.Sprintf("agnt-depl-xxx-%d", i),
-			Phase: api.MemberPhaseCreated,
+			Phase:   api.MemberPhaseCreated,
 			Conditions: []api.Condition{
 				{
 					Type:   api.ConditionTypeReady,

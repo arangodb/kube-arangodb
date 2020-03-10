@@ -31,6 +31,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/rs/zerolog"
+
 	driver "github.com/arangodb/go-driver"
 	errs "github.com/pkg/errors"
 )
@@ -199,5 +201,11 @@ func libCause(err error) (bool, error) {
 		default:
 			return err != original, err
 		}
+	}
+}
+
+func LogError(logger zerolog.Logger, msg string, f func() error) {
+	if err := f(); err != nil {
+		logger.Error().Err(err).Msg(msg)
 	}
 }

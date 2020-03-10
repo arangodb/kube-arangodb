@@ -24,10 +24,11 @@ package backup
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
@@ -79,15 +80,6 @@ func newObjectSet(state state.State) (*backupApi.ArangoBackup, *database.ArangoD
 	deployment := newArangoDeployment(namespace, name)
 
 	return obj, deployment
-}
-
-func compareTemporaryState(t *testing.T, err error, errorMsg string, handler *handler, obj *backupApi.ArangoBackup) {
-	require.Error(t, err)
-	require.True(t, isTemporaryError(err))
-	require.EqualError(t, err, errorMsg)
-
-	newObj := refreshArangoBackup(t, handler, obj)
-	require.Equal(t, obj.Status, newObj.Status)
 }
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {

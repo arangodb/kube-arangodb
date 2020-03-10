@@ -81,7 +81,7 @@ func getServerContainer(containers []core.Container) (core.Container, bool) {
 	return core.Container{}, false
 }
 
-func compareSC(a,b *core.SecurityContext) bool {
+func compareSC(a, b *core.SecurityContext) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -97,7 +97,7 @@ func compareSC(a,b *core.SecurityContext) bool {
 	return true
 }
 
-func compareCapabilities(a,b *core.Capabilities) bool {
+func compareCapabilities(a, b *core.Capabilities) bool {
 	if a == nil && b == nil {
 		return true
 	}

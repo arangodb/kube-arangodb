@@ -63,8 +63,8 @@ func main() {
 	checkCleanRepo()
 	version := bumpVersion(releaseType)
 	binaries = map[string]string{
-		fmt.Sprintf("kube-arangodb-%s.tgz", version):         fmt.Sprintf("charts/kube-arangodb-%s.tgz", version),
-		fmt.Sprintf("kube-arangodb-crd-%s.tgz", version):     fmt.Sprintf("charts/kube-arangodb-crd-%s.tgz", version),
+		fmt.Sprintf("kube-arangodb-%s.tgz", version):     fmt.Sprintf("charts/kube-arangodb-%s.tgz", version),
+		fmt.Sprintf("kube-arangodb-crd-%s.tgz", version): fmt.Sprintf("charts/kube-arangodb-crd-%s.tgz", version),
 	}
 	make("clean", nil)
 	make("patch-release", nil)

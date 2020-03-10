@@ -276,7 +276,6 @@ func (i *ImageUpdatePod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
 }
 
 func (i *ImageUpdatePod) GetSidecars(*v1.Pod) {
-	return
 }
 
 func (i *ImageUpdatePod) GetInitContainers() ([]v1.Container, error) {

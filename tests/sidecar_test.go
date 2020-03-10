@@ -350,7 +350,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		if err != nil {
 			t.Fatalf("Deployment not rotated in time: %s", err)
 		}
-		podCreationTimes := getPodCreationTimes(t, kubecli, d);
+		podCreationTimes := getPodCreationTimes(t, kubecli, d)
 		time.Sleep(2 * time.Minute)
 		checkPodCreationTimes(t, kubecli, d, podCreationTimes)
 	})

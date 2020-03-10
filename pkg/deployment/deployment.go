@@ -33,7 +33,6 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -48,7 +47,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -465,51 +463,6 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 	}
 }
 
-// failOnError reports the given error and sets the deployment status to failed.
-// Since there is no recovery from a failed deployment, use with care!
-func (d *Deployment) failOnError(err error, msg string) {
-	log.Error().Err(err).Msg(msg)
-	d.status.last.Reason = err.Error()
-	d.reportFailedStatus()
-}
-
-// reportFailedStatus sets the status of the deployment to Failed and keeps trying to forward
-// that to the API server.
-func (d *Deployment) reportFailedStatus() {
-	log := d.deps.Log
-	log.Info().Msg("deployment failed. Reporting failed reason...")
-
-	op := func() error {
-		d.status.last.Phase = api.DeploymentPhaseFailed
-		err := d.updateCRStatus()
-		if err == nil || k8sutil.IsNotFound(err) {
-			// Status has been updated
-			return nil
-		}
-
-		if !k8sutil.IsConflict(err) {
-			log.Warn().Err(err).Msg("retry report status: fail to update")
-			return maskAny(err)
-		}
-
-		depl, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.Namespace).Get(d.apiObject.Name, metav1.GetOptions{})
-		if err != nil {
-			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
-			// Because it will check UID first and return something like:
-			// "Precondition failed: UID in precondition: 0xc42712c0f0, UID in object meta: ".
-			if k8sutil.IsNotFound(err) {
-				return nil
-			}
-			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
-			return maskAny(err)
-		}
-		d.apiObject = depl
-		return maskAny(fmt.Errorf("retry needed"))
-	}
-
-	retry.Retry(op, time.Hour*24*365)
-}
-
 // isOwnerOf returns true if the given object belong to this deployment.
 func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 	ownerRefs := obj.GetOwnerReferences()
@@ -542,7 +495,6 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 		return
 	}
 	log.Warn().Err(err).Msgf("Error when looking for ServiceMonitor CRD")
-	return
 }
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod

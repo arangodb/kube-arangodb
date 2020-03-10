@@ -278,7 +278,6 @@ func checkVolumeAvailable(kube kubernetes.Interface, vname string) (VolumeInfo, 
 		if _, err := kube.CoreV1().PersistentVolumes().Update(volume); err != nil {
 			return VolumeInfo{}, errors.Wrapf(err, "failed to remove claim reference")
 		}
-		break
 	default:
 		return VolumeInfo{}, fmt.Errorf("Volume %s phase is %s, expected %s", vname, volume.Status.Phase, corev1.VolumeAvailable)
 	}
@@ -455,7 +454,7 @@ func inspectDatabaseDirectory(dirname string) (*inspectResult, error) {
 	// 	UUID
 
 	uuidfile := path.Join(dirname, "UUID")
-	uuid, err := ioutil.ReadFile(uuidfile)
+	uuid, err := ioutil.ReadFile(path.Clean(uuidfile))
 	if err != nil {
 		return nil, err
 	}

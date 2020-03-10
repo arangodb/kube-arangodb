@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -232,7 +234,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	}); err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
 	} else {
-		go svr.Run()
+		go utilsError.LogError(cliLog, "error while starting service", svr.Run)
 	}
 
 	//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)

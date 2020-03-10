@@ -24,10 +24,11 @@ package backup
 
 import (
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"

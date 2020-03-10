@@ -24,16 +24,13 @@ package backup
 
 import (
 	"fmt"
-	"github.com/arangodb/go-driver"
 	"testing"
+
+	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	progressError = "progress error"
 )
 
 func Test_State_Downloading_Common(t *testing.T) {

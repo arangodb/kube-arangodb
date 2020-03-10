@@ -24,6 +24,7 @@ package operator
 
 import (
 	"fmt"
+
 	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	"github.com/pkg/errors"

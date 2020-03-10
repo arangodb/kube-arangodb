@@ -24,6 +24,7 @@ package operator
 
 import (
 	"fmt"
+
 	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 
 	"github.com/pkg/errors"

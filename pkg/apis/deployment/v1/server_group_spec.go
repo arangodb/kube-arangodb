@@ -125,9 +125,7 @@ func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *v1.SecurityContex
 	if caps := s.GetAddCapabilities(); caps != nil {
 		capabilities.Add = []v1.Capability{}
 
-		for _, capability := range caps {
-			capabilities.Add = append(capabilities.Add, capability)
-		}
+		capabilities.Add = append(capabilities.Add, caps...)
 	}
 
 	r.Capabilities = capabilities

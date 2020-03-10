@@ -56,7 +56,7 @@ type Config struct {
 
 type OperatorDependency struct {
 	Enabled bool
-	Probe *probe.ReadyProbe
+	Probe   *probe.ReadyProbe
 }
 
 // Dependencies of the Server
@@ -228,9 +228,9 @@ func createTLSConfig(cert, key string) (*tls.Config, error) {
 	return result, nil
 }
 
-func ready(probes ... *probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {
+func ready(probes ...*probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		for _, probe := range probes  {
+		for _, probe := range probes {
 			if !probe.IsReady() {
 				w.WriteHeader(http.StatusInternalServerError)
 				return

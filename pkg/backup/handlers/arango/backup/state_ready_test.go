@@ -23,11 +23,12 @@
 package backup
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"sync"
-	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 

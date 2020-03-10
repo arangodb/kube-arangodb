@@ -24,6 +24,7 @@ package backup
 
 import (
 	"fmt"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/go-driver"

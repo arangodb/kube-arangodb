@@ -26,7 +26,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"net"
 	"net/url"
 	"path/filepath"
@@ -34,6 +33,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"

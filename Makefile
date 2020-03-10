@@ -123,7 +123,9 @@ ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
-SOURCES := $(shell find $(SRCDIR) -name '*.go' -not -path './test/*')
+SOURCES_QUERY := find $(SRCDIR) -name '*.go' -type f -not -path '$(SRCDIR)/tests/*' -not -path '$(SRCDIR)/vendor/*' -not -path '$(SRCDIR)/.gobuild/*' -not -path '$(SRCDIR)/deps/*' -not -path '$(SRCDIR)/tools/*'
+SOURCES := $(shell $(SOURCES_QUERY))
+SOURCES_PACKAGES := $(shell $(SOURCES_QUERY) -exec dirname {} \; | sort | uniq)
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
 
 ifndef ARANGOSYNCSRCDIR
@@ -157,13 +159,22 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
+GOLANGCI_ENABLED=deadcode gocyclo golint varcheck structcheck maligned errcheck \
+                 ineffassign interfacer unconvert goconst \
+                 megacheck
+
+#GOLANGCI_ENABLED+=dupl - disable dupl check
+
 .PHONY: fmt
 fmt:
-	golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all --enable=deadcode --enable=gocyclo \
-	                  --enable=golint --enable=varcheck --enable=structcheck --enable=maligned --enable=errcheck \
-	                  --enable=dupl --enable=ineffassign --enable=interfacer --enable=unconvert --enable=goconst \
-	                  --enable=gosec --enable=megacheck --exclude-use-default=false \
-	                  $(ROOTDIR)/pkg/backup/...
+	@goimports -w $(SOURCES)
+
+.PHONY: linter
+linter: fmt
+	@golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all \
+	                  $(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE) ) \
+	                  --exclude-use-default=false \
+	                  $(SOURCES_PACKAGES)
 
 .PHONY: build
 build: docker docker-ubi manifests

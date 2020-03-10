@@ -72,6 +72,8 @@ const (
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
 	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
 	testImageAlpine               = "alpine:3.7"
+
+	testYes = "yes"
 )
 
 type testCaseStruct struct {
@@ -984,7 +986,7 @@ func TestEnsurePods(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: v1.Pod{
@@ -1045,7 +1047,7 @@ func TestEnsurePods(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: v1.Pod{
@@ -1102,7 +1104,7 @@ func TestEnsurePods(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
 				LifecycleImage: testImageLifecycle,
@@ -1171,7 +1173,7 @@ func TestEnsurePods(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
 				LifecycleImage: testImageLifecycle,
@@ -1247,7 +1249,7 @@ func TestEnsurePods(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 
 				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)

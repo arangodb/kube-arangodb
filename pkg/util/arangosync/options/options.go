@@ -41,9 +41,7 @@ var (
 // IsCriticalOption returns true if the given string is the key of
 // an option of arangosync that cannot be overwritten.
 func IsCriticalOption(optionKey string) bool {
-	if strings.HasPrefix(optionKey, "--") {
-		optionKey = optionKey[2:]
-	}
+	optionKey = strings.TrimPrefix(optionKey, "--")
 	_, found := criticalOptionKeys[optionKey]
 	return found
 }

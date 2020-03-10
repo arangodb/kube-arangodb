@@ -26,7 +26,7 @@ import (
 	"sort"
 
 	"github.com/rs/zerolog"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/server"

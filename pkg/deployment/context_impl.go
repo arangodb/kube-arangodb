@@ -25,9 +25,10 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"net"
 	"strconv"
+
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
@@ -454,7 +455,7 @@ func (d *Deployment) EnableScalingCluster() error {
 }
 
 // GetAgencyPlan returns agency plan
-func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts ... string) error {
+func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error {
 	a, err := d.GetAgency(ctx)
 	if err != nil {
 		return err
