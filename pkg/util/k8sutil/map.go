@@ -23,8 +23,9 @@
 package k8sutil
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"regexp"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 )
 
 const (

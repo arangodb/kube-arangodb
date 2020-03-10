@@ -23,10 +23,11 @@
 package reconcile
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"reflect"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 

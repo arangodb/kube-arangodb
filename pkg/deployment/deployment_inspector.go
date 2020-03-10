@@ -24,8 +24,9 @@ package deployment
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
