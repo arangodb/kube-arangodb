@@ -26,6 +26,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/go-driver"
@@ -85,6 +88,17 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 				rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m.ID, context)
 				if rotNeeded {
 					newPlan = createRotateMemberPlan(log, m, group, reason)
+				}
+			}
+
+			if !newPlan.IsEmpty() {
+				// Only rotate/upgrade 1 pod at a time
+				continue
+			}
+
+			if pod.Annotations != nil {
+				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
+					newPlan = createRotateMemberPlan(log, m, group, "Rotation flag present")
 				}
 			}
 		}
