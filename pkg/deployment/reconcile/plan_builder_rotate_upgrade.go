@@ -90,7 +90,6 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 					}
 				} else {
 					// Use new level of rotate logic
-
 					rotNeeded, reason := podNeedsRotationNew(log, pod, apiObject, spec, group, status, m, context)
 					if rotNeeded {
 						newPlan = createRotateMemberPlan(log, m, group, reason)

@@ -397,6 +397,9 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 
 // GetPodSpecChecksum return checksum of requested pod spec
 func GetPodSpecChecksum(podSpec v1.PodSpec) (string, error) {
+	// Do not calculate init containers
+	podSpec.InitContainers = nil
+
 	data, err := json.Marshal(podSpec)
 	if err != nil {
 		return "", err

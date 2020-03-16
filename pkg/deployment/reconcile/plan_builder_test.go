@@ -54,6 +54,14 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	panic("implement me")
+}
+
+func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
+	panic("implement me")
+}
+
 func (c *testContext) UpdatePvc(pvc *core.PersistentVolumeClaim) error {
 	panic("implement me")
 }

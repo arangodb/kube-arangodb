@@ -377,6 +377,10 @@ func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.Deplo
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
+	kubecli := r.context.GetKubeCli()
+	ns := r.context.GetNamespace()
+	secrets := kubecli.CoreV1().Secrets(ns)
+
 	// Update pod name
 	role := group.AsRole()
 	roleAbbr := group.AsRoleAbbreviated()
@@ -394,15 +398,22 @@ func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.Deplo
 		if spec.IsSecure() {
 			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 		}
+
 		rocksdbEncryptionSecretName := ""
 		if spec.RocksDB.IsEncrypted() {
 			rocksdbEncryptionSecretName = spec.RocksDB.Encryption.GetKeySecretName()
+			if err := k8sutil.ValidateEncryptionKeySecret(secrets, rocksdbEncryptionSecretName); err != nil {
+				return nil, maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
+			}
 		}
 		// Check cluster JWT secret
 		var clusterJWTSecretName string
 		if spec.IsAuthenticated() {
 			if versionHasJWTSecretKeyfile(version) {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
+				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
+					return nil, maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
+				}
 			}
 		}
 
@@ -430,18 +441,35 @@ func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.Deplo
 		if spec.Sync.HasSyncImage() {
 			imageInfo.Image = spec.Sync.GetSyncImage()
 		}
+
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
+
+		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
+			return nil, maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
+		}
+
+		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
+		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
+			return nil, maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
+		}
+
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
 			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
+				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
+					return nil, maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
+				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
+			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
+				return nil, maskAny(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
+			}
 		}
 
 		// Prepare arguments
@@ -521,7 +549,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	// Create pod
 	if group.IsArangod() {
 		// Prepare arguments
-		version := imageInfo.ArangoDBVersion
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
@@ -538,21 +565,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			owner := apiObject.AsOwner()
 			if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-			}
-		}
-		if spec.RocksDB.IsEncrypted() {
-			rocksdbEncryptionSecretName := spec.RocksDB.Encryption.GetKeySecretName()
-			if err := k8sutil.ValidateEncryptionKeySecret(secrets, rocksdbEncryptionSecretName); err != nil {
-				return maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
-			}
-		}
-		// Check cluster JWT secret
-		if spec.IsAuthenticated() {
-			if versionHasJWTSecretKeyfile(version) {
-				clusterJWTSecretName := spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
-					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
-				}
 			}
 		}
 
@@ -574,16 +586,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 	} else if group.IsArangosync() {
-		// Check master JWT secret
-		masterJWTSecretName := spec.Sync.Authentication.GetJWTSecretName()
-		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
-			return maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
-		}
 		// Check monitoring token secret
-		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
-		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
-			return maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
-		}
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
@@ -601,18 +604,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			owner := apiObject.AsOwner()
 			if err := createTLSServerCertificate(log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-			}
-			// Check cluster JWT secret
-			if spec.IsAuthenticated() {
-				clusterJWTSecretName := spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
-					return maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
-				}
-			}
-			// Check client-auth CA certificate secret
-			clientAuthCASecretName := spec.Sync.Authentication.GetClientCASecretName()
-			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
-				return maskAny(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
 		}
 
