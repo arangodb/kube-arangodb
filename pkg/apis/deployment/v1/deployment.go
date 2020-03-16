@@ -45,8 +45,8 @@ type ArangoDeploymentList struct {
 type ArangoDeployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              DeploymentSpec   `json:"spec"`
-	Status            DeploymentStatus `json:"status"`
+	Spec              DeploymentSpec   `json:"spec,omitempty"`
+	Status            DeploymentStatus `json:"status,omitempty"`
 }
 
 type ServerGroupFunc func(ServerGroup, ServerGroupSpec, *MemberStatusList) error

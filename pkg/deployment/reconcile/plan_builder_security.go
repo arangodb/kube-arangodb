@@ -23,6 +23,8 @@
 package reconcile
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
@@ -139,6 +141,11 @@ func compareCapabilityLists(a, b []core.Capability) bool {
 	for _, capability := range b {
 		if _, ok := checked[capability]; !ok {
 			return false
+		}
+
+		// If we got ALL on list and expect ALL to be present then it is equal for us
+		if strings.EqualFold(string(capability), "ALL") {
+			return true
 		}
 
 		checked[capability] = true

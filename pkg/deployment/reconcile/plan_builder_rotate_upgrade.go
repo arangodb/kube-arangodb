@@ -23,8 +23,11 @@
 package reconcile
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -358,6 +361,15 @@ func podNeedsRotation(log zerolog.Logger, p core.Pod, apiObject metav1.Object, s
 		return rotate, reason
 	}
 
+	// Volumes
+	if rotate, reason := compareVolumes(groupSpec, p); rotate {
+		return rotate, reason
+	}
+
+	if rotate, reason := compareVolumeMounts(groupSpec, c); rotate {
+		return rotate, reason
+	}
+
 	return false, ""
 }
 
@@ -412,6 +424,63 @@ func compareProbes(probe pod.Probe, groupProbeDisabled *bool, groupProbeSpec *ap
 	// Recreate probe if timeout seconds are different
 	if groupProbeSpec.GetSuccessThreshold(containerProbe.SuccessThreshold) != containerProbe.SuccessThreshold {
 		return true, "Success threshold does not match"
+	}
+
+	return false, ""
+}
+
+func compareVolumes(spec api.ServerGroupSpec, pod core.Pod) (bool, string) {
+	if len(spec.Volumes) == 0 {
+		return false, ""
+	}
+
+	currentVolumes := map[string]core.Volume{}
+
+	for _, volume := range pod.Spec.Volumes {
+		currentVolumes[volume.Name] = volume
+	}
+
+	for _, expectedVolumeTemplate := range spec.Volumes {
+		expectedVolume := expectedVolumeTemplate.Volume()
+
+		currentVolume, ok := currentVolumes[expectedVolume.Name]
+		if !ok {
+			return true, fmt.Sprintf("Volume %s is not mount. Rotating", expectedVolume.Name)
+		}
+
+		if !equality.Semantic.DeepDerivative(expectedVolume, currentVolume) {
+			return true, fmt.Sprintf("Volume %s needs to be updated", expectedVolume.Name)
+		}
+	}
+
+	return false, ""
+}
+
+func compareVolumeMounts(spec api.ServerGroupSpec, container core.Container) (bool, string) {
+	if len(container.VolumeMounts) < len(spec.VolumeMounts) {
+		return true, "Missing volume mounts in container"
+	}
+
+	// Get compared mounts
+	mounts := container.VolumeMounts
+	if len(mounts) > 0 {
+		if container.VolumeMounts[len(mounts)-1].MountPath == "/var/run/secrets/kubernetes.io/serviceaccount" {
+			// Remove last mount added by ServiceAccount from compare
+			mounts = mounts[0 : len(mounts)-1]
+		}
+	}
+
+	if len(spec.VolumeMounts) > len(mounts) {
+		return true, "Missing volume mounts in container"
+	}
+
+	mounts = mounts[len(mounts)-len(spec.VolumeMounts):]
+
+	// Now we can compare lists
+	for id, mount := range mounts {
+		if !equality.Semantic.DeepDerivative(spec.VolumeMounts[id].VolumeMount(), mount) {
+			return true, fmt.Sprintf("Mount with if %d does not match - got %s, expected %s", id, mount.Name, spec.VolumeMounts[id].Name)
+		}
 	}
 
 	return false, ""

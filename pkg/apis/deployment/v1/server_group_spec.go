@@ -26,6 +26,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -72,6 +74,10 @@ type ServerGroupSpec struct {
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group
 	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
+	// Volumes define list of volumes mounted to pod
+	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
+	// VolumeMounts define list of volume mounts mounted into server container
+	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -372,9 +378,41 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 				}
 			}
 		}
+
+		if err := s.validate(); err != nil {
+			return maskAny(err)
+		}
 	} else if s.GetCount() != 0 {
 		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
+	return nil
+}
+
+func (s *ServerGroupSpec) validate() error {
+	if s == nil {
+		return nil
+	}
+
+	return shared.WithErrors(
+		shared.PrefixResourceError("volumes", s.Volumes.Validate()),
+		shared.PrefixResourceError("volumeMounts", s.VolumeMounts.Validate()),
+		s.validateVolumes(),
+	)
+}
+
+func (s *ServerGroupSpec) validateVolumes() error {
+	volumes := map[string]bool{}
+
+	for _, volume := range s.Volumes {
+		volumes[volume.Name] = true
+	}
+
+	for _, mount := range s.VolumeMounts {
+		if _, ok := volumes[mount.Name]; !ok {
+			return errors.Errorf("Volume %s is not defined, but required by mount", mount.Name)
+		}
+	}
+
 	return nil
 }
 
