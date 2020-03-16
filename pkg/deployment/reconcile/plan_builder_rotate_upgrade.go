@@ -29,8 +29,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -85,9 +83,18 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Upgrade is not needed, see if rotation is needed
-				rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m.ID, context)
-				if rotNeeded {
-					newPlan = createRotateMemberPlan(log, m, group, reason)
+				if m.PodUID == "" {
+					rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m.ID, context)
+					if rotNeeded {
+						newPlan = createRotateMemberPlan(log, m, group, reason)
+					}
+				} else {
+					// Use new level of rotate logic
+
+					rotNeeded, reason := podNeedsRotationNew(log, pod, apiObject, spec, group, status, m, context)
+					if rotNeeded {
+						newPlan = createRotateMemberPlan(log, m, group, reason)
+					}
 				}
 			}
 
@@ -184,6 +191,46 @@ func podNeedsUpgrading(log zerolog.Logger, p core.Pod, spec api.DeploymentSpec, 
 		}
 	}
 	return upgradeDecision{UpgradeNeeded: false}
+}
+
+// podNeedsRotationNew returns true when the specification of the
+// given pod differs from what it should be according to the
+// given deployment spec.
+// When true is returned, a reason for the rotation is already returned.
+func podNeedsRotationNew(log zerolog.Logger, p core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
+	context PlanBuilderContext) (bool, string) {
+	if m.PodUID != p.UID {
+		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
+	}
+
+	if m.PodSpecVersion == "" {
+		return true, "Pod Spec Version is nil - recreating pod"
+	}
+
+	imageInfo, imageFound := context.SelectImage(spec, status)
+	if !imageFound {
+		// Image is not found, so rotation is not needed
+		return false, ""
+	}
+
+	renderedPod, err := context.RenderPodForMember(spec, status, m.ID, imageInfo)
+	if err != nil {
+		log.Err(err).Msg("Error while rendering pod")
+		return false, ""
+	}
+
+	checksum, err := k8sutil.GetPodSpecChecksum(renderedPod.Spec)
+	if err != nil {
+		log.Err(err).Msg("Error while getting pod checksum")
+		return false, ""
+	}
+
+	if m.PodSpecVersion != checksum {
+		return true, "Pod needs rotation - checksum does not match"
+	}
+
+	return false, ""
 }
 
 // podNeedsRotation returns true when the specification of the

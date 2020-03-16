@@ -26,6 +26,8 @@ import (
 	"reflect"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	v1 "k8s.io/api/core/v1"
@@ -45,6 +47,10 @@ type MemberStatus struct {
 	PersistentVolumeClaimName string `json:"persistentVolumeClaimName,omitempty"`
 	// PodName holds the name of the Pod that currently runs this member
 	PodName string `json:"podName,omitempty"`
+	// PodUID holds the UID of the Pod that currently runs this member
+	PodUID types.UID `json:"podUID,omitempty"`
+	// PodSpecVersion holds the checksum of Pod spec that currently runs this member. Used to rotate pods
+	PodSpecVersion string `json:"podSpecVersion,omitempty"`
 	// Conditions specific to this member
 	Conditions ConditionList `json:"conditions,omitempty"`
 	// RecentTerminatons holds the times when this member was recently terminated.
