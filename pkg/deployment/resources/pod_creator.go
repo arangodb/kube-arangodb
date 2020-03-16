@@ -524,6 +524,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		})
 		return nil
 	}
+	status.CurrentImage = &imageInfo
 
 	pod, err := r.RenderPodForMember(spec, status, memberID, imageInfo)
 	if err != nil {
@@ -575,8 +576,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		m.PodUID = uid
 		m.PodSpecVersion = checksum
-		m.ArangoVersion = imageInfo.ArangoDBVersion
-		m.ImageID = imageInfo.ImageID
+		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
+		m.ImageID = status.CurrentImage.ImageID
 
 		// Check for missing side cars in
 		m.SideCarSpecs = make(map[string]core.Container)

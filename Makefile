@@ -177,10 +177,7 @@ linter: fmt
 	                  $(SOURCES_PACKAGES)
 
 .PHONY: build
-build: docker manifests
-ifndef IGNORE_UBI
-build: docker-ubi
-endif
+build: docker docker-ubi manifests
 
 .PHONY: clean
 clean:
