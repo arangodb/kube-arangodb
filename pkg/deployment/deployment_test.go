@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -1885,7 +1886,10 @@ func TestEnsurePods(t *testing.T) {
 
 			// Assert
 			if testCase.ExpectedError != nil {
-				assert.EqualError(t, err, testCase.ExpectedError.Error())
+
+				if !assert.EqualError(t, err, testCase.ExpectedError.Error()) {
+					println(fmt.Sprintf("%+v", err))
+				}
 				return
 			}
 

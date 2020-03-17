@@ -467,3 +467,11 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 
 	return err
 }
+
+func (d *Deployment) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
+	return d.resources.RenderPodForMember(spec, status, memberID, imageInfo)
+}
+
+func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
+	return d.resources.SelectImage(spec, status)
+}

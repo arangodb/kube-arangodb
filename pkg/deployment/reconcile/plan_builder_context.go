@@ -28,7 +28,7 @@ import (
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -44,7 +44,7 @@ type PlanBuilderContext interface {
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
-	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
+	GetPvc(pvcName string) (*core.PersistentVolumeClaim, error)
 	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 		agents api.MemberStatusList, id string, version driver.Version) []string
@@ -56,6 +56,10 @@ type PlanBuilderContext interface {
 	GetStatus() (api.DeploymentStatus, int32)
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
+	// Renders Pod definition for member
+	RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

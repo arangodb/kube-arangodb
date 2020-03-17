@@ -23,10 +23,14 @@
 package k8sutil
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -391,15 +395,35 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 	return p
 }
 
+// GetPodSpecChecksum return checksum of requested pod spec
+func GetPodSpecChecksum(podSpec v1.PodSpec) (string, error) {
+	// Do not calculate init containers
+	podSpec.InitContainers = nil
+
+	data, err := json.Marshal(podSpec)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+}
+
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) error {
+func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) (types.UID, string, error) {
 	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
-	if _, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
-		return maskAny(err)
+
+	checksum, err := GetPodSpecChecksum(pod.Spec)
+	if err != nil {
+		return "", "", err
 	}
-	return nil
+
+	if pod, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
+		return "", "", maskAny(err)
+	} else {
+		return pod.UID, checksum, nil
+	}
 }
 
 func CreateVolumeEmptyDir(name string) v1.Volume {
