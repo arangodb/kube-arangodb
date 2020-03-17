@@ -914,6 +914,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		**out = **in
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
+	if in.OverrideDetectedTotalMemory != nil {
+		in, out := &in.OverrideDetectedTotalMemory, &out.OverrideDetectedTotalMemory
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
 		*out = make([]corev1.Toleration, len(*in))

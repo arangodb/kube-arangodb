@@ -50,6 +50,8 @@ type ServerGroupSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	// OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
+	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
