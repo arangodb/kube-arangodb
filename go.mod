@@ -4,6 +4,7 @@ go 1.13
 
 replace (
 	github.com/coreos/prometheus-operator => github.com/coreos/prometheus-operator v0.37.0
+	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
 	k8s.io/api => k8s.io/api v0.15.9

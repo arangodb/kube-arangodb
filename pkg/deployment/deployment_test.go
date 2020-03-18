@@ -163,14 +163,12 @@ func TestEnsurePods(t *testing.T) {
 
 	resourcesUnfiltered := v1.ResourceRequirements{
 		Limits: v1.ResourceList{
-			v1.ResourceCPU:     resource.MustParse("500m"),
-			v1.ResourceMemory:  resource.MustParse("2Gi"),
-			v1.ResourceStorage: resource.MustParse("8Gi"),
+			v1.ResourceCPU:    resource.MustParse("500m"),
+			v1.ResourceMemory: resource.MustParse("2Gi"),
 		},
 		Requests: v1.ResourceList{
-			v1.ResourceCPU:     resource.MustParse("100m"),
-			v1.ResourceMemory:  resource.MustParse("1Gi"),
-			v1.ResourceStorage: resource.MustParse("2Gi"),
+			v1.ResourceCPU:    resource.MustParse("100m"),
+			v1.ResourceMemory: resource.MustParse("1Gi"),
 		},
 	}
 
@@ -219,6 +217,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullAlways,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -278,6 +277,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -334,6 +334,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -398,6 +399,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -568,6 +570,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -619,6 +622,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -673,6 +677,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -725,6 +730,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(true, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -784,6 +790,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.ClusterJWTVolumeMount(),
 							},
+							Resources:       emptyResources,
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -847,6 +854,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 								k8sutil.ClusterJWTVolumeMount(),
 							},
+							Resources: emptyResources,
 						},
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
@@ -901,6 +909,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.RocksdbEncryptionVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -952,6 +961,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -1005,6 +1015,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -1066,6 +1077,7 @@ func TestEnsurePods(t *testing.T) {
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -1137,6 +1149,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.LifecycleVolumeMount(),
 							},
+							Resources:       emptyResources,
 							Lifecycle:       createTestLifecycle(),
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
@@ -1208,6 +1221,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.LifecycleVolumeMount(),
 							},
+							Resources:       emptyResources,
 							Lifecycle:       createTestLifecycle(),
 							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: v1.PullIfNotPresent,
@@ -1306,6 +1320,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.RocksdbEncryptionVolumeMount(),
 								k8sutil.ClusterJWTVolumeMount(),
 							},
+							Resources: emptyResources,
 						},
 						testCreateExporterContainer(true, emptyResources),
 					},
@@ -1434,6 +1449,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.TlsKeyfileVolumeMount(),
 								k8sutil.ClusterJWTVolumeMount(),
 							},
+							Resources: emptyResources,
 						},
 					},
 					RestartPolicy:                 v1.RestartPolicyNever,
@@ -1744,6 +1760,7 @@ func TestEnsurePods(t *testing.T) {
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
 							},
+							Resources:       emptyResources,
 							ImagePullPolicy: v1.PullIfNotPresent,
 							Lifecycle:       createTestLifecycle(),
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -1840,7 +1857,7 @@ func TestEnsurePods(t *testing.T) {
 							},
 							Lifecycle:       createTestLifecycle(),
 							ImagePullPolicy: v1.PullIfNotPresent,
-							Resources:       resourcesUnfiltered,
+							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []v1.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),
@@ -2338,7 +2355,7 @@ func testCreateExporterContainer(secure bool, resources v1.ResourceRequirements)
 		VolumeMounts: []v1.VolumeMount{
 			k8sutil.ExporterJWTVolumeMount(),
 		},
-		Resources:       resources,
+		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
 		LivenessProbe:   createTestExporterLivenessProbe(secure),
 		ImagePullPolicy: v1.PullIfNotPresent,
 		SecurityContext: securityContext.NewSecurityContext(),
