@@ -23,17 +23,21 @@
 package resources
 
 import (
+	"fmt"
 	"math"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 const (
-	ArangoDExecutor string = "/usr/sbin/arangod"
+	ArangoDExecutor                        string = "/usr/sbin/arangod"
+	ArangoDBOverrideDetectedTotalMemoryEnv        = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
 )
 
 type MemberArangoDPod struct {
@@ -61,12 +65,12 @@ func (a *ArangoDContainer) GetExecutor() string {
 	return ArangoDExecutor
 }
 
-func (a *ArangoDContainer) GetSecurityContext() *v1.SecurityContext {
+func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {
 	return a.groupSpec.SecurityContext.NewSecurityContext()
 }
 
-func (a *ArangoDContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
-	var liveness, readiness *v1.Probe
+func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	var liveness, readiness *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
@@ -93,15 +97,15 @@ func (a *ArangoDContainer) GetImage() string {
 	return a.imageInfo.ImageID
 }
 
-func (a *ArangoDContainer) GetEnvs() []v1.EnvVar {
-	envs := make([]v1.EnvVar, 0)
+func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
+	envs := NewEnvBuilder()
 
 	if a.spec.IsAuthenticated() {
 		if !versionHasJWTSecretKeyfile(a.imageInfo.ArangoDBVersion) {
 			env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangodJWTSecret,
 				a.spec.Authentication.GetJWTSecretName(), constants.SecretKeyToken)
 
-			envs = append(envs, env)
+			envs.Add(true, env)
 		}
 	}
 
@@ -109,40 +113,43 @@ func (a *ArangoDContainer) GetEnvs() []v1.EnvVar {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
 			constants.SecretKeyToken)
 
-		envs = append(envs, env)
+		envs.Add(true, env)
 	}
 
 	if a.resources.context.GetLifecycleImage() != "" {
-		envs = append(envs, k8sutil.GetLifecycleEnv()...)
+		envs.Add(true, k8sutil.GetLifecycleEnv()...)
 	}
 
-	if len(envs) > 0 {
-		return envs
+	if util.BoolOrDefault(a.groupSpec.OverrideDetectedTotalMemory, false) {
+		if a.groupSpec.Resources.Limits != nil {
+			if limits, ok := a.groupSpec.Resources.Limits[core.ResourceMemory]; ok {
+				envs.Add(true, core.EnvVar{
+					Name:  ArangoDBOverrideDetectedTotalMemoryEnv,
+					Value: fmt.Sprintf("%d", limits.Value()),
+				})
+			}
+		}
 	}
 
-	return nil
+	return envs.GetEnvList()
 }
 
-func (a *ArangoDContainer) GetResourceRequirements() v1.ResourceRequirements {
-	if a.groupSpec.GetVolumeClaimTemplate() != nil {
-		return a.groupSpec.Resources
-	}
-
+func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
 	return k8sutil.ExtractPodResourceRequirement(a.groupSpec.Resources)
 }
 
-func (a *ArangoDContainer) GetLifecycle() (*v1.Lifecycle, error) {
+func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 	if a.resources.context.GetLifecycleImage() != "" {
 		return k8sutil.NewLifecycle()
 	}
 	return nil, nil
 }
 
-func (a *ArangoDContainer) GetImagePullPolicy() v1.PullPolicy {
+func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
-func (m *MemberArangoDPod) Init(pod *v1.Pod) {
+func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
@@ -164,7 +171,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberArangoDPod) GetSidecars(pod *v1.Pod) {
+func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 
 	if isMetricsEnabledForGroup(m.spec, m.group) {
 		image := m.spec.GetImage()
@@ -197,9 +204,9 @@ func (m *MemberArangoDPod) GetSidecars(pod *v1.Pod) {
 	return
 }
 
-func (m *MemberArangoDPod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
-	var volumes []v1.Volume
-	var volumeMounts []v1.VolumeMount
+func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
+	var volumes []core.Volume
+	var volumeMounts []core.VolumeMount
 
 	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
 
@@ -253,8 +260,8 @@ func (m *MemberArangoDPod) IsDeploymentMode() bool {
 	return m.spec.IsDevelopment()
 }
 
-func (m *MemberArangoDPod) GetInitContainers() ([]v1.Container, error) {
-	var initContainers []v1.Container
+func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
+	var initContainers []core.Container
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
@@ -283,7 +290,7 @@ func (m *MemberArangoDPod) GetFinalizers() []string {
 	return m.resources.CreatePodFinalizers(m.group)
 }
 
-func (m *MemberArangoDPod) GetTolerations() []v1.Toleration {
+func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
 }
 

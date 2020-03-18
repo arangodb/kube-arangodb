@@ -311,11 +311,11 @@ func ExtractPodResourceRequirement(resources v1.ResourceRequirements) v1.Resourc
 
 	filterStorage := func(list v1.ResourceList) v1.ResourceList {
 		newlist := make(v1.ResourceList)
-		for k, v := range list {
-			if k != v1.ResourceCPU && k != v1.ResourceMemory {
-				continue
-			}
-			newlist[k] = v
+		if q, ok := list[v1.ResourceCPU]; ok {
+			newlist[v1.ResourceCPU] = q
+		}
+		if q, ok := list[v1.ResourceMemory]; ok {
+			newlist[v1.ResourceMemory] = q
 		}
 		return newlist
 	}

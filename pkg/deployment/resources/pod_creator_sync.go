@@ -89,7 +89,7 @@ func (a *ArangoSyncContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() v1.ResourceRequirements {
-	return a.groupSpec.Resources
+	return k8sutil.ExtractPodResourceRequirement(a.groupSpec.Resources)
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*v1.Lifecycle, error) {
