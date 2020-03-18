@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -45,6 +47,6 @@ func (s *ServerGroupSpecVolumeMount) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("name", shared.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
 	)
 }

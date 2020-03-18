@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
@@ -97,7 +99,7 @@ func (s *ServerGroupSpecVolume) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceErrors("name", shared.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceErrors("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
 		shared.PrefixResourceErrors("secret", s.Secret.Validate()),
 		shared.PrefixResourceErrors("configMap", s.ConfigMap.Validate()),
 		s.validate(),
@@ -135,7 +137,7 @@ func (s *ServerGroupSpecVolumeSecret) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("secretName", shared.AsKubernetesResourceName(&s.SecretName).Validate()),
+		shared.PrefixResourceError("secretName", sharedv1.AsKubernetesResourceName(&s.SecretName).Validate()),
 	)
 }
 
@@ -147,6 +149,6 @@ func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.PrefixResourceError("name", shared.AsKubernetesResourceName(&s.Name).Validate()),
+		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
 	)
 }
