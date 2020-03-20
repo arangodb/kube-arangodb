@@ -177,7 +177,11 @@ linter: fmt
 	                  $(SOURCES_PACKAGES)
 
 .PHONY: build
-build: docker docker-ubi manifests
+build: docker manifests
+
+ifndef IGNORE_UBI
+build: docker-ubi
+endif
 
 .PHONY: clean
 clean:
@@ -204,12 +208,19 @@ update-generated:
 	@mkdir -p $(ORGDIR)
 	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-		"all" \
-		"github.com/arangodb/kube-arangodb/pkg/generated" \
-		"github.com/arangodb/kube-arangodb/pkg/apis" \
-		"deployment:v1 replication:v1 storage:v1alpha backup:v1" \
-		--go-header-file "./tools/codegen/boilerplate.go.txt" \
-		$(VERIFYARGS)
+			"all" \
+			"github.com/arangodb/kube-arangodb/pkg/generated" \
+			"github.com/arangodb/kube-arangodb/pkg/apis" \
+			"deployment:v1 replication:v1 storage:v1alpha backup:v1" \
+			--go-header-file "./tools/codegen/boilerplate.go.txt" \
+			$(VERIFYARGS)
+	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
+			"deepcopy" \
+			"github.com/arangodb/kube-arangodb/pkg/generated" \
+			"github.com/arangodb/kube-arangodb/pkg/apis" \
+			"shared:v1" \
+			--go-header-file "./tools/codegen/boilerplate.go.txt" \
+			$(VERIFYARGS)
 
 .PHONY: verify-generated
 verify-generated:
@@ -225,6 +236,9 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
 		$(DASHBOARDBUILDIMAGE)
 	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+
+.PHONY: bin
+bin: $(BIN)
 
 $(BIN): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)

@@ -29,7 +29,7 @@ import (
 // DeploymentStatus contains the status part of a Cluster resource.
 type DeploymentStatus struct {
 	// Phase holds the current lifetime phase of the deployment
-	Phase DeploymentPhase `json:"phase"`
+	Phase DeploymentPhase `json:"phase,omitempty"`
 	// Reason contains a human readable reason for reaching the current state (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current state
 

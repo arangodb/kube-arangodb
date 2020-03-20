@@ -121,6 +121,7 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 		}
 		return nil
 	})
+
 	return plan
 }
 

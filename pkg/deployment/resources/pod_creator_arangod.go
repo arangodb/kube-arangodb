@@ -253,6 +253,14 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 		volumes = append(volumes, k8sutil.LifecycleVolume())
 	}
 
+	if len(m.groupSpec.Volumes) > 0 {
+		volumes = append(volumes, m.groupSpec.Volumes.Volumes()...)
+	}
+
+	if len(m.groupSpec.VolumeMounts) > 0 {
+		volumeMounts = append(volumeMounts, m.groupSpec.VolumeMounts.VolumeMounts()...)
+	}
+
 	return volumes, volumeMounts
 }
 

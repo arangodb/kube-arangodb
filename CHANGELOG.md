@@ -1,6 +1,9 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Added Customizable Volumes and VolumeMounts for ArangoDB server container
+- Added MemoryOverride flag for ArangoDB >= 3.6.3
+- Improved Rotation discovery process
 - Added annotation to rotate ArangoDeployment in secure way
 
 ## [1.0.0](https://github.com/arangodb/kube-arangodb/tree/1.0.0) (2020-03-03)
