@@ -663,9 +663,9 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 
 	// Add affinity
 	p.Spec.Affinity = &core.Affinity{
-		NodeAffinity: podCreator.GetNodeAffinity(),
+		NodeAffinity:    podCreator.GetNodeAffinity(),
 		PodAntiAffinity: podCreator.GetPodAntiAffinity(),
-		PodAffinity: podCreator.GetPodAffinity(),
+		PodAffinity:     podCreator.GetPodAffinity(),
 	}
 
 	return &p, nil

@@ -86,7 +86,7 @@ func AppendAffinityWithRole(p k8sutil.PodCreator, a *core.PodAffinity, role stri
 	}
 }
 
-func MergePodAntiAffinity(a ,b *core.PodAntiAffinity) {
+func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
 	if a == nil || b == nil {
 		return
 	}
@@ -100,7 +100,7 @@ func MergePodAntiAffinity(a ,b *core.PodAntiAffinity) {
 	}
 }
 
-func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity{
+func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity {
 	if len(a.RequiredDuringSchedulingIgnoredDuringExecution) > 0 || len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
 		return &a
 	}
@@ -116,7 +116,7 @@ func ReturnPodAntiAffinityOrNil(a core.PodAntiAffinity) *core.PodAntiAffinity {
 	return nil
 }
 
-func ReturnNodeAffinityOrNil( a core.NodeAffinity) *core.NodeAffinity {
+func ReturnNodeAffinityOrNil(a core.NodeAffinity) *core.NodeAffinity {
 	if len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
 		return &a
 	}

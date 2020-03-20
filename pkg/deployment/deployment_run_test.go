@@ -25,10 +25,11 @@ package deployment
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
-	"testing"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +78,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		if util.BoolOrDefault(testCase.CompareChecksum, true) {
 			compareSpec(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
 		}
-			require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
+		require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
 		require.Equal(t, testCase.ExpectedPod.ObjectMeta, pods.Items[0].ObjectMeta)
 
 		if len(testCase.ExpectedEvent) > 0 {

@@ -23,8 +23,9 @@
 package resources
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"math"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 

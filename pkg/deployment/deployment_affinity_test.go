@@ -31,7 +31,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func modifyAffinity(name, group string, required bool, role string, mods ... func(a *core.Affinity)) *core.Affinity {
+func modifyAffinity(name, group string, required bool, role string, mods ...func(a *core.Affinity)) *core.Affinity {
 	affinity := k8sutil.CreateAffinity(name, group,
 		required, role)
 
@@ -61,7 +61,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
-						AntiAffinity:&core.PodAntiAffinity{
+						AntiAffinity: &core.PodAntiAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []core.PodAffinityTerm{
 								testAffinity,
 							},
@@ -123,7 +123,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
-						AntiAffinity:&core.PodAntiAffinity{
+						AntiAffinity: &core.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []core.WeightedPodAffinityTerm{
 								weight,
 							},
@@ -185,7 +185,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
-						AntiAffinity:&core.PodAntiAffinity{
+						AntiAffinity: &core.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []core.WeightedPodAffinityTerm{
 								weight,
 							},
@@ -251,7 +251,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Authentication: noAuthentication,
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
-						AntiAffinity:&core.PodAntiAffinity{
+						AntiAffinity: &core.PodAntiAffinity{
 							PreferredDuringSchedulingIgnoredDuringExecution: []core.WeightedPodAffinityTerm{
 								weight,
 								weight,

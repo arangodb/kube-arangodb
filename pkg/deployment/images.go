@@ -26,9 +26,10 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -45,9 +46,9 @@ import (
 var _ k8sutil.PodCreator = &ImageUpdatePod{}
 
 type ImageUpdatePod struct {
-	spec  api.DeploymentSpec
+	spec      api.DeploymentSpec
 	apiObject k8sutil.APIObject
-	image string
+	image     string
 }
 
 type ArangoDImageUpdateContainer struct {
@@ -195,8 +196,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	}
 
 	imagePod := ImageUpdatePod{
-		spec:  ib.Spec,
-		image: image,
+		spec:      ib.Spec,
+		image:     image,
 		apiObject: ib.APIObject,
 	}
 
