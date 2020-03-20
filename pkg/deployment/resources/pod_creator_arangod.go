@@ -24,6 +24,7 @@ package resources
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"math"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -40,6 +41,8 @@ const (
 	ArangoDBOverrideDetectedTotalMemoryEnv        = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
 )
 
+var _ k8sutil.PodCreator = &MemberArangoDPod{}
+
 type MemberArangoDPod struct {
 	status                      api.MemberStatus
 	tlsKeyfileSecretName        string
@@ -48,7 +51,6 @@ type MemberArangoDPod struct {
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
 	group                       api.ServerGroup
-	context                     Context
 	resources                   *Resources
 	imageInfo                   api.ImageInfo
 }
@@ -161,12 +163,38 @@ func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
 
+func (m *MemberArangoDPod) GetName() string {
+	return m.resources.context.GetAPIObject().GetName()
+}
+
+func (m *MemberArangoDPod) GetRole() string {
+	return m.group.AsRole()
+}
+
 func (m *MemberArangoDPod) GetImagePullSecrets() []string {
 	return m.spec.ImagePullSecrets
 }
 
-func (m *MemberArangoDPod) GetAffinityRole() string {
-	return ""
+func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
+	a := core.PodAntiAffinity{}
+
+	pod.AppendPodAntiAffinityDefault(m, &a)
+
+	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+
+	return pod.ReturnPodAntiAffinityOrNil(a)
+}
+
+func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
+	return nil
+}
+
+func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
+	a := core.NodeAffinity{}
+
+	pod.AppendNodeSelector(&a)
+
+	return pod.ReturnNodeAffinityOrNil(a)
 }
 
 func (m *MemberArangoDPod) GetNodeSelector() map[string]string {

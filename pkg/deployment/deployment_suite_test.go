@@ -65,6 +65,7 @@ type testCaseStruct struct {
 	ArangoDeployment *api.ArangoDeployment
 	Helper           func(*testing.T, *Deployment, *testCaseStruct)
 	config           Config
+	CompareChecksum  *bool
 	ExpectedError    error
 	ExpectedEvent    string
 	ExpectedPod      core.Pod

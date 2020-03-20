@@ -26,11 +26,12 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -41,8 +42,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+var _ k8sutil.PodCreator = &ImageUpdatePod{}
+
 type ImageUpdatePod struct {
 	spec  api.DeploymentSpec
+	apiObject k8sutil.APIObject
 	image string
 }
 
@@ -193,6 +197,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	imagePod := ImageUpdatePod{
 		spec:  ib.Spec,
 		image: image,
+		apiObject: ib.APIObject,
 	}
 
 	pod, err := resources.RenderArangoPod(ib.APIObject, role, id, podName, args, &imagePod)
@@ -213,14 +218,14 @@ func (a *ArangoDImageUpdateContainer) GetExecutor() string {
 	return resources.ArangoDExecutor
 }
 
-func (a *ArangoDImageUpdateContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
+func (a *ArangoDImageUpdateContainer) GetProbes() (*core.Probe, *core.Probe, error) {
 	return nil, nil, nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetResourceRequirements() v1.ResourceRequirements {
-	return v1.ResourceRequirements{
-		Limits:   make(v1.ResourceList),
-		Requests: make(v1.ResourceList),
+func (a *ArangoDImageUpdateContainer) GetResourceRequirements() core.ResourceRequirements {
+	return core.ResourceRequirements{
+		Limits:   make(core.ResourceList),
+		Requests: make(core.ResourceList),
 	}
 }
 
@@ -228,8 +233,8 @@ func (a *ArangoDImageUpdateContainer) GetImage() string {
 	return a.image
 }
 
-func (a *ArangoDImageUpdateContainer) GetEnvs() []v1.EnvVar {
-	env := make([]v1.EnvVar, 0)
+func (a *ArangoDImageUpdateContainer) GetEnvs() []core.EnvVar {
+	env := make([]core.EnvVar, 0)
 
 	if a.spec.License.HasSecretName() {
 		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
@@ -243,15 +248,23 @@ func (a *ArangoDImageUpdateContainer) GetEnvs() []v1.EnvVar {
 	return nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetLifecycle() (*v1.Lifecycle, error) {
+func (a *ArangoDImageUpdateContainer) GetLifecycle() (*core.Lifecycle, error) {
 	return nil, nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() v1.PullPolicy {
+func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
-func (i *ImageUpdatePod) Init(pod *v1.Pod) {
+func (i *ImageUpdatePod) GetName() string {
+	return i.apiObject.GetName()
+}
+
+func (i *ImageUpdatePod) GetRole() string {
+	return "id"
+}
+
+func (i *ImageUpdatePod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 }
@@ -271,9 +284,9 @@ func (i *ImageUpdatePod) GetAffinityRole() string {
 	return ""
 }
 
-func (i *ImageUpdatePod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
-	var volumes []v1.Volume
-	var volumeMounts []v1.VolumeMount
+func (i *ImageUpdatePod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
+	var volumes []core.Volume
+	var volumeMounts []core.VolumeMount
 
 	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
 	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
@@ -281,10 +294,10 @@ func (i *ImageUpdatePod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
 	return volumes, volumeMounts
 }
 
-func (i *ImageUpdatePod) GetSidecars(*v1.Pod) {
+func (i *ImageUpdatePod) GetSidecars(*core.Pod) {
 }
 
-func (i *ImageUpdatePod) GetInitContainers() ([]v1.Container, error) {
+func (i *ImageUpdatePod) GetInitContainers() ([]core.Container, error) {
 	return nil, nil
 }
 
@@ -292,14 +305,14 @@ func (i *ImageUpdatePod) GetFinalizers() []string {
 	return nil
 }
 
-func (i *ImageUpdatePod) GetTolerations() []v1.Toleration {
+func (i *ImageUpdatePod) GetTolerations() []core.Toleration {
 
 	shortDur := k8sutil.TolerationDuration{
 		Forever:  false,
 		TimeSpan: time.Second * 5,
 	}
 
-	tolerations := make([]v1.Toleration, 0, 2)
+	tolerations := make([]core.Toleration, 0, 2)
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
 		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
@@ -322,8 +335,28 @@ func (i *ImageUpdatePod) GetServiceAccountName() string {
 	return ""
 }
 
-func (a *ArangoDImageUpdateContainer) GetSecurityContext() *v1.SecurityContext {
+func (a *ArangoDImageUpdateContainer) GetSecurityContext() *core.SecurityContext {
 	// Default security context
 	var v api.ServerGroupSpecSecurityContext
 	return v.NewSecurityContext()
+}
+
+func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
+	a := core.PodAntiAffinity{}
+
+	pod.AppendPodAntiAffinityDefault(i, &a)
+
+	return pod.ReturnPodAntiAffinityOrNil(a)
+}
+
+func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
+	return nil
+}
+
+func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
+	a := core.NodeAffinity{}
+
+	pod.AppendNodeSelector(&a)
+
+	return pod.ReturnNodeAffinityOrNil(a)
 }

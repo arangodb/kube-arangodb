@@ -34,7 +34,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -59,15 +59,19 @@ const (
 )
 
 type PodCreator interface {
-	Init(*v1.Pod)
-	GetVolumes() ([]v1.Volume, []v1.VolumeMount)
-	GetSidecars(*v1.Pod)
-	GetInitContainers() ([]v1.Container, error)
+	Init(*core.Pod)
+	GetName() string
+	GetRole() string
+	GetVolumes() ([]core.Volume, []core.VolumeMount)
+	GetSidecars(*core.Pod)
+	GetInitContainers() ([]core.Container, error)
 	GetFinalizers() []string
-	GetTolerations() []v1.Toleration
+	GetTolerations() []core.Toleration
 	GetNodeSelector() map[string]string
 	GetServiceAccountName() string
-	GetAffinityRole() string
+	GetPodAntiAffinity() *core.PodAntiAffinity
+	GetPodAffinity() *core.PodAffinity
+	GetNodeAffinity() *core.NodeAffinity
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool
@@ -75,37 +79,37 @@ type PodCreator interface {
 
 type ContainerCreator interface {
 	GetExecutor() string
-	GetProbes() (*v1.Probe, *v1.Probe, error)
-	GetResourceRequirements() v1.ResourceRequirements
-	GetLifecycle() (*v1.Lifecycle, error)
-	GetImagePullPolicy() v1.PullPolicy
+	GetProbes() (*core.Probe, *core.Probe, error)
+	GetResourceRequirements() core.ResourceRequirements
+	GetLifecycle() (*core.Lifecycle, error)
+	GetImagePullPolicy() core.PullPolicy
 	GetImage() string
-	GetEnvs() []v1.EnvVar
-	GetSecurityContext() *v1.SecurityContext
+	GetEnvs() []core.EnvVar
+	GetSecurityContext() *core.SecurityContext
 }
 
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
-func IsPodReady(pod *v1.Pod) bool {
-	condition := getPodCondition(&pod.Status, v1.PodReady)
-	return condition != nil && condition.Status == v1.ConditionTrue
+func IsPodReady(pod *core.Pod) bool {
+	condition := getPodCondition(&pod.Status, core.PodReady)
+	return condition != nil && condition.Status == core.ConditionTrue
 }
 
 // GetPodByName returns pod if it exists among the pods' list
 // Returns false if not found.
-func GetPodByName(pods []v1.Pod, podName string) (v1.Pod, bool) {
+func GetPodByName(pods []core.Pod, podName string) (core.Pod, bool) {
 	for _, pod := range pods {
 		if pod.GetName() == podName {
 			return pod, true
 		}
 	}
-	return v1.Pod{}, false
+	return core.Pod{}, false
 }
 
 // IsPodSucceeded returns true if the arangodb container of the pod
 // has terminated with exit code 0.
-func IsPodSucceeded(pod *v1.Pod) bool {
-	if pod.Status.Phase == v1.PodSucceeded {
+func IsPodSucceeded(pod *core.Pod) bool {
+	if pod.Status.Phase == core.PodSucceeded {
 		return true
 	} else {
 		for _, c := range pod.Status.ContainerStatuses {
@@ -124,8 +128,8 @@ func IsPodSucceeded(pod *v1.Pod) bool {
 
 // IsPodFailed returns true if the arangodb container of the pod
 // has terminated wih a non-zero exit code.
-func IsPodFailed(pod *v1.Pod) bool {
-	if pod.Status.Phase == v1.PodFailed {
+func IsPodFailed(pod *core.Pod) bool {
+	if pod.Status.Phase == core.PodFailed {
 		return true
 	} else {
 		for _, c := range pod.Status.ContainerStatuses {
@@ -144,40 +148,40 @@ func IsPodFailed(pod *v1.Pod) bool {
 }
 
 // IsPodScheduled returns true if the pod has been scheduled.
-func IsPodScheduled(pod *v1.Pod) bool {
-	condition := getPodCondition(&pod.Status, v1.PodScheduled)
-	return condition != nil && condition.Status == v1.ConditionTrue
+func IsPodScheduled(pod *core.Pod) bool {
+	condition := getPodCondition(&pod.Status, core.PodScheduled)
+	return condition != nil && condition.Status == core.ConditionTrue
 }
 
 // IsPodNotScheduledFor returns true if the pod has not been scheduled
 // for longer than the given duration.
-func IsPodNotScheduledFor(pod *v1.Pod, timeout time.Duration) bool {
-	condition := getPodCondition(&pod.Status, v1.PodScheduled)
+func IsPodNotScheduledFor(pod *core.Pod, timeout time.Duration) bool {
+	condition := getPodCondition(&pod.Status, core.PodScheduled)
 	return condition != nil &&
-		condition.Status == v1.ConditionFalse &&
+		condition.Status == core.ConditionFalse &&
 		condition.LastTransitionTime.Time.Add(timeout).Before(time.Now())
 }
 
 // IsPodMarkedForDeletion returns true if the pod has been marked for deletion.
-func IsPodMarkedForDeletion(pod *v1.Pod) bool {
+func IsPodMarkedForDeletion(pod *core.Pod) bool {
 	return pod.DeletionTimestamp != nil
 }
 
 // IsPodTerminating returns true if the pod has been marked for deletion
 // but is still running.
-func IsPodTerminating(pod *v1.Pod) bool {
-	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == v1.PodRunning
+func IsPodTerminating(pod *core.Pod) bool {
+	return IsPodMarkedForDeletion(pod) && pod.Status.Phase == core.PodRunning
 }
 
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
-func IsArangoDBImageIDAndVersionPod(p v1.Pod) bool {
+func IsArangoDBImageIDAndVersionPod(p core.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]
 	return found && role == ImageIDAndVersionRole
 }
 
 // getPodCondition returns the condition of given type in the given status.
 // If not found, nil is returned.
-func getPodCondition(status *v1.PodStatus, condType v1.PodConditionType) *v1.PodCondition {
+func getPodCondition(status *core.PodStatus, condType core.PodConditionType) *core.PodCondition {
 	for i := range status.Conditions {
 		if status.Conditions[i].Type == condType {
 			return &status.Conditions[i]
@@ -208,62 +212,62 @@ func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
 }
 
 // ArangodVolumeMount creates a volume mount structure for arangod.
-func ArangodVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func ArangodVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      ArangodVolumeName,
 		MountPath: ArangodVolumeMountDir,
 	}
 }
 
 // TlsKeyfileVolumeMount creates a volume mount structure for a TLS keyfile.
-func TlsKeyfileVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func TlsKeyfileVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      TlsKeyfileVolumeName,
 		MountPath: TLSKeyfileVolumeMountDir,
 	}
 }
 
 // ClientAuthCACertificateVolumeMount creates a volume mount structure for a client-auth CA certificate (ca.crt).
-func ClientAuthCACertificateVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func ClientAuthCACertificateVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      ClientAuthCAVolumeName,
 		MountPath: ClientAuthCAVolumeMountDir,
 	}
 }
 
 // MasterJWTVolumeMount creates a volume mount structure for a master JWT secret (token).
-func MasterJWTVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func MasterJWTVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      MasterJWTSecretVolumeName,
 		MountPath: MasterJWTSecretVolumeMountDir,
 	}
 }
 
 // ClusterJWTVolumeMount creates a volume mount structure for a cluster JWT secret (token).
-func ClusterJWTVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func ClusterJWTVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      ClusterJWTSecretVolumeName,
 		MountPath: ClusterJWTSecretVolumeMountDir,
 	}
 }
 
-func ExporterJWTVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func ExporterJWTVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      ExporterJWTVolumeName,
 		MountPath: ExporterJWTVolumeMountDir,
 	}
 }
 
 // RocksdbEncryptionVolumeMount creates a volume mount structure for a RocksDB encryption key.
-func RocksdbEncryptionVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func RocksdbEncryptionVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      RocksdbEncryptionVolumeName,
 		MountPath: RocksDBEncryptionVolumeMountDir,
 	}
 }
 
 // ArangodInitContainer creates a container configured to initalize a UUID file.
-func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool, securityContext *v1.SecurityContext) v1.Container {
+func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
 	var command string
@@ -280,7 +284,7 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 	} else {
 		command = fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile)
 	}
-	c := v1.Container{
+	c := core.Container{
 		Name:  name,
 		Image: alpineImage,
 		Command: []string{
@@ -288,17 +292,17 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 			"-c",
 			command,
 		},
-		Resources: v1.ResourceRequirements{
-			Requests: v1.ResourceList{
-				v1.ResourceCPU:    resource.MustParse("100m"),
-				v1.ResourceMemory: resource.MustParse("10Mi"),
+		Resources: core.ResourceRequirements{
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("10Mi"),
 			},
-			Limits: v1.ResourceList{
-				v1.ResourceCPU:    resource.MustParse("100m"),
-				v1.ResourceMemory: resource.MustParse("50Mi"),
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("100m"),
+				core.ResourceMemory: resource.MustParse("50Mi"),
 			},
 		},
-		VolumeMounts: []v1.VolumeMount{
+		VolumeMounts: []core.VolumeMount{
 			ArangodVolumeMount(),
 		},
 		SecurityContext: securityContext,
@@ -307,47 +311,47 @@ func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool
 }
 
 // ExtractPodResourceRequirement filters resource requirements for Pods.
-func ExtractPodResourceRequirement(resources v1.ResourceRequirements) v1.ResourceRequirements {
+func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.ResourceRequirements {
 
-	filterStorage := func(list v1.ResourceList) v1.ResourceList {
-		newlist := make(v1.ResourceList)
-		if q, ok := list[v1.ResourceCPU]; ok {
-			newlist[v1.ResourceCPU] = q
+	filterStorage := func(list core.ResourceList) core.ResourceList {
+		newlist := make(core.ResourceList)
+		if q, ok := list[core.ResourceCPU]; ok {
+			newlist[core.ResourceCPU] = q
 		}
-		if q, ok := list[v1.ResourceMemory]; ok {
-			newlist[v1.ResourceMemory] = q
+		if q, ok := list[core.ResourceMemory]; ok {
+			newlist[core.ResourceMemory] = q
 		}
 		return newlist
 	}
 
-	return v1.ResourceRequirements{
+	return core.ResourceRequirements{
 		Limits:   filterStorage(resources.Limits),
 		Requests: filterStorage(resources.Requests),
 	}
 }
 
 // NewContainer creates a container for specified creator
-func NewContainer(args []string, containerCreator ContainerCreator) (v1.Container, error) {
+func NewContainer(args []string, containerCreator ContainerCreator) (core.Container, error) {
 
 	liveness, readiness, err := containerCreator.GetProbes()
 	if err != nil {
-		return v1.Container{}, err
+		return core.Container{}, err
 	}
 
 	lifecycle, err := containerCreator.GetLifecycle()
 	if err != nil {
-		return v1.Container{}, err
+		return core.Container{}, err
 	}
 
-	return v1.Container{
+	return core.Container{
 		Name:    ServerContainerName,
 		Image:   containerCreator.GetImage(),
 		Command: append([]string{containerCreator.GetExecutor()}, args...),
-		Ports: []v1.ContainerPort{
+		Ports: []core.ContainerPort{
 			{
 				Name:          "server",
 				ContainerPort: int32(ArangoPort),
-				Protocol:      v1.ProtocolTCP,
+				Protocol:      core.ProtocolTCP,
 			},
 		},
 		Env:             containerCreator.GetEnvs(),
@@ -361,19 +365,19 @@ func NewContainer(args []string, containerCreator ContainerCreator) (v1.Containe
 }
 
 // NewPod creates a basic Pod for given settings.
-func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.Pod {
+func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) core.Pod {
 
 	hostname := CreatePodHostName(deploymentName, role, id)
-	p := v1.Pod{
+	p := core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       podName,
 			Labels:     LabelsForDeployment(deploymentName, role),
 			Finalizers: podCreator.GetFinalizers(),
 		},
-		Spec: v1.PodSpec{
+		Spec: core.PodSpec{
 			Hostname:           hostname,
 			Subdomain:          CreateHeadlessServiceName(deploymentName),
-			RestartPolicy:      v1.RestartPolicyNever,
+			RestartPolicy:      core.RestartPolicyNever,
 			Tolerations:        podCreator.GetTolerations(),
 			ServiceAccountName: podCreator.GetServiceAccountName(),
 			NodeSelector:       podCreator.GetNodeSelector(),
@@ -383,9 +387,9 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 	// Add ImagePullSecrets
 	imagePullSecrets := podCreator.GetImagePullSecrets()
 	if imagePullSecrets != nil {
-		imagePullSecretsReference := make([]v1.LocalObjectReference, len(imagePullSecrets))
+		imagePullSecretsReference := make([]core.LocalObjectReference, len(imagePullSecrets))
 		for id := range imagePullSecrets {
-			imagePullSecretsReference[id] = v1.LocalObjectReference{
+			imagePullSecretsReference[id] = core.LocalObjectReference{
 				Name: imagePullSecrets[id],
 			}
 		}
@@ -396,7 +400,7 @@ func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) v1.
 }
 
 // GetPodSpecChecksum return checksum of requested pod spec
-func GetPodSpecChecksum(podSpec v1.PodSpec) (string, error) {
+func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 	// Do not calculate init containers
 	podSpec.InitContainers = nil
 
@@ -411,7 +415,7 @@ func GetPodSpecChecksum(podSpec v1.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav1.OwnerReference) (types.UID, string, error) {
+func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, string, error) {
 	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	checksum, err := GetPodSpecChecksum(pod.Spec)
@@ -426,55 +430,55 @@ func CreatePod(kubecli kubernetes.Interface, pod *v1.Pod, ns string, owner metav
 	}
 }
 
-func CreateVolumeEmptyDir(name string) v1.Volume {
-	return v1.Volume{
+func CreateVolumeEmptyDir(name string) core.Volume {
+	return core.Volume{
 		Name: name,
-		VolumeSource: v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{},
+		VolumeSource: core.VolumeSource{
+			EmptyDir: &core.EmptyDirVolumeSource{},
 		},
 	}
 }
 
-func CreateVolumeWithSecret(name, secretName string) v1.Volume {
-	return v1.Volume{
+func CreateVolumeWithSecret(name, secretName string) core.Volume {
+	return core.Volume{
 		Name: name,
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
+		VolumeSource: core.VolumeSource{
+			Secret: &core.SecretVolumeSource{
 				SecretName: secretName,
 			},
 		},
 	}
 }
 
-func CreateVolumeWithPersitantVolumeClaim(name, claimName string) v1.Volume {
-	return v1.Volume{
+func CreateVolumeWithPersitantVolumeClaim(name, claimName string) core.Volume {
+	return core.Volume{
 		Name: name,
-		VolumeSource: v1.VolumeSource{
-			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+		VolumeSource: core.VolumeSource{
+			PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
 				ClaimName: claimName,
 			},
 		},
 	}
 }
 
-func CreateEnvFieldPath(name, fieldPath string) v1.EnvVar {
-	return v1.EnvVar{
+func CreateEnvFieldPath(name, fieldPath string) core.EnvVar {
+	return core.EnvVar{
 		Name: name,
-		ValueFrom: &v1.EnvVarSource{
-			FieldRef: &v1.ObjectFieldSelector{
+		ValueFrom: &core.EnvVarSource{
+			FieldRef: &core.ObjectFieldSelector{
 				FieldPath: fieldPath,
 			},
 		},
 	}
 }
 
-func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) v1.EnvVar {
-	return v1.EnvVar{
+func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) core.EnvVar {
+	return core.EnvVar{
 		Name:  name,
 		Value: "",
-		ValueFrom: &v1.EnvVarSource{
-			SecretKeyRef: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+		ValueFrom: &core.EnvVarSource{
+			SecretKeyRef: &core.SecretKeySelector{
+				LocalObjectReference: core.LocalObjectReference{
 					Name: SecretKeyName,
 				},
 				Key: secretKey,

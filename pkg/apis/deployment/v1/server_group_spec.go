@@ -70,6 +70,8 @@ type ServerGroupSpec struct {
 	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// VolumeResizeMode specified resize mode for pvc
 	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
+	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
+	AntiAffinity *v1.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []v1.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group
