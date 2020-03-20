@@ -215,12 +215,12 @@ update-generated:
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-    		"deepcopy" \
-    		"github.com/arangodb/kube-arangodb/pkg/generated" \
-    		"github.com/arangodb/kube-arangodb/pkg/apis" \
-    		"shared:v1" \
-    		--go-header-file "./tools/codegen/boilerplate.go.txt" \
-    		$(VERIFYARGS)
+			"deepcopy" \
+			"github.com/arangodb/kube-arangodb/pkg/generated" \
+			"github.com/arangodb/kube-arangodb/pkg/apis" \
+			"shared:v1" \
+			--go-header-file "./tools/codegen/boilerplate.go.txt" \
+			$(VERIFYARGS)
 
 .PHONY: verify-generated
 verify-generated:
