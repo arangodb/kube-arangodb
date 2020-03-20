@@ -98,6 +98,12 @@ spec:
                         valueFrom:
                             fieldRef:
                                 fieldPath: status.podIP
+                      - name: RELATED_IMAGE_UBI
+                        value: "{{ .Values.operator.images.base }}"
+                      - name: RELATED_IMAGE_METRICSEXPORTER
+                        value: "{{ .Values.operator.images.metricsExporter }}"
+                      - name: RELATED_IMAGE_DATABASE
+                        value: "{{ .Values.operator.images.arango }}"
                   ports:
                       - name: metrics
                         containerPort: 8528

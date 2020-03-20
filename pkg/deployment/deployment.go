@@ -52,10 +52,12 @@ import (
 
 // Config holds configuration settings for a Deployment
 type Config struct {
-	ServiceAccount string
-	AllowChaos     bool
-	LifecycleImage string
-	AlpineImage    string
+	ServiceAccount       string
+	AllowChaos           bool
+	LifecycleImage       string
+	AlpineImage          string
+	MetricsExporterImage string
+	ArangoImage          string
 }
 
 // Dependencies holds dependent services for a Deployment

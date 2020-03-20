@@ -31,6 +31,10 @@ import (
 	"strings"
 	"time"
 
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	utilsError "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/pkg/errors"
@@ -58,11 +62,17 @@ import (
 )
 
 const (
-	defaultServerHost      = "0.0.0.0"
-	defaultServerPort      = 8528
-	defaultLogLevel        = "debug"
-	defaultAdminSecretName = "arangodb-operator-dashboard"
-	defaultAlpineImage     = "alpine:3.7"
+	defaultServerHost           = "0.0.0.0"
+	defaultServerPort           = 8528
+	defaultLogLevel             = "debug"
+	defaultAdminSecretName      = "arangodb-operator-dashboard"
+	defaultAlpineImage          = "alpine:3.7"
+	defaultMetricsExporterImage = "arangodb/arangodb-exporter:0.1.6"
+	defaultArangoImage          = "arangodb/arangodb:latest"
+
+	UBIImageEnv             util.EnvironmentVariable = "RELATED_IMAGE_UBI"
+	ArangoImageEnv          util.EnvironmentVariable = "RELATED_IMAGE_DATABASE"
+	MetricsExporterImageEnv util.EnvironmentVariable = "RELATED_IMAGE_METRICSEXPORTER"
 )
 
 var (
@@ -91,7 +101,8 @@ var (
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
-		alpineImage                 string
+
+		alpineImage, metricsExporterImage, arangoImage string
 	}
 	chaosOptions struct {
 		allowed bool
@@ -104,6 +115,7 @@ var (
 )
 
 func init() {
+
 	f := cmdMain.Flags()
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
@@ -115,7 +127,9 @@ func init() {
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
-	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", defaultAlpineImage, "Docker image used for alpine containers")
+	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
+	f.StringVar(&operatorOptions.metricsExporterImage, "operator.metrics-exporter-image", MetricsExporterImageEnv.GetOrDefault(defaultMetricsExporterImage), "Docker image used for metrics containers by default")
+	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 
 }
@@ -136,6 +150,8 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	name := os.Getenv(constants.EnvOperatorPodName)
 	ip := os.Getenv(constants.EnvOperatorPodIP)
+
+	deploymentApi.DefaultImage = operatorOptions.arangoImage
 
 	// Prepare log service
 	var err error
@@ -277,6 +293,8 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableBackup:                operatorOptions.enableBackup,
 		AllowChaos:                  chaosOptions.allowed,
 		AlpineImage:                 operatorOptions.alpineImage,
+		MetricsExporterImage:        operatorOptions.metricsExporterImage,
+		ArangoImage:                 operatorOptions.arangoImage,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,

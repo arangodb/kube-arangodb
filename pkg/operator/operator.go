@@ -85,6 +85,8 @@ type Config struct {
 	ServiceAccount              string
 	LifecycleImage              string
 	AlpineImage                 string
+	ArangoImage                 string
+	MetricsExporterImage        string
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
