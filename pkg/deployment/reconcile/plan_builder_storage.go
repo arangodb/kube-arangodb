@@ -122,10 +122,6 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 		return nil
 	})
 
-	if !plan.IsEmpty() {
-		return plan
-	}
-
 	return plan
 }
 
