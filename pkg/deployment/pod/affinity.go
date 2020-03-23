@@ -100,6 +100,40 @@ func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
 	}
 }
 
+func MergePodAffinity(a, b *core.PodAffinity) {
+	if a == nil || b == nil {
+		return
+	}
+
+	for _, rule := range b.PreferredDuringSchedulingIgnoredDuringExecution {
+		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
+	}
+
+	for _, rule := range b.RequiredDuringSchedulingIgnoredDuringExecution {
+		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, rule)
+	}
+}
+
+func MergeNodeAffinity(a, b *core.NodeAffinity) {
+	if a == nil || b == nil {
+		return
+	}
+
+	for _, rule := range b.PreferredDuringSchedulingIgnoredDuringExecution {
+		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
+	}
+
+	if b.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		if a.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+			a.RequiredDuringSchedulingIgnoredDuringExecution = b.RequiredDuringSchedulingIgnoredDuringExecution.DeepCopy()
+		} else {
+			for _, rule := range b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+				a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, rule)
+			}
+		}
+	}
+}
+
 func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity {
 	if len(a.RequiredDuringSchedulingIgnoredDuringExecution) > 0 || len(a.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
 		return &a

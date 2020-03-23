@@ -168,6 +168,8 @@ func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
 		pod.AppendAffinityWithRole(m, &a, api.ServerGroupDBServers.AsRole())
 	}
 
+	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+
 	return pod.ReturnPodAffinityOrNil(a)
 }
 
@@ -175,6 +177,8 @@ func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 
 	pod.AppendNodeSelector(&a)
+
+	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

@@ -187,13 +187,19 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 }
 
 func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
-	return nil
+	a := core.PodAffinity{}
+
+	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+
+	return pod.ReturnPodAffinityOrNil(a)
 }
 
 func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 
 	pod.AppendNodeSelector(&a)
+
+	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }
