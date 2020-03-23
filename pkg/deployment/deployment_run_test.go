@@ -23,8 +23,13 @@
 package deployment
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/stretchr/testify/assert"
@@ -70,6 +75,9 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
 		require.NoError(t, err)
 		require.Len(t, pods.Items, 1)
+		if util.BoolOrDefault(testCase.CompareChecksum, true) {
+			compareSpec(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
+		}
 		require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)
 		require.Equal(t, testCase.ExpectedPod.ObjectMeta, pods.Items[0].ObjectMeta)
 
@@ -105,4 +113,21 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			d.GetServerGroupIterator().ForeachServerGroup(checkEachMember, &status)
 		}
 	})
+}
+
+func compareSpec(t *testing.T, a, b core.PodSpec) {
+	ac, err := k8sutil.GetPodSpecChecksum(a)
+	require.NoError(t, err)
+
+	bc, err := k8sutil.GetPodSpecChecksum(b)
+	require.NoError(t, err)
+
+	aj, err := json.Marshal(a)
+	require.NoError(t, err)
+
+	bj, err := json.Marshal(b)
+	require.NoError(t, err)
+
+	require.Equal(t, string(aj), string(bj))
+	require.Equal(t, ac, bc)
 }

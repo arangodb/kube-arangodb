@@ -25,11 +25,13 @@ package resources
 import (
 	"math"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 const (
@@ -43,6 +45,8 @@ type ArangoSyncContainer struct {
 	resources *Resources
 	imageInfo api.ImageInfo
 }
+
+var _ k8sutil.PodCreator = &MemberSyncPod{}
 
 type MemberSyncPod struct {
 	tlsKeyfileSecretName   string
@@ -60,12 +64,12 @@ func (a *ArangoSyncContainer) GetExecutor() string {
 	return ArangoSyncExecutor
 }
 
-func (a *ArangoSyncContainer) GetSecurityContext() *v1.SecurityContext {
+func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
 	return a.groupSpec.SecurityContext.NewSecurityContext()
 }
 
-func (a *ArangoSyncContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
-	var liveness, readiness *v1.Probe
+func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	var liveness, readiness *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
@@ -88,18 +92,18 @@ func (a *ArangoSyncContainer) GetProbes() (*v1.Probe, *v1.Probe, error) {
 	return liveness, readiness, nil
 }
 
-func (a *ArangoSyncContainer) GetResourceRequirements() v1.ResourceRequirements {
+func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
 	return k8sutil.ExtractPodResourceRequirement(a.groupSpec.Resources)
 }
 
-func (a *ArangoSyncContainer) GetLifecycle() (*v1.Lifecycle, error) {
+func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
 	if a.resources.context.GetLifecycleImage() != "" {
 		return k8sutil.NewLifecycle()
 	}
 	return nil, nil
 }
 
-func (a *ArangoSyncContainer) GetImagePullPolicy() v1.PullPolicy {
+func (a *ArangoSyncContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
@@ -107,8 +111,8 @@ func (a *ArangoSyncContainer) GetImage() string {
 	return a.imageInfo.Image
 }
 
-func (a *ArangoSyncContainer) GetEnvs() []v1.EnvVar {
-	envs := make([]v1.EnvVar, 0)
+func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
+	envs := make([]core.EnvVar, 0)
 
 	if a.spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
@@ -135,15 +139,48 @@ func (a *ArangoSyncContainer) GetEnvs() []v1.EnvVar {
 	return nil
 }
 
-func (m *MemberSyncPod) GetAffinityRole() string {
-	if m.group == api.ServerGroupSyncWorkers {
-		return api.ServerGroupDBServers.AsRole()
-	}
-	return ""
+func (m *MemberSyncPod) GetName() string {
+	return m.resources.context.GetAPIObject().GetName()
+}
+
+func (m *MemberSyncPod) GetRole() string {
+	return m.group.AsRole()
 }
 
 func (m *MemberSyncPod) GetImagePullSecrets() []string {
 	return m.spec.ImagePullSecrets
+}
+
+func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
+	a := core.PodAntiAffinity{}
+
+	pod.AppendPodAntiAffinityDefault(m, &a)
+
+	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
+
+	return pod.ReturnPodAntiAffinityOrNil(a)
+}
+
+func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
+	a := core.PodAffinity{}
+
+	if m.group == api.ServerGroupSyncWorkers {
+		pod.AppendAffinityWithRole(m, &a, api.ServerGroupDBServers.AsRole())
+	}
+
+	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
+
+	return pod.ReturnPodAffinityOrNil(a)
+}
+
+func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
+	a := core.NodeAffinity{}
+
+	pod.AppendNodeSelector(&a)
+
+	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+
+	return pod.ReturnNodeAffinityOrNil(a)
 }
 
 func (m *MemberSyncPod) GetNodeSelector() map[string]string {
@@ -154,7 +191,7 @@ func (m *MemberSyncPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberSyncPod) GetSidecars(pod *v1.Pod) {
+func (m *MemberSyncPod) GetSidecars(pod *core.Pod) {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
@@ -162,9 +199,9 @@ func (m *MemberSyncPod) GetSidecars(pod *v1.Pod) {
 	}
 }
 
-func (m *MemberSyncPod) GetVolumes() ([]v1.Volume, []v1.VolumeMount) {
-	var volumes []v1.Volume
-	var volumeMounts []v1.VolumeMount
+func (m *MemberSyncPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
+	var volumes []core.Volume
+	var volumeMounts []core.VolumeMount
 
 	if m.resources.context.GetLifecycleImage() != "" {
 		volumes = append(volumes, k8sutil.LifecycleVolume())
@@ -205,8 +242,8 @@ func (m *MemberSyncPod) IsDeploymentMode() bool {
 	return m.spec.IsDevelopment()
 }
 
-func (m *MemberSyncPod) GetInitContainers() ([]v1.Container, error) {
-	var initContainers []v1.Container
+func (m *MemberSyncPod) GetInitContainers() ([]core.Container, error) {
+	var initContainers []core.Container
 
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
@@ -225,7 +262,7 @@ func (m *MemberSyncPod) GetFinalizers() []string {
 	return nil
 }
 
-func (m *MemberSyncPod) GetTolerations() []v1.Toleration {
+func (m *MemberSyncPod) GetTolerations() []core.Toleration {
 	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
 }
 
@@ -239,7 +276,7 @@ func (m *MemberSyncPod) GetContainerCreator() k8sutil.ContainerCreator {
 	}
 }
 
-func (m *MemberSyncPod) Init(pod *v1.Pod) {
+func (m *MemberSyncPod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
