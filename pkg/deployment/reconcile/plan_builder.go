@@ -161,12 +161,6 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 				memberLog.Msg("Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss")
 				plan = append(plan,
 					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
-			case api.ServerGroupCoordinators:
-				// For coordinators rotation of ID does not make sense at all - they are anyway stateless.
-				// This will prevent zombie coordinators creation
-				memberLog.Msg("Restoring old member. For coordinator rotation of ID does not make sense at all")
-				plan = append(plan,
-					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
 			default:
 				memberLog.Msg("Creating member replacement plan because member has failed")
 				plan = append(plan,
