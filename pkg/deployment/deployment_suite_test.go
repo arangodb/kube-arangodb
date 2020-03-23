@@ -99,6 +99,15 @@ func modTestLivenessProbe(secure bool, authorization string, port int, mod func(
 	return probe
 }
 
+func createTestReadinessSimpleProbe(secure bool, authorization string, port int) *core.Probe {
+	probe := createTestLivenessProbe(secure, authorization, port)
+
+	probe.InitialDelaySeconds = 15
+	probe.PeriodSeconds = 10
+
+	return probe
+}
+
 func createTestLivenessProbe(secure bool, authorization string, port int) *core.Probe {
 	return k8sutil.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
