@@ -52,6 +52,7 @@ type MemberArangoDPod struct {
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
 	group                       api.ServerGroup
+	context                     Context
 	resources                   *Resources
 	imageInfo                   api.ImageInfo
 }
