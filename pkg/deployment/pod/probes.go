@@ -55,14 +55,14 @@ var probeMap = map[api.ServerGroup]probes{
 	},
 	api.ServerGroupAgents: {
 		liveness:  newProbe(true, true),
-		readiness: newProbe(false, false),
+		readiness: newProbe(true, false),
 	},
 	api.ServerGroupDBServers: {
 		liveness:  newProbe(true, true),
-		readiness: newProbe(false, false),
+		readiness: newProbe(true, false),
 	},
 	api.ServerGroupCoordinators: {
-		liveness:  newProbe(false, false),
+		liveness:  newProbe(true, false),
 		readiness: newProbe(true, true),
 	},
 	api.ServerGroupSyncMasters: {
