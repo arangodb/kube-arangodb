@@ -965,6 +965,21 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(PVCResizeMode)
 		**out = **in
 	}
+	if in.AntiAffinity != nil {
+		in, out := &in.AntiAffinity, &out.AntiAffinity
+		*out = new(corev1.PodAntiAffinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(corev1.PodAffinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.NodeAffinity != nil {
+		in, out := &in.NodeAffinity, &out.NodeAffinity
+		*out = new(corev1.NodeAffinity)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
 		*out = make([]corev1.Container, len(*in))
