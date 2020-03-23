@@ -155,15 +155,20 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 				// Everything is fine, proceed
 			}
 
-			memberLog.Msg("Creating member replacement plan because member has failed")
-			newID := ""
-			if group == api.ServerGroupAgents {
-				newID = m.ID // Agents cannot (yet) be replaced with new IDs
+			switch group {
+			case api.ServerGroupAgents:
+				// For agents just recreate member do not rotate ID, do not remove PVC or service
+				memberLog.Msg("Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss")
+				plan = append(plan,
+					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+			default:
+				memberLog.Msg("Creating member replacement plan because member has failed")
+				plan = append(plan,
+					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+					api.NewAction(api.ActionTypeAddMember, group, ""),
+				)
+
 			}
-			plan = append(plan,
-				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-				api.NewAction(api.ActionTypeAddMember, group, newID),
-			)
 		}
 		return nil
 	})

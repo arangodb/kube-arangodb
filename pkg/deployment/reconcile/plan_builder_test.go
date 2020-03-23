@@ -681,7 +681,7 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedLog: "Creating rotation plan",
 		},
 		{
-			Name: "Member in failed state",
+			Name: "Agent in failed state",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
@@ -690,10 +690,46 @@ func TestCreatePlan(t *testing.T) {
 					Count: util.NewInt(2),
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseFailed
+				ad.Status.Members.Agents[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, "id"),
+			},
+			ExpectedLog: "Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss",
+		},
+		{
+			Name: "Coordinator in failed state",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.Coordinators = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseFailed
+				ad.Status.Members.Coordinators[0].ID = "id"
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, "id"),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, ""),
+			},
+			ExpectedLog: "Creating member replacement plan because member has failed",
+		},
+		{
+			Name: "DBServer in failed state",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseFailed
+				ad.Status.Members.DBServers[0].ID = "id"
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, "id"),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},

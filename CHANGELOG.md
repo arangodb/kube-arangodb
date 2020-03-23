@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Prevent Agency Members recreation
 - Added Customizable Volumes and VolumeMounts for ArangoDB server container
 - Added MemoryOverride flag for ArangoDB >= 3.6.3
 - Improved Rotation discovery process
