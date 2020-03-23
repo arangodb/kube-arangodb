@@ -278,6 +278,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ImageDiscoveryMode != nil {
+		in, out := &in.ImageDiscoveryMode, &out.ImageDiscoveryMode
+		*out = new(DeploymentImageDiscoveryModeSpec)
+		**out = **in
+	}
 	if in.DowntimeAllowed != nil {
 		in, out := &in.DowntimeAllowed, &out.DowntimeAllowed
 		*out = new(bool)
