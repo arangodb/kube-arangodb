@@ -710,9 +710,10 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Coordinators[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRecreateMember, api.ServerGroupCoordinators, "id"),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, "id"),
+				api.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, ""),
 			},
-			ExpectedLog: "Restoring old member. For coordinator rotation of ID does not make sense at all",
+			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
 		{
 			Name: "DBServer in failed state",
