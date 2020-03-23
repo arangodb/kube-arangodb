@@ -180,7 +180,7 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 
 	if isMetricsEnabledForGroup(m.spec, m.group) {
-		image := m.spec.GetImage()
+		image := m.context.GetMetricsExporterImage()
 		if m.spec.Metrics.HasImage() {
 			image = m.spec.Metrics.GetImage()
 		}

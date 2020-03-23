@@ -427,6 +427,7 @@ func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.Deplo
 			group:                       group,
 			resources:                   r,
 			imageInfo:                   imageInfo,
+			context:                     r.context,
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberPod)

@@ -30,8 +30,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const (
-	defaultImage = "arangodb/arangodb:latest"
+var (
+	DefaultImage = "arangodb/arangodb:latest"
 )
 
 // validatePullPolicy the image pull policy.
@@ -223,7 +223,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 		s.StorageEngine = NewStorageEngine(StorageEngineRocksDB)
 	}
 	if s.GetImage() == "" && s.IsDevelopment() {
-		s.Image = util.NewString(defaultImage)
+		s.Image = util.NewString(DefaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
 		s.ImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)

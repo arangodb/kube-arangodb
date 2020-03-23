@@ -63,6 +63,10 @@ type Context interface {
 	GetLifecycleImage() string
 	// GetAlpineImage returns the image name containing the alpine environment
 	GetAlpineImage() string
+	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
+	GetMetricsExporterImage() string
+	// GetArangoImage returns the image name containing the default arango image
+	GetArangoImage() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
 	// CreateEvent creates a given event.

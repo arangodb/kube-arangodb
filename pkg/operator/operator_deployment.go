@@ -204,10 +204,12 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 // makeDeploymentConfigAndDeps creates a Config & Dependencies object for a new Deployment.
 func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
-		ServiceAccount: o.Config.ServiceAccount,
-		LifecycleImage: o.Config.LifecycleImage,
-		AlpineImage:    o.Config.AlpineImage,
-		AllowChaos:     o.Config.AllowChaos,
+		ServiceAccount:       o.Config.ServiceAccount,
+		LifecycleImage:       o.Config.LifecycleImage,
+		AlpineImage:          o.Config.AlpineImage,
+		MetricsExporterImage: o.MetricsExporterImage,
+		ArangoImage:          o.ArangoImage,
+		AllowChaos:           o.Config.AllowChaos,
 	}
 	deps := deployment.Dependencies{
 		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().

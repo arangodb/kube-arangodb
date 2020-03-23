@@ -475,3 +475,11 @@ func (d *Deployment) RenderPodForMember(spec api.DeploymentSpec, status api.Depl
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
 	return d.resources.SelectImage(spec, status)
 }
+
+func (d *Deployment) GetMetricsExporterImage() string {
+	return d.config.MetricsExporterImage
+}
+
+func (d *Deployment) GetArangoImage() string {
+	return d.config.ArangoImage
+}
