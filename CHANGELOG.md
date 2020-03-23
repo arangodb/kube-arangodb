@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Added Image Discovery type in ArangoDeployment spec
 - Prevent Agency Members recreation
 - Added Customizable Volumes and VolumeMounts for ArangoDB server container
 - Added MemoryOverride flag for ArangoDB >= 3.6.3
