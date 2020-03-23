@@ -63,7 +63,7 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 	_, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
 	if err != nil {
 		if kubeErrors.IsNotFound(err) {
-			return false, fmt.Errorf("PVC is missing %s. Member wont be recreated without old PV", m.PersistentVolumeClaimName)
+			return false, fmt.Errorf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
 		}
 
 		return false, maskAny(err)
