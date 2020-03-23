@@ -144,14 +144,14 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 		},
 		api.ServerGroupAgents: {
 			liveness:  r.probeBuilderLivenessCore,
-			readiness: nilProbeBuilder,
+			readiness: r.probeBuilderLivenessCore,
 		},
 		api.ServerGroupDBServers: {
 			liveness:  r.probeBuilderLivenessCore,
-			readiness: nilProbeBuilder,
+			readiness: r.probeBuilderLivenessCore,
 		},
 		api.ServerGroupCoordinators: {
-			liveness:  nilProbeBuilder,
+			liveness:  r.probeBuilderLivenessCore,
 			readiness: r.probeBuilderReadinessCore,
 		},
 		api.ServerGroupSyncMasters: {
