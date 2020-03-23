@@ -94,7 +94,13 @@ func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
 }
 
 func (a *ArangoDContainer) GetImage() string {
-	return a.imageInfo.ImageID
+	switch a.spec.ImageDiscoveryMode.Get() {
+	case api.DeploymentImageDiscoveryDirectMode:
+		// In case of direct mode ignore discovery
+		return util.StringOrDefault(a.spec.Image, a.imageInfo.ImageID)
+	default:
+		return a.imageInfo.ImageID
+	}
 }
 
 func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
