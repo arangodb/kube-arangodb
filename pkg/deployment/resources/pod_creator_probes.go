@@ -144,11 +144,11 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 		},
 		api.ServerGroupAgents: {
 			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderLivenessCore,
+			readiness: r.probeBuilderReadinessSimpleCore,
 		},
 		api.ServerGroupDBServers: {
 			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderLivenessCore,
+			readiness: r.probeBuilderReadinessSimpleCore,
 		},
 		api.ServerGroupCoordinators: {
 			liveness:  r.probeBuilderLivenessCore,
@@ -182,6 +182,22 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 		Secure:        spec.IsSecure(),
 		Authorization: authorization,
 	}, nil
+}
+
+func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+	p, err := r.probeBuilderLivenessCore(spec, group, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if p == nil {
+		return nil, nil
+	}
+
+	p.InitialDelaySeconds = 15
+	p.PeriodSeconds = 10
+
+	return p, nil
 }
 
 func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
