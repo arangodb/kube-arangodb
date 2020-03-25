@@ -7,7 +7,7 @@ metadata:
   namespace: default
   labels:
       app.kubernetes.io/name: kube-arangodb
-      helm.sh/chart: kube-arangodb-1.0.0
+      helm.sh/chart: kube-arangodb-1.0.1
       app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: deployment-replication
       release: deployment-replication
@@ -20,7 +20,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-1.0.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -40,7 +40,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-1.0.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -61,7 +61,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-1.0.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -87,7 +87,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-1.0.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -108,7 +108,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.0.0
+    helm.sh/chart: kube-arangodb-1.0.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -134,7 +134,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.0.0
+        helm.sh/chart: kube-arangodb-1.0.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -153,7 +153,7 @@ spec:
         metadata:
             labels:
                 app.kubernetes.io/name: kube-arangodb
-                helm.sh/chart: kube-arangodb-1.0.0
+                helm.sh/chart: kube-arangodb-1.0.1
                 app.kubernetes.io/managed-by: Tiller
                 app.kubernetes.io/instance: deployment-replication
                 release: deployment-replication
@@ -192,7 +192,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: arangodb/kube-arangodb:1.0.0
+                  image: arangodb/kube-arangodb:1.0.1
                   args:
                     - --operator.deployment-replication
 
@@ -210,6 +210,12 @@ spec:
                         valueFrom:
                             fieldRef:
                                 fieldPath: status.podIP
+                      - name: RELATED_IMAGE_UBI
+                        value: "alpine:3.11"
+                      - name: RELATED_IMAGE_METRICSEXPORTER
+                        value: "arangodb/arangodb-exporter:0.1.6"
+                      - name: RELATED_IMAGE_DATABASE
+                        value: "arangodb/arangodb:latest"
                   ports:
                       - name: metrics
                         containerPort: 8528
