@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.0.1](https://github.com/arangodb/kube-arangodb/tree/1.0.1) (2020-03-25)
 - Added Customizable Affinity settings for ArangoDB Member Pods
 - Added possibility to override default images used by ArangoDeployment
 - Added possibility to set probes on all groups
