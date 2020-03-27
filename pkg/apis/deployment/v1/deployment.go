@@ -93,3 +93,13 @@ func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *Deploy
 	}
 	return nil
 }
+
+// IsUpToDate checks if applied version match current version in spec
+func (d ArangoDeployment) IsUpToDate() (bool, error) {
+	sha, err := d.Spec.Checksum()
+	if err != nil {
+		return false, err
+	}
+
+	return sha == d.Status.AppliedVersion && d.Status.Conditions.IsTrue(ConditionTypeUpToDate), nil
+}

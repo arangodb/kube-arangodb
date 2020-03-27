@@ -24,28 +24,34 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-// NewAddMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeAddMember, newAddMemberAction)
+}
+
+// newAddMemberAction creates a new Action that implements the given
 // planned AddMember action.
-func NewAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionAddMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionAddMember{}
+
+	a.actionImpl = newActionImpl(log, action, actionCtx, addMemberTimeout, &a.newMemberID)
+
+	return a
 }
 
 // actionAddMember implements an AddMemberAction.
 type actionAddMember struct {
-	log         zerolog.Logger
-	action      api.Action
-	actionCtx   ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
+
 	newMemberID string
 }
 
@@ -60,21 +66,4 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 	}
 	a.newMemberID = newID
 	return true, nil
-}
-
-// CheckProgress checks the progress of the action.
-// Returns true if the action is completely finished, false otherwise.
-func (a *actionAddMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	// Nothing todo
-	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionAddMember) Timeout() time.Duration {
-	return addMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionAddMember) MemberID() string {
-	return a.newMemberID
 }

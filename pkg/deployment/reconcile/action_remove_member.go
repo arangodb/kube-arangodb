@@ -25,7 +25,6 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -35,21 +34,27 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-// NewRemoveMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRemoveMember, newRemoveMemberAction)
+}
+
+// newRemoveMemberAction creates a new Action that implements the given
 // planned RemoveMember action.
-func NewRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionRemoveMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionRemoveMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, removeMemberTimeout)
+
+	return a
 }
 
 // actionRemoveMember implements an RemoveMemberAction.
 type actionRemoveMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start performs the start of the action.
@@ -113,21 +118,4 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		return false, maskAny(fmt.Errorf("Member %s still exists", a.action.MemberID))
 	}
 	return true, nil
-}
-
-// CheckProgress checks the progress of the action.
-// Returns true if the action is completely finished, false otherwise.
-func (a *actionRemoveMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	// Nothing todo
-	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionRemoveMember) Timeout() time.Duration {
-	return removeMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionRemoveMember) MemberID() string {
-	return a.action.MemberID
 }

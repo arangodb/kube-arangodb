@@ -24,27 +24,29 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-// NewUpgradeMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeUpgradeMember, newUpgradeMemberAction)
+}
+
+// newUpgradeMemberAction creates a new Action that implements the given
 // planned UpgradeMember action.
-func NewUpgradeMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionUpgradeMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newUpgradeMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionUpgradeMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, upgradeMemberTimeout)
+
+	return a
 }
 
 // actionUpgradeMember implements an UpgradeMember.
 type actionUpgradeMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -127,14 +129,4 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, maskAny(err)
 	}
 	return isUpgrading, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionUpgradeMember) Timeout() time.Duration {
-	return upgradeMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionUpgradeMember) MemberID() string {
-	return a.action.MemberID
 }

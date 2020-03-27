@@ -92,4 +92,6 @@ type Context interface {
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetAgency returns a connection to the entire agency.
 	GetAgency(ctx context.Context) (agency.Agency, error)
+	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
 }

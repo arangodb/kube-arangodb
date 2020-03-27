@@ -59,6 +59,8 @@ const (
 	ConditionTypeBootstrapSucceded ConditionType = "BootstrapSucceded"
 	// ConditionTypeTerminating indicates that the member is terminating but not yet terminated.
 	ConditionTypeTerminating ConditionType = "Terminating"
+	// ConditionTypeTerminating indicates that the deployment is up to date.
+	ConditionTypeUpToDate ConditionType = "UpToDate"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
@@ -77,6 +79,10 @@ type Condition struct {
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
+}
+
+func (c Condition) IsTrue() bool {
+	return c.Status == v1.ConditionTrue
 }
 
 // ConditionList is a list of conditions.
@@ -116,12 +122,17 @@ func (c Condition) Equal(other Condition) bool {
 // IsTrue return true when a condition with given type exists and its status is `True`.
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	c, found := list.Get(conditionType)
-	return found && c.Status == v1.ConditionTrue
+	return found && c.IsTrue()
 }
 
 // Get a condition by type.
 // Returns true if found, false if not found.
 func (list ConditionList) Get(conditionType ConditionType) (Condition, bool) {
+	// Covers nil and empty lists
+	if len(list) == 0 {
+		return Condition{}, false
+	}
+
 	for _, x := range list {
 		if x.Type == conditionType {
 			return x, true

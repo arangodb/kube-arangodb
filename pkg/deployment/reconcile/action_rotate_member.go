@@ -24,27 +24,29 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-// NewRotateMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRotateMember, newRotateMemberAction)
+}
+
+// newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func NewRotateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionRotateMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRotateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionRotateMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
+
+	return a
 }
 
 // actionRotateMember implements an RotateMember.
 type actionRotateMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -122,14 +124,4 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, maskAny(err)
 	}
 	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionRotateMember) Timeout() time.Duration {
-	return rotateMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionRotateMember) MemberID() string {
-	return a.action.MemberID
 }

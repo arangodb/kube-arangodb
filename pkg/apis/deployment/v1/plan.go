@@ -25,6 +25,7 @@ package v1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
+	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -66,6 +67,8 @@ const (
 	ActionTypePVCResize ActionType = "PVCResize"
 	// ActionTypePVCResized waits for PVC to resize for defined time
 	ActionTypePVCResized ActionType = "PVCResized"
+	// UpToDateUpdateResized define up to date annotation in spec
+	UpToDateUpdate ActionType = "UpToDateUpdate"
 )
 
 const (
@@ -92,6 +95,8 @@ type Action struct {
 	Reason string `json:"reason,omitempty"`
 	// Image used in can of a SetCurrentImage action.
 	Image string `json:"image,omitempty"`
+	// Params additional parameters used for action
+	Params map[string]interface{} `json:"params,omitempty"`
 }
 
 // Equal compares two Actions
@@ -103,7 +108,30 @@ func (a Action) Equal(other Action) bool {
 		util.TimeCompareEqual(a.CreationTime, other.CreationTime) &&
 		util.TimeCompareEqualPointer(a.StartTime, other.StartTime) &&
 		a.Reason == other.Reason &&
-		a.Image == other.Image
+		a.Image == other.Image &&
+		equality.Semantic.DeepEqual(a.Params, other.Params)
+}
+
+// AddParam returns copy of action with set parameter
+func (a Action) AddParam(key string, value interface{}) Action {
+	if a.Params == nil {
+		a.Params = map[string]interface{}{}
+	}
+
+	a.Params[key] = value
+
+	return a
+}
+
+// GetParam returns action parameter
+func (a Action) GetParam(key string) (interface{}, bool) {
+	if a.Params == nil {
+		return nil, false
+	}
+
+	i, ok := a.Params[key]
+
+	return i, ok
 }
 
 // NewAction instantiates a new Action.

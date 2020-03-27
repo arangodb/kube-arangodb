@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -34,21 +33,24 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-// NewWaitForMemberUpAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeWaitForMemberUp, newWaitForMemberUpAction)
+}
+
+// newWaitForMemberUpAction creates a new Action that implements the given
 // planned WaitForMemberUp action.
-func NewWaitForMemberUpAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionWaitForMemberUp{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newWaitForMemberUpAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionWaitForMemberUp{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, waitForMemberUpTimeout)
+
+	return a
 }
 
 // actionWaitForMemberUp implements an WaitForMemberUp.
 type actionWaitForMemberUp struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -188,14 +190,4 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 		return false, false, maskAny(err)
 	}
 	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionWaitForMemberUp) Timeout() time.Duration {
-	return waitForMemberUpTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionWaitForMemberUp) MemberID() string {
-	return a.action.MemberID
 }

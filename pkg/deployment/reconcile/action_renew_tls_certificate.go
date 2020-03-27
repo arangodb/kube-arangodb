@@ -24,27 +24,32 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-// NewRenewTLSCertificateAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRenewTLSCertificate, newRenewTLSCertificateAction)
+}
+
+// newRenewTLSCertificateAction creates a new Action that implements the given
 // planned RenewTLSCertificate action.
-func NewRenewTLSCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &renewTLSCertificateAction{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRenewTLSCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &renewTLSCertificateAction{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, renewTLSCertificateTimeout)
+
+	return a
 }
 
 // renewTLSCertificateAction implements a RenewTLSCertificate action.
 type renewTLSCertificateAction struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start performs the start of the action.
@@ -63,20 +68,4 @@ func (a *renewTLSCertificateAction) Start(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	return false, nil
-}
-
-// CheckProgress checks the progress of the action.
-// Returns true if the action is completely finished, false otherwise.
-func (a *renewTLSCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *renewTLSCertificateAction) Timeout() time.Duration {
-	return renewTLSCertificateTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *renewTLSCertificateAction) MemberID() string {
-	return a.action.MemberID
 }

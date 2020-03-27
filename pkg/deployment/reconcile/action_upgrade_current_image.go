@@ -24,27 +24,29 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-// NewSetCurrentImageAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeSetCurrentImage, newSetCurrentImageAction)
+}
+
+// newSetCurrentImageAction creates a new Action that implements the given
 // planned SetCurrentImage action.
-func NewSetCurrentImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &setCurrentImageAction{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newSetCurrentImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &setCurrentImageAction{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, upgradeMemberTimeout)
+
+	return a
 }
 
 // setCurrentImageAction implements an SetCurrentImage.
 type setCurrentImageAction struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -72,14 +74,4 @@ func (a *setCurrentImageAction) CheckProgress(ctx context.Context) (bool, bool, 
 	}
 	log.Info().Str("image", a.action.Image).Msg("Changed current image")
 	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *setCurrentImageAction) Timeout() time.Duration {
-	return upgradeMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *setCurrentImageAction) MemberID() string {
-	return ""
 }

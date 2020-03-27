@@ -33,6 +33,9 @@ type DeploymentStatus struct {
 	// Reason contains a human readable reason for reaching the current state (can be empty)
 	Reason string `json:"reason,omitempty"` // Reason for current state
 
+	// AppliedVersion defines checksum of applied spec
+	AppliedVersion string `json:"appliedVersion"`
+
 	// ServiceName holds the name of the Service a client can use (inside the k8s cluster)
 	// to access ArangoDB.
 	ServiceName string `json:"serviceName,omitempty"`

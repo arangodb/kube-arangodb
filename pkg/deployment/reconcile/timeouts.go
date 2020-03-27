@@ -37,4 +37,7 @@ const (
 	shutdownMemberTimeout        = time.Minute * 30
 	upgradeMemberTimeout         = time.Hour * 6
 	waitForMemberUpTimeout       = time.Minute * 15
+	upToDateUpdateTimeout        = time.Minute
+
+	shutdownTimeout = time.Second * 15
 )

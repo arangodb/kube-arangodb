@@ -22,27 +22,32 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/rs/zerolog"
 )
 
-// actionDisableScalingCluster implements disabling scaling DBservers and coordinators.
-type actionDisableScalingCluster struct {
-	log         zerolog.Logger
-	action      api.Action
-	actionCtx   ActionContext
-	newMemberID string
+func init() {
+	registerAction(api.ActionTypeDisableClusterScaling, newDisableScalingCluster)
 }
 
-// NewDisableScalingCluster creates the new action with disabling scaling DBservers and coordinators.
-func NewDisableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionDisableScalingCluster{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+// newDisableScalingCluster creates the new action with disabling scaling DBservers and coordinators.
+func newDisableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionDisableScalingCluster{}
+
+	a.actionImpl = newActionImpl(log, action, actionCtx, 0, util.NewString(""))
+
+	return a
+}
+
+// actionDisableScalingCluster implements disabling scaling DBservers and coordinators.
+type actionDisableScalingCluster struct {
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start disables scaling DBservers and coordinators
@@ -52,19 +57,4 @@ func (a *actionDisableScalingCluster) Start(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-// CheckProgress does not matter. Everything is done in 'Start' function
-func (a *actionDisableScalingCluster) CheckProgress(ctx context.Context) (bool, bool, error) {
-	return true, false, nil
-}
-
-// Timeout does not matter. Everything is done in 'Start' function
-func (a *actionDisableScalingCluster) Timeout() time.Duration {
-	return 0
-}
-
-// MemberID is not used
-func (a *actionDisableScalingCluster) MemberID() string {
-	return ""
 }

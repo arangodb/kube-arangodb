@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -34,28 +33,27 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// NewRotateMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypePVCResized, newPVCResizedAction)
+}
+
+// newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func NewPVCResizedAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionPVCResized{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newPVCResizedAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionPVCResized{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, pvcResizedTimeout)
+
+	return a
 }
 
 // actionRotateMember implements an RotateMember.
 type actionPVCResized struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
-}
+	// actionImpl implement timeout and member id functions
+	actionImpl
 
-// Start performs the start of the action.
-// Returns true if the action is completely finished, false in case
-// the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionPVCResized) Start(ctx context.Context) (bool, error) {
-	return false, nil
+	// actionEmptyStart empty start function
+	actionEmptyStart
 }
 
 // CheckProgress checks the progress of the action.
@@ -93,14 +91,4 @@ func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error
 	}
 
 	return false, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionPVCResized) Timeout() time.Duration {
-	return pvcResizedTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionPVCResized) MemberID() string {
-	return a.action.MemberID
 }

@@ -25,7 +25,6 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"time"
 
 	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -34,21 +33,27 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-// NewRecreateMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRecreateMember, newRecreateMemberAction)
+}
+
+// newRecreateMemberAction creates a new Action that implements the given
 // planned RecreateMember action.
-func NewRecreateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionRecreateMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRecreateMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionRecreateMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, recreateMemberTimeout)
+
+	return a
 }
 
 // actionRecreateMember implements an RecreateMemberAction.
 type actionRecreateMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start performs the start of the action.
@@ -79,21 +84,4 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// CheckProgress checks the progress of the action.
-// Returns true if the action is completely finished, false otherwise.
-func (a *actionRecreateMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	// Nothing todo
-	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionRecreateMember) Timeout() time.Duration {
-	return recreateMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionRecreateMember) MemberID() string {
-	return a.action.MemberID
 }

@@ -24,31 +24,29 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-const (
-	shutdownTimeout = time.Second * 15
-)
+func init() {
+	registerAction(api.ActionTypeShutdownMember, newShutdownMemberAction)
+}
 
-// NewShutdownMemberAction creates a new Action that implements the given
+// newShutdownMemberAction creates a new Action that implements the given
 // planned ShutdownMember action.
-func NewShutdownMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionShutdownMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newShutdownMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionShutdownMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, shutdownMemberTimeout)
+
+	return a
 }
 
 // actionShutdownMember implements an ShutdownMemberAction.
 type actionShutdownMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -114,14 +112,4 @@ func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// Member still not shutdown, retry soon
 	return false, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionShutdownMember) Timeout() time.Duration {
-	return shutdownMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionShutdownMember) MemberID() string {
-	return a.action.MemberID
 }
