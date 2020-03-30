@@ -239,7 +239,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	return
 }
 
-func ( d *Deployment) ensureResources(lastInterval util.Interval) (util.Interval, error) {
+func (d *Deployment) ensureResources(lastInterval util.Interval) (util.Interval, error) {
 	// Ensure all resources are created
 	if err := d.resources.EnsureSecrets(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
