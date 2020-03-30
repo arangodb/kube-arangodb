@@ -556,3 +556,16 @@ ifdef PUSHIMAGES
 	docker push $(ARANGOSYNCIMAGE)
 endif
 	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)' '$(TESTOPTIONS)'
+
+.PHONY: init
+init: tools vendor
+
+.PHONY: tools
+tools:
+	@echo ">> Fetching goimports"
+	@go get -u golang.org/x/tools/cmd/goimports
+
+.PHONY: vendor
+vendor:
+	@echo ">> Updating vendor"
+	@go mod vendor

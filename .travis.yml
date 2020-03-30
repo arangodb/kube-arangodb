@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - "1.13"
+
+go_import_path: github.com/arangodb/kube-arangodb
+
+install:
+  - make init
+
+script:
+  - exit 0
