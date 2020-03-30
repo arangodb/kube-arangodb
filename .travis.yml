@@ -9,4 +9,5 @@ install:
   - make init
 
 script:
-  - exit 0
+  - make run-unit-tests
+  - make bin
