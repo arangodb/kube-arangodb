@@ -6,6 +6,9 @@ go:
 
 go_import_path: github.com/arangodb/kube-arangodb
 
+env:
+  - GO111MODULES=off
+
 install:
   - make init
 
