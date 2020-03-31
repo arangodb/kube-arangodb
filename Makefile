@@ -167,13 +167,13 @@ GOLANGCI_ENABLED=deadcode gocyclo golint varcheck structcheck maligned errcheck 
 
 .PHONY: fmt
 fmt:
-	@echo ">> ensuring style of files"
-	@goimports -w $(SOURCES)
+	@echo ">> Ensuring style of files"
+	@go run golang.org/x/tools/cmd/goimports -w $(SOURCES)
 
 .PHONY: fmt-verify
 fmt-verify:
 	@echo ">> Verify files style"
-	@if [ X"$$(goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; goimports -l $(SOURCES); exit 1; fi
+	@if [ X"$$(go run golang.org/x/tools/cmd/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; go run golang.org/x/tools/cmd/goimports -l $(SOURCES); exit 1; fi
 
 .PHONY: linter
 linter: fmt
