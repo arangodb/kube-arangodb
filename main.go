@@ -65,7 +65,7 @@ const (
 	defaultServerHost           = "0.0.0.0"
 	defaultServerPort           = 8528
 	defaultLogLevel             = "debug"
-	defaultAdminSecretName   = "arangodb-operator-dashboard"
+	defaultAdminSecretName      = "arangodb-operator-dashboard"
 	defaultAlpineImage          = "alpine:3.7"
 	defaultMetricsExporterImage = "arangodb/arangodb-exporter:0.1.6"
 	defaultArangoImage          = "arangodb/arangodb:latest"
