@@ -1,0 +1,18 @@
+language: go
+
+go:
+  - "1.13"
+  - "1.14"
+
+go_import_path: github.com/arangodb/kube-arangodb
+
+env:
+  - GO111MODULES=off
+
+install:
+  - make init
+
+script:
+  - make license-verify fmt-verify
+  - make run-unit-tests
+  - make bin
