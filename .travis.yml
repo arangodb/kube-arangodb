@@ -13,6 +13,6 @@ install:
   - make init
 
 script:
-  - make fmt-verify
+  - make license-verify fmt-verify
   - make run-unit-tests
   - make bin
