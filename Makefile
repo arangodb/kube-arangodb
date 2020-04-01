@@ -165,13 +165,18 @@ GOLANGCI_ENABLED=deadcode gocyclo golint varcheck structcheck maligned errcheck 
 
 #GOLANGCI_ENABLED+=dupl - disable dupl check
 
+.PHONY: license-verify
+license-verify:
+	@echo ">> Verify license of files"
+	@go run github.com/google/addlicense -f "./tools/codegen/boilerplate.go.txt" -check $(SOURCES)
+
 .PHONY: fmt
 fmt:
 	@echo ">> Ensuring style of files"
 	@go run golang.org/x/tools/cmd/goimports -w $(SOURCES)
 
 .PHONY: fmt-verify
-fmt-verify:
+fmt-verify: license-verify
 	@echo ">> Verify files style"
 	@if [ X"$$(go run golang.org/x/tools/cmd/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; go run golang.org/x/tools/cmd/goimports -l $(SOURCES); exit 1; fi
 
@@ -570,6 +575,8 @@ init: tools vendor
 tools:
 	@echo ">> Fetching goimports"
 	@go get -u golang.org/x/tools/cmd/goimports
+	@echo ">> Fetching license check"
+	@go get -u github.com/google/addlicense
 
 .PHONY: vendor
 vendor:
