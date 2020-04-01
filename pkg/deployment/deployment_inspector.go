@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -84,138 +86,11 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			return nextInterval
 		}
 
-		// Inspect secret hashes
-		if err := d.resources.ValidateSecretHashes(); err != nil {
+		if inspectNextInterval, err := d.inspectDeploymentWithError(ctx, nextInterval); err != nil {
+			nextInterval = inspectNextInterval
 			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Secret hash validation failed", err, d.apiObject))
-		}
 
-		// Check for LicenseKeySecret
-		if err := d.resources.ValidateLicenseKeySecret(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("License Key Secret invalid", err, d.apiObject))
-		}
-
-		// Is the deployment in a good state?
-		status, _ := d.GetStatus()
-		if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
-			log.Debug().Msg("Condition SecretsChanged is true. Revert secrets before we can continue")
-			return nextInterval
-		}
-
-		// Ensure we have image info
-		if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Image detection failed", err, d.apiObject))
-		} else if retrySoon {
-			nextInterval = minInspectionInterval
-		}
-
-		// Inspection of generated resources needed
-		if x, err := d.resources.InspectPods(ctx); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Pod inspection failed", err, d.apiObject))
-		} else {
-			nextInterval = nextInterval.ReduceTo(x)
-		}
-		if x, err := d.resources.InspectPVCs(ctx); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("PVC inspection failed", err, d.apiObject))
-		} else {
-			nextInterval = nextInterval.ReduceTo(x)
-		}
-
-		// Check members for resilience
-		if err := d.resilience.CheckMemberFailure(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Member failure detection failed", err, d.apiObject))
-		}
-
-		// Immediate actions
-		if err := d.reconciler.CheckDeployment(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Reconciler immediate actions failed", err, d.apiObject))
-		}
-
-		// Create scale/update plan
-		if err := d.reconciler.CreatePlan(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Plan creation failed", err, d.apiObject))
-		}
-
-		// Execute current step of scale/update plan
-		retrySoon, err := d.reconciler.ExecutePlan(ctx)
-		if err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Plan execution failed", err, d.apiObject))
-		}
-		if retrySoon {
-			nextInterval = minInspectionInterval
-		}
-
-		// Ensure all resources are created
-		if err := d.resources.EnsureSecrets(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Secret creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsureServices(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Service creation failed", err, d.apiObject))
-		}
-		if d.haveServiceMonitorCRD {
-			if err := d.resources.EnsureServiceMonitor(); err != nil {
-				hasError = true
-				d.CreateEvent(k8sutil.NewErrorEvent("Service monitor creation failed", err, d.apiObject))
-			}
-		}
-
-		if err := d.resources.EnsurePVCs(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("PVC creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsurePods(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Pod creation failed", err, d.apiObject))
-		}
-		if err := d.resources.EnsurePDBs(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("PDB creation failed", err, d.apiObject))
-		}
-
-		if err := d.resources.EnsureAnnotations(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Annotation update failed", err, d.apiObject))
-		}
-
-		// Create access packages
-		if err := d.createAccessPackages(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("AccessPackage creation failed", err, d.apiObject))
-		}
-
-		// Ensure deployment bootstrap
-		if err := d.EnsureBootstrap(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Bootstrap failed", err, d.apiObject))
-		}
-
-		// Inspect deployment for obsolete members
-		if err := d.resources.CleanupRemovedMembers(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Removed member cleanup failed", err, d.apiObject))
-		}
-
-		if err := d.backup.CheckRestore(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Restore operation failed", err, d.apiObject))
-		}
-
-		// At the end of the inspect, we cleanup terminated pods.
-		if x, err := d.resources.CleanupTerminatedPods(); err != nil {
-			hasError = true
-			d.CreateEvent(k8sutil.NewErrorEvent("Pod cleanup failed", err, d.apiObject))
-		} else {
-			nextInterval = nextInterval.ReduceTo(x)
+			d.CreateEvent(k8sutil.NewErrorEvent("Reconcilation failed", err, d.apiObject))
 		}
 	}
 
@@ -229,6 +104,170 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 		d.recentInspectionErrors = 0
 	}
 	return nextInterval.ReduceTo(maxInspectionInterval)
+}
+
+func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval) (nextInterval util.Interval, inspectError error) {
+	// Ensure that spec and status checksum are same
+	spec := d.GetSpec()
+	status, _ := d.getStatus()
+
+	nextInterval = lastInterval
+	inspectError = nil
+
+	checksum, err := spec.Checksum()
+	if err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Calculation of spec failed")
+	} else {
+		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
+		if (checksum != status.AppliedVersion && (!exists || condition.IsTrue())) ||
+			(checksum == status.AppliedVersion && (!exists || !condition.IsTrue())) {
+			if err = d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+				if checksum == status.AppliedVersion {
+					return s.Conditions.Update(api.ConditionTypeUpToDate, true, "Everything is UpToDate", "Spec applied")
+				}
+				return s.Conditions.Update(api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied")
+			}); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+			}
+
+			return minInspectionInterval, nil // Retry ASAP
+		}
+	}
+
+	// Inspect secret hashes
+	if err := d.resources.ValidateSecretHashes(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
+	}
+
+	// Check for LicenseKeySecret
+	if err := d.resources.ValidateLicenseKeySecret(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "License Key Secret invalid")
+	}
+
+	// Is the deployment in a good state?
+	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
+		return minInspectionInterval, errors.Errorf("Secrets changed")
+	}
+
+	// Ensure we have image info
+	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Image detection failed")
+	} else if retrySoon {
+		return minInspectionInterval, nil
+	}
+
+	// Inspection of generated resources needed
+	if x, err := d.resources.InspectPods(ctx); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Pod inspection failed")
+	} else {
+		nextInterval = nextInterval.ReduceTo(x)
+	}
+	if x, err := d.resources.InspectPVCs(ctx); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "PVC inspection failed")
+	} else {
+		nextInterval = nextInterval.ReduceTo(x)
+	}
+
+	// Check members for resilience
+	if err := d.resilience.CheckMemberFailure(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Member failure detection failed")
+	}
+
+	// Immediate actions
+	if err := d.reconciler.CheckDeployment(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Reconciler immediate actions failed")
+	}
+
+	if interval, err := d.ensureResources(nextInterval); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Reconciler resource recreation failed")
+	} else {
+		nextInterval = interval
+	}
+
+	// Create scale/update plan
+	if err := d.reconciler.CreatePlan(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
+	}
+
+	// Execute current step of scale/update plan
+	retrySoon, err := d.reconciler.ExecutePlan(ctx)
+	if err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Plan execution failed")
+	}
+	if retrySoon {
+		nextInterval = minInspectionInterval
+	} else {
+		// Do not retry - so plan is empty
+		if status.AppliedVersion != checksum {
+			if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+				s.AppliedVersion = checksum
+				return true
+			}); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+			}
+
+			return minInspectionInterval, nil
+		}
+	}
+
+	// Create access packages
+	if err := d.createAccessPackages(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "AccessPackage creation failed")
+	}
+
+	// Ensure deployment bootstrap
+	if err := d.EnsureBootstrap(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Bootstrap failed")
+	}
+
+	// Inspect deployment for obsolete members
+	if err := d.resources.CleanupRemovedMembers(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
+	}
+
+	if err := d.backup.CheckRestore(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Restore operation failed")
+	}
+
+	// At the end of the inspect, we cleanup terminated pods.
+	if x, err := d.resources.CleanupTerminatedPods(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
+	} else {
+		nextInterval = nextInterval.ReduceTo(x)
+	}
+
+	return
+}
+
+func (d *Deployment) ensureResources(lastInterval util.Interval) (util.Interval, error) {
+	// Ensure all resources are created
+	if err := d.resources.EnsureSecrets(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
+	}
+	if err := d.resources.EnsureServices(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
+	}
+	if d.haveServiceMonitorCRD {
+		if err := d.resources.EnsureServiceMonitor(); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Service monitor creation failed")
+		}
+	}
+
+	if err := d.resources.EnsurePVCs(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "PVC creation failed")
+	}
+	if err := d.resources.EnsurePods(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Pod creation failed")
+	}
+	if err := d.resources.EnsurePDBs(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "PDB creation failed")
+	}
+
+	if err := d.resources.EnsureAnnotations(); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Annotation update failed")
+	}
+
+	return lastInterval, nil
 }
 
 // triggerInspection ensures that an inspection is run soon.

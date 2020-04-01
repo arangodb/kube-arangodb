@@ -22,27 +22,32 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/rs/zerolog"
 )
 
-// actionEnableScalingCluster implements enabling scaling DBservers and coordinators.
-type actionEnableScalingCluster struct {
-	log         zerolog.Logger
-	action      api.Action
-	actionCtx   ActionContext
-	newMemberID string
+func init() {
+	registerAction(api.ActionTypeEnableClusterScaling, newEnableScalingCluster)
 }
 
-// NewEnableScalingCluster creates the new action with enabling scaling DBservers and coordinators.
-func NewEnableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionEnableScalingCluster{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+// newEnableScalingCluster creates the new action with enabling scaling DBservers and coordinators.
+func newEnableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionEnableScalingCluster{}
+
+	a.actionImpl = newActionImpl(log, action, actionCtx, 0, util.NewString(""))
+
+	return a
+}
+
+// actionEnableScalingCluster implements enabling scaling DBservers and coordinators.
+type actionEnableScalingCluster struct {
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start enables scaling DBservers and coordinators
@@ -52,19 +57,4 @@ func (a *actionEnableScalingCluster) Start(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-// CheckProgress does not matter. Everything is done in 'Start' function
-func (a *actionEnableScalingCluster) CheckProgress(ctx context.Context) (bool, bool, error) {
-	return true, false, nil
-}
-
-// Timeout does not matter. Everything is done in 'Start' function
-func (a *actionEnableScalingCluster) Timeout() time.Duration {
-	return 0
-}
-
-// MemberID is not used
-func (a *actionEnableScalingCluster) MemberID() string {
-	return ""
 }

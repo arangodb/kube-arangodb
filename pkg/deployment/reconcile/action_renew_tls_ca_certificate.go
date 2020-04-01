@@ -30,21 +30,27 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// NewRenewTLSCACertificateAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRenewTLSCACertificate, newRenewTLSCACertificateAction)
+}
+
+// newRenewTLSCACertificateAction creates a new Action that implements the given
 // planned RenewTLSCACertificate action.
-func NewRenewTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &renewTLSCACertificateAction{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRenewTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &renewTLSCACertificateAction{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, renewTLSCACertificateTimeout)
+
+	return a
 }
 
 // renewTLSCACertificateAction implements a RenewTLSCACertificate action.
 type renewTLSCACertificateAction struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start performs the start of the action.

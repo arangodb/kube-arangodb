@@ -44,6 +44,7 @@ import (
 )
 
 var _ PlanBuilderContext = &testContext{}
+var _ Context = &testContext{}
 
 type testContext struct {
 	Pods             []core.Pod
@@ -52,6 +53,10 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+	panic("implement me")
 }
 
 func (c *testContext) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {

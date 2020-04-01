@@ -103,6 +103,10 @@ func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
+	return d.getStatus()
+}
+
+func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
 	version := d.status.version
 	return *d.status.last.DeepCopy(), version
 }
@@ -115,6 +119,10 @@ func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
+	return d.updateStatus(status, lastVersion, force...)
+}
+
+func (d *Deployment) updateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	if d.status.version != lastVersion {
 		// Status is obsolete
 		d.deps.Log.Error().
@@ -482,4 +490,19 @@ func (d *Deployment) GetMetricsExporterImage() string {
 
 func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
+}
+
+func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+	d.status.mutex.Lock()
+	defer d.status.mutex.Unlock()
+
+	status, version := d.getStatus()
+
+	changed := action(&status)
+
+	if !changed {
+		return nil
+	}
+
+	return d.updateStatus(status, version, force...)
 }

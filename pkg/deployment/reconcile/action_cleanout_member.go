@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -33,21 +32,24 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-// NewCleanOutMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeCleanOutMember, newCleanOutMemberAction)
+}
+
+// newCleanOutMemberAction creates a new Action that implements the given
 // planned CleanOutMember action.
-func NewCleanOutMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionCleanoutMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newCleanOutMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionCleanoutMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, cleanoutMemberTimeout)
+
+	return a
 }
 
 // actionCleanoutMember implements an CleanOutMemberAction.
 type actionCleanoutMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -153,14 +155,4 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// Cleanout completed
 	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionCleanoutMember) Timeout() time.Duration {
-	return cleanoutMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionCleanoutMember) MemberID() string {
-	return a.action.MemberID
 }

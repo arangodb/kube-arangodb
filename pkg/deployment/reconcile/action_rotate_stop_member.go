@@ -24,27 +24,32 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-// NewRotateStopMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypeRotateStopMember, newRotateStopMemberAction)
+}
+
+// newRotateStopMemberAction creates a new Action that implements the given
 // planned RotateStopMember action.
-func NewRotateStopMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionRotateStopMember{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newRotateStopMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionRotateStopMember{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
+
+	return a
 }
 
 // actionRotateStopMember implements an RotateStopMember.
 type actionRotateStopMember struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
 }
 
 // Start performs the start of the action.
@@ -64,20 +69,4 @@ func (a *actionRotateStopMember) Start(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	return false, nil
-}
-
-// CheckProgress checks the progress of the action.
-// Returns: ready, abort, error.
-func (a *actionRotateStopMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	return true, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionRotateStopMember) Timeout() time.Duration {
-	return rotateMemberTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionRotateStopMember) MemberID() string {
-	return a.action.MemberID
 }

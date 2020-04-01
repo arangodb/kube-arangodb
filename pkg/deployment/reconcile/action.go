@@ -24,7 +24,12 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/rs/zerolog"
 )
 
 // Action executes a single Plan item.
@@ -40,4 +45,31 @@ type Action interface {
 	Timeout() time.Duration
 	// Return the MemberID used / created in this action
 	MemberID() string
+}
+
+type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action
+
+var (
+	actions     = map[api.ActionType]actionFactory{}
+	actionsLock sync.Mutex
+)
+
+func registerAction(t api.ActionType, f actionFactory) {
+	actionsLock.Lock()
+	defer actionsLock.Unlock()
+
+	_, ok := actions[t]
+	if ok {
+		panic(fmt.Sprintf("Action already defined %s", t))
+	}
+
+	actions[t] = f
+}
+
+func getActionFactory(t api.ActionType) (actionFactory, bool) {
+	actionsLock.Lock()
+	defer actionsLock.Unlock()
+
+	f, ok := actions[t]
+	return f, ok
 }

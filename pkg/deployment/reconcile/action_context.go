@@ -109,6 +109,8 @@ type ActionContext interface {
 	DisableScalingCluster() error
 	// EnableScalingCluster enables scaling DBservers and coordinators
 	EnableScalingCluster() error
+	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -123,6 +125,12 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error {
+	return ac.context.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		return s.Conditions.Update(conditionType, status, reason, message)
+	})
 }
 
 func (ac *actionContext) GetPv(pvName string) (*v1.PersistentVolume, error) {

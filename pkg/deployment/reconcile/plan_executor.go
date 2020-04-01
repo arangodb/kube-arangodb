@@ -157,47 +157,14 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 	}
 }
 
-// startAction performs the start of the given action
-// Returns true if the action is completely finished, false in case
-// the start time needs to be recorded and a ready condition needs to be checked.
+// createAction create action object based on action type
 func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
 	actionCtx := newActionContext(log, d.context)
-	switch action.Type {
-	case api.ActionTypeAddMember:
-		return NewAddMemberAction(log, action, actionCtx)
-	case api.ActionTypeRemoveMember:
-		return NewRemoveMemberAction(log, action, actionCtx)
-	case api.ActionTypeRecreateMember:
-		return NewRecreateMemberAction(log, action, actionCtx)
-	case api.ActionTypeCleanOutMember:
-		return NewCleanOutMemberAction(log, action, actionCtx)
-	case api.ActionTypeShutdownMember:
-		return NewShutdownMemberAction(log, action, actionCtx)
-	case api.ActionTypeRotateMember:
-		return NewRotateMemberAction(log, action, actionCtx)
-	case api.ActionTypeRotateStartMember:
-		return NewRotateStartMemberAction(log, action, actionCtx)
-	case api.ActionTypeRotateStopMember:
-		return NewRotateStopMemberAction(log, action, actionCtx)
-	case api.ActionTypeUpgradeMember:
-		return NewUpgradeMemberAction(log, action, actionCtx)
-	case api.ActionTypeWaitForMemberUp:
-		return NewWaitForMemberUpAction(log, action, actionCtx)
-	case api.ActionTypeRenewTLSCertificate:
-		return NewRenewTLSCertificateAction(log, action, actionCtx)
-	case api.ActionTypeRenewTLSCACertificate:
-		return NewRenewTLSCACertificateAction(log, action, actionCtx)
-	case api.ActionTypeSetCurrentImage:
-		return NewSetCurrentImageAction(log, action, actionCtx)
-	case api.ActionTypeDisableClusterScaling:
-		return NewDisableScalingCluster(log, action, actionCtx)
-	case api.ActionTypeEnableClusterScaling:
-		return NewEnableScalingCluster(log, action, actionCtx)
-	case api.ActionTypePVCResize:
-		return NewPVCResizeAction(log, action, actionCtx)
-	case api.ActionTypePVCResized:
-		return NewPVCResizedAction(log, action, actionCtx)
-	default:
+
+	f, ok := getActionFactory(action.Type)
+	if !ok {
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))
 	}
+
+	return f(log, action, actionCtx)
 }

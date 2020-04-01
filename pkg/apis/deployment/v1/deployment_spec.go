@@ -23,6 +23,9 @@
 package v1
 
 import (
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -412,4 +415,14 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 		resetFields = append(resetFields, l...)
 	}
 	return resetFields
+}
+
+// Checksum return checksum of current ArangoDeployment Spec section
+func (s DeploymentSpec) Checksum() (string, error) {
+	data, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
 }

@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -34,21 +33,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// NewRotateMemberAction creates a new Action that implements the given
+func init() {
+	registerAction(api.ActionTypePVCResize, newPVCResizeAction)
+}
+
+// newRotateMemberAction creates a new Action that implements the given
 // planned RotateMember action.
-func NewPVCResizeAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	return &actionPVCResize{
-		log:       log,
-		action:    action,
-		actionCtx: actionCtx,
-	}
+func newPVCResizeAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionPVCResize{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, pvcResizeTimeout)
+
+	return a
 }
 
 // actionRotateMember implements an RotateMember.
 type actionPVCResize struct {
-	log       zerolog.Logger
-	action    api.Action
-	actionCtx ActionContext
+	// actionImpl implement timeout and member id functions
+	actionImpl
 }
 
 // Start performs the start of the action.
@@ -146,14 +148,4 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 	}
 
 	return false, false, nil
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a *actionPVCResize) Timeout() time.Duration {
-	return pvcResizeTimeout
-}
-
-// Return the MemberID used / created in this action
-func (a *actionPVCResize) MemberID() string {
-	return a.action.MemberID
 }
