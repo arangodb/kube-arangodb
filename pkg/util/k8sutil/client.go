@@ -24,9 +24,10 @@ package k8sutil
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
 
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
