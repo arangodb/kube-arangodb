@@ -275,7 +275,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
 	}
-	crCli, err := client.NewInCluster()
+	crCli, err := client.NewClient()
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}

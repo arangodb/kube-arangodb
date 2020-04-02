@@ -45,7 +45,7 @@ import (
 // Tests handling of individual pod deletions
 func TestResiliencePod(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -164,7 +164,7 @@ func TestResiliencePVCDBServers(t *testing.T) {
 // Tests handling of individual PVCs of given group being deleted
 func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -257,7 +257,7 @@ func testResiliencePVC(testGroup api.ServerGroup, t *testing.T) {
 // Tests handling of entire PVs of dbservers being removed.
 func TestResiliencePVDBServer(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -361,7 +361,7 @@ func TestResiliencePVDBServer(t *testing.T) {
 // Tests handling of individual service deletions
 func TestResilienceService(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

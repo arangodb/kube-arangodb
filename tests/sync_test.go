@@ -57,7 +57,7 @@ func waitUntilReplicationNotFound(ns, name string, cli versioned.Interface) erro
 func TestSyncSimple(t *testing.T) {
 	longOrSkip(t)
 	img := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -159,7 +159,7 @@ func TestSyncSimple(t *testing.T) {
 func TestSyncToggleEnabled(t *testing.T) {
 	longOrSkip(t)
 	img := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

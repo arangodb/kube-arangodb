@@ -114,7 +114,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 
 	depl := newDeployment(fmt.Sprintf("tu-%s-%s", spec.Name(), uniuri.NewLen(4)))
 	depl.Spec.Mode = api.NewMode(spec.Mode())

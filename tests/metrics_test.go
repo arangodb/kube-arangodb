@@ -48,7 +48,7 @@ func TestAddingMetrics(t *testing.T) {
 
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 
 	depl := newDeployment(fmt.Sprintf("%s-%s", "arangodb-metrics-test", uniuri.NewLen(4)))
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)

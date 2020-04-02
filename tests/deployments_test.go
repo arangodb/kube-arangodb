@@ -72,7 +72,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 
 	// Prepare deployment config
 	depl := newDeployment("test-deployment-" + string(mode) + "-" + string(engine) + "-" + uniuri.NewLen(4))
@@ -107,7 +107,7 @@ func TestMultiDeployment(t *testing.T) {
 
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 
 	// Prepare deployment configurations
 	depl1 := newDeployment("test-multidep-1-" + uniuri.NewLen(4))

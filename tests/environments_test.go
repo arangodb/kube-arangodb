@@ -54,7 +54,7 @@ func TestEnvironmentProduction(t *testing.T) {
 	}
 	numNodes := len(nodeList.Items)
 
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 	depl := newDeployment(strings.Replace(fmt.Sprintf("tprod-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	depl.Spec.Mode = api.NewMode(mode)
 	depl.Spec.StorageEngine = api.NewStorageEngine(engine)

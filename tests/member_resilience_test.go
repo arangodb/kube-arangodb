@@ -42,7 +42,7 @@ import (
 // After 5 times, the member should be replaced by another member with the same ID.
 func TestMemberResilienceAgents(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -143,7 +143,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 // After 5 times, the member should be replaced by another member.
 func TestMemberResilienceCoordinators(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -240,7 +240,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 // After 5 times, the member should be replaced by another member.
 func TestMemberResilienceDBServers(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

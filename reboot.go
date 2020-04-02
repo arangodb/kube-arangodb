@@ -386,7 +386,7 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
 	}
 
-	extcli, err := extclient.NewInCluster()
+	extcli, err := extclient.NewClient()
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("failed to create arango extension client")
 	}
