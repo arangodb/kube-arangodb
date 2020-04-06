@@ -33,12 +33,54 @@ type MetricsAuthenticationSpec struct {
 	JWTTokenSecretName *string `json:"jwtTokenSecretName,omitempty"`
 }
 
+// MetricsMode defines mode for metrics exporter
+type MetricsMode string
+
+func (m MetricsMode) New() *MetricsMode {
+	return &m
+}
+
+func (m MetricsMode) GetMetricsEndpoint() string {
+	switch m {
+	case MetricsModeInternal:
+		return k8sutil.ArangoExporterInternalEndpoint
+	default:
+		return k8sutil.ArangoExporterDefaultEndpoint
+	}
+}
+
+const (
+	// MetricsModeExporter exporter mode for old exporter type
+	MetricsModeExporter MetricsMode = "exporter"
+	MetricsModeSidecar  MetricsMode = "sidecar"
+	MetricsModeInternal MetricsMode = "internal"
+)
+
+func (m *MetricsMode) Get() MetricsMode {
+	if m == nil {
+		return MetricsModeExporter
+	}
+
+	return *m
+}
+
 // MetricsSpec contains spec for arangodb exporter
 type MetricsSpec struct {
 	Enabled        *bool                     `json:"enabled,omitempty"`
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
+	Mode           *MetricsMode              `json:"mode,omitempty"`
+
+	Port *uint16 `json:"port,omitempty"`
+}
+
+func (s *MetricsSpec) GetPort() uint16 {
+	if s == nil || s.Port == nil {
+		return k8sutil.ArangoExporterPort
+	}
+
+	return *s.Port
 }
 
 // IsEnabled returns whether metrics are enabled or not

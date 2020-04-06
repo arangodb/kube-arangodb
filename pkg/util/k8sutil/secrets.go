@@ -36,6 +36,7 @@ import (
 type SecretInterface interface {
 	Create(*v1.Secret) (*v1.Secret, error)
 	Get(name string, options metav1.GetOptions) (*v1.Secret, error)
+	Delete(name string, options *metav1.DeleteOptions) error
 }
 
 // ValidateEncryptionKeySecret checks that a secret with given name in given namespace

@@ -29,6 +29,9 @@ const (
 	ArangoSyncWorkerPort = 8729
 	ArangoExporterPort   = 9101
 
+	ArangoExporterInternalEndpoint = "/_admin/metrics"
+	ArangoExporterDefaultEndpoint  = "/metrics"
+
 	// K8s constants
 	ClusterIPNone       = "None"
 	TopologyKeyHostname = "kubernetes.io/hostname"

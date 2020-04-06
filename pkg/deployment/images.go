@@ -44,6 +44,7 @@ import (
 )
 
 var _ k8sutil.PodCreator = &ImageUpdatePod{}
+var _ k8sutil.ContainerCreator = &ArangoDImageUpdateContainer{}
 
 type ImageUpdatePod struct {
 	spec      api.DeploymentSpec
@@ -334,6 +335,16 @@ func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
 
 func (i *ImageUpdatePod) GetServiceAccountName() string {
 	return ""
+}
+
+func (a *ArangoDImageUpdateContainer) GetPorts() []core.ContainerPort {
+	return []core.ContainerPort{
+		{
+			Name:          "server",
+			ContainerPort: int32(k8sutil.ArangoPort),
+			Protocol:      core.ProtocolTCP,
+		},
+	}
 }
 
 func (a *ArangoDImageUpdateContainer) GetSecurityContext() *core.SecurityContext {

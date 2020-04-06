@@ -86,6 +86,7 @@ type ContainerCreator interface {
 	GetImage() string
 	GetEnvs() []core.EnvVar
 	GetSecurityContext() *core.SecurityContext
+	GetPorts() []core.ContainerPort
 }
 
 // IsPodReady returns true if the PodReady condition on
@@ -344,16 +345,10 @@ func NewContainer(args []string, containerCreator ContainerCreator) (core.Contai
 	}
 
 	return core.Container{
-		Name:    ServerContainerName,
-		Image:   containerCreator.GetImage(),
-		Command: append([]string{containerCreator.GetExecutor()}, args...),
-		Ports: []core.ContainerPort{
-			{
-				Name:          "server",
-				ContainerPort: int32(ArangoPort),
-				Protocol:      core.ProtocolTCP,
-			},
-		},
+		Name:            ServerContainerName,
+		Image:           containerCreator.GetImage(),
+		Command:         append([]string{containerCreator.GetExecutor()}, args...),
+		Ports:           containerCreator.GetPorts(),
 		Env:             containerCreator.GetEnvs(),
 		Resources:       containerCreator.GetResourceRequirements(),
 		LivenessProbe:   liveness,

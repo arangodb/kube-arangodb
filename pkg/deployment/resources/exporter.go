@@ -21,9 +21,12 @@
 package resources
 
 import (
+	"fmt"
 	"path/filepath"
 	"sort"
 	"strconv"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
@@ -34,7 +37,8 @@ import (
 
 // ArangodbExporterContainer creates metrics container
 func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sutil.HTTPProbeConfig,
-	resources v1.ResourceRequirements, securityContext *v1.SecurityContext) v1.Container {
+	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
+	spec api.DeploymentSpec) v1.Container {
 
 	c := v1.Container{
 		Name:    k8sutil.ExporterContainerName,
@@ -43,7 +47,7 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sut
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "exporter",
-				ContainerPort: int32(k8sutil.ArangoExporterPort),
+				ContainerPort: int32(spec.Metrics.GetPort()),
 				Protocol:      v1.ProtocolTCP,
 			},
 		},
@@ -59,11 +63,11 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sut
 	return c
 }
 
-func createExporterArgs(isSecure bool) []string {
+func createExporterArgs(spec api.DeploymentSpec) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := make([]pod.OptionPair, 0, 64)
 	scheme := "http"
-	if isSecure {
+	if spec.IsSecure() {
 		scheme = "https"
 	}
 	options = append(options,
@@ -71,11 +75,18 @@ func createExporterArgs(isSecure bool) []string {
 		pod.OptionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if isSecure {
+	if spec.IsSecure() {
 		options = append(options,
 			pod.OptionPair{"--ssl.keyfile", keyPath},
 		)
 	}
+
+	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
+		options = append(options,
+			pod.OptionPair{"--server.address", fmt.Sprintf(":%d", port)},
+		)
+	}
+
 	args := make([]string, 0, 2+len(options))
 	sort.Slice(options, func(i, j int) bool {
 		return options[i].CompareTo(options[j]) < 0

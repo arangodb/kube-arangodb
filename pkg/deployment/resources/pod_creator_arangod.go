@@ -43,6 +43,7 @@ const (
 )
 
 var _ k8sutil.PodCreator = &MemberArangoDPod{}
+var _ k8sutil.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
 	status                      api.MemberStatus
@@ -63,6 +64,29 @@ type ArangoDContainer struct {
 	spec      api.DeploymentSpec
 	group     api.ServerGroup
 	imageInfo api.ImageInfo
+}
+
+func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
+	ports := []core.ContainerPort{
+		{
+			Name:          "server",
+			ContainerPort: int32(k8sutil.ArangoPort),
+			Protocol:      core.ProtocolTCP,
+		},
+	}
+
+	if a.spec.Metrics.IsEnabled() {
+		switch a.spec.Metrics.Mode.Get() {
+		case api.MetricsModeInternal:
+			ports = append(ports, core.ContainerPort{
+				Name:          "exporter",
+				ContainerPort: int32(k8sutil.ArangoPort),
+				Protocol:      core.ProtocolTCP,
+			})
+		}
+	}
+
+	return ports
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
@@ -215,26 +239,26 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 
 func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 
-	if isMetricsEnabledForGroup(m.spec, m.group) {
-		image := m.context.GetMetricsExporterImage()
-		if m.spec.Metrics.HasImage() {
-			image = m.spec.Metrics.GetImage()
+	if m.spec.Metrics.IsEnabled() {
+		var c *core.Container
+
+		switch m.spec.Metrics.Mode.Get() {
+		case api.MetricsModeExporter:
+			if !m.group.IsExportMetrics() {
+				break
+			}
+			fallthrough
+		case api.MetricsModeSidecar:
+			c = m.createMetricsExporterSidecar()
+
+			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+		default:
+			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
 		}
 
-		c := ArangodbExporterContainer(image, createExporterArgs(m.spec.IsSecure()),
-			createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources,
-			m.groupSpec.SecurityContext.NewSecurityContext())
-
-		if m.spec.Metrics.GetJWTTokenSecretName() != "" {
-			c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
+		if c != nil {
+			pod.Spec.Containers = append(pod.Spec.Containers, *c)
 		}
-
-		if m.tlsKeyfileSecretName != "" {
-			c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
-		}
-
-		pod.Spec.Containers = append(pod.Spec.Containers, c)
-		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
 	}
 
 	// A sidecar provided by the user
@@ -277,11 +301,19 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 		volumeMounts = append(volumeMounts, k8sutil.RocksdbEncryptionVolumeMount())
 	}
 
-	if isMetricsEnabledForGroup(m.spec, m.group) {
-		token := m.spec.Metrics.GetJWTTokenSecretName()
-		if token != "" {
-			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-			volumes = append(volumes, vol)
+	if m.spec.Metrics.IsEnabled() {
+		switch m.spec.Metrics.Mode.Get() {
+		case api.MetricsModeExporter:
+			if !m.group.IsExportMetrics() {
+				break
+			}
+			fallthrough
+		case api.MetricsModeSidecar:
+			token := m.spec.Metrics.GetJWTTokenSecretName()
+			if token != "" {
+				vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+				volumes = append(volumes, vol)
+			}
 		}
 	}
 
@@ -354,6 +386,33 @@ func (m *MemberArangoDPod) GetContainerCreator() k8sutil.ContainerCreator {
 	}
 }
 
-func isMetricsEnabledForGroup(spec api.DeploymentSpec, group api.ServerGroup) bool {
-	return spec.Metrics.IsEnabled() && group.IsExportMetrics()
+func (m *MemberArangoDPod) isMetricsEnabledForGroup() bool {
+	return m.spec.Metrics.IsEnabled() && m.group.IsExportMetrics()
+}
+
+func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
+	image := m.context.GetMetricsExporterImage()
+	if m.spec.Metrics.HasImage() {
+		image = m.spec.Metrics.GetImage()
+	}
+
+	args := createExporterArgs(m.spec)
+	if m.spec.Metrics.Mode.Get() == api.MetricsModeSidecar {
+		args = append(args, "--mode=passthru")
+	}
+
+	c := ArangodbExporterContainer(image, args,
+		createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources,
+		m.groupSpec.SecurityContext.NewSecurityContext(),
+		m.spec)
+
+	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
+	}
+
+	if m.tlsKeyfileSecretName != "" {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+	}
+
+	return &c
 }
