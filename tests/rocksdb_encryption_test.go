@@ -43,7 +43,7 @@ import (
 func TestRocksDBEncryptionSingle(t *testing.T) {
 	longOrSkip(t)
 	image := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 	secrets := kubecli.CoreV1().Secrets(ns)

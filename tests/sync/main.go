@@ -392,7 +392,7 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 	kube := k8sutil.MustNewKubeClient()
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 
 	defer removeReplicationWaitForCompletion(namespace, replicationResourceName, c)
 	defer removeDeploymentWaitForCompletion(namespace, dstDeploymentName, c)

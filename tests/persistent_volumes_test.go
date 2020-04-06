@@ -70,7 +70,7 @@ func TestPVCExists(t *testing.T) {
 	mode := api.DeploymentModeCluster
 	engine := api.StorageEngineRocksDB
 
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	deploymentClient := kubeArangoClient.MustNewClient()
 	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("tpers-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
@@ -106,7 +106,7 @@ func TestPVCResize(t *testing.T) {
 	size10GB, _ := resource.ParseQuantity("10Gi")
 	size08GB, _ := resource.ParseQuantity("8Gi")
 
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	deploymentClient := kubeArangoClient.MustNewClient()
 	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("trsz-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
@@ -192,7 +192,7 @@ func TestPVCTemplateResize(t *testing.T) {
 	size10GB, _ := resource.ParseQuantity("10Gi")
 	size08GB, _ := resource.ParseQuantity("8Gi")
 
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	deploymentClient := kubeArangoClient.MustNewClient()
 	deploymentTemplate := newDeployment(strings.Replace(fmt.Sprintf("trsz-%s-%s-%s", mode[:2], engine[:2], uniuri.NewLen(4)), ".", "", -1))
 	deploymentTemplate.Spec.Mode = api.NewMode(mode)
 	deploymentTemplate.Spec.StorageEngine = api.NewStorageEngine(engine)
@@ -271,7 +271,7 @@ func TestPVCChangeStorage(t *testing.T) {
 	longOrSkip(t)
 
 	k8sNameSpace := getNamespace(t)
-	arangoClient := kubeArangoClient.MustNewInCluster()
+	arangoClient := kubeArangoClient.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	mode := api.DeploymentModeCluster
 
@@ -385,7 +385,7 @@ func TestPVCChangeStorageDeprecated(t *testing.T) {
 	longOrSkip(t)
 
 	k8sNameSpace := getNamespace(t)
-	arangoClient := kubeArangoClient.MustNewInCluster()
+	arangoClient := kubeArangoClient.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	mode := api.DeploymentModeCluster
 

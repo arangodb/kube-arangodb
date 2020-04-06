@@ -48,7 +48,7 @@ func waitForPriorityOfServerGroup(kube kubernetes.Interface, c versioned.Interfa
 // Then check if the pods have the desired priority. Then change the class and check that the pods are rotated.
 func TestPriorityClasses(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

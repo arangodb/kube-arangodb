@@ -54,7 +54,7 @@ func wasForwarded(r driver.Response) bool {
 
 // tests cursor forwarding with load-balanced conn.
 func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

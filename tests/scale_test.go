@@ -38,7 +38,7 @@ import (
 // of a cluster.
 func TestScaleClusterNonTLS(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -109,7 +109,7 @@ func TestScaleClusterNonTLS(t *testing.T) {
 
 func TestScaleCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -182,7 +182,7 @@ func TestScaleCluster(t *testing.T) {
 func TestScaleClusterWithSync(t *testing.T) {
 	longOrSkip(t)
 	img := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

@@ -34,10 +34,10 @@ var (
 	maskAny = errors.WithStack
 )
 
-// MustNewInCluster creates an in-cluster client, or panics
+// MustNewClient creates an client, or panics
 // when a failure is detected.
-func MustNewInCluster() versioned.Interface {
-	cli, err := NewInCluster()
+func MustNewClient() versioned.Interface {
+	cli, err := NewClient()
 	if err != nil {
 		panic(err)
 	}
@@ -54,10 +54,10 @@ func MustNew(cfg *rest.Config) versioned.Interface {
 	return cli
 }
 
-// NewInCluster creates an in-cluster client, or returns an error
+// NewClient creates an client, or returns an error
 // when a failure is detected.
-func NewInCluster() (versioned.Interface, error) {
-	cfg, err := k8sutil.InClusterConfig()
+func NewClient() (versioned.Interface, error) {
+	cfg, err := k8sutil.NewKubeConfig()
 	if err != nil {
 		return nil, maskAny(err)
 	}

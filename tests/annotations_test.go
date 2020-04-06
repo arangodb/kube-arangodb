@@ -184,7 +184,7 @@ func ensureAnnotations(t *testing.T, client kubernetes.Interface, depl *api.Aran
 
 func TestAnnotations(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

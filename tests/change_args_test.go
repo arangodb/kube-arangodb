@@ -42,7 +42,7 @@ import (
 // with default settings and once ready changes the arguments of the agents.
 func TestChangeArgsAgents(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -121,7 +121,7 @@ func TestChangeArgsAgents(t *testing.T) {
 // with default settings and once ready changes the arguments of the dbservers.
 func TestChangeArgsDBServer(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

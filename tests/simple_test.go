@@ -38,7 +38,7 @@ import (
 // TestSimpleSingle tests the creating of a single server deployment
 // with default settings.
 func TestSimpleSingle(t *testing.T) {
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -76,7 +76,7 @@ func TestSimpleSingle(t *testing.T) {
 // TestSimpleActiveFailover tests the creating of a ActiveFailover server deployment
 // with default settings.
 func TestSimpleActiveFailover(t *testing.T) {
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -114,7 +114,7 @@ func TestSimpleActiveFailover(t *testing.T) {
 // TestSimpleCluster tests the creating of a cluster deployment
 // with default settings.
 func TestSimpleCluster(t *testing.T) {
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -153,7 +153,7 @@ func TestSimpleCluster(t *testing.T) {
 // with default settings and sync enabled.
 func TestSimpleClusterWithSync(t *testing.T) {
 	img := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

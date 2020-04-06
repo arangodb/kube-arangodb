@@ -38,9 +38,9 @@ import (
 
 func TestResourcesChangeLimitsCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	deploymentClient := kubeArangoClient.MustNewClient()
 	ns := getNamespace(t)
 
 	size500m, _ := resource.ParseQuantity("50m")
