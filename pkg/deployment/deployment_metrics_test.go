@@ -197,12 +197,12 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Ports: func()[]core.ContainerPort {
+							Ports: func() []core.ContainerPort {
 								ports := createTestPorts()
 
 								ports = append(ports, core.ContainerPort{
-									Name: "exporter",
-									Protocol: core.ProtocolTCP,
+									Name:          "exporter",
+									Protocol:      core.ProtocolTCP,
 									ContainerPort: k8sutil.ArangoPort,
 								})
 
@@ -266,12 +266,12 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForAgent(firstAgentStatus.ID, false, false, false),
-							Ports: func()[]core.ContainerPort {
+							Ports: func() []core.ContainerPort {
 								ports := createTestPorts()
 
 								ports = append(ports, core.ContainerPort{
-									Name: "exporter",
-									Protocol: core.ProtocolTCP,
+									Name:          "exporter",
+									Protocol:      core.ProtocolTCP,
 									ContainerPort: k8sutil.ArangoPort,
 								})
 
@@ -348,7 +348,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 						func() core.Container {
-									z := testCreateExporterContainerWithPort(false, emptyResources, 9999)
+							z := testCreateExporterContainerWithPort(false, emptyResources, 9999)
 							z.Command = append(z.Command, "--mode=passthru")
 							return z
 						}(),
