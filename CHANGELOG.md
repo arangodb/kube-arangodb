@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Removed old rotation logic (rotation of ArangoDeployment may be enforced after Operator upgrade)
 - Added UpToDate condition in ArangoDeployment Status
 
 ## [1.0.1](https://github.com/arangodb/kube-arangodb/tree/1.0.1) (2020-03-25)
