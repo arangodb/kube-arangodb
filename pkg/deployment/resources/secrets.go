@@ -170,7 +170,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.Secr
 		}
 
 		token, err := jg.Parse(string(data), func(token *jg.Token) (i interface{}, err error) {
-			return secret, nil
+			return []byte(secret), nil
 		})
 
 		if err != nil {
