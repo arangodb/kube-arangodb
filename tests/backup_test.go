@@ -317,9 +317,9 @@ func compareBackup(t *testing.T, meta driver.BackupMeta, backup *backupApi.Arang
 
 func TestBackupCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
-	deploymentClient := kubeArangoClient.MustNewInCluster()
+	deploymentClient := kubeArangoClient.MustNewClient()
 	ns := getNamespace(t)
 
 	backupPolicyClient := deploymentClient.BackupV1().ArangoBackupPolicies(ns)

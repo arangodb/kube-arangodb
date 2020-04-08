@@ -40,7 +40,7 @@ import (
 // with default settings and runs some cursor requests on it.
 func TestCursorSingle(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -84,7 +84,7 @@ func TestCursorSingle(t *testing.T) {
 // with default settings.
 func TestCursorActiveFailover(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -128,7 +128,7 @@ func TestCursorActiveFailover(t *testing.T) {
 // with default settings.
 func TestCursorCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

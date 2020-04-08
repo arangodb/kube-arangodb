@@ -39,7 +39,7 @@ import (
 // spec are reverted to their original value.
 func TestImmutableFields(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 	revertTimeout := time.Second * 30

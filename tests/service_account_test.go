@@ -43,7 +43,7 @@ import (
 // with default settings using a custom service account.
 func TestServiceAccountSingle(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -91,7 +91,7 @@ func TestServiceAccountSingle(t *testing.T) {
 // with default settings using a custom service account.
 func TestServiceAccountActiveFailover(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -141,7 +141,7 @@ func TestServiceAccountActiveFailover(t *testing.T) {
 // with default settings using a custom service account.
 func TestServiceAccountCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -194,7 +194,7 @@ func TestServiceAccountCluster(t *testing.T) {
 func TestServiceAccountClusterWithSync(t *testing.T) {
 	longOrSkip(t)
 	img := getEnterpriseImageOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

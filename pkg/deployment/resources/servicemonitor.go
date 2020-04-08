@@ -57,7 +57,7 @@ func (r *Resources) EnsureMonitoringClient() (*clientv1.MonitoringV1Client, erro
 
 	// Make a client:
 	var restConfig *rest.Config
-	restConfig, err := k8sutil.InClusterConfig()
+	restConfig, err := k8sutil.NewKubeConfig()
 	if err != nil {
 		return nil, maskAny(err)
 	}

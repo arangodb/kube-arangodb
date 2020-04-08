@@ -43,7 +43,7 @@ import (
 // TestSecretHashesRootUser checks if Status.SecretHashes.Users[root] changed after request for it
 func TestSecretHashesRootUser(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

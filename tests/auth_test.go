@@ -41,7 +41,7 @@ import (
 // with default authentication (on) using a generated JWT secret.
 func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -89,7 +89,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 // with default authentication (on) using a user created JWT secret.
 func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 	secrets := kubecli.CoreV1().Secrets(ns)
@@ -140,7 +140,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 // with authentication set to `None`.
 func TestAuthenticationNoneSingle(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -179,7 +179,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 // with default authentication (on) using a generated JWT secret.
 func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 
@@ -227,7 +227,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 // with default authentication (on) using a user created JWT secret.
 func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 	secrets := kubecli.CoreV1().Secrets(ns)
@@ -280,7 +280,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 // with authentication set to `None`.
 func TestAuthenticationNoneCluster(t *testing.T) {
 	longOrSkip(t)
-	c := client.MustNewInCluster()
+	c := client.MustNewClient()
 	kubecli := mustNewKubeClient(t)
 	ns := getNamespace(t)
 

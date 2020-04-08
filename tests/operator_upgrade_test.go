@@ -27,7 +27,7 @@ const (
 func TestOperatorUpgradeFrom038(t *testing.T) {
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
-	c := kubeArangoClient.MustNewInCluster()
+	c := kubeArangoClient.MustNewClient()
 
 	if err := waitForArangoDBPodsGone(ns, kubecli); err != nil {
 		t.Fatalf("Remaining arangodb pods did not vanish, can not start test: %v", err)

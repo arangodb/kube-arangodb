@@ -590,7 +590,7 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 // clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
 func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
 
-	c := cl.MustNewInCluster()
+	c := cl.MustNewClient()
 	ns := getNamespace(t)
 
 	var noGood int
