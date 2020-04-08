@@ -84,6 +84,8 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
+	// ExtendedRotationCheck extend checks for rotation
+	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
