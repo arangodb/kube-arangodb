@@ -101,7 +101,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 	switch spec.Metrics.Mode.Get() {
 	case deploymentApi.MetricsModeInternal:
 		if spec.Metrics.Authentication.JWTTokenSecretName == nil {
-			return coreosv1.ServiceMonitorSpec{}, errors.NewNotFound(schema.GroupResource{Group:"v1/secret"}, "metrics-secret")
+			return coreosv1.ServiceMonitorSpec{}, errors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
 		}
 
 		endpoint := r.makeEndpoint(spec.IsSecure())
@@ -160,7 +160,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 			}
 
 			spec, err := r.serviceMonitorSpec()
-			if err != nil {return err}
+			if err != nil {
+				return err
+			}
 
 			// Need to create one:
 			smon := &coreosv1.ServiceMonitor{
@@ -201,7 +203,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 			serviceMonitorName)
 
 		spec, err := r.serviceMonitorSpec()
-		if err != nil {return err}
+		if err != nil {
+			return err
+		}
 
 		if equality.Semantic.DeepDerivative(spec, servMon.Spec) {
 			log.Debug().Msgf("ServiceMonitor %s already found and up to date.",
