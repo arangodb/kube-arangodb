@@ -100,6 +100,30 @@ func Int32OrDefault(input *int32, defaultValue ...int32) int32 {
 	return *input
 }
 
+// NewUInt16 returns a reference to an uint16 with given value.
+func NewUInt16(input uint16) *uint16 {
+	return &input
+}
+
+// NewUInt16OrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewUInt16OrNil(input *uint16) *uint16 {
+	if input == nil {
+		return nil
+	}
+	return NewUInt16(*input)
+}
+
+// UInt16OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func UInt16OrDefault(input *uint16, defaultValue ...uint16) uint16 {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return 0
+	}
+	return *input
+}
+
 // NewBool returns a reference to a bool with given value.
 func NewBool(input bool) *bool {
 	return &input

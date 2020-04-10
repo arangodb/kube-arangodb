@@ -58,6 +58,15 @@ func (sc *secretsCache) Create(s *v1.Secret) (*v1.Secret, error) {
 	return result, nil
 }
 
+func (sc *secretsCache) Delete(name string, options *metav1.DeleteOptions) error {
+	sc.cache = nil
+	err := sc.cli.Delete(name, options)
+	if err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 func (sc *secretsCache) Get(name string, options metav1.GetOptions) (*v1.Secret, error) {
 	if sc.cache == nil {
 		list, err := sc.cli.List(metav1.ListOptions{})

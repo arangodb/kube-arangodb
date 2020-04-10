@@ -27,6 +27,11 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	jg "github.com/dgrijalva/jwt-go"
+	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -116,30 +121,72 @@ func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretNam
 	return nil
 }
 
+var (
+	exporterTokenClaims = map[string]interface{}{
+		"iss":           "arangodb",
+		"server_id":     "exporter",
+		"allowed_paths": []string{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
+	}
+)
+
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
 func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
-	if _, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
-		// Secret not found, create it
-		claims := map[string]interface{}{
-			"iss":           "arangodb",
-			"server_id":     "exporter",
-			"allowed_paths": []string{"/_admin/statistics", "/_admin/statistics-description"},
-		}
+	if recreate, exists, err := r.ensureExporterTokenSecretCreateRequired(secrets, tokenSecretName, secretSecretName); err != nil {
+		return err
+	} else if recreate {
 		// Create secret
+		if exists {
+			if err := secrets.Delete(tokenSecretName, nil); err != nil && !apierrors.IsNotFound(err) {
+				return err
+			}
+		}
+
 		owner := r.context.GetAPIObject().AsOwner()
-		if err := k8sutil.CreateJWTFromSecret(secrets, tokenSecretName, secretSecretName, claims, &owner); k8sutil.IsAlreadyExists(err) {
+		if err := k8sutil.CreateJWTFromSecret(secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner); k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
 		} else if err != nil {
 			// Failed to create secret
 			return maskAny(err)
 		}
-	} else if err != nil {
-		// Failed to get secret for other reasons
-		return maskAny(err)
 	}
 	return nil
+}
+
+func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) (bool, bool, error) {
+	if secret, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		return true, false, nil
+	} else if err == nil {
+		// Check if claims are fine
+		data, ok := secret.Data[constants.SecretKeyToken]
+		if !ok {
+			return true, true, nil
+		}
+
+		secret, err := k8sutil.GetTokenSecret(secrets, secretSecretName)
+		if err != nil {
+			return false, true, maskAny(err)
+		}
+
+		token, err := jg.Parse(string(data), func(token *jg.Token) (i interface{}, err error) {
+			return []byte(secret), nil
+		})
+
+		if err != nil {
+			return true, true, nil
+		}
+
+		tokenClaims, ok := token.Claims.(jg.MapClaims)
+		if !ok {
+			return true, true, nil
+		}
+
+		return !equality.Semantic.DeepEqual(tokenClaims, exporterTokenClaims), true, nil
+	} else {
+		// Failed to get secret for other reasons
+		return false, false, maskAny(err)
+	}
 }
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace

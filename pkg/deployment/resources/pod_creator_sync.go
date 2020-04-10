@@ -47,6 +47,7 @@ type ArangoSyncContainer struct {
 }
 
 var _ k8sutil.PodCreator = &MemberSyncPod{}
+var _ k8sutil.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
 	tlsKeyfileSecretName   string
@@ -58,6 +59,16 @@ type MemberSyncPod struct {
 	group                  api.ServerGroup
 	resources              *Resources
 	imageInfo              api.ImageInfo
+}
+
+func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
+	return []core.ContainerPort{
+		{
+			Name:          "server",
+			ContainerPort: int32(k8sutil.ArangoPort),
+			Protocol:      core.ProtocolTCP,
+		},
+	}
 }
 
 func (a *ArangoSyncContainer) GetExecutor() string {

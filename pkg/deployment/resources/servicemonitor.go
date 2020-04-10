@@ -24,7 +24,12 @@ package resources
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	coreosv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	clientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -88,6 +93,45 @@ func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
 	}
 }
 
+func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
+	spec := r.context.GetSpec()
+
+	switch spec.Metrics.Mode.Get() {
+	case deploymentApi.MetricsModeInternal:
+		if spec.Metrics.Authentication.JWTTokenSecretName == nil {
+			return coreosv1.ServiceMonitorSpec{}, errors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
+		}
+
+		endpoint := r.makeEndpoint(spec.IsSecure())
+
+		endpoint.BearerTokenSecret.Name = *spec.Metrics.Authentication.JWTTokenSecretName
+		endpoint.BearerTokenSecret.Key = constants.SecretKeyToken
+		endpoint.Path = k8sutil.ArangoExporterInternalEndpoint
+
+		return coreosv1.ServiceMonitorSpec{
+			JobLabel: "k8s-app",
+			Endpoints: []coreosv1.Endpoint{
+				endpoint,
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
+			},
+		}, nil
+	default:
+		return coreosv1.ServiceMonitorSpec{
+			JobLabel: "k8s-app",
+			Endpoints: []coreosv1.Endpoint{
+				r.makeEndpoint(spec.IsSecure()),
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
+			},
+		}, nil
+	}
+}
+
 // EnsureServiceMonitor creates or updates a ServiceMonitor.
 func (r *Resources) EnsureServiceMonitor() error {
 	// Some preparations:
@@ -114,6 +158,12 @@ func (r *Resources) EnsureServiceMonitor() error {
 			if !wantMetrics {
 				return nil
 			}
+
+			spec, err := r.serviceMonitorSpec()
+			if err != nil {
+				return err
+			}
+
 			// Need to create one:
 			smon := &coreosv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -121,15 +171,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 					Labels:          LabelsForExporterServiceMonitor(deploymentName),
 					OwnerReferences: []metav1.OwnerReference{owner},
 				},
-				Spec: coreosv1.ServiceMonitorSpec{
-					JobLabel: "k8s-app",
-					Endpoints: []coreosv1.Endpoint{
-						r.makeEndpoint(spec.IsSecure()),
-					},
-					Selector: metav1.LabelSelector{
-						MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
-					},
-				},
+				Spec: spec,
 			}
 			smon, err = serviceMonitors.Create(smon)
 			if err != nil {
@@ -143,11 +185,6 @@ func (r *Resources) EnsureServiceMonitor() error {
 			return maskAny(err)
 		}
 	}
-	if wantMetrics {
-		log.Debug().Msgf("ServiceMonitor %s already found, no need to create.",
-			serviceMonitorName)
-		return nil
-	}
 	// Check if the service monitor is ours, otherwise we do not touch it:
 	found := false
 	for _, owner := range servMon.ObjectMeta.OwnerReferences {
@@ -159,6 +196,30 @@ func (r *Resources) EnsureServiceMonitor() error {
 	}
 	if !found {
 		log.Debug().Msgf("Found unneeded ServiceMonitor %s, but not owned by us, will not touch it", serviceMonitorName)
+		return nil
+	}
+	if wantMetrics {
+		log.Debug().Msgf("ServiceMonitor %s already found, ensuring it is fine.",
+			serviceMonitorName)
+
+		spec, err := r.serviceMonitorSpec()
+		if err != nil {
+			return err
+		}
+
+		if equality.Semantic.DeepDerivative(spec, servMon.Spec) {
+			log.Debug().Msgf("ServiceMonitor %s already found and up to date.",
+				serviceMonitorName)
+			return nil
+		}
+
+		servMon.Spec = spec
+
+		_, err = serviceMonitors.Update(servMon)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:

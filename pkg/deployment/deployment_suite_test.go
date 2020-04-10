@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -401,17 +402,17 @@ func createTestImages(enterprise bool) api.ImageInfoList {
 	}
 }
 
-func createTestExporterPorts() []core.ContainerPort {
+func createTestExporterPorts(port uint16) []core.ContainerPort {
 	return []core.ContainerPort{
 		{
 			Name:          "exporter",
-			ContainerPort: 9101,
+			ContainerPort: int32(port),
 			Protocol:      "TCP",
 		},
 	}
 }
 
-func createTestExporterCommand(secure bool) []string {
+func createTestExporterCommand(secure bool, port uint16) []string {
 	command := []string{
 		"/app/arangodb-exporter",
 	}
@@ -427,6 +428,11 @@ func createTestExporterCommand(secure bool) []string {
 	if secure {
 		command = append(command, "--ssl.keyfile=/secrets/tls/tls.keyfile")
 	}
+
+	if port != k8sutil.ArangoExporterPort {
+		command = append(command, fmt.Sprintf("--server.address=:%d", port))
+	}
+
 	return command
 }
 
@@ -480,14 +486,14 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
 }
 
-func testCreateExporterContainer(secure bool, resources core.ResourceRequirements) core.Container {
+func testCreateExporterContainerWithPort(secure bool, resources core.ResourceRequirements, port uint16) core.Container {
 	var securityContext api.ServerGroupSpecSecurityContext
 
 	return core.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   testExporterImage,
-		Command: createTestExporterCommand(secure),
-		Ports:   createTestExporterPorts(),
+		Command: createTestExporterCommand(secure, port),
+		Ports:   createTestExporterPorts(port),
 		VolumeMounts: []core.VolumeMount{
 			k8sutil.ExporterJWTVolumeMount(),
 		},
@@ -496,4 +502,8 @@ func testCreateExporterContainer(secure bool, resources core.ResourceRequirement
 		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: securityContext.NewSecurityContext(),
 	}
+}
+
+func testCreateExporterContainer(secure bool, resources core.ResourceRequirements) core.Container {
+	return testCreateExporterContainerWithPort(secure, resources, k8sutil.ArangoExporterPort)
 }

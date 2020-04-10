@@ -33,7 +33,7 @@ operator:
 
   images:
     base: alpine:3.11
-    metricsExporter: arangodb/arangodb-exporter:0.1.6
+    metricsExporter: arangodb/arangodb-exporter:0.1.7
     arango: arangodb/arangodb:latest
 rbac:
   enabled: true
