@@ -54,7 +54,7 @@ const (
 	// ActionTypeWaitForMemberUp causes the plan to wait until the member is considered "up".
 	ActionTypeWaitForMemberUp ActionType = "WaitForMemberUp"
 	// ActionTypeWaitForMemberInSync causes the plan to wait until members are considered "up" and cluster is healthy.
-	ActionTypeWaitForMemberInSync ActionType = "WaitMemberInSync"
+	ActionTypeWaitForMemberInSync ActionType = "WaitForMemberInSync"
 	// ActionTypeRenewTLSCertificate causes the TLS certificate of a member to be renewed.
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.

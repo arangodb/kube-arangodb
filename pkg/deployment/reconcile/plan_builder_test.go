@@ -682,6 +682,7 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{
 				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
+				api.NewAction(api.ActionTypeWaitForMemberInSync, api.ServerGroupAgents, ""),
 			},
 			ExpectedLog: "Creating rotation plan",
 		},
