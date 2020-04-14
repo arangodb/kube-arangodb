@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/rs/zerolog"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,7 +43,7 @@ func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, names
 	source := cache.NewListWatchFromClient(
 		getter,
 		resource,
-		namespace,
+		v1.NamespaceAll,
 		fields.Everything())
 
 	_, informer := cache.NewIndexerInformer(source, objType, 0, cache.ResourceEventHandlerFuncs{
