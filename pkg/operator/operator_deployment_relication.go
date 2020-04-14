@@ -28,6 +28,7 @@ import (
 	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
@@ -52,7 +53,7 @@ func (o *Operator) runDeploymentReplications(stop <-chan struct{}) {
 		o.log,
 		o.Dependencies.CRCli.ReplicationV1().RESTClient(),
 		replication2.ArangoDeploymentReplicationResourcePlural,
-		o.Config.Namespace,
+		v1.NamespaceAll,
 		&api.ArangoDeploymentReplication{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    o.onAddArangoDeploymentReplication,
