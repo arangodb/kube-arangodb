@@ -101,6 +101,8 @@ type ActionContext interface {
 	SetCurrentImage(imageInfo api.ImageInfo) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
+	// GetShardSyncStatus returns true if all shards are in sync
+	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
 	// GetSpec returns a copy of the spec
@@ -125,6 +127,10 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) GetShardSyncStatus() bool {
+	return ac.context.GetShardSyncStatus()
 }
 
 func (ac *actionContext) UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error {

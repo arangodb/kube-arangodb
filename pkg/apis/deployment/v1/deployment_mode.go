@@ -49,6 +49,15 @@ func (m DeploymentMode) Validate() error {
 	}
 }
 
+// Get mode or default value
+func (m *DeploymentMode) Get() DeploymentMode {
+	if m == nil {
+		return DeploymentModeCluster
+	}
+
+	return *m
+}
+
 // HasSingleServers returns true when the given mode is "Single" or "ActiveFailover".
 func (m DeploymentMode) HasSingleServers() bool {
 	return m == DeploymentModeSingle || m == DeploymentModeActiveFailover
