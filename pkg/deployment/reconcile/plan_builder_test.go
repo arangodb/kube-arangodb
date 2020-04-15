@@ -776,7 +776,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err := r.CreatePlan()
+			err, _ := r.CreatePlan()
 
 			// Assert
 			if testCase.ExpectedEvent != nil {
