@@ -119,14 +119,8 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Calculation of spec failed")
 	} else {
 		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
-		if (checksum != status.AppliedVersion && (!exists || condition.IsTrue())) ||
-			(checksum == status.AppliedVersion && (!exists || !condition.IsTrue())) {
-			if err = d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
-				if checksum == status.AppliedVersion {
-					return s.Conditions.Update(api.ConditionTypeUpToDate, true, "Everything is UpToDate", "Spec applied")
-				}
-				return s.Conditions.Update(api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied")
-			}); err != nil {
+		if checksum != status.AppliedVersion && (!exists || condition.IsTrue()) {
+			if err = d.updateCondition(api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -185,8 +179,37 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Create scale/update plan
-	if err := d.reconciler.CreatePlan(); err != nil {
+	if err, updated := d.reconciler.CreatePlan(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
+	} else if updated {
+		return minInspectionInterval, nil
+	}
+
+	if d.apiObject.Status.Plan.IsEmpty() && status.AppliedVersion != checksum {
+		if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+			s.AppliedVersion = checksum
+			return true
+		}); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+		}
+
+		return minInspectionInterval, nil
+	} else if status.AppliedVersion == checksum {
+		if !status.Plan.IsEmpty() && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+			if err = d.updateCondition(api.ConditionTypeUpToDate, false, "Plan is not empty", "There are pending operations in plan"); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+			}
+
+			return minInspectionInterval, nil
+		}
+
+		if status.Plan.IsEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+			if err = d.updateCondition(api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date"); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
+			}
+
+			return minInspectionInterval, nil
+		}
 	}
 
 	// Execute current step of scale/update plan
@@ -196,18 +219,6 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 	if retrySoon {
 		nextInterval = minInspectionInterval
-	} else {
-		// Do not retry - so plan is empty
-		if status.AppliedVersion != checksum {
-			if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
-				s.AppliedVersion = checksum
-				return true
-			}); err != nil {
-				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
-			}
-
-			return minInspectionInterval, nil
-		}
 	}
 
 	// Create access packages
@@ -278,4 +289,15 @@ func (d *Deployment) triggerInspection() {
 // triggerCRDInspection ensures that an inspection is run soon.
 func (d *Deployment) triggerCRDInspection() {
 	d.inspectCRDTrigger.Trigger()
+}
+
+func (d *Deployment) updateCondition(conditionType api.ConditionType, status bool, reason, message string) error {
+	d.deps.Log.Info().Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Msg("Updated condition")
+	if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		return s.Conditions.Update(conditionType, status, reason, message)
+	}); err != nil {
+		return errors.Wrapf(err, "Unable to update condition")
+	}
+
+	return nil
 }

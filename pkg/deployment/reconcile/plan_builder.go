@@ -52,12 +52,12 @@ type upgradeDecision struct {
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan() error {
+func (d *Reconciler) CreatePlan() (error, bool) {
 	// Get all current pods
 	pods, err := d.context.GetOwnedPods()
 	if err != nil {
 		d.log.Debug().Err(err).Msg("Failed to get owned pods")
-		return maskAny(err)
+		return maskAny(err), false
 	}
 
 	// Create plan
@@ -69,19 +69,19 @@ func (d *Reconciler) CreatePlan() error {
 
 	// If not change, we're done
 	if !changed {
-		return nil
+		return nil, false
 	}
 
 	// Save plan
 	if len(newPlan) == 0 {
 		// Nothing to do
-		return nil
+		return nil, false
 	}
 	status.Plan = newPlan
 	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return maskAny(err), false
 	}
-	return nil
+	return nil, true
 }
 
 func fetchAgency(log zerolog.Logger,
@@ -112,6 +112,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
 	context PlanBuilderContext) (api.Plan, bool) {
+
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -176,7 +177,8 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	// Ensure that we were able to get agency info
 	if len(plan) == 0 && agencyErr != nil {
 		log.Err(agencyErr).Msg("unable to build further plan without access to agency")
-		return plan, false
+		return append(plan,
+			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, "")), true
 	}
 
 	// Check for cleaned out dbserver in created state
@@ -200,7 +202,13 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate one or more members
 	if plan.IsEmpty() {
-		plan = createRotateOrUpgradePlan(log, apiObject, spec, status, context, pods)
+		newPlan, idle := createRotateOrUpgradePlan(log, apiObject, spec, status, context, pods)
+		if idle {
+			plan = append(plan,
+				api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
+		} else {
+			plan = append(plan, newPlan...)
+		}
 	}
 
 	// Check for the need to rotate TLS certificate of a members

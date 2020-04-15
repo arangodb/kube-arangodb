@@ -35,7 +35,7 @@ import (
 
 // createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
 func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, context PlanBuilderContext, pods []core.Pod) api.Plan {
+	status api.DeploymentStatus, context PlanBuilderContext, pods []core.Pod) (api.Plan, bool) {
 
 	var newPlan api.Plan
 	var upgradeNotAllowed bool
@@ -103,12 +103,13 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 	} else if !newPlan.IsEmpty() {
 		if clusterReadyForUpgrade(context) {
 			// Use the new plan
-			return newPlan
+			return newPlan, false
 		} else {
 			log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+			return nil, true
 		}
 	}
-	return nil
+	return nil, false
 }
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with

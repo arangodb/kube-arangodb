@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Added additional checks in UpToDate condition
 - Added extended Rotation check for Cluster mode
 - Removed old rotation logic (rotation of ArangoDeployment may be enforced after Operator upgrade)
 - Added UpToDate condition in ArangoDeployment Status
