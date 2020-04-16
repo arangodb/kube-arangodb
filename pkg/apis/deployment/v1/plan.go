@@ -33,6 +33,8 @@ import (
 type ActionType string
 
 const (
+	// ActionTypeIdle causes a plan to be recalculated.
+	ActionTypeIdle ActionType = "Idle"
 	// ActionTypeAddMember causes a member to be added.
 	ActionTypeAddMember ActionType = "AddMember"
 	// ActionTypeRemoveMember causes a member to be removed.
