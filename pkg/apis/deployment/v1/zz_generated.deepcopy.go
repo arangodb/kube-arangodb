@@ -40,6 +40,13 @@ func (in *Action) DeepCopyInto(out *Action) {
 		in, out := &in.StartTime, &out.StartTime
 		*out = (*in).DeepCopy()
 	}
+	if in.Params != nil {
+		in, out := &in.Params, &out.Params
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 
@@ -669,6 +676,16 @@ func (in *MetricsSpec) DeepCopyInto(out *MetricsSpec) {
 	}
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	in.Resources.DeepCopyInto(&out.Resources)
+	if in.Mode != nil {
+		in, out := &in.Mode, &out.Mode
+		*out = new(MetricsMode)
+		**out = **in
+	}
+	if in.Port != nil {
+		in, out := &in.Port, &out.Port
+		*out = new(uint16)
+		**out = **in
+	}
 	return
 }
 
@@ -1005,6 +1022,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.ExtendedRotationCheck != nil {
+		in, out := &in.ExtendedRotationCheck, &out.ExtendedRotationCheck
+		*out = new(bool)
+		**out = **in
 	}
 	return
 }

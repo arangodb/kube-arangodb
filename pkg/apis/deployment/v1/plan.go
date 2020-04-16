@@ -100,7 +100,7 @@ type Action struct {
 	// Image used in can of a SetCurrentImage action.
 	Image string `json:"image,omitempty"`
 	// Params additional parameters used for action
-	Params map[string]interface{} `json:"params,omitempty"`
+	Params map[string]string `json:"params,omitempty"`
 }
 
 // Equal compares two Actions
@@ -117,9 +117,9 @@ func (a Action) Equal(other Action) bool {
 }
 
 // AddParam returns copy of action with set parameter
-func (a Action) AddParam(key string, value interface{}) Action {
+func (a Action) AddParam(key, value string) Action {
 	if a.Params == nil {
-		a.Params = map[string]interface{}{}
+		a.Params = map[string]string{}
 	}
 
 	a.Params[key] = value
