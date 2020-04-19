@@ -1,0 +1,24 @@
+---
+
+webhook:
+  enabled: False
+  validation: True
+
+  image: arangodb/kube-arangodb:1.0.2
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+  replicaCount: 1
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 128Mi
+    requests:
+      cpu: 125m
+      memory: 128Mi
+
+  annotations: {}
+
+  updateStrategy:
+    type: Recreate

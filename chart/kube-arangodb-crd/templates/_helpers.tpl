@@ -4,5 +4,5 @@
 Expand the name of the chart.
 */}}
 {{- define "kube-arangodb-crd.name" -}}
-{{- printf "%s" .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Chart.Name .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
