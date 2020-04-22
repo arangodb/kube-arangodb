@@ -40,6 +40,8 @@ type TLSSpec struct {
 	CASecretName *string   `json:"caSecretName,omitempty"`
 	AltNames     []string  `json:"altNames,omitempty"`
 	TTL          *Duration `json:"ttl,omitempty"`
+
+	SNI TLSSNISpec `json:",inline"`
 }
 
 const (
@@ -125,4 +127,6 @@ func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
 	if s.TTL == nil {
 		s.TTL = NewDurationOrNil(source.TTL)
 	}
+
+	s.SNI.SetDefaultsFrom(source.SNI)
 }

@@ -52,10 +52,13 @@ type MemberArangoDPod struct {
 	clusterJWTSecretName        string
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
+	deploymentStatus            api.DeploymentStatus
 	group                       api.ServerGroup
 	context                     Context
 	resources                   *Resources
 	imageInfo                   api.ImageInfo
+	autoUpgrade                 bool
+	id                          string
 }
 
 type ArangoDContainer struct {
@@ -183,10 +186,33 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (m *MemberArangoDPod) AsInput() pod.Input {
+	return pod.Input{
+		ApiObject:   m.context.GetAPIObject(),
+		Deployment:  m.spec,
+		Status:      m.deploymentStatus,
+		Group:       m.group,
+		GroupSpec:   m.groupSpec,
+		Version:     m.imageInfo.ArangoDBVersion,
+		Enterprise:  m.imageInfo.Enterprise,
+		AutoUpgrade: m.autoUpgrade,
+		ID:          m.id,
+	}
+}
+
 func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+}
+
+func (m *MemberArangoDPod) Validate(secrets k8sutil.SecretInterface) error {
+	i := m.AsInput()
+	if err := pod.SNI().Verify(i, secrets); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *MemberArangoDPod) GetName() string {
@@ -325,6 +351,19 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 
 	if m.resources.context.GetLifecycleImage() != "" {
 		volumes = append(volumes, k8sutil.LifecycleVolume())
+	}
+
+	// SNI
+	{
+		sniVolumes, sniVolumeMounts := pod.SNI().Volumes(m.AsInput())
+
+		if len(sniVolumes) > 0 {
+			volumes = append(volumes, sniVolumes...)
+		}
+
+		if len(sniVolumeMounts) > 0 {
+			volumeMounts = append(volumeMounts, sniVolumeMounts...)
+		}
 	}
 
 	if len(m.groupSpec.Volumes) > 0 {

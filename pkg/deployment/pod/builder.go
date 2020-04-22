@@ -22,25 +22,28 @@
 
 package pod
 
-import "strings"
+import (
+	"github.com/arangodb/go-driver"
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
-// OptionPair key value pair builder
-type OptionPair struct {
-	Key   string
-	Value string
+type Input struct {
+	ApiObject   meta.Object
+	Deployment  deploymentApi.DeploymentSpec
+	Status      deploymentApi.DeploymentStatus
+	GroupSpec   deploymentApi.ServerGroupSpec
+	Group       deploymentApi.ServerGroup
+	Version     driver.Version
+	Enterprise  bool
+	AutoUpgrade bool
+	ID          string
 }
 
-// CompareTo returns -1 if o < other, 0 if o == other, 1 otherwise
-func (o OptionPair) CompareTo(other OptionPair) int {
-	rc := strings.Compare(o.Key, other.Key)
-	if rc < 0 {
-		return -1
-	} else if rc > 0 {
-		return 1
-	}
-	return strings.Compare(o.Value, other.Value)
-}
-
-func NewOptionPair(pairs ...OptionPair) []OptionPair {
-	return pairs
+type Builder interface {
+	Args(i Input) k8sutil.OptionPairs
+	Volumes(i Input) ([]core.Volume, []core.VolumeMount)
+	Verify(i Input, s k8sutil.SecretInterface) error
 }

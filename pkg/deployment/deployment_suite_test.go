@@ -28,6 +28,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -65,6 +67,7 @@ type testCaseStruct struct {
 	Name             string
 	ArangoDeployment *api.ArangoDeployment
 	Helper           func(*testing.T, *Deployment, *testCaseStruct)
+	Resources        func(*testing.T, *Deployment)
 	config           Config
 	CompareChecksum  *bool
 	ExpectedError    error
@@ -391,15 +394,19 @@ func createTestPorts() []core.ContainerPort {
 	}
 }
 
-func createTestImages(enterprise bool) api.ImageInfoList {
+func createTestImagesWithVersion(enterprise bool, version driver.Version) api.ImageInfoList {
 	return api.ImageInfoList{
 		{
 			Image:           testImage,
-			ArangoDBVersion: testVersion,
+			ArangoDBVersion: version,
 			ImageID:         testImage,
 			Enterprise:      enterprise,
 		},
 	}
+}
+
+func createTestImages(enterprise bool) api.ImageInfoList {
+	return createTestImagesWithVersion(enterprise, testVersion)
 }
 
 func createTestExporterPorts(port uint16) []core.ContainerPort {

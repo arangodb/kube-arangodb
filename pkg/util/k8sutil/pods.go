@@ -52,6 +52,7 @@ const (
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
+	TLSSNIKeyfileVolumeMountDir     = "/secrets/sni"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
@@ -75,6 +76,7 @@ type PodCreator interface {
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool
+	Validate(secrets SecretInterface) error
 }
 
 type ContainerCreator interface {
