@@ -40,7 +40,7 @@ func NewClient(c driver.Connection) Client {
 }
 
 type Client interface {
-
+	GetTLS(ctx context.Context) (Details, string, error)
 }
 
 type client struct {
