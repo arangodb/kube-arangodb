@@ -74,7 +74,10 @@ func (s TLSSNISpec) Validate() error {
 }
 
 // SetDefaultsFrom fills unspecified fields with a value from given source spec.
-func (s *TLSSNISpec) SetDefaultsFrom(source TLSSNISpec) {
+func (s *TLSSNISpec) SetDefaultsFrom(source *TLSSNISpec) {
+	if source == nil {
+		return
+	}
 	if s.Mapping == nil {
 		s.Mapping = source.Mapping
 	}
