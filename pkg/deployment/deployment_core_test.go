@@ -1240,8 +1240,6 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(true,
 					authorization, k8sutil.ArangoPort)
-				testCase.ExpectedPod.Spec.Containers[1].VolumeMounts = append(
-					testCase.ExpectedPod.Spec.Containers[1].VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 			},
 			config: Config{
 				LifecycleImage: testImageLifecycle,
@@ -1287,7 +1285,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							},
 							Resources: emptyResources,
 						},
-						testCreateExporterContainer(true, emptyResources),
+						func() core.Container {
+							c := testCreateExporterContainer(true, emptyResources)
+							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+							return c
+						}(),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,

@@ -25,17 +25,28 @@ package tls
 import (
 	"context"
 	"encoding/json"
-	"github.com/arangodb/go-driver"
 	"net/http"
+
+	"github.com/arangodb/go-driver"
 )
 
-type Details struct {
+type KeyFile struct {
+	PrivateKeyChecksum string `json:"privateKeySHA256,omitempty"`
+	Checksum string `json:"SHA256,omitempty"`
+	Certificates []string `json:"certificates,omitempty"`
+}
 
+type DetailsResult struct {
+	KeyFile KeyFile `json:"keyfile,omitempty"`
+}
+
+type Details struct {
+	Result DetailsResult `json:"result,omitempty"`
 }
 
 func NewClient(c driver.Connection) Client {
 	return &client{
-		c:c,
+		c: c,
 	}
 }
 
@@ -47,7 +58,7 @@ type client struct {
 	c driver.Connection
 }
 
-func (c *client ) parseResponse(response driver.Response) (Details, string, error) {
+func (c *client) parseResponse(response driver.Response) (Details, string, error) {
 	if err := response.CheckStatus(http.StatusOK); err != nil {
 		return Details{}, "", err
 	}
@@ -71,7 +82,7 @@ func (c *client ) parseResponse(response driver.Response) (Details, string, erro
 	return d, string(resultData), nil
 }
 
-func (c * client) GetTLS(ctx context.Context) (Details, string, error) {
+func (c *client) GetTLS(ctx context.Context) (Details, string, error) {
 	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/tls")
 	if err != nil {
 		return Details{}, "", err

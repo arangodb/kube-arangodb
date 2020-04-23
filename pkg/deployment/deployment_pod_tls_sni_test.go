@@ -66,14 +66,16 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					TLS: func() api.TLSSpec {
 						s := tlsSpec.DeepCopy()
 
-						s.SNI.Mapping = map[string][]string{
-							"sni1": {
-								"a",
-								"b",
-							},
-							"sni2": {
-								"c",
-								"d",
+						s.SNI = &api.TLSSNISpec{
+							Mapping: map[string][]string{
+								"sni1": {
+									"a",
+									"b",
+								},
+								"sni2": {
+									"c",
+									"d",
+								},
 							},
 						}
 
@@ -163,16 +165,17 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					TLS: func() api.TLSSpec {
 						s := tlsSpec.DeepCopy()
 
-						s.SNI.Mapping = map[string][]string{
-							"sni1": {
-								"a",
-								"b",
-							},
-							"sni2": {
-								"c",
-								"d",
-							},
-						}
+						s.SNI = &api.TLSSNISpec{
+							Mapping: map[string][]string{
+								"sni1": {
+									"a",
+									"b",
+								},
+								"sni2": {
+									"c",
+									"d",
+								},
+							}}
 
 						return *s
 					}(),
@@ -260,16 +263,17 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					TLS: func() api.TLSSpec {
 						s := tlsSpec.DeepCopy()
 
-						s.SNI.Mapping = map[string][]string{
-							"sni1": {
-								"a",
-								"b",
-							},
-							"sni2": {
-								"c",
-								"d",
-							},
-						}
+						s.SNI = &api.TLSSNISpec{
+							Mapping: map[string][]string{
+								"sni1": {
+									"a",
+									"b",
+								},
+								"sni2": {
+									"c",
+									"d",
+								},
+							}}
 
 						return *s
 					}(),
@@ -357,16 +361,17 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					TLS: func() api.TLSSpec {
 						s := tlsSpec.DeepCopy()
 
-						s.SNI.Mapping = map[string][]string{
-							"sni1": {
-								"a",
-								"b",
-							},
-							"sni2": {
-								"c",
-								"d",
-							},
-						}
+						s.SNI = &api.TLSSNISpec{
+							Mapping: map[string][]string{
+								"sni1": {
+									"a",
+									"b",
+								},
+								"sni2": {
+									"c",
+									"d",
+								},
+							}}
 
 						return *s
 					}(),
