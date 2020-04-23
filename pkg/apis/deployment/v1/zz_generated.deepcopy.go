@@ -1362,7 +1362,11 @@ func (in *TLSSpec) DeepCopyInto(out *TLSSpec) {
 		*out = new(Duration)
 		**out = **in
 	}
-	in.SNI.DeepCopyInto(&out.SNI)
+	if in.SNI != nil {
+		in, out := &in.SNI, &out.SNI
+		*out = new(TLSSNISpec)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
