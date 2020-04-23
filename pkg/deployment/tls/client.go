@@ -75,7 +75,7 @@ func (c *client) parseResponse(response driver.Response) (Details, string, error
 	}
 
 	var d Details
-	if err := response.ParseBody("", &d); err != nil {
+	if err := json.Unmarshal(resultData, &d); err != nil {
 		return Details{}, "", err
 	}
 
