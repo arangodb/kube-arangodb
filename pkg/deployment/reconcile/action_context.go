@@ -96,6 +96,9 @@ type ActionContext interface {
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
 	GetImageInfo(imageName string) (api.ImageInfo, bool)
+	// GetImageInfo returns the image info for an current image.
+	// Returns: (info, infoFound)
+	GetCurrentImageInfo() (api.ImageInfo, bool)
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
 	SetCurrentImage(imageInfo api.ImageInfo) error
@@ -113,6 +116,7 @@ type ActionContext interface {
 	EnableScalingCluster() error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error
+	SecretsInterface() k8sutil.SecretInterface
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -127,6 +131,10 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {
+	return ac.context.SecretsInterface()
 }
 
 func (ac *actionContext) GetShardSyncStatus() bool {
@@ -340,6 +348,18 @@ func (ac *actionContext) DeleteTLSCASecret() error {
 func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
 	status, _ := ac.context.GetStatus()
 	return status.Images.GetByImage(imageName)
+}
+
+// GetImageInfo returns the image info for an current image.
+// Returns: (info, infoFound)
+func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
+	status, _ := ac.context.GetStatus()
+
+	if status.CurrentImage == nil {
+		return api.ImageInfo{}, false
+	}
+
+	return *status.CurrentImage, true
 }
 
 // SetCurrentImage changes the CurrentImage field in the deployment

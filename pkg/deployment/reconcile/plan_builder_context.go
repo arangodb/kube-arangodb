@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -55,6 +57,10 @@ type PlanBuilderContext interface {
 	RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// GetServerClient returns a cached client for a specific server.
+	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	// SecretsInterface return secret interface
+	SecretsInterface() k8sutil.SecretInterface
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

@@ -113,4 +113,6 @@ type Context interface {
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// SecretsInterface return secret interface
+	SecretsInterface() k8sutil.SecretInterface
 }

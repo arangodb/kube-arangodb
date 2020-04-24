@@ -76,7 +76,7 @@ func (d *Deployment) GetAlpineImage() string {
 	return d.config.AlpineImage
 }
 
-// GetNamespace returns the kubernetes namespace that contains
+// GetNamespSecretsInterfaceace returns the kubernetes namespace that contains
 // this deployment.
 func (d *Deployment) GetNamespace() string {
 	return d.apiObject.GetNamespace()
@@ -499,4 +499,8 @@ func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool,
 	}
 
 	return d.updateStatus(status, version, force...)
+}
+
+func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
+	return d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
 }

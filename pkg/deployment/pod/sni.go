@@ -26,6 +26,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -34,14 +36,41 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func GroupSNISupported(mode api.DeploymentMode, group api.ServerGroup) bool {
+	switch mode {
+	case api.DeploymentModeCluster:
+		return group == api.ServerGroupCoordinators
+
+	case api.DeploymentModeSingle:
+		fallthrough
+	case api.DeploymentModeActiveFailover:
+		return group == api.ServerGroupSingle
+	default:
+		return false
+	}
+}
+
 func SNI() Builder {
 	return sni{}
 }
 
 type sni struct{}
 
-func (s sni) Verify(i Input, secrets k8sutil.SecretInterface) error {
+func (s sni) isSupported(i Input) bool {
 	if !i.Deployment.TLS.IsSecure() {
+		return false
+	}
+
+	if i.Version.CompareTo("3.7.0") < 0 || !i.Enterprise {
+		// We need 3.7.0+ and Enterprise to support this
+		return false
+	}
+
+	return GroupSNISupported(i.Deployment.Mode.Get(), i.Group)
+}
+
+func (s sni) Verify(i Input, secrets k8sutil.SecretInterface) error {
+	if !s.isSupported(i) {
 		return nil
 	}
 
@@ -60,45 +89,43 @@ func (s sni) Verify(i Input, secrets k8sutil.SecretInterface) error {
 }
 
 func (s sni) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+	if !s.isSupported(i) {
+		return nil, nil
+	}
+
 	sni := i.Deployment.TLS.GetTLSSNISpec()
 	volumes := make([]core.Volume, 0, len(sni.Mapping))
 	volumeMounts := make([]core.VolumeMount, 0, len(sni.Mapping))
 
-	if i.Deployment.TLS.IsSecure() {
-		for _, secret := range util.SortKeys(sni.Mapping) {
-			secretNameSha := fmt.Sprintf("%0x", sha256.Sum256([]byte(secret)))
+	for _, secret := range util.SortKeys(sni.Mapping) {
+		secretNameSha := fmt.Sprintf("%0x", sha256.Sum256([]byte(secret)))
 
-			secretNameSha = fmt.Sprintf("sni-%s", secretNameSha[:48])
+		secretNameSha = fmt.Sprintf("sni-%s", secretNameSha[:48])
 
-			vol := core.Volume{
-				Name: secretNameSha,
-				VolumeSource: core.VolumeSource{
-					Secret: &core.SecretVolumeSource{
-						SecretName: secret,
-					},
+		vol := core.Volume{
+			Name: secretNameSha,
+			VolumeSource: core.VolumeSource{
+				Secret: &core.SecretVolumeSource{
+					SecretName: secret,
 				},
-			}
-
-			volMount := core.VolumeMount{
-				Name:      secretNameSha,
-				MountPath: fmt.Sprintf("%s/%s", k8sutil.TLSSNIKeyfileVolumeMountDir, secret),
-				ReadOnly:  true,
-			}
-
-			volumes = append(volumes, vol)
-			volumeMounts = append(volumeMounts, volMount)
+			},
 		}
+
+		volMount := core.VolumeMount{
+			Name:      secretNameSha,
+			MountPath: fmt.Sprintf("%s/%s", k8sutil.TLSSNIKeyfileVolumeMountDir, secret),
+			ReadOnly:  true,
+		}
+
+		volumes = append(volumes, vol)
+		volumeMounts = append(volumeMounts, volMount)
 	}
 
 	return volumes, volumeMounts
 }
 
 func (s sni) Args(i Input) k8sutil.OptionPairs {
-	if !i.Deployment.TLS.IsSecure() {
-		return nil
-	}
-
-	if i.Version.CompareTo("3.7.0") < 0 || !i.Enterprise {
+	if !s.isSupported(i) {
 		return nil
 	}
 

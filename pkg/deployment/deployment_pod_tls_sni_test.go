@@ -90,68 +90,42 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
-						Agents: api.MemberStatusList{
-							firstAgentStatus,
+						Coordinators: api.MemberStatusList{
+							firstCoordinatorStatus,
 						},
 					},
 					Images: createTestImages(false),
 				}
-				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
-			ExpectedEvent: "member agent is created",
+			ExpectedEvent: "member coordinator is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
-						{
-							Name: "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni1",
-								},
-							},
-						},
-						{
-							Name: "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni2",
-								},
-							},
-						},
+						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
-								{
-									Name:      "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni1",
-									ReadOnly:  true,
-								},
-								{
-									Name:      "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni2",
-									ReadOnly:  true,
-								},
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(true, "", k8sutil.ArangoPort),
+							ReadinessProbe:  createTestReadinessProbe(true, ""),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
 					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
 						false, ""),
 				},
 			},
@@ -188,68 +162,42 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
-						Agents: api.MemberStatusList{
-							firstAgentStatus,
+						Coordinators: api.MemberStatusList{
+							firstCoordinatorStatus,
 						},
 					},
 					Images: createTestImagesWithVersion(true, "3.6.0"),
 				}
-				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
-			ExpectedEvent: "member agent is created",
+			ExpectedEvent: "member coordinator is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
-						{
-							Name: "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni1",
-								},
-							},
-						},
-						{
-							Name: "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni2",
-								},
-							},
-						},
+						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
-								{
-									Name:      "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni1",
-									ReadOnly:  true,
-								},
-								{
-									Name:      "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni2",
-									ReadOnly:  true,
-								},
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(true, "", k8sutil.ArangoPort),
+							ReadinessProbe:  createTestReadinessProbe(true, ""),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
 					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
 						false, ""),
 				},
 			},
@@ -286,68 +234,42 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
-						Agents: api.MemberStatusList{
-							firstAgentStatus,
+						Coordinators: api.MemberStatusList{
+							firstCoordinatorStatus,
 						},
 					},
 					Images: createTestImagesWithVersion(false, "3.7.0"),
 				}
-				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
-			ExpectedEvent: "member agent is created",
+			ExpectedEvent: "member coordinator is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
-						{
-							Name: "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni1",
-								},
-							},
-						},
-						{
-							Name: "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-							VolumeSource: core.VolumeSource{
-								Secret: &core.SecretVolumeSource{
-									SecretName: "sni2",
-								},
-							},
-						},
+						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 					},
 					Containers: []core.Container{
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
-								{
-									Name:      "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni1",
-									ReadOnly:  true,
-								},
-								{
-									Name:      "sni-bbd5fc9d5151a1294ffb5de7b85ee74b7f4620021b5891e4",
-									MountPath: k8sutil.TLSSNIKeyfileVolumeMountDir + "/sni2",
-									ReadOnly:  true,
-								},
 							},
 							Resources:       emptyResources,
-							LivenessProbe:   createTestLivenessProbe(true, "", k8sutil.ArangoPort),
+							ReadinessProbe:  createTestReadinessProbe(true, ""),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
 					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
 						false, ""),
 				},
 			},
@@ -384,20 +306,20 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
 					Members: api.DeploymentStatusMembers{
-						Agents: api.MemberStatusList{
-							firstAgentStatus,
+						Coordinators: api.MemberStatusList{
+							firstCoordinatorStatus,
 						},
 					},
 					Images: createTestImagesWithVersion(true, "3.7.0"),
 				}
-				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.createTestPodData(deployment, api.ServerGroupCoordinators, firstCoordinatorStatus)
 			},
-			ExpectedEvent: "member agent is created",
+			ExpectedEvent: "member coordinator is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
+						createTestTLSVolume(api.ServerGroupCoordinatorsString, firstCoordinatorStatus.ID),
 						{
 							Name: "sni-1b43a8b9b6df3d38b4ef394346283cd5aeda46a9b61d52da",
 							VolumeSource: core.VolumeSource{
@@ -420,7 +342,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
 							Command: func() []string {
-								args := createTestCommandForAgent(firstAgentStatus.ID, true, false, false)
+								args := createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false)
 								args = append(args, fmt.Sprintf("--ssl.server-name-indication=a=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
 									fmt.Sprintf("--ssl.server-name-indication=b=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
 									fmt.Sprintf("--ssl.server-name-indication=c=%s/sni2/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
@@ -443,16 +365,91 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 								},
 							},
 							Resources:       emptyResources,
+							ReadinessProbe:  createTestReadinessProbe(true, ""),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultCoordinatorTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupCoordinatorsString + "-" + firstCoordinatorStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupCoordinatorsString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Pod SNI Mounts - Enterprise - 3.7.0 - DBServer",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS: func() api.TLSSpec {
+						s := tlsSpec.DeepCopy()
+
+						s.SNI = &api.TLSSNISpec{
+							Mapping: map[string][]string{
+								"sni1": {
+									"a",
+									"b",
+								},
+								"sni2": {
+									"c",
+									"d",
+								},
+							}}
+
+						return *s
+					}(),
+				},
+			},
+			Resources: func(t *testing.T, deployment *Deployment) {
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						DBServers: api.MemberStatusList{
+							firstDBServerStatus,
+						},
+					},
+					Images: createTestImagesWithVersion(true, "3.7.0"),
+				}
+				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
+			},
+			ExpectedEvent: "member dbserver is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						createTestTLSVolume(api.ServerGroupDBServersString, firstDBServerStatus.ID),
+					},
+					Containers: []core.Container{
+						{
+							Name:  k8sutil.ServerContainerName,
+							Image: testImage,
+							Command: func() []string {
+								args := createTestCommandForDBServer(firstDBServerStatus.ID, true, false, false)
+								return args
+							}(),
+							Ports: createTestPorts(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+							},
+							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(true, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupDBServersString + "-" + firstDBServerStatus.ID,
 					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
 						false, ""),
 				},
 			},

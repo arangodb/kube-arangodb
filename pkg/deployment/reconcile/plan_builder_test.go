@@ -55,6 +55,10 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
+	panic("implement me")
+}
+
 func (c *testContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
 	panic("implement me")
 }

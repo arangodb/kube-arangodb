@@ -179,7 +179,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Create scale/update plan
-	if err, updated := d.reconciler.CreatePlan(); err != nil {
+	if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
 		return minInspectionInterval, nil

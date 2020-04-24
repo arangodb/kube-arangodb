@@ -24,20 +24,20 @@ package tls
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/arangodb/go-driver"
 )
 
 type KeyFile struct {
-	PrivateKeyChecksum string `json:"privateKeySHA256,omitempty"`
-	Checksum string `json:"SHA256,omitempty"`
-	Certificates []string `json:"certificates,omitempty"`
+	PrivateKeyChecksum string   `json:"privateKeySHA256,omitempty"`
+	Checksum           string   `json:"SHA256,omitempty"`
+	Certificates       []string `json:"certificates,omitempty"`
 }
 
 type DetailsResult struct {
-	KeyFile KeyFile `json:"keyfile,omitempty"`
+	KeyFile KeyFile            `json:"keyfile,omitempty"`
+	SNI     map[string]KeyFile `json:"SNI,omitempty"`
 }
 
 type Details struct {
@@ -51,52 +51,62 @@ func NewClient(c driver.Connection) Client {
 }
 
 type Client interface {
-	GetTLS(ctx context.Context) (Details, string, error)
+	GetTLS(ctx context.Context) (Details, error)
+	RefreshTLS(ctx context.Context) (Details, error)
 }
 
 type client struct {
 	c driver.Connection
 }
 
-func (c *client) parseResponse(response driver.Response) (Details, string, error) {
+func (c *client) parseResponse(response driver.Response) (Details, error) {
 	if err := response.CheckStatus(http.StatusOK); err != nil {
-		return Details{}, "", err
-	}
-
-	var result map[string]interface{}
-
-	if err := response.ParseBody("", &result); err != nil {
-		return Details{}, "", err
-	}
-
-	resultData, err := json.Marshal(result)
-	if err != nil {
-		return Details{}, "", err
+		return Details{}, err
 	}
 
 	var d Details
-	if err := json.Unmarshal(resultData, &d); err != nil {
-		return Details{}, "", err
+
+	if err := response.ParseBody("", &d); err != nil {
+		return Details{}, err
 	}
 
-	return d, string(resultData), nil
+	return d, nil
 }
 
-func (c *client) GetTLS(ctx context.Context) (Details, string, error) {
+func (c *client) GetTLS(ctx context.Context) (Details, error) {
 	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/tls")
 	if err != nil {
-		return Details{}, "", err
+		return Details{}, err
 	}
 
 	response, err := c.c.Do(ctx, r)
 	if err != nil {
-		return Details{}, "", err
+		return Details{}, err
 	}
 
-	d, j, err := c.parseResponse(response)
+	d, err := c.parseResponse(response)
 	if err != nil {
-		return Details{}, "", err
+		return Details{}, err
 	}
 
-	return d, j, nil
+	return d, nil
+}
+
+func (c *client) RefreshTLS(ctx context.Context) (Details, error) {
+	r, err := c.c.NewRequest(http.MethodPost, "/_admin/server/tls")
+	if err != nil {
+		return Details{}, err
+	}
+
+	response, err := c.c.Do(ctx, r)
+	if err != nil {
+		return Details{}, err
+	}
+
+	d, err := c.parseResponse(response)
+	if err != nil {
+		return Details{}, err
+	}
+
+	return d, nil
 }
