@@ -25,6 +25,8 @@ package resources
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -51,7 +53,18 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
@@ -92,7 +105,18 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1", "", true)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: true,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
@@ -137,7 +161,18 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=tcp://name-agent-a1.name-int.ns.svc:8529",
@@ -177,7 +212,18 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
@@ -219,7 +265,18 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupDBServers, agents, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",

@@ -28,11 +28,9 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	v1 "k8s.io/api/core/v1"
 )
 
 // Context provides methods to the reconcile package.
@@ -97,9 +95,6 @@ type Context interface {
 	// DeleteSecret removes the Secret with given name.
 	// If the secret does not exist, the error is ignored.
 	DeleteSecret(secretName string) error
-	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
-	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-		agents api.MemberStatusList, id string, version driver.Version) []string
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
 	// GetShardSyncStatus returns true if all shards are in sync
@@ -118,4 +113,6 @@ type Context interface {
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// SecretsInterface return secret interface
+	SecretsInterface() k8sutil.SecretInterface
 }
