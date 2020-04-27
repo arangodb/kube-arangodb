@@ -78,7 +78,4 @@ func (s *TLSSNISpec) SetDefaultsFrom(source *TLSSNISpec) {
 	if source == nil {
 		return
 	}
-	if s.Mapping == nil {
-		s.Mapping = source.Mapping
-	}
 }
