@@ -283,7 +283,6 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 		id,
 		"--engine",
 		engine,
-		"--require",
 	}
 	if requireUUID {
 		command = append(command, "--require")
