@@ -277,7 +277,6 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			Name: "Sync Master Pod with lifecycle, license, monitoring without authentication and alpine",
 			config: Config{
 				LifecycleImage: testImageLifecycle,
-				AlpineImage:    testImageAlpine,
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -374,7 +373,6 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				"liveness probe, priority class name, resource requirements without alpine",
 			config: Config{
 				LifecycleImage: testImageLifecycle,
-				AlpineImage:    testImageAlpine,
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{

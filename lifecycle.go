@@ -121,7 +121,7 @@ func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
 
 	exePath, err := os.Executable()
 	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to get executable path")
+		cliLog.Fatal().Err(err).Msg("Failed to get executable uuidPath")
 	}
 
 	// Open source

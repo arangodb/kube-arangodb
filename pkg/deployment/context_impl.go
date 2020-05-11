@@ -71,9 +71,9 @@ func (d *Deployment) GetLifecycleImage() string {
 	return d.config.LifecycleImage
 }
 
-// GetAlpineImage returns the image name containing the alpine environment
-func (d *Deployment) GetAlpineImage() string {
-	return d.config.AlpineImage
+// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
+func (d *Deployment) GetOperatorUUIDImage() string {
+	return d.config.OperatorUUIDInitImage
 }
 
 // GetNamespSecretsInterfaceace returns the kubernetes namespace that contains

@@ -276,7 +276,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				AlpineImage: testImageAlpine,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -502,7 +502,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				AlpineImage: testImageAlpine,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -1155,8 +1155,8 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
-				LifecycleImage: testImageLifecycle,
-				AlpineImage:    testImageAlpine,
+				LifecycleImage:        testImageLifecycle,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
