@@ -1,7 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-- Prevent deletion not known PVC's
+- Prevent deletion of not known PVC's
+- Move Restore as Plan
 
 ## [1.0.2](https://github.com/arangodb/kube-arangodb/tree/1.0.2) (2020-04-16)
 - Added additional checks in UpToDate condition

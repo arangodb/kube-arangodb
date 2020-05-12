@@ -75,6 +75,10 @@ const (
 	ActionTypePVCResized ActionType = "PVCResized"
 	// UpToDateUpdateResized define up to date annotation in spec
 	UpToDateUpdate ActionType = "UpToDateUpdate"
+	// ActionTypeBackupRestore restore plan
+	ActionTypeBackupRestore ActionType = "BackupRestore"
+	// ActionTypeBackupRestoreClean restore plan
+	ActionTypeBackupRestoreClean ActionType = "BackupRestoreClean"
 )
 
 const (

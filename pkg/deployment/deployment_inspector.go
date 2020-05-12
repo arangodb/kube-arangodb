@@ -236,10 +236,6 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
 	}
 
-	if err := d.backup.CheckRestore(); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Restore operation failed")
-	}
-
 	// At the end of the inspect, we cleanup terminated pods.
 	if x, err := d.resources.CleanupTerminatedPods(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")

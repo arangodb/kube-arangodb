@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -115,4 +117,6 @@ type Context interface {
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }

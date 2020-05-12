@@ -29,6 +29,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog"
@@ -53,6 +55,10 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+	panic("implement me")
 }
 
 func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
