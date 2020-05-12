@@ -25,6 +25,7 @@ package resources
 import (
 	"fmt"
 	"math"
+	"os"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
@@ -384,6 +385,11 @@ func (m *MemberArangoDPod) IsDeploymentMode() bool {
 func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 	var initContainers []core.Container
 
+	executable, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
 		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
@@ -394,12 +400,12 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 		initContainers = append(initContainers, c)
 	}
 
-	alpineImage := m.resources.context.GetAlpineImage()
-	if alpineImage != "" {
+	operatorUUIDImage := m.resources.context.GetOperatorUUIDImage()
+	if operatorUUIDImage != "" {
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, alpineImage, requireUUID,
+		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
 	}

@@ -61,8 +61,8 @@ type Context interface {
 	GetKubeCli() kubernetes.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
-	// GetAlpineImage returns the image name containing the alpine environment
-	GetAlpineImage() string
+	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
+	GetOperatorUUIDImage() string
 	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
 	GetMetricsExporterImage() string
 	// GetArangoImage returns the image name containing the default arango image

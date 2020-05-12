@@ -58,7 +58,7 @@ const (
 	testPriorityClassName         = "testPriority"
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
 	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
-	testImageAlpine               = "alpine:3.7"
+	testImageOperatorUUIDInit     = "image/test-1234:3.7"
 
 	testYes = "yes"
 )
@@ -469,8 +469,9 @@ func createTestLifecycleContainer(resources core.ResourceRequirements) core.Cont
 }
 
 func createTestAlpineContainer(name string, requireUUID bool) core.Container {
+	binaryPath, _ := os.Executable()
 	var securityContext api.ServerGroupSpecSecurityContext
-	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", testImageAlpine, requireUUID, securityContext.NewSecurityContext())
+	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperatorUUIDInit, requireUUID, securityContext.NewSecurityContext())
 }
 
 func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group api.ServerGroup,
