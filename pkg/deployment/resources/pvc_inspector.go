@@ -65,17 +65,6 @@ func (r *Resources) InspectPVCs(ctx context.Context) (util.Interval, error) {
 		memberStatus, group, found := status.Members.MemberStatusByPVCName(p.GetName())
 		if !found {
 			log.Debug().Str("pvc", p.GetName()).Msg("no memberstatus found for PVC")
-			if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(&p) && len(p.GetFinalizers()) > 0 {
-				// Strange, pvc belongs to us, but we have no member for it.
-				// Remove all finalizers, so it can be removed.
-				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
-				kubecli := r.context.GetKubeCli()
-				ignoreNotFound := false
-				if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
-					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
-					return 0, maskAny(err)
-				}
-			}
 			continue
 		}
 

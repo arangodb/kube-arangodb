@@ -25,11 +25,11 @@ package reconcile
 import (
 	"context"
 
-	driver "github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PlanBuilderContext contains context methods provided to plan builders.
@@ -45,9 +45,6 @@ type PlanBuilderContext interface {
 	CreateEvent(evt *k8sutil.Event)
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
 	GetPvc(pvcName string) (*core.PersistentVolumeClaim, error)
-	// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
-	GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-		agents api.MemberStatusList, id string, version driver.Version) []string
 	// GetShardSyncStatus returns true if all shards are in sync
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
@@ -60,6 +57,10 @@ type PlanBuilderContext interface {
 	RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// GetServerClient returns a cached client for a specific server.
+	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	// SecretsInterface return secret interface
+	SecretsInterface() k8sutil.SecretInterface
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

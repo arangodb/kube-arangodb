@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
 	driver "github.com/arangodb/go-driver"
@@ -52,7 +54,7 @@ type upgradeDecision struct {
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan() (error, bool) {
+func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
 	// Get all current pods
 	pods, err := d.context.GetOwnedPods()
 	if err != nil {
@@ -64,8 +66,8 @@ func (d *Reconciler) CreatePlan() (error, bool) {
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status, lastVersion := d.context.GetStatus()
-	ctx := newPlanBuilderContext(d.context)
-	newPlan, changed := createPlan(d.log, apiObject, status.Plan, spec, status, pods, ctx)
+	builderCtx := newPlanBuilderContext(d.context)
+	newPlan, changed := createPlan(ctx, d.log, apiObject, status.Plan, spec, status, pods, builderCtx)
 
 	// If not change, we're done
 	if !changed {
@@ -84,13 +86,13 @@ func (d *Reconciler) CreatePlan() (error, bool) {
 	return nil, true
 }
 
-func fetchAgency(log zerolog.Logger,
+func fetchAgency(ctx context.Context, log zerolog.Logger,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
 	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
 		return nil, nil
 	} else if status.Members.Agents.MembersReady() > 0 {
-		agencyCtx, agencyCancel := goContext.WithTimeout(goContext.Background(), time.Minute)
+		agencyCtx, agencyCancel := goContext.WithTimeout(ctx, time.Minute)
 		defer agencyCancel()
 
 		ret := &agency.ArangoPlanDatabases{}
@@ -108,10 +110,10 @@ func fetchAgency(log zerolog.Logger,
 // createPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
 // Otherwise the new plan is returned with a boolean true.
-func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
+func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, pods []v1.Pod,
-	context PlanBuilderContext) (api.Plan, bool) {
+	builderCtx PlanBuilderContext) (api.Plan, bool) {
 
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
@@ -119,7 +121,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 	}
 
 	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(log, spec, status, context)
+	agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, builderCtx)
 
 	// Check for various scenario's
 	var plan api.Plan
@@ -202,7 +204,7 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate one or more members
 	if plan.IsEmpty() {
-		newPlan, idle := createRotateOrUpgradePlan(log, apiObject, spec, status, context, pods)
+		newPlan, idle := createRotateOrUpgradePlan(log, apiObject, spec, status, builderCtx, pods)
 		if idle {
 			plan = append(plan,
 				api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
@@ -213,17 +215,21 @@ func createPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 
 	// Check for the need to rotate TLS certificate of a members
 	if plan.IsEmpty() {
-		plan = createRotateTLSServerCertificatePlan(log, spec, status, context.GetTLSKeyfile)
+		plan = createRotateTLSServerCertificatePlan(log, spec, status, builderCtx.GetTLSKeyfile)
 	}
 
 	// Check for changes storage classes or requirements
 	if plan.IsEmpty() {
-		plan = createRotateServerStoragePlan(log, apiObject, spec, status, context.GetPvc, context.CreateEvent)
+		plan = createRotateServerStoragePlan(log, apiObject, spec, status, builderCtx.GetPvc, builderCtx.CreateEvent)
 	}
 
 	// Check for the need to rotate TLS CA certificate and all members
 	if plan.IsEmpty() {
-		plan = createRotateTLSCAPlan(log, apiObject, spec, status, context.GetTLSCA, context.CreateEvent)
+		plan = createRotateTLSCAPlan(log, apiObject, spec, status, builderCtx.GetTLSCA, builderCtx.CreateEvent)
+	}
+
+	if plan.IsEmpty() {
+		plan = createRotateTLSServerSNIPlan(ctx, log, spec, status, builderCtx)
 	}
 
 	// Return plan

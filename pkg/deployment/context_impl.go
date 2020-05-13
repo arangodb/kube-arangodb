@@ -71,12 +71,12 @@ func (d *Deployment) GetLifecycleImage() string {
 	return d.config.LifecycleImage
 }
 
-// GetAlpineImage returns the image name containing the alpine environment
-func (d *Deployment) GetAlpineImage() string {
-	return d.config.AlpineImage
+// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
+func (d *Deployment) GetOperatorUUIDImage() string {
+	return d.config.OperatorUUIDInitImage
 }
 
-// GetNamespace returns the kubernetes namespace that contains
+// GetNamespSecretsInterfaceace returns the kubernetes namespace that contains
 // this deployment.
 func (d *Deployment) GetNamespace() string {
 	return d.apiObject.GetNamespace()
@@ -438,12 +438,6 @@ func (d *Deployment) DeleteSecret(secretName string) error {
 	return nil
 }
 
-// GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
-func (d *Deployment) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string, version driver.Version) []string {
-	return d.resources.GetExpectedPodArguments(apiObject, deplSpec, group, agents, id, version)
-}
-
 // GetShardSyncStatus returns true if all shards are in sync
 func (d *Deployment) GetShardSyncStatus() bool {
 	return d.resources.GetShardSyncStatus()
@@ -505,4 +499,8 @@ func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool,
 	}
 
 	return d.updateStatus(status, version, force...)
+}
+
+func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
+	return d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
 }

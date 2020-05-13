@@ -28,6 +28,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -56,7 +58,7 @@ const (
 	testPriorityClassName         = "testPriority"
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
 	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
-	testImageAlpine               = "alpine:3.7"
+	testImageOperatorUUIDInit     = "image/test-1234:3.7"
 
 	testYes = "yes"
 )
@@ -65,6 +67,7 @@ type testCaseStruct struct {
 	Name             string
 	ArangoDeployment *api.ArangoDeployment
 	Helper           func(*testing.T, *Deployment, *testCaseStruct)
+	Resources        func(*testing.T, *Deployment)
 	config           Config
 	CompareChecksum  *bool
 	ExpectedError    error
@@ -391,15 +394,19 @@ func createTestPorts() []core.ContainerPort {
 	}
 }
 
-func createTestImages(enterprise bool) api.ImageInfoList {
+func createTestImagesWithVersion(enterprise bool, version driver.Version) api.ImageInfoList {
 	return api.ImageInfoList{
 		{
 			Image:           testImage,
-			ArangoDBVersion: testVersion,
+			ArangoDBVersion: version,
 			ImageID:         testImage,
 			Enterprise:      enterprise,
 		},
 	}
+}
+
+func createTestImages(enterprise bool) api.ImageInfoList {
+	return createTestImagesWithVersion(enterprise, testVersion)
 }
 
 func createTestExporterPorts(port uint16) []core.ContainerPort {
@@ -462,8 +469,9 @@ func createTestLifecycleContainer(resources core.ResourceRequirements) core.Cont
 }
 
 func createTestAlpineContainer(name string, requireUUID bool) core.Container {
+	binaryPath, _ := os.Executable()
 	var securityContext api.ServerGroupSpecSecurityContext
-	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", testImageAlpine, requireUUID, securityContext.NewSecurityContext())
+	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperatorUUIDInit, requireUUID, securityContext.NewSecurityContext())
 }
 
 func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group api.ServerGroup,

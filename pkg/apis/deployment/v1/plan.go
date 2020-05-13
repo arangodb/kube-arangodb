@@ -61,6 +61,8 @@ const (
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
+	// ActionTypeUpdateTLSSNI update SNI inplace.
+	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
 	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators

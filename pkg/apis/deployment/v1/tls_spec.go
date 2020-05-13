@@ -37,9 +37,10 @@ const (
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName *string   `json:"caSecretName,omitempty"`
-	AltNames     []string  `json:"altNames,omitempty"`
-	TTL          *Duration `json:"ttl,omitempty"`
+	CASecretName *string     `json:"caSecretName,omitempty"`
+	AltNames     []string    `json:"altNames,omitempty"`
+	TTL          *Duration   `json:"ttl,omitempty"`
+	SNI          *TLSSNISpec `json:",inline"`
 }
 
 const (
@@ -55,6 +56,14 @@ func (s TLSSpec) GetCASecretName() string {
 // GetAltNames returns the value of altNames.
 func (s TLSSpec) GetAltNames() []string {
 	return s.AltNames
+}
+
+func (s TLSSpec) GetTLSSNISpec() TLSSNISpec {
+	if s.SNI == nil {
+		return TLSSNISpec{}
+	}
+
+	return *s.SNI
 }
 
 // GetTTL returns the value of ttl.
@@ -125,4 +134,6 @@ func (s *TLSSpec) SetDefaultsFrom(source TLSSpec) {
 	if s.TTL == nil {
 		s.TTL = NewDurationOrNil(source.TTL)
 	}
+
+	s.SNI.SetDefaultsFrom(source.SNI)
 }

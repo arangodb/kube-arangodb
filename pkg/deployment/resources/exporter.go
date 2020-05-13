@@ -28,8 +28,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -65,25 +63,25 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sut
 
 func createExporterArgs(spec api.DeploymentSpec) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := make([]pod.OptionPair, 0, 64)
+	options := make([]k8sutil.OptionPair, 0, 64)
 	scheme := "http"
 	if spec.IsSecure() {
 		scheme = "https"
 	}
 	options = append(options,
-		pod.OptionPair{"--arangodb.jwt-file", tokenpath},
-		pod.OptionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
+		k8sutil.OptionPair{"--arangodb.jwt-file", tokenpath},
+		k8sutil.OptionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if spec.IsSecure() {
 		options = append(options,
-			pod.OptionPair{"--ssl.keyfile", keyPath},
+			k8sutil.OptionPair{"--ssl.keyfile", keyPath},
 		)
 	}
 
 	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
 		options = append(options,
-			pod.OptionPair{"--server.address", fmt.Sprintf(":%d", port)},
+			k8sutil.OptionPair{"--server.address", fmt.Sprintf(":%d", port)},
 		)
 	}
 

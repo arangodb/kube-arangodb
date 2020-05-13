@@ -22,25 +22,37 @@
 
 package pod
 
-import deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
+)
 
-func AutoUpgrade() ArgumentsBuilder {
-	return autoUpgradeArgs{}
+func AutoUpgrade() Builder {
+	return autoUpgrade{}
 }
 
-type autoUpgradeArgs struct{}
+type autoUpgrade struct{}
 
-func (u autoUpgradeArgs) Create(i Input) []OptionPair {
+func (u autoUpgrade) Verify(i Input, s k8sutil.SecretInterface) error {
+	return nil
+}
+
+func (u autoUpgrade) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+	return nil, nil
+}
+
+func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
 	if !i.AutoUpgrade {
-		return NewOptionPair()
+		return nil
 	}
 
 	if i.Version.CompareTo("3.6.0") >= 0 {
 		switch i.Group {
 		case deploymentApi.ServerGroupCoordinators:
-			return NewOptionPair(OptionPair{"--cluster.upgrade", "online"})
+			return k8sutil.NewOptionPair(k8sutil.OptionPair{"--cluster.upgrade", "online"})
 		}
 	}
 
-	return NewOptionPair(OptionPair{"--database.auto-upgrade", "true"})
+	return k8sutil.NewOptionPair(k8sutil.OptionPair{"--database.auto-upgrade", "true"})
 }

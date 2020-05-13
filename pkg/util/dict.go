@@ -20,21 +20,27 @@
 // Author Adam Janikowski
 //
 
-package pod
+package util
 
 import (
-	"github.com/arangodb/go-driver"
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"reflect"
+	"sort"
 )
 
-type Input struct {
-	Deployment  deploymentApi.DeploymentSpec
-	GroupSpec   deploymentApi.ServerGroupSpec
-	Group       deploymentApi.ServerGroup
-	Version     driver.Version
-	AutoUpgrade bool
-}
+func SortKeys(m interface{}) []string {
+	if m == nil {
+		return []string{}
+	}
 
-type ArgumentsBuilder interface {
-	Create(i Input) []OptionPair
+	q := reflect.ValueOf(m).MapKeys()
+
+	r := make([]string, len(q))
+
+	for id, v := range q {
+		r[id] = v.String()
+	}
+
+	sort.Strings(r)
+
+	return r
 }

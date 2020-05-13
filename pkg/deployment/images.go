@@ -372,3 +372,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }
+
+func (i *ImageUpdatePod) Validate(secrets k8sutil.SecretInterface) error {
+	return nil
+}
