@@ -34,6 +34,7 @@ const (
 	rotateMemberTimeout          = time.Minute * 15
 	pvcResizeTimeout             = time.Minute * 15
 	pvcResizedTimeout            = time.Minute * 15
+	backupRestoreTimeout         = time.Minute * 15
 	shutdownMemberTimeout        = time.Minute * 30
 	upgradeMemberTimeout         = time.Hour * 6
 	waitForMemberUpTimeout       = time.Minute * 15

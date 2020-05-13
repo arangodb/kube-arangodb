@@ -232,6 +232,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = createRotateTLSServerSNIPlan(ctx, log, spec, status, builderCtx)
 	}
 
+	if plan.IsEmpty() {
+		plan = createRestorePlan(ctx, log, spec, status, builderCtx)
+	}
+
 	// Return plan
 	return plan, true
 }

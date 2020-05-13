@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -61,6 +63,8 @@ type PlanBuilderContext interface {
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

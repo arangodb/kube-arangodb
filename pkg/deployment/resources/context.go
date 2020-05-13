@@ -25,6 +25,8 @@ package resources
 import (
 	"context"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -94,4 +96,6 @@ type Context interface {
 	GetAgency(ctx context.Context) (agency.Agency, error)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }
