@@ -4,7 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-    name: {{ template "kube-arangodb.rbac" . }}-storage
+    name: {{ template "kube-arangodb.rbac" . }}-backup
     namespace: {{ .Release.Namespace }}
     labels:
         app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
