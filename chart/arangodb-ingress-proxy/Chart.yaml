@@ -1,0 +1,4 @@
+description: ArangoDB Ingress Proxy
+name: arangodb-ingress-proxy
+tillerVersion: '>2.7'
+version: 1.0.0

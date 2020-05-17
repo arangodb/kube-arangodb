@@ -44,7 +44,7 @@ const (
 
 // TLSSNISpec holds TLS SNI additional certificates
 type TLSSNISpec struct {
-	Mapping map[string][]string `json:"sniMapping,omitempty"`
+	Mapping map[string][]string `json:"mapping,omitempty"`
 	Mode    *TLSSNIRotateMode   `json:"mode,omitempty"`
 }
 

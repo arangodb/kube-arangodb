@@ -74,7 +74,7 @@ func (s sni) Verify(i Input, secrets k8sutil.SecretInterface) error {
 		return nil
 	}
 
-	for _, secret := range util.SortKeys(i.Deployment.TLS.GetTLSSNISpec().Mapping) {
+	for _, secret := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
 		kubeSecret, err := secrets.Get(secret, meta.GetOptions{})
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ func (s sni) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 		return nil, nil
 	}
 
-	sni := i.Deployment.TLS.GetTLSSNISpec()
+	sni := i.Deployment.TLS.GetSNI()
 	volumes := make([]core.Volume, 0, len(sni.Mapping))
 	volumeMounts := make([]core.VolumeMount, 0, len(sni.Mapping))
 
@@ -131,7 +131,7 @@ func (s sni) Args(i Input) k8sutil.OptionPairs {
 
 	opts := k8sutil.CreateOptionPairs()
 
-	for _, volume := range util.SortKeys(i.Deployment.TLS.GetTLSSNISpec().Mapping) {
+	for _, volume := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
 		servers, ok := i.Deployment.TLS.SNI.Mapping[volume]
 		if !ok {
 			continue
