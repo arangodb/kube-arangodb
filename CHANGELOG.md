@@ -4,7 +4,7 @@
 - Prevent deletion of not known PVC's
 - Move Restore as Plan
 
-## [1.0.1](https://github.com/arangodb/kube-arangodb/tree/1.0.1) (2020-04-16)
+## [1.0.2](https://github.com/arangodb/kube-arangodb/tree/1.0.2) (2020-04-16)
 - Added additional checks in UpToDate condition
 - Added extended Rotation check for Cluster mode
 - Removed old rotation logic (rotation of ArangoDeployment may be enforced after Operator upgrade)
