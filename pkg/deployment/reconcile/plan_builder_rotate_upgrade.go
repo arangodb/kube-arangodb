@@ -27,6 +27,7 @@ import (
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -105,8 +106,14 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 			// Use the new plan
 			return newPlan, false
 		} else {
-			log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
-			return nil, true
+			if util.BoolOrDefault(spec.AllowUnsafeUpgrade, false) {
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				// Use the new plan
+				return newPlan, false
+			} else {
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				return nil, true
+			}
 		}
 	}
 	return nil, false
