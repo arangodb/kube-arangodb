@@ -317,6 +317,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.AllowUnsafeUpgrade != nil {
+		in, out := &in.AllowUnsafeUpgrade, &out.AllowUnsafeUpgrade
+		*out = new(bool)
+		**out = **in
+	}
 	in.ExternalAccess.DeepCopyInto(&out.ExternalAccess)
 	in.RocksDB.DeepCopyInto(&out.RocksDB)
 	in.Authentication.DeepCopyInto(&out.Authentication)
