@@ -1,0 +1,5 @@
+---
+
+replicas: 2
+imagePullPolicy: Always
+image: nginx:1.16.1-alpine
