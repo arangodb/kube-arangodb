@@ -125,6 +125,8 @@ type ActionContext interface {
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// GetBackup receives information about a backup resource
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	// GetName receives information about a deployment name
+	GetName() string
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -139,6 +141,10 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) GetName() string {
+	return ac.context.GetName()
 }
 
 func (ac *actionContext) GetStatus() api.DeploymentStatus {

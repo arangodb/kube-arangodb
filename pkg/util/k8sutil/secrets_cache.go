@@ -23,10 +23,12 @@
 package k8sutil
 
 import (
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -35,6 +37,10 @@ import (
 type secretsCache struct {
 	cli   corev1.SecretInterface
 	cache []v1.Secret
+}
+
+func (sc *secretsCache) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (*v1.Secret, error) {
+	return nil, errors.Errorf("Not implemented")
 }
 
 // NewSecretCache creates a cached version of the given SecretInterface.
@@ -56,6 +62,10 @@ func (sc *secretsCache) Create(s *v1.Secret) (*v1.Secret, error) {
 		return nil, maskAny(err)
 	}
 	return result, nil
+}
+
+func (sc *secretsCache) Update(s *v1.Secret) (*v1.Secret, error) {
+	return sc.Update(s)
 }
 
 func (sc *secretsCache) Delete(name string, options *metav1.DeleteOptions) error {

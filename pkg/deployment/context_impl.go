@@ -504,3 +504,7 @@ func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool,
 func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
 	return d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
 }
+
+func (d *Deployment) GetName() string {
+	return d.apiObject.GetName()
+}

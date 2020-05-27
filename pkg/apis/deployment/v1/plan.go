@@ -79,6 +79,12 @@ const (
 	ActionTypeBackupRestore ActionType = "BackupRestore"
 	// ActionTypeBackupRestoreClean restore plan
 	ActionTypeBackupRestoreClean ActionType = "BackupRestoreClean"
+	// ActionTypeEncryptionKeyAdd add new encryption key to list
+	ActionTypeEncryptionKeyAdd ActionType = "EncryptionKeyAdd"
+	// ActionTypeEncryptionKeyAdd removes encryption key to list
+	ActionTypeEncryptionKeyRemove ActionType = "EncryptionKeyRemove"
+	// ActionTypeEncryptionKeyRefresh refresh encryption keys
+	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
 )
 
 const (

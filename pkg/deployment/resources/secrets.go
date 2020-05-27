@@ -27,12 +27,15 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/pkg/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	jg "github.com/dgrijalva/jwt-go"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -73,6 +76,11 @@ func (r *Resources) EnsureSecrets() error {
 			return maskAny(err)
 		}
 	}
+	if spec.RocksDB.IsEncrypted() {
+		if err := r.ensureEncryptionKeyfolderSecret(secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetKeyfolderSecretName(deploymentName)); err != nil {
+			return maskAny(err)
+		}
+	}
 	if spec.Sync.IsEnabled() {
 		counterMetric.Inc()
 		if err := r.ensureTokenSecret(secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
@@ -98,7 +106,7 @@ func (r *Resources) EnsureSecrets() error {
 // of the deployment. If not, it will add such a secret with a random
 // token.
 func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {
-	if _, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	if _, err := secrets.Get(secretName, meta.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		// Create token
 		tokenData := make([]byte, 32)
@@ -117,6 +125,28 @@ func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretNam
 	} else if err != nil {
 		// Failed to get secret for other reasons
 		return maskAny(err)
+	}
+	return nil
+}
+
+func (r *Resources) ensureEncryptionKeyfolderSecret(secrets k8sutil.SecretInterface, keyfileSecretName, secretName string) error {
+	keyfile, err := secrets.Get(keyfileSecretName, meta.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "Unable to find original secret")
+	}
+
+	if len(keyfile.Data) == 0 {
+		return errors.Errorf("Missing key in secret")
+	}
+
+	d, ok := keyfile.Data[constants.SecretEncryptionKey]
+	if !ok {
+		return errors.Errorf("Missing key in secret")
+	}
+
+	owner := r.context.GetAPIObject().AsOwner()
+	if err = k8sutil.AppendKeyfileToKeyfolder(secrets, &owner, secretName, d); err != nil {
+		return errors.Wrapf(err, "Unable to create keyfolder secret")
 	}
 	return nil
 }
@@ -155,7 +185,7 @@ func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, t
 }
 
 func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) (bool, bool, error) {
-	if secret, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	if secret, err := secrets.Get(tokenSecretName, meta.GetOptions{}); k8sutil.IsNotFound(err) {
 		return true, false, nil
 	} else if err == nil {
 		// Check if claims are fine
@@ -192,7 +222,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.Secr
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
 func (r *Resources) ensureTLSCACertificateSecret(secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
-	if _, err := secrets.Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	if _, err := secrets.Get(spec.GetCASecretName(), meta.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
@@ -214,7 +244,7 @@ func (r *Resources) ensureTLSCACertificateSecret(secrets k8sutil.SecretInterface
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
 func (r *Resources) ensureClientAuthCACertificateSecret(secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
-	if _, err := secrets.Get(spec.GetClientCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+	if _, err := secrets.Get(spec.GetClientCASecretName(), meta.GetOptions{}); k8sutil.IsNotFound(err) {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()

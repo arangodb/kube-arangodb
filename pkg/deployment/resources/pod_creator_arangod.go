@@ -322,10 +322,17 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 		volumeMounts = append(volumeMounts, k8sutil.TlsKeyfileVolumeMount())
 	}
 
-	if m.rocksdbEncryptionSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, m.rocksdbEncryptionSecretName)
-		volumes = append(volumes, vol)
-		volumeMounts = append(volumeMounts, k8sutil.RocksdbEncryptionVolumeMount())
+	// Encryption
+	{
+		encryptionVolumes, encryptionVolumeMounts := pod.Encryption().Volumes(m.AsInput())
+
+		if len(encryptionVolumes) > 0 {
+			volumes = append(volumes, encryptionVolumes...)
+		}
+
+		if len(encryptionVolumeMounts) > 0 {
+			volumeMounts = append(volumeMounts, encryptionVolumeMounts...)
+		}
 	}
 
 	if m.spec.Metrics.IsEnabled() {

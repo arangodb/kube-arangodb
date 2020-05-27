@@ -107,10 +107,7 @@ func createArangodArgs(input pod.Input) []string {
 	}
 
 	// RocksDB
-	if input.Deployment.RocksDB.IsEncrypted() {
-		keyPath := filepath.Join(k8sutil.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
-		options.Add("--rocksdb.encryption-keyfile", keyPath)
-	}
+	options.Merge(pod.Encryption().Args(input))
 
 	options.Add("--database.directory", k8sutil.ArangodVolumeMountDir)
 	options.Add("--log.output", "+")

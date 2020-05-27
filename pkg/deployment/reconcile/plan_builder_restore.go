@@ -25,6 +25,10 @@ package reconcile
 import (
 	"context"
 
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
@@ -43,6 +47,10 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 			return nil
 		}
 
+		if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
+			return p
+		}
+
 		if backup.Status.Backup == nil {
 			log.Warn().Msg("Backup not yet ready")
 			return nil
@@ -50,6 +58,47 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 
 		return api.Plan{
 			api.NewAction(api.ActionTypeBackupRestore, api.ServerGroupUnknown, ""),
+		}
+	}
+
+	return nil
+}
+
+func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) api.Plan {
+	if backup.Spec.EncryptionSecret != nil {
+		if !spec.RocksDB.IsEncrypted() {
+			return nil
+		}
+
+		if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+			return nil
+		}
+
+		secret := *backup.Spec.EncryptionSecret
+
+		// Additional logic to do restore with encryption key
+		keyfolder, err := builderCtx.SecretsInterface().Get(pod.GetKeyfolderSecretName(builderCtx.GetName()), meta.GetOptions{})
+		if err != nil {
+			log.Err(err).Msgf("Unable to fetch encryption folder")
+			return nil
+		}
+
+		if len(keyfolder.Data) <= 1 {
+			return nil
+		}
+		name, _, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
+		if err != nil {
+			log.Err(err).Msgf("Unable to fetch encryption key")
+			return nil
+		}
+
+		if _, ok := keyfolder.Data[name]; !ok {
+			log.Err(err).Msgf("Key from encryption is not in keyfolder - first install this secret")
+			return nil
+		}
+
+		return api.Plan{
+			api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
 		}
 	}
 
