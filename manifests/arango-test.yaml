@@ -17,7 +17,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
     name: kube-arangodb-test-arangodb-test
-    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb-test
         helm.sh/chart: kube-arangodb-test-1.0.3

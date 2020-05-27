@@ -17,7 +17,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
     name: arango-deployment-operator-rbac-deployment
-    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.3
@@ -40,7 +39,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
     name: arango-deployment-operator-rbac-deployment
-    namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.0.3
@@ -189,7 +187,7 @@ spec:
     replicas: 2
     strategy:
         type: Recreate
-        
+
     selector:
         matchLabels:
             app.kubernetes.io/name: kube-arangodb
