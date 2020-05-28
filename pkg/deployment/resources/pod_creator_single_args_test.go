@@ -25,6 +25,8 @@ package resources
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -42,7 +44,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -69,7 +81,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", true)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: true,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.auto-upgrade=true",
@@ -100,7 +122,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -126,7 +158,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			},
 		}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -154,7 +196,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Authentication.JWTSecretName = util.NewString("None")
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -181,7 +233,17 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 		}
 		apiObject.Spec.Single.Args = []string{"--foo1", "--foo2"}
 		apiObject.Spec.SetDefaults("test")
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, nil, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -219,7 +281,18 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupSingle, agents, "id1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupSingle,
+			GroupSpec:   apiObject.Spec.Single,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "id1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",

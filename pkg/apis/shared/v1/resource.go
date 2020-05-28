@@ -110,3 +110,11 @@ func IsValidName(name string) error {
 
 	return nil
 }
+
+func IsValidDomain(name string) error {
+	if res := validation.IsDNS1123Subdomain(name); len(res) > 0 {
+		return errors.Errorf("validation of domain failed: %s", strings.Join(res, ", "))
+	}
+
+	return nil
+}

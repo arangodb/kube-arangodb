@@ -25,6 +25,8 @@ package resources
 import (
 	"context"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -61,8 +63,8 @@ type Context interface {
 	GetKubeCli() kubernetes.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
-	// GetAlpineImage returns the image name containing the alpine environment
-	GetAlpineImage() string
+	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
+	GetOperatorUUIDImage() string
 	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
 	GetMetricsExporterImage() string
 	// GetArangoImage returns the image name containing the default arango image
@@ -94,4 +96,6 @@ type Context interface {
 	GetAgency(ctx context.Context) (agency.Agency, error)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }

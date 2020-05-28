@@ -25,6 +25,7 @@ package resources
 import (
 	"fmt"
 	"math"
+	"os"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
@@ -52,10 +53,13 @@ type MemberArangoDPod struct {
 	clusterJWTSecretName        string
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
+	deploymentStatus            api.DeploymentStatus
 	group                       api.ServerGroup
 	context                     Context
 	resources                   *Resources
 	imageInfo                   api.ImageInfo
+	autoUpgrade                 bool
+	id                          string
 }
 
 type ArangoDContainer struct {
@@ -183,10 +187,33 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (m *MemberArangoDPod) AsInput() pod.Input {
+	return pod.Input{
+		ApiObject:   m.context.GetAPIObject(),
+		Deployment:  m.spec,
+		Status:      m.deploymentStatus,
+		Group:       m.group,
+		GroupSpec:   m.groupSpec,
+		Version:     m.imageInfo.ArangoDBVersion,
+		Enterprise:  m.imageInfo.Enterprise,
+		AutoUpgrade: m.autoUpgrade,
+		ID:          m.id,
+	}
+}
+
 func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+}
+
+func (m *MemberArangoDPod) Validate(secrets k8sutil.SecretInterface) error {
+	i := m.AsInput()
+	if err := pod.SNI().Verify(i, secrets); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *MemberArangoDPod) GetName() string {
@@ -327,6 +354,19 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 		volumes = append(volumes, k8sutil.LifecycleVolume())
 	}
 
+	// SNI
+	{
+		sniVolumes, sniVolumeMounts := pod.SNI().Volumes(m.AsInput())
+
+		if len(sniVolumes) > 0 {
+			volumes = append(volumes, sniVolumes...)
+		}
+
+		if len(sniVolumeMounts) > 0 {
+			volumeMounts = append(volumeMounts, sniVolumeMounts...)
+		}
+	}
+
 	if len(m.groupSpec.Volumes) > 0 {
 		volumes = append(volumes, m.groupSpec.Volumes.Volumes()...)
 	}
@@ -345,6 +385,11 @@ func (m *MemberArangoDPod) IsDeploymentMode() bool {
 func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 	var initContainers []core.Container
 
+	executable, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
 		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
@@ -355,12 +400,12 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 		initContainers = append(initContainers, c)
 	}
 
-	alpineImage := m.resources.context.GetAlpineImage()
-	if alpineImage != "" {
+	operatorUUIDImage := m.resources.context.GetOperatorUUIDImage()
+	if operatorUUIDImage != "" {
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, alpineImage, requireUUID,
+		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
 	}

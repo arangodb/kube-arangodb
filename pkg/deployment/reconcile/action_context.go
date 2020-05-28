@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -96,6 +98,9 @@ type ActionContext interface {
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
 	GetImageInfo(imageName string) (api.ImageInfo, bool)
+	// GetImageInfo returns the image info for an current image.
+	// Returns: (info, infoFound)
+	GetCurrentImageInfo() (api.ImageInfo, bool)
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
 	SetCurrentImage(imageInfo api.ImageInfo) error
@@ -107,12 +112,19 @@ type ActionContext interface {
 	InvalidateSyncStatus()
 	// GetSpec returns a copy of the spec
 	GetSpec() api.DeploymentSpec
+	// GetStatus returns a copy of the status
+	GetStatus() api.DeploymentStatus
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster() error
 	// EnableScalingCluster enables scaling DBservers and coordinators
 	EnableScalingCluster() error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error
+	SecretsInterface() k8sutil.SecretInterface
+	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -127,6 +139,26 @@ func newActionContext(log zerolog.Logger, context Context) ActionContext {
 type actionContext struct {
 	log     zerolog.Logger
 	context Context
+}
+
+func (ac *actionContext) GetStatus() api.DeploymentStatus {
+	a, _ := ac.context.GetStatus()
+
+	s := a.DeepCopy()
+
+	return *s
+}
+
+func (ac *actionContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+	return ac.context.GetBackup(backup)
+}
+
+func (ac *actionContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+	return ac.context.WithStatusUpdate(action, force...)
+}
+
+func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {
+	return ac.context.SecretsInterface()
 }
 
 func (ac *actionContext) GetShardSyncStatus() bool {
@@ -340,6 +372,18 @@ func (ac *actionContext) DeleteTLSCASecret() error {
 func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
 	status, _ := ac.context.GetStatus()
 	return status.Images.GetByImage(imageName)
+}
+
+// GetImageInfo returns the image info for an current image.
+// Returns: (info, infoFound)
+func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
+	status, _ := ac.context.GetStatus()
+
+	if status.CurrentImage == nil {
+		return api.ImageInfo{}, false
+	}
+
+	return *status.CurrentImage, true
 }
 
 // SetCurrentImage changes the CurrentImage field in the deployment

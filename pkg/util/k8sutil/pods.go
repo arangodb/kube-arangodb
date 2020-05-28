@@ -26,7 +26,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -52,6 +51,7 @@ const (
 	ArangodVolumeMountDir           = "/data"
 	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
 	TLSKeyfileVolumeMountDir        = "/secrets/tls"
+	TLSSNIKeyfileVolumeMountDir     = "/secrets/sni"
 	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
@@ -75,6 +75,7 @@ type PodCreator interface {
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool
+	Validate(secrets SecretInterface) error
 }
 
 type ContainerCreator interface {
@@ -268,31 +269,28 @@ func RocksdbEncryptionVolumeMount() core.VolumeMount {
 }
 
 // ArangodInitContainer creates a container configured to initalize a UUID file.
-func ArangodInitContainer(name, id, engine, alpineImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
+func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
-	var command string
+	var command []string = []string{
+		executable,
+		"uuid",
+		"--uuid-path",
+		uuidFile,
+		"--engine-path",
+		engineFile,
+		"--uuid",
+		id,
+		"--engine",
+		engine,
+	}
 	if requireUUID {
-		command = strings.Join([]string{
-			// Files must exist
-			fmt.Sprintf("test -f %s", uuidFile),
-			fmt.Sprintf("test -f %s", engineFile),
-			// Content must match
-			fmt.Sprintf("grep -q %s %s", id, uuidFile),
-			fmt.Sprintf("grep -q %s %s", engine, engineFile),
-		}, " && ")
-
-	} else {
-		command = fmt.Sprintf("test -f %s || echo '%s' > %s", uuidFile, id, uuidFile)
+		command = append(command, "--require")
 	}
 	c := core.Container{
-		Name:  name,
-		Image: alpineImage,
-		Command: []string{
-			"/bin/sh",
-			"-c",
-			command,
-		},
+		Name:    name,
+		Image:   operatorImage,
+		Command: command,
 		Resources: core.ResourceRequirements{
 			Requests: core.ResourceList{
 				core.ResourceCPU:    resource.MustParse("100m"),

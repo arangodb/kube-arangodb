@@ -1,0 +1,3 @@
+Your LB is ready!
+
+Get LoadBalancer IP using `kubectl --namespace "{{ .Release.Namespace }}" get svc "{{ template "arangodb-ingress-proxy.name" . }}" -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`

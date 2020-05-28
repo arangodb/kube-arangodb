@@ -276,7 +276,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				AlpineImage: testImageAlpine,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -502,7 +502,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				AlpineImage: testImageAlpine,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -1155,8 +1155,8 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
-				LifecycleImage: testImageLifecycle,
-				AlpineImage:    testImageAlpine,
+				LifecycleImage:        testImageLifecycle,
+				OperatorUUIDInitImage: testImageOperatorUUIDInit,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -1240,8 +1240,6 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(true,
 					authorization, k8sutil.ArangoPort)
-				testCase.ExpectedPod.Spec.Containers[1].VolumeMounts = append(
-					testCase.ExpectedPod.Spec.Containers[1].VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 			},
 			config: Config{
 				LifecycleImage: testImageLifecycle,
@@ -1287,7 +1285,11 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							},
 							Resources: emptyResources,
 						},
-						testCreateExporterContainer(true, emptyResources),
+						func() core.Container {
+							c := testCreateExporterContainer(true, emptyResources)
+							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+							return c
+						}(),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,

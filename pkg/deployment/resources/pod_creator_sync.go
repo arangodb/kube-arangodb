@@ -292,3 +292,7 @@ func (m *MemberSyncPod) Init(pod *core.Pod) {
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
+
+func (m *MemberSyncPod) Validate(secrets k8sutil.SecretInterface) error {
+	return nil
+}

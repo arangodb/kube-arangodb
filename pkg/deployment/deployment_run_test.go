@@ -38,8 +38,13 @@ import (
 )
 
 func runTestCases(t *testing.T, testCases ...testCaseStruct) {
-	for _, testCase := range testCases {
-		runTestCase(t, testCase)
+	// This esure idempotency in generated outputs
+	for i := 0; i < 25; i++ {
+		t.Run(fmt.Sprintf("Iteration %d", i), func(t *testing.T) {
+			for _, testCase := range testCases {
+				runTestCase(t, testCase)
+			}
+		})
 	}
 }
 
@@ -58,6 +63,10 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		// Create custom resource in the fake kubernetes API
 		_, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(d.apiObject)
 		require.NoError(t, err)
+
+		if testCase.Resources != nil {
+			testCase.Resources(t, d)
+		}
 
 		// Act
 		err = d.resources.EnsurePods()

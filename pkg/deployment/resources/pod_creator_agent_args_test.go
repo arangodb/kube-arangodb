@@ -25,6 +25,8 @@ package resources
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -51,7 +53,18 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupAgents,
+			GroupSpec:   apiObject.Spec.Agents,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -94,7 +107,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", true)
+
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupAgents,
+			GroupSpec:   apiObject.Spec.Agents,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: true,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -141,7 +166,19 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
+
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupAgents,
+			GroupSpec:   apiObject.Spec.Agents,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -184,7 +221,18 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupAgents,
+			GroupSpec:   apiObject.Spec.Agents,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -227,7 +275,18 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a2"},
 			api.MemberStatus{ID: "a3"},
 		}
-		cmdline := createArangodArgs(apiObject, apiObject.Spec, api.ServerGroupAgents, agents, "a1", "", false)
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupAgents,
+			GroupSpec:   apiObject.Spec.Agents,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: false,
+			ID:          "a1",
+		}
+		cmdline := createArangodArgs(input)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",

@@ -1,6 +1,13 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
+- Prevent deletion of not known PVC's
+- Move Restore as Plan
+
+## [1.0.2](https://github.com/arangodb/kube-arangodb/tree/1.0.2) (2020-04-16)
+- Added additional checks in UpToDate condition
 - Added extended Rotation check for Cluster mode
 - Removed old rotation logic (rotation of ArangoDeployment may be enforced after Operator upgrade)
 - Added UpToDate condition in ArangoDeployment Status

@@ -33,6 +33,8 @@ import (
 type ActionType string
 
 const (
+	// ActionTypeIdle causes a plan to be recalculated.
+	ActionTypeIdle ActionType = "Idle"
 	// ActionTypeAddMember causes a member to be added.
 	ActionTypeAddMember ActionType = "AddMember"
 	// ActionTypeRemoveMember causes a member to be removed.
@@ -59,6 +61,8 @@ const (
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
+	// ActionTypeUpdateTLSSNI update SNI inplace.
+	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
 	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators
@@ -71,6 +75,10 @@ const (
 	ActionTypePVCResized ActionType = "PVCResized"
 	// UpToDateUpdateResized define up to date annotation in spec
 	UpToDateUpdate ActionType = "UpToDateUpdate"
+	// ActionTypeBackupRestore restore plan
+	ActionTypeBackupRestore ActionType = "BackupRestore"
+	// ActionTypeBackupRestoreClean restore plan
+	ActionTypeBackupRestoreClean ActionType = "BackupRestoreClean"
 )
 
 const (
@@ -98,7 +106,7 @@ type Action struct {
 	// Image used in can of a SetCurrentImage action.
 	Image string `json:"image,omitempty"`
 	// Params additional parameters used for action
-	Params map[string]interface{} `json:"params,omitempty"`
+	Params map[string]string `json:"params,omitempty"`
 }
 
 // Equal compares two Actions
@@ -115,9 +123,9 @@ func (a Action) Equal(other Action) bool {
 }
 
 // AddParam returns copy of action with set parameter
-func (a Action) AddParam(key string, value interface{}) Action {
+func (a Action) AddParam(key, value string) Action {
 	if a.Params == nil {
-		a.Params = map[string]interface{}{}
+		a.Params = map[string]string{}
 	}
 
 	a.Params[key] = value

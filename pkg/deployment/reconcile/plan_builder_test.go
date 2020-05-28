@@ -29,6 +29,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog"
@@ -53,6 +55,14 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+	panic("implement me")
+}
+
+func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
+	panic("implement me")
 }
 
 func (c *testContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
@@ -226,6 +236,9 @@ func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
 
 // TestCreatePlanSingleScale creates a `single` deployment to test the creating of scaling plan.
 func TestCreatePlanSingleScale(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
@@ -242,7 +255,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -253,7 +266,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -268,13 +281,16 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
 
 // TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
 func TestCreatePlanActiveFailoverScale(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
@@ -294,7 +310,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -307,7 +323,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -332,7 +348,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -343,6 +359,9 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 
 // TestCreatePlanClusterScale creates a `cluster` deployment to test the creating of scaling plan.
 func TestCreatePlanClusterScale(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	c := &testContext{}
 	log := zerolog.Nop()
 	spec := api.DeploymentSpec{
@@ -361,7 +380,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -394,7 +413,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -431,7 +450,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -768,6 +787,9 @@ func TestCreatePlan(t *testing.T) {
 		//nolint:scopelint
 		t.Run(testCase.Name, func(t *testing.T) {
 			// Arrange
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			h := &LastLogRecord{}
 			logger := zerolog.New(ioutil.Discard).Hook(h)
 			r := NewReconciler(logger, testCase.context)
@@ -776,7 +798,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err := r.CreatePlan()
+			err, _ := r.CreatePlan(ctx)
 
 			// Assert
 			if testCase.ExpectedEvent != nil {
