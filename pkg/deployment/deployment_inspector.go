@@ -107,6 +107,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 }
 
 func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval) (nextInterval util.Interval, inspectError error) {
+	l := d.deps.Log.With().Str("depl", d.GetName()).Logger()
 	// Ensure that spec and status checksum are same
 	spec := d.GetSpec()
 	status, _ := d.getStatus()
@@ -114,6 +115,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	nextInterval = lastInterval
 	inspectError = nil
 
+	l.Debug().Msgf("Starting loop")
 	checksum, err := spec.Checksum()
 	if err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Calculation of spec failed")
@@ -127,21 +129,25 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, nil // Retry ASAP
 		}
 	}
+	l.Debug().Msgf("UpToDate inspected")
 
 	// Inspect secret hashes
 	if err := d.resources.ValidateSecretHashes(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
 	}
+	l.Debug().Msgf("Secret Hashes inspected")
 
 	// Check for LicenseKeySecret
 	if err := d.resources.ValidateLicenseKeySecret(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "License Key Secret invalid")
 	}
+	l.Debug().Msgf("License Key inspected")
 
 	// Is the deployment in a good state?
 	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
 		return minInspectionInterval, errors.Errorf("Secrets changed")
 	}
+	l.Debug().Msgf("Good State for Secters inspected")
 
 	// Ensure we have image info
 	if retrySoon, err := d.ensureImages(d.apiObject); err != nil {
@@ -149,6 +155,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else if retrySoon {
 		return minInspectionInterval, nil
 	}
+	l.Debug().Msgf("Images inspected")
 
 	// Inspection of generated resources needed
 	if x, err := d.resources.InspectPods(ctx); err != nil {
@@ -156,27 +163,33 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
+	l.Debug().Msgf("Pods inspected")
+
 	if x, err := d.resources.InspectPVCs(ctx); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "PVC inspection failed")
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
+	l.Debug().Msgf("PVCs inspected")
 
 	// Check members for resilience
 	if err := d.resilience.CheckMemberFailure(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Member failure detection failed")
 	}
+	l.Debug().Msgf("Member Failures inspected")
 
 	// Immediate actions
 	if err := d.reconciler.CheckDeployment(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Reconciler immediate actions failed")
 	}
+	l.Debug().Msgf("Deployment inspected")
 
 	if interval, err := d.ensureResources(nextInterval); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Reconciler resource recreation failed")
 	} else {
 		nextInterval = interval
 	}
+	l.Debug().Msgf("Resources inspected")
 
 	// Create scale/update plan
 	if err, updated := d.reconciler.CreatePlan(ctx); err != nil {
@@ -211,6 +224,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, nil
 		}
 	}
+	l.Debug().Msgf("Plan inspected")
 
 	// Execute current step of scale/update plan
 	retrySoon, err := d.reconciler.ExecutePlan(ctx)
