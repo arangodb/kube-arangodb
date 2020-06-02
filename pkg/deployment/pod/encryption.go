@@ -91,11 +91,11 @@ func GetKeyfolderSecretName(name string) string {
 }
 
 func IsEncryptionEnabled(i Input) bool {
-	return i.Enterprise && i.Deployment.RocksDB.IsEncrypted()
+	return i.Deployment.RocksDB.IsEncrypted()
 }
 
 func MultiFileMode(i Input) bool {
-	return i.Version.CompareTo("3.7.0") >= 1
+	return i.Enterprise && i.Version.CompareTo("3.7.0") >= 0
 }
 
 func Encryption() Builder {

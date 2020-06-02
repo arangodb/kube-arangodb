@@ -54,6 +54,7 @@ func (r *Resources) EnsureSecrets() error {
 	ns := r.context.GetNamespace()
 	secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
 	spec := r.context.GetSpec()
+	status, _ := r.context.GetStatus()
 	deploymentName := r.context.GetAPIObject().GetName()
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
@@ -77,8 +78,10 @@ func (r *Resources) EnsureSecrets() error {
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if err := r.ensureEncryptionKeyfolderSecret(secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetKeyfolderSecretName(deploymentName)); err != nil {
-			return maskAny(err)
+		if i := status.CurrentImage; i != nil && i.Enterprise && i.ArangoDBVersion.CompareTo("3.7.0") >= 0 {
+			if err := r.ensureEncryptionKeyfolderSecret(secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetKeyfolderSecretName(deploymentName)); err != nil {
+				return maskAny(err)
+			}
 		}
 	}
 	if spec.Sync.IsEnabled() {

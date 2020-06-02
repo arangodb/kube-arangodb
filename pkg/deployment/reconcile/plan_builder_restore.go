@@ -47,9 +47,10 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 			return nil
 		}
 
-		if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
-			return p
-		}
+		// Do later
+		//if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
+		//	return p
+		//}
 
 		if backup.Status.Backup == nil {
 			log.Warn().Msg("Backup not yet ready")
