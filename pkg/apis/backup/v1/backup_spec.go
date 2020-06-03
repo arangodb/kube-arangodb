@@ -26,8 +26,6 @@ type ArangoBackupSpec struct {
 	// Deployment
 	Deployment ArangoBackupSpecDeployment `json:"deployment,omitempty"`
 
-	EncryptionSecret *string `json:"encryptionSecret,omitempty"`
-
 	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
 
 	// Download

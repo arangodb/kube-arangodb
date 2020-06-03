@@ -39,9 +39,7 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 	switch mode {
 	case api.DeploymentModeCluster:
 		switch group {
-		case api.ServerGroupDBServers:
-			fallthrough
-		case api.ServerGroupAgents:
+		case api.ServerGroupDBServers, api.ServerGroupAgents:
 			return true
 		default:
 			return false
@@ -52,9 +50,7 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 
 	case api.DeploymentModeActiveFailover:
 		switch group {
-		case api.ServerGroupSingle:
-			fallthrough
-		case api.ServerGroupAgents:
+		case api.ServerGroupSingle, api.ServerGroupAgents:
 			return true
 		default:
 			return false

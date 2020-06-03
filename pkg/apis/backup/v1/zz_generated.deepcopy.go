@@ -247,11 +247,6 @@ func (in *ArangoBackupProgress) DeepCopy() *ArangoBackupProgress {
 func (in *ArangoBackupSpec) DeepCopyInto(out *ArangoBackupSpec) {
 	*out = *in
 	out.Deployment = in.Deployment
-	if in.EncryptionSecret != nil {
-		in, out := &in.EncryptionSecret, &out.EncryptionSecret
-		*out = new(string)
-		**out = **in
-	}
 	if in.Options != nil {
 		in, out := &in.Options, &out.Options
 		*out = new(ArangoBackupSpecOptions)

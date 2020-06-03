@@ -67,6 +67,8 @@ type DeploymentSpec struct {
 
 	RestoreFrom *string `json:"restoreFrom,omitempty"`
 
+	RestoreEncryptionSecret *string `json:"restoreEncryptionSecret,omitempty"`
+
 	// AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 	AllowUnsafeUpgrade *bool `json:"allowUnsafeUpgrade,omitempty"`
 

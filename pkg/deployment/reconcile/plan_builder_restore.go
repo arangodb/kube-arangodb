@@ -47,10 +47,9 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 			return nil
 		}
 
-		// Do later
-		//if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
-		//	return p
-		//}
+		if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
+			return p
+		}
 
 		if backup.Status.Backup == nil {
 			log.Warn().Msg("Backup not yet ready")
@@ -66,7 +65,7 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 }
 
 func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) api.Plan {
-	if backup.Spec.EncryptionSecret != nil {
+	if spec.RestoreEncryptionSecret != nil {
 		if !spec.RocksDB.IsEncrypted() {
 			return nil
 		}
@@ -75,7 +74,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 			return nil
 		}
 
-		secret := *backup.Spec.EncryptionSecret
+		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
 		keyfolder, err := builderCtx.SecretsInterface().Get(pod.GetKeyfolderSecretName(builderCtx.GetName()), meta.GetOptions{})
@@ -84,8 +83,10 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 			return nil
 		}
 
-		if len(keyfolder.Data) <= 1 {
-			return nil
+		if len(keyfolder.Data) == 0 {
+			return api.Plan{
+				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
+			}
 		}
 		name, _, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
 		if err != nil {
@@ -94,13 +95,14 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		}
 
 		if _, ok := keyfolder.Data[name]; !ok {
-			log.Err(err).Msgf("Key from encryption is not in keyfolder - first install this secret")
-			return nil
+			log.Err(err).Msgf("Key from encryption is not in keyfolder")
+
+			return api.Plan{
+				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
+			}
 		}
 
-		return api.Plan{
-			api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
-		}
+		return nil
 	}
 
 	return nil

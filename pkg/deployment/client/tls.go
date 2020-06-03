@@ -23,9 +23,9 @@
 package client
 
 type TLSKeyFile struct {
-	PrivateKeyChecksum string   `json:"privateKeySHA256,omitempty"`
-	Checksum           string   `json:"SHA256,omitempty"`
-	Certificates       []string `json:"certificates,omitempty"`
+	PrivateKeyHash string   `json:"privateKeySHA256,omitempty"`
+	Checksum       string   `json:"SHA256,omitempty"`
+	Certificates   []string `json:"certificates,omitempty"`
 }
 
 type TLSDetailsResult struct {
