@@ -317,6 +317,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.RestoreEncryptionSecret != nil {
+		in, out := &in.RestoreEncryptionSecret, &out.RestoreEncryptionSecret
+		*out = new(string)
+		**out = **in
+	}
 	if in.AllowUnsafeUpgrade != nil {
 		in, out := &in.AllowUnsafeUpgrade, &out.AllowUnsafeUpgrade
 		*out = new(bool)

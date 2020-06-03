@@ -110,6 +110,7 @@ func (r *Resources) ValidateSecretHashes() error {
 	log := r.log
 	var badSecretNames []string
 	status, lastVersion := r.context.GetStatus()
+	image := status.CurrentImage
 	getHashes := func() *api.SecretHashes {
 		if status.SecretHashes == nil {
 			status.SecretHashes = api.NewEmptySecretHashes()
@@ -148,15 +149,17 @@ func (r *Resources) ValidateSecretHashes() error {
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		secretName := spec.RocksDB.Encryption.GetKeySecretName()
-		getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
-		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
-		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-			return maskAny(err)
-		} else if !hashOK {
-			badSecretNames = append(badSecretNames, secretName)
+		if image == nil || image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+			secretName := spec.RocksDB.Encryption.GetKeySecretName()
+			getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
+			setExpectedHash := func(h string) error {
+				return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
+			}
+			if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+				return maskAny(err)
+			} else if !hashOK {
+				badSecretNames = append(badSecretNames, secretName)
+			}
 		}
 	}
 	if spec.IsSecure() {

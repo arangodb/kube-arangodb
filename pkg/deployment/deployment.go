@@ -83,8 +83,8 @@ type deploymentEvent struct {
 
 const (
 	deploymentEventQueueSize = 256
-	minInspectionInterval    = util.Interval(time.Second) // Ensure we inspect the generated resources no less than with this interval
-	maxInspectionInterval    = util.Interval(time.Minute) // Ensure we inspect the generated resources no less than with this interval
+	minInspectionInterval    = 250 * util.Interval(time.Millisecond) // Ensure we inspect the generated resources no less than with this interval
+	maxInspectionInterval    = 30 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.

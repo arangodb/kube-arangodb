@@ -213,6 +213,11 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		}
 	}
 
+	// Add encryption keys
+	if plan.IsEmpty() {
+		plan = createEncryptionKey(ctx, log, spec, status, builderCtx)
+	}
+
 	// Check for the need to rotate TLS certificate of a members
 	if plan.IsEmpty() {
 		plan = createRotateTLSServerCertificatePlan(log, spec, status, builderCtx.GetTLSKeyfile)
@@ -234,6 +239,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	if plan.IsEmpty() {
 		plan = createRestorePlan(ctx, log, spec, status, builderCtx)
+	}
+
+	if plan.IsEmpty() {
+		plan = cleanEncryptionKey(ctx, log, spec, status, builderCtx)
 	}
 
 	// Return plan

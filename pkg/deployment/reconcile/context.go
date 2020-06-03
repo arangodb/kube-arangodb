@@ -119,4 +119,6 @@ type Context interface {
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	// GetName receives deployment name
+	GetName() string
 }

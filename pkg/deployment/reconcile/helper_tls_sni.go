@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/tls"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
@@ -70,7 +70,7 @@ func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, secrets k8sutil.Sec
 }
 
 func compareTLSSNIConfig(ctx context.Context, c driver.Connection, m map[string]string, refresh bool) (bool, error) {
-	tlsClient := tls.NewClient(c)
+	tlsClient := client.NewClient(c)
 
 	f := tlsClient.GetTLS
 	if refresh {

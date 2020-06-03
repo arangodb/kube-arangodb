@@ -268,6 +268,15 @@ func RocksdbEncryptionVolumeMount() core.VolumeMount {
 	}
 }
 
+// RocksdbEncryptionReadOnlyVolumeMount creates a volume mount structure for a RocksDB encryption key.
+func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
+		Name:      RocksdbEncryptionVolumeName,
+		MountPath: RocksDBEncryptionVolumeMountDir,
+		ReadOnly:  true,
+	}
+}
+
 // ArangodInitContainer creates a container configured to initalize a UUID file.
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")

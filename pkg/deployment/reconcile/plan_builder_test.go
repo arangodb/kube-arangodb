@@ -57,6 +57,10 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) GetName() string {
+	panic("implement me")
+}
+
 func (c *testContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
 	panic("implement me")
 }
