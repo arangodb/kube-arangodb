@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -43,9 +45,13 @@ func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deplo
 		return nil
 	}
 
-	name, _, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
+	name, _, exists, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
 	if err != nil {
 		log.Err(err).Msgf("Unable to fetch encryption key")
+		return nil
+	}
+
+	if !exists {
 		return nil
 	}
 
@@ -112,6 +118,18 @@ func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deplo
 		return plan
 	}
 
+	currentKeys := make([]string, 0, len(keyfolder.Data))
+
+	for key := range keyfolder.Data {
+		currentKeys = append(currentKeys, key)
+	}
+
+	currentKeyHashes := util.PrefixStringArray(currentKeys, "sha256:")
+
+	if !util.CompareStringArray(currentKeyHashes, status.CurrentEncryptionKeyHashes) {
+		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyStatusUpdate, api.ServerGroupUnknown, "")}
+	}
+
 	return api.Plan{}
 }
 
@@ -134,9 +152,13 @@ func cleanEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deploy
 		return nil
 	}
 
-	name, _, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
+	name, _, exists, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
 	if err != nil {
 		log.Err(err).Msgf("Unable to fetch encryption key")
+		return nil
+	}
+
+	if !exists {
 		return nil
 	}
 

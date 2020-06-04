@@ -82,9 +82,13 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		secret = s
 	}
 
-	sha, d, err := pod.GetEncryptionKey(a.actionCtx.SecretsInterface(), secret)
+	sha, d, exists, err := pod.GetEncryptionKey(a.actionCtx.SecretsInterface(), secret)
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to fetch current encryption key")
+		return true, nil
+	}
+
+	if !exists {
 		return true, nil
 	}
 

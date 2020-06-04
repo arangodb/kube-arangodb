@@ -60,24 +60,31 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 	}
 }
 
-func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []byte, error) {
+func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []byte, bool, error) {
 	keyfile, err := secrets.Get(name, meta.GetOptions{})
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "Unable to fetch secret")
+		if k8sutil.IsNotFound(err) {
+			return "", nil, false, nil
+		}
+		return "", nil, false, errors.Wrapf(err, "Unable to fetch secret")
 	}
 
 	if len(keyfile.Data) == 0 {
-		return "", nil, errors.Errorf("Current encryption key is not valid")
+		return "", nil, false, nil
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
-	if !ok || len(d) != 32 {
-		return "", nil, errors.Errorf("Current encryption key is not valid")
+	if !ok {
+		return "", nil, false, nil
+	}
+
+	if len(d) != 32 {
+		return "", nil, false, errors.Errorf("Current encryption key is not valid")
 	}
 
 	sha := fmt.Sprintf("%0x", sha256.Sum256(d))
 
-	return sha, d, nil
+	return sha, d, true, nil
 }
 
 func GetKeyfolderSecretName(name string) string {
