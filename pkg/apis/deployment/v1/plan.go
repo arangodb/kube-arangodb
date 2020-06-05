@@ -85,6 +85,8 @@ const (
 	ActionTypeEncryptionKeyRemove ActionType = "EncryptionKeyRemove"
 	// ActionTypeEncryptionKeyRefresh refresh encryption keys
 	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
+	// ActionTypeEncryptionKeyStatusUpdate update status object with current encryption keys
+	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
 )
 
 const (

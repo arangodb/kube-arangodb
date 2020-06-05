@@ -88,9 +88,14 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
 			}
 		}
-		name, _, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
+		name, _, exists, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
+			return nil
+		}
+
+		if !exists {
+			log.Error().Msgf("Unable to fetch encryption key - key is empty or missing")
 			return nil
 		}
 
