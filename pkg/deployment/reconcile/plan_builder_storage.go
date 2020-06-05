@@ -23,6 +23,9 @@
 package reconcile
 
 import (
+	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
@@ -33,9 +36,10 @@ import (
 
 // createRotateServerStoragePlan creates plan to rotate a server and its volume because of a
 // different storage class or a difference in storage resource requirements.
-func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus,
-	getPVC func(pvcName string) (*core.PersistentVolumeClaim, error),
-	createEvent func(evt *k8sutil.Event)) api.Plan {
+func createRotateServerStoragePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if spec.GetMode() == api.DeploymentModeSingle {
 		// Storage cannot be changed in single server deployments
 		return nil
@@ -58,9 +62,9 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 			groupSpec := spec.GetServerGroupSpec(group)
 			storageClassName := groupSpec.GetStorageClassName()
 			// Load PVC
-			pvc, err := getPVC(m.PersistentVolumeClaimName)
-			if err != nil {
-				log.Warn().Err(err).
+			pvc, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
+			if !exists {
+				log.Warn().
 					Str("role", group.AsRole()).
 					Str("id", m.ID).
 					Msg("Failed to get PVC")
@@ -92,7 +96,7 @@ func createRotateServerStoragePlan(log zerolog.Logger, apiObject k8sutil.APIObje
 					)
 				} else {
 					// Only agents & dbservers are allowed to change their storage class.
-					createEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
+					context.CreateEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
 			} else if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
 				// rotation needed

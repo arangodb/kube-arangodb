@@ -109,7 +109,7 @@ func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, d
 	if storageClassName != "" {
 		pvc.Spec.StorageClassName = &storageClassName
 	}
-	addOwnerRefToObject(pvc.GetObjectMeta(), &owner)
+	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
 	if _, err := pvcs.Create(pvc); err != nil && !IsAlreadyExists(err) {
 		return maskAny(err)
 	}

@@ -25,13 +25,20 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-func createRotateTLSServerSNIPlan(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+func createRotateTLSServerSNIPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -45,7 +52,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context, log zerolog.Logger, spec 
 		return nil
 	}
 
-	fetchedSecrets, err := mapTLSSNIConfig(log, *sni, context.SecretsInterface())
+	fetchedSecrets, err := mapTLSSNIConfig(log, *sni, cachedStatus)
 	if err != nil {
 		log.Warn().Err(err).Msg("Unable to get SNI desired state")
 		return nil

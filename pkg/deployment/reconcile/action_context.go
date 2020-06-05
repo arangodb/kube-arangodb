@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
 	"github.com/arangodb/go-driver/agency"
@@ -127,20 +129,28 @@ type ActionContext interface {
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
+	// GetNameget current cached state of deployment
+	GetCachedStatus() inspector.Inspector
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context) ActionContext {
+func newActionContext(log zerolog.Logger, context Context, cachedStatus inspector.Inspector) ActionContext {
 	return &actionContext{
-		log:     log,
-		context: context,
+		log:          log,
+		context:      context,
+		cachedStatus: cachedStatus,
 	}
 }
 
 // actionContext implements ActionContext
 type actionContext struct {
-	log     zerolog.Logger
-	context Context
+	log          zerolog.Logger
+	context      Context
+	cachedStatus inspector.Inspector
+}
+
+func (ac *actionContext) GetCachedStatus() inspector.Inspector {
+	return ac.cachedStatus
 }
 
 func (ac *actionContext) GetName() string {

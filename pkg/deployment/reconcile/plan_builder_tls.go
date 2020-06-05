@@ -23,10 +23,13 @@
 package reconcile
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"net"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -34,8 +37,10 @@ import (
 )
 
 // createRotateTLSServerCertificatePlan creates plan to rotate a server because of an (soon to be) expired TLS certificate.
-func createRotateTLSServerCertificatePlan(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus,
-	getTLSKeyfile func(group api.ServerGroup, member api.MemberStatus) (string, error)) api.Plan {
+func createRotateTLSServerCertificatePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -55,14 +60,24 @@ func createRotateTLSServerCertificatePlan(log zerolog.Logger, spec api.Deploymen
 				continue
 			}
 			// Load keyfile
-			keyfile, err := getTLSKeyfile(group, m)
-			if err != nil {
-				log.Warn().Err(err).
+			secret, exists := cachedStatus.Secret(k8sutil.CreateTLSKeyfileSecretName(context.GetName(), group.AsRole(), m.ID))
+			if !exists {
+				log.Warn().
 					Str("role", group.AsRole()).
 					Str("id", m.ID).
 					Msg("Failed to get TLS secret")
 				continue
 			}
+
+			keyfile, err := k8sutil.GetTLSKeyfileFromSecret(secret)
+			if err != nil {
+				log.Warn().Err(err).
+					Str("role", group.AsRole()).
+					Str("id", m.ID).
+					Msg("Failed to parse TLS secret")
+				continue
+			}
+
 			tlsSpec := spec.TLS
 			if group.IsArangosync() {
 				tlsSpec = spec.Sync.TLS
@@ -81,15 +96,25 @@ func createRotateTLSServerCertificatePlan(log zerolog.Logger, spec api.Deploymen
 }
 
 // createRotateTLSCAPlan creates plan to replace a TLS CA and rotate all server.
-func createRotateTLSCAPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
+func createRotateTLSCAPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	getTLSCA func(string) (string, string, bool, error),
-	createEvent func(evt *k8sutil.Event)) api.Plan {
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
+
+	asOwner := apiObject.AsOwner()
+
 	secretName := spec.TLS.GetCASecretName()
-	cert, _, isOwned, err := getTLSCA(secretName)
+	secret, exists := cachedStatus.Secret(secretName)
+
+	if !exists {
+		log.Warn().Str("secret-name", secretName).Msg("TLS CA secret missing")
+		return nil
+	}
+
+	cert, _, isOwned, err := k8sutil.GetCAFromSecret(secret, &asOwner)
 	if err != nil {
 		log.Warn().Err(err).Str("secret-name", secretName).Msg("Failed to fetch TLS CA secret")
 		return nil
@@ -129,7 +154,7 @@ func createRotateTLSCAPlan(log zerolog.Logger, apiObject k8sutil.APIObject,
 		} else {
 			// Rotating the CA results in downtime.
 			// That is currently not allowed.
-			createEvent(k8sutil.NewDowntimeNotAllowedEvent(apiObject, "Rotate TLS CA"))
+			context.CreateEvent(k8sutil.NewDowntimeNotAllowedEvent(apiObject, "Rotate TLS CA"))
 		}
 	}
 	return plan

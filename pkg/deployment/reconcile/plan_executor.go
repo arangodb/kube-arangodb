@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -37,7 +39,7 @@ import (
 // ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
-func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
+func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Inspector) (bool, error) {
 	log := d.log
 	firstLoop := true
 
@@ -61,7 +63,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 			Str("group", planAction.Group.AsRole()).
 			Str("member-id", planAction.MemberID).
 			Logger()
-		action := d.createAction(ctx, log, planAction)
+		action := d.createAction(ctx, log, planAction, cachedStatus)
 		if planAction.StartTime.IsZero() {
 			// Not started yet
 			ready, err := action.Start(ctx)
@@ -158,8 +160,8 @@ func (d *Reconciler) ExecutePlan(ctx context.Context) (bool, error) {
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action) Action {
-	actionCtx := newActionContext(log, d.context)
+func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action, cachedStatus inspector.Inspector) Action {
+	actionCtx := newActionContext(log, d.context, cachedStatus)
 
 	f, ok := getActionFactory(action.Type)
 	if !ok {

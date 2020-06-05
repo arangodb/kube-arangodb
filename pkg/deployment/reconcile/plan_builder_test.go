@@ -24,10 +24,11 @@ package reconcile
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -36,7 +37,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -57,6 +58,10 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	panic("implement me")
+}
+
 func (c *testContext) GetName() string {
 	panic("implement me")
 }
@@ -70,10 +75,6 @@ func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
 }
 
 func (c *testContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
-	panic("implement me")
-}
-
-func (c *testContext) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	panic("implement me")
 }
 
@@ -204,7 +205,7 @@ func (c *testContext) GetPvc(pvcName string) (*core.PersistentVolumeClaim, error
 }
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
-func (c *testContext) GetExpectedPodArguments(apiObject metav1.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
+func (c *testContext) GetExpectedPodArguments(apiObject meta.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
 	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return nil // not implemented
 }
@@ -250,7 +251,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
 			Namespace: "test",
 		},
@@ -259,7 +260,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -270,7 +271,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -285,7 +286,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
@@ -303,7 +304,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	spec.SetDefaults("test")
 	spec.Single.Count = util.NewInt(2)
 	depl := &api.ArangoDeployment{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
 			Namespace: "test",
 		},
@@ -314,7 +315,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -327,7 +328,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -352,7 +353,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -373,7 +374,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.SetDefaults("test")
 	depl := &api.ArangoDeployment{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
 			Namespace: "test",
 		},
@@ -417,7 +418,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -454,7 +455,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, nil, c)
+	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -503,7 +504,7 @@ func TestCreatePlan(t *testing.T) {
 	}
 
 	deploymentTemplate := &api.ArangoDeployment{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name:      "test_depl",
 			Namespace: "test",
 		},
@@ -531,15 +532,12 @@ func TestCreatePlan(t *testing.T) {
 		ExpectedPlan  api.Plan
 		ExpectedLog   string
 		ExpectedEvent *k8sutil.Event
+
+		Pods map[string]*core.Pod
+		Secrets map[string]*core.Secret
+		Services map[string]*core.Service
+		PVCS map[string]*core.PersistentVolumeClaim
 	}{
-		{
-			Name: "Can not get pods",
-			context: &testContext{
-				ErrPods: errors.New("fake error"),
-			},
-			ExpectedError: errors.New("fake error"),
-			ExpectedLog:   "Failed to get owned pods",
-		},
 		{
 			Name: "Can not create plan for single deployment",
 			context: &testContext{
@@ -572,26 +570,16 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{},
 		},
 		{
-			Name: "Getting PVC from kubernetes failed",
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVCErr:           errors.New("fake error"),
-			},
-			Helper: func(ad *api.ArangoDeployment) {
-				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = "pvc_test"
-			},
-			ExpectedLog: "Failed to get PVC",
-		},
-		{
 			Name: "Change Storage for DBServers",
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &core.PersistentVolumeClaim{
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				"pvc_test": {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
@@ -618,13 +606,15 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &core.PersistentVolumeClaim{
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				"pvc_test":{
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
@@ -644,13 +634,15 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Storage for Coordinators is not possible",
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &core.PersistentVolumeClaim{
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				"pvc_test": {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Coordinators = api.ServerGroupSpec{
@@ -674,9 +666,8 @@ func TestCreatePlan(t *testing.T) {
 		},
 		{
 			Name: "Create rotation plan",
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-				PVC: &core.PersistentVolumeClaim{
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				"pvc_test": {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
@@ -689,6 +680,9 @@ func TestCreatePlan(t *testing.T) {
 						},
 					},
 				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Agents = api.ServerGroupSpec{
@@ -802,7 +796,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx)
+			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services))
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

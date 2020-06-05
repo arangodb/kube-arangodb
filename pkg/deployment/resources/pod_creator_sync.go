@@ -25,6 +25,9 @@ package resources
 import (
 	"math"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -46,8 +49,8 @@ type ArangoSyncContainer struct {
 	imageInfo api.ImageInfo
 }
 
-var _ k8sutil.PodCreator = &MemberSyncPod{}
-var _ k8sutil.ContainerCreator = &ArangoSyncContainer{}
+var _ interfaces.PodCreator = &MemberSyncPod{}
+var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
 	tlsKeyfileSecretName   string
@@ -277,7 +280,7 @@ func (m *MemberSyncPod) GetTolerations() []core.Toleration {
 	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
 }
 
-func (m *MemberSyncPod) GetContainerCreator() k8sutil.ContainerCreator {
+func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoSyncContainer{
 		groupSpec: m.groupSpec,
 		spec:      m.spec,
@@ -293,6 +296,6 @@ func (m *MemberSyncPod) Init(pod *core.Pod) {
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
 
-func (m *MemberSyncPod) Validate(secrets k8sutil.SecretInterface) error {
+func (m *MemberSyncPod) Validate(cachedStatus inspector.Inspector) error {
 	return nil
 }

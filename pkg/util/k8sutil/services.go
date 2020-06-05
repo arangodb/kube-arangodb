@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -72,11 +74,15 @@ func CreateExporterClientServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExporterService(cachedStatus inspector.Inspector, svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
 
 	selectorLabels := LabelsForExporterServiceSelector(deploymentName)
+
+	if _, exists := cachedStatus.Service(svcName); exists {
+		return svcName, false, nil
+	}
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -95,7 +101,7 @@ func CreateExporterService(svcs ServiceInterface, deployment metav1.Object, owne
 			Selector: selectorLabels,
 		},
 	}
-	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
+	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
 	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
@@ -202,7 +208,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 			LoadBalancerSourceRanges: loadBalancerSourceRanges,
 		},
 	}
-	addOwnerRefToObject(svc.GetObjectMeta(), &owner)
+	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
 	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
 		return false, nil
 	} else if err != nil {

@@ -25,6 +25,7 @@ package deployment
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -53,7 +54,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		// Arrange
 		d, eventRecorder := createTestDeployment(testCase.config, testCase.ArangoDeployment)
 
-		err := d.resources.EnsureSecrets()
+		err := d.resources.EnsureSecrets(inspector.NewEmptyInspector())
 		require.NoError(t, err)
 
 		if testCase.Helper != nil {
@@ -69,7 +70,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Act
-		err = d.resources.EnsurePods()
+		err = d.resources.EnsurePods(inspector.NewEmptyInspector())
 
 		// Assert
 		if testCase.ExpectedError != nil {

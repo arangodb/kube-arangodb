@@ -23,23 +23,25 @@
 package deployment
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	core "k8s.io/api/core/v1"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
-func (d *Deployment) removePodFinalizers() error {
+func (d *Deployment) removePodFinalizers(cachedStatus inspector.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
-	pods, err := d.GetOwnedPods()
-	if err != nil {
-		return maskAny(err)
-	}
-	for _, p := range pods {
-		ignoreNotFound := true
-		if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
+
+	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
+		if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove pod finalizers")
 		}
+		return nil
+	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
+		return err
 	}
+
 	return nil
 }
 

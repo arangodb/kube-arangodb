@@ -26,6 +26,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -33,7 +35,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GroupSNISupported(mode api.DeploymentMode, group api.ServerGroup) bool {
@@ -69,15 +70,15 @@ func (s sni) isSupported(i Input) bool {
 	return GroupSNISupported(i.Deployment.Mode.Get(), i.Group)
 }
 
-func (s sni) Verify(i Input, secrets k8sutil.SecretInterface) error {
+func (s sni) Verify(i Input, cachedStatus inspector.Inspector) error {
 	if !s.isSupported(i) {
 		return nil
 	}
 
 	for _, secret := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
-		kubeSecret, err := secrets.Get(secret, meta.GetOptions{})
-		if err != nil {
-			return err
+		kubeSecret, exists := cachedStatus.Secret(secret)
+		if !exists {
+			return errors.Errorf("SNI Secret not found %s", secret)
 		}
 
 		_, ok := kubeSecret.Data[constants.SecretTLSKeyfile]
