@@ -57,9 +57,9 @@ func NewEmptyInspector() Inspector {
 
 func NewInspectorFromData(pods map[string]*core.Pod, secrets map[string]*core.Secret, pvcs map[string]*core.PersistentVolumeClaim, services map[string]*core.Service) Inspector {
 	return &inspector{
-		pods: pods,
-		secrets: secrets,
-		pvcs: pvcs,
+		pods:     pods,
+		secrets:  secrets,
+		pvcs:     pvcs,
 		services: services,
 	}
 }

@@ -59,7 +59,7 @@ func (r *Resources) EnsureSecrets(cachedStatus inspector.Inspector) error {
 	spec := r.context.GetSpec()
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
-	secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
+	secrets := kubecli.CoreV1().Secrets(ns)
 	status, _ := r.context.GetStatus()
 	deploymentName := r.context.GetAPIObject().GetName()
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
@@ -189,10 +189,10 @@ func AppendKeyfileToKeyfolder(cachedStatus inspector.Inspector, secrets k8sutil.
 }
 
 var (
-	exporterTokenClaims = map[string]interface{}{
+	exporterTokenClaims = jg.MapClaims{
 		"iss":           "arangodb",
 		"server_id":     "exporter",
-		"allowed_paths": []string{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
+		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
 	}
 )
 
@@ -235,12 +235,12 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 
 		jwtSecret, exists := cachedStatus.Secret(secretSecretName)
 		if !exists {
-			return false, true, errors.Errorf("Secret %s does not exists", secretSecretName)
+			return true, true, errors.Errorf("Secret %s does not exists", secretSecretName)
 		}
 
 		secret, err := k8sutil.GetTokenFromSecret(jwtSecret)
 		if err != nil {
-			return false, true, maskAny(err)
+			return true, true, maskAny(err)
 		}
 
 		token, err := jg.Parse(string(data), func(token *jg.Token) (i interface{}, err error) {
@@ -256,7 +256,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, nil
 		}
 
-		return !equality.Semantic.DeepEqual(tokenClaims, exporterTokenClaims), true, nil
+		return !equality.Semantic.DeepDerivative(tokenClaims, exporterTokenClaims), true, nil
 	}
 }
 

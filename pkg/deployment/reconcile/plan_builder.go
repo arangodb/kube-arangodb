@@ -115,7 +115,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	// Fetch agency plan
-		agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, builderCtx)
+	agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, builderCtx)
 
 	// Check for various scenario's
 	var plan api.Plan
@@ -123,7 +123,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	pb := NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx)
 
 	// Check for members in failed state
-		status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseFailed || len(plan) > 0 {
 				continue
@@ -180,7 +180,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	// Check for cleaned out dbserver in created state
-		for _, m := range status.Members.DBServers {
+	for _, m := range status.Members.DBServers {
 		if plan.IsEmpty() && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).
@@ -195,12 +195,12 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Check for scale up/down
 	if plan.IsEmpty() {
-				plan = pb.Apply(createScaleMemeberPlan)
+		plan = pb.Apply(createScaleMemeberPlan)
 	}
 
 	// Check for the need to rotate one or more members
 	if plan.IsEmpty() {
-				plan = pb.Apply(createRotateOrUpgradePlan)
+		plan = pb.Apply(createRotateOrUpgradePlan)
 	}
 
 	// Add encryption keys

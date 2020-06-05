@@ -533,10 +533,10 @@ func TestCreatePlan(t *testing.T) {
 		ExpectedLog   string
 		ExpectedEvent *k8sutil.Event
 
-		Pods map[string]*core.Pod
-		Secrets map[string]*core.Secret
+		Pods     map[string]*core.Pod
+		Secrets  map[string]*core.Secret
 		Services map[string]*core.Service
-		PVCS map[string]*core.PersistentVolumeClaim
+		PVCS     map[string]*core.PersistentVolumeClaim
 	}{
 		{
 			Name: "Can not create plan for single deployment",
@@ -607,7 +607,7 @@ func TestCreatePlan(t *testing.T) {
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
 			PVCS: map[string]*core.PersistentVolumeClaim{
-				"pvc_test":{
+				"pvc_test": {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
