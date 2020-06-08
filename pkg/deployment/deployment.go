@@ -241,7 +241,7 @@ func (d *Deployment) run() {
 			if err := d.removePodFinalizers(cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
 			}
-			if err := d.removePVCFinalizers(); err != nil {
+			if err := d.removePVCFinalizers(cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.

@@ -24,8 +24,10 @@ package deployment
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
@@ -36,6 +38,16 @@ func (d *Deployment) removePodFinalizers(cachedStatus inspector.Inspector) error
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove pod finalizers")
+			return err
+		}
+
+		if err := kubecli.CoreV1().Pods(pod.GetNamespace()).Delete(pod.GetName(), &meta.DeleteOptions{
+			GracePeriodSeconds: util.NewInt64(1),
+		}); err != nil {
+			if !k8sutil.IsNotFound(err) {
+				log.Warn().Err(err).Msg("Failed to remove pod")
+				return err
+			}
 		}
 		return nil
 	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
@@ -46,18 +58,19 @@ func (d *Deployment) removePodFinalizers(cachedStatus inspector.Inspector) error
 }
 
 // removePVCFinalizers removes all finalizers from all PVCs owned by us.
-func (d *Deployment) removePVCFinalizers() error {
+func (d *Deployment) removePVCFinalizers(cachedStatus inspector.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
-	pvcs, err := d.GetOwnedPVCs()
-	if err != nil {
-		return maskAny(err)
-	}
-	for _, p := range pvcs {
-		ignoreNotFound := true
-		if err := k8sutil.RemovePVCFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
+
+	if err := cachedStatus.IteratePersistentVolumeClaims(func(pvc *core.PersistentVolumeClaim) error {
+		if err := k8sutil.RemovePVCFinalizers(log, kubecli, pvc, pvc.GetFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
+			return err
 		}
+		return nil
+	}, inspector.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
+		return err
 	}
+
 	return nil
 }

@@ -85,7 +85,7 @@ func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerol
 	if err := d.removePodFinalizers(cachedStatus); err != nil {
 		return maskAny(err)
 	}
-	if err := d.removePVCFinalizers(); err != nil {
+	if err := d.removePVCFinalizers(cachedStatus); err != nil {
 		return maskAny(err)
 	}
 
