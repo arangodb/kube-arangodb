@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -84,7 +86,7 @@ type deploymentEvent struct {
 const (
 	deploymentEventQueueSize = 256
 	minInspectionInterval    = 250 * util.Interval(time.Millisecond) // Ensure we inspect the generated resources no less than with this interval
-	maxInspectionInterval    = 30 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
+	maxInspectionInterval    = 10 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
 // Deployment is the in process state of an ArangoDeployment.
@@ -151,10 +153,10 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		go d.resources.RunDeploymentHealthLoop(d.stopCh)
 		go d.resources.RunDeploymentShardSyncLoop(d.stopCh)
 	}
-	if config.AllowChaos {
-		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
-		go d.chaosMonkey.Run(d.stopCh)
-	}
+	//if config.AllowChaos {
+	//	d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
+	//	go d.chaosMonkey.Run(d.stopCh)
+	//}
 
 	return d, nil
 }
@@ -199,16 +201,6 @@ func (d *Deployment) run() {
 	log := d.deps.Log
 
 	if d.GetPhase() == api.DeploymentPhaseNone {
-		// Create secrets
-		if err := d.resources.EnsureSecrets(); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create secrets", err, d.GetAPIObject()))
-		}
-
-		// Create services
-		if err := d.resources.EnsureServices(); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create services", err, d.GetAPIObject()))
-		}
-
 		// Create service monitor
 		if d.haveServiceMonitorCRD {
 			if err := d.resources.EnsureServiceMonitor(); err != nil {
@@ -219,16 +211,6 @@ func (d *Deployment) run() {
 		// Create members
 		if err := d.createInitialMembers(d.apiObject); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
-		}
-
-		// Create PVCs
-		if err := d.resources.EnsurePVCs(); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create persistent volume claims", err, d.GetAPIObject()))
-		}
-
-		// Create pods
-		if err := d.resources.EnsurePods(); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pods", err, d.GetAPIObject()))
 		}
 
 		// Create Pod Disruption Budgets
@@ -244,22 +226,22 @@ func (d *Deployment) run() {
 		log.Info().Msg("start running...")
 	}
 
-	if err := d.resources.EnsureAnnotations(); err != nil {
-		log.Warn().Err(err).Msg("unable to update annotations")
-	}
-
 	d.lookForServiceMonitorCRD()
 
 	inspectionInterval := maxInspectionInterval
 	for {
 		select {
 		case <-d.stopCh:
+			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetNamespace())
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to get resources")
+			}
 			// Remove finalizers from created resources
 			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
-			if err := d.removePodFinalizers(); err != nil {
+			if err := d.removePodFinalizers(cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
 			}
-			if err := d.removePVCFinalizers(); err != nil {
+			if err := d.removePVCFinalizers(cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.

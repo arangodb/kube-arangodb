@@ -24,8 +24,7 @@ package resources
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -36,7 +35,7 @@ func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
 }
 
 // EnsurePVCs creates all PVC's listed in member status
-func (r *Resources) EnsurePVCs() error {
+func (r *Resources) EnsurePVCs(cachedStatus inspector.Inspector) error {
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
@@ -45,25 +44,24 @@ func (r *Resources) EnsurePVCs() error {
 	iterator := r.context.GetServerGroupIterator()
 	status, _ := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
+	pvcs := kubecli.CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 
-	pvcs := k8sutil.NewPersistentVolumeClaimCache(kubecli.CoreV1().PersistentVolumeClaims(ns))
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.PersistentVolumeClaimName == "" {
 				continue
 			}
 
-			_, err := pvcs.Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
-			if k8sutil.IsNotFound(err) {
-				storageClassName := spec.GetStorageClassName()
-				role := group.AsRole()
-				resources := spec.Resources
-				vct := spec.VolumeClaimTemplate
-				finalizers := r.createPVCFinalizers(group)
-				if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
-					return maskAny(err)
-				}
-			} else if err != nil {
+			_, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
+			if exists {
+				continue
+			}
+			storageClassName := spec.GetStorageClassName()
+			role := group.AsRole()
+			resources := spec.Resources
+			vct := spec.VolumeClaimTemplate
+			finalizers := r.createPVCFinalizers(group)
+			if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
 				return maskAny(err)
 			}
 		}

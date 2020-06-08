@@ -30,6 +30,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/go-driver"
 
 	v1 "k8s.io/api/core/v1"
@@ -45,7 +49,7 @@ import (
 // If a hash is different, the deployment is marked
 // with a SecretChangedCondition and the operator will not
 // touch it until this is resolved.
-func (r *Resources) ValidateSecretHashes() error {
+func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error {
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
@@ -56,16 +60,12 @@ func (r *Resources) ValidateSecretHashes() error {
 
 		log := r.log.With().Str("secret-name", secretName).Logger()
 		expectedHash := getExpectedHash()
-		secret, hash, err := r.getSecretHash(secretName)
+		secret, hash, exists := r.getSecretHash(cachedStatus, secretName)
 		if expectedHash == "" {
 			// No hash set yet, try to fill it
-			if k8sutil.IsNotFound(err) {
+			if !exists {
 				// Secret does not (yet) exists, do nothing
 				return true, nil
-			}
-			if err != nil {
-				log.Warn().Err(err).Msg("Failed to get secret")
-				return true, nil // Since we do not yet have a hash, we let this go with only a warning.
 			}
 			// Hash fetched succesfully, store it
 			if err := setExpectedHash(hash); err != nil {
@@ -75,9 +75,9 @@ func (r *Resources) ValidateSecretHashes() error {
 			return true, nil
 		}
 		// Hash is set, it must match the current hash
-		if err != nil {
+		if !exists {
 			// Fetching error failed for other reason.
-			log.Debug().Err(err).Msg("Failed to fetch secret hash")
+			log.Debug().Msg("Secret does not exist")
 			// This is not good, return false so SecretsChanged condition will be set.
 			return false, nil
 		}
@@ -107,6 +107,7 @@ func (r *Resources) ValidateSecretHashes() error {
 	}
 
 	spec := r.context.GetSpec()
+	deploymentName := r.context.GetAPIObject().GetName()
 	log := r.log
 	var badSecretNames []string
 	status, lastVersion := r.context.GetStatus()
@@ -159,6 +160,19 @@ func (r *Resources) ValidateSecretHashes() error {
 				return maskAny(err)
 			} else if !hashOK {
 				badSecretNames = append(badSecretNames, secretName)
+			}
+		} else {
+			if _, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(deploymentName)); !exists {
+				secretName := spec.RocksDB.Encryption.GetKeySecretName()
+				getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
+				setExpectedHash := func(h string) error {
+					return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
+				}
+				if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+					return maskAny(err)
+				} else if !hashOK {
+					badSecretNames = append(badSecretNames, secretName)
+				}
 			}
 		}
 	}
@@ -277,12 +291,10 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 }
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.
-func (r *Resources) getSecretHash(secretName string) (*v1.Secret, string, error) {
-	kubecli := r.context.GetKubeCli()
-	ns := r.context.GetNamespace()
-	s, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
-	if err != nil {
-		return nil, "", maskAny(err)
+func (r *Resources) getSecretHash(cachedStatus inspector.Inspector, secretName string) (*v1.Secret, string, bool) {
+	s, exists := cachedStatus.Secret(secretName)
+	if !exists {
+		return nil, "", false
 	}
 	// Create hash of value
 	rows := make([]string, 0, len(s.Data))
@@ -294,5 +306,5 @@ func (r *Resources) getSecretHash(secretName string) (*v1.Secret, string, error)
 	data := strings.Join(rows, "\n")
 	rawHash := sha256.Sum256([]byte(data))
 	hash := fmt.Sprintf("%0x", rawHash)
-	return s, hash, nil
+	return s, hash, true
 }

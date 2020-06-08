@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -42,7 +44,7 @@ var (
 )
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) EnsureServices() error {
+func (r *Resources) EnsureServices(cachedStatus inspector.Inspector) error {
 	log := r.log
 	start := time.Now()
 	kubecli := r.context.GetKubeCli()
@@ -55,10 +57,10 @@ func (r *Resources) EnsureServices() error {
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
 	// Fetch existing services
-	svcs := k8sutil.NewServiceCache(kubecli.CoreV1().Services(ns))
+	svcs := kubecli.CoreV1().Services(ns)
 	// Headless service
 	counterMetric.Inc()
-	if _, err := svcs.Get(k8sutil.CreateHeadlessServiceName(deploymentName), metav1.GetOptions{}); err != nil {
+	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(svcs, apiObject, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create headless service")
@@ -72,7 +74,7 @@ func (r *Resources) EnsureServices() error {
 	// Internal database client service
 	single := spec.GetMode().HasSingleServers()
 	counterMetric.Inc()
-	if _, err := svcs.Get(k8sutil.CreateDatabaseClientServiceName(deploymentName), metav1.GetOptions{}); err != nil {
+	if _, exists := cachedStatus.Service(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
 		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(svcs, apiObject, single, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client service")
@@ -98,7 +100,7 @@ func (r *Resources) EnsureServices() error {
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
+	if err := r.ensureExternalAccessServices(cachedStatus, svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
 		return maskAny(err)
 	}
 
@@ -107,7 +109,7 @@ func (r *Resources) EnsureServices() error {
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
+		if err := r.ensureExternalAccessServices(cachedStatus, svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
 			return maskAny(err)
 		}
 		status, lastVersion := r.context.GetStatus()
@@ -120,7 +122,7 @@ func (r *Resources) EnsureServices() error {
 	}
 
 	if spec.Metrics.IsEnabled() {
-		name, _, err := k8sutil.CreateExporterService(svcs, apiObject, apiObject.AsOwner())
+		name, _, err := k8sutil.CreateExporterService(cachedStatus, svcs, apiObject, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s exporter service", name)
 			return maskAny(err)
@@ -137,12 +139,12 @@ func (r *Resources) EnsureServices() error {
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
+func (r *Resources) ensureExternalAccessServices(cachedStatus inspector.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false
 	eaServiceType := spec.GetType().AsServiceType() // Note: Type auto defaults to ServiceTypeLoadBalancer
-	if existing, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+	if existing, exists := cachedStatus.Service(eaServiceName); exists {
 		// External access service exists
 		updateExternalAccessService := false
 		loadBalancerIP := spec.GetLoadBalancerIP()
@@ -198,12 +200,13 @@ func (r *Resources) ensureExternalAccessServices(svcs k8sutil.ServiceInterface, 
 				return maskAny(err)
 			}
 		}
-	} else if k8sutil.IsNotFound(err) {
+	} else {
 		// External access service does not exist
 		if !spec.GetType().IsNone() || noneIsClusterIP {
 			createExternalAccessService = true
 		}
 	}
+
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
 		if err := svcs.Delete(eaServiceName, &metav1.DeleteOptions{}); err != nil {

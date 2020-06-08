@@ -22,8 +22,15 @@
 
 package operator
 
-import "github.com/pkg/errors"
-
-var (
-	maskAny = errors.WithStack
+import (
+	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/pkg/errors"
 )
+
+func maskAny(err error) error {
+	if operatorErrors.IsReconcile(err) {
+		return nil
+	}
+
+	return errors.WithStack(err)
+}

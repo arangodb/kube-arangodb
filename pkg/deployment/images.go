@@ -29,6 +29,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/rs/zerolog"
@@ -43,8 +46,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-var _ k8sutil.PodCreator = &ImageUpdatePod{}
-var _ k8sutil.ContainerCreator = &ArangoDImageUpdateContainer{}
+var _ interfaces.PodCreator = &ImageUpdatePod{}
+var _ interfaces.ContainerCreator = &ArangoDImageUpdateContainer{}
 
 type ImageUpdatePod struct {
 	spec      api.DeploymentSpec
@@ -275,7 +278,7 @@ func (i *ImageUpdatePod) GetImagePullSecrets() []string {
 	return i.spec.ImagePullSecrets
 }
 
-func (i *ImageUpdatePod) GetContainerCreator() k8sutil.ContainerCreator {
+func (i *ImageUpdatePod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDImageUpdateContainer{
 		spec:  i.spec,
 		image: i.image,
@@ -373,6 +376,6 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	return pod.ReturnNodeAffinityOrNil(a)
 }
 
-func (i *ImageUpdatePod) Validate(secrets k8sutil.SecretInterface) error {
+func (i *ImageUpdatePod) Validate(cachedStatus inspector.Inspector) error {
 	return nil
 }

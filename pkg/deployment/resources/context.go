@@ -74,13 +74,11 @@ type Context interface {
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
-	// GetOwnedPods returns a list of all pods owned by the deployment.
-	GetOwnedPods() ([]v1.Pod, error)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(p v1.Pod) error
+	CleanupPod(p *v1.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error

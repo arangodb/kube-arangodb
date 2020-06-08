@@ -17,32 +17,44 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+//
 
-package resources
+package pod
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	core "k8s.io/api/core/v1"
 )
 
-// ValidateLicenseKeySecret checks if the licens key secret exists and is valid
-func (r *Resources) ValidateLicenseKeySecret(cachedStatus inspector.Inspector) error {
-	spec := r.context.GetSpec().License
+func JWT() Builder {
+	return jwt{}
+}
 
-	if spec.HasSecretName() {
-		secretName := spec.GetSecretName()
+type jwt struct{}
 
-		s, exists := cachedStatus.Secret(secretName)
+func (e jwt) Args(i Input) k8sutil.OptionPairs {
+	return nil
+}
 
-		if !exists {
-			return errors.Errorf("License secret %s does not exist", s)
-		}
+func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
+	return nil, nil
+}
 
-		if _, ok := s.Data[constants.SecretKeyToken]; !ok {
-			return errors.Errorf("Invalid secret format")
-		}
+func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
+	if !i.Deployment.IsAuthenticated() {
+		return nil
+	}
+
+	secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
+	if !exists {
+		return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
+	}
+
+	if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {
+		return errors.Wrapf(err, "Cluster JWT secret validation failed")
 	}
 
 	return nil

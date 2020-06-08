@@ -27,6 +27,9 @@ import (
 	"math"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -43,8 +46,8 @@ const (
 	ArangoDBOverrideDetectedTotalMemoryEnv        = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
 )
 
-var _ k8sutil.PodCreator = &MemberArangoDPod{}
-var _ k8sutil.ContainerCreator = &ArangoDContainer{}
+var _ interfaces.PodCreator = &MemberArangoDPod{}
+var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
 	status                      api.MemberStatus
@@ -207,9 +210,17 @@ func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
 
-func (m *MemberArangoDPod) Validate(secrets k8sutil.SecretInterface) error {
+func (m *MemberArangoDPod) Validate(cachedStatus inspector.Inspector) error {
 	i := m.AsInput()
-	if err := pod.SNI().Verify(i, secrets); err != nil {
+	if err := pod.SNI().Verify(i, cachedStatus); err != nil {
+		return err
+	}
+
+	if err := pod.Encryption().Verify(i, cachedStatus); err != nil {
+		return err
+	}
+
+	if err := pod.JWT().Verify(i, cachedStatus); err != nil {
 		return err
 	}
 
@@ -428,7 +439,7 @@ func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
 }
 
-func (m *MemberArangoDPod) GetContainerCreator() k8sutil.ContainerCreator {
+func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
 		spec:      m.spec,
 		group:     m.group,

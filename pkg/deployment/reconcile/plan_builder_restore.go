@@ -25,6 +25,9 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +36,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext) api.Plan {
+func createRestorePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if spec.RestoreFrom == nil && status.Restore != nil {
 		return api.Plan{
 			api.NewAction(api.ActionTypeBackupRestoreClean, api.ServerGroupUnknown, ""),
@@ -41,13 +47,13 @@ func createRestorePlan(ctx context.Context, log zerolog.Logger, spec api.Deploym
 	}
 
 	if spec.RestoreFrom != nil && status.Restore == nil {
-		backup, err := builderCtx.GetBackup(spec.GetRestoreFrom())
+		backup, err := context.GetBackup(spec.GetRestoreFrom())
 		if err != nil {
 			log.Warn().Err(err).Msg("Backup not found")
 			return nil
 		}
 
-		if p := createRestorePlanEncryption(ctx, log, spec, status, builderCtx, backup); !p.IsEmpty() {
+		if p := createRestorePlanEncryption(ctx, log, spec, status, context, backup); !p.IsEmpty() {
 			return p
 		}
 

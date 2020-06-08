@@ -24,6 +24,7 @@ package pod
 
 import (
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 )
@@ -34,7 +35,7 @@ func AutoUpgrade() Builder {
 
 type autoUpgrade struct{}
 
-func (u autoUpgrade) Verify(i Input, s k8sutil.SecretInterface) error {
+func (u autoUpgrade) Verify(i Input, cachedStatus inspector.Inspector) error {
 	return nil
 }
 

@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -69,22 +71,28 @@ func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []b
 		return "", nil, false, errors.Wrapf(err, "Unable to fetch secret")
 	}
 
+	sha, data, err := GetEncryptionKeyFromSecret(keyfile)
+
+	return sha, data, true, err
+}
+
+func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 	if len(keyfile.Data) == 0 {
-		return "", nil, false, nil
+		return "", nil, nil
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
 	if !ok {
-		return "", nil, false, nil
+		return "", nil, nil
 	}
 
 	if len(d) != 32 {
-		return "", nil, false, errors.Errorf("Current encryption key is not valid")
+		return "", nil, errors.Errorf("Current encryption key is not valid")
 	}
 
 	sha := fmt.Sprintf("%0x", sha256.Sum256(d))
 
-	return sha, d, true, nil
+	return sha, d, nil
 }
 
 func GetKeyfolderSecretName(name string) string {
@@ -138,12 +146,18 @@ func (e encryption) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	}
 }
 
-func (e encryption) Verify(i Input, s k8sutil.SecretInterface) error {
+func (e encryption) Verify(i Input, cachedStatus inspector.Inspector) error {
 	if !IsEncryptionEnabled(i) {
 		return nil
 	}
+
+	secret, exists := cachedStatus.Secret(i.Deployment.RocksDB.Encryption.GetKeySecretName())
+	if !exists {
+		return errors.Errorf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
+	}
+
 	if !MultiFileMode(i) {
-		if err := k8sutil.ValidateEncryptionKeySecret(s, i.Deployment.RocksDB.Encryption.GetKeySecretName()); err != nil {
+		if err := k8sutil.ValidateEncryptionKeyFromSecret(secret); err != nil {
 			return errors.Wrapf(err, "RocksDB encryption key secret validation failed")
 		}
 		return nil

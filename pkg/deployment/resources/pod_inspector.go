@@ -27,6 +27,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -49,7 +52,7 @@ const (
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
+func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Inspector) (util.Interval, error) {
 	log := r.log
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()
@@ -58,50 +61,43 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 	defer metrics.SetDuration(inspectPodsDurationGauges.WithLabelValues(deploymentName), start)
 
-	pods, err := r.context.GetOwnedPods()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get owned pods")
-		return 0, maskAny(err)
-	}
-
-	// Update member status from all pods found
 	status, lastVersion := r.context.GetStatus()
 	var podNamesWithScheduleTimeout []string
 	var unscheduledPodNames []string
-	for _, p := range pods {
-		if k8sutil.IsArangoDBImageIDAndVersionPod(p) {
+
+	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
+		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
-			continue
+			return nil
 		}
 
 		// Pod belongs to this deployment, update metric
 		inspectedPodsCounters.WithLabelValues(deploymentName).Inc()
 
-		// Find member status
-		memberStatus, group, found := status.Members.MemberStatusByPodName(p.GetName())
+		memberStatus, group, found := status.Members.MemberStatusByPodName(pod.GetName())
 		if !found {
-			log.Debug().Str("pod", p.GetName()).Msg("no memberstatus found for pod")
-			if k8sutil.IsPodMarkedForDeletion(&p) && len(p.GetFinalizers()) > 0 {
+			log.Debug().Str("pod", pod.GetName()).Msg("no memberstatus found for pod")
+			if k8sutil.IsPodMarkedForDeletion(pod) && len(pod.GetFinalizers()) > 0 {
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
 				ignoreNotFound := false
-				if err := k8sutil.RemovePodFinalizers(log, kubecli, &p, p.GetFinalizers(), ignoreNotFound); err != nil {
+				if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
-					return 0, maskAny(err)
+					return maskAny(err)
 				}
 			}
-			continue
+			return nil
 		}
 
 		// Update state
 		updateMemberStatusNeeded := false
-		if k8sutil.IsPodSucceeded(&p) {
+		if k8sutil.IsPodSucceeded(pod) {
 			// Pod has terminated with exit code 0.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
-				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Succeeded")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
@@ -111,11 +107,11 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 					r.InvalidateSyncStatus()
 				}
 			}
-		} else if k8sutil.IsPodFailed(&p) {
+		} else if k8sutil.IsPodFailed(pod) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
-				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				if !wasTerminated {
@@ -126,10 +122,11 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 				}
 			}
 		}
-		if k8sutil.IsPodReady(&p) {
+
+		if k8sutil.IsPodReady(pod) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
-				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to true")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to true")
 				memberStatus.IsInitialized = true // Require future pods for this member to have an existing UUID (in case of dbserver).
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
@@ -137,25 +134,27 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 		} else {
 			// Pod is not ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", "") {
-				log.Debug().Str("pod-name", p.GetName()).Msg("Updating member condition Ready to false")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to false")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 			}
 		}
-		if k8sutil.IsPodNotScheduledFor(&p, podScheduleTimeout) {
+
+		if k8sutil.IsPodNotScheduledFor(pod, podScheduleTimeout) {
 			// Pod cannot be scheduled for to long
-			log.Debug().Str("pod-name", p.GetName()).Msg("Pod scheduling timeout")
-			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, p.GetName())
-		} else if !k8sutil.IsPodScheduled(&p) {
-			unscheduledPodNames = append(unscheduledPodNames, p.GetName())
+			log.Debug().Str("pod-name", pod.GetName()).Msg("Pod scheduling timeout")
+			podNamesWithScheduleTimeout = append(podNamesWithScheduleTimeout, pod.GetName())
+		} else if !k8sutil.IsPodScheduled(pod) {
+			unscheduledPodNames = append(unscheduledPodNames, pod.GetName())
 		}
-		if k8sutil.IsPodMarkedForDeletion(&p) {
+
+		if k8sutil.IsPodMarkedForDeletion(pod) {
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminating, true, "Pod marked for deletion", "") {
 				updateMemberStatusNeeded = true
-				log.Debug().Str("pod-name", p.GetName()).Msg("Pod marked as terminating")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Pod marked as terminating")
 			}
 			// Process finalizers
-			if x, err := r.runPodFinalizers(ctx, &p, memberStatus, func(m api.MemberStatus) error {
+			if x, err := r.runPodFinalizers(ctx, pod, memberStatus, func(m api.MemberStatus) error {
 				updateMemberStatusNeeded = true
 				memberStatus = m
 				return nil
@@ -166,27 +165,24 @@ func (r *Resources) InspectPods(ctx context.Context) (util.Interval, error) {
 				nextInterval = nextInterval.ReduceTo(x)
 			}
 		}
+
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return 0, maskAny(err)
+				return maskAny(err)
 			}
 		}
-	}
 
-	podExists := func(podName string) bool {
-		for _, p := range pods {
-			if p.GetName() == podName {
-				return true
-			}
-		}
-		return false
+		return nil
+	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(deploymentName, "")))
+	if err != nil {
+		return 0, err
 	}
 
 	// Go over all members, check for missing pods
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if podName := m.PodName; podName != "" {
-				if !podExists(podName) {
+				if _, exists := cachedStatus.Pod(podName); !exists {
 					log.Debug().Str("pod-name", podName).Msg("Does not exist")
 					switch m.Phase {
 					case api.MemberPhaseNone:

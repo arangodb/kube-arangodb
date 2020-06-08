@@ -33,6 +33,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -298,7 +301,7 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
@@ -360,22 +363,8 @@ func (r *Resources) RenderPodForMember(spec api.DeploymentSpec, status api.Deplo
 
 		args := createArangodArgs(input)
 
-		if err := memberPod.Validate(secrets); err != nil {
+		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, maskAny(errors.Wrapf(err, "Validation of pods resources failed"))
-		}
-
-		if rocksdbEncryptionSecretName != "" {
-			if err := k8sutil.ValidateEncryptionKeySecret(secrets, rocksdbEncryptionSecretName); err != nil {
-				return nil, maskAny(errors.Wrapf(err, "RocksDB encryption key secret validation failed"))
-			}
-		}
-
-		// Check cluster JWT secret
-		if clusterJWTSecretName != "" {
-			if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
-				return nil, maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
-			}
-
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberPod)
@@ -461,7 +450,7 @@ func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentSt
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once) error {
+func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspector.Inspector) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -475,7 +464,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	}
 	status.CurrentImage = &imageInfo
 
-	pod, err := r.RenderPodForMember(spec, status, memberID, imageInfo)
+	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
 		return maskAny(err)
 	}
@@ -587,7 +576,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 // RenderArangoPod renders new ArangoD Pod
 func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
-	args []string, podCreator k8sutil.PodCreator) (*core.Pod, error) {
+	args []string, podCreator interfaces.PodCreator) (*core.Pod, error) {
 
 	// Prepare basic pod
 	p := k8sutil.NewPod(deployment.GetName(), role, id, podName, podCreator)
@@ -631,7 +620,7 @@ func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject,
 }
 
 // EnsurePods creates all Pods listed in member status
-func (r *Resources) EnsurePods() error {
+func (r *Resources) EnsurePods(cachedStatus inspector.Inspector) error {
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
@@ -645,7 +634,7 @@ func (r *Resources) EnsurePods() error {
 				continue
 			}
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce); err != nil {
+			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
 				return maskAny(err)
 			}
 		}

@@ -25,18 +25,23 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+func createEncryptionKey(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.RocksDB.IsEncrypted() {
 		return nil
 	}
@@ -45,9 +50,14 @@ func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deplo
 		return nil
 	}
 
-	name, _, exists, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := cachedStatus.Secret(spec.RocksDB.Encryption.GetKeySecretName())
+	if !exists {
+		return nil
+	}
+
+	name, _, err := pod.GetEncryptionKeyFromSecret(secret)
 	if err != nil {
-		log.Err(err).Msgf("Unable to fetch encryption key")
+		log.Error().Err(err).Msgf("Unable to fetch encryption key")
 		return nil
 	}
 
@@ -55,9 +65,9 @@ func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deplo
 		return nil
 	}
 
-	keyfolder, err := context.SecretsInterface().Get(pod.GetKeyfolderSecretName(context.GetName()), meta.GetOptions{})
-	if err != nil {
-		log.Err(err).Msgf("Unable to fetch encryption folder")
+	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	if !exists {
+		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
 	}
 
@@ -133,7 +143,10 @@ func createEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deplo
 	return api.Plan{}
 }
 
-func cleanEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+func cleanEncryptionKey(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.RocksDB.IsEncrypted() {
 		return nil
 	}
@@ -142,9 +155,9 @@ func cleanEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deploy
 		return nil
 	}
 
-	keyfolder, err := context.SecretsInterface().Get(pod.GetKeyfolderSecretName(context.GetName()), meta.GetOptions{})
-	if err != nil {
-		log.Err(err).Msgf("Unable to fetch encryption folder")
+	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	if !exists {
+		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
 	}
 
@@ -152,9 +165,13 @@ func cleanEncryptionKey(ctx context.Context, log zerolog.Logger, spec api.Deploy
 		return nil
 	}
 
-	name, _, exists, err := pod.GetEncryptionKey(context.SecretsInterface(), spec.RocksDB.Encryption.GetKeySecretName())
+	secret, exists := cachedStatus.Secret(spec.RocksDB.Encryption.GetKeySecretName())
+	if !exists {
+		return nil
+	}
+
+	name, _, err := pod.GetEncryptionKeyFromSecret(secret)
 	if err != nil {
-		log.Err(err).Msgf("Unable to fetch encryption key")
 		return nil
 	}
 
