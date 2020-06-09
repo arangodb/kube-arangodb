@@ -53,7 +53,6 @@ type MemberArangoDPod struct {
 	status                      api.MemberStatus
 	tlsKeyfileSecretName        string
 	rocksdbEncryptionSecretName string
-	clusterJWTSecretName        string
 	groupSpec                   api.ServerGroupSpec
 	spec                        api.DeploymentSpec
 	deploymentStatus            api.DeploymentStatus
@@ -66,6 +65,7 @@ type MemberArangoDPod struct {
 }
 
 type ArangoDContainer struct {
+	member    *MemberArangoDPod
 	resources *Resources
 	groupSpec api.ServerGroupSpec
 	spec      api.DeploymentSpec
@@ -141,13 +141,8 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 	envs := NewEnvBuilder()
 
-	if a.spec.IsAuthenticated() {
-		if !versionHasJWTSecretKeyfile(a.imageInfo.ArangoDBVersion) {
-			env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangodJWTSecret,
-				a.spec.Authentication.GetJWTSecretName(), constants.SecretKeyToken)
-
-			envs.Add(true, env)
-		}
+	if env := pod.JWT().Envs(a.member.AsInput()); len(env) > 0 {
+		envs.Add(true, env...)
 	}
 
 	if a.spec.License.HasSecretName() {
@@ -309,42 +304,31 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 }
 
 func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	var volumes []core.Volume
-	var volumeMounts []core.VolumeMount
+	volumes := pod.NewVolumes()
 
-	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
 
 	if m.resources.context.GetLifecycleImage() != "" {
-		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
+		volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 	}
 
 	if m.status.PersistentVolumeClaimName != "" {
 		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
 			m.status.PersistentVolumeClaimName)
 
-		volumes = append(volumes, vol)
+		volumes.AddVolume(vol)
 	} else {
-		volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
 	}
 
 	if m.tlsKeyfileSecretName != "" {
 		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, m.tlsKeyfileSecretName)
-		volumes = append(volumes, vol)
-		volumeMounts = append(volumeMounts, k8sutil.TlsKeyfileVolumeMount())
+		volumes.AddVolume(vol)
+		volumes.AddVolumeMount(k8sutil.TlsKeyfileVolumeMount())
 	}
 
 	// Encryption
-	{
-		encryptionVolumes, encryptionVolumeMounts := pod.Encryption().Volumes(m.AsInput())
-
-		if len(encryptionVolumes) > 0 {
-			volumes = append(volumes, encryptionVolumes...)
-		}
-
-		if len(encryptionVolumeMounts) > 0 {
-			volumeMounts = append(volumeMounts, encryptionVolumeMounts...)
-		}
-	}
+	volumes.Append(pod.Encryption(), m.AsInput())
 
 	if m.spec.Metrics.IsEnabled() {
 		switch m.spec.Metrics.Mode.Get() {
@@ -357,43 +341,29 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 			token := m.spec.Metrics.GetJWTTokenSecretName()
 			if token != "" {
 				vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-				volumes = append(volumes, vol)
+				volumes.AddVolume(vol)
 			}
 		}
 	}
 
-	if m.clusterJWTSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, m.clusterJWTSecretName)
-		volumes = append(volumes, vol)
-		volumeMounts = append(volumeMounts, k8sutil.ClusterJWTVolumeMount())
-	}
+	volumes.Append(pod.JWT(), m.AsInput())
 
 	if m.resources.context.GetLifecycleImage() != "" {
-		volumes = append(volumes, k8sutil.LifecycleVolume())
+		volumes.AddVolume(k8sutil.LifecycleVolume())
 	}
 
 	// SNI
-	{
-		sniVolumes, sniVolumeMounts := pod.SNI().Volumes(m.AsInput())
-
-		if len(sniVolumes) > 0 {
-			volumes = append(volumes, sniVolumes...)
-		}
-
-		if len(sniVolumeMounts) > 0 {
-			volumeMounts = append(volumeMounts, sniVolumeMounts...)
-		}
-	}
+	volumes.Append(pod.SNI(), m.AsInput())
 
 	if len(m.groupSpec.Volumes) > 0 {
-		volumes = append(volumes, m.groupSpec.Volumes.Volumes()...)
+		volumes.AddVolume(m.groupSpec.Volumes.Volumes()...)
 	}
 
 	if len(m.groupSpec.VolumeMounts) > 0 {
-		volumeMounts = append(volumeMounts, m.groupSpec.VolumeMounts.VolumeMounts()...)
+		volumes.AddVolumeMount(m.groupSpec.VolumeMounts.VolumeMounts()...)
 	}
 
-	return volumes, volumeMounts
+	return volumes.Volumes(), volumes.VolumeMounts()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
@@ -441,6 +411,7 @@ func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 
 func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
+		member:    m,
 		spec:      m.spec,
 		group:     m.group,
 		resources: m.resources,

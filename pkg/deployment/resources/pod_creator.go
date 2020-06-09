@@ -54,20 +54,6 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
-// versionHasJWTSecretKeyfile derives from the version number of arangod has
-// the option --auth.jwt-secret-keyfile which can take the JWT secret from
-// a file in the file system.
-func versionHasJWTSecretKeyfile(v driver.Version) bool {
-	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
-		return true
-	}
-	if v.CompareTo("3.4.2") >= 0 {
-		return true
-	}
-
-	return false
-}
-
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(input pod.Input) []string {
 	options := k8sutil.CreateOptionPairs(64)
@@ -81,20 +67,7 @@ func createArangodArgs(input pod.Input) []string {
 	options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
 
 	// Authentication
-	if input.Deployment.IsAuthenticated() {
-		// With authentication
-		options.Add("--server.authentication", "true")
-
-		if versionHasJWTSecretKeyfile(input.Version) {
-			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
-			options.Add("--server.jwt-secret-keyfile", keyPath)
-		} else {
-			options.Addf("--server.jwt-secret", "$(%s)", constants.EnvArangodJWTSecret)
-		}
-	} else {
-		// Without authentication
-		options.Add("--server.authentication", "false")
-	}
+	options.Merge(pod.JWT().Args(input))
 
 	// Storage engine
 	options.Add("--server.storage-engine", input.Deployment.GetStorageEngine().AsArangoArgument())
@@ -323,7 +296,6 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	// Render pod
 	if group.IsArangod() {
 		// Prepare arguments
-		version := imageInfo.ArangoDBVersion
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 
 		tlsKeyfileSecretName := ""
@@ -336,18 +308,10 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			rocksdbEncryptionSecretName = spec.RocksDB.Encryption.GetKeySecretName()
 		}
 
-		var clusterJWTSecretName string
-		if spec.IsAuthenticated() {
-			if versionHasJWTSecretKeyfile(version) {
-				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-			}
-		}
-
 		memberPod := MemberArangoDPod{
 			status:                      m,
 			tlsKeyfileSecretName:        tlsKeyfileSecretName,
 			rocksdbEncryptionSecretName: rocksdbEncryptionSecretName,
-			clusterJWTSecretName:        clusterJWTSecretName,
 			groupSpec:                   groupSpec,
 			spec:                        spec,
 			group:                       group,
