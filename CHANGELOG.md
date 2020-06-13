@@ -2,6 +2,8 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Add Encryption Key rotation feature for ArangoDB EE 3.7+
+- Improve TLS CA and Keyfile rotation for CE and EE
+- Add runtime TLS rotation for ArangoDB EE 3.7+
 
 ## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
 - Prevent deletion of not known PVC's

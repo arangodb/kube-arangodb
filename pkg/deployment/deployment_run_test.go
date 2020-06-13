@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -60,12 +62,12 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		for {
 			cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetNamespace())
 			require.NoError(t, err)
-			err = d.resources.EnsureSecrets(cache)
+			err = d.resources.EnsureSecrets(log.Logger, cache)
 			if err == nil {
 				break
 			}
 
-			if errs > 5 {
+			if errs > 25 {
 				require.NoError(t, err)
 			}
 

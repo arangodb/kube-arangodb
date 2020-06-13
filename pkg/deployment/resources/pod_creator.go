@@ -76,11 +76,7 @@ func createArangodArgs(input pod.Input) []string {
 	options.Add("--log.level", "INFO")
 
 	// TLS
-	if input.Deployment.IsSecure() {
-		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-		options.Add("--ssl.keyfile", keyPath)
-		options.Add("--ssl.ecdh-curve", "") // This way arangod accepts curves other than P256 as well.
-	}
+	options.Merge(pod.TLS().Args(input))
 
 	// RocksDB
 	options.Merge(pod.Encryption().Args(input))
@@ -298,29 +294,17 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		// Prepare arguments
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 
-		tlsKeyfileSecretName := ""
-		if spec.IsSecure() {
-			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
-		}
-
-		rocksdbEncryptionSecretName := ""
-		if spec.RocksDB.IsEncrypted() {
-			rocksdbEncryptionSecretName = spec.RocksDB.Encryption.GetKeySecretName()
-		}
-
 		memberPod := MemberArangoDPod{
-			status:                      m,
-			tlsKeyfileSecretName:        tlsKeyfileSecretName,
-			rocksdbEncryptionSecretName: rocksdbEncryptionSecretName,
-			groupSpec:                   groupSpec,
-			spec:                        spec,
-			group:                       group,
-			resources:                   r,
-			imageInfo:                   imageInfo,
-			context:                     r.context,
-			autoUpgrade:                 autoUpgrade,
-			deploymentStatus:            status,
-			id:                          memberID,
+			status:           m,
+			groupSpec:        groupSpec,
+			spec:             spec,
+			group:            group,
+			resources:        r,
+			imageInfo:        imageInfo,
+			context:          r.context,
+			autoUpgrade:      autoUpgrade,
+			deploymentStatus: status,
+			id:               memberID,
 		}
 
 		input := memberPod.AsInput()
@@ -455,20 +439,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
-		}
-		if spec.IsSecure() {
-			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
-			serverNames := []string{
-				k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
-				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
-			}
-			if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
-				serverNames = append(serverNames, ip)
-			}
-			owner := apiObject.AsOwner()
-			if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
-				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-			}
 		}
 
 		uid, checksum, err := CreateArangoPod(kubecli, apiObject, pod)

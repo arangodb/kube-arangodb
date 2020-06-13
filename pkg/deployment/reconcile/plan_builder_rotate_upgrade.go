@@ -76,7 +76,6 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				continue
 			}
 
-			log.Debug().Msgf("Before upgrade")
 			// Got pod, compare it with what it should be
 			decision := podNeedsUpgrading(log, pod, spec, status.Images)
 			if decision.UpgradeNeeded && !decision.UpgradeAllowed {
@@ -89,14 +88,11 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				return nil
 			}
 
-			log.Debug().Msgf("After upgrade")
-
 			if !newPlan.IsEmpty() {
 				// Only rotate/upgrade 1 pod at a time
 				continue
 			}
 
-			log.Debug().Msgf("Before rotate")
 			if decision.UpgradeNeeded {
 				// Yes, upgrade is needed (and allowed)
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status,
@@ -108,7 +104,6 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
 			}
-			log.Debug().Msgf("After rotate")
 
 			if !newPlan.IsEmpty() {
 				// Only rotate/upgrade 1 pod at a time

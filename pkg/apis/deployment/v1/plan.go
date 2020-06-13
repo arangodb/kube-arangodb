@@ -32,6 +32,10 @@ import (
 // ActionType is a strongly typed name for a plan action item
 type ActionType string
 
+func (a ActionType) String() string {
+	return string(a)
+}
+
 const (
 	// ActionTypeIdle causes a plan to be recalculated.
 	ActionTypeIdle ActionType = "Idle"
@@ -61,6 +65,16 @@ const (
 	ActionTypeRenewTLSCertificate ActionType = "RenewTLSCertificate"
 	// ActionTypeRenewTLSCACertificate causes the TLS CA certificate of the entire deployment to be renewed.
 	ActionTypeRenewTLSCACertificate ActionType = "RenewTLSCACertificate"
+	// ActionTypeAppendTLSCACertificate add TLS CA certificate to local truststore.
+	ActionTypeAppendTLSCACertificate ActionType = "AppendTLSCACertificate"
+	// ActionTypeCleanTLSCACertificate clean TLS CA certificate from local truststore.
+	ActionTypeCleanTLSCACertificate ActionType = "CleanTLSCACertificate"
+	// ActionTypeCleanTLSKeyfileCertificate clean server keyfile
+	ActionTypeCleanTLSKeyfileCertificate ActionType = "CleanTLSKeyfileCertificate"
+	// ActionTypeRefreshTLSKeyfileCertificate refresh server keyfile using API
+	ActionTypeRefreshTLSKeyfileCertificate ActionType = "RefreshTLSKeyfileCertificate"
+	// ActionTypeTLSKeyStatusUpdate update status with current data from deployment
+	ActionTypeTLSKeyStatusUpdate ActionType = "TLSKeyStatusUpdate"
 	// ActionTypeUpdateTLSSNI update SNI inplace.
 	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.

@@ -50,18 +50,16 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
-	status                      api.MemberStatus
-	tlsKeyfileSecretName        string
-	rocksdbEncryptionSecretName string
-	groupSpec                   api.ServerGroupSpec
-	spec                        api.DeploymentSpec
-	deploymentStatus            api.DeploymentStatus
-	group                       api.ServerGroup
-	context                     Context
-	resources                   *Resources
-	imageInfo                   api.ImageInfo
-	autoUpgrade                 bool
-	id                          string
+	status           api.MemberStatus
+	groupSpec        api.ServerGroupSpec
+	spec             api.DeploymentSpec
+	deploymentStatus api.DeploymentStatus
+	group            api.ServerGroup
+	context          Context
+	resources        *Resources
+	imageInfo        api.ImageInfo
+	autoUpgrade      bool
+	id               string
 }
 
 type ArangoDContainer struct {
@@ -207,6 +205,7 @@ func (m *MemberArangoDPod) Init(pod *core.Pod) {
 
 func (m *MemberArangoDPod) Validate(cachedStatus inspector.Inspector) error {
 	i := m.AsInput()
+
 	if err := pod.SNI().Verify(i, cachedStatus); err != nil {
 		return err
 	}
@@ -216,6 +215,10 @@ func (m *MemberArangoDPod) Validate(cachedStatus inspector.Inspector) error {
 	}
 
 	if err := pod.JWT().Verify(i, cachedStatus); err != nil {
+		return err
+	}
+
+	if err := pod.TLS().Verify(i, cachedStatus); err != nil {
 		return err
 	}
 
@@ -321,11 +324,8 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
 	}
 
-	if m.tlsKeyfileSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, m.tlsKeyfileSecretName)
-		volumes.AddVolume(vol)
-		volumes.AddVolumeMount(k8sutil.TlsKeyfileVolumeMount())
-	}
+	// TLS
+	volumes.Append(pod.TLS(), m.AsInput())
 
 	// Encryption
 	volumes.Append(pod.Encryption(), m.AsInput())
@@ -444,7 +444,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 	}
 
-	if m.tlsKeyfileSecretName != "" {
+	if pod.IsTLSEnabled(m.AsInput()) {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 	}
 

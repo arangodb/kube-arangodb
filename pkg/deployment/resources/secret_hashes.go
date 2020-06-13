@@ -176,18 +176,6 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			}
 		}
 	}
-	if spec.IsSecure() {
-		secretName := spec.TLS.GetCASecretName()
-		getExpectedHash := func() string { return getHashes().TLSCA }
-		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.TLSCA = h }))
-		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-			return maskAny(err)
-		} else if !hashOK {
-			badSecretNames = append(badSecretNames, secretName)
-		}
-	}
 	if spec.Sync.IsEnabled() {
 		secretName := spec.Sync.TLS.GetCASecretName()
 		getExpectedHash := func() string { return getHashes().SyncTLSCA }
