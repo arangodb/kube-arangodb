@@ -73,6 +73,7 @@ MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
+MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
@@ -330,8 +331,19 @@ manifests-operator-backup: helm
 	     --set "operator.features.storage=false" \
 	     --set "operator.features.backup=true" > "$(MANIFESTPATHBACKUP)"
 
+.PHONY: manifests-operator-all
+manifests-operator-all: export CHART_NAME := kube-arangodb
+manifests-operator-all: export NAME := all
+manifests-operator-all: helm
+	@echo Building manifests for All Operators - $(MANIFESTPATHALL)
+	@$(HELM_CMD) \
+	     --set "operator.features.deployment=true" \
+	     --set "operator.features.deploymentReplications=true" \
+	     --set "operator.features.storage=true" \
+	     --set "operator.features.backup=true" > "$(MANIFESTPATHALL)"
+
 .PHONY: manifests-operator
-manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage manifests-operator-backup
+manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage manifests-operator-backup manifests-operator-all
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd
