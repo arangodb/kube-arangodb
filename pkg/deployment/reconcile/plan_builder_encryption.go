@@ -38,15 +38,23 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bool {
+	if !spec.RocksDB.IsEncrypted() {
+		return true
+	}
+
+	if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+		return true
+	}
+
+	return false
+}
+
 func createEncryptionKey(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
-	if !spec.RocksDB.IsEncrypted() {
-		return nil
-	}
-
-	if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 
@@ -128,30 +136,53 @@ func createEncryptionKey(ctx context.Context,
 		return plan
 	}
 
-	currentKeys := make([]string, 0, len(keyfolder.Data))
+	return api.Plan{}
+}
 
-	for key := range keyfolder.Data {
-		currentKeys = append(currentKeys, key)
+func createEncryptionKeyStatusUpdate(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	if skipEncryptionPlan(spec, status) {
+		return nil
 	}
 
-	currentKeyHashes := util.PrefixStringArray(currentKeys, "sha256:")
-
-	if !util.CompareStringArray(currentKeyHashes, status.CurrentEncryptionKeyHashes) {
+	if createEncryptionKeyStatusUpdateRequired(ctx, log, apiObject, spec, status, cachedStatus, context) {
 		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyStatusUpdate, api.ServerGroupUnknown, "")}
 	}
 
-	return api.Plan{}
+	return nil
+
+}
+
+func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) bool {
+	if skipEncryptionPlan(spec, status) {
+		return false
+	}
+
+	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	if !exists {
+		log.Error().Msgf("Encryption key folder does not exist")
+		return false
+	}
+
+	keyHashes := secretKeysToListWithPrefix("sha256:", keyfolder)
+
+	if !util.CompareStringArray(keyHashes, status.Hashes.Encryption) {
+		return true
+	}
+
+	return false
 }
 
 func cleanEncryptionKey(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
-	if !spec.RocksDB.IsEncrypted() {
-		return nil
-	}
-
-	if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
 

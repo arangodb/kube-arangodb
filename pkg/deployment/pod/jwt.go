@@ -23,11 +23,34 @@
 package pod
 
 import (
+	"path/filepath"
+
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
+
+func IsAuthenticated(i Input) bool {
+	return i.Deployment.IsAuthenticated()
+}
+
+func VersionHasJWTSecretKeyfile(v driver.Version) bool {
+	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
+		return true
+	}
+	if v.CompareTo("3.4.2") >= 0 {
+		return true
+	}
+
+	return false
+}
+
+func VersionHasJWTSecretKeyfolder(i Input) bool {
+	return i.Enterprise && i.Version.CompareTo("3.7.0") > 0
+}
 
 func JWT() Builder {
 	return jwt{}
@@ -35,16 +58,50 @@ func JWT() Builder {
 
 type jwt struct{}
 
-func (e jwt) Args(i Input) k8sutil.OptionPairs {
+func (e jwt) Envs(i Input) []core.EnvVar {
+	if !IsAuthenticated(i) {
+		return nil
+	}
+
+	if !VersionHasJWTSecretKeyfile(i.Version) {
+		return []core.EnvVar{k8sutil.CreateEnvSecretKeySelector(constants.EnvArangodJWTSecret,
+			i.Deployment.Authentication.GetJWTSecretName(), constants.SecretKeyToken)}
+	}
+
 	return nil
 }
 
+func (e jwt) Args(i Input) k8sutil.OptionPairs {
+	if !IsAuthenticated(i) {
+		// Without authentication
+		return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--server.authentication", Value: "false"})
+	}
+
+	options := k8sutil.CreateOptionPairs(2)
+
+	options.Add("--server.authentication", "true")
+
+	if VersionHasJWTSecretKeyfile(i.Version) {
+		keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+		options.Add("--server.jwt-secret-keyfile", keyPath)
+	} else {
+		options.Addf("--server.jwt-secret", "$(%s)", constants.EnvArangodJWTSecret)
+	}
+
+	return options
+}
+
 func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
-	return nil, nil
+	if !IsAuthenticated(i) {
+		return nil, nil
+	}
+
+	vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
+	return []core.Volume{vol}, []core.VolumeMount{k8sutil.ClusterJWTVolumeMount()}
 }
 
 func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
-	if !i.Deployment.IsAuthenticated() {
+	if !IsAuthenticated(i) {
 		return nil
 	}
 

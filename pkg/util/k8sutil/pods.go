@@ -196,6 +196,7 @@ func TlsKeyfileVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
 		Name:      TlsKeyfileVolumeName,
 		MountPath: TLSKeyfileVolumeMountDir,
+		ReadOnly:  true,
 	}
 }
 

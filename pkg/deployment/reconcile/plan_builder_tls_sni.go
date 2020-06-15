@@ -90,10 +90,10 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				return nil
 
 			} else if !ok {
-				switch sni.Mode.Get() {
-				case api.TLSSNIRotateModeRecreate:
+				switch spec.TLS.Mode.Get() {
+				case api.TLSRotateModeRecreate:
 					plan = append(plan, createRotateMemberPlan(log, m, group, "SNI Secret needs update")...)
-				case api.TLSSNIRotateModeInPlace:
+				case api.TLSRotateModeInPlace:
 					plan = append(plan,
 						api.NewAction(api.ActionTypeUpdateTLSSNI, group, m.ID, "SNI Secret needs update"))
 				default:

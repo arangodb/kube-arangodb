@@ -57,6 +57,10 @@ func SNI() Builder {
 
 type sni struct{}
 
+func (s sni) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
 func (s sni) isSupported(i Input) bool {
 	if !i.Deployment.TLS.IsSecure() {
 		return false

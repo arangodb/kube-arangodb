@@ -150,7 +150,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
-	if err := d.resources.EnsureSecrets(cachedStatus); err != nil {
+	if err := d.resources.EnsureSecrets(d.deps.Log, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
 

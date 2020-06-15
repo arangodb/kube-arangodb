@@ -24,9 +24,9 @@ package v1
 
 import "fmt"
 
-type DeploymentStatusEncryptionKeyHashes []string
+type DeploymentStatusHashList []string
 
-func (d DeploymentStatusEncryptionKeyHashes) Contains(hash string) bool {
+func (d DeploymentStatusHashList) Contains(hash string) bool {
 	if len(d) == 0 {
 		return false
 	}
@@ -40,6 +40,6 @@ func (d DeploymentStatusEncryptionKeyHashes) Contains(hash string) bool {
 	return false
 }
 
-func (d DeploymentStatusEncryptionKeyHashes) ContainsSHA256(hash string) bool {
+func (d DeploymentStatusHashList) ContainsSHA256(hash string) bool {
 	return d.Contains(fmt.Sprintf("sha256:%s", hash))
 }

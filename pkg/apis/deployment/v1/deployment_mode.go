@@ -58,6 +58,16 @@ func (m *DeploymentMode) Get() DeploymentMode {
 	return *m
 }
 
+// String return string from mode
+func (m *DeploymentMode) String() string {
+	return string(m.Get())
+}
+
+// Nww return pointer to mode
+func (m DeploymentMode) New() *DeploymentMode {
+	return &m
+}
+
 // HasSingleServers returns true when the given mode is "Single" or "ActiveFailover".
 func (m DeploymentMode) HasSingleServers() bool {
 	return m == DeploymentModeSingle || m == DeploymentModeActiveFailover

@@ -70,8 +70,8 @@ type DeploymentStatus struct {
 	// detect changes in secret values.
 	SecretHashes *SecretHashes `json:"secret-hashes,omitempty"`
 
-	// CurrentEncryptionKeys keep list of currently applied encryption keys as SHA256 hash
-	CurrentEncryptionKeyHashes DeploymentStatusEncryptionKeyHashes `json:"currentEncryptionKeyHashes,omitempty"`
+	// Hashes keep status of hashes in deployment
+	Hashes DeploymentStatusHashes `json:"hashes,omitempty"`
 
 	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
 	ForceStatusReload *bool `json:"force-status-reload,omitempty"`

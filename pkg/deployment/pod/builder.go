@@ -46,5 +46,6 @@ type Input struct {
 type Builder interface {
 	Args(i Input) k8sutil.OptionPairs
 	Volumes(i Input) ([]core.Volume, []core.VolumeMount)
+	Envs(i Input) []core.EnvVar
 	Verify(i Input, cachedStatus inspector.Inspector) error
 }

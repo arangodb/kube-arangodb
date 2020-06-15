@@ -29,6 +29,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -53,15 +55,25 @@ var (
 	inspectSecretsDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_secrets_duration", "Amount of time taken by a single inspection of all Secrets for a deployment (in sec)", metrics.DeploymentName)
 )
 
+const (
+	CAKeyName  = "ca.key"
+	CACertName = "ca.crt"
+)
+
+func GetCASecretName(apiObject k8sutil.APIObject) string {
+	return fmt.Sprintf("%s-truststore", apiObject.GetName())
+}
+
 // EnsureSecrets creates all secrets needed to run the given deployment
-func (r *Resources) EnsureSecrets(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	status, _ := r.context.GetStatus()
-	deploymentName := r.context.GetAPIObject().GetName()
+	apiObject := r.context.GetAPIObject()
+	deploymentName := apiObject.GetName()
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
 
@@ -80,6 +92,40 @@ func (r *Resources) EnsureSecrets(cachedStatus inspector.Inspector) error {
 	if spec.IsSecure() {
 		counterMetric.Inc()
 		if err := r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.TLS); err != nil {
+			return maskAny(err)
+		}
+
+		if err := r.ensureSecretWithEmptyKey(cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty"); err != nil {
+			return maskAny(err)
+		}
+
+		if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+			if !group.IsArangod() {
+				return nil
+			}
+
+			role := group.AsRole()
+
+			for _, m := range list {
+				tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
+				if _, exists := cachedStatus.Secret(tlsKeyfileSecretName); !exists {
+					serverNames := []string{
+						k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
+						k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+					}
+					if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
+						serverNames = append(serverNames, ip)
+					}
+					owner := apiObject.AsOwner()
+					if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+						return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+					}
+
+					return operatorErrors.Reconcile()
+				}
+			}
+			return nil
+		}); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -120,6 +166,61 @@ func (r *Resources) ensureTokenSecret(cachedStatus inspector.Inspector, secrets 
 	}
 
 	return nil
+}
+
+func (r *Resources) ensureSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
+	if _, exists := cachedStatus.Secret(secretName); !exists {
+		return r.createSecret(secrets, secretName)
+	}
+
+	return nil
+}
+
+func (r *Resources) createSecret(secrets k8sutil.SecretInterface, secretName string) error {
+	// Create secret
+	secret := &core.Secret{
+		ObjectMeta: meta.ObjectMeta{
+			Name: secretName,
+		},
+	}
+	// Attach secret to owner
+	owner := r.context.GetAPIObject().AsOwner()
+	k8sutil.AddOwnerRefToObject(secret, &owner)
+	if _, err := secrets.Create(secret); err != nil {
+		// Failed to create secret
+		return maskAny(err)
+	}
+
+	return operatorErrors.Reconcile()
+}
+
+func (r *Resources) ensureSecretWithEmptyKey(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string) error {
+	if _, exists := cachedStatus.Secret(secretName); !exists {
+		return r.createSecretWithEmptyKey(secrets, secretName, keyName)
+	}
+
+	return nil
+}
+
+func (r *Resources) createSecretWithEmptyKey(secrets k8sutil.SecretInterface, secretName, keyName string) error {
+	// Create secret
+	secret := &core.Secret{
+		ObjectMeta: meta.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			keyName: {},
+		},
+	}
+	// Attach secret to owner
+	owner := r.context.GetAPIObject().AsOwner()
+	k8sutil.AddOwnerRefToObject(secret, &owner)
+	if _, err := secrets.Create(secret); err != nil {
+		// Failed to create secret
+		return maskAny(err)
+	}
+
+	return operatorErrors.Reconcile()
 }
 
 func (r *Resources) createTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {

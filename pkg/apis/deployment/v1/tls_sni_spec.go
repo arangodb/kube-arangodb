@@ -27,25 +27,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TLSSNIRotateMode string
-
-func (t *TLSSNIRotateMode) Get() TLSSNIRotateMode {
-	if t == nil {
-		return TLSSNIRotateModeInPlace
-	}
-
-	return *t
-}
-
-const (
-	TLSSNIRotateModeInPlace  TLSSNIRotateMode = "inplace"
-	TLSSNIRotateModeRecreate TLSSNIRotateMode = "recreate"
-)
-
 // TLSSNISpec holds TLS SNI additional certificates
 type TLSSNISpec struct {
 	Mapping map[string][]string `json:"mapping,omitempty"`
-	Mode    *TLSSNIRotateMode   `json:"mode,omitempty"`
 }
 
 func (s TLSSNISpec) Validate() error {
