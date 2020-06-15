@@ -31,16 +31,36 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/validation"
 )
 
+type TLSRotateMode string
+
+func (t *TLSRotateMode) Get() TLSRotateMode {
+	if t == nil {
+		return TLSRotateModeInPlace
+	}
+
+	return *t
+}
+
+func (t TLSRotateMode) New() *TLSRotateMode {
+	return &t
+}
+
+const (
+	TLSRotateModeInPlace  TLSRotateMode = "inplace"
+	TLSRotateModeRecreate TLSRotateMode = "recreate"
+)
+
 const (
 	defaultTLSTTL = Duration("2610h") // About 3 month
 )
 
 // TLSSpec holds TLS specific configuration settings
 type TLSSpec struct {
-	CASecretName *string     `json:"caSecretName,omitempty"`
-	AltNames     []string    `json:"altNames,omitempty"`
-	TTL          *Duration   `json:"ttl,omitempty"`
-	SNI          *TLSSNISpec `json:"sni,omitempty"`
+	CASecretName *string        `json:"caSecretName,omitempty"`
+	AltNames     []string       `json:"altNames,omitempty"`
+	TTL          *Duration      `json:"ttl,omitempty"`
+	SNI          *TLSSNISpec    `json:"sni,omitempty"`
+	Mode         *TLSRotateMode `json:"mode,omitempty"`
 }
 
 const (

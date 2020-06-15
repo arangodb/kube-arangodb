@@ -54,20 +54,6 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
-// versionHasJWTSecretKeyfile derives from the version number of arangod has
-// the option --auth.jwt-secret-keyfile which can take the JWT secret from
-// a file in the file system.
-func versionHasJWTSecretKeyfile(v driver.Version) bool {
-	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
-		return true
-	}
-	if v.CompareTo("3.4.2") >= 0 {
-		return true
-	}
-
-	return false
-}
-
 // createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(input pod.Input) []string {
 	options := k8sutil.CreateOptionPairs(64)
@@ -81,20 +67,7 @@ func createArangodArgs(input pod.Input) []string {
 	options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
 
 	// Authentication
-	if input.Deployment.IsAuthenticated() {
-		// With authentication
-		options.Add("--server.authentication", "true")
-
-		if versionHasJWTSecretKeyfile(input.Version) {
-			keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
-			options.Add("--server.jwt-secret-keyfile", keyPath)
-		} else {
-			options.Addf("--server.jwt-secret", "$(%s)", constants.EnvArangodJWTSecret)
-		}
-	} else {
-		// Without authentication
-		options.Add("--server.authentication", "false")
-	}
+	options.Merge(pod.JWT().Args(input))
 
 	// Storage engine
 	options.Add("--server.storage-engine", input.Deployment.GetStorageEngine().AsArangoArgument())
@@ -103,11 +76,7 @@ func createArangodArgs(input pod.Input) []string {
 	options.Add("--log.level", "INFO")
 
 	// TLS
-	if input.Deployment.IsSecure() {
-		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-		options.Add("--ssl.keyfile", keyPath)
-		options.Add("--ssl.ecdh-curve", "") // This way arangod accepts curves other than P256 as well.
-	}
+	options.Merge(pod.TLS().Args(input))
 
 	// RocksDB
 	options.Merge(pod.Encryption().Args(input))
@@ -323,40 +292,19 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	// Render pod
 	if group.IsArangod() {
 		// Prepare arguments
-		version := imageInfo.ArangoDBVersion
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 
-		tlsKeyfileSecretName := ""
-		if spec.IsSecure() {
-			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
-		}
-
-		rocksdbEncryptionSecretName := ""
-		if spec.RocksDB.IsEncrypted() {
-			rocksdbEncryptionSecretName = spec.RocksDB.Encryption.GetKeySecretName()
-		}
-
-		var clusterJWTSecretName string
-		if spec.IsAuthenticated() {
-			if versionHasJWTSecretKeyfile(version) {
-				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-			}
-		}
-
 		memberPod := MemberArangoDPod{
-			status:                      m,
-			tlsKeyfileSecretName:        tlsKeyfileSecretName,
-			rocksdbEncryptionSecretName: rocksdbEncryptionSecretName,
-			clusterJWTSecretName:        clusterJWTSecretName,
-			groupSpec:                   groupSpec,
-			spec:                        spec,
-			group:                       group,
-			resources:                   r,
-			imageInfo:                   imageInfo,
-			context:                     r.context,
-			autoUpgrade:                 autoUpgrade,
-			deploymentStatus:            status,
-			id:                          memberID,
+			status:           m,
+			groupSpec:        groupSpec,
+			spec:             spec,
+			group:            group,
+			resources:        r,
+			imageInfo:        imageInfo,
+			context:          r.context,
+			autoUpgrade:      autoUpgrade,
+			deploymentStatus: status,
+			id:               memberID,
 		}
 
 		input := memberPod.AsInput()
@@ -491,20 +439,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
 		if autoUpgrade {
 			newPhase = api.MemberPhaseUpgrading
-		}
-		if spec.IsSecure() {
-			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
-			serverNames := []string{
-				k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
-				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
-			}
-			if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
-				serverNames = append(serverNames, ip)
-			}
-			owner := apiObject.AsOwner()
-			if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
-				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-			}
 		}
 
 		uid, checksum, err := CreateArangoPod(kubecli, apiObject, pod)

@@ -94,11 +94,8 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 				}
 			}
 			log.Debug().Bool("ready", ready).Msg("Action Start completed")
-			if !ready {
-				// We need to check back soon
-				return true, nil
-			}
-			// Continue with next action
+
+			return true, nil
 		} else {
 			// First action of plan has been started, check its progress
 			ready, abort, err := action.CheckProgress(ctx)
@@ -154,14 +151,14 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 				// Timeout not yet expired, come back soon
 				return true, nil
 			}
-			// Continue with next action
+			return true, nil
 		}
 	}
 }
 
 // createAction create action object based on action type
 func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action, cachedStatus inspector.Inspector) Action {
-	actionCtx := newActionContext(log, d.context, cachedStatus)
+	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context, cachedStatus)
 
 	f, ok := getActionFactory(action.Type)
 	if !ok {

@@ -25,39 +25,38 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
 )
 
 func init() {
-	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate)
+	registerAction(api.ActionTypeTLSKeyStatusUpdate, newTLSKeyStatusUpdate)
 }
 
-func newEncryptionKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyStatusUpdateAction{}
+func newTLSKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &tlsKeyStatusUpdateAction{}
 
 	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
 
 	return a
 }
 
-type encryptionKeyStatusUpdateAction struct {
+type tlsKeyStatusUpdateAction struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
-	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
-		a.log.Error().Err(err).Msgf("Action not supported")
+func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
+	if !a.actionCtx.GetSpec().TLS.IsSecure() {
 		return true, nil
 	}
 
-	f, err := a.actionCtx.SecretsInterface().Get(pod.GetKeyfolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
+	f, err := a.actionCtx.SecretsInterface().Get(resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil
@@ -66,19 +65,18 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 	keyHashes := secretKeysToListWithPrefix("sha256:", f)
 
 	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
-		if len(keyHashes) == 0 {
-			if s.Hashes.Encryption != nil {
-				s.Hashes.Encryption = nil
+		if len(keyHashes) == 1 {
+			if s.Hashes.TLS.CA == nil || *s.Hashes.TLS.CA != keyHashes[0] {
+				s.Hashes.TLS.CA = util.NewString(keyHashes[0])
 				return true
 			}
-
-			return false
 		}
 
-		if !util.CompareStringArray(keyHashes, s.Hashes.Encryption) {
-			s.Hashes.Encryption = keyHashes
+		if !util.CompareStringArray(keyHashes, s.Hashes.TLS.Truststore) {
+			s.Hashes.TLS.Truststore = keyHashes
 			return true
 		}
+
 		return false
 	}); err != nil {
 		return false, err
