@@ -26,6 +26,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
@@ -110,6 +114,8 @@ type ActionContext interface {
 	InvalidateSyncStatus()
 	// GetSpec returns a copy of the spec
 	GetSpec() api.DeploymentSpec
+	// GetStatus returns a copy of the status
+	GetStatus() api.DeploymentStatus
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster() error
 	// EnableScalingCluster enables scaling DBservers and coordinators
@@ -117,20 +123,54 @@ type ActionContext interface {
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error
 	SecretsInterface() k8sutil.SecretInterface
+	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	// GetName receives information about a deployment name
+	GetName() string
+	// GetNameget current cached state of deployment
+	GetCachedStatus() inspector.Inspector
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context) ActionContext {
+func newActionContext(log zerolog.Logger, context Context, cachedStatus inspector.Inspector) ActionContext {
 	return &actionContext{
-		log:     log,
-		context: context,
+		log:          log,
+		context:      context,
+		cachedStatus: cachedStatus,
 	}
 }
 
 // actionContext implements ActionContext
 type actionContext struct {
-	log     zerolog.Logger
-	context Context
+	log          zerolog.Logger
+	context      Context
+	cachedStatus inspector.Inspector
+}
+
+func (ac *actionContext) GetCachedStatus() inspector.Inspector {
+	return ac.cachedStatus
+}
+
+func (ac *actionContext) GetName() string {
+	return ac.context.GetName()
+}
+
+func (ac *actionContext) GetStatus() api.DeploymentStatus {
+	a, _ := ac.context.GetStatus()
+
+	s := a.DeepCopy()
+
+	return *s
+}
+
+func (ac *actionContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+	return ac.context.GetBackup(backup)
+}
+
+func (ac *actionContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+	return ac.context.WithStatusUpdate(action, force...)
 }
 
 func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {

@@ -27,6 +27,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -53,15 +56,34 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		// Arrange
 		d, eventRecorder := createTestDeployment(testCase.config, testCase.ArangoDeployment)
 
-		err := d.resources.EnsureSecrets()
-		require.NoError(t, err)
+		errs := 0
+		for {
+			cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetNamespace())
+			require.NoError(t, err)
+			err = d.resources.EnsureSecrets(cache)
+			if err == nil {
+				break
+			}
+
+			if errs > 5 {
+				require.NoError(t, err)
+			}
+
+			errs++
+
+			if errors.IsReconcile(err) {
+				continue
+			}
+
+			require.NoError(t, err)
+		}
 
 		if testCase.Helper != nil {
 			testCase.Helper(t, d, &testCase)
 		}
 
 		// Create custom resource in the fake kubernetes API
-		_, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(d.apiObject)
+		_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(d.apiObject)
 		require.NoError(t, err)
 
 		if testCase.Resources != nil {
@@ -69,7 +91,9 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Act
-		err = d.resources.EnsurePods()
+		cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetNamespace())
+		require.NoError(t, err)
+		err = d.resources.EnsurePods(cache)
 
 		// Assert
 		if testCase.ExpectedError != nil {

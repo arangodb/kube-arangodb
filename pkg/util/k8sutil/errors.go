@@ -48,3 +48,9 @@ func IsConflict(err error) bool {
 func IsNotFound(err error) bool {
 	return apierrors.IsNotFound(errors.Cause(err))
 }
+
+// IsNotFound returns true if the given error is or is caused by a
+// kubernetes InvalidError,
+func IsInvalid(err error) bool {
+	return apierrors.IsInvalid(errors.Cause(err))
+}

@@ -43,8 +43,8 @@ const (
 	AppName = "arangodb"
 )
 
-// addOwnerRefToObject adds given owner reference to given object
-func addOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
+// AddOwnerRefToObject adds given owner reference to given object
+func AddOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {
 	if ownerRef != nil {
 		obj.SetOwnerReferences(append(obj.GetOwnerReferences(), *ownerRef))
 	}

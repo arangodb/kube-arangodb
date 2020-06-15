@@ -28,6 +28,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
@@ -57,38 +59,6 @@ const (
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
 )
-
-type PodCreator interface {
-	Init(*core.Pod)
-	GetName() string
-	GetRole() string
-	GetVolumes() ([]core.Volume, []core.VolumeMount)
-	GetSidecars(*core.Pod)
-	GetInitContainers() ([]core.Container, error)
-	GetFinalizers() []string
-	GetTolerations() []core.Toleration
-	GetNodeSelector() map[string]string
-	GetServiceAccountName() string
-	GetPodAntiAffinity() *core.PodAntiAffinity
-	GetPodAffinity() *core.PodAffinity
-	GetNodeAffinity() *core.NodeAffinity
-	GetContainerCreator() ContainerCreator
-	GetImagePullSecrets() []string
-	IsDeploymentMode() bool
-	Validate(secrets SecretInterface) error
-}
-
-type ContainerCreator interface {
-	GetExecutor() string
-	GetProbes() (*core.Probe, *core.Probe, error)
-	GetResourceRequirements() core.ResourceRequirements
-	GetLifecycle() (*core.Lifecycle, error)
-	GetImagePullPolicy() core.PullPolicy
-	GetImage() string
-	GetEnvs() []core.EnvVar
-	GetSecurityContext() *core.SecurityContext
-	GetPorts() []core.ContainerPort
-}
 
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
@@ -176,7 +146,7 @@ func IsPodTerminating(pod *core.Pod) bool {
 }
 
 // IsArangoDBImageIDAndVersionPod returns true if the given pod is used for fetching image ID and ArangoDB version of an image
-func IsArangoDBImageIDAndVersionPod(p core.Pod) bool {
+func IsArangoDBImageIDAndVersionPod(p *core.Pod) bool {
 	role, found := p.GetLabels()[LabelKeyRole]
 	return found && role == ImageIDAndVersionRole
 }
@@ -268,6 +238,15 @@ func RocksdbEncryptionVolumeMount() core.VolumeMount {
 	}
 }
 
+// RocksdbEncryptionReadOnlyVolumeMount creates a volume mount structure for a RocksDB encryption key.
+func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
+		Name:      RocksdbEncryptionVolumeName,
+		MountPath: RocksDBEncryptionVolumeMountDir,
+		ReadOnly:  true,
+	}
+}
+
 // ArangodInitContainer creates a container configured to initalize a UUID file.
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
@@ -330,7 +309,7 @@ func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.Res
 }
 
 // NewContainer creates a container for specified creator
-func NewContainer(args []string, containerCreator ContainerCreator) (core.Container, error) {
+func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (core.Container, error) {
 
 	liveness, readiness, err := containerCreator.GetProbes()
 	if err != nil {
@@ -358,7 +337,7 @@ func NewContainer(args []string, containerCreator ContainerCreator) (core.Contai
 }
 
 // NewPod creates a basic Pod for given settings.
-func NewPod(deploymentName, role, id, podName string, podCreator PodCreator) core.Pod {
+func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodCreator) core.Pod {
 
 	hostname := CreatePodHostName(deploymentName, role, id)
 	p := core.Pod{
@@ -409,7 +388,7 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
 func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, string, error) {
-	addOwnerRefToObject(pod.GetObjectMeta(), &owner)
+	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	checksum, err := GetPodSpecChecksum(pod.Spec)
 	if err != nil {

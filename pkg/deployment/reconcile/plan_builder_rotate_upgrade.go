@@ -23,10 +23,14 @@
 package reconcile
 
 import (
+	"context"
+
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -34,8 +38,25 @@ import (
 )
 
 // createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
-func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, context PlanBuilderContext, pods []core.Pod) (api.Plan, bool) {
+
+func createRotateOrUpgradePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, cachedStatus, context)
+	if idle {
+		plan = append(plan,
+			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
+	} else {
+		plan = append(plan, newPlan...)
+	}
+	return plan
+}
+
+func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+	status api.DeploymentStatus, cachedStatus inspector.Inspector, context PlanBuilderContext) (api.Plan, bool) {
 
 	var newPlan api.Plan
 	var upgradeNotAllowed bool
@@ -50,11 +71,12 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 				continue
 			}
 
-			pod, found := k8sutil.GetPodByName(pods, m.PodName)
+			pod, found := cachedStatus.Pod(m.PodName)
 			if !found {
 				continue
 			}
 
+			log.Debug().Msgf("Before upgrade")
 			// Got pod, compare it with what it should be
 			decision := podNeedsUpgrading(log, pod, spec, status.Images)
 			if decision.UpgradeNeeded && !decision.UpgradeAllowed {
@@ -67,22 +89,26 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 				return nil
 			}
 
+			log.Debug().Msgf("After upgrade")
+
 			if !newPlan.IsEmpty() {
 				// Only rotate/upgrade 1 pod at a time
 				continue
 			}
 
+			log.Debug().Msgf("Before rotate")
 			if decision.UpgradeNeeded {
 				// Yes, upgrade is needed (and allowed)
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status,
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Use new level of rotate logic
-				rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m, context)
+				rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m, cachedStatus, context)
 				if rotNeeded {
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
 			}
+			log.Debug().Msgf("After rotate")
 
 			if !newPlan.IsEmpty() {
 				// Only rotate/upgrade 1 pod at a time
@@ -105,8 +131,14 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 			// Use the new plan
 			return newPlan, false
 		} else {
-			log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
-			return nil, true
+			if util.BoolOrDefault(spec.AllowUnsafeUpgrade, false) {
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				// Use the new plan
+				return newPlan, false
+			} else {
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				return nil, true
+			}
 		}
 	}
 	return nil, false
@@ -114,8 +146,8 @@ func createRotateOrUpgradePlan(log zerolog.Logger, apiObject k8sutil.APIObject, 
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(log zerolog.Logger, p core.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
-	if c, found := k8sutil.GetContainerByName(&p, k8sutil.ServerContainerName); found {
+func podNeedsUpgrading(log zerolog.Logger, p *core.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+	if c, found := k8sutil.GetContainerByName(p, k8sutil.ServerContainerName); found {
 		specImageInfo, found := images.GetByImage(spec.GetImage())
 		if !found {
 			return upgradeDecision{UpgradeNeeded: false}
@@ -184,9 +216,9 @@ func podNeedsUpgrading(log zerolog.Logger, p core.Pod, spec api.DeploymentSpec, 
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(log zerolog.Logger, p core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
-	context PlanBuilderContext) (bool, string) {
+	cachedStatus inspector.Inspector, context PlanBuilderContext) (bool, string) {
 	if m.PodUID != p.UID {
 		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
 	}
@@ -201,7 +233,7 @@ func podNeedsRotation(log zerolog.Logger, p core.Pod, apiObject metav1.Object, s
 		return false, ""
 	}
 
-	renderedPod, err := context.RenderPodForMember(spec, status, m.ID, imageInfo)
+	renderedPod, err := context.RenderPodForMember(cachedStatus, spec, status, m.ID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
 		return false, ""

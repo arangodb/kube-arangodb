@@ -24,11 +24,12 @@ package pod
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AppendPodAntiAffinityDefault(p k8sutil.PodCreator, a *core.PodAntiAffinity) {
+func AppendPodAntiAffinityDefault(p interfaces.PodCreator, a *core.PodAntiAffinity) {
 	labels := k8sutil.LabelsForDeployment(p.GetName(), p.GetRole())
 	labelSelector := &meta.LabelSelector{
 		MatchLabels: labels,
@@ -66,7 +67,7 @@ func AppendNodeSelector(a *core.NodeAffinity) {
 	})
 }
 
-func AppendAffinityWithRole(p k8sutil.PodCreator, a *core.PodAffinity, role string) {
+func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role string) {
 	labelSelector := &meta.LabelSelector{
 		MatchLabels: k8sutil.LabelsForDeployment(p.GetName(), role),
 	}

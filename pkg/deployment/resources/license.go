@@ -21,29 +21,27 @@
 package resources
 
 import (
-	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ValidateLicenseKeySecret checks if the licens key secret exists and is valid
-func (r *Resources) ValidateLicenseKeySecret() error {
+func (r *Resources) ValidateLicenseKeySecret(cachedStatus inspector.Inspector) error {
 	spec := r.context.GetSpec().License
 
 	if spec.HasSecretName() {
 		secretName := spec.GetSecretName()
 
-		kubecli := r.context.GetKubeCli()
-		ns := r.context.GetNamespace()
-		s, err := kubecli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+		s, exists := cachedStatus.Secret(secretName)
 
-		if err != nil {
-			return err
+		if !exists {
+			return errors.Errorf("License secret %s does not exist", s)
 		}
 
 		if _, ok := s.Data[constants.SecretKeyToken]; !ok {
-			return fmt.Errorf("Invalid secret format")
+			return errors.Errorf("Invalid secret format")
 		}
 	}
 

@@ -29,15 +29,14 @@ import (
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/tls"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, secrets k8sutil.SecretInterface) (map[string]string, error) {
+func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, cachedStatus inspector.Inspector) (map[string]string, error) {
 	fetchedSecrets := map[string]string{}
 
 	mapping := sni.Mapping
@@ -46,9 +45,9 @@ func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, secrets k8sutil.Sec
 	}
 
 	for name, servers := range mapping {
-		secret, err := secrets.Get(name, meta.GetOptions{})
-		if err != nil {
-			return nil, errors.WithMessage(err, "Unable to get SNI secret")
+		secret, exists := cachedStatus.Secret(name)
+		if !exists {
+			return nil, errors.Errorf("Secret %s does not exist", name)
 		}
 
 		tlsKey, ok := secret.Data[constants.SecretTLSKeyfile]
@@ -70,7 +69,7 @@ func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, secrets k8sutil.Sec
 }
 
 func compareTLSSNIConfig(ctx context.Context, c driver.Connection, m map[string]string, refresh bool) (bool, error) {
-	tlsClient := tls.NewClient(c)
+	tlsClient := client.NewClient(c)
 
 	f := tlsClient.GetTLS
 	if refresh {

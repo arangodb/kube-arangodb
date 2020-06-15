@@ -30,13 +30,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TestAddOwnerRefToObject tests addOwnerRefToObject.
+// TestAddOwnerRefToObject tests AddOwnerRefToObject.
 func TestAddOwnerRefToObject(t *testing.T) {
 	p := &v1.Pod{}
-	addOwnerRefToObject(p, nil)
+	AddOwnerRefToObject(p, nil)
 	assert.Len(t, p.GetOwnerReferences(), 0)
 
-	addOwnerRefToObject(p, &metav1.OwnerReference{})
+	AddOwnerRefToObject(p, &metav1.OwnerReference{})
 	assert.Len(t, p.GetOwnerReferences(), 1)
 }
 

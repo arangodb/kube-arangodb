@@ -67,6 +67,11 @@ func (a *actionWaitForMemberUp) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
 func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, error) {
+	member, ok := a.actionCtx.GetMemberStatusByID(a.MemberID())
+	if !ok || member.Phase == api.MemberPhaseFailed {
+		a.log.Debug().Msg("Member in failed phase")
+		return true, false, nil
+	}
 	if a.action.Group.IsArangosync() {
 		return a.checkProgressArangoSync(ctx)
 	}

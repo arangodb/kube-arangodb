@@ -100,6 +100,30 @@ func Int32OrDefault(input *int32, defaultValue ...int32) int32 {
 	return *input
 }
 
+// NewInt64 returns a reference to an int64 with given value.
+func NewInt64(input int64) *int64 {
+	return &input
+}
+
+// NewInt64OrNil returns nil if input is nil, otherwise returns a clone of the given value.
+func NewInt64OrNil(input *int64) *int64 {
+	if input == nil {
+		return nil
+	}
+	return NewInt64(*input)
+}
+
+// Int64OrDefault returns the default value (or 0) if input is nil, otherwise returns the referenced value.
+func Int64OrDefault(input *int64, defaultValue ...int64) int64 {
+	if input == nil {
+		if len(defaultValue) > 0 {
+			return defaultValue[0]
+		}
+		return 0
+	}
+	return *input
+}
+
 // NewUInt16 returns a reference to an uint16 with given value.
 func NewUInt16(input uint16) *uint16 {
 	return &input

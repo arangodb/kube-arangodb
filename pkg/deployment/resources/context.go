@@ -25,6 +25,8 @@ package resources
 import (
 	"context"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -72,13 +74,11 @@ type Context interface {
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
-	// GetOwnedPods returns a list of all pods owned by the deployment.
-	GetOwnedPods() ([]v1.Pod, error)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(p v1.Pod) error
+	CleanupPod(p *v1.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error
@@ -94,4 +94,6 @@ type Context interface {
 	GetAgency(ctx context.Context) (agency.Agency, error)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 }

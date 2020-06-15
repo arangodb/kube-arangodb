@@ -23,11 +23,18 @@
 package reconcile
 
 import (
+	"context"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 )
 
-func createScaleMemeberPlan(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus) api.Plan {
+func createScaleMemeberPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
 
 	var plan api.Plan
 

@@ -25,6 +25,10 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -74,8 +78,6 @@ type Context interface {
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	RemovePodFinalizers(podName string) error
-	// GetOwnedPods returns a list of all pods owned by the deployment.
-	GetOwnedPods() ([]v1.Pod, error)
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
 	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
@@ -89,9 +91,6 @@ type Context interface {
 	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 	// If the secret does not exist, the error is ignored.
 	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
-	// GetTLSCA returns the TLS CA certificate in the secret with given name.
-	// Returns: publicKey, privateKey, ownerByDeployment, error
-	GetTLSCA(secretName string) (string, string, bool, error)
 	// DeleteSecret removes the Secret with given name.
 	// If the secret does not exist, the error is ignored.
 	DeleteSecret(secretName string) error
@@ -108,11 +107,15 @@ type Context interface {
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member
-	RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
+	RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
+	// GetBackup receives information about a backup resource
+	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	// GetName receives deployment name
+	GetName() string
 }

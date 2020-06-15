@@ -24,15 +24,24 @@ package resources
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"time"
+
+	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	jg "github.com/dgrijalva/jwt-go"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -45,49 +54,57 @@ var (
 )
 
 // EnsureSecrets creates all secrets needed to run the given deployment
-func (r *Resources) EnsureSecrets() error {
+func (r *Resources) EnsureSecrets(cachedStatus inspector.Inspector) error {
 	start := time.Now()
+	spec := r.context.GetSpec()
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
-	secrets := k8sutil.NewSecretCache(kubecli.CoreV1().Secrets(ns))
-	spec := r.context.GetSpec()
+	secrets := kubecli.CoreV1().Secrets(ns)
+	status, _ := r.context.GetStatus()
 	deploymentName := r.context.GetAPIObject().GetName()
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
 
 	if spec.IsAuthenticated() {
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(secrets, spec.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 
 		if spec.Metrics.IsEnabled() {
-			if err := r.ensureExporterTokenSecret(secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName()); err != nil {
+			if err := r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName()); err != nil {
 				return maskAny(err)
 			}
 		}
 	}
 	if spec.IsSecure() {
 		counterMetric.Inc()
-		if err := r.ensureTLSCACertificateSecret(secrets, spec.TLS); err != nil {
+		if err := r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.TLS); err != nil {
 			return maskAny(err)
+		}
+	}
+	if spec.RocksDB.IsEncrypted() {
+		if i := status.CurrentImage; i != nil && i.Enterprise && i.ArangoDBVersion.CompareTo("3.7.0") >= 0 {
+			if err := r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetKeyfolderSecretName(deploymentName)); err != nil {
+				return maskAny(err)
+			}
 		}
 	}
 	if spec.Sync.IsEnabled() {
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(secrets, spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
+		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureTLSCACertificateSecret(secrets, spec.Sync.TLS); err != nil {
+		if err := r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.Sync.TLS); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureClientAuthCACertificateSecret(secrets, spec.Sync.Authentication); err != nil {
+		if err := r.ensureClientAuthCACertificateSecret(cachedStatus, secrets, spec.Sync.Authentication); err != nil {
 			return maskAny(err)
 		}
 	}
@@ -97,42 +114,92 @@ func (r *Resources) EnsureSecrets() error {
 // ensureTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a random
 // token.
-func (r *Resources) ensureTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {
-	if _, err := secrets.Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
-		// Secret not found, create it
-		// Create token
-		tokenData := make([]byte, 32)
-		rand.Read(tokenData)
-		token := hex.EncodeToString(tokenData)
+func (r *Resources) ensureTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
+	if _, exists := cachedStatus.Secret(secretName); !exists {
+		return r.createTokenSecret(secrets, secretName)
+	}
 
-		// Create secret
-		owner := r.context.GetAPIObject().AsOwner()
-		if err := k8sutil.CreateTokenSecret(secrets, secretName, token, &owner); k8sutil.IsAlreadyExists(err) {
-			// Secret added while we tried it also
-			return nil
-		} else if err != nil {
-			// Failed to create secret
-			return maskAny(err)
-		}
+	return nil
+}
+
+func (r *Resources) createTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {
+	tokenData := make([]byte, 32)
+	rand.Read(tokenData)
+	token := hex.EncodeToString(tokenData)
+
+	// Create secret
+	owner := r.context.GetAPIObject().AsOwner()
+	if err := k8sutil.CreateTokenSecret(secrets, secretName, token, &owner); k8sutil.IsAlreadyExists(err) {
+		// Secret added while we tried it also
+		return nil
 	} else if err != nil {
-		// Failed to get secret for other reasons
+		// Failed to create secret
 		return maskAny(err)
+	}
+
+	return operatorErrors.Reconcile()
+}
+
+func (r *Resources) ensureEncryptionKeyfolderSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, keyfileSecretName, secretName string) error {
+	keyfile, exists := cachedStatus.Secret(keyfileSecretName)
+	if !exists {
+		return errors.Errorf("Unable to find original secret %s", keyfileSecretName)
+	}
+
+	if len(keyfile.Data) == 0 {
+		return errors.Errorf("Missing key in secret")
+	}
+
+	d, ok := keyfile.Data[constants.SecretEncryptionKey]
+	if !ok {
+		return errors.Errorf("Missing key in secret")
+	}
+
+	owner := r.context.GetAPIObject().AsOwner()
+	if err := AppendKeyfileToKeyfolder(cachedStatus, secrets, &owner, secretName, d); err != nil {
+		return errors.Wrapf(err, "Unable to create keyfolder secret")
 	}
 	return nil
 }
 
+func AppendKeyfileToKeyfolder(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
+	encSha := fmt.Sprintf("%0x", sha256.Sum256(encryptionKey))
+	if _, exists := cachedStatus.Secret(secretName); !exists {
+
+		// Create secret
+		secret := &core.Secret{
+			ObjectMeta: meta.ObjectMeta{
+				Name: secretName,
+			},
+			Data: map[string][]byte{
+				encSha: encryptionKey,
+			},
+		}
+		// Attach secret to owner
+		k8sutil.AddOwnerRefToObject(secret, ownerRef)
+		if _, err := secrets.Create(secret); err != nil {
+			// Failed to create secret
+			return maskAny(err)
+		}
+
+		return operatorErrors.Reconcile()
+	}
+
+	return nil
+}
+
 var (
-	exporterTokenClaims = map[string]interface{}{
+	exporterTokenClaims = jg.MapClaims{
 		"iss":           "arangodb",
 		"server_id":     "exporter",
-		"allowed_paths": []string{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
+		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
 	}
 )
 
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
-func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
-	if recreate, exists, err := r.ensureExporterTokenSecretCreateRequired(secrets, tokenSecretName, secretSecretName); err != nil {
+func (r *Resources) ensureExporterTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
+	if recreate, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
 		return err
 	} else if recreate {
 		// Create secret
@@ -150,23 +217,30 @@ func (r *Resources) ensureExporterTokenSecret(secrets k8sutil.SecretInterface, t
 			// Failed to create secret
 			return maskAny(err)
 		}
+
+		return operatorErrors.Reconcile()
 	}
 	return nil
 }
 
-func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) (bool, bool, error) {
-	if secret, err := secrets.Get(tokenSecretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspector.Inspector, tokenSecretName, secretSecretName string) (bool, bool, error) {
+	if secret, exists := cachedStatus.Secret(tokenSecretName); !exists {
 		return true, false, nil
-	} else if err == nil {
+	} else {
 		// Check if claims are fine
 		data, ok := secret.Data[constants.SecretKeyToken]
 		if !ok {
 			return true, true, nil
 		}
 
-		secret, err := k8sutil.GetTokenSecret(secrets, secretSecretName)
+		jwtSecret, exists := cachedStatus.Secret(secretSecretName)
+		if !exists {
+			return true, true, errors.Errorf("Secret %s does not exists", secretSecretName)
+		}
+
+		secret, err := k8sutil.GetTokenFromSecret(jwtSecret)
 		if err != nil {
-			return false, true, maskAny(err)
+			return true, true, maskAny(err)
 		}
 
 		token, err := jg.Parse(string(data), func(token *jg.Token) (i interface{}, err error) {
@@ -182,17 +256,14 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(secrets k8sutil.Secr
 			return true, true, nil
 		}
 
-		return !equality.Semantic.DeepEqual(tokenClaims, exporterTokenClaims), true, nil
-	} else {
-		// Failed to get secret for other reasons
-		return false, false, maskAny(err)
+		return !equality.Semantic.DeepDerivative(tokenClaims, exporterTokenClaims), true, nil
 	}
 }
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCACertificateSecret(secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
-	if _, err := secrets.Get(spec.GetCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureTLSCACertificateSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
+	if _, exists := cachedStatus.Secret(spec.GetCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
@@ -204,17 +275,16 @@ func (r *Resources) ensureTLSCACertificateSecret(secrets k8sutil.SecretInterface
 			// Failed to create secret
 			return maskAny(err)
 		}
-	} else if err != nil {
-		// Failed to get secret for other reasons
-		return maskAny(err)
+
+		return operatorErrors.Reconcile()
 	}
 	return nil
 }
 
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureClientAuthCACertificateSecret(secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
-	if _, err := secrets.Get(spec.GetClientCASecretName(), metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+func (r *Resources) ensureClientAuthCACertificateSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
+	if _, exists := cachedStatus.Secret(spec.GetClientCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
@@ -226,9 +296,8 @@ func (r *Resources) ensureClientAuthCACertificateSecret(secrets k8sutil.SecretIn
 			// Failed to create secret
 			return maskAny(err)
 		}
-	} else if err != nil {
-		// Failed to get secret for other reasons
-		return maskAny(err)
+
+		return operatorErrors.Reconcile()
 	}
 	return nil
 }

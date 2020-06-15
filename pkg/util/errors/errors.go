@@ -209,3 +209,34 @@ func LogError(logger zerolog.Logger, msg string, f func() error) {
 		logger.Error().Err(err).Msg(msg)
 	}
 }
+
+type causer interface {
+	Cause() error
+}
+
+func IsReconcile(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if _, ok := err.(reconcile); ok {
+		return true
+	}
+
+	if c, ok := err.(causer); ok {
+		return IsReconcile(c.Cause())
+	}
+
+	return false
+}
+
+func Reconcile() error {
+	return reconcile{}
+}
+
+type reconcile struct {
+}
+
+func (r reconcile) Error() string {
+	return "reconcile"
+}

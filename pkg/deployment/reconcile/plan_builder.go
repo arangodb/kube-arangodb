@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"golang.org/x/net/context"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -37,7 +39,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
 )
 
 // upgradeDecision is the result of an upgrade check.
@@ -54,20 +55,13 @@ type upgradeDecision struct {
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context) (error, bool) {
-	// Get all current pods
-	pods, err := d.context.GetOwnedPods()
-	if err != nil {
-		d.log.Debug().Err(err).Msg("Failed to get owned pods")
-		return maskAny(err), false
-	}
-
+func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Inspector) (error, bool) {
 	// Create plan
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
 	status, lastVersion := d.context.GetStatus()
 	builderCtx := newPlanBuilderContext(d.context)
-	newPlan, changed := createPlan(ctx, d.log, apiObject, status.Plan, spec, status, pods, builderCtx)
+	newPlan, changed := createPlan(ctx, d.log, apiObject, status.Plan, spec, status, cachedStatus, builderCtx)
 
 	// If not change, we're done
 	if !changed {
@@ -112,7 +106,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 // Otherwise the new plan is returned with a boolean true.
 func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, pods []v1.Pod,
+	status api.DeploymentStatus, cachedStatus inspector.Inspector,
 	builderCtx PlanBuilderContext) (api.Plan, bool) {
 
 	if !currentPlan.IsEmpty() {
@@ -125,6 +119,8 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Check for various scenario's
 	var plan api.Plan
+
+	pb := NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx)
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
@@ -199,37 +195,44 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Check for scale up/down
 	if plan.IsEmpty() {
-		plan = createScaleMemeberPlan(log, spec, status)
+		plan = pb.Apply(createScaleMemeberPlan)
 	}
 
 	// Check for the need to rotate one or more members
 	if plan.IsEmpty() {
-		newPlan, idle := createRotateOrUpgradePlan(log, apiObject, spec, status, builderCtx, pods)
-		if idle {
-			plan = append(plan,
-				api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
-		} else {
-			plan = append(plan, newPlan...)
-		}
+		plan = pb.Apply(createRotateOrUpgradePlan)
+	}
+
+	// Add encryption keys
+	if plan.IsEmpty() {
+		plan = pb.Apply(createEncryptionKey)
 	}
 
 	// Check for the need to rotate TLS certificate of a members
 	if plan.IsEmpty() {
-		plan = createRotateTLSServerCertificatePlan(log, spec, status, builderCtx.GetTLSKeyfile)
+		plan = pb.Apply(createRotateTLSServerCertificatePlan)
 	}
 
 	// Check for changes storage classes or requirements
 	if plan.IsEmpty() {
-		plan = createRotateServerStoragePlan(log, apiObject, spec, status, builderCtx.GetPvc, builderCtx.CreateEvent)
+		plan = pb.Apply(createRotateServerStoragePlan)
 	}
 
 	// Check for the need to rotate TLS CA certificate and all members
 	if plan.IsEmpty() {
-		plan = createRotateTLSCAPlan(log, apiObject, spec, status, builderCtx.GetTLSCA, builderCtx.CreateEvent)
+		plan = pb.Apply(createRotateTLSCAPlan)
 	}
 
 	if plan.IsEmpty() {
-		plan = createRotateTLSServerSNIPlan(ctx, log, spec, status, builderCtx)
+		plan = pb.Apply(createRotateTLSServerSNIPlan)
+	}
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(createRestorePlan)
+	}
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(cleanEncryptionKey)
 	}
 
 	// Return plan
@@ -251,4 +254,42 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
 	}
 	return plan
+}
+
+type planBuilder func(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan
+
+func NewWithPlanBuilder(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) WithPlanBuilder {
+	return &withPlanBuilder{
+		ctx:          ctx,
+		log:          log,
+		apiObject:    apiObject,
+		spec:         spec,
+		status:       status,
+		cachedStatus: cachedStatus,
+		context:      context,
+	}
+}
+
+type WithPlanBuilder interface {
+	Apply(p planBuilder) api.Plan
+}
+
+type withPlanBuilder struct {
+	ctx          context.Context
+	log          zerolog.Logger
+	apiObject    k8sutil.APIObject
+	spec         api.DeploymentSpec
+	status       api.DeploymentStatus
+	cachedStatus inspector.Inspector
+	context      PlanBuilderContext
+}
+
+func (w withPlanBuilder) Apply(p planBuilder) api.Plan {
+	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context)
 }

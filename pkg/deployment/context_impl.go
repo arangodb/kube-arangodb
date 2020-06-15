@@ -28,6 +28,8 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -275,7 +277,7 @@ func (d *Deployment) DeletePod(podName string) error {
 
 // CleanupPod deletes a given pod with force and explicit UID.
 // If the pod does not exist, the error is ignored.
-func (d *Deployment) CleanupPod(p v1.Pod) error {
+func (d *Deployment) CleanupPod(p *v1.Pod) error {
 	log := d.deps.Log
 	podName := p.GetName()
 	ns := p.GetNamespace()
@@ -344,24 +346,6 @@ func (d *Deployment) GetPv(pvName string) (*v1.PersistentVolume, error) {
 	return nil, maskAny(err)
 }
 
-// GetOwnedPods returns a list of all pods owned by the deployment.
-func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
-	// Get all current pods
-	log := d.deps.Log
-	pods, err := d.deps.KubeCli.CoreV1().Pods(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list pods")
-		return nil, maskAny(err)
-	}
-	myPods := make([]v1.Pod, 0, len(pods.Items))
-	for _, p := range pods.Items {
-		if d.isOwnerOf(&p) {
-			myPods = append(myPods, p)
-		}
-	}
-	return myPods, nil
-}
-
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 	// Get all current PVCs
@@ -414,20 +398,6 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 	return nil
 }
 
-// GetTLSCA returns the TLS CA certificate in the secret with given name.
-// Returns: publicKey, privateKey, ownerByDeployment, error
-func (d *Deployment) GetTLSCA(secretName string) (string, string, bool, error) {
-	ns := d.apiObject.GetNamespace()
-	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
-	owner := d.apiObject.AsOwner()
-	cert, priv, isOwned, err := k8sutil.GetCASecret(secrets, secretName, &owner)
-	if err != nil {
-		return "", "", false, maskAny(err)
-	}
-	return cert, priv, isOwned, nil
-
-}
-
 // DeleteSecret removes the Secret with given name.
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
@@ -470,8 +440,8 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 	return err
 }
 
-func (d *Deployment) RenderPodForMember(spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
-	return d.resources.RenderPodForMember(spec, status, memberID, imageInfo)
+func (d *Deployment) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
+	return d.resources.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 }
 
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -503,4 +473,8 @@ func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool,
 
 func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
 	return d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
+}
+
+func (d *Deployment) GetName() string {
+	return d.apiObject.GetName()
 }

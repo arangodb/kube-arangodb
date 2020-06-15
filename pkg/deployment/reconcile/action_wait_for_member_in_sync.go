@@ -63,6 +63,12 @@ func (a *actionWaitForMemberInSync) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
 func (a *actionWaitForMemberInSync) CheckProgress(ctx context.Context) (bool, bool, error) {
+	member, ok := a.actionCtx.GetMemberStatusByID(a.MemberID())
+	if !ok || member.Phase == api.MemberPhaseFailed {
+		a.log.Debug().Msg("Member in failed phase")
+		return true, false, nil
+	}
+
 	ready, err := a.check(ctx)
 	if err != nil {
 		return false, false, err

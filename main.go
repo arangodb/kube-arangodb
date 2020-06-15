@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -146,6 +148,9 @@ func cmdUsage(cmd *cobra.Command, args []string) {
 
 // Run the operator
 func cmdMainRun(cmd *cobra.Command, args []string) {
+	// Set global logger
+	log.Logger = logging.NewRootLogger()
+
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	name := os.Getenv(constants.EnvOperatorPodName)
