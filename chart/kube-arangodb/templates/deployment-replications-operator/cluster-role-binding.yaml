@@ -14,7 +14,7 @@ metadata:
 roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: {{ template "kube-arangodb.rbac" . }}-deployment-replication
+    name: {{ template "kube-arangodb.rbac-cluster" . }}-deployment-replication
 subjects:
     - kind: ServiceAccount
       name: {{ template "kube-arangodb.operatorName" . }}
