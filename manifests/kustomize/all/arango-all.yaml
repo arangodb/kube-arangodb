@@ -530,7 +530,7 @@ spec:
             containers:
                 - name: operator
                   imagePullPolicy: Always
-                  image: /kube-arangodb:dev
+                  image: arangodb/kube-arangodb:1.0.3
                   args:
                     - --operator.deployment
                     - --operator.deployment-replication
