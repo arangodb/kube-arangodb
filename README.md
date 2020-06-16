@@ -86,6 +86,23 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.0.3/
 This procedure can also be used for upgrades and will not harm any
 running ArangoDB deployments.
 
+## Installation of latest release using kustomize
+
+Installation using [kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) looks like installation from yaml files,
+but user is allowed to modify namespace or resource names without yaml modifications.
+
+IT is recommended to use kustomization instead of handcrafting namespace in yaml files - kustomization will replace not only resource namespaces,
+but also namespace references in resources like ClusterRoleBinding.
+
+Example kustomization file:
+```
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd/?ref=1.0.3
+```
+
 ## Installation of latest release using Helm
 
 Only use this procedure for a new install of the operator. See below for
