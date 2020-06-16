@@ -99,8 +99,10 @@ Example kustomization file:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: my-custom-namespace
+
 bases:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd/?ref=1.0.3
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment/?ref=1.0.3
 ```
 
 ## Installation of latest release using Helm
