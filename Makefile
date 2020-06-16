@@ -35,6 +35,7 @@ HELM ?= $(shell which helm)
 
 UPPER = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
 LOWER = $(shell echo '$1' | tr '[:upper:]' '[:lower:]')
+UPPER_ENV = $(shell echo '$1' | tr '[:lower:]' '[:upper:]' | tr -d '-')
 
 .PHONY: helm
 helm:
@@ -285,7 +286,7 @@ endif
 
 define manifest-generator
 $(eval _TARGET:=$(call LOWER,$1))
-$(eval _ENV:=$(call UPPER,$1))
+$(eval _ENV:=$(call UPPER_ENV,$1))
 .PHONY: manifests-$(_TARGET)-file
 manifests-$(_TARGET)-file: export CHART_NAME := $2
 manifests-$(_TARGET)-file: export NAME := $(_TARGET)
@@ -316,7 +317,7 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 	   --set "operator.features.storage=false" \
 	   --set "operator.features.backup=false"))
 
-$(eval $(call manifest-generator, deploymentreplication, kube-arangodb, \
+$(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=false" \
