@@ -33,6 +33,10 @@ DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
 HELM ?= $(shell which helm)
 
+UPPER = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
+LOWER = $(shell echo '$1' | tr '[:upper:]' '[:lower:]')
+UPPER_ENV = $(shell echo '$1' | tr '[:lower:]' '[:upper:]' | tr -d '-')
+
 .PHONY: helm
 helm:
 ifeq ($(HELM),)
@@ -73,7 +77,15 @@ MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
+MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHTEST := manifests/kustomize/test/arango-test$(MANIFESTSUFFIX).yaml
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
@@ -272,72 +284,69 @@ endif
 
 # Manifests
 
-.PHONY: manifests-crd
-manifests-crd: export CHART_NAME := kube-arangodb-crd
-manifests-crd: export NAME := crd
-manifests-crd: helm
-	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
-	@$(HELM_CMD) > "$(MANIFESTPATHCRD)"
+define manifest-generator
+$(eval _TARGET:=$(call LOWER,$1))
+$(eval _ENV:=$(call UPPER_ENV,$1))
+.PHONY: manifests-$(_TARGET)-file
+manifests-$(_TARGET)-file: export CHART_NAME := $2
+manifests-$(_TARGET)-file: export NAME := $(_TARGET)
+manifests-$(_TARGET)-file: helm
+	@echo Building manifests for $(_ENV) - $$(MANIFESTPATH$(_ENV))
+	@$$(HELM_CMD) $3 > "$$(MANIFESTPATH$(_ENV))"
+manifests: manifests-$(_TARGET)-file
 
-.PHONY: manifests-test
-manifests-test: export CHART_NAME := kube-arangodb-test
-manifests-test: export NAME := arangodb-test
-manifests-test: helm
-	@echo Building manifests for test - $(MANIFESTPATHTEST)
-	@$(HELM_CMD) > "$(MANIFESTPATHTEST)"
+.PHONY: manifests-$(_TARGET)-kustomize
+manifests-$(_TARGET)-kustomize: export CHART_NAME := $2
+manifests-$(_TARGET)-kustomize: export NAME := $(_TARGET)
+manifests-$(_TARGET)-kustomize: helm
+	@echo Building kustomize manifests for $(_ENV) - $$(KUSTOMIZEPATH$(_ENV))
+	@$$(HELM_CMD) $3 > "$$(KUSTOMIZEPATH$(_ENV))"
+manifests: manifests-$(_TARGET)-kustomize
+endef
 
-.PHONY: manifests-operator-deployment
-manifests-operator-deployment: export CHART_NAME := kube-arangodb
-manifests-operator-deployment: export NAME := deployment
-manifests-operator-deployment: helm
-	@echo Building manifests for Operator Deployment - $(MANIFESTPATHDEPLOYMENT)
-	@$(HELM_CMD) \
-	     --set "operator.features.deployment=true" \
-	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=false" \
-	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENT)"
+.PHONY: manifests
+manifests:
 
-.PHONY: manifests-operator-deployment-replication
-manifests-operator-deployment-replication: export CHART_NAME := kube-arangodb
-manifests-operator-deployment-replication: export NAME := deployment-replication
-manifests-operator-deployment-replication: helm
-	@echo Building manifests for Operator Deployment Replication - $(MANIFESTPATHDEPLOYMENTREPLICATION)
-	@$(HELM_CMD) \
-	     --set "operator.features.deployment=false" \
-	     --set "operator.features.deploymentReplications=true" \
-	     --set "operator.features.storage=false" \
-	     --set "operator.features.backup=false" > "$(MANIFESTPATHDEPLOYMENTREPLICATION)"
+$(eval $(call manifest-generator, crd, kube-arangodb-crd))
 
-.PHONY: manifests-operator-storage
-manifests-operator-storage: export CHART_NAME := kube-arangodb
-manifests-operator-storage: export NAME := storage
-manifests-operator-storage: helm
-	@echo Building manifests for Operator Storage - $(MANIFESTPATHSTORAGE)
-	@$(HELM_CMD) \
-	     --set "operator.features.deployment=false" \
-	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=true" \
-	     --set "operator.features.backup=false" > "$(MANIFESTPATHSTORAGE)"
+$(eval $(call manifest-generator, test, kube-arangodb-test))
 
-.PHONY: manifests-operator-backup
-manifests-operator-backup: export CHART_NAME := kube-arangodb
-manifests-operator-backup: export NAME := backup
-manifests-operator-backup: helm
-	@echo Building manifests for Operator Backup - $(MANIFESTPATHBACKUP)
-	@$(HELM_CMD) \
-	     --set "operator.features.deployment=false" \
-	     --set "operator.features.deploymentReplications=false" \
-	     --set "operator.features.storage=false" \
-	     --set "operator.features.backup=true" > "$(MANIFESTPATHBACKUP)"
+$(eval $(call manifest-generator, deployment, kube-arangodb, \
+       --set "operator.features.deployment=true" \
+	   --set "operator.features.deploymentReplications=false" \
+	   --set "operator.features.storage=false" \
+	   --set "operator.features.backup=false"))
 
-.PHONY: manifests-operator
-manifests-operator: manifests-operator-deployment manifests-operator-deployment-replication manifests-operator-storage manifests-operator-backup
+$(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=true" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.backup=false"))
+
+$(eval $(call manifest-generator, storage, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=true" \
+       --set "operator.features.backup=false"))
+
+$(eval $(call manifest-generator, backup, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.backup=true"))
+
+$(eval $(call manifest-generator, all, kube-arangodb, \
+       --set "operator.features.deployment=true" \
+       --set "operator.features.deploymentReplications=true" \
+       --set "operator.features.storage=true" \
+       --set "operator.features.backup=true"))
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd
 chart-crd: helm
 	@mkdir -p "$(ROOTDIR)/bin/charts"
 	@$(HELM_PACKAGE_CMD)
+manifests: chart-crd
 
 .PHONY: chart-operator
 chart-operator: export CHART_NAME := kube-arangodb
@@ -345,8 +354,7 @@ chart-operator: helm
 	@mkdir -p "$(ROOTDIR)/bin/charts"
 	@$(HELM_PACKAGE_CMD)
 
-.PHONY: manifests
-manifests: helm manifests-crd manifests-operator manifests-test chart-crd chart-operator
+manifests: chart-operator
 
 # Testing
 

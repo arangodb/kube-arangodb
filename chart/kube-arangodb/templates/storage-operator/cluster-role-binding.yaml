@@ -4,8 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-    name: {{ template "kube-arangodb.rbac" . }}-storage
-    namespace: {{ .Release.Namespace }}
+    name: {{ template "kube-arangodb.rbac-cluster" . }}-storage
     labels:
         app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
@@ -15,7 +14,7 @@ metadata:
 roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: {{ template "kube-arangodb.rbac" . }}-storage
+    name: {{ template "kube-arangodb.rbac-cluster" . }}-storage
 subjects:
     - kind: ServiceAccount
       name: {{ template "kube-arangodb.operatorName" . }}
