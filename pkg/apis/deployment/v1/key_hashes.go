@@ -22,24 +22,8 @@
 
 package v1
 
-import "fmt"
+import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+)
 
-type DeploymentStatusHashList []string
-
-func (d DeploymentStatusHashList) Contains(hash string) bool {
-	if len(d) == 0 {
-		return false
-	}
-
-	for _, h := range d {
-		if h == hash {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (d DeploymentStatusHashList) ContainsSHA256(hash string) bool {
-	return d.Contains(fmt.Sprintf("sha256:%s", hash))
-}
+type DeploymentStatusHashList shared.HashList

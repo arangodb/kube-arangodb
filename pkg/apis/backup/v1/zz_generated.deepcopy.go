@@ -25,6 +25,7 @@
 package v1
 
 import (
+	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -81,6 +82,11 @@ func (in *ArangoBackupDetails) DeepCopyInto(out *ArangoBackupDetails) {
 		**out = **in
 	}
 	in.CreationTimestamp.DeepCopyInto(&out.CreationTimestamp)
+	if in.Keys != nil {
+		in, out := &in.Keys, &out.Keys
+		*out = make(sharedv1.HashList, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
