@@ -23,6 +23,7 @@
 package v1
 
 import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -49,15 +50,16 @@ func (a *ArangoBackupStatus) Equal(b *ArangoBackupStatus) bool {
 }
 
 type ArangoBackupDetails struct {
-	ID                      string    `json:"id"`
-	Version                 string    `json:"version"`
-	PotentiallyInconsistent *bool     `json:"potentiallyInconsistent,omitempty"`
-	SizeInBytes             uint64    `json:"sizeInBytes,omitempty"`
-	NumberOfDBServers       uint      `json:"numberOfDBServers,omitempty"`
-	Uploaded                *bool     `json:"uploaded,omitempty"`
-	Downloaded              *bool     `json:"downloaded,omitempty"`
-	Imported                *bool     `json:"imported,omitempty"`
-	CreationTimestamp       meta.Time `json:"createdAt"`
+	ID                      string          `json:"id"`
+	Version                 string          `json:"version"`
+	PotentiallyInconsistent *bool           `json:"potentiallyInconsistent,omitempty"`
+	SizeInBytes             uint64          `json:"sizeInBytes,omitempty"`
+	NumberOfDBServers       uint            `json:"numberOfDBServers,omitempty"`
+	Uploaded                *bool           `json:"uploaded,omitempty"`
+	Downloaded              *bool           `json:"downloaded,omitempty"`
+	Imported                *bool           `json:"imported,omitempty"`
+	CreationTimestamp       meta.Time       `json:"createdAt"`
+	Keys                    shared.HashList `json:"keys,omitempty"`
 }
 
 func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {
@@ -77,7 +79,8 @@ func (a *ArangoBackupDetails) Equal(b *ArangoBackupDetails) bool {
 		compareBoolPointer(a.PotentiallyInconsistent, b.PotentiallyInconsistent) &&
 		compareBoolPointer(a.Uploaded, b.Uploaded) &&
 		compareBoolPointer(a.Downloaded, b.Downloaded) &&
-		compareBoolPointer(a.Imported, b.Imported)
+		compareBoolPointer(a.Imported, b.Imported) &&
+		a.Keys.Equal(b.Keys)
 }
 
 func compareBoolPointer(a, b *bool) bool {

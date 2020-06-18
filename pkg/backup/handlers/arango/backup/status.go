@@ -24,6 +24,9 @@ package backup
 
 import (
 	"fmt"
+	"sort"
+
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -128,6 +131,7 @@ func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBac
 		obj = old.DeepCopy()
 	}
 
+	obj.Keys = keysToHashList(backupMeta.Keys)
 	obj.PotentiallyInconsistent = util.NewBool(backupMeta.PotentiallyInconsistent)
 	obj.SizeInBytes = backupMeta.SizeInBytes
 	obj.CreationTimestamp = v1.Time{
@@ -138,4 +142,20 @@ func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBac
 	obj.ID = string(backupMeta.ID)
 
 	return obj
+}
+
+func keysToHashList(l []driver.BackupMetaSha256) shared.HashList {
+	if len(l) == 0 {
+		return nil
+	}
+
+	r := make(shared.HashList, len(l))
+
+	for id, i := range l {
+		r[id] = fmt.Sprintf("sha256:%s", i.SHA256)
+	}
+
+	sort.Strings(r)
+
+	return r
 }
