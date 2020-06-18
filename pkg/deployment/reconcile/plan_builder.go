@@ -73,7 +73,16 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Insp
 		// Nothing to do
 		return nil, false
 	}
+
+	// Send events
+	for id := len(status.Plan); id < len(newPlan); id++ {
+		action := newPlan[id]
+		d.log.Info().Msgf("Registering Action event")
+		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
+	}
+
 	status.Plan = newPlan
+
 	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 		return maskAny(err), false
 	}
