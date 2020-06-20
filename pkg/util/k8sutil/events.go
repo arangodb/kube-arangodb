@@ -153,6 +153,23 @@ func NewAccessPackageDeletedEvent(apiObject APIObject, apSecretName string) *Eve
 	return event
 }
 
+// NewPlanTimeoutEvent creates an event indicating that an item on a reconciliation plan has been added
+func NewPlanAppendEvent(apiObject APIObject, itemType, memberID, role, reason string) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "Plan Action added"
+	msg := fmt.Sprintf("An plan item of type %s", itemType)
+	if role != "" {
+		msg = fmt.Sprintf("%s for member %s with role %s", msg, memberID, role)
+	}
+	msg = fmt.Sprintf("%s has beed added", msg)
+	if reason != "" {
+		msg = fmt.Sprintf("%s with reason: %s", msg, reason)
+	}
+	event.Message = msg
+	return event
+}
+
 // NewPlanTimeoutEvent creates an event indicating that an item on a reconciliation plan did not
 // finish before its deadline.
 func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *Event {
