@@ -57,6 +57,12 @@ func NewNoExecuteToleration(key string, duration TolerationDuration) v1.Tolerati
 
 // AddTolerationIfNotFound adds the given tolerations, if no such toleration has been set in the given source.
 func AddTolerationIfNotFound(source []v1.Toleration, toAdd v1.Toleration) []v1.Toleration {
+	if len(source) == 0 {
+		return []v1.Toleration{
+			toAdd,
+		}
+	}
+
 	for _, t := range source {
 		if (t.Key == toAdd.Key || len(t.Key) == 0) && (t.Effect == toAdd.Effect || len(t.Effect) == 0) {
 			// Toleration alread exists, do not add
