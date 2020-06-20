@@ -81,6 +81,8 @@ type DeploymentSpec struct {
 	Metrics        MetricsSpec        `json:"metrics"`
 	Lifecycle      LifecycleSpec      `json:"lifecycle,omitempty"`
 
+	ID ServerIDGroupSpec `json:"id"`
+
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`
 	DBServers    ServerGroupSpec `json:"dbservers"`

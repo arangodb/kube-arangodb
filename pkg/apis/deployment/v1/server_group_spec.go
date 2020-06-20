@@ -29,12 +29,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	arangod_options "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
-	arangosync_options "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
+	arangodOptions "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
+	arangosyncOptions "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -51,11 +51,11 @@ type ServerGroupSpec struct {
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
-	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
@@ -67,17 +67,17 @@ type ServerGroupSpec struct {
 	// PriorityClassName specifies a priority class name
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// VolumeClaimTemplate specifies a template for volume claims
-	VolumeClaimTemplate *v1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
+	VolumeClaimTemplate *core.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// VolumeResizeMode specified resize mode for pvc
 	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
-	AntiAffinity *v1.PodAntiAffinity `json:"antiAffinity,omitempty"`
+	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
-	Affinity *v1.PodAffinity `json:"affinity,omitempty"`
+	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
-	NodeAffinity *v1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
-	Sidecars []v1.Container `json:"sidecars,omitempty"`
+	Sidecars []core.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group
 	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
 	// Volumes define list of volumes mounted to pod
@@ -95,7 +95,7 @@ type ServerGroupSpecSecurityContext struct {
 	// Deprecated: This field is added for backward compatibility. Will be removed in 1.1.0.
 	DropAllCapabilities *bool `json:"dropAllCapabilities,omitempty"`
 	// AddCapabilities add new capabilities to containers
-	AddCapabilities []v1.Capability `json:"addCapabilities,omitempty"`
+	AddCapabilities []core.Capability `json:"addCapabilities,omitempty"`
 }
 
 // GetDropAllCapabilities returns flag if capabilities should be dropped
@@ -114,7 +114,7 @@ func (s *ServerGroupSpecSecurityContext) GetDropAllCapabilities() bool {
 }
 
 // GetAddCapabilities add capabilities to pod context
-func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []v1.Capability {
+func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []core.Capability {
 	if s == nil {
 		return nil
 	}
@@ -127,19 +127,19 @@ func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []v1.Capability {
 }
 
 // NewSecurityContext creates new security context
-func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *v1.SecurityContext {
-	r := &v1.SecurityContext{}
+func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *core.SecurityContext {
+	r := &core.SecurityContext{}
 
-	capabilities := &v1.Capabilities{}
+	capabilities := &core.Capabilities{}
 
 	if s.GetDropAllCapabilities() {
-		capabilities.Drop = []v1.Capability{
+		capabilities.Drop = []core.Capability{
 			"ALL",
 		}
 	}
 
 	if caps := s.GetAddCapabilities(); caps != nil {
-		capabilities.Add = []v1.Capability{}
+		capabilities.Add = []core.Capability{}
 
 		capabilities.Add = append(capabilities.Add, caps...)
 	}
@@ -246,7 +246,7 @@ func (s *ServerGroupProbeSpec) GetFailureThreshold(d int32) int32 {
 }
 
 // GetSidecars returns a list of sidecars the use wish to add
-func (s ServerGroupSpec) GetSidecars() []v1.Container {
+func (s ServerGroupSpec) GetSidecars() []core.Container {
 	return s.Sidecars
 }
 
@@ -256,7 +256,7 @@ func (s ServerGroupSpec) HasVolumeClaimTemplate() bool {
 }
 
 // GetVolumeClaimTemplate returns a pointer to a volume claim template or nil if none is specified
-func (s ServerGroupSpec) GetVolumeClaimTemplate() *v1.PersistentVolumeClaim {
+func (s ServerGroupSpec) GetVolumeClaimTemplate() *core.PersistentVolumeClaim {
 	return s.VolumeClaimTemplate
 }
 
@@ -299,7 +299,7 @@ func (s ServerGroupSpec) GetStorageClassName() string {
 }
 
 // GetTolerations returns the value of tolerations.
-func (s ServerGroupSpec) GetTolerations() []v1.Toleration {
+func (s ServerGroupSpec) GetTolerations() []core.Toleration {
 	return s.Tolerations
 }
 
@@ -377,11 +377,11 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			parts := strings.Split(arg, "=")
 			optionKey := strings.TrimSpace(parts[0])
 			if group.IsArangod() {
-				if arangod_options.IsCriticalOption(optionKey) {
+				if arangodOptions.IsCriticalOption(optionKey) {
 					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}
 			} else if group.IsArangosync() {
-				if arangosync_options.IsCriticalOption(optionKey) {
+				if arangosyncOptions.IsCriticalOption(optionKey) {
 					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}
 			}
@@ -443,19 +443,19 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 		s.MaxCount = nil
 	}
 	if !s.HasVolumeClaimTemplate() {
-		if _, found := s.Resources.Requests[v1.ResourceStorage]; !found {
+		if _, found := s.Resources.Requests[core.ResourceStorage]; !found {
 			switch group {
 			case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers:
-				volumeMode := v1.PersistentVolumeFilesystem
-				s.VolumeClaimTemplate = &v1.PersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
-						AccessModes: []v1.PersistentVolumeAccessMode{
-							v1.ReadWriteOnce,
+				volumeMode := core.PersistentVolumeFilesystem
+				s.VolumeClaimTemplate = &core.PersistentVolumeClaim{
+					Spec: core.PersistentVolumeClaimSpec{
+						AccessModes: []core.PersistentVolumeAccessMode{
+							core.ReadWriteOnce,
 						},
 						VolumeMode: &volumeMode,
-						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("8Gi"),
+						Resources: core.ResourceRequirements{
+							Requests: core.ResourceList{
+								core.ResourceStorage: resource.MustParse("8Gi"),
 							},
 						},
 					},
@@ -466,10 +466,10 @@ func (s *ServerGroupSpec) SetDefaults(group ServerGroup, used bool, mode Deploym
 }
 
 // setDefaultsFromResourceList fills unspecified fields with a value from given source spec.
-func setDefaultsFromResourceList(s *v1.ResourceList, source v1.ResourceList) {
+func setDefaultsFromResourceList(s *core.ResourceList, source core.ResourceList) {
 	for k, v := range source {
 		if *s == nil {
-			*s = make(v1.ResourceList)
+			*s = make(core.ResourceList)
 		}
 		if _, found := (*s)[k]; !found {
 			(*s)[k] = v

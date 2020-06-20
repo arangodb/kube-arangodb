@@ -272,6 +272,7 @@ func (i *ImageUpdatePod) GetRole() string {
 func (i *ImageUpdatePod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
+	pod.Spec.PriorityClassName = i.spec.ID.PriorityClassName
 }
 
 func (i *ImageUpdatePod) GetImagePullSecrets() []string {
@@ -311,13 +312,19 @@ func (i *ImageUpdatePod) GetFinalizers() []string {
 }
 
 func (i *ImageUpdatePod) GetTolerations() []core.Toleration {
-
 	shortDur := k8sutil.TolerationDuration{
 		Forever:  false,
 		TimeSpan: time.Second * 5,
 	}
 
-	tolerations := make([]core.Toleration, 0, 2)
+	tolerations := make([]core.Toleration, 0, 3+len(i.spec.ID.Tolerations))
+
+	if idTolerations := i.spec.ID.Tolerations; len(idTolerations) > 0 {
+		for _, toleration := range idTolerations {
+			tolerations = k8sutil.AddTolerationIfNotFound(tolerations, toleration)
+		}
+	}
+
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
 		k8sutil.NewNoExecuteToleration(k8sutil.TolerationKeyNodeNotReady, shortDur))
 	tolerations = k8sutil.AddTolerationIfNotFound(tolerations,
@@ -333,7 +340,7 @@ func (i *ImageUpdatePod) IsDeploymentMode() bool {
 }
 
 func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
-	return nil
+	return i.spec.ID.NodeSelector
 }
 
 func (i *ImageUpdatePod) GetServiceAccountName() string {
@@ -361,17 +368,25 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(i, &a)
 
+	pod.MergePodAntiAffinity(&a, i.spec.ID.AntiAffinity)
+
 	return pod.ReturnPodAntiAffinityOrNil(a)
 }
 
 func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
-	return nil
+	a := core.PodAffinity{}
+
+	pod.MergePodAffinity(&a, i.spec.ID.Affinity)
+
+	return pod.ReturnPodAffinityOrNil(a)
 }
 
 func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	a := core.NodeAffinity{}
 
 	pod.AppendNodeSelector(&a)
+
+	pod.MergeNodeAffinity(&a, i.spec.ID.NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }
