@@ -58,6 +58,10 @@ type ServerGroupSpec struct {
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// Labels specified the labels added to Pods in this group.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Envs allow to specify additional envs in this group.
+	Envs ServerGroupEnvVars `json:"envs,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
 	// NodeSelector speficies a set of selectors for nodes

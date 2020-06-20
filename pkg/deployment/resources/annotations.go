@@ -54,6 +54,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 	}
 
 	if err := ensureServiceAccountsAnnotations(kubecli.CoreV1().ServiceAccounts(r.context.GetNamespace()),
+		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
@@ -71,6 +72,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 	}
 
 	if err := ensurePdbsAnnotations(kubecli.PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace()),
+		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
@@ -137,22 +139,20 @@ func setSecretAnnotations(client typedCore.SecretInterface, secret *core.Secret,
 	})
 }
 
-func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, kind, name, namespace string, annotations map[string]string) error {
-	serviceAccounts, err := k8sutil.GetServiceAccountsForParent(client,
-		kind,
-		name,
-		namespace)
-	if err != nil {
-		return err
-	}
-
-	for _, serviceAccount := range serviceAccounts {
+func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		if !k8sutil.CompareAnnotations(serviceAccount.GetAnnotations(), annotations) {
 			log.Info().Msgf("Replacing annotations for ServiceAccount %s", serviceAccount.Name)
-			if err = setServiceAccountAnnotations(client, serviceAccount, annotations); err != nil {
+			if err := setServiceAccountAnnotations(client, serviceAccount, annotations); err != nil {
 				return err
 			}
 		}
+
+		return nil
+	}, func(serviceAccount *core.ServiceAccount) bool {
+		return k8sutil.IsChildResource(kind, name, namespace, serviceAccount)
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -213,22 +213,20 @@ func setServiceAnnotations(client typedCore.ServiceInterface, service *core.Serv
 	})
 }
 
-func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, kind, name, namespace string, annotations map[string]string) error {
-	podDisruptionBudgets, err := k8sutil.GetPDBForParent(client,
-		kind,
-		name,
-		namespace)
-	if err != nil {
-		return err
-	}
-
-	for _, podDisruptionBudget := range podDisruptionBudgets {
+func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+	if err := cachedStatus.IteratePodDisruptionBudgets(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
 		if !k8sutil.CompareAnnotations(podDisruptionBudget.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for PDB %s", podDisruptionBudget.Name)
-			if err = setPdbAnnotations(client, podDisruptionBudget, annotations); err != nil {
+			log.Info().Msgf("Replacing annotations for PodDisruptionBudget %s", podDisruptionBudget.Name)
+			if err := setPdbAnnotations(client, podDisruptionBudget, annotations); err != nil {
 				return err
 			}
 		}
+
+		return nil
+	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
+		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -289,17 +287,23 @@ func setPvcAnnotations(client typedCore.PersistentVolumeClaimInterface, persiste
 	})
 }
 
-func getPodGroup(pod *core.Pod) api.ServerGroup {
-	if pod.Labels == nil {
+func getObjectGroup(obj meta.Object) api.ServerGroup {
+	l := obj.GetLabels()
+	if len(l) == 0 {
 		return api.ServerGroupUnknown
 	}
 
-	return api.ServerGroupFromRole(pod.Labels[k8sutil.LabelKeyRole])
+	group, ok := l[k8sutil.LabelKeyRole]
+	if !ok {
+		return api.ServerGroupUnknown
+	}
+
+	return api.ServerGroupFromRole(group)
 }
 
 func ensurePodsAnnotations(client typedCore.PodInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
-		group := getPodGroup(pod)
+		group := getObjectGroup(pod)
 		mergedAnnotations := k8sutil.MergeAnnotations(annotations, spec.GetServerGroupSpec(group).Annotations)
 
 		if !k8sutil.CompareAnnotations(pod.GetAnnotations(), mergedAnnotations) {
@@ -335,4 +339,11 @@ func setPodAnnotations(client typedCore.PodInterface, pod *core.Pod, annotations
 
 		return nil
 	})
+}
+
+func (r *Resources) isChildResource(obj meta.Object) bool {
+	return k8sutil.IsChildResource(deployment.ArangoDeploymentResourceKind,
+		r.context.GetAPIObject().GetName(),
+		r.context.GetAPIObject().GetNamespace(),
+		obj)
 }

@@ -126,31 +126,37 @@ func (a *ArangoSyncContainer) GetImage() string {
 }
 
 func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
-	envs := make([]core.EnvVar, 0)
+	envs := NewEnvBuilder()
 
 	if a.spec.Sync.Monitoring.GetTokenSecretName() != "" {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 			a.spec.Sync.Monitoring.GetTokenSecretName(), constants.SecretKeyToken)
 
-		envs = append(envs, env)
+		envs.Add(true, env)
 	}
 
 	if a.spec.License.HasSecretName() {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
 			constants.SecretKeyToken)
 
-		envs = append(envs, env)
+		envs.Add(true, env)
 	}
 
 	if a.resources.context.GetLifecycleImage() != "" {
-		envs = append(envs, k8sutil.GetLifecycleEnv()...)
+		envs.Add(true, k8sutil.GetLifecycleEnv()...)
 	}
 
-	if len(envs) > 0 {
-		return envs
+	if len(a.groupSpec.Envs) > 0 {
+		for _, env := range a.groupSpec.Envs {
+			// Do not override preset envs
+			envs.Add(false, core.EnvVar{
+				Name:  env.Name,
+				Value: env.Value,
+			})
+		}
 	}
 
-	return nil
+	return envs.GetEnvList()
 }
 
 func (m *MemberSyncPod) GetName() string {

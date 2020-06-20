@@ -64,6 +64,8 @@ type DeploymentSpec struct {
 
 	// Annotations specified the annotations added to all resources
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// Labels specified the labels added to all resources
+	Labels map[string]string `json:"labels,omitempty"`
 
 	RestoreFrom *string `json:"restoreFrom,omitempty"`
 

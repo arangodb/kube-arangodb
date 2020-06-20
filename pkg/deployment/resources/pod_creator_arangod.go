@@ -165,6 +165,16 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 		}
 	}
 
+	if len(a.groupSpec.Envs) > 0 {
+		for _, env := range a.groupSpec.Envs {
+			// Do not override preset envs
+			envs.Add(false, core.EnvVar{
+				Name:  env.Name,
+				Value: env.Value,
+			})
+		}
+	}
+
 	return envs.GetEnvList()
 }
 

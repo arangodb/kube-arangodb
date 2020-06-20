@@ -38,8 +38,18 @@ const (
 
 var _ json.Marshaler = &Path{}
 
+func EscapePatchElement(element string) string {
+	return strings.ReplaceAll(element, "/", "~1") // https://tools.ietf.org/html/rfc6901#section-3
+}
+
 func NewPath(items ...string) Path {
-	return items
+	i := make([]string, len(items))
+
+	for id, item := range items {
+		i[id] = EscapePatchElement(item)
+	}
+
+	return i
 }
 
 type Path []string

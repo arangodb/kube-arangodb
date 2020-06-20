@@ -7,6 +7,7 @@
 - Add Kustomize support
 - Improve Helm 3 support
 - Allow to customize ID Pod selectors
+- Add Label and Envs Pod customization
 
 ## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
 - Prevent deletion of not known PVC's
