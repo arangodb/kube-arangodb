@@ -28,6 +28,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	policy "k8s.io/api/policy/v1beta1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -533,10 +535,12 @@ func TestCreatePlan(t *testing.T) {
 		ExpectedLog   string
 		ExpectedEvent *k8sutil.Event
 
-		Pods     map[string]*core.Pod
-		Secrets  map[string]*core.Secret
-		Services map[string]*core.Service
-		PVCS     map[string]*core.PersistentVolumeClaim
+		Pods            map[string]*core.Pod
+		Secrets         map[string]*core.Secret
+		Services        map[string]*core.Service
+		PVCS            map[string]*core.PersistentVolumeClaim
+		ServiceAccounts map[string]*core.ServiceAccount
+		PDBS            map[string]*policy.PodDisruptionBudget
 	}{
 		{
 			Name: "Can not create plan for single deployment",
@@ -796,7 +800,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services))
+			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS))
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

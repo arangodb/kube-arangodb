@@ -301,6 +301,10 @@ func (d *Deployment) ensureResources(lastInterval util.Interval, cachedStatus in
 		return minInspectionInterval, errors.Wrapf(err, "Annotation update failed")
 	}
 
+	if err := d.resources.EnsureLabels(cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Labels update failed")
+	}
+
 	return lastInterval, nil
 }
 

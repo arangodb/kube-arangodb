@@ -24,6 +24,7 @@ package inspector
 
 import (
 	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -48,19 +49,36 @@ func NewInspector(k kubernetes.Interface, namespace string) (Inspector, error) {
 		return nil, err
 	}
 
-	return NewInspectorFromData(pods, secrets, pvcs, services), nil
+	serviceAccounts, err := serviceAccountsToMap(k, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	podDisruptionBudgets, err := podDisruptionBudgetsToMap(k, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets), nil
 }
 
 func NewEmptyInspector() Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil)
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil)
 }
 
-func NewInspectorFromData(pods map[string]*core.Pod, secrets map[string]*core.Secret, pvcs map[string]*core.PersistentVolumeClaim, services map[string]*core.Service) Inspector {
+func NewInspectorFromData(pods map[string]*core.Pod,
+	secrets map[string]*core.Secret,
+	pvcs map[string]*core.PersistentVolumeClaim,
+	services map[string]*core.Service,
+	serviceAccounts map[string]*core.ServiceAccount,
+	podDisruptionBudgets map[string]*policy.PodDisruptionBudget) Inspector {
 	return &inspector{
-		pods:     pods,
-		secrets:  secrets,
-		pvcs:     pvcs,
-		services: services,
+		pods:                 pods,
+		secrets:              secrets,
+		pvcs:                 pvcs,
+		services:             services,
+		serviceAccounts:      serviceAccounts,
+		podDisruptionBudgets: podDisruptionBudgets,
 	}
 }
 
@@ -76,11 +94,19 @@ type Inspector interface {
 
 	Service(name string) (*core.Service, bool)
 	IterateServices(action ServiceAction, filters ...ServiceFilter) error
+
+	ServiceAccount(name string) (*core.ServiceAccount, bool)
+	IterateServiceAccounts(action ServiceAccountAction, filters ...ServiceAccountFilter) error
+
+	PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool)
+	IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error
 }
 
 type inspector struct {
-	pods     map[string]*core.Pod
-	secrets  map[string]*core.Secret
-	pvcs     map[string]*core.PersistentVolumeClaim
-	services map[string]*core.Service
+	pods                 map[string]*core.Pod
+	secrets              map[string]*core.Secret
+	pvcs                 map[string]*core.PersistentVolumeClaim
+	services             map[string]*core.Service
+	serviceAccounts      map[string]*core.ServiceAccount
+	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
 }
