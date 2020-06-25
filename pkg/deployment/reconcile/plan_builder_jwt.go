@@ -64,22 +64,16 @@ func createJWTKeyUpdate(ctx context.Context,
 	jwt, ok := s.Data[constants.SecretKeyToken]
 	if !ok {
 		log.Warn().Msgf("JWT Secret is invalid, no rotation will take place")
-		return nil
+		return addJWTPropagatedPlanAction(status)
 	}
 
 	jwtSha := util.SHA256(jwt)
 
-	f, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
-	if !ok {
-		log.Info().Msgf("JWT Folder Secret is missing, no rotation will take place")
-		return nil
-	}
-
-	if _, ok := f.Data[jwtSha]; !ok {
+	if _, ok := folder.Data[jwtSha]; !ok {
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWT key").AddParam(checksum, jwtSha))
 	}
 
-	activeKey, ok := f.Data[pod.ActiveJWTKey]
+	activeKey, ok := folder.Data[pod.ActiveJWTKey]
 	if !ok {
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key").AddParam(checksum, jwtSha))
 	}
