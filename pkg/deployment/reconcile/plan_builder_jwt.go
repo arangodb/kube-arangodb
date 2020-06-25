@@ -92,7 +92,7 @@ func createJWTKeyUpdate(ctx context.Context,
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key").AddParam(checksum, jwtSha))
 	}
 
-	for key := range f.Data {
+	for key := range folder.Data {
 		if key == pod.ActiveJWTKey {
 			continue
 		}
