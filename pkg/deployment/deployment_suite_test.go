@@ -28,6 +28,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/go-driver/jwt"
@@ -96,16 +100,16 @@ func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []s
 	return jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(s, "kube-arangodb", paths)
 }
 
-func modTestLivenessProbe(secure bool, authorization string, port int, mod func(*core.Probe)) *core.Probe {
-	probe := createTestLivenessProbe(secure, authorization, port)
+func modTestLivenessProbe(mode string, secure bool, authorization string, port int, mod func(*core.Probe)) *core.Probe {
+	probe := createTestLivenessProbe(mode, secure, authorization, port)
 
 	mod(probe)
 
 	return probe
 }
 
-func createTestReadinessSimpleProbe(secure bool, authorization string, port int) *core.Probe {
-	probe := createTestLivenessProbe(secure, authorization, port)
+func createTestReadinessSimpleProbe(mode string, secure bool, authorization string, port int) *core.Probe {
+	probe := createTestReadinessProbe(mode, secure, authorization)
 
 	probe.InitialDelaySeconds = 15
 	probe.PeriodSeconds = 10
@@ -113,23 +117,74 @@ func createTestReadinessSimpleProbe(secure bool, authorization string, port int)
 	return probe
 }
 
-func createTestLivenessProbe(secure bool, authorization string, port int) *core.Probe {
-	return k8sutil.HTTPProbeConfig{
-		LocalPath:     "/_api/version",
+func createTestLivenessProbe(mode string, secure bool, authorization string, port int) *core.Probe {
+	return getProbeCreator(mode)(secure, authorization, "/_api/version", port).Create()
+}
+
+func createTestReadinessProbe(mode string, secure bool, authorization string) *core.Probe {
+	p := getProbeCreator(mode)(secure, authorization, "/_admin/server/availability", k8sutil.ArangoPort).Create()
+
+	p.InitialDelaySeconds = 2
+	p.PeriodSeconds = 2
+
+	return p
+}
+
+type probeCreator func(secure bool, authorization, endpoint string, port int) resources.Probe
+
+const (
+	cmd = "cmd"
+)
+
+func getProbeCreator(t string) probeCreator {
+	switch t {
+	case cmd:
+		return getCMDProbeCreator()
+	default:
+		return getHTTPProbeCreator()
+	}
+}
+
+func getHTTPProbeCreator() probeCreator {
+	return func(secure bool, authorization, endpoint string, port int) resources.Probe {
+		return createHTTPTestProbe(secure, authorization, endpoint, port)
+	}
+}
+
+func getCMDProbeCreator() probeCreator {
+	return func(secure bool, authorization, endpoint string, port int) resources.Probe {
+		return createCMDTestProbe(secure, authorization != "", endpoint)
+	}
+}
+
+func createCMDTestProbe(secure, authorization bool, endpoint string) resources.Probe {
+	args := []string{
+		"/lifecycle/tools/___go_test_github_com_arangodb_kube_arangodb_pkg_deployment",
+		"lifecycle",
+		"probe",
+		fmt.Sprintf("--endpoint=%s", endpoint),
+	}
+
+	if secure {
+		args = append(args, "--ssl")
+	}
+
+	if authorization {
+		args = append(args, "--auth")
+	}
+
+	return &probes.CMDProbeConfig{
+		Command: args,
+	}
+}
+
+func createHTTPTestProbe(secure bool, authorization string, endpoint string, port int) resources.Probe {
+	return &probes.HTTPProbeConfig{
+		LocalPath:     endpoint,
 		Secure:        secure,
 		Authorization: authorization,
 		Port:          port,
-	}.Create()
-}
-
-func createTestReadinessProbe(secure bool, authorization string) *core.Probe {
-	return k8sutil.HTTPProbeConfig{
-		LocalPath:           "/_admin/server/availability",
-		Secure:              secure,
-		Authorization:       authorization,
-		InitialDelaySeconds: 2,
-		PeriodSeconds:       2,
-	}.Create()
+	}
 }
 
 func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool) []string {
@@ -370,13 +425,13 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 	}
 
 	d := &Deployment{
-		apiObject:   arangoDeployment,
-		config:      config,
-		deps:        deps,
-		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:      make(chan struct{}),
-		clientCache: newClientCache(deps.KubeCli, arangoDeployment),
+		apiObject: arangoDeployment,
+		config:    config,
+		deps:      deps,
+		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:    make(chan struct{}),
 	}
+	d.clientCache = newClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)
@@ -444,7 +499,7 @@ func createTestExporterCommand(secure bool, port uint16) []string {
 }
 
 func createTestExporterLivenessProbe(secure bool) *core.Probe {
-	return k8sutil.HTTPProbeConfig{
+	return probes.HTTPProbeConfig{
 		LocalPath: "/",
 		Port:      k8sutil.ArangoExporterPort,
 		Secure:    secure,

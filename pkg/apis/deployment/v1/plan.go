@@ -101,6 +101,18 @@ const (
 	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
 	// ActionTypeEncryptionKeyStatusUpdate update status object with current encryption keys
 	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
+	// ActionTypeJWTStatusUpdate update status of JWT Secret
+	ActionTypeJWTStatusUpdate ActionType = "JWTStatusUpdate"
+	// ActionTypeJWTSetActive change active JWT key
+	ActionTypeJWTSetActive ActionType = "JWTSetActive"
+	// ActionTypeJWTAdd add new JWT key
+	ActionTypeJWTAdd ActionType = "JWTAdd"
+	// ActionTypeJWTClean Clean old JWT key
+	ActionTypeJWTClean ActionType = "JWTClean"
+	// ActionTypeJWTRefresh refresh jwt tokens
+	ActionTypeJWTRefresh ActionType = "JWTRefresh"
+	// ActionTypeJWTPropagated change propagated flag
+	ActionTypeJWTPropagated ActionType = "JWTPropagated"
 )
 
 const (

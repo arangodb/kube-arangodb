@@ -20,7 +20,7 @@
 // Author Jan Christoph Uhde
 //
 
-package k8sutil
+package probes
 
 import (
 	"testing"

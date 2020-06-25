@@ -20,10 +20,13 @@
 // Author Adam Janikowski
 //
 
-package v1
+package client
 
-import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-)
+type JWTDetailsResult struct {
+	Active  *Entry  `json:"active,omitempty"`
+	Passive Entries `json:"passive,omitempty"`
+}
 
-type DeploymentStatusHashList shared.HashList
+type JWTDetails struct {
+	Result JWTDetailsResult `json:"result,omitempty"`
+}

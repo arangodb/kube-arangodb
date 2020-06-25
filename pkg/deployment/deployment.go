@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -123,14 +125,17 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	if err := apiObject.Spec.Validate(); err != nil {
 		return nil, maskAny(err)
 	}
+
 	d := &Deployment{
-		apiObject:   apiObject,
-		config:      config,
-		deps:        deps,
-		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:      make(chan struct{}),
-		clientCache: newClientCache(deps.KubeCli, apiObject),
+		apiObject: apiObject,
+		config:    config,
+		deps:      deps,
+		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:    make(chan struct{}),
 	}
+
+	d.clientCache = newClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
 	d.resilience = resilience.NewResilience(deps.Log, d)
@@ -490,4 +495,8 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 		return maskAny(err)
 	}
 	return nil
+}
+
+func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
+	return d.apiObject
 }

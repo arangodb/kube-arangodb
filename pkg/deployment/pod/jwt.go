@@ -23,6 +23,7 @@
 package pod
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/arangodb/go-driver"
@@ -32,6 +33,8 @@ import (
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
+
+const ActiveJWTKey = "-"
 
 func IsAuthenticated(i Input) bool {
 	return i.Deployment.IsAuthenticated()
@@ -48,8 +51,12 @@ func VersionHasJWTSecretKeyfile(v driver.Version) bool {
 	return false
 }
 
-func VersionHasJWTSecretKeyfolder(i Input) bool {
-	return i.Enterprise && i.Version.CompareTo("3.7.0") > 0
+func JWTSecretFolder(name string) string {
+	return fmt.Sprintf("%s-jwt-folder", name)
+}
+
+func VersionHasJWTSecretKeyfolder(v driver.Version, enterprise bool) bool {
+	return enterprise && v.CompareTo("3.7.0") > 0
 }
 
 func JWT() Builder {
@@ -81,7 +88,9 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 
 	options.Add("--server.authentication", "true")
 
-	if VersionHasJWTSecretKeyfile(i.Version) {
+	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+		options.Add("--server.jwt-secret-folder", k8sutil.ClusterJWTSecretVolumeMountDir)
+	} else if VersionHasJWTSecretKeyfile(i.Version) {
 		keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 		options.Add("--server.jwt-secret-keyfile", keyPath)
 	} else {
@@ -96,7 +105,12 @@ func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 		return nil, nil
 	}
 
-	vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
+	var vol core.Volume
+	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+		vol = k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, JWTSecretFolder(i.ApiObject.GetName()))
+	} else {
+		vol = k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
+	}
 	return []core.Volume{vol}, []core.VolumeMount{k8sutil.ClusterJWTVolumeMount()}
 }
 
@@ -105,13 +119,20 @@ func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
-	if !exists {
-		return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
-	}
+	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+		_, exists := cachedStatus.Secret(JWTSecretFolder(i.ApiObject.GetName()))
+		if !exists {
+			return errors.Errorf("Secret for JWT Folderis missing %s", i.Deployment.Authentication.GetJWTSecretName())
+		}
+	} else {
+		secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
+		if !exists {
+			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
+		}
 
-	if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {
-		return errors.Wrapf(err, "Cluster JWT secret validation failed")
+		if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {
+			return errors.Wrapf(err, "Cluster JWT secret validation failed")
+		}
 	}
 
 	return nil

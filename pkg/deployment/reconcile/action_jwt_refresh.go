@@ -29,34 +29,32 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
-	registerAction(api.ActionTypeEncryptionKeyRefresh, newEncryptionKeyRefresh)
+	registerAction(api.ActionTypeJWTRefresh, newJWTRefresh)
 }
 
-func newEncryptionKeyRefresh(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyRefreshAction{}
+func newJWTRefresh(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &jwtRefreshAction{}
 
 	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
 
 	return a
 }
 
-type encryptionKeyRefreshAction struct {
+type jwtRefreshAction struct {
 	actionImpl
 }
 
-func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
-	ready, _, err := a.CheckProgress(ctx)
-	return ready, err
-}
+func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatus()); err != nil || !folder {
+		return true, false, nil
+	}
 
-func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	keyfolder, err := a.actionCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
-	if err != nil {
-		a.log.Err(err).Msgf("Unable to fetch encryption folder")
+	folder, ok := a.actionCtx.GetCachedStatus().Secret(pod.JWTSecretFolder(a.actionCtx.GetAPIObject().GetName()))
+	if !ok {
+		a.log.Error().Msgf("Unable to get JWT folder info")
 		return true, false, nil
 	}
 
@@ -65,18 +63,16 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
 	}
-
-	client := client.NewClient(c.Connection())
-
-	e, err := client.RefreshEncryption(ctx)
-	if err != nil {
-		a.log.Warn().Err(err).Msg("Unable to refresh encryption")
+	if invalid, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection()), folder.Data, true); err != nil {
+		a.log.Warn().Err(err).Msg("Error while getting JWT Status")
 		return true, false, nil
-	}
-
-	if !e.Result.KeysPresent(keyfolder.Data) {
+	} else if invalid {
 		return false, false, nil
 	}
-
 	return true, false, nil
+}
+
+func (a *jwtRefreshAction) Start(ctx context.Context) (bool, error) {
+	ready, _, err := a.CheckProgress(ctx)
+	return ready, err
 }

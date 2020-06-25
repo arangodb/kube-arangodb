@@ -138,15 +138,30 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 	}
 
 	if spec.IsAuthenticated() {
-		secretName := spec.Authentication.GetJWTSecretName()
-		getExpectedHash := func() string { return getHashes().AuthJWT }
-		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
-		}
-		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-			return maskAny(err)
-		} else if !hashOK {
-			badSecretNames = append(badSecretNames, secretName)
+		if image == nil || image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+			secretName := spec.Authentication.GetJWTSecretName()
+			getExpectedHash := func() string { return getHashes().AuthJWT }
+			setExpectedHash := func(h string) error {
+				return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
+			}
+			if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+				return maskAny(err)
+			} else if !hashOK {
+				badSecretNames = append(badSecretNames, secretName)
+			}
+		} else {
+			if _, exists := cachedStatus.Secret(pod.JWTSecretFolder(deploymentName)); !exists {
+				secretName := spec.Authentication.GetJWTSecretName()
+				getExpectedHash := func() string { return getHashes().AuthJWT }
+				setExpectedHash := func(h string) error {
+					return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
+				}
+				if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
+					return maskAny(err)
+				} else if !hashOK {
+					badSecretNames = append(badSecretNames, secretName)
+				}
+			}
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
@@ -162,7 +177,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 				badSecretNames = append(badSecretNames, secretName)
 			}
 		} else {
-			if _, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(deploymentName)); !exists {
+			if _, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(deploymentName)); !exists {
 				secretName := spec.RocksDB.Encryption.GetKeySecretName()
 				getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 				setExpectedHash := func(h string) error {

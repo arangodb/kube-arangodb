@@ -24,9 +24,18 @@ package deployment
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
+	nhttp "net/http"
 	"strconv"
+	"time"
+
+	"github.com/arangodb/go-driver/http"
+	"github.com/arangodb/go-driver/jwt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	goErrors "github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -37,20 +46,19 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/rs/zerolog/log"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 )
 
 // GetBackup receives information about a backup resource
 func (d *Deployment) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
-	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(backup, metav1.GetOptions{})
+	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(backup, meta.GetOptions{})
 }
 
 // GetAPIObject returns the deployment as k8s object.
@@ -198,11 +206,84 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 
 // GetAgency returns a connection to the entire agency.
 func (d *Deployment) GetAgency(ctx context.Context) (agency.Agency, error) {
-	result, err := arangod.CreateArangodAgencyClient(ctx, d.deps.KubeCli.CoreV1(), d.apiObject)
+	return d.clientCache.GetAgency(ctx)
+}
+
+func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
+	transport := &nhttp.Transport{
+		Proxy: nhttp.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 100 * time.Millisecond,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       100 * time.Millisecond,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	if d.apiObject.Spec.TLS.IsSecure() {
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	connConfig := http.ConnectionConfig{
+		Transport:          transport,
+		DontFollowRedirect: true,
+	}
+
+	return connConfig, nil
+}
+
+func (d *Deployment) getAuth() (driver.Authentication, error) {
+	if !d.apiObject.Spec.Authentication.IsAuthenticated() {
+		return nil, nil
+	}
+
+	secrets := d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+
+	var secret string
+	if i := d.apiObject.Status.CurrentImage; i == nil || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || !i.Enterprise {
+		s, err := secrets.Get(d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+		if err != nil {
+			return nil, goErrors.Errorf("JWT Secret is missing")
+		}
+
+		jwt, ok := s.Data[constants.SecretKeyToken]
+		if !ok {
+			return nil, goErrors.Errorf("JWT Secret is invalid")
+		}
+
+		secret = string(jwt)
+	} else {
+		s, err := secrets.Get(pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
+		if err != nil {
+			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
+			return nil, goErrors.Errorf("JWT Folder Secret is missing")
+		}
+
+		if len(s.Data) == 0 {
+			return nil, goErrors.Errorf("JWT Folder Secret is empty")
+		}
+
+		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
+			secret = string(q)
+		} else {
+			for _, q := range s.Data {
+				secret = string(q)
+				break
+			}
+		}
+	}
+
+	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
 	if err != nil {
 		return nil, maskAny(err)
 	}
-	return result, nil
+
+	return driver.RawAuthentication(jwt), nil
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.
@@ -268,7 +349,7 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 func (d *Deployment) DeletePod(podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return maskAny(err)
 	}
@@ -281,8 +362,8 @@ func (d *Deployment) CleanupPod(p *v1.Pod) error {
 	log := d.deps.Log
 	podName := p.GetName()
 	ns := p.GetNamespace()
-	options := metav1.NewDeleteOptions(0)
-	options.Preconditions = metav1.NewUIDPreconditions(string(p.GetUID()))
+	options := meta.NewDeleteOptions(0)
+	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
 	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return maskAny(err)
@@ -296,7 +377,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 	log := d.deps.Log
 	ns := d.GetNamespace()
 	kubecli := d.deps.KubeCli
-	p, err := kubecli.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	p, err := kubecli.CoreV1().Pods(ns).Get(podName, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -314,7 +395,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 func (d *Deployment) DeletePvc(pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return maskAny(err)
 	}
@@ -338,7 +419,7 @@ func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
 
 // GetPv returns PV info about PV with given name.
 func (d *Deployment) GetPv(pvName string) (*v1.PersistentVolume, error) {
-	pv, err := d.GetKubeCli().CoreV1().PersistentVolumes().Get(pvName, metav1.GetOptions{})
+	pv, err := d.GetKubeCli().CoreV1().PersistentVolumes().Get(pvName, meta.GetOptions{})
 	if err == nil {
 		return pv, nil
 	}
@@ -366,7 +447,7 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
 func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
-	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(pvcName, metav1.GetOptions{})
+	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, maskAny(err)
@@ -392,7 +473,7 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -402,7 +483,7 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil

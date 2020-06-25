@@ -25,60 +25,49 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
 )
 
 func init() {
-	registerAction(api.ActionTypeEncryptionKeyStatusUpdate, newEncryptionKeyStatusUpdate)
+	registerAction(api.ActionTypeJWTPropagated, newJWTPropagated)
 }
 
-func newEncryptionKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &encryptionKeyStatusUpdateAction{}
+func newJWTPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &jwtPropagatedAction{}
 
 	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
 
 	return a
 }
 
-type encryptionKeyStatusUpdateAction struct {
+type jwtPropagatedAction struct {
 	actionImpl
 
 	actionEmptyCheckProgress
 }
 
-func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
-	if err := ensureEncryptionSupport(a.actionCtx); err != nil {
+func (a *jwtPropagatedAction) Start(ctx context.Context) (bool, error) {
+	_, err := ensureJWTFolderSupportFromAction(a.actionCtx)
+	if err != nil {
 		a.log.Error().Err(err).Msgf("Action not supported")
 		return true, nil
 	}
 
-	f, err := a.actionCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
-	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to get folder info")
+	propagatedFlag, exists := a.action.Params[propagated]
+	if !exists {
+		a.log.Error().Err(err).Msgf("Propagated flag is missing")
 		return true, nil
 	}
 
-	keyHashes := secretKeysToListWithPrefix("sha256:", f)
+	propagatedFlagBool := propagatedFlag == conditionTrue
 
 	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
-		if len(keyHashes) == 0 {
-			if s.Hashes.Encryption.Keys != nil {
-				s.Hashes.Encryption.Keys = nil
-				return true
-			}
-
-			return false
-		}
-
-		if !util.CompareStringArray(keyHashes, s.Hashes.Encryption.Keys) {
-			s.Hashes.Encryption.Keys = keyHashes
+		if s.Hashes.JWT.Propagated != propagatedFlagBool {
+			s.Hashes.JWT.Propagated = propagatedFlagBool
 			return true
 		}
+
 		return false
 	}); err != nil {
 		return false, err

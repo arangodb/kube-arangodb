@@ -88,7 +88,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -148,7 +148,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							Env: []core.EnvVar{
 								resourceLimitAsEnv(t, resourcesUnfiltered),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -204,7 +204,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

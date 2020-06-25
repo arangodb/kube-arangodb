@@ -77,7 +77,7 @@ func (a *encryptionKeyRemoveAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	_, err = a.actionCtx.SecretsInterface().Patch(pod.GetKeyfolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch)
+	_, err = a.actionCtx.SecretsInterface().Patch(pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch)
 	if err != nil {
 		if !k8sutil.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", string(patch))
