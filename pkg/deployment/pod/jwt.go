@@ -119,12 +119,7 @@ func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
 		return nil
 	}
 
-	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
-		_, exists := cachedStatus.Secret(JWTSecretFolder(i.ApiObject.GetName()))
-		if !exists {
-			return errors.Errorf("Secret for JWT Folderis missing %s", i.Deployment.Authentication.GetJWTSecretName())
-		}
-	} else {
+	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
 			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())

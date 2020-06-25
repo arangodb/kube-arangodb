@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
@@ -158,8 +159,9 @@ func getCMDProbeCreator() probeCreator {
 }
 
 func createCMDTestProbe(secure, authorization bool, endpoint string) resources.Probe {
+	bin, _ := os.Executable()
 	args := []string{
-		"/lifecycle/tools/___go_test_github_com_arangodb_kube_arangodb_pkg_deployment",
+		filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(bin)),
 		"lifecycle",
 		"probe",
 		fmt.Sprintf("--endpoint=%s", endpoint),

@@ -169,11 +169,6 @@ func (e encryption) Verify(i Input, cachedStatus inspector.Inspector) error {
 			return errors.Wrapf(err, "RocksDB encryption key secret validation failed")
 		}
 		return nil
-	} else {
-		_, exists := cachedStatus.Secret(GetEncryptionFolderSecretName(i.ApiObject.GetName()))
-		if !exists {
-			return errors.Errorf("Encryption key folder secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
-		}
 	}
 
 	return nil
