@@ -135,6 +135,24 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 	return c, nil
 }
 
+func CreateArangodAgencyConnection(ctx context.Context, apiObject *api.ArangoDeployment) (driver.Connection, error) {
+	var dnsNames []string
+	for _, m := range apiObject.Status.Members.Agents {
+		dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), m.ID)
+		dnsNames = append(dnsNames, dnsName)
+	}
+	shortTimeout := false
+	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	agencyConn, err := agency.NewAgencyConnection(connConfig)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return agencyConn, nil
+}
+
 // CreateArangodAgencyClient creates a go-driver client for accessing the agents of the given deployment.
 func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (agency.Agency, error) {
 	var dnsNames []string
@@ -143,7 +161,7 @@ func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, 
 		dnsNames = append(dnsNames, dnsName)
 	}
 	shortTimeout := false
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, dnsNames, shortTimeout)
+	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -182,7 +200,7 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, cli, apiObject, []string{dnsName}, shortTimeout)
+	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, []string{dnsName}, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -209,7 +227,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 }
 
 // createArangodHTTPConfigForDNSNames creates a go-driver HTTP connection config for a given DNS names.
-func createArangodHTTPConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (http.ConnectionConfig, error) {
+func createArangodHTTPConfigForDNSNames(ctx context.Context, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (http.ConnectionConfig, error) {
 	scheme := "http"
 	transport := sharedHTTPTransport
 	if shortTimeout {

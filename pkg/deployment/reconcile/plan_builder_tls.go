@@ -255,7 +255,7 @@ func createCAAppendPlan(ctx context.Context,
 
 	if _, exists := trusted.Data[certSha]; !exists {
 		return api.Plan{api.NewAction(api.ActionTypeAppendTLSCACertificate, api.ServerGroupUnknown, "", "Append CA to truststore").
-			AddParam(actionTypeAppendTLSCACertificateChecksum, certSha)}
+			AddParam(checksum, certSha)}
 	}
 
 	return nil
@@ -340,15 +340,14 @@ func createCACleanPlan(ctx context.Context,
 	for sha := range trusted.Data {
 		if certSha != sha {
 			return api.Plan{api.NewAction(api.ActionTypeCleanTLSCACertificate, api.ServerGroupUnknown, "", "Clean CA from truststore").
-				AddParam(actionTypeAppendTLSCACertificateChecksum, sha)}
+				AddParam(checksum, sha)}
 		}
 	}
 
 	return nil
 }
 
-// createKeyfileRenewalPlan creates plan to renew server keyfile
-func createKeyfileRenewalPlan(ctx context.Context,
+func createKeyfileRenewalPlanDefault(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
@@ -367,10 +366,12 @@ func createKeyfileRenewalPlan(ctx context.Context,
 			if !plan.IsEmpty() {
 				return nil
 			}
-
-			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member); renew {
+			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeRecreate); renew {
 				log.Info().Msg("Renewal of keyfile required")
-				plan = append(plan, createKeyfileRotationPlan(log, spec, status, group, member, recreate)...)
+				if recreate {
+					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
+				}
+				plan = append(plan, createRotateMemberPlan(log, member, group, "Restart server after keyfile removal")...)
 			}
 		}
 
@@ -380,43 +381,84 @@ func createKeyfileRenewalPlan(ctx context.Context,
 	return plan
 }
 
-func createKeyfileRenewalPlanMode(
+func createKeyfileRenewalPlanInPlace(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	member api.MemberStatus) api.TLSRotateMode {
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	if !spec.TLS.IsSecure() {
+		return nil
+	}
+
+	var plan api.Plan
+
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		if !group.IsArangod() {
+			return nil
+		}
+
+		for _, member := range members {
+			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeInPlace); renew {
+				log.Info().Msg("Renewal of keyfile required")
+				if recreate {
+					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
+				}
+				plan = append(plan, api.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, group, member.ID, "Renew Member Keyfile"))
+			}
+		}
+
+		return nil
+	})
+
+	return plan
+}
+
+func createKeyfileRenewalPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	if !spec.TLS.IsSecure() {
+		return nil
+	}
+
+	switch createKeyfileRenewalPlanMode(spec, status) {
+	case api.TLSRotateModeInPlace:
+		return createKeyfileRenewalPlanInPlace(ctx, log, apiObject, spec, status, cachedStatus, context)
+	default:
+		return createKeyfileRenewalPlanDefault(ctx, log, apiObject, spec, status, cachedStatus, context)
+	}
+}
+
+func createKeyfileRenewalPlanMode(
+	spec api.DeploymentSpec, status api.DeploymentStatus) api.TLSRotateMode {
 	if !spec.TLS.IsSecure() {
 		return api.TLSRotateModeRecreate
 	}
 
-	if spec.TLS.Mode.Get() != api.TLSRotateModeInPlace {
-		return api.TLSRotateModeRecreate
-	}
+	mode := spec.TLS.Mode.Get()
 
-	if i := status.CurrentImage; i == nil {
-		return api.TLSRotateModeRecreate
-	} else {
-		if !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || i.ImageID != member.ImageID {
-			return api.TLSRotateModeRecreate
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		if mode != api.TLSRotateModeInPlace {
+			return nil
 		}
-	}
 
-	return api.TLSRotateModeInPlace
-}
+		for _, member := range list {
+			if mode != api.TLSRotateModeInPlace {
+				return nil
+			}
 
-func createKeyfileRotationPlan(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus, recreate bool) api.Plan {
-	p := api.Plan{}
+			if i := status.CurrentImage; i == nil {
+				mode = api.TLSRotateModeRecreate
+			} else {
+				if !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || i.ImageID != member.ImageID {
+					mode = api.TLSRotateModeRecreate
+				}
+			}
+		}
 
-	if recreate {
-		p = append(p,
-			api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
-	}
+		return nil
+	})
 
-	switch createKeyfileRenewalPlanMode(spec, status, member) {
-	case api.TLSRotateModeInPlace:
-		p = append(p, api.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, group, member.ID, "Renew Member Keyfile"))
-	default:
-		p = append(p, createRotateMemberPlan(log, member, group, "Restart server after keyfile removal")...)
-	}
-	return p
+	return mode
 }
 
 func checkServerValidCertRequest(ctx context.Context, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca Certificates) (*tls.ConnectionState, error) {
@@ -440,7 +482,7 @@ func keyfileRenewalRequired(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext,
-	group api.ServerGroup, member api.MemberStatus) (bool, bool) {
+	group api.ServerGroup, member api.MemberStatus, mode api.TLSRotateMode) (bool, bool) {
 	if !spec.TLS.IsSecure() {
 		return false, false
 	}
@@ -485,7 +527,7 @@ func keyfileRenewalRequired(ctx context.Context,
 	}
 
 	// Ensure secret is propagated only on 3.7.0+ enterprise and inplace mode
-	if createKeyfileRenewalPlanMode(spec, status, member) == api.TLSRotateModeInPlace {
+	if mode == api.TLSRotateModeInPlace {
 		conn, err := context.GetServerClient(ctx, group, member.ID)
 		if err != nil {
 			log.Warn().Err(err).Msg("Unable to get client")
@@ -513,7 +555,7 @@ func keyfileRenewalRequired(ctx context.Context,
 
 		keyfileSha := util.SHA256(keyfile)
 
-		if tls.Result.KeyFile.Checksum != keyfileSha {
+		if tls.Result.KeyFile.GetSHA().Checksum() != keyfileSha {
 			return true, false
 		}
 	}

@@ -61,9 +61,9 @@ func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	certChecksum, exists := a.action.Params[actionTypeAppendTLSCACertificateChecksum]
+	certChecksum, exists := a.action.Params[checksum]
 	if !exists {
-		a.log.Warn().Msgf("Key %s is missing in action", actionTypeAppendTLSCACertificateChecksum)
+		a.log.Warn().Msgf("Key %s is missing in action", checksum)
 		return true, nil
 	}
 

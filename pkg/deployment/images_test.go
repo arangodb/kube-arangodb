@@ -330,7 +330,7 @@ func TestEnsureImages(t *testing.T) {
 			require.NoError(t, err)
 
 			// Act
-			retrySoon, err := d.ensureImages(d.apiObject)
+			retrySoon, _, err := d.ensureImages(d.apiObject)
 
 			// Assert
 			assert.EqualValues(t, testCase.RetrySoon, retrySoon)

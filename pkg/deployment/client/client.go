@@ -41,6 +41,9 @@ type Client interface {
 
 	GetEncryption(ctx context.Context) (EncryptionDetails, error)
 	RefreshEncryption(ctx context.Context) (EncryptionDetails, error)
+
+	GetJWT(ctx context.Context) (JWTDetails, error)
+	RefreshJWT(ctx context.Context) (JWTDetails, error)
 }
 
 type client struct {
@@ -70,6 +73,20 @@ func (c *client) parseEncryptionResponse(response driver.Response) (EncryptionDe
 
 	if err := response.ParseBody("", &d); err != nil {
 		return EncryptionDetails{}, err
+	}
+
+	return d, nil
+}
+
+func (c *client) parseJWTResponse(response driver.Response) (JWTDetails, error) {
+	if err := response.CheckStatus(http.StatusOK); err != nil {
+		return JWTDetails{}, err
+	}
+
+	var d JWTDetails
+
+	if err := response.ParseBody("", &d); err != nil {
+		return JWTDetails{}, err
 	}
 
 	return d, nil
@@ -146,6 +163,44 @@ func (c *client) RefreshEncryption(ctx context.Context) (EncryptionDetails, erro
 	d, err := c.parseEncryptionResponse(response)
 	if err != nil {
 		return EncryptionDetails{}, err
+	}
+
+	return d, nil
+}
+
+func (c *client) GetJWT(ctx context.Context) (JWTDetails, error) {
+	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/jwt")
+	if err != nil {
+		return JWTDetails{}, err
+	}
+
+	response, err := c.c.Do(ctx, r)
+	if err != nil {
+		return JWTDetails{}, err
+	}
+
+	d, err := c.parseJWTResponse(response)
+	if err != nil {
+		return JWTDetails{}, err
+	}
+
+	return d, nil
+}
+
+func (c *client) RefreshJWT(ctx context.Context) (JWTDetails, error) {
+	r, err := c.c.NewRequest(http.MethodPost, "/_admin/server/jwt")
+	if err != nil {
+		return JWTDetails{}, err
+	}
+
+	response, err := c.c.Do(ctx, r)
+	if err != nil {
+		return JWTDetails{}, err
+	}
+
+	d, err := c.parseJWTResponse(response)
+	if err != nil {
+		return JWTDetails{}, err
 	}
 
 	return d, nil

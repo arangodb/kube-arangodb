@@ -90,7 +90,7 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Insp
 
 func fetchAgency(ctx context.Context, log zerolog.Logger,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
+	cache inspector.Inspector, context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
 	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
 		return nil, nil
 	} else if status.Members.Agents.MembersReady() > 0 {
@@ -99,7 +99,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 
 		ret := &agency.ArangoPlanDatabases{}
 
-		if err := context.GetAgencyData(agencyCtx, ret, agency.ArangoKey, agency.PlanKey, agency.PlanCollectionsKey); err != nil {
+		if err := context.GetAgencyData(agencyCtx, cache, agency.ArangoKey, agency.PlanKey, agency.PlanCollectionsKey); err != nil {
 			return nil, err
 		}
 
@@ -123,7 +123,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, builderCtx)
+	agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, cachedStatus, builderCtx)
 
 	// Check for various scenario's
 	var plan api.Plan
@@ -210,6 +210,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.Apply(createTLSStatusUpdate)
 	}
 
+	if plan.IsEmpty() {
+		plan = pb.Apply(createJWTStatusUpdate)
+	}
+
 	// Check for scale up/down
 	if plan.IsEmpty() {
 		plan = pb.Apply(createScaleMemeberPlan)
@@ -220,9 +224,13 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.Apply(createRotateOrUpgradePlan)
 	}
 
-	// Add encryption keys
+	// Add keys
 	if plan.IsEmpty() {
 		plan = pb.Apply(createEncryptionKey)
+	}
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(createJWTKeyUpdate)
 	}
 
 	if plan.IsEmpty() {
@@ -256,7 +264,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(cleanEncryptionKey)
+		plan = pb.Apply(createEncryptionKeyCleanPlan)
 	}
 
 	if plan.IsEmpty() {

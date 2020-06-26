@@ -27,6 +27,10 @@ import (
 	"fmt"
 )
 
+func SHA256FromString(data string) string {
+	return SHA256([]byte(data))
+}
+
 func SHA256(data []byte) string {
 	return fmt.Sprintf("%0x", sha256.Sum256(data))
 }

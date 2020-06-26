@@ -25,29 +25,76 @@ package deployment
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 	"sync"
 
-	"k8s.io/client-go/kubernetes"
+	"github.com/pkg/errors"
+
+	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type clientCache struct {
-	mutex          sync.Mutex
-	clients        map[string]driver.Client
-	kubecli        kubernetes.Interface
-	apiObject      *api.ArangoDeployment
+	mutex           sync.Mutex
+	clients         map[string]driver.Client
+	apiObjectGetter func() *api.ArangoDeployment
+
 	databaseClient driver.Client
+
+	factory conn.Factory
 }
 
-// newClientCache creates a new client cache
-func newClientCache(kubecli kubernetes.Interface, apiObject *api.ArangoDeployment) *clientCache {
+func newClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.Factory) *clientCache {
 	return &clientCache{
-		clients:   make(map[string]driver.Client),
-		kubecli:   kubecli,
-		apiObject: apiObject,
+		clients:         make(map[string]driver.Client),
+		apiObjectGetter: apiObjectGetter,
+		factory:         factory,
+	}
+}
+
+func (cc *clientCache) extendHost(host string) string {
+	scheme := "http"
+	if cc.apiObjectGetter().Spec.TLS.IsSecure() {
+		scheme = "https"
+	}
+
+	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(k8sutil.ArangoPort))
+}
+
+func (cc *clientCache) getClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+	key := fmt.Sprintf("%d-%s", group, id)
+	c, found := cc.clients[key]
+	if found {
+		return c, nil
+	}
+
+	// Not found, create a new client
+	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id)))
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	cc.clients[key] = c
+	return c, nil
+}
+
+func (cc *clientCache) get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+	client, err := cc.getClient(ctx, group, id)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+
+	if _, err := client.Version(ctx); err == nil {
+		return client, nil
+	} else if driver.IsUnauthorized(err) {
+		delete(cc.clients, fmt.Sprintf("%d-%s", group, id))
+		return cc.getClient(ctx, group, id)
+	} else {
+		return client, nil
 	}
 }
 
@@ -57,19 +104,37 @@ func (cc *clientCache) Get(ctx context.Context, group api.ServerGroup, id string
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	key := fmt.Sprintf("%d-%s", group, id)
-	c, found := cc.clients[key]
-	if found {
+	return cc.get(ctx, group, id)
+}
+
+func (cc *clientCache) getDatabaseClient() (driver.Client, error) {
+	if c := cc.databaseClient; c != nil {
 		return c, nil
 	}
 
 	// Not found, create a new client
-	c, err := arangod.CreateArangodClient(ctx, cc.kubecli.CoreV1(), cc.apiObject, group, id)
+	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.apiObjectGetter())))
 	if err != nil {
 		return nil, maskAny(err)
 	}
-	cc.clients[key] = c
+	cc.databaseClient = c
 	return c, nil
+}
+
+func (cc *clientCache) getDatabase(ctx context.Context) (driver.Client, error) {
+	client, err := cc.getDatabaseClient()
+	if err != nil {
+		return nil, maskAny(err)
+	}
+
+	if _, err := client.Version(ctx); err == nil {
+		return client, nil
+	} else if driver.IsUnauthorized(err) {
+		cc.databaseClient = nil
+		return cc.getDatabaseClient()
+	} else {
+		return client, nil
+	}
 }
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
@@ -78,16 +143,31 @@ func (cc *clientCache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	if c := cc.databaseClient; c != nil {
-		return c, nil
+	return cc.getDatabase(ctx)
+}
+
+func (cc *clientCache) getAgencyClient() (agency.Agency, error) {
+	// Not found, create a new client
+	var dnsNames []string
+	for _, m := range cc.apiObjectGetter().Status.Members.Agents {
+		dnsNames = append(dnsNames, cc.extendHost(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), api.ServerGroupAgents.AsRole(), m.ID)))
 	}
 
-	// Not found, create a new client
-	shortTimeout := false
-	c, err := arangod.CreateArangodDatabaseClient(ctx, cc.kubecli.CoreV1(), cc.apiObject, shortTimeout)
+	if len(dnsNames) == 0 {
+		return nil, errors.Errorf("There is no DNS Name")
+	}
+
+	c, err := cc.factory.Agency(dnsNames...)
 	if err != nil {
 		return nil, maskAny(err)
 	}
-	cc.databaseClient = c
 	return c, nil
+}
+
+// GetDatabase returns a cached client for the agency
+func (cc *clientCache) GetAgency(ctx context.Context) (agency.Agency, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+
+	return cc.getAgencyClient()
 }

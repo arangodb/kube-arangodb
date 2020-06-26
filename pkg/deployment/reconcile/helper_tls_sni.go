@@ -91,7 +91,7 @@ func compareTLSSNIConfig(ctx context.Context, c driver.Connection, m map[string]
 			return false, errors.Errorf("Unable to fetch TLS SNI state")
 		}
 
-		if value.Checksum != currentValue {
+		if value.GetSHA().Checksum() != currentValue {
 			return false, nil
 		}
 	}

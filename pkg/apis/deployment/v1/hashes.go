@@ -22,12 +22,26 @@
 
 package v1
 
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+
 type DeploymentStatusHashes struct {
-	Encryption DeploymentStatusHashList  `json:"encryption,omitempty"`
-	TLS        DeploymentStatusHashesTLS `json:"tls,omitempty"`
+	Encryption DeploymentStatusHashesEncryption `json:"rocksDBEncryption,omitempty"`
+	TLS        DeploymentStatusHashesTLS        `json:"tls,omitempty"`
+	JWT        DeploymentStatusHashesJWT        `json:"jwt,omitempty"`
+}
+
+type DeploymentStatusHashesEncryption struct {
+	Keys shared.HashList `json:"keys,omitempty"`
 }
 
 type DeploymentStatusHashesTLS struct {
-	CA         *string                  `json:"ca,omitempty"`
-	Truststore DeploymentStatusHashList `json:"truststore,omitempty"`
+	CA         *string         `json:"ca,omitempty"`
+	Truststore shared.HashList `json:"truststore,omitempty"`
+}
+
+type DeploymentStatusHashesJWT struct {
+	Active  string          `json:"active,omitempty"`
+	Passive shared.HashList `json:"passive,omitempty"`
+
+	Propagated bool `json:"propagated,omitempty"`
 }

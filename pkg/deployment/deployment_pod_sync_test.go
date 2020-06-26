@@ -228,7 +228,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
+					"", true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -307,7 +307,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
+					"", true, "bearer "+auth, k8sutil.ArangoSyncMasterPort)
 			},
 			ExpectedEvent: "member syncmaster is created",
 			ExpectedPod: core.Pod{
@@ -409,7 +409,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
-					true, "bearer "+auth, k8sutil.ArangoSyncWorkerPort)
+					"", true, "bearer "+auth, k8sutil.ArangoSyncWorkerPort)
 			},
 			ExpectedEvent: "member syncworker is created",
 			ExpectedPod: core.Pod{

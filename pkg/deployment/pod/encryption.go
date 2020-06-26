@@ -95,7 +95,7 @@ func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 	return sha, d, nil
 }
 
-func GetKeyfolderSecretName(name string) string {
+func GetEncryptionFolderSecretName(name string) string {
 	n := fmt.Sprintf("%s-encryption-folder", name)
 
 	return n
@@ -145,7 +145,7 @@ func (e encryption) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		return []core.Volume{vol}, []core.VolumeMount{k8sutil.RocksdbEncryptionVolumeMount()}
 	} else {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, GetKeyfolderSecretName(i.ApiObject.GetName()))
+		vol := k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, GetEncryptionFolderSecretName(i.ApiObject.GetName()))
 		return []core.Volume{vol}, []core.VolumeMount{k8sutil.RocksdbEncryptionReadOnlyVolumeMount()}
 	}
 }
@@ -155,17 +155,21 @@ func (e encryption) Verify(i Input, cachedStatus inspector.Inspector) error {
 		return nil
 	}
 
-	secret, exists := cachedStatus.Secret(i.Deployment.RocksDB.Encryption.GetKeySecretName())
-	if !exists {
-		return errors.Errorf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
+	if !GroupEncryptionSupported(i.Deployment.GetMode(), i.Group) {
+		return nil
 	}
 
 	if !MultiFileMode(i) {
+		secret, exists := cachedStatus.Secret(i.Deployment.RocksDB.Encryption.GetKeySecretName())
+		if !exists {
+			return errors.Errorf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
+		}
+
 		if err := k8sutil.ValidateEncryptionKeyFromSecret(secret); err != nil {
 			return errors.Wrapf(err, "RocksDB encryption key secret validation failed")
 		}
 		return nil
-	} else {
-		return nil
 	}
+
+	return nil
 }

@@ -33,7 +33,7 @@ import (
 
 const (
 	initLifecycleContainerName = "init-lifecycle"
-	lifecycleVolumeMountDir    = "/lifecycle/tools"
+	LifecycleVolumeMountDir    = "/lifecycle/tools"
 	lifecycleVolumeName        = "lifecycle"
 )
 
@@ -46,7 +46,7 @@ func InitLifecycleContainer(image string, resources *v1.ResourceRequirements, se
 	c := v1.Container{
 		Name:    initLifecycleContainerName,
 		Image:   image,
-		Command: append([]string{binaryPath}, "lifecycle", "copy", "--target", lifecycleVolumeMountDir),
+		Command: append([]string{binaryPath}, "lifecycle", "copy", "--target", LifecycleVolumeMountDir),
 		VolumeMounts: []v1.VolumeMount{
 			LifecycleVolumeMount(),
 		},
@@ -66,7 +66,7 @@ func NewLifecycle() (*v1.Lifecycle, error) {
 	if err != nil {
 		return nil, maskAny(err)
 	}
-	exePath := filepath.Join(lifecycleVolumeMountDir, filepath.Base(binaryPath))
+	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
 	lifecycle := &v1.Lifecycle{
 		PreStop: &v1.Handler{
 			Exec: &v1.ExecAction{
@@ -91,7 +91,7 @@ func GetLifecycleEnv() []v1.EnvVar {
 func LifecycleVolumeMount() v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      lifecycleVolumeName,
-		MountPath: lifecycleVolumeMountDir,
+		MountPath: LifecycleVolumeMountDir,
 	}
 }
 

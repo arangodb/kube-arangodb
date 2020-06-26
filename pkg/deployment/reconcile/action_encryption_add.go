@@ -101,7 +101,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	_, err = a.actionCtx.SecretsInterface().Patch(pod.GetKeyfolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch)
+	_, err = a.actionCtx.SecretsInterface().Patch(pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch)
 	if err != nil {
 		return false, err
 	}

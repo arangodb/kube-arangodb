@@ -29,6 +29,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/rs/zerolog"
 
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -74,6 +76,8 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 	status, _ := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
+	image := status.CurrentImage
+	imageFound := status.CurrentImage != nil
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
 
@@ -81,6 +85,14 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 		counterMetric.Inc()
 		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Authentication.GetJWTSecretName()); err != nil {
 			return maskAny(err)
+		}
+
+		if imageFound {
+			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
+				if err := r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
+					return maskAny(err)
+				}
+			}
 		}
 
 		if spec.Metrics.IsEnabled() {
@@ -131,7 +143,7 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 	}
 	if spec.RocksDB.IsEncrypted() {
 		if i := status.CurrentImage; i != nil && i.Enterprise && i.ArangoDBVersion.CompareTo("3.7.0") >= 0 {
-			if err := r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetKeyfolderSecretName(deploymentName)); err != nil {
+			if err := r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName)); err != nil {
 				return maskAny(err)
 			}
 		}
@@ -157,9 +169,28 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 	return nil
 }
 
-// ensureTokenSecret checks if a secret with given name exists in the namespace
-// of the deployment. If not, it will add such a secret with a random
-// token.
+func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, folderSecretName string) error {
+	if _, exists := cachedStatus.Secret(folderSecretName); exists {
+		return nil
+	}
+
+	s, exists := cachedStatus.Secret(secretName)
+	if !exists {
+		return errors.Errorf("Token secret does not exist")
+	}
+
+	token, ok := s.Data[constants.SecretKeyToken]
+	if !ok {
+		return errors.Errorf("Token secret is invalid")
+	}
+
+	if err := r.createSecretWithKey(secrets, folderSecretName, util.SHA256(token), token); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *Resources) ensureTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createTokenSecret(secrets, secretName)
@@ -196,20 +227,28 @@ func (r *Resources) createSecret(secrets k8sutil.SecretInterface, secretName str
 
 func (r *Resources) ensureSecretWithEmptyKey(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
-		return r.createSecretWithEmptyKey(secrets, secretName, keyName)
+		return r.createSecretWithKey(secrets, secretName, keyName, nil)
 	}
 
 	return nil
 }
 
-func (r *Resources) createSecretWithEmptyKey(secrets k8sutil.SecretInterface, secretName, keyName string) error {
+func (r *Resources) ensureSecretWithKey(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
+	if _, exists := cachedStatus.Secret(secretName); !exists {
+		return r.createSecretWithKey(secrets, secretName, keyName, value)
+	}
+
+	return nil
+}
+
+func (r *Resources) createSecretWithKey(secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			keyName: {},
+			keyName: value,
 		},
 	}
 	// Attach secret to owner
@@ -242,17 +281,28 @@ func (r *Resources) createTokenSecret(secrets k8sutil.SecretInterface, secretNam
 }
 
 func (r *Resources) ensureEncryptionKeyfolderSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, keyfileSecretName, secretName string) error {
+	_, folderExists := cachedStatus.Secret(secretName)
+
 	keyfile, exists := cachedStatus.Secret(keyfileSecretName)
 	if !exists {
+		if folderExists {
+			return nil
+		}
 		return errors.Errorf("Unable to find original secret %s", keyfileSecretName)
 	}
 
 	if len(keyfile.Data) == 0 {
+		if folderExists {
+			return nil
+		}
 		return errors.Errorf("Missing key in secret")
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
 	if !ok {
+		if folderExists {
+			return nil
+		}
 		return errors.Errorf("Missing key in secret")
 	}
 

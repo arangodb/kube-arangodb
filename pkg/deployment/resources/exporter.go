@@ -26,6 +26,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -34,7 +36,7 @@ import (
 )
 
 // ArangodbExporterContainer creates metrics container
-func ArangodbExporterContainer(image string, args []string, livenessProbe *k8sutil.HTTPProbeConfig,
+func ArangodbExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
 	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
 	spec api.DeploymentSpec) v1.Container {
 
@@ -96,8 +98,8 @@ func createExporterArgs(spec api.DeploymentSpec) []string {
 	return args
 }
 
-func createExporterLivenessProbe(isSecure bool) *k8sutil.HTTPProbeConfig {
-	probeCfg := &k8sutil.HTTPProbeConfig{
+func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {
+	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath: "/",
 		Port:      k8sutil.ArangoExporterPort,
 		Secure:    isSecure,

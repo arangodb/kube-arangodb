@@ -62,6 +62,7 @@ func init() {
 	cmdMain.AddCommand(cmdLifecycle)
 	cmdLifecycle.AddCommand(cmdLifecyclePreStop)
 	cmdLifecycle.AddCommand(cmdLifecycleCopy)
+	cmdLifecycle.AddCommand(cmdLifecycleProbe)
 
 	cmdLifecycleCopy.Flags().StringVar(&lifecycleCopyOptions.TargetDir, "target", "", "Target directory to copy the executable to")
 }

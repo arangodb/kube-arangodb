@@ -98,7 +98,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -160,7 +160,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -225,7 +225,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -295,7 +295,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -374,7 +374,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -439,7 +439,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -507,7 +507,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -580,7 +580,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -661,7 +661,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							LivenessProbe:   createTestLivenessProbe(false, "", k8sutil.ArangoPort),
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},

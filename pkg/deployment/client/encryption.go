@@ -22,33 +22,12 @@
 
 package client
 
-type EncryptionKeyEntry struct {
-	Sha string `json:"sha256,omitempty"`
-}
-
 type EncryptionDetailsResult struct {
-	Keys []EncryptionKeyEntry `json:"encryption-keys,omitempty"`
+	Keys Entries `json:"encryption-keys,omitempty"`
 }
 
 func (e EncryptionDetailsResult) KeysPresent(m map[string][]byte) bool {
-	if len(e.Keys) != len(m) {
-		return false
-	}
-
-	for key := range m {
-		ok := false
-		for _, entry := range e.Keys {
-			if entry.Sha == key {
-				ok = true
-				break
-			}
-		}
-		if !ok {
-			return false
-		}
-	}
-
-	return true
+	return e.Keys.KeysPresent(m)
 }
 
 type EncryptionDetails struct {

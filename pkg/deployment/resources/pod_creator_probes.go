@@ -23,24 +23,37 @@
 package resources
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	core "k8s.io/api/core/v1"
 )
+
+type Probe interface {
+	Create() *core.Probe
+
+	SetSpec(spec *api.ServerGroupProbeSpec)
+}
 
 type probeCheckBuilder struct {
 	liveness, readiness probeBuilder
 }
 
-type probeBuilder func(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error)
+type probeBuilder func(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error)
 
-func nilProbeBuilder(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func nilProbeBuilder(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	return nil, nil
 }
 
-func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	if !r.isReadinessProbeEnabled(spec, group, version) {
 		return nil, nil
 	}
@@ -65,16 +78,12 @@ func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerG
 
 	probeSpec := groupSpec.GetProbesSpec()
 
-	config.InitialDelaySeconds = probeSpec.ReadinessProbeSpec.GetInitialDelaySeconds(config.InitialDelaySeconds)
-	config.PeriodSeconds = probeSpec.ReadinessProbeSpec.GetPeriodSeconds(config.PeriodSeconds)
-	config.TimeoutSeconds = probeSpec.ReadinessProbeSpec.GetTimeoutSeconds(config.TimeoutSeconds)
-	config.SuccessThreshold = probeSpec.ReadinessProbeSpec.GetSuccessThreshold(config.SuccessThreshold)
-	config.FailureThreshold = probeSpec.ReadinessProbeSpec.GetFailureThreshold(config.FailureThreshold)
+	config.SetSpec(probeSpec.ReadinessProbeSpec)
 
 	return config, nil
 }
 
-func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	if !r.isLivenessProbeEnabled(spec, group, version) {
 		return nil, nil
 	}
@@ -99,11 +108,7 @@ func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGr
 
 	probeSpec := groupSpec.GetProbesSpec()
 
-	config.InitialDelaySeconds = probeSpec.LivenessProbeSpec.GetInitialDelaySeconds(config.InitialDelaySeconds)
-	config.PeriodSeconds = probeSpec.LivenessProbeSpec.GetPeriodSeconds(config.PeriodSeconds)
-	config.TimeoutSeconds = probeSpec.LivenessProbeSpec.GetTimeoutSeconds(config.TimeoutSeconds)
-	config.SuccessThreshold = probeSpec.LivenessProbeSpec.GetSuccessThreshold(config.SuccessThreshold)
-	config.FailureThreshold = probeSpec.LivenessProbeSpec.GetFailureThreshold(config.FailureThreshold)
+	config.SetSpec(probeSpec.LivenessProbeSpec)
 
 	return config, nil
 }
@@ -139,20 +144,20 @@ func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.Se
 func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
-			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderReadinessCore,
+			liveness:  r.probeBuilderLivenessCoreOperator,
+			readiness: r.probeBuilderReadinessCoreOperator,
 		},
 		api.ServerGroupAgents: {
-			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderReadinessSimpleCore,
+			liveness:  r.probeBuilderLivenessCoreOperator,
+			readiness: r.probeBuilderReadinessSimpleCoreOperator,
 		},
 		api.ServerGroupDBServers: {
-			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderReadinessSimpleCore,
+			liveness:  r.probeBuilderLivenessCoreOperator,
+			readiness: r.probeBuilderReadinessSimpleCoreOperator,
 		},
 		api.ServerGroupCoordinators: {
-			liveness:  r.probeBuilderLivenessCore,
-			readiness: r.probeBuilderReadinessCore,
+			liveness:  r.probeBuilderLivenessCoreOperator,
+			readiness: r.probeBuilderReadinessCoreOperator,
 		},
 		api.ServerGroupSyncMasters: {
 			liveness:  r.probeBuilderLivenessSync,
@@ -165,7 +170,42 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	}
 }
 
-func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) probeCommand(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version, endpoint string) ([]string, error) {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+	args := []string{
+		exePath,
+		"lifecycle",
+		"probe",
+		fmt.Sprintf("--endpoint=%s", endpoint),
+	}
+
+	if spec.IsSecure() {
+		args = append(args, "--ssl")
+	}
+
+	if spec.IsAuthenticated() {
+		args = append(args, "--auth")
+	}
+
+	return args, nil
+}
+
+func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	args, err := r.probeCommand(spec, group, version, "/_api/version")
+	if err != nil {
+		return nil, err
+	}
+
+	return &probes.CMDProbeConfig{
+		Command: args,
+	}, nil
+}
+
+func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	authorization := ""
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
@@ -177,14 +217,32 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 			return nil, maskAny(err)
 		}
 	}
-	return &k8sutil.HTTPProbeConfig{
+	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
 		Secure:        spec.IsSecure(),
 		Authorization: authorization,
 	}, nil
 }
 
-func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	p, err := r.probeBuilderReadinessCoreOperator(spec, group, version)
+	if err != nil {
+		return nil, err
+	}
+
+	if p == nil {
+		return nil, nil
+	}
+
+	p.SetSpec(&api.ServerGroupProbeSpec{
+		InitialDelaySeconds: util.NewInt32(15),
+		PeriodSeconds:       util.NewInt32(10),
+	})
+
+	return p, nil
+}
+
+func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	p, err := r.probeBuilderLivenessCore(spec, group, version)
 	if err != nil {
 		return nil, err
@@ -194,13 +252,39 @@ func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, gro
 		return nil, nil
 	}
 
-	p.InitialDelaySeconds = 15
-	p.PeriodSeconds = 10
+	p.SetSpec(&api.ServerGroupProbeSpec{
+		InitialDelaySeconds: util.NewInt32(15),
+		PeriodSeconds:       util.NewInt32(10),
+	})
 
 	return p, nil
 }
 
-func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	localPath := "/_api/version"
+	switch spec.GetMode() {
+	case api.DeploymentModeActiveFailover:
+		localPath = "/_admin/echo"
+	}
+
+	// /_admin/server/availability is the way to go, it is available since 3.3.9
+	if version.CompareTo("3.3.9") >= 0 {
+		localPath = "/_admin/server/availability"
+	}
+
+	args, err := r.probeCommand(spec, group, version, localPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &probes.CMDProbeConfig{
+		Command:             args,
+		InitialDelaySeconds: 2,
+		PeriodSeconds:       2,
+	}, nil
+}
+
+func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	localPath := "/_api/version"
 	switch spec.GetMode() {
 	case api.DeploymentModeActiveFailover:
@@ -223,7 +307,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api
 			return nil, maskAny(err)
 		}
 	}
-	probeCfg := &k8sutil.HTTPProbeConfig{
+	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath:           localPath,
 		Secure:              spec.IsSecure(),
 		Authorization:       authorization,
@@ -234,7 +318,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api
 	return probeCfg, nil
 }
 
-func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (*k8sutil.HTTPProbeConfig, error) {
+func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	authorization := ""
 	port := k8sutil.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {
@@ -261,7 +345,7 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 		// Don't have a probe
 		return nil, nil
 	}
-	return &k8sutil.HTTPProbeConfig{
+	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
 		Secure:        spec.IsSecure(),
 		Authorization: authorization,

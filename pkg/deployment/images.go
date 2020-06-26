@@ -71,7 +71,7 @@ type imagesBuilder struct {
 
 // ensureImages creates pods needed to detect ImageID for specified images.
 // Returns: retrySoon, error
-func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, error) {
+func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, bool, error) {
 	status, lastVersion := d.GetStatus()
 	ib := imagesBuilder{
 		APIObject: apiObject,
@@ -87,29 +87,28 @@ func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, error)
 		},
 	}
 	ctx := context.Background()
-	retrySoon, err := ib.Run(ctx)
+	retrySoon, exists, err := ib.Run(ctx)
 	if err != nil {
-		return retrySoon, maskAny(err)
+		return retrySoon, exists, maskAny(err)
 	}
-	return retrySoon, nil
+	return retrySoon, exists, nil
 }
 
 // Run creates pods needed to detect ImageID for specified images and puts the found
 // image ID's into the status.Images list.
 // Returns: retrySoon, error
-func (ib *imagesBuilder) Run(ctx context.Context) (bool, error) {
-	result := false
+func (ib *imagesBuilder) Run(ctx context.Context) (bool, bool, error) {
 	// Check ArangoDB image
 	if _, found := ib.Status.Images.GetByImage(ib.Spec.GetImage()); !found {
 		// We need to find the image ID for the ArangoDB image
 		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, ib.Spec.GetImage())
 		if err != nil {
-			return retrySoon, maskAny(err)
+			return retrySoon, false, maskAny(err)
 		}
-		result = result || retrySoon
+		return retrySoon, false, nil
 	}
 
-	return result, nil
+	return false, true, nil
 }
 
 // fetchArangoDBImageIDAndVersion checks a running pod for fetching the ID of the given image.

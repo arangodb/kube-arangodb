@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -73,7 +75,7 @@ func createEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return nil
@@ -88,49 +90,7 @@ func createEncryptionKey(ctx context.Context,
 		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "")}
 	}
 
-	var plan api.Plan
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		if !pod.GroupEncryptionSupported(spec.Mode.Get(), group) {
-			return nil
-		}
-
-		glog := log.With().Str("group", group.AsRole())
-
-		for _, m := range members {
-			if m.Phase != api.MemberPhaseCreated {
-				// Only make changes when phase is created
-				continue
-			}
-
-			if m.ArangoVersion.CompareTo("3.7.0") < 0 {
-				continue
-			}
-
-			mlog := glog.Str("member", m.ID).Logger()
-
-			c, err := context.GetServerClient(ctx, group, m.ID)
-			if err != nil {
-				mlog.Warn().Err(err).Msg("Unable to get client")
-				continue
-			}
-
-			client := client.NewClient(c.Connection())
-
-			e, err := client.GetEncryption(ctx)
-			if err != nil {
-				mlog.Error().Err(err).Msgf("Unable to fetch encryption keys")
-				continue
-			}
-
-			if !e.Result.KeysPresent(keyfolder.Data) {
-				plan = append(plan, api.NewAction(api.ActionTypeEncryptionKeyRefresh, group, m.ID))
-				mlog.Info().Msgf("Refresh of encryption keys required")
-				continue
-			}
-		}
-
-		return nil
-	})
+	plan, _ := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
 
 	if !plan.IsEmpty() {
 		return plan
@@ -163,7 +123,7 @@ func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
 		return false
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
 		return false
@@ -171,14 +131,14 @@ func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
 
 	keyHashes := secretKeysToListWithPrefix("sha256:", keyfolder)
 
-	if !util.CompareStringArray(keyHashes, status.Hashes.Encryption) {
+	if !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys) {
 		return true
 	}
 
 	return false
 }
 
-func cleanEncryptionKey(ctx context.Context,
+func createEncryptionKeyCleanPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
@@ -186,9 +146,21 @@ func cleanEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	keyfolder, exists := cachedStatus.Secret(pod.GetKeyfolderSecretName(context.GetName()))
+	keyfolder, exists := cachedStatus.Secret(pod.GetEncryptionFolderSecretName(context.GetName()))
 	if !exists {
 		log.Error().Msgf("Encryption key folder does not exist")
+		return nil
+	}
+
+	plan, failed := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
+
+	if failed {
+		log.Info().Msgf("Unable to continue with encryption until all servers are ready")
+		return nil
+	}
+
+	if len(plan) != 0 {
+		log.Info().Msgf("Unable to continue with encryption until all servers report state or gonna be upToDate")
 		return nil
 	}
 
@@ -215,8 +187,6 @@ func cleanEncryptionKey(ctx context.Context,
 		return nil
 	}
 
-	var plan api.Plan
-
 	for key := range keyfolder.Data {
 		if key != name {
 			plan = append(plan, api.NewAction(api.ActionTypeEncryptionKeyRemove, api.ServerGroupUnknown, "").AddParam("key", key))
@@ -228,4 +198,69 @@ func cleanEncryptionKey(ctx context.Context,
 	}
 
 	return api.Plan{}
+}
+
+func areEncryptionKeysUpToDate(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	folder *core.Secret) (plan api.Plan, failed bool) {
+
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		if !pod.GroupEncryptionSupported(spec.Mode.Get(), group) {
+			return nil
+		}
+
+		for _, m := range list {
+			if updateRequired, failedMember := isEncryptionKeyUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, group, m, folder); failedMember {
+				failed = true
+				continue
+			} else if updateRequired {
+				plan = append(plan, api.NewAction(api.ActionTypeEncryptionKeyRefresh, group, m.ID))
+				continue
+			}
+		}
+
+		return nil
+	})
+
+	return
+}
+
+func isEncryptionKeyUpToDate(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	group api.ServerGroup, m api.MemberStatus,
+	folder *core.Secret) (updateRequired bool, failed bool) {
+	if m.Phase != api.MemberPhaseCreated {
+		return false, true
+	}
+
+	if m.ArangoVersion.CompareTo("3.7.0") < 0 {
+		return false, false
+	}
+
+	mlog := log.With().Str("group", group.AsRole()).Str("member", m.ID).Logger()
+
+	c, err := context.GetServerClient(ctx, group, m.ID)
+	if err != nil {
+		mlog.Warn().Err(err).Msg("Unable to get client")
+		return false, true
+	}
+
+	client := client.NewClient(c.Connection())
+
+	e, err := client.GetEncryption(ctx)
+	if err != nil {
+		mlog.Error().Err(err).Msgf("Unable to fetch encryption keys")
+		return false, true
+	}
+
+	if !e.Result.KeysPresent(folder.Data) {
+		mlog.Info().Msgf("Refresh of encryption keys required")
+		return true, false
+	}
+
+	return false, false
 }

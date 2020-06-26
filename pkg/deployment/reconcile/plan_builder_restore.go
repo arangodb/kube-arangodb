@@ -83,7 +83,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		keyfolder, err := builderCtx.SecretsInterface().Get(pod.GetKeyfolderSecretName(builderCtx.GetName()), meta.GetOptions{})
+		keyfolder, err := builderCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(builderCtx.GetName()), meta.GetOptions{})
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption folder")
 			return nil

@@ -80,7 +80,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 		return true, false, nil
 	}
 
-	if e.Result.KeyFile.Checksum == keyfileSha {
+	if e.Result.KeyFile.GetSHA().Checksum() == keyfileSha {
 		return true, false, nil
 	}
 
