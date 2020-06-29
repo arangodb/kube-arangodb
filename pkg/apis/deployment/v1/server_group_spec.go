@@ -100,6 +100,13 @@ type ServerGroupSpecSecurityContext struct {
 	DropAllCapabilities *bool `json:"dropAllCapabilities,omitempty"`
 	// AddCapabilities add new capabilities to containers
 	AddCapabilities []core.Capability `json:"addCapabilities,omitempty"`
+
+	AllowPrivilegeEscalation *bool  `json:"allowPrivilegeEscalation,omitempty"`
+	Privileged               *bool  `json:"privileged,omitempty"`
+	ReadOnlyRootFilesystem   *bool  `json:"readOnlyFileSystem,omitempty"`
+	RunAsNonRoot             *bool  `json:"runAsNonRoot,omitempty"`
+	RunAsUser                *int64 `json:"runAsUser,omitempty"`
+	RunAsGroup               *int64 `json:"runAsGroup,omitempty"`
 }
 
 // GetDropAllCapabilities returns flag if capabilities should be dropped
@@ -133,6 +140,15 @@ func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []core.Capability 
 // NewSecurityContext creates new security context
 func (s *ServerGroupSpecSecurityContext) NewSecurityContext() *core.SecurityContext {
 	r := &core.SecurityContext{}
+
+	if s != nil {
+		r.AllowPrivilegeEscalation = s.AllowPrivilegeEscalation
+		r.Privileged = s.Privileged
+		r.ReadOnlyRootFilesystem = s.ReadOnlyRootFilesystem
+		r.RunAsNonRoot = s.RunAsNonRoot
+		r.RunAsUser = s.RunAsUser
+		r.RunAsGroup = s.RunAsGroup
+	}
 
 	capabilities := &core.Capabilities{}
 

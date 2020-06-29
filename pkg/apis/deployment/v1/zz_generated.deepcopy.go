@@ -1209,6 +1209,36 @@ func (in *ServerGroupSpecSecurityContext) DeepCopyInto(out *ServerGroupSpecSecur
 		*out = make([]corev1.Capability, len(*in))
 		copy(*out, *in)
 	}
+	if in.AllowPrivilegeEscalation != nil {
+		in, out := &in.AllowPrivilegeEscalation, &out.AllowPrivilegeEscalation
+		*out = new(bool)
+		**out = **in
+	}
+	if in.Privileged != nil {
+		in, out := &in.Privileged, &out.Privileged
+		*out = new(bool)
+		**out = **in
+	}
+	if in.ReadOnlyRootFilesystem != nil {
+		in, out := &in.ReadOnlyRootFilesystem, &out.ReadOnlyRootFilesystem
+		*out = new(bool)
+		**out = **in
+	}
+	if in.RunAsNonRoot != nil {
+		in, out := &in.RunAsNonRoot, &out.RunAsNonRoot
+		*out = new(bool)
+		**out = **in
+	}
+	if in.RunAsUser != nil {
+		in, out := &in.RunAsUser, &out.RunAsUser
+		*out = new(int64)
+		**out = **in
+	}
+	if in.RunAsGroup != nil {
+		in, out := &in.RunAsGroup, &out.RunAsGroup
+		*out = new(int64)
+		**out = **in
+	}
 	return
 }
 
