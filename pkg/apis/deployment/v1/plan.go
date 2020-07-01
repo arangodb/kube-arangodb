@@ -113,6 +113,8 @@ const (
 	ActionTypeJWTRefresh ActionType = "JWTRefresh"
 	// ActionTypeJWTPropagated change propagated flag
 	ActionTypeJWTPropagated ActionType = "JWTPropagated"
+	// ActionTypeClusterMemberCleanup removes member from cluster
+	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
 )
 
 const (

@@ -35,6 +35,17 @@ func GetContainerByName(p *v1.Pod, name string) (v1.Container, bool) {
 	return v1.Container{}, false
 }
 
+// GetContainerStatusByName returns the container status in the given pod with the given name.
+// Returns false if not found.
+func GetContainerStatusByName(p *v1.Pod, name string) (v1.ContainerStatus, bool) {
+	for _, c := range p.Status.ContainerStatuses {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return v1.ContainerStatus{}, false
+}
+
 // IsResourceRequirementsChanged returns true if the resource requirements have changed.
 func IsResourceRequirementsChanged(wanted, given v1.ResourceRequirements) bool {
 	checkList := func(wanted, given v1.ResourceList) bool {

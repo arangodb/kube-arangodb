@@ -124,10 +124,26 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		log.Debug().Msg("Pod is already failed, safe to remove dbserver pod")
 		return nil
 	}
+
 	// If pod is not member of cluster, do nothing
 	if !memberStatus.Conditions.IsTrue(api.ConditionTypeMemberOfCluster) {
 		log.Debug().Msg("Pod is not member of cluster")
 		return nil
+	}
+
+	if c, ok := k8sutil.GetContainerStatusByName(p, k8sutil.ServerContainerName); ok {
+		if t := c.State.Terminated; t != nil {
+			log.Warn().Str("member", memberStatus.ID).
+				Str("pod", p.GetName()).
+				Str("uid", string(p.GetUID())).
+				Int32("exit-code", t.ExitCode).
+				Str("reason", t.Reason).
+				Str("message", t.Message).
+				Int32("signal", t.Signal).
+				Time("started", t.StartedAt.Time).
+				Time("finished", t.FinishedAt.Time).
+				Msgf("Pod failed in unexpected way")
+		}
 	}
 
 	// Inspect deployment deletion state
@@ -194,7 +210,14 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	cluster, err := c.Cluster(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return maskAny(err)
+
+		if r.context.GetSpec().Recovery.Get().GetAutoRecover() {
+			if c, ok := k8sutil.GetContainerStatusByName(p, k8sutil.ServerContainerName); ok {
+				if t := c.State.Terminated; t != nil {
+					return nil
+				}
+			}
+		}
 	}
 	cleanedOut, err := cluster.IsCleanedOut(ctx, memberStatus.ID)
 	if err != nil {

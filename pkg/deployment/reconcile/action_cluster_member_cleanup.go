@@ -1,0 +1,95 @@
+//
+// DISCLAIMER
+//
+// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+// Author Adam Janikowski
+//
+
+package reconcile
+
+import (
+	"context"
+
+	"github.com/arangodb/go-driver"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/rs/zerolog"
+)
+
+func init() {
+	registerAction(api.ActionTypeClusterMemberCleanup, newClusterMemberCleanupAction)
+}
+
+// newClusterMemberCleanupAction creates a new Action that implements the given
+// planned ClusterMemberCleanup action.
+func newClusterMemberCleanupAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionClusterMemberCleanup{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, addMemberTimeout)
+
+	return a
+}
+
+// actionClusterMemberCleanup implements an ClusterMemberCleanup.
+type actionClusterMemberCleanup struct {
+	// actionImpl implement timeout and member id functions
+	actionImpl
+
+	// actionEmptyCheckProgress implement check progress with empty implementation
+	actionEmptyCheckProgress
+}
+
+// Start performs the start of the action.
+// Returns true if the action is completely finished, false in case
+// the start time needs to be recorded and a ready condition needs to be checked.
+func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
+	if err := a.start(ctx); err != nil {
+		a.log.Warn().Err(err).Msgf("Unable to clean cluster member")
+	}
+
+	return true, nil
+}
+
+func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
+	id := driver.ServerID(a.MemberID())
+
+	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.Cluster(ctx)
+	if err != nil {
+		return err
+	}
+
+	health, err := cluster.Health(ctx)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := health.Health[id]; !ok {
+		return nil
+	}
+
+	if err := cluster.RemoveServer(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
+}
