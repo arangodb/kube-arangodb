@@ -39,3 +39,11 @@ type ServerIDGroupSpec struct {
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
 }
+
+func (s *ServerIDGroupSpec) Get() ServerIDGroupSpec {
+	if s != nil {
+		return *s
+	}
+
+	return ServerIDGroupSpec{}
+}
