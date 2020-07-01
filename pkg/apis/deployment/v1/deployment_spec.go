@@ -94,6 +94,8 @@ type DeploymentSpec struct {
 
 	Chaos ChaosSpec `json:"chaos"`
 
+	Recovery *ArangoDeploymentRecoverySpec `json:"recovery,omitempty"`
+
 	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
 }
 

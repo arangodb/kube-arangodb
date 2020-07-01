@@ -58,6 +58,9 @@ type PlanBuilderContext interface {
 	RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
+	// creating one if needed.
+	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// SecretsInterface return secret interface

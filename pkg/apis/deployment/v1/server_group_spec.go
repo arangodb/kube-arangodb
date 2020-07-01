@@ -103,7 +103,7 @@ type ServerGroupSpecSecurityContext struct {
 
 	AllowPrivilegeEscalation *bool  `json:"allowPrivilegeEscalation,omitempty"`
 	Privileged               *bool  `json:"privileged,omitempty"`
-	ReadOnlyRootFilesystem   *bool  `json:"readOnlyFileSystem,omitempty"`
+	ReadOnlyRootFilesystem   *bool  `json:"readOnlyRootFilesystem,omitempty"`
 	RunAsNonRoot             *bool  `json:"runAsNonRoot,omitempty"`
 	RunAsUser                *int64 `json:"runAsUser,omitempty"`
 	RunAsGroup               *int64 `json:"runAsGroup,omitempty"`

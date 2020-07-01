@@ -28,6 +28,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	policy "k8s.io/api/policy/v1beta1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -117,7 +119,7 @@ func (c *testContext) UpdateMember(member api.MemberStatus) error {
 }
 
 func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	panic("implement me")
+	return nil, errors.Errorf("Client Not Found")
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {

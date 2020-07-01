@@ -10,6 +10,8 @@
 - Add Label and Envs Pod customization
 - Improved JWT Rotation
 - Allow to customize Security Context in pods
+- Remove dead Coordinators in Cluster mode
+- Add AutoRecovery flag to recover cluster in case of deadlock
 
 ## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
 - Prevent deletion of not known PVC's

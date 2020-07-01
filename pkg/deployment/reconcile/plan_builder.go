@@ -245,11 +245,6 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.Apply(createKeyfileRenewalPlan)
 	}
 
-	// Check for the need to rotate TLS certificate of a members
-	//if plan.IsEmpty() {
-	//	plan = pb.Apply(createRotateTLSServerCertificatePlan)
-	//}
-
 	// Check for changes storage classes or requirements
 	if plan.IsEmpty() {
 		plan = pb.Apply(createRotateServerStoragePlan)
@@ -269,6 +264,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	if plan.IsEmpty() {
 		plan = pb.Apply(createCACleanPlan)
+	}
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(createClusterOperationPlan)
 	}
 
 	// Return plan
