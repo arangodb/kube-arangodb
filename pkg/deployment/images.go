@@ -271,7 +271,7 @@ func (i *ImageUpdatePod) GetRole() string {
 func (i *ImageUpdatePod) Init(pod *core.Pod) {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = i.spec.ID.PriorityClassName
+	pod.Spec.PriorityClassName = i.spec.ID.Get().PriorityClassName
 }
 
 func (i *ImageUpdatePod) GetImagePullSecrets() []string {
@@ -316,9 +316,9 @@ func (i *ImageUpdatePod) GetTolerations() []core.Toleration {
 		TimeSpan: time.Second * 5,
 	}
 
-	tolerations := make([]core.Toleration, 0, 3+len(i.spec.ID.Tolerations))
+	tolerations := make([]core.Toleration, 0, 3+len(i.spec.ID.Get().Tolerations))
 
-	if idTolerations := i.spec.ID.Tolerations; len(idTolerations) > 0 {
+	if idTolerations := i.spec.ID.Get().Tolerations; len(idTolerations) > 0 {
 		for _, toleration := range idTolerations {
 			tolerations = k8sutil.AddTolerationIfNotFound(tolerations, toleration)
 		}
@@ -339,7 +339,7 @@ func (i *ImageUpdatePod) IsDeploymentMode() bool {
 }
 
 func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
-	return i.spec.ID.NodeSelector
+	return i.spec.ID.Get().NodeSelector
 }
 
 func (i *ImageUpdatePod) GetServiceAccountName() string {
@@ -367,7 +367,7 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(i, &a)
 
-	pod.MergePodAntiAffinity(&a, i.spec.ID.AntiAffinity)
+	pod.MergePodAntiAffinity(&a, i.spec.ID.Get().AntiAffinity)
 
 	return pod.ReturnPodAntiAffinityOrNil(a)
 }
@@ -375,7 +375,7 @@ func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (i *ImageUpdatePod) GetPodAffinity() *core.PodAffinity {
 	a := core.PodAffinity{}
 
-	pod.MergePodAffinity(&a, i.spec.ID.Affinity)
+	pod.MergePodAffinity(&a, i.spec.ID.Get().Affinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -385,7 +385,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.AppendNodeSelector(&a)
 
-	pod.MergeNodeAffinity(&a, i.spec.ID.NodeAffinity)
+	pod.MergeNodeAffinity(&a, i.spec.ID.Get().NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

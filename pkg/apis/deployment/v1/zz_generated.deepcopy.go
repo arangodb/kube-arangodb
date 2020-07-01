@@ -343,7 +343,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	in.License.DeepCopyInto(&out.License)
 	in.Metrics.DeepCopyInto(&out.Metrics)
 	in.Lifecycle.DeepCopyInto(&out.Lifecycle)
-	in.ID.DeepCopyInto(&out.ID)
+	if in.ID != nil {
+		in, out := &in.ID, &out.ID
+		*out = new(ServerIDGroupSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	in.Single.DeepCopyInto(&out.Single)
 	in.Agents.DeepCopyInto(&out.Agents)
 	in.DBServers.DeepCopyInto(&out.DBServers)
