@@ -78,7 +78,7 @@ func (a *appendTLSCACertificateAction) Start(ctx context.Context) (bool, error) 
 		return true, nil
 	}
 
-	ca, _, err := getKeyCertFromSecret(a.log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(a.log, caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		a.log.Warn().Err(err).Msgf("Cert %s is invalid", resources.GetCASecretName(a.actionCtx.GetAPIObject()))
 		return true, nil

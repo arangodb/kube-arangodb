@@ -23,11 +23,9 @@
 package reconcile
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -37,128 +35,15 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
-	"github.com/arangodb-helper/go-certificates"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/pkg/errors"
-	core "k8s.io/api/core/v1"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 )
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
-
-type Certificates []*x509.Certificate
-
-func (c Certificates) Contains(cert *x509.Certificate) bool {
-	for _, localCert := range c {
-		if !localCert.Equal(cert) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (c Certificates) ContainsAll(certs Certificates) bool {
-	if len(certs) == 0 {
-		return true
-	}
-
-	for _, cert := range certs {
-		if !c.Contains(cert) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (c Certificates) ToPem() ([]byte, error) {
-	bytes := bytes.NewBuffer([]byte{})
-
-	for _, cert := range c {
-		if err := pem.Encode(bytes, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw}); err != nil {
-			return nil, err
-		}
-	}
-
-	return bytes.Bytes(), nil
-}
-
-func (c Certificates) AsCertPool() *x509.CertPool {
-	cp := x509.NewCertPool()
-
-	for _, cert := range c {
-		cp.AddCert(cert)
-	}
-
-	return cp
-}
-
-func getCertsFromData(log zerolog.Logger, caPem []byte) Certificates {
-	certs := make([]*x509.Certificate, 0, 2)
-
-	for {
-		pem, rest := pem.Decode(caPem)
-		if pem == nil {
-			break
-		}
-
-		caPem = rest
-
-		cert, err := x509.ParseCertificate(pem.Bytes)
-		if err != nil {
-			// This error should be ignored
-			log.Error().Err(err).Msg("Unable to parse certificate")
-			continue
-		}
-
-		certs = append(certs, cert)
-	}
-
-	return certs
-}
-
-func getCertsFromSecret(log zerolog.Logger, secret *core.Secret) Certificates {
-	caPem, exists := secret.Data[core.ServiceAccountRootCAKey]
-	if !exists {
-		return nil
-	}
-
-	return getCertsFromData(log, caPem)
-}
-
-func getKeyCertFromCache(log zerolog.Logger, cachedStatus inspector.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
-	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
-	if !exists {
-		return nil, nil, errors.Errorf("CA Secret does not exists")
-	}
-
-	return getKeyCertFromSecret(log, caSecret, keyName, certName)
-}
-
-func getKeyCertFromSecret(log zerolog.Logger, secret *core.Secret, certName, keyName string) (Certificates, interface{}, error) {
-	ca, exists := secret.Data[certName]
-	if !exists {
-		return nil, nil, errors.Errorf("Key %s missing in secret", certName)
-	}
-
-	key, exists := secret.Data[keyName]
-	if !exists {
-		return nil, nil, errors.Errorf("Key %s missing in secret", keyName)
-	}
-
-	cert, keys, err := certificates.LoadFromPEM(string(ca), string(key))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return cert, keys, nil
-}
 
 // createTLSStatusUpdate creates plan to update ca info
 func createTLSStatusUpdate(ctx context.Context,
@@ -228,7 +113,7 @@ func createCAAppendPlan(ctx context.Context,
 		return nil
 	}
 
-	ca, _, err := getKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
 		return nil
@@ -281,7 +166,7 @@ func createCARenewalPlan(ctx context.Context,
 		return nil
 	}
 
-	cas, _, err := getKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	cas, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
 		return nil
@@ -312,7 +197,7 @@ func createCACleanPlan(ctx context.Context,
 		return nil
 	}
 
-	ca, _, err := getKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
 		return nil
@@ -461,7 +346,7 @@ func createKeyfileRenewalPlanMode(
 	return mode
 }
 
-func checkServerValidCertRequest(ctx context.Context, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca Certificates) (*tls.ConnectionState, error) {
+func checkServerValidCertRequest(ctx context.Context, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
 	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSName(apiObject, group.AsRole(), member.ID), k8sutil.ArangoPort)
 
 	tlsConfig := &tls.Config{
@@ -493,7 +378,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		return false, false
 	}
 
-	ca, _, err := getKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
+	ca, _, err := resources.GetKeyCertFromSecret(log, caSecret, resources.CACertName, resources.CAKeyName)
 	if err != nil {
 		log.Warn().Err(err).Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not contains Cert")
 		return false, false

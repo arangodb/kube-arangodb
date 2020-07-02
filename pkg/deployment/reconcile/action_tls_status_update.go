@@ -65,19 +65,20 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	keyHashes := secretKeysToListWithPrefix("sha256:", f)
 
 	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		r := false
 		if len(keyHashes) == 1 {
 			if s.Hashes.TLS.CA == nil || *s.Hashes.TLS.CA != keyHashes[0] {
 				s.Hashes.TLS.CA = util.NewString(keyHashes[0])
-				return true
+				r = true
 			}
 		}
 
 		if !util.CompareStringArray(keyHashes, s.Hashes.TLS.Truststore) {
 			s.Hashes.TLS.Truststore = keyHashes
-			return true
+			r = true
 		}
 
-		return false
+		return r
 	}); err != nil {
 		return false, err
 	}

@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"sync"
+
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
@@ -83,6 +85,8 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 }
 
 type Inspector interface {
+	Refresh(k kubernetes.Interface, namespace string) error
+
 	Pod(name string) (*core.Pod, bool)
 	IteratePods(action PodAction, filters ...PodFilter) error
 
@@ -103,10 +107,56 @@ type Inspector interface {
 }
 
 type inspector struct {
+	lock sync.Mutex
+
 	pods                 map[string]*core.Pod
 	secrets              map[string]*core.Secret
 	pvcs                 map[string]*core.PersistentVolumeClaim
 	services             map[string]*core.Service
 	serviceAccounts      map[string]*core.ServiceAccount
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
+}
+
+func (i *inspector) Refresh(k kubernetes.Interface, namespace string) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	pods, err := podsToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	secrets, err := secretsToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	pvcs, err := pvcsToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	services, err := servicesToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	serviceAccounts, err := serviceAccountsToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	podDisruptionBudgets, err := podDisruptionBudgetsToMap(k, namespace)
+	if err != nil {
+		return err
+	}
+
+	i.pods = pods
+	i.secrets = secrets
+	i.pvcs = pvcs
+	i.services = services
+	i.serviceAccounts = serviceAccounts
+	i.podDisruptionBudgets = podDisruptionBudgets
+
+	return nil
 }

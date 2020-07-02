@@ -83,31 +83,31 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 
 	if spec.IsAuthenticated() {
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureTokenSecret(cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
 			return maskAny(err)
 		}
 
 		if imageFound {
 			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
-				if err := r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
+				if err := r.refreshCache(cachedStatus, r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
 					return maskAny(err)
 				}
 			}
 		}
 
 		if spec.Metrics.IsEnabled() {
-			if err := r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName()); err != nil {
+			if err := r.refreshCache(cachedStatus, r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
 				return maskAny(err)
 			}
 		}
 	}
 	if spec.IsSecure() {
 		counterMetric.Inc()
-		if err := r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.TLS); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.TLS)); err != nil {
 			return maskAny(err)
 		}
 
-		if err := r.ensureSecretWithEmptyKey(cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty"); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureSecretWithEmptyKey(cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty")); err != nil {
 			return maskAny(err)
 		}
 
@@ -129,11 +129,13 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 						serverNames = append(serverNames, ip)
 					}
 					owner := apiObject.AsOwner()
-					if err := createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+					if err := r.refreshCache(cachedStatus, createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner)); err != nil && !k8sutil.IsAlreadyExists(err) {
 						return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 					}
 
-					return operatorErrors.Reconcile()
+					if err := r.refreshCache(cachedStatus, operatorErrors.Reconcile()); err != nil {
+						return maskAny(err)
+					}
 				}
 			}
 			return nil
@@ -143,29 +145,45 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 	}
 	if spec.RocksDB.IsEncrypted() {
 		if i := status.CurrentImage; i != nil && i.Enterprise && i.ArangoDBVersion.CompareTo("3.7.0") >= 0 {
-			if err := r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName)); err != nil {
+			if err := r.refreshCache(cachedStatus, r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
 				return maskAny(err)
 			}
 		}
 	}
 	if spec.Sync.IsEnabled() {
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName()); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName()); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureTokenSecret(cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName())); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.Sync.TLS); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureTLSCACertificateSecret(cachedStatus, secrets, spec.Sync.TLS)); err != nil {
 			return maskAny(err)
 		}
 		counterMetric.Inc()
-		if err := r.ensureClientAuthCACertificateSecret(cachedStatus, secrets, spec.Sync.Authentication); err != nil {
+		if err := r.refreshCache(cachedStatus, r.ensureClientAuthCACertificateSecret(cachedStatus, secrets, spec.Sync.Authentication)); err != nil {
 			return maskAny(err)
 		}
 	}
+	return nil
+}
+
+func (r *Resources) refreshCache(cachedStatus inspector.Inspector, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if operatorErrors.IsReconcile(err) {
+		if err := cachedStatus.Refresh(r.context.GetKubeCli(), r.context.GetNamespace()); err != nil {
+			return maskAny(err)
+		}
+	} else {
+		return maskAny(err)
+	}
+
 	return nil
 }
 
@@ -184,7 +202,10 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, se
 		return errors.Errorf("Token secret is invalid")
 	}
 
-	if err := r.createSecretWithKey(secrets, folderSecretName, util.SHA256(token), token); err != nil {
+	if err := r.createSecretWithMod(secrets, folderSecretName, func(s *core.Secret) {
+		s.Data[util.SHA256(token)] = token
+		s.Data[pod.ActiveJWTKey] = token
+	}); err != nil {
 		return err
 	}
 
@@ -241,25 +262,32 @@ func (r *Resources) ensureSecretWithKey(cachedStatus inspector.Inspector, secret
 	return nil
 }
 
-func (r *Resources) createSecretWithKey(secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
+func (r *Resources) createSecretWithMod(secrets k8sutil.SecretInterface, secretName string, f func(s *core.Secret)) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
 			Name: secretName,
 		},
-		Data: map[string][]byte{
-			keyName: value,
-		},
+		Data: map[string][]byte{},
 	}
 	// Attach secret to owner
 	owner := r.context.GetAPIObject().AsOwner()
 	k8sutil.AddOwnerRefToObject(secret, &owner)
+
+	f(secret)
+
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		return maskAny(err)
 	}
 
 	return operatorErrors.Reconcile()
+}
+
+func (r *Resources) createSecretWithKey(secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
+	return r.createSecretWithMod(secrets, secretName, func(s *core.Secret) {
+		s.Data[keyName] = value
+	})
 }
 
 func (r *Resources) createTokenSecret(secrets k8sutil.SecretInterface, secretName string) error {
@@ -428,6 +456,43 @@ func (r *Resources) ensureTLSCACertificateSecret(cachedStatus inspector.Inspecto
 		}
 
 		return operatorErrors.Reconcile()
+	}
+	return nil
+}
+
+// ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
+// of the deployment. If not, it will add such a secret with a generated CA certificate.
+func (r *Resources) ensureTLSCAFolderSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec, folderSecretName string) error {
+	if spec.CASecretName == nil {
+		return errors.Errorf("CA Secret Name is nil")
+	}
+
+	caSecret, ok := cachedStatus.Secret(*spec.CASecretName)
+	if !ok {
+		return errors.Errorf("CA Secret is missing")
+	}
+
+	if _, exists := cachedStatus.Secret(spec.GetCASecretName()); !exists {
+		ca, _, err := GetKeyCertFromSecret(r.log, caSecret, CACertName, CAKeyName)
+		if err != nil {
+			return maskAny(err)
+		}
+
+		if len(ca) == 0 {
+			return maskAny(err)
+		}
+
+		caData, err := ca.ToPem()
+		if err != nil {
+			return maskAny(err)
+		}
+
+		certSha := util.SHA256(caData)
+
+		// Secret not found, create it
+		return r.createSecretWithMod(secrets, folderSecretName, func(s *core.Secret) {
+			s.Data[certSha] = caData
+		})
 	}
 	return nil
 }
