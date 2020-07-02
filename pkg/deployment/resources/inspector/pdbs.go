@@ -33,6 +33,9 @@ type PodDisruptionBudgetFilter func(podDisruptionBudget *policy.PodDisruptionBud
 type PodDisruptionBudgetAction func(podDisruptionBudget *policy.PodDisruptionBudget) error
 
 func (i *inspector) IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
 	for _, podDisruptionBudget := range i.podDisruptionBudgets {
 		if err := i.iteratePodDisruptionBudget(podDisruptionBudget, action, filters...); err != nil {
 			return err
@@ -52,6 +55,9 @@ func (i *inspector) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDi
 }
 
 func (i *inspector) PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
 	podDisruptionBudget, ok := i.podDisruptionBudgets[name]
 	if !ok {
 		return nil, false
