@@ -205,6 +205,7 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, se
 	if err := r.createSecretWithMod(secrets, folderSecretName, func(s *core.Secret) {
 		s.Data[util.SHA256(token)] = token
 		s.Data[pod.ActiveJWTKey] = token
+		s.Data[constants.SecretKeyToken] = token
 	}); err != nil {
 		return err
 	}

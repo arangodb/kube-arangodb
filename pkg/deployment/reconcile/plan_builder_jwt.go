@@ -78,6 +78,11 @@ func createJWTKeyUpdate(ctx context.Context,
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key").AddParam(checksum, jwtSha))
 	}
 
+	tokenKey, ok := folder.Data[constants.SecretKeyToken]
+	if !ok || util.SHA256(activeKey) != util.SHA256(tokenKey) {
+		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key and add token field").AddParam(checksum, jwtSha))
+	}
+
 	plan, failed := areJWTTokensUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, folder)
 	if len(plan) > 0 {
 		return plan
@@ -93,7 +98,7 @@ func createJWTKeyUpdate(ctx context.Context,
 	}
 
 	for key := range folder.Data {
-		if key == pod.ActiveJWTKey {
+		if key == pod.ActiveJWTKey || key == constants.SecretKeyToken {
 			continue
 		}
 
@@ -184,7 +189,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 	var keys []string
 
 	for key := range f.Data {
-		if key == pod.ActiveJWTKey || key == activeKeyShort {
+		if key == pod.ActiveJWTKey || key == activeKeyShort || key == constants.SecretKeyToken {
 			continue
 		}
 
@@ -309,7 +314,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 func compareJWTKeys(e client.Entries, keys map[string][]byte) bool {
 	for k := range keys {
-		if k == pod.ActiveJWTKey {
+		if k == pod.ActiveJWTKey || k == constants.SecretKeyToken {
 			continue
 		}
 

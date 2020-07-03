@@ -152,7 +152,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 		var keys []string
 
 		for key := range f.Data {
-			if key == pod.ActiveJWTKey || key == activeKeyShort {
+			if key == pod.ActiveJWTKey || key == activeKeyShort || key == constants.SecretKeyToken {
 				continue
 			}
 

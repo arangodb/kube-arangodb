@@ -26,6 +26,8 @@ import (
 	"context"
 	"encoding/base64"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -85,8 +87,9 @@ func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	activeKeyData, active := f.Data[pod.ActiveJWTKey]
+	tokenKeyData, token := f.Data[constants.SecretKeyToken]
 
-	if util.SHA256(activeKeyData) == toActiveChecksum {
+	if util.SHA256(activeKeyData) == toActiveChecksum && util.SHA256(activeKeyData) == util.SHA256(tokenKeyData) {
 		a.log.Info().Msgf("Desired JWT is already active")
 		return true, nil
 	}
@@ -94,6 +97,13 @@ func (a *jwtSetActiveAction) Start(ctx context.Context) (bool, error) {
 	p := patch.NewPatch()
 	path := patch.NewPath("data", pod.ActiveJWTKey)
 	if !active {
+		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
+	} else {
+		p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
+	}
+
+	path = patch.NewPath("data", constants.SecretKeyToken)
+	if !token {
 		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
 	} else {
 		p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
