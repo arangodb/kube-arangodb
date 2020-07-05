@@ -48,6 +48,7 @@ HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
                            --save=false
 
 HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
+                   --kube-version 1.14 \
          	       --name "$(NAME)" \
          	       --set "operator.image=$(OPERATORIMAGE)" \
          	       --set "operator.imagePullPolicy=Always" \
