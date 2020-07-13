@@ -203,7 +203,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Update status
 	if plan.IsEmpty() {
-		plan = pb.Apply(createEncryptionKeyStatusUpdate)
+		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate)
 	}
 
 	if plan.IsEmpty() {
@@ -226,7 +226,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Add keys
 	if plan.IsEmpty() {
-		plan = pb.Apply(createEncryptionKey)
+		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKey)
 	}
 
 	if plan.IsEmpty() {
@@ -234,11 +234,11 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(createCARenewalPlan)
+		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCARenewalPlan)
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(createCAAppendPlan)
+		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan)
 	}
 
 	if plan.IsEmpty() {
@@ -251,7 +251,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(createRotateTLSServerSNIPlan)
+		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan)
 	}
 
 	if plan.IsEmpty() {
@@ -259,15 +259,21 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(createEncryptionKeyCleanPlan)
+		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan)
 	}
 
 	if plan.IsEmpty() {
-		plan = pb.Apply(createCACleanPlan)
+		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCACleanPlan)
 	}
 
 	if plan.IsEmpty() {
 		plan = pb.Apply(createClusterOperationPlan)
+	}
+
+	// Final
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(createTLSStatusPropagated)
 	}
 
 	// Return plan
@@ -296,6 +302,11 @@ type planBuilder func(ctx context.Context,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan
 
+type planBuilderSubPlan func(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ... planBuilder) api.Plan
+
 func NewWithPlanBuilder(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -313,6 +324,7 @@ func NewWithPlanBuilder(ctx context.Context,
 
 type WithPlanBuilder interface {
 	Apply(p planBuilder) api.Plan
+	ApplySubPlan(p planBuilderSubPlan, plans ... planBuilder) api.Plan
 }
 
 type withPlanBuilder struct {
@@ -323,6 +335,10 @@ type withPlanBuilder struct {
 	status       api.DeploymentStatus
 	cachedStatus inspector.Inspector
 	context      PlanBuilderContext
+}
+
+func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {
+	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context, w, plans...)
 }
 
 func (w withPlanBuilder) Apply(p planBuilder) api.Plan {

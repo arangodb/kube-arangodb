@@ -228,6 +228,7 @@ func ExporterJWTVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
 		Name:      ExporterJWTVolumeName,
 		MountPath: ExporterJWTVolumeMountDir,
+		ReadOnly:true,
 	}
 }
 

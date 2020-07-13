@@ -27,6 +27,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -42,14 +45,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/pkg/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	jg "github.com/dgrijalva/jwt-go"
-	"k8s.io/apimachinery/pkg/api/equality"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	jg "github.com/dgrijalva/jwt-go"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 var (
@@ -89,15 +90,21 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 
 		if imageFound {
 			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
-				if err := r.refreshCache(cachedStatus, r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
+				if err :=r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
 					return maskAny(err)
 				}
 			}
 		}
 
 		if spec.Metrics.IsEnabled() {
-			if err := r.refreshCache(cachedStatus, r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
-				return maskAny(err)
+			if imageFound && pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
+				if err := r.refreshCache(cachedStatus, r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
+					return maskAny(err)
+				}
+			} else {
+				if err := r.refreshCache(cachedStatus, r.ensureExporterTokenSecret(cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
+					return maskAny(err)
+				}
 			}
 		}
 	}
@@ -188,7 +195,67 @@ func (r *Resources) refreshCache(cachedStatus inspector.Inspector, err error) er
 }
 
 func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, folderSecretName string) error {
-	if _, exists := cachedStatus.Secret(folderSecretName); exists {
+	if f, exists := cachedStatus.Secret(folderSecretName); exists {
+		if len(f.Data) == 0 {
+			s, exists := cachedStatus.Secret(secretName)
+			if !exists {
+				return errors.Errorf("Token secret does not exist")
+			}
+
+			token, ok := s.Data[constants.SecretKeyToken]
+			if !ok {
+				return errors.Errorf("Token secret is invalid")
+			}
+
+			f.Data[util.SHA256(token)] = token
+			f.Data[pod.ActiveJWTKey] = token
+			f.Data[constants.SecretKeyToken] = token
+
+			if _, err := secrets.Update(f); err != nil {
+				return err
+			}
+
+			return operatorErrors.Reconcile()
+		}
+
+		if _, ok := f.Data[pod.ActiveJWTKey]; !ok {
+			_, b, ok := getFirstKeyFromMap(f.Data)
+			if !ok {
+				return errors.Errorf("Token Folder secret is invalid")
+			}
+
+			p := patch.NewPatch()
+			p.ItemAdd(patch.NewPath("data", pod.ActiveJWTKey), util.SHA256(b))
+
+			pdata, err := json.Marshal(p)
+			if err != nil {
+				return err
+			}
+
+			if _, err := secrets.Patch(folderSecretName, types.JSONPatchType, pdata); err != nil {
+				return err
+			}
+		}
+
+		if _, ok := f.Data[constants.SecretKeyToken]; !ok {
+			b, ok := f.Data[pod.ActiveJWTKey]
+			if !ok {
+				return errors.Errorf("Token Folder secret is invalid")
+			}
+
+			p := patch.NewPatch()
+			p.ItemAdd(patch.NewPath("data", constants.SecretKeyToken), util.SHA256(b))
+
+			pdata, err := json.Marshal(p)
+			if err != nil {
+				return err
+			}
+
+			if _, err := secrets.Patch(folderSecretName, types.JSONPatchType, pdata); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}
 
@@ -379,24 +446,21 @@ var (
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
 func (r *Resources) ensureExporterTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
-	if recreate, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
+	if update, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
 		return err
-	} else if recreate {
+	} else if update {
 		// Create secret
-		if exists {
-			if err := secrets.Delete(tokenSecretName, nil); err != nil && !apierrors.IsNotFound(err) {
-				return err
+		if !exists {
+			owner := r.context.GetAPIObject().AsOwner()
+			if err := k8sutil.CreateJWTFromSecret(secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner); k8sutil.IsAlreadyExists(err) {
+				// Secret added while we tried it also
+				return nil
+			} else if err != nil {
+				// Failed to create secret
+				return maskAny(err)
 			}
 		}
 
-		owner := r.context.GetAPIObject().AsOwner()
-		if err := k8sutil.CreateJWTFromSecret(secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner); k8sutil.IsAlreadyExists(err) {
-			// Secret added while we tried it also
-			return nil
-		} else if err != nil {
-			// Failed to create secret
-			return maskAny(err)
-		}
 
 		return operatorErrors.Reconcile()
 	}
@@ -562,4 +626,12 @@ func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, err
 		return "", maskAny(err)
 	}
 	return s, nil
+}
+
+func getFirstKeyFromMap(m map[string][]byte) (string, []byte, bool) {
+	for k,v := range m {
+		return k,v,true
+	}
+
+	return "",nil,false
 }

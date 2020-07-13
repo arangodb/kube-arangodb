@@ -75,6 +75,8 @@ const (
 	ActionTypeRefreshTLSKeyfileCertificate ActionType = "RefreshTLSKeyfileCertificate"
 	// ActionTypeTLSKeyStatusUpdate update status with current data from deployment
 	ActionTypeTLSKeyStatusUpdate ActionType = "TLSKeyStatusUpdate"
+	// ActionTypeTLSPropagated change propagated flag
+	ActionTypeTLSPropagated ActionType = "TLSPropagated"
 	// ActionTypeUpdateTLSSNI update SNI inplace.
 	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
@@ -101,6 +103,8 @@ const (
 	ActionTypeEncryptionKeyRefresh ActionType = "EncryptionKeyRefresh"
 	// ActionTypeEncryptionKeyStatusUpdate update status object with current encryption keys
 	ActionTypeEncryptionKeyStatusUpdate ActionType = "EncryptionKeyStatusUpdate"
+	// ActionTypeEncryptionKeyPropagated change propagated flag
+	ActionTypeEncryptionKeyPropagated ActionType = "EncryptionKeyPropagated"
 	// ActionTypeJWTStatusUpdate update status of JWT Secret
 	ActionTypeJWTStatusUpdate ActionType = "JWTStatusUpdate"
 	// ActionTypeJWTSetActive change active JWT key
