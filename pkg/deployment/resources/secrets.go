@@ -27,10 +27,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
@@ -90,7 +91,7 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 
 		if imageFound {
 			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
-				if err :=r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
+				if err := r.ensureTokenSecretFolder(cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
 					return maskAny(err)
 				}
 			}
@@ -461,7 +462,6 @@ func (r *Resources) ensureExporterTokenSecret(cachedStatus inspector.Inspector, 
 			}
 		}
 
-
 		return operatorErrors.Reconcile()
 	}
 	return nil
@@ -629,9 +629,9 @@ func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, err
 }
 
 func getFirstKeyFromMap(m map[string][]byte) (string, []byte, bool) {
-	for k,v := range m {
-		return k,v,true
+	for k, v := range m {
+		return k, v, true
 	}
 
-	return "",nil,false
+	return "", nil, false
 }

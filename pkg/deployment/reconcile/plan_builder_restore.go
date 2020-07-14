@@ -114,8 +114,8 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 			}
 		}
 
-		return true,nil
+		return true, nil
 	}
 
-	return true,nil
+	return true, nil
 }

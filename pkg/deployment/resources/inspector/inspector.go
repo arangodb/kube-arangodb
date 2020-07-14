@@ -117,7 +117,7 @@ type inspector struct {
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
 
 	ns string
-	k kubernetes.Interface
+	k  kubernetes.Interface
 }
 
 func (i *inspector) Refresh(k kubernetes.Interface, namespace string) error {

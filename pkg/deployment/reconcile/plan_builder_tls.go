@@ -45,11 +45,10 @@ import (
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
 
-
 func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders... planBuilder) api.Plan {
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}

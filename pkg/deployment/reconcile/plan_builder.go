@@ -305,7 +305,7 @@ type planBuilder func(ctx context.Context,
 type planBuilderSubPlan func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ... planBuilder) api.Plan
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
 
 func NewWithPlanBuilder(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -324,7 +324,7 @@ func NewWithPlanBuilder(ctx context.Context,
 
 type WithPlanBuilder interface {
 	Apply(p planBuilder) api.Plan
-	ApplySubPlan(p planBuilderSubPlan, plans ... planBuilder) api.Plan
+	ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan
 }
 
 type withPlanBuilder struct {

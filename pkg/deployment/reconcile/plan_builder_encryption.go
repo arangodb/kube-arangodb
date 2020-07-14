@@ -55,7 +55,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders... planBuilder) api.Plan {
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -76,7 +76,7 @@ func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 		return nil
 	}
 
-	if len(plan)==1 && plan[0].Type == api.ActionTypeEncryptionKeyPropagated {
+	if len(plan) == 1 && plan[0].Type == api.ActionTypeEncryptionKeyPropagated {
 		return plan
 	}
 
