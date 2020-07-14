@@ -25,6 +25,7 @@ package main
 import (
 	goflag "flag"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net"
 	"os"
 	"strconv"
@@ -134,6 +135,7 @@ func init() {
 	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 
+	features.Init(&cmdMain)
 }
 
 func main() {
