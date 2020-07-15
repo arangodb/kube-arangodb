@@ -71,19 +71,19 @@ func createExporterArgs(spec api.DeploymentSpec) []string {
 		scheme = "https"
 	}
 	options = append(options,
-		k8sutil.OptionPair{"--arangodb.jwt-file", tokenpath},
-		k8sutil.OptionPair{"--arangodb.endpoint", scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
+		k8sutil.OptionPair{Key: "--arangodb.jwt-file", Value: tokenpath},
+		k8sutil.OptionPair{Key: "--arangodb.endpoint", Value: scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if spec.IsSecure() {
 		options = append(options,
-			k8sutil.OptionPair{"--ssl.keyfile", keyPath},
+			k8sutil.OptionPair{Key: "--ssl.keyfile", Value: keyPath},
 		)
 	}
 
 	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
 		options = append(options,
-			k8sutil.OptionPair{"--server.address", fmt.Sprintf(":%d", port)},
+			k8sutil.OptionPair{Key: "--server.address", Value: fmt.Sprintf(":%d", port)},
 		)
 	}
 

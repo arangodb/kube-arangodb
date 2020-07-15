@@ -115,6 +115,9 @@ type inspector struct {
 	services             map[string]*core.Service
 	serviceAccounts      map[string]*core.ServiceAccount
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
+
+	ns string
+	k  kubernetes.Interface
 }
 
 func (i *inspector) Refresh(k kubernetes.Interface, namespace string) error {

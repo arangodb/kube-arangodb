@@ -52,6 +52,43 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 	return false
 }
 
+func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
+	if skipEncryptionPlan(spec, status) {
+		return nil
+	}
+
+	var plan api.Plan
+
+	for _, builder := range builders {
+		if !plan.IsEmpty() {
+			continue
+		}
+
+		if p := w.Apply(builder); !p.IsEmpty() {
+			plan = append(plan, p...)
+		}
+	}
+
+	if plan.IsEmpty() {
+		return nil
+	}
+
+	if len(plan) == 1 && plan[0].Type == api.ActionTypeEncryptionKeyPropagated {
+		return plan
+	}
+
+	if status.Hashes.Encryption.Propagated {
+		plan = append(api.Plan{
+			api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "", "Change propagated flag to false").AddParam(propagated, conditionFalse),
+		}, plan...)
+	}
+
+	return plan
+}
+
 func createEncryptionKey(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -85,15 +122,22 @@ func createEncryptionKey(ctx context.Context,
 		keyfolder.Data = map[string][]byte{}
 	}
 
-	_, ok := keyfolder.Data[name]
-	if !ok {
-		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "")}
+	if status.Hashes.Encryption.Propagated {
+		_, ok := keyfolder.Data[name]
+		if !ok {
+			return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "")}
+		}
 	}
 
-	plan, _ := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
-
+	plan, failed := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
 	if !plan.IsEmpty() {
 		return plan
+	}
+
+	if !failed && !status.Hashes.Encryption.Propagated {
+		return api.Plan{
+			api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "", "Change propagated flag to true").AddParam(propagated, conditionTrue),
+		}
 	}
 
 	return api.Plan{}
@@ -152,17 +196,11 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 		return nil
 	}
 
-	plan, failed := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
-
-	if failed {
-		log.Info().Msgf("Unable to continue with encryption until all servers are ready")
+	if !status.Hashes.Encryption.Propagated {
 		return nil
 	}
 
-	if len(plan) != 0 {
-		log.Info().Msgf("Unable to continue with encryption until all servers report state or gonna be upToDate")
-		return nil
-	}
+	var plan api.Plan
 
 	if len(keyfolder.Data) <= 1 {
 		return nil

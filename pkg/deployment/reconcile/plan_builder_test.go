@@ -264,6 +264,11 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	// Test with empty status
 	var status api.DeploymentStatus
+
+	status.Hashes.JWT.Propagated = true
+	status.Hashes.TLS.Propagated = true
+	status.Hashes.Encryption.Propagated = true
+
 	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
