@@ -53,7 +53,7 @@ func createJWTKeyUpdate(ctx context.Context,
 
 	folder, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
-		log.Error().Msgf("Unable to get JWTRotation folder info")
+		log.Error().Msgf("Unable to get JWT folder info")
 		return nil
 	}
 
@@ -146,7 +146,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 
 		f, ok := cachedStatus.Secret(spec.Authentication.GetJWTSecretName())
 		if !ok {
-			log.Error().Msgf("Unable to get JWTRotation secret info")
+			log.Error().Msgf("Unable to get JWT secret info")
 			return false
 		}
 
@@ -168,7 +168,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 
 	f, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
-		log.Error().Msgf("Unable to get JWTRotation folder info")
+		log.Error().Msgf("Unable to get JWT folder info")
 		return false
 	}
 
@@ -293,15 +293,15 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 	e, err := cmd(ctx)
 	if err != nil {
-		return false, errors.Wrapf(err, "Unable to fetch JWTRotation tokens")
+		return false, errors.Wrapf(err, "Unable to fetch JWT tokens")
 	}
 
 	if e.Result.Active == nil {
-		return false, errors.Wrapf(err, "There is no active JWTRotation Token")
+		return false, errors.Wrapf(err, "There is no active JWT Token")
 	}
 
 	if jwtActive, ok := data[pod.ActiveJWTKey]; !ok {
-		return false, errors.Errorf("Missing Active JWTRotation Token in folder")
+		return false, errors.Errorf("Missing Active JWT Token in folder")
 	} else if util.SHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
 		log.Info().Str("active", e.Result.Active.GetSHA().Checksum()).Str("expected", util.SHA256(jwtActive)).Msgf("Active key is invalid")
 		return true, nil
@@ -321,7 +321,7 @@ func compareJWTKeys(e client.Entries, keys map[string][]byte) bool {
 		}
 
 		if !e.Contains(k) {
-			log.Info().Msgf("Missing JWTRotation Key")
+			log.Info().Msgf("Missing JWT Key")
 			return false
 		}
 	}

@@ -27,6 +27,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -305,7 +306,7 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 				return nil
 			}
 			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeRecreate); renew {
-				log.Info().Msg("Renewal of keyfile required")
+				log.Info().Msg("Renewal of keyfile required - Recreate")
 				if recreate {
 					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
 				}
@@ -336,7 +337,7 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 
 		for _, member := range members {
 			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeInPlace); renew {
-				log.Info().Msg("Renewal of keyfile required")
+				log.Info().Msg("Renewal of keyfile required - InPlace")
 				if recreate {
 					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
 				}
@@ -385,9 +386,11 @@ func createKeyfileRenewalPlanMode(
 			}
 
 			if i, ok := status.Images.GetByImageID(member.ImageID); !ok {
+				log.Info().Msgf("IMAGE NOT FOUND!!!")
 				mode = api.TLSRotateModeRecreate
 			} else {
 				if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+					log.Info().Msgf("IT IS NOT SUPPORTED!!!")
 					mode = api.TLSRotateModeRecreate
 				}
 			}

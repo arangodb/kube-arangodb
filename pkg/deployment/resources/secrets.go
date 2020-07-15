@@ -29,10 +29,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
@@ -584,7 +584,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(cachedStatus inspector.I
 	return nil
 }
 
-// getJWTSecret loads the JWTRotation secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
+// getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
 func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	if !spec.IsAuthenticated() {
 		return "", nil
@@ -595,13 +595,13 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWTRotation secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
 		return "", maskAny(err)
 	}
 	return s, nil
 }
 
-// getSyncJWTSecret loads the JWTRotation secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
+// getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
 func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
@@ -609,7 +609,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWTRotation secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
 		return "", maskAny(err)
 	}
 	return s, nil

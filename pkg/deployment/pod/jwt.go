@@ -124,11 +124,11 @@ func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
 	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
-			return errors.Errorf("Secret for JWTRotation token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
+			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
 		}
 
 		if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {
-			return errors.Wrapf(err, "Cluster JWTRotation secret validation failed")
+			return errors.Wrapf(err, "Cluster JWT secret validation failed")
 		}
 	}
 

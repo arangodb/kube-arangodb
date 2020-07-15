@@ -88,8 +88,8 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		}
 
 		if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-			                        return nil
-					}
+			return false, nil
+		}
 
 		if !status.Hashes.Encryption.Propagated {
 			return false, nil
