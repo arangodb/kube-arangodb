@@ -22,9 +22,10 @@ package features
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/arangodb/go-driver"
 	"github.com/spf13/cobra"
-	"sync"
 )
 
 var features = map[string]Feature{}
@@ -47,9 +48,9 @@ func registerFeature(f Feature) {
 }
 
 var internalCMD = &cobra.Command{
-	Use: "features",
+	Use:   "features",
 	Short: "Describe all operator features",
-	Run: cmdRun,
+	Run:   cmdRun,
 }
 
 func Init(cmd *cobra.Command) {
@@ -99,7 +100,7 @@ func cmdRun(cmd *cobra.Command, args []string) {
 
 		if feature.EnterpriseRequired() {
 			println(fmt.Sprintf("ArangoDB Edition Required: Enterprise"))
-		}else{
+		} else {
 			println(fmt.Sprintf("ArangoDB Edition Required: Community, Enterprise"))
 		}
 

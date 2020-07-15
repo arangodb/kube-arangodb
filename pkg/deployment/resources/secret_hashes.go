@@ -27,9 +27,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"sort"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 

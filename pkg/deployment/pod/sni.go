@@ -25,6 +25,7 @@ package pod
 import (
 	"crypto/sha256"
 	"fmt"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"

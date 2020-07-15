@@ -83,8 +83,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					}(),
 				},
 			},
-			Features:testCaseFeatures{
-						TLSSNI:true,
+			Features: testCaseFeatures{
+				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
@@ -158,8 +158,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					}(),
 				},
 			},
-			Features:testCaseFeatures{
-				TLSSNI:true,
+			Features: testCaseFeatures{
+				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
@@ -233,8 +233,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					}(),
 				},
 			},
-			Features:testCaseFeatures{
-				TLSSNI:true,
+			Features: testCaseFeatures{
+				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
@@ -308,8 +308,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					}(),
 				},
 			},
-			Features:testCaseFeatures{
-				TLSSNI:true,
+			Features: testCaseFeatures{
+				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
@@ -416,8 +416,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 					}(),
 				},
 			},
-			Features:testCaseFeatures{
-				TLSSNI:true,
+			Features: testCaseFeatures{
+				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
 				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")

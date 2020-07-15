@@ -36,9 +36,9 @@ type Feature interface {
 }
 
 type feature struct {
-	name, description string
-	version driver.Version
-	enterpriseRequired,	enabledByDefault, enabled bool
+	name, description                             string
+	version                                       driver.Version
+	enterpriseRequired, enabledByDefault, enabled bool
 }
 
 func (f feature) Supported(v driver.Version, enterprise bool) bool {

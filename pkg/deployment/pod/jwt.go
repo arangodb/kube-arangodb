@@ -24,8 +24,9 @@ package pod
 
 import (
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"path/filepath"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"

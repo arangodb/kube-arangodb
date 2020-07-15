@@ -270,7 +270,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 				},
 			},
 			Features: testCaseFeatures{
-						EncryptionRotation:true,
+				EncryptionRotation: true,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{

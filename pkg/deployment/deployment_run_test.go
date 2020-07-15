@@ -25,8 +25,9 @@ package deployment
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/rs/zerolog/log"
 

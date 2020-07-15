@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"encoding/base64"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"

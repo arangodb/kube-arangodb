@@ -25,12 +25,13 @@ package main
 import (
 	goflag "flag"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/rs/zerolog/log"
 

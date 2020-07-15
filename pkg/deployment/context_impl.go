@@ -26,11 +26,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net"
 	nhttp "net/http"
 	"strconv"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"

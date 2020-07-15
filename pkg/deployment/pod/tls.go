@@ -23,8 +23,9 @@
 package pod
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"path/filepath"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 

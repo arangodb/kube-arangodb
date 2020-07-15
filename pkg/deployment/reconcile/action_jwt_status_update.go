@@ -25,8 +25,9 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"sort"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/pkg/errors"
