@@ -27,6 +27,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -152,7 +153,7 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if i := status.CurrentImage; i != nil && i.Enterprise && i.ArangoDBVersion.CompareTo("3.7.0") >= 0 {
+		if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 			if err := r.refreshCache(cachedStatus, r.ensureEncryptionKeyfolderSecret(cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
 				return maskAny(err)
 			}
@@ -583,7 +584,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(cachedStatus inspector.I
 	return nil
 }
 
-// getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
+// getJWTSecret loads the JWTRotation secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
 func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	if !spec.IsAuthenticated() {
 		return "", nil
@@ -594,13 +595,13 @@ func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWT secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get JWTRotation secret")
 		return "", maskAny(err)
 	}
 	return s, nil
 }
 
-// getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
+// getSyncJWTSecret loads the JWTRotation secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
 func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
@@ -608,7 +609,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
-		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWT secret")
+		r.log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync JWTRotation secret")
 		return "", maskAny(err)
 	}
 	return s, nil

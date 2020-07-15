@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	core "k8s.io/api/core/v1"
 
@@ -45,7 +46,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 		return true
 	}
 
-	if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+	if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return true
 	}
 
@@ -275,7 +276,7 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 		return false, true
 	}
 
-	if m.ArangoVersion.CompareTo("3.7.0") < 0 {
+	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return false, false
 	}
 

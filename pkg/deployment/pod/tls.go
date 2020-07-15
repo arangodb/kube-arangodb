@@ -23,6 +23,7 @@
 package pod
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"path/filepath"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -35,8 +36,7 @@ import (
 )
 
 func IsRuntimeTLSKeyfileUpdateSupported(i Input) bool {
-	return IsTLSEnabled(i) && i.Enterprise &&
-		i.Version.CompareTo("3.7.0") >= 0 &&
+	return IsTLSEnabled(i) && features.TLSRotation().Supported(i.Version, i.Enterprise) &&
 		i.Deployment.TLS.Mode.Get() == api.TLSRotateModeInPlace
 }
 

@@ -27,6 +27,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -382,10 +383,10 @@ func createKeyfileRenewalPlanMode(
 				return nil
 			}
 
-			if i := status.CurrentImage; i == nil {
+			if i, ok  := status.Images.GetByImageID(member.ImageID); !ok {
 				mode = api.TLSRotateModeRecreate
 			} else {
-				if !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || i.ImageID != member.ImageID {
+				if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 					mode = api.TLSRotateModeRecreate
 				}
 			}

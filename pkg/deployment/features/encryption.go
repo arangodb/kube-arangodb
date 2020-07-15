@@ -21,17 +21,17 @@
 package features
 
 func init() {
-	registerFeature(jwtRotation)
+	registerFeature(encryptionRotation)
 }
 
-var jwtRotation = &feature{
-	name:               "jwt-rotation",
-	description:        "JWT Token rotation in runtime",
+var encryptionRotation = &feature{
+	name:               "encryption-rotation",
+	description:        "Encryption Key rotation in runtime",
 	version:            "3.7.0",
 	enterpriseRequired: true,
 	enabledByDefault:   false,
 }
 
-func JWTRotation() Feature {
-	return jwtRotation
+func EncryptionRotation() Feature {
+	return encryptionRotation
 }

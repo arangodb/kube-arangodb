@@ -25,6 +25,7 @@ package pod
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"path/filepath"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -106,7 +107,7 @@ func IsEncryptionEnabled(i Input) bool {
 }
 
 func MultiFileMode(i Input) bool {
-	return i.Enterprise && i.Version.CompareTo("3.7.0") >= 0
+	return features.EncryptionRotation().Supported(i.Version, i.Enterprise)
 }
 
 func Encryption() Builder {

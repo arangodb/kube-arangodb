@@ -25,6 +25,7 @@ package deployment
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"testing"
 
 	"github.com/rs/zerolog/log"
@@ -90,6 +91,15 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		if testCase.Resources != nil {
 			testCase.Resources(t, d)
+		}
+
+		// Set features
+		{
+			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation
+			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
+			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
+			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
+			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
 		}
 
 		// Act

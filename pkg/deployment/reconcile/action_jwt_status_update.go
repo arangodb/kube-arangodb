@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"sort"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -56,10 +57,7 @@ func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus
 	if image := status.CurrentImage; image == nil {
 		return false, errors.Errorf("Missing image info")
 	} else {
-		if !image.Enterprise {
-			return false, nil
-		}
-		if image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+		if !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			return false, nil
 		}
 	}
@@ -94,7 +92,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 	if !folder {
 		f, ok := a.actionCtx.GetCachedStatus().Secret(a.actionCtx.GetSpec().Authentication.GetJWTSecretName())
 		if !ok {
-			a.log.Error().Msgf("Unable to get JWT secret info")
+			a.log.Error().Msgf("Unable to get JWTRotation secret info")
 			return true, nil
 		}
 
@@ -127,7 +125,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 	f, ok := a.actionCtx.GetCachedStatus().Secret(pod.JWTSecretFolder(a.actionCtx.GetName()))
 	if !ok {
-		a.log.Error().Msgf("Unable to get JWT folder info")
+		a.log.Error().Msgf("Unable to get JWTRotation folder info")
 		return true, nil
 	}
 

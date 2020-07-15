@@ -68,6 +68,10 @@ const (
 	testYes = "yes"
 )
 
+type testCaseFeatures struct {
+	TLSSNI, TLSRotation,JWTRotation,EncryptionRotation bool
+}
+
 type testCaseStruct struct {
 	Name             string
 	ArangoDeployment *api.ArangoDeployment
@@ -78,6 +82,7 @@ type testCaseStruct struct {
 	ExpectedError    error
 	ExpectedEvent    string
 	ExpectedPod      core.Pod
+	Features testCaseFeatures
 }
 
 func createTestTLSVolume(serverGroupString, ID string) core.Volume {

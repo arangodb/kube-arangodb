@@ -25,6 +25,7 @@ package pod
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -66,7 +67,7 @@ func (s sni) isSupported(i Input) bool {
 		return false
 	}
 
-	if i.Version.CompareTo("3.7.0") < 0 || !i.Enterprise {
+	if !features.TLSSNI().Supported(i.Version, i.Enterprise) {
 		// We need 3.7.0+ and Enterprise to support this
 		return false
 	}

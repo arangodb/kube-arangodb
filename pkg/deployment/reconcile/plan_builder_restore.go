@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -85,9 +86,9 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 			return true, nil
 		}
 
-		if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
-			return true, nil
-		}
+		if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+			                        return nil
+					}
 
 		if !status.Hashes.Encryption.Propagated {
 			return false, nil

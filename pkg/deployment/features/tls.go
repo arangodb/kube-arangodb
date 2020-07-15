@@ -21,17 +21,30 @@
 package features
 
 func init() {
-	registerFeature(jwtRotation)
+	registerFeature(tlsRotation)
+	registerFeature(tlsSNI)
 }
 
-var jwtRotation = &feature{
-	name:               "jwt-rotation",
-	description:        "JWT Token rotation in runtime",
+var tlsRotation Feature = &feature{
+	name:               "tls-rotation",
+	description:        "TLS Keyfile rotation in runtime",
 	version:            "3.7.0",
 	enterpriseRequired: true,
 	enabledByDefault:   false,
 }
 
-func JWTRotation() Feature {
-	return jwtRotation
+func TLSRotation() Feature {
+	return tlsRotation
+}
+
+var tlsSNI Feature = &feature{
+	name:               "tls-sni",
+	description:        "TLS SNI Support",
+	version:            "3.7.0",
+	enterpriseRequired: true,
+	enabledByDefault:   true,
+}
+
+func TLSSNI() Feature {
+	return tlsSNI
 }

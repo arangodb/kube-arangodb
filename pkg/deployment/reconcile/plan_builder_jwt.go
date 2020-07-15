@@ -25,6 +25,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"sort"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -51,7 +52,7 @@ func createJWTKeyUpdate(ctx context.Context,
 
 	folder, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
-		log.Error().Msgf("Unable to get JWT folder info")
+		log.Error().Msgf("Unable to get JWTRotation folder info")
 		return nil
 	}
 
@@ -70,7 +71,7 @@ func createJWTKeyUpdate(ctx context.Context,
 	jwtSha := util.SHA256(jwt)
 
 	if _, ok := folder.Data[jwtSha]; !ok {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWT key").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWTRotation key").AddParam(checksum, jwtSha))
 	}
 
 	activeKey, ok := folder.Data[pod.ActiveJWTKey]
@@ -144,7 +145,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 
 		f, ok := cachedStatus.Secret(spec.Authentication.GetJWTSecretName())
 		if !ok {
-			log.Error().Msgf("Unable to get JWT secret info")
+			log.Error().Msgf("Unable to get JWTRotation secret info")
 			return false
 		}
 
@@ -166,7 +167,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 
 	f, ok := cachedStatus.Secret(pod.JWTSecretFolder(apiObject.GetName()))
 	if !ok {
-		log.Error().Msgf("Unable to get JWT folder info")
+		log.Error().Msgf("Unable to get JWTRotation folder info")
 		return false
 	}
 
@@ -246,7 +247,7 @@ func isJWTTokenUpToDate(ctx context.Context,
 		return false, true
 	}
 
-	if m.ArangoVersion.CompareTo("3.7.0") < 0 {
+	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return false, false
 	}
 
@@ -259,7 +260,7 @@ func isJWTTokenUpToDate(ctx context.Context,
 	}
 
 	if updateRequired, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection()), folder.Data, false); err != nil {
-		mlog.Warn().Err(err).Msg("JET UpToDate Check failed")
+		mlog.Warn().Err(err).Msg("JWT UpToDate Check failed")
 		return false, true
 	} else if updateRequired {
 		return true, false
@@ -291,15 +292,15 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 	e, err := cmd(ctx)
 	if err != nil {
-		return false, errors.Wrapf(err, "Unable to fetch JWT tokens")
+		return false, errors.Wrapf(err, "Unable to fetch JWTRotation tokens")
 	}
 
 	if e.Result.Active == nil {
-		return false, errors.Wrapf(err, "There is no active JWT Token")
+		return false, errors.Wrapf(err, "There is no active JWTRotation Token")
 	}
 
 	if jwtActive, ok := data[pod.ActiveJWTKey]; !ok {
-		return false, errors.Errorf("Missing Active JWT Token in folder")
+		return false, errors.Errorf("Missing Active JWTRotation Token in folder")
 	} else if util.SHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
 		log.Info().Str("active", e.Result.Active.GetSHA().Checksum()).Str("expected", util.SHA256(jwtActive)).Msgf("Active key is invalid")
 		return true, nil
@@ -319,7 +320,7 @@ func compareJWTKeys(e client.Entries, keys map[string][]byte) bool {
 		}
 
 		if !e.Contains(k) {
-			log.Info().Msgf("Missing JWT Key")
+			log.Info().Msgf("Missing JWTRotation Key")
 			return false
 		}
 	}
