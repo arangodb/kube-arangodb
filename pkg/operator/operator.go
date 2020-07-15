@@ -92,6 +92,7 @@ type Config struct {
 	EnableStorage               bool
 	EnableBackup                bool
 	AllowChaos                  bool
+	SingleMode                  bool
 }
 
 type Dependencies struct {
@@ -123,16 +124,32 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 // Run the operator
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
-		go o.runLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
+		}
 	}
 	if o.Config.EnableDeploymentReplication {
-		go o.runLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+		}
 	}
 	if o.Config.EnableStorage {
-		go o.runLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+		}
 	}
 	if o.Config.EnableBackup {
-		go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+		}
 	}
 	// Wait until process terminates
 	<-context.TODO().Done()

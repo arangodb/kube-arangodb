@@ -107,6 +107,8 @@ var (
 		enableBackup                bool // Run backup operator
 
 		alpineImage, metricsExporterImage, arangoImage string
+
+		singleMode bool
 	}
 	chaosOptions struct {
 		allowed bool
@@ -135,6 +137,7 @@ func init() {
 	f.StringVar(&operatorOptions.metricsExporterImage, "operator.metrics-exporter-image", MetricsExporterImageEnv.GetOrDefault(defaultMetricsExporterImage), "Docker image used for metrics containers by default")
 	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
+	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 
 	features.Init(&cmdMain)
 }
@@ -303,6 +306,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		AlpineImage:                 operatorOptions.alpineImage,
 		MetricsExporterImage:        operatorOptions.metricsExporterImage,
 		ArangoImage:                 operatorOptions.arangoImage,
+		SingleMode:                  operatorOptions.singleMode,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,
