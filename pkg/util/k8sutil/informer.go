@@ -44,7 +44,6 @@ func NewResourceWatcher(log zerolog.Logger, getter cache.Getter, resource, names
 		resource,
 		namespace,
 		fields.Everything())
-
 	_, informer := cache.NewIndexerInformer(source, objType, 0, cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			defer func() {

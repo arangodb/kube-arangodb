@@ -25,6 +25,7 @@ package deployment
 import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -49,7 +50,7 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 		d.deps.Log,
 		d.deps.KubeCli.CoreV1().RESTClient(),
 		"pods",
-		d.apiObject.GetNamespace(),
+		metav1.NamespaceAll,
 		&v1.Pod{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
@@ -91,7 +92,7 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 		d.deps.Log,
 		d.deps.KubeCli.CoreV1().RESTClient(),
 		"persistentvolumeclaims",
-		d.apiObject.GetNamespace(),
+		metav1.NamespaceAll,
 		&v1.PersistentVolumeClaim{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
@@ -133,7 +134,7 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 		d.deps.Log,
 		d.deps.KubeCli.CoreV1().RESTClient(),
 		"secrets",
-		d.apiObject.GetNamespace(),
+		metav1.NamespaceAll,
 		&v1.Secret{},
 		cache.ResourceEventHandlerFuncs{
 			// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
@@ -176,7 +177,7 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 		d.deps.Log,
 		d.deps.KubeCli.CoreV1().RESTClient(),
 		"services",
-		d.apiObject.GetNamespace(),
+		metav1.NamespaceAll,
 		&v1.Service{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {

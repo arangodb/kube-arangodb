@@ -28,6 +28,7 @@ import (
 	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
@@ -52,7 +53,7 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 		o.log,
 		o.Dependencies.CRCli.DatabaseV1().RESTClient(),
 		deploymentType.ArangoDeploymentResourcePlural,
-		o.Config.Namespace,
+		metav1.NamespaceAll,
 		&api.ArangoDeployment{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    o.onAddArangoDeployment,
