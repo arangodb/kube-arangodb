@@ -67,9 +67,11 @@ func createRestorePlan(ctx context.Context,
 				return p
 			}
 
-			if !status.Hashes.Encryption.Propagated {
-				log.Warn().Msg("Backup not able to be restored in non propagated state")
-				return nil
+			if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+				if !status.Hashes.Encryption.Propagated {
+					log.Warn().Msg("Backup not able to be restored in non propagated state")
+					return nil
+				}
 			}
 		}
 

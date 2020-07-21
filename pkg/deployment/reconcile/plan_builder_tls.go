@@ -27,7 +27,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -386,11 +385,9 @@ func createKeyfileRenewalPlanMode(
 			}
 
 			if i, ok := status.Images.GetByImageID(member.ImageID); !ok {
-				log.Info().Msgf("IMAGE NOT FOUND!!!")
 				mode = api.TLSRotateModeRecreate
 			} else {
 				if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-					log.Info().Msgf("IT IS NOT SUPPORTED!!!")
 					mode = api.TLSRotateModeRecreate
 				}
 			}
