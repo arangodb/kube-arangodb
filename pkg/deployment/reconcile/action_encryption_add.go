@@ -26,6 +26,8 @@ import (
 	"context"
 	"encoding/base64"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/pkg/errors"
@@ -43,11 +45,8 @@ func ensureEncryptionSupport(actionCtx ActionContext) error {
 	if image, ok := actionCtx.GetCurrentImageInfo(); !ok {
 		return errors.Errorf("Missing image info")
 	} else {
-		if !image.Enterprise {
-			return errors.Errorf("Supported only in enterprise")
-		}
-		if image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
-			return errors.Errorf("Supported only in 3.7.0+")
+		if !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+			return errors.Errorf("Supported only in Enterprise Edition 3.7.0+")
 		}
 	}
 	return nil

@@ -187,6 +187,11 @@ fmt:
 	@echo ">> Ensuring style of files"
 	@go run golang.org/x/tools/cmd/goimports -w $(SOURCES)
 
+.PHONY: license
+license:
+	@echo ">> Ensuring license of files"
+	@go run github.com/google/addlicense -f "./tools/codegen/boilerplate.go.txt" $(SOURCES)
+
 .PHONY: fmt-verify
 fmt-verify: license-verify
 	@echo ">> Verify files style"

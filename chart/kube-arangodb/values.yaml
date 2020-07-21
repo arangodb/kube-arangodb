@@ -5,6 +5,8 @@ operator:
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
+  args: []
+
   service:
     type: ClusterIP
 

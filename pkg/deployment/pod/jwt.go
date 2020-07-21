@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -56,7 +58,7 @@ func JWTSecretFolder(name string) string {
 }
 
 func VersionHasJWTSecretKeyfolder(v driver.Version, enterprise bool) bool {
-	return enterprise && v.CompareTo("3.7.0") > 0
+	return features.JWTRotation().Supported(v, enterprise)
 }
 
 func JWT() Builder {

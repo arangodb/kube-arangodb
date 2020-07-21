@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -106,7 +108,7 @@ func IsEncryptionEnabled(i Input) bool {
 }
 
 func MultiFileMode(i Input) bool {
-	return i.Enterprise && i.Version.CompareTo("3.7.0") >= 0
+	return features.EncryptionRotation().Supported(i.Version, i.Enterprise)
 }
 
 func Encryption() Builder {

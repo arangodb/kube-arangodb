@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/pkg/errors"
 
@@ -56,10 +58,7 @@ func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus
 	if image := status.CurrentImage; image == nil {
 		return false, errors.Errorf("Missing image info")
 	} else {
-		if !image.Enterprise {
-			return false, nil
-		}
-		if image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+		if !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			return false, nil
 		}
 	}

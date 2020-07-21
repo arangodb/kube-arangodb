@@ -32,6 +32,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
@@ -303,7 +305,7 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 				return nil
 			}
 			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeRecreate); renew {
-				log.Info().Msg("Renewal of keyfile required")
+				log.Info().Msg("Renewal of keyfile required - Recreate")
 				if recreate {
 					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
 				}
@@ -334,7 +336,7 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 
 		for _, member := range members {
 			if renew, recreate := keyfileRenewalRequired(ctx, log, apiObject, spec, status, cachedStatus, context, group, member, api.TLSRotateModeInPlace); renew {
-				log.Info().Msg("Renewal of keyfile required")
+				log.Info().Msg("Renewal of keyfile required - InPlace")
 				if recreate {
 					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
 				}
@@ -382,10 +384,10 @@ func createKeyfileRenewalPlanMode(
 				return nil
 			}
 
-			if i := status.CurrentImage; i == nil {
+			if i, ok := status.Images.GetByImageID(member.ImageID); !ok {
 				mode = api.TLSRotateModeRecreate
 			} else {
-				if !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || i.ImageID != member.ImageID {
+				if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 					mode = api.TLSRotateModeRecreate
 				}
 			}

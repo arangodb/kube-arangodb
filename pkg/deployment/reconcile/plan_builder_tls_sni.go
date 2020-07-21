@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -75,7 +77,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				continue
 			}
 
-			if m.ArangoVersion.CompareTo("3.7.0") < 0 {
+			if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 				continue
 			}
 

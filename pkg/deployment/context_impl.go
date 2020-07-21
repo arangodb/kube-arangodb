@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -245,7 +247,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	secrets := d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
 
 	var secret string
-	if i := d.apiObject.Status.CurrentImage; i == nil || i.ArangoDBVersion.CompareTo("3.7.0") < 0 || !i.Enterprise {
+	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		s, err := secrets.Get(d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
 		if err != nil {
 			return nil, goErrors.Errorf("JWT Secret is missing")

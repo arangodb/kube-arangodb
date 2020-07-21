@@ -199,7 +199,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 			},
 		},
 		{
-			Name: "Agent EE 3.7.0 Pod with encrypted rocksdb",
+			Name: "Agent EE 3.7.0 Pod with encrypted rocksdb, disabled feature",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image:          util.NewString(testImage),
@@ -207,6 +207,70 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					TLS:            noTLS,
 					RocksDB:        rocksDBSpec,
 				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImagesWithVersion(true, "3.7.0"),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+
+				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
+				key := make([]byte, 32)
+				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
+					},
+					Containers: []core.Container{
+						{
+							Name:  k8sutil.ServerContainerName,
+							Image: testImage,
+							Command: BuildTestAgentArgs(t, firstAgentStatus.ID,
+								AgentArgsWithTLS(firstAgentStatus.ID, false),
+								ArgsWithAuth(false),
+								ArgsWithEncryptionKey()),
+							Ports: createTestPorts(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.RocksdbEncryptionVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(cmd, false, "", k8sutil.ArangoPort),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Agent EE 3.7.0 Pod with encrypted rocksdb, enabled feature",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS:            noTLS,
+					RocksDB:        rocksDBSpec,
+				},
+			},
+			Features: testCaseFeatures{
+				EncryptionRotation: true,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{

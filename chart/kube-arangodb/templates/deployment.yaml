@@ -85,6 +85,11 @@ spec:
                     - --operator.backup
 {{- end }}
                     - --chaos.allowed={{ .Values.operator.allowChaos }}
+{{- if .Values.operator.args }}
+{{- range .Values.operator.args }}
+                    - {{ . | quote }}
+{{- end }}
+{{- end }}
                   env:
                       - name: MY_POD_NAMESPACE
                         valueFrom:

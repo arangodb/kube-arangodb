@@ -30,6 +30,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -138,7 +140,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 	}
 
 	if spec.IsAuthenticated() {
-		if image == nil || image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+		if image == nil || !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			secretName := spec.Authentication.GetJWTSecretName()
 			getExpectedHash := func() string { return getHashes().AuthJWT }
 			setExpectedHash := func(h string) error {
@@ -165,7 +167,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if image == nil || image.ArangoDBVersion.CompareTo("3.7.0") < 0 {
+		if image == nil || !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			secretName := spec.RocksDB.Encryption.GetKeySecretName()
 			getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 			setExpectedHash := func(h string) error {

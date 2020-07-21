@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -70,7 +72,7 @@ func createJWTKeyUpdate(ctx context.Context,
 	jwtSha := util.SHA256(jwt)
 
 	if _, ok := folder.Data[jwtSha]; !ok {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWT key").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWTRotation key").AddParam(checksum, jwtSha))
 	}
 
 	activeKey, ok := folder.Data[pod.ActiveJWTKey]
@@ -246,7 +248,7 @@ func isJWTTokenUpToDate(ctx context.Context,
 		return false, true
 	}
 
-	if m.ArangoVersion.CompareTo("3.7.0") < 0 {
+	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return false, false
 	}
 
@@ -259,7 +261,7 @@ func isJWTTokenUpToDate(ctx context.Context,
 	}
 
 	if updateRequired, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection()), folder.Data, false); err != nil {
-		mlog.Warn().Err(err).Msg("JET UpToDate Check failed")
+		mlog.Warn().Err(err).Msg("JWT UpToDate Check failed")
 		return false, true
 	} else if updateRequired {
 		return true, false

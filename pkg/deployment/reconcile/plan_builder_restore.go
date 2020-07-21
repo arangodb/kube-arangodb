@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
@@ -65,9 +67,11 @@ func createRestorePlan(ctx context.Context,
 				return p
 			}
 
-			if !status.Hashes.Encryption.Propagated {
-				log.Warn().Msg("Backup not able to be restored in non propagated state")
-				return nil
+			if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+				if !status.Hashes.Encryption.Propagated {
+					log.Warn().Msg("Backup not able to be restored in non propagated state")
+					return nil
+				}
 			}
 		}
 
@@ -85,8 +89,8 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 			return true, nil
 		}
 
-		if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
-			return true, nil
+		if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+			return false, nil
 		}
 
 		if !status.Hashes.Encryption.Propagated {

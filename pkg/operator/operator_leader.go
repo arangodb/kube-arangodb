@@ -99,6 +99,25 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 	})
 }
 
+func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
+	log := o.log.With().Str("lock-name", lockName).Logger()
+	eventTarget := o.getLeaderElectionEventTarget(log)
+	recordEvent := func(reason, message string) {
+		if eventTarget != nil {
+			o.Dependencies.EventRecorder.Event(eventTarget, v1.EventTypeNormal, reason, message)
+		}
+	}
+	ctx := context.Background()
+
+	recordEvent("Leader Election Skipped", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
+	readyProbe.SetReady()
+	if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
+		log.Error().Msg("Cannot set leader role on Pod. Terminating process")
+		os.Exit(2)
+	}
+	onStart(ctx.Done())
+}
+
 // getLeaderElectionEventTarget returns the object that leader election related
 // events will be added to.
 func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Object {
