@@ -45,6 +45,39 @@ import (
 
 const CertificateRenewalMargin = 7 * 24 * time.Hour
 
+func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
+	if !spec.TLS.IsSecure() {
+		return nil
+	}
+
+	var plan api.Plan
+
+	for _, builder := range builders {
+		if !plan.IsEmpty() {
+			continue
+		}
+
+		if p := w.Apply(builder); !p.IsEmpty() {
+			plan = append(plan, p...)
+		}
+	}
+
+	if plan.IsEmpty() {
+		return nil
+	}
+
+	if status.Hashes.TLS.Propagated {
+		plan = append(api.Plan{
+			api.NewAction(api.ActionTypeTLSPropagated, api.ServerGroupUnknown, "", "Change propagated flag to false").AddParam(propagated, conditionFalse),
+		}, plan...)
+	}
+
+	return plan
+}
+
 // createTLSStatusUpdate creates plan to update ca info
 func createTLSStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -56,6 +89,24 @@ func createTLSStatusUpdate(ctx context.Context,
 
 	if createTLSStatusUpdateRequired(ctx, log, apiObject, spec, status, cachedStatus, context) {
 		return api.Plan{api.NewAction(api.ActionTypeTLSKeyStatusUpdate, api.ServerGroupUnknown, "", "Update status")}
+	}
+
+	return nil
+}
+
+// createTLSStatusUpdate creates plan to update ca info
+func createTLSStatusPropagated(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	if !spec.TLS.IsSecure() {
+		return nil
+	}
+
+	if !status.Hashes.TLS.Propagated {
+		return api.Plan{
+			api.NewAction(api.ActionTypeTLSPropagated, api.ServerGroupUnknown, "", "Change propagated flag to true").AddParam(propagated, conditionTrue),
+		}
 	}
 
 	return nil

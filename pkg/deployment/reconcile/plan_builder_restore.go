@@ -29,12 +29,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
 )
+
+const secretActionParam = "secret"
 
 func createRestorePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -53,13 +53,22 @@ func createRestorePlan(ctx context.Context,
 			return nil
 		}
 
-		if p := createRestorePlanEncryption(ctx, log, spec, status, context, backup); !p.IsEmpty() {
-			return p
-		}
-
 		if backup.Status.Backup == nil {
 			log.Warn().Msg("Backup not yet ready")
 			return nil
+		}
+
+		if spec.RocksDB.IsEncrypted() {
+			if ok, p := createRestorePlanEncryption(ctx, log, spec, status, context, backup); !ok {
+				return nil
+			} else if !p.IsEmpty() {
+				return p
+			}
+
+			if !status.Hashes.Encryption.Propagated {
+				log.Warn().Msg("Backup not able to be restored in non propagated state")
+				return nil
+			}
 		}
 
 		return api.Plan{
@@ -70,51 +79,43 @@ func createRestorePlan(ctx context.Context,
 	return nil
 }
 
-func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) api.Plan {
+func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) (bool, api.Plan) {
 	if spec.RestoreEncryptionSecret != nil {
 		if !spec.RocksDB.IsEncrypted() {
-			return nil
+			return true, nil
 		}
 
 		if i := status.CurrentImage; i == nil || !i.Enterprise || i.ArangoDBVersion.CompareTo("3.7.0") < 0 {
-			return nil
+			return true, nil
+		}
+
+		if !status.Hashes.Encryption.Propagated {
+			return false, nil
 		}
 
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		keyfolder, err := builderCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(builderCtx.GetName()), meta.GetOptions{})
-		if err != nil {
-			log.Err(err).Msgf("Unable to fetch encryption folder")
-			return nil
-		}
-
-		if len(keyfolder.Data) == 0 {
-			return api.Plan{
-				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
-			}
-		}
 		name, _, exists, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
-			return nil
+			return false, nil
 		}
 
 		if !exists {
 			log.Error().Msgf("Unable to fetch encryption key - key is empty or missing")
-			return nil
+			return false, nil
 		}
 
-		if _, ok := keyfolder.Data[name]; !ok {
-			log.Err(err).Msgf("Key from encryption is not in keyfolder")
-
-			return api.Plan{
-				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam("secret", secret),
+		if !status.Hashes.Encryption.Keys.ContainsSHA256(name) {
+			return true, api.Plan{
+				api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "").AddParam(propagated, conditionFalse),
+				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam(secretActionParam, secret),
 			}
 		}
 
-		return nil
+		return true, nil
 	}
 
-	return nil
+	return true, nil
 }

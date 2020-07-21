@@ -32,11 +32,15 @@ type DeploymentStatusHashes struct {
 
 type DeploymentStatusHashesEncryption struct {
 	Keys shared.HashList `json:"keys,omitempty"`
+
+	Propagated bool `json:"propagated,omitempty"`
 }
 
 type DeploymentStatusHashesTLS struct {
 	CA         *string         `json:"ca,omitempty"`
 	Truststore shared.HashList `json:"truststore,omitempty"`
+
+	Propagated bool `json:"propagated,omitempty"`
 }
 
 type DeploymentStatusHashesJWT struct {

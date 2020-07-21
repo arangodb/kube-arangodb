@@ -78,7 +78,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	secret := a.actionCtx.GetSpec().RocksDB.Encryption.GetKeySecretName()
-	if s, ok := a.action.Params["secret"]; ok {
+	if s, ok := a.action.Params[secretActionParam]; ok {
 		secret = s
 	}
 

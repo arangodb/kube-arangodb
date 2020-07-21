@@ -56,13 +56,19 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 
 		// Take first action
 		planAction := loopStatus.Plan[0]
-		log := log.With().
+		logContext := log.With().
 			Int("plan-len", len(loopStatus.Plan)).
 			Str("action-id", planAction.ID).
 			Str("action-type", string(planAction.Type)).
 			Str("group", planAction.Group.AsRole()).
-			Str("member-id", planAction.MemberID).
-			Logger()
+			Str("member-id", planAction.MemberID)
+
+		for k, v := range planAction.Params {
+			logContext = logContext.Str(k, v)
+		}
+
+		log := logContext.Logger()
+
 		action := d.createAction(ctx, log, planAction, cachedStatus)
 		if planAction.StartTime.IsZero() {
 			// Not started yet

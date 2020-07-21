@@ -78,12 +78,12 @@ func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []b
 
 func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 	if len(keyfile.Data) == 0 {
-		return "", nil, nil
+		return "", nil, errors.Errorf("Current encryption key is not valid - missing data section")
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
 	if !ok {
-		return "", nil, nil
+		return "", nil, errors.Errorf("Current encryption key is not valid - missing field")
 	}
 
 	if len(d) != 32 {
