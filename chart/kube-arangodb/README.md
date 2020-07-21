@@ -69,7 +69,7 @@ Default: `[]string`
 
 ### `operator.scope`
 
-Scope on which Operator should work.
+Scope on which Operator will be configured.
 
 Default: `legacy`
 

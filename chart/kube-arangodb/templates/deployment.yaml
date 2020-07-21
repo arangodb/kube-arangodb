@@ -1,3 +1,8 @@
+{{- if eq .Values.operator.scope "legacy" -}}
+# Scope "legacy" selected
+{{ else -}}
+{{ fail (printf "Operator Scope %s is not supported!" .Values.operator.scope) }}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

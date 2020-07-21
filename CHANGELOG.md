@@ -14,7 +14,7 @@
 - Add AutoRecovery flag to recover cluster in case of deadlock
 - Add Operator Single
 - Improve SecurityContext settings
-- Update k8s dependency to 1.15
+- Update k8s dependency to 1.15.11
 - Add Scope parameter to Operator
 
 ## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
