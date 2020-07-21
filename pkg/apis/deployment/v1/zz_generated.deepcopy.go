@@ -1269,6 +1269,16 @@ func (in *ServerGroupSpecSecurityContext) DeepCopyInto(out *ServerGroupSpecSecur
 		*out = new(int64)
 		**out = **in
 	}
+	if in.SupplementalGroups != nil {
+		in, out := &in.SupplementalGroups, &out.SupplementalGroups
+		*out = make([]int64, len(*in))
+		copy(*out, *in)
+	}
+	if in.FSGroup != nil {
+		in, out := &in.FSGroup, &out.FSGroup
+		*out = new(int64)
+		**out = **in
+	}
 	return
 }
 

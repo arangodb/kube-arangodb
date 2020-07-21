@@ -107,6 +107,9 @@ type ServerGroupSpecSecurityContext struct {
 	RunAsNonRoot             *bool  `json:"runAsNonRoot,omitempty"`
 	RunAsUser                *int64 `json:"runAsUser,omitempty"`
 	RunAsGroup               *int64 `json:"runAsGroup,omitempty"`
+
+	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
+	FSGroup            *int64  `json:"fsGroup,omitempty"`
 }
 
 // GetDropAllCapabilities returns flag if capabilities should be dropped
@@ -135,6 +138,22 @@ func (s *ServerGroupSpecSecurityContext) GetAddCapabilities() []core.Capability 
 	}
 
 	return s.AddCapabilities
+}
+
+// NewSecurityContext creates new pod security context
+func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext() *core.PodSecurityContext {
+	if s == nil {
+		return nil
+	}
+
+	if s.FSGroup == nil && len(s.SupplementalGroups) == 0 {
+		return nil
+	}
+
+	return &core.PodSecurityContext{
+		SupplementalGroups: s.SupplementalGroups,
+		FSGroup:            s.FSGroup,
+	}
 }
 
 // NewSecurityContext creates new security context

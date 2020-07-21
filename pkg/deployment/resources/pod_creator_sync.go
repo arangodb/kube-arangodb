@@ -305,3 +305,7 @@ func (m *MemberSyncPod) Init(pod *core.Pod) {
 func (m *MemberSyncPod) Validate(cachedStatus inspector.Inspector) error {
 	return nil
 }
+
+func (m *MemberSyncPod) ApplyPodSpec(spec *core.PodSpec) error {
+	return nil
+}

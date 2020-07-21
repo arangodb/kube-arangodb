@@ -8,15 +8,20 @@ replace (
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
-	k8s.io/api => k8s.io/api v0.15.9
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.15.9
-	k8s.io/apimachinery => k8s.io/apimachinery v0.15.9
-	k8s.io/client-go => k8s.io/client-go v0.15.9
+	k8s.io/api => k8s.io/api v0.15.11
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.15.11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.15.11
+	k8s.io/apiserver => k8s.io/apiserver v0.15.11
+	k8s.io/client-go => k8s.io/client-go v0.15.11
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.15.11
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.15.11
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
+	k8s.io/component-base => k8s.io/component-base v0.15.11
+	k8s.io/kubernetes => k8s.io/kubernetes v1.15.11
+	k8s.io/metrics => k8s.io/metrics v0.15.11
 )
 
 require (
-	github.com/aktau/github-release v0.8.1 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
 	github.com/arangodb/go-driver v0.0.0-20191002124627-11b6bfc64f67
@@ -30,13 +35,10 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
-	github.com/github-release/github-release v0.8.1 // indirect
-	github.com/google/addlicense v0.0.0-20200422172452-68a83edd47bc // indirect
-	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
+	github.com/google/addlicense v0.0.0-20200622132530-df58acafd6d5 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/kevinburke/rest v0.0.0-20200429221318-0d2892b400f8 // indirect
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/pkg/errors v0.8.1
@@ -46,11 +48,10 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
-	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
-	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
-	golang.org/x/sys v0.0.0-20200116001909-b77594299b42
+	golang.org/x/net v0.0.0-20200625001655-4c5254603344
+	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
+	golang.org/x/tools v0.0.0-20200721154406-b8e13e1a4d3b // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	k8s.io/api v0.17.3

@@ -532,6 +532,10 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 	p.Spec.Containers = append(p.Spec.Containers, c)
 	podCreator.GetSidecars(&p)
 
+	if err := podCreator.ApplyPodSpec(&p.Spec); err != nil {
+		return nil, err
+	}
+
 	// Add affinity
 	p.Spec.Affinity = &core.Affinity{
 		NodeAffinity:    podCreator.GetNodeAffinity(),

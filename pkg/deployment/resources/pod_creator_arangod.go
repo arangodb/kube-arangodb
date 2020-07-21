@@ -460,3 +460,9 @@ func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
 
 	return &c
 }
+
+func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
+	p.SecurityContext = m.groupSpec.SecurityContext.NewPodSecurityContext()
+
+	return nil
+}

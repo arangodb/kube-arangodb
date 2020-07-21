@@ -72,6 +72,7 @@ spec:
                   imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
                   image: {{ .Values.operator.image }}
                   args:
+                    - --scope={{ .Values.operator.scope }}
 {{- if .Values.operator.features.deployment }}
                     - --operator.deployment
 {{- end -}}

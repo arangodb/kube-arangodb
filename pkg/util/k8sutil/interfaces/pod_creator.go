@@ -27,6 +27,10 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
+type PodModifier interface {
+	ApplyPodSpec(spec *core.PodSpec) error
+}
+
 type PodCreator interface {
 	Init(*core.Pod)
 	GetName() string
@@ -45,6 +49,8 @@ type PodCreator interface {
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool
 	Validate(cachedStatus inspector.Inspector) error
+
+	PodModifier
 }
 
 type ContainerCreator interface {

@@ -5,6 +5,8 @@ operator:
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
+  scope: legacy
+
   args: []
 
   service:

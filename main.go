@@ -109,6 +109,7 @@ var (
 		alpineImage, metricsExporterImage, arangoImage string
 
 		singleMode bool
+		scope      string
 	}
 	chaosOptions struct {
 		allowed bool
@@ -138,6 +139,7 @@ func init() {
 	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
+	f.StringVar(&operatorOptions.scope, "scope", operator.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
 
 	features.Init(&cmdMain)
 }
@@ -292,6 +294,11 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	}
 	eventRecorder := createRecorder(cliLog, kubecli, name, namespace)
 
+	scope, ok := operator.AsScope(operatorOptions.scope)
+	if !ok {
+		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
+	}
+
 	cfg := operator.Config{
 		ID:                          id,
 		Namespace:                   namespace,
@@ -307,6 +314,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		MetricsExporterImage:        operatorOptions.metricsExporterImage,
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
+		Scope:                       scope,
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,
