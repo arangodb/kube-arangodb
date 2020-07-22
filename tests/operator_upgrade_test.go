@@ -77,7 +77,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 					return // Abort
 				}
 				if pod, ok := ev.Object.(*v1.Pod); ok {
-					if k8sutil.IsArangoDBImageIDAndVersionPod(*pod) {
+					if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 						continue
 					}
 

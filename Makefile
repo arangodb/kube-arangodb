@@ -226,7 +226,7 @@ endif
 .PHONY: update-vendor
 update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
-	@git clone --branch kubernetes-1.14.1 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.15.11 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 
 
@@ -581,8 +581,15 @@ ifdef PUSHIMAGES
 endif
 	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)' '$(TESTOPTIONS)'
 
+.PHONY: tidy
+tidy:
+	@go mod tidy
+
+.PHONY: deps-reload
+deps-reload: tidy init
+
 .PHONY: init
-init: tools vendor
+init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 
 .PHONY: tools
 tools:
