@@ -139,12 +139,13 @@ func createTestReadinessProbe(mode string, secure bool, authorization string) *c
 type probeCreator func(secure bool, authorization, endpoint string, port int) resources.Probe
 
 const (
-	cmd = "cmd"
+	cmdProbe  = "cmdProbe"
+	httpProbe = "http"
 )
 
 func getProbeCreator(t string) probeCreator {
 	switch t {
-	case cmd:
+	case cmdProbe:
 		return getCMDProbeCreator()
 	default:
 		return getHTTPProbeCreator()

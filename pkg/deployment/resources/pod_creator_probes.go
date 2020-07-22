@@ -147,7 +147,7 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
 			liveness:  r.probeBuilderLivenessCoreSelect(),
-			readiness: r.probeBuilderReadinessCoreOperator,
+			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupAgents: {
 			liveness:  r.probeBuilderLivenessCoreSelect(),
@@ -261,7 +261,7 @@ func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentS
 }
 
 func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	p, err := r.probeBuilderLivenessCore(spec, group, version)
+	p, err := r.probeBuilderReadinessCore(spec, group, version)
 	if err != nil {
 		return nil, err
 	}
