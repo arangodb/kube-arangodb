@@ -28,6 +28,9 @@ state for individual new features, since we expect that new
 features will first be released with an "alpha" or "beta" readiness
 state and over time move to full "production readiness".
 
+Operator will supports versions supported on providers and maintained by Kubernetes.
+Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
+
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
