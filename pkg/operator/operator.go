@@ -61,6 +61,27 @@ const (
 	initRetryWaitTime = 30 * time.Second
 )
 
+func AsScope(s string) (Scope, bool) {
+	switch s {
+	case LegacyScope.String():
+		return LegacyScope, true
+	}
+
+	return "", false
+}
+
+type Scope string
+
+func (s Scope) String() string {
+	return string(s)
+}
+
+const (
+	LegacyScope Scope = "legacy"
+
+	DefaultScope = LegacyScope
+)
+
 type Event struct {
 	Type                  kwatch.EventType
 	Deployment            *deplapi.ArangoDeployment
@@ -93,6 +114,7 @@ type Config struct {
 	EnableBackup                bool
 	AllowChaos                  bool
 	SingleMode                  bool
+	Scope                       Scope
 }
 
 type Dependencies struct {

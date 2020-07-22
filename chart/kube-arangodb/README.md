@@ -67,6 +67,15 @@ List of the Image Pull Secrets for Operator images.
 
 Default: `[]string`
 
+### `operator.scope`
+
+Scope on which Operator will be configured.
+
+Default: `legacy`
+
+Supported modes:
+- `legacy` - mode with limited cluster scope access
+
 ### `operator.service.type`
 
 Type of the Operator service.

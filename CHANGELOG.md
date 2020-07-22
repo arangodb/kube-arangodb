@@ -12,6 +12,10 @@
 - Allow to customize Security Context in pods
 - Remove dead Coordinators in Cluster mode
 - Add AutoRecovery flag to recover cluster in case of deadlock
+- Add Operator Single mode
+- Improve SecurityContext settings
+- Update k8s dependency to 1.15.11
+- Add Scope parameter to Operator
 
 ## [1.0.3](https://github.com/arangodb/kube-arangodb/tree/1.0.3) (2020-05-25)
 - Prevent deletion of not known PVC's

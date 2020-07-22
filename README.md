@@ -28,36 +28,57 @@ state for individual new features, since we expect that new
 features will first be released with an "alpha" or "beta" readiness
 state and over time move to full "production readiness".
 
+Operator will supports versions supported on providers and maintained by Kubernetes.
+Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
+
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-| Platform            | Kubernetes Version | ArangoDB Version | ArangoDB Operator Version | State       | Remarks               | Provider Remarks                   |
-|---------------------|--------------------|------------------|---------------------------|-------------|-----------------------|------------------------------------|
-| Google GKE          | 1.14               | >= 3.3.13        |                           | Production  | Don't use micro nodes |                                    |
-| Google GKE          | 1.15               | >= 3.3.13        |                           | Production  | Don't use micro nodes |                                    |
-| Azure AKS           | 1.14               | >= 3.3.13        |                           | Production  |                       |                                    |
-| Azure AKS           | 1.15               | >= 3.3.13        |                           | Production  |                       |                                    |
-| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production  |                       | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.14               | >= 3.4.6.1       | >= 0.3.11                 | Production  |                       |                                    |
-| OpenShift           | 3.11               | >= 3.3.13        |                           | Production  |                       |                                    |
-| OpenShift           | 4.2                | >= 3.3.13        |                           | In Progress |                       |                                    |
-| BareMetal (kubeadm) | 1.14               | >= 3.3.13        |                           | Production  |                       |                                    |
-| Minikube            | 1.14               | >= 3.3.13        |                           | Devel Only  |                       |                                    |
-| Other               | 1.14               | >= 3.3.13        |                           | Devel Only  |                       |                                    |
+| Platform            | Kubernetes Version | ArangoDB Version | ArangoDB Operator Version | State                    | Remarks               | Provider Remarks                   |
+|---------------------|--------------------|------------------|---------------------------|--------------------------|-----------------------|------------------------------------|
+| Google GKE          | 1.14               | >= 3.3.13        |                           | Production (Deprecating) | Don't use micro nodes |                                    |
+| Google GKE          | 1.15               | >= 3.3.13        |                           | Production (Deprecating) | Don't use micro nodes |                                    |
+| Google GKE          | 1.16               | >= 3.3.13        |                           | Production               | Don't use micro nodes |                                    |
+| Google GKE          | 1.17               | >= 3.3.13        |                           | Production               | Don't use micro nodes |                                    |
+| Azure AKS           | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
+| Azure AKS           | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
+| Azure AKS           | 1.16               | >= 3.3.13        |                           | Production               |                       |                                    |
+| Azure AKS           | 1.17               | >= 3.3.13        |                           | Production               |                       |                                    |
+| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.16               | >= 3.3.13        |                           | Production               |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.17               | >= 3.3.13        |                           | Production               |                       | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.14               | >= 3.4.6.1       | >= 0.3.11                 | Production               |                       |                                    |
+| OpenShift           | 3.11               | >= 3.3.13        |                           | Production               |                       |                                    |
+| OpenShift           | 4.2                | >= 3.3.13        |                           | In Progress              |                       |                                    |
+| BareMetal (kubeadm) | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
+| BareMetal (kubeadm) | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
+| BareMetal (kubeadm) | 1.16               | >= 3.3.13        |                           | Production               |                       |                                    |
+| BareMetal (kubeadm) | 1.17               | >= 3.3.13        |                           | Production               |                       |                                    |
+| Minikube            | 1.14+              | >= 3.3.13        |                           | Devel Only               |                       |                                    |
+| Other               | 1.14+              | >= 3.3.13        |                           | Devel Only               |                       |                                    |
 
 Feature-wise production readiness table:
 
-| Feature                      | ArangoDB K8s Operator Version         | Production Readiness      | Remarks           |
-|------------------------------|---------------------------------------|---------------------------|-------------------|
-| Pod Disruption Budgets       | 0.3.10                                | new - alpha               |                   |
-|                              | 0.3.11                                | beta                      |                   |
-| Volume Resizing              | 0.3.10                                | new - beta                |                   |
-|                              | 0.3.11                                | beta                      |                   |
-| Disabling of liveness probes | 0.3.10                                | new - beta                |                   |
-|                              | 0.3.11                                | production ready          |                   |
-| Volume Claim Templates       | 0.3.11                                | new - alpha               |                   |
-| Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
-| User sidecar containers      | 0.3.11                                | new - alpha               |                   |
+| Feature                         | Operator Version | ArangoDB Version | ArangoDB Edition      | State      | Enabled | Flag                                     | Remarks                                                                  |
+|---------------------------------|------------------|------------------|-----------------------|------------|---------|------------------------------------------|--------------------------------------------------------------------------|
+| Pod Disruption Budgets          | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | N/A                                                                      |
+| Pod Disruption Budgets          | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                      | N/A                                                                      |
+| Volume Resizing                 | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | N/A                                                                      |
+| Volume Resizing                 | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                      | N/A                                                                      |
+| Disabling of liveness probes    | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | N/A                                                                      |
+| Disabling of liveness probes    | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                      | N/A                                                                      |
+| Volume Claim Templates          | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | N/A                                                                      |
+| Volume Claim Templates          | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                      | N/A                                                                      |
+| Prometheus Metrics Exporter     | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | Prometheus required                                                      |
+| Prometheus Metrics Exporter     | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                      | Prometheus required                                                      |
+| Sidecar Containers              | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                      | N/A                                                                      |
+| Sidecar Containers              | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                      | N/A                                                                      |
+| Operator Single Mode            | 1.0.4            | Any              | Community, Enterprise | Production | False   | --mode.single                            | Only 1 instance of Operator allowed in namespace when feature is enabled |
+| TLS SNI Support                 | 1.0.3            | >= 3.7.0         | Enterprise            | Production | True    | --deployment.feature.tls-sni             | N/A                                                                      |
+| TLS Runtime Rotation Support    | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.tls-rotation        | N/A                                                                      |
+| JWT Rotation Support            | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.jwt-rotation        | N/A                                                                      |
+| Encryption Key Rotation Support | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.encryption-rotation | N/A                                                                      |
 
 ## Release notes for 0.3.16
 

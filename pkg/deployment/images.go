@@ -393,3 +393,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 func (i *ImageUpdatePod) Validate(cachedStatus inspector.Inspector) error {
 	return nil
 }
+
+func (i *ImageUpdatePod) ApplyPodSpec(spec *core.PodSpec) error {
+	return nil
+}

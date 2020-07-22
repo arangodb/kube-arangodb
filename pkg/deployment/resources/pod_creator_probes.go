@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -144,20 +146,20 @@ func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.Se
 func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
-			liveness:  r.probeBuilderLivenessCoreOperator,
-			readiness: r.probeBuilderReadinessCoreOperator,
+			liveness:  r.probeBuilderLivenessCoreSelect(),
+			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupAgents: {
-			liveness:  r.probeBuilderLivenessCoreOperator,
-			readiness: r.probeBuilderReadinessSimpleCoreOperator,
+			liveness:  r.probeBuilderLivenessCoreSelect(),
+			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupDBServers: {
-			liveness:  r.probeBuilderLivenessCoreOperator,
-			readiness: r.probeBuilderReadinessSimpleCoreOperator,
+			liveness:  r.probeBuilderLivenessCoreSelect(),
+			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupCoordinators: {
-			liveness:  r.probeBuilderLivenessCoreOperator,
-			readiness: r.probeBuilderReadinessCoreOperator,
+			liveness:  r.probeBuilderLivenessCoreSelect(),
+			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupSyncMasters: {
 			liveness:  r.probeBuilderLivenessSync,
@@ -194,6 +196,14 @@ func (r *Resources) probeCommand(spec api.DeploymentSpec, group api.ServerGroup,
 	return args, nil
 }
 
+func (r *Resources) probeBuilderLivenessCoreSelect() probeBuilder {
+	if features.JWTRotation().Enabled() {
+		return r.probeBuilderLivenessCoreOperator
+	}
+
+	return r.probeBuilderLivenessCore
+}
+
 func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	args, err := r.probeCommand(spec, group, version, "/_api/version")
 	if err != nil {
@@ -224,6 +234,14 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 	}, nil
 }
 
+func (r *Resources) probeBuilderReadinessSimpleCoreSelect() probeBuilder {
+	if features.JWTRotation().Enabled() {
+		return r.probeBuilderReadinessSimpleCoreOperator
+	}
+
+	return r.probeBuilderReadinessSimpleCore
+}
+
 func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	p, err := r.probeBuilderReadinessCoreOperator(spec, group, version)
 	if err != nil {
@@ -243,7 +261,7 @@ func (r *Resources) probeBuilderReadinessSimpleCoreOperator(spec api.DeploymentS
 }
 
 func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	p, err := r.probeBuilderLivenessCore(spec, group, version)
+	p, err := r.probeBuilderReadinessCore(spec, group, version)
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +276,14 @@ func (r *Resources) probeBuilderReadinessSimpleCore(spec api.DeploymentSpec, gro
 	})
 
 	return p, nil
+}
+
+func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
+	if features.JWTRotation().Enabled() {
+		return r.probeBuilderReadinessCoreOperator
+	}
+
+	return r.probeBuilderReadinessCore
 }
 
 func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
