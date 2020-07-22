@@ -58,6 +58,7 @@ Feature-wise production readiness table:
 | Volume Claim Templates       | 0.3.11                                | new - alpha               |                   |
 | Prometheus Metrics export    | 0.3.11                                | new - alpha               | needs Prometheus  |
 | User sidecar containers      | 0.3.11                                | new - alpha               |                   |
+| Operator Single Mode         | 1.0.4                                 | production ready          |                   |
 
 ## Release notes for 0.3.16
 
