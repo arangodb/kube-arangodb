@@ -26,6 +26,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net"
 	"net/url"
 	"path/filepath"
@@ -147,6 +148,10 @@ func createArangodArgs(input pod.Input) []string {
 			dnsName := k8sutil.CreatePodDNSName(input.ApiObject, api.ServerGroupAgents.AsRole(), p.ID)
 			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 		}
+	}
+
+	if features.EncryptionRotation().Enabled() {
+		options.Add("--rocksdb.encryption-key-rotation", "true")
 	}
 
 	args := append(options.Copy().Sort().AsArgs())
