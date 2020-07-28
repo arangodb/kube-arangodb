@@ -7,7 +7,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb-test
-        helm.sh/chart: kube-arangodb-test-1.0.3
+        helm.sh/chart: kube-arangodb-test-1.0.4
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: test
         release: test
@@ -20,7 +20,7 @@ metadata:
     namespace: default
     labels:
         app.kubernetes.io/name: kube-arangodb-test
-        helm.sh/chart: kube-arangodb-test-1.0.3
+        helm.sh/chart: kube-arangodb-test-1.0.4
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: test
         release: test
