@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.0.4](https://github.com/arangodb/kube-arangodb/tree/1.0.4) (2020-07-28)
 - Add Encryption Key rotation feature for ArangoDB EE 3.7+
 - Improve TLS CA and Keyfile rotation for CE and EE
 - Add runtime TLS rotation for ArangoDB EE 3.7+
