@@ -24,6 +24,7 @@ package resources
 
 import (
 	"encoding/json"
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -57,6 +58,10 @@ func (r *Resources) EnsureLabels(cachedStatus inspector.Inspector) error {
 	}
 
 	if err := r.EnsureServicesLabels(cachedStatus); err != nil {
+		return err
+	}
+
+	if err := r.EnsureServiceMonitorsLabels(cachedStatus); err != nil {
 		return err
 	}
 
@@ -160,6 +165,38 @@ func (r *Resources) EnsureServicesLabels(cachedStatus inspector.Inspector) error
 		return nil
 	}, func(service *core.Service) bool {
 		return r.isChildResource(service)
+	}); err != nil {
+		return err
+	}
+
+	if changed {
+		return errors.Reconcile()
+	}
+
+	return nil
+}
+
+func (r *Resources) EnsureServiceMonitorsLabels(cachedStatus inspector.Inspector) error {
+	changed := false
+	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
+		if p := ensureLabelsFromMaps(serviceMonitor, r.context.GetSpec().Labels, r.context.GetSpec().GetServerGroupSpec(getObjectGroup(serviceMonitor)).Labels); len(p) != 0 {
+			patch, err := json.Marshal(p)
+			if err != nil {
+				return err
+			}
+			r.log.Info().Int("changes", len(p)).Msgf("Updating labels for ServiceMonitor %s", serviceMonitor.GetName())
+
+			if _, err = r.context.GetMonitoringV1Cli().ServiceMonitors(r.context.GetAPIObject().GetNamespace()).Patch(serviceMonitor.GetName(), types.JSONPatchType, patch); err != nil {
+				return err
+			}
+
+			changed = true
+			return nil
+		}
+
+		return nil
+	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
+		return r.isChildResource(serviceMonitor)
 	}); err != nil {
 		return err
 	}

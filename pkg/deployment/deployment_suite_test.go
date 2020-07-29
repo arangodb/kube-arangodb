@@ -29,6 +29,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	monitoringFakeClient "github.com/coreos/prometheus-operator/pkg/client/versioned/fake"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -419,6 +421,7 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 
 	eventRecorder := recordfake.NewFakeRecorder(10)
 	kubernetesClientSet := fake.NewSimpleClientset()
+	monitoringClientSet := monitoringFakeClient.NewSimpleClientset()
 
 	arangoDeployment.ObjectMeta = metav1.ObjectMeta{
 		Name:      testDeploymentName,
@@ -426,10 +429,11 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 	}
 
 	deps := Dependencies{
-		Log:           zerolog.New(ioutil.Discard),
-		KubeCli:       kubernetesClientSet,
-		DatabaseCRCli: arangofake.NewSimpleClientset(&api.ArangoDeployment{}),
-		EventRecorder: eventRecorder,
+		Log:               zerolog.New(ioutil.Discard),
+		KubeCli:           kubernetesClientSet,
+		KubeMonitoringCli: monitoringClientSet,
+		DatabaseCRCli:     arangofake.NewSimpleClientset(&api.ArangoDeployment{}),
+		EventRecorder:     eventRecorder,
 	}
 
 	d := &Deployment{

@@ -27,6 +27,8 @@ import (
 	"math/rand"
 	"time"
 
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
@@ -121,6 +123,7 @@ type Dependencies struct {
 	LogService                 logging.Service
 	KubeCli                    kubernetes.Interface
 	KubeExtCli                 apiextensionsclient.Interface
+	KubeMonitoringCli          monitoringClient.MonitoringV1Interface
 	CRCli                      versioned.Interface
 	EventRecorder              record.EventRecorder
 	LivenessProbe              *probe.LivenessProbe

@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"os"
 
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -88,6 +90,18 @@ func NewKubeExtClient() (apiextensionsclient.Interface, error) {
 		return nil, maskAny(err)
 	}
 	c, err := apiextensionsclient.NewForConfig(cfg)
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	return c, nil
+}
+
+func NewKubeMonitoringV1Client() (monitoringClient.MonitoringV1Interface, error) {
+	cfg, err := NewKubeConfig()
+	if err != nil {
+		return nil, maskAny(err)
+	}
+	c, err := monitoringClient.NewForConfig(cfg)
 	if err != nil {
 		return nil, maskAny(err)
 	}

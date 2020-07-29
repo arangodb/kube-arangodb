@@ -215,10 +215,11 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().
 			Str("deployment", apiObject.GetName()).
 			Logger(),
-		KubeCli:       o.Dependencies.KubeCli,
-		KubeExtCli:    o.Dependencies.KubeExtCli,
-		DatabaseCRCli: o.Dependencies.CRCli,
-		EventRecorder: o.Dependencies.EventRecorder,
+		KubeCli:           o.Dependencies.KubeCli,
+		KubeMonitoringCli: o.Dependencies.KubeMonitoringCli,
+		KubeExtCli:        o.Dependencies.KubeExtCli,
+		DatabaseCRCli:     o.Dependencies.CRCli,
+		EventRecorder:     o.Dependencies.EventRecorder,
 	}
 	return cfg, deps
 }

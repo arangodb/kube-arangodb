@@ -25,6 +25,8 @@ package resources
 import (
 	"context"
 
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
 	driver "github.com/arangodb/go-driver"
@@ -61,6 +63,8 @@ type Context interface {
 	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// GetKubeCli returns the kubernetes client
 	GetKubeCli() kubernetes.Interface
+	// GetMonitoringV1Cli returns monitoring client
+	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
 	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
