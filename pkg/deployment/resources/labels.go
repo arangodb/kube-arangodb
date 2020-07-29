@@ -24,6 +24,7 @@ package resources
 
 import (
 	"encoding/json"
+
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
