@@ -431,7 +431,7 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 	deps := Dependencies{
 		Log:               zerolog.New(ioutil.Discard),
 		KubeCli:           kubernetesClientSet,
-		KubeMonitoringCli: monitoringClientSet,
+		KubeMonitoringCli: monitoringClientSet.MonitoringV1(),
 		DatabaseCRCli:     arangofake.NewSimpleClientset(&api.ArangoDeployment{}),
 		EventRecorder:     eventRecorder,
 	}
