@@ -302,7 +302,11 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Command: BuildTestAgentArgs(t, firstAgentStatus.ID,
 								AgentArgsWithTLS(firstAgentStatus.ID, false),
 								ArgsWithAuth(false),
-								ArgsWithEncryptionFolder()),
+								ArgsWithEncryptionFolder(), func(t *testing.T) map[string]string {
+									return map[string]string{
+										"rocksdb.encryption-key-rotation": "true",
+									}
+								}),
 							Ports: createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),

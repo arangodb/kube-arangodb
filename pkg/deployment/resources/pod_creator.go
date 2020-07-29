@@ -26,13 +26,14 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"net"
 	"net/url"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
