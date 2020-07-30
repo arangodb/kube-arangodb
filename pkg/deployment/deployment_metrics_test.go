@@ -429,6 +429,152 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Agency Pod with sidecar metrics exporter and port override, with enabled deployment tls",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS:            tlsSpec,
+					Metrics: func() api.MetricsSpec {
+						m := metricsSpec.DeepCopy()
+
+						m.Port = util.NewUInt16(9999)
+
+						m.Mode = api.MetricsModeSidecar.New()
+
+						return *m
+					}(),
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
+						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
+					},
+					Containers: []core.Container{
+						{
+							Name:    k8sutil.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
+							Ports:   createTestPorts(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", k8sutil.ArangoPort),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+						func() core.Container {
+							z := testCreateExporterContainerWithPortAndSecureEndpoint(true, true, emptyResources, 9999)
+
+							z.VolumeMounts = append(z.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+
+							z.Command = append(z.Command, "--mode=passthru")
+							return z
+						}(),
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
+		{
+			Name: "Agency Pod with sidecar metrics exporter and port override, with enabled deployment tls but disabled metrics tls",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image:          util.NewString(testImage),
+					Authentication: noAuthentication,
+					TLS:            tlsSpec,
+					Metrics: func() api.MetricsSpec {
+						m := metricsSpec.DeepCopy()
+
+						m.Port = util.NewUInt16(9999)
+
+						m.Mode = api.MetricsModeSidecar.New()
+
+						m.TLS = util.NewBool(false)
+
+						return *m
+					}(),
+				},
+			},
+			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
+				deployment.status.last = api.DeploymentStatus{
+					Members: api.DeploymentStatusMembers{
+						Agents: api.MemberStatusList{
+							firstAgentStatus,
+						},
+					},
+					Images: createTestImages(false),
+				}
+
+				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
+			},
+			ExpectedEvent: "member agent is created",
+			ExpectedPod: core.Pod{
+				Spec: core.PodSpec{
+					Volumes: []core.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						createTestTLSVolume(api.ServerGroupAgentsString, firstAgentStatus.ID),
+						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
+					},
+					Containers: []core.Container{
+						{
+							Name:    k8sutil.ServerContainerName,
+							Image:   testImage,
+							Command: createTestCommandForAgent(firstAgentStatus.ID, true, false, false),
+							Ports:   createTestPorts(),
+							VolumeMounts: []core.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+								k8sutil.TlsKeyfileVolumeMount(),
+							},
+							Resources:       emptyResources,
+							LivenessProbe:   createTestLivenessProbe(httpProbe, true, "", k8sutil.ArangoPort),
+							ImagePullPolicy: core.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+						func() core.Container {
+							z := testCreateExporterContainerWithPortAndSecureEndpoint(true, false, emptyResources, 9999)
+
+							z.VolumeMounts = append(z.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+
+							z.Command = append(z.Command, "--mode=passthru")
+							return z
+						}(),
+					},
+					RestartPolicy:                 core.RestartPolicyNever,
+					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
+					Hostname:                      testDeploymentName + "-" + api.ServerGroupAgentsString + "-" + firstAgentStatus.ID,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupAgentsString,
+						false, ""),
+				},
+			},
+		},
 	}
 
 	runTestCases(t, testCases...)

@@ -75,7 +75,7 @@ func createExporterArgs(spec api.DeploymentSpec) []string {
 		k8sutil.OptionPair{Key: "--arangodb.endpoint", Value: scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
 	)
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if spec.IsSecure() {
+	if spec.IsSecure() && spec.Metrics.IsTLS() {
 		options = append(options,
 			k8sutil.OptionPair{Key: "--ssl.keyfile", Value: keyPath},
 		)

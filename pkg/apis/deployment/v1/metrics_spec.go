@@ -72,8 +72,17 @@ type MetricsSpec struct {
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
 	Mode           *MetricsMode              `json:"mode,omitempty"`
+	TLS            *bool                     `json:"tls,omitempty"`
 
 	Port *uint16 `json:"port,omitempty"`
+}
+
+func (s *MetricsSpec) IsTLS() bool {
+	if s == nil || s.TLS == nil {
+		return true
+	}
+
+	return *s.TLS
 }
 
 func (s *MetricsSpec) GetPort() uint16 {

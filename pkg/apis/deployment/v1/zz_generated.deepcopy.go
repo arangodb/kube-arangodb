@@ -818,6 +818,11 @@ func (in *MetricsSpec) DeepCopyInto(out *MetricsSpec) {
 		*out = new(MetricsMode)
 		**out = **in
 	}
+	if in.TLS != nil {
+		in, out := &in.TLS, &out.TLS
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
 		*out = new(uint16)
