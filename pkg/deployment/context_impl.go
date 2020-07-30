@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver/http"
@@ -76,6 +78,10 @@ func (d *Deployment) GetServerGroupIterator() resources.ServerGroupIterator {
 // GetKubeCli returns the kubernetes client
 func (d *Deployment) GetKubeCli() kubernetes.Interface {
 	return d.deps.KubeCli
+}
+
+func (d *Deployment) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
+	return d.deps.KubeMonitoringCli
 }
 
 // GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)

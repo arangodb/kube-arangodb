@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -65,11 +67,12 @@ type Config struct {
 
 // Dependencies holds dependent services for a Deployment
 type Dependencies struct {
-	Log           zerolog.Logger
-	KubeCli       kubernetes.Interface
-	KubeExtCli    apiextensionsclient.Interface
-	DatabaseCRCli versioned.Interface
-	EventRecorder record.EventRecorder
+	Log               zerolog.Logger
+	KubeCli           kubernetes.Interface
+	KubeExtCli        apiextensionsclient.Interface
+	KubeMonitoringCli monitoringClient.MonitoringV1Interface
+	DatabaseCRCli     versioned.Interface
+	EventRecorder     record.EventRecorder
 }
 
 // deploymentEventType strongly typed type of event
@@ -237,7 +240,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetNamespace())
+			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetNamespace())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}
