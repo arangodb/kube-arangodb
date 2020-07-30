@@ -109,6 +109,21 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				// Only rotate/upgrade 1 pod at a time
 				continue
 			}
+		}
+		return nil
+	})
+
+	status.Members.ForeachServerInGroups(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
+			if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
+				// Only rotate when phase is created
+				continue
+			}
+
+			pod, found := cachedStatus.Pod(m.PodName)
+			if !found {
+				continue
+			}
 
 			if pod.Annotations != nil {
 				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
@@ -116,8 +131,10 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				}
 			}
 		}
+
 		return nil
-	})
+	}, api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupCoordinators, // Change order of execution - Coordinators and Agents should be executed before DBServer to save time
+		api.ServerGroupDBServers, api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers)
 
 	if upgradeNotAllowed {
 		context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion, fromLicense, toLicense))
