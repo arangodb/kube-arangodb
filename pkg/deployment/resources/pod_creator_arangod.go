@@ -446,7 +446,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
 	}
 
 	c := ArangodbExporterContainer(image, args,
-		createExporterLivenessProbe(m.spec.IsSecure()), m.spec.Metrics.Resources,
+		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
 		m.groupSpec.SecurityContext.NewSecurityContext(),
 		m.spec)
 
