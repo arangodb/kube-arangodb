@@ -486,7 +486,7 @@ func createTestExporterPorts(port uint16) []core.ContainerPort {
 	}
 }
 
-func createTestExporterCommand(secure bool, port uint16) []string {
+func createTestExporterCommand(secure, exporterSecure bool, port uint16) []string {
 	command := []string{
 		"/app/arangodb-exporter",
 	}
@@ -499,12 +499,12 @@ func createTestExporterCommand(secure bool, port uint16) []string {
 
 	command = append(command, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
 
-	if secure {
-		command = append(command, "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-
 	if port != k8sutil.ArangoExporterPort {
 		command = append(command, fmt.Sprintf("--server.address=:%d", port))
+	}
+
+	if exporterSecure {
+		command = append(command, "--ssl.keyfile=/secrets/tls/tls.keyfile")
 	}
 
 	return command
@@ -561,24 +561,28 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
 }
 
-func testCreateExporterContainerWithPort(secure bool, resources core.ResourceRequirements, port uint16) core.Container {
+func testCreateExporterContainerWithPortAndSecureEndpoint(secure, exporterSecure bool, resources core.ResourceRequirements, port uint16) core.Container {
 	var securityContext api.ServerGroupSpecSecurityContext
 
 	return core.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   testExporterImage,
-		Command: createTestExporterCommand(secure, port),
+		Command: createTestExporterCommand(secure, exporterSecure, port),
 		Ports:   createTestExporterPorts(port),
 		VolumeMounts: []core.VolumeMount{
 			k8sutil.ExporterJWTVolumeMount(),
 		},
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		LivenessProbe:   createTestExporterLivenessProbe(secure),
+		LivenessProbe:   createTestExporterLivenessProbe(exporterSecure),
 		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: securityContext.NewSecurityContext(),
 	}
 }
 
+func testCreateExporterContainerWithPort(secure bool, resources core.ResourceRequirements, port uint16) core.Container {
+	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, port)
+}
+
 func testCreateExporterContainer(secure bool, resources core.ResourceRequirements) core.Container {
-	return testCreateExporterContainerWithPort(secure, resources, k8sutil.ArangoExporterPort)
+	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, k8sutil.ArangoExporterPort)
 }
