@@ -30,7 +30,7 @@ rules:
       verbs: ["get", "list", "watch"]
     - apiGroups: ["monitoring.coreos.com"]
       resources: ["servicemonitors"]
-      verbs: ["get", "create", "delete", "update"]
+      verbs: ["get", "create", "delete", "update", "list", "watch", "patch"]
 
 {{- end }}
 {{- end }}

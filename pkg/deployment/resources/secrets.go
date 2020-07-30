@@ -186,7 +186,7 @@ func (r *Resources) refreshCache(cachedStatus inspector.Inspector, err error) er
 	}
 
 	if operatorErrors.IsReconcile(err) {
-		if err := cachedStatus.Refresh(r.context.GetKubeCli(), r.context.GetNamespace()); err != nil {
+		if err := cachedStatus.Refresh(r.context.GetKubeCli(), r.context.GetMonitoringV1Cli(), r.context.GetNamespace()); err != nil {
 			return maskAny(err)
 		}
 	} else {

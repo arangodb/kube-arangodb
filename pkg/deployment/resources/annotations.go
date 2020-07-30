@@ -25,6 +25,9 @@ package resources
 import (
 	"time"
 
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringTypedClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -41,6 +44,7 @@ import (
 
 func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 	kubecli := r.context.GetKubeCli()
+	monitoringcli := r.context.GetMonitoringV1Cli()
 
 	log.Info().Msgf("Ensuring annotations")
 
@@ -96,6 +100,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		r.context.GetAPIObject().GetNamespace(),
 		r.context.GetSpec().Annotations,
 		r.context.GetSpec()); err != nil {
+		return err
+	}
+
+	if err := ensureServiceMonitorsAnnotations(monitoringcli.ServiceMonitors(r.context.GetNamespace()),
+		cachedStatus,
+		deployment.ArangoDeploymentResourceKind,
+		r.context.GetAPIObject().GetName(),
+		r.context.GetAPIObject().GetNamespace(),
+		r.context.GetSpec().Annotations); err != nil {
 		return err
 	}
 
@@ -279,6 +292,43 @@ func setPvcAnnotations(client typedCore.PersistentVolumeClaimInterface, persiste
 		currentVolumeClaim.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentVolumeClaim.Annotations), annotations)
 
 		_, err = client.Update(currentVolumeClaim)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonitorInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
+		if !k8sutil.CompareAnnotations(serviceMonitor.GetAnnotations(), annotations) {
+			log.Info().Msgf("Replacing annotations for ServiceMonitors %s", serviceMonitor.Name)
+			if err := setServiceMonitorAnnotations(client, serviceMonitor, annotations); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
+		return k8sutil.IsChildResource(kind, name, namespace, serviceMonitor)
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setServiceMonitorAnnotations(client monitoringTypedClient.ServiceMonitorInterface, serviceMonitor *monitoring.ServiceMonitor, annotations map[string]string) error {
+	return utils.Retry(5, 200*time.Millisecond, func() error {
+		currentServiceMonitor, err := client.Get(serviceMonitor.Name, meta.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		currentServiceMonitor.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentServiceMonitor.Annotations), annotations)
+
+		_, err = client.Update(currentServiceMonitor)
 		if err != nil {
 			return err
 		}

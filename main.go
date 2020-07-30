@@ -279,6 +279,11 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		return operator.Config{}, operator.Dependencies{}, maskAny(err)
 	}
 
+	kubeMonCli, err := k8sutil.NewKubeMonitoringV1Client()
+	if err != nil {
+		return operator.Config{}, operator.Dependencies{}, maskAny(err)
+	}
+
 	image, serviceAccount, err := getMyPodInfo(kubecli, namespace, name)
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
@@ -320,6 +325,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		LogService:                 logService,
 		KubeCli:                    kubecli,
 		KubeExtCli:                 kubeExtCli,
+		KubeMonitoringCli:          kubeMonCli,
 		CRCli:                      crCli,
 		EventRecorder:              eventRecorder,
 		LivenessProbe:              &livenessProbe,

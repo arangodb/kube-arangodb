@@ -28,6 +28,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+
 	"github.com/pkg/errors"
 
 	policy "k8s.io/api/policy/v1beta1"
@@ -548,6 +550,7 @@ func TestCreatePlan(t *testing.T) {
 		PVCS            map[string]*core.PersistentVolumeClaim
 		ServiceAccounts map[string]*core.ServiceAccount
 		PDBS            map[string]*policy.PodDisruptionBudget
+		ServiceMonitors map[string]*monitoring.ServiceMonitor
 	}{
 		{
 			Name: "Can not create plan for single deployment",
@@ -807,7 +810,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS))
+			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS, testCase.ServiceMonitors))
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

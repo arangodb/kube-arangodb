@@ -25,12 +25,15 @@ package inspector
 import (
 	"sync"
 
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewInspector(k kubernetes.Interface, namespace string) (Inspector, error) {
+func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) (Inspector, error) {
 	pods, err := podsToMap(k, namespace)
 	if err != nil {
 		return nil, err
@@ -61,11 +64,16 @@ func NewInspector(k kubernetes.Interface, namespace string) (Inspector, error) {
 		return nil, err
 	}
 
-	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets), nil
+	serviceMonitors, err := serviceMonitorsToMap(m, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets, serviceMonitors), nil
 }
 
 func NewEmptyInspector() Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil)
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil)
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -73,7 +81,8 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	pvcs map[string]*core.PersistentVolumeClaim,
 	services map[string]*core.Service,
 	serviceAccounts map[string]*core.ServiceAccount,
-	podDisruptionBudgets map[string]*policy.PodDisruptionBudget) Inspector {
+	podDisruptionBudgets map[string]*policy.PodDisruptionBudget,
+	serviceMonitors map[string]*monitoring.ServiceMonitor) Inspector {
 	return &inspector{
 		pods:                 pods,
 		secrets:              secrets,
@@ -81,11 +90,12 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 		services:             services,
 		serviceAccounts:      serviceAccounts,
 		podDisruptionBudgets: podDisruptionBudgets,
+		serviceMonitors:      serviceMonitors,
 	}
 }
 
 type Inspector interface {
-	Refresh(k kubernetes.Interface, namespace string) error
+	Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) error
 
 	Pod(name string) (*core.Pod, bool)
 	IteratePods(action PodAction, filters ...PodFilter) error
@@ -104,6 +114,9 @@ type Inspector interface {
 
 	PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool)
 	IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error
+
+	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)
+	IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error
 }
 
 type inspector struct {
@@ -115,12 +128,14 @@ type inspector struct {
 	services             map[string]*core.Service
 	serviceAccounts      map[string]*core.ServiceAccount
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
+	serviceMonitors      map[string]*monitoring.ServiceMonitor
 
 	ns string
 	k  kubernetes.Interface
+	m  monitoringClient.MonitoringV1Interface
 }
 
-func (i *inspector) Refresh(k kubernetes.Interface, namespace string) error {
+func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -154,12 +169,18 @@ func (i *inspector) Refresh(k kubernetes.Interface, namespace string) error {
 		return err
 	}
 
+	serviceMonitors, err := serviceMonitorsToMap(m, namespace)
+	if err != nil {
+		return err
+	}
+
 	i.pods = pods
 	i.secrets = secrets
 	i.pvcs = pvcs
 	i.services = services
 	i.serviceAccounts = serviceAccounts
 	i.podDisruptionBudgets = podDisruptionBudgets
+	i.serviceMonitors = serviceMonitors
 
 	return nil
 }
