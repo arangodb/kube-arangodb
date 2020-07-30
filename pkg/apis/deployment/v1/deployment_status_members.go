@@ -84,23 +84,45 @@ func (ds DeploymentStatusMembers) ElementByID(id string) (MemberStatus, ServerGr
 // If the callback returns an error, this error is returned and the callback is
 // not called for the remaining groups.
 func (ds DeploymentStatusMembers) ForeachServerGroup(cb func(group ServerGroup, list MemberStatusList) error) error {
-	if err := cb(ServerGroupSingle, ds.Single); err != nil {
-		return maskAny(err)
+	return ds.ForeachServerInGroups(cb, AllServerGroups...)
+}
+
+func (ds DeploymentStatusMembers) ForeachServerInGroups(cb func(group ServerGroup, list MemberStatusList) error, groups ...ServerGroup) error {
+	for _, group := range groups {
+		if err := ds.ForServerGroup(cb, group); err != nil {
+			return err
+		}
 	}
-	if err := cb(ServerGroupAgents, ds.Agents); err != nil {
-		return maskAny(err)
-	}
-	if err := cb(ServerGroupDBServers, ds.DBServers); err != nil {
-		return maskAny(err)
-	}
-	if err := cb(ServerGroupCoordinators, ds.Coordinators); err != nil {
-		return maskAny(err)
-	}
-	if err := cb(ServerGroupSyncMasters, ds.SyncMasters); err != nil {
-		return maskAny(err)
-	}
-	if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
-		return maskAny(err)
+
+	return nil
+}
+
+func (ds DeploymentStatusMembers) ForServerGroup(cb func(group ServerGroup, list MemberStatusList) error, group ServerGroup) error {
+	switch group {
+	case ServerGroupSingle:
+		if err := cb(ServerGroupSingle, ds.Single); err != nil {
+			return maskAny(err)
+		}
+	case ServerGroupAgents:
+		if err := cb(ServerGroupAgents, ds.Agents); err != nil {
+			return maskAny(err)
+		}
+	case ServerGroupDBServers:
+		if err := cb(ServerGroupDBServers, ds.DBServers); err != nil {
+			return maskAny(err)
+		}
+	case ServerGroupCoordinators:
+		if err := cb(ServerGroupCoordinators, ds.Coordinators); err != nil {
+			return maskAny(err)
+		}
+	case ServerGroupSyncMasters:
+		if err := cb(ServerGroupSyncMasters, ds.SyncMasters); err != nil {
+			return maskAny(err)
+		}
+	case ServerGroupSyncWorkers:
+		if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
+			return maskAny(err)
+		}
 	}
 	return nil
 }
