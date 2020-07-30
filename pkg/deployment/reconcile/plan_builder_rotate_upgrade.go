@@ -37,8 +37,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
+var (
+	// rotationByAnnotationOrder - Change order of execution - Coordinators and Agents should be executed before DBServer to save time
+	rotationByAnnotationOrder = []api.ServerGroup{
+		api.ServerGroupSingle,
+		api.ServerGroupAgents,
+		api.ServerGroupCoordinators,
+		api.ServerGroupDBServers,
+		api.ServerGroupSyncMasters,
+		api.ServerGroupSyncWorkers,
+	}
+)
 
+// createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
 func createRotateOrUpgradePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -138,8 +149,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 		}
 
 		return nil
-	}, api.ServerGroupSingle, api.ServerGroupAgents, api.ServerGroupCoordinators, // Change order of execution - Coordinators and Agents should be executed before DBServer to save time
-		api.ServerGroupDBServers, api.ServerGroupSyncMasters, api.ServerGroupSyncWorkers)
+	}, rotationByAnnotationOrder...)
 
 	if upgradeNotAllowed {
 		context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, fromVersion, toVersion, fromLicense, toLicense))
