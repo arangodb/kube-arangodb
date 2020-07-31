@@ -124,15 +124,28 @@ func MergeNodeAffinity(a, b *core.NodeAffinity) {
 		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
 	}
 
-	if b.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		if a.RequiredDuringSchedulingIgnoredDuringExecution == nil {
-			a.RequiredDuringSchedulingIgnoredDuringExecution = b.RequiredDuringSchedulingIgnoredDuringExecution.DeepCopy()
-		} else {
-			for _, rule := range b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
-				a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, rule)
+	var newSelectorTerms []core.NodeSelectorTerm
+
+	if b.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
+		newSelectorTerms = a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
+	} else if a.RequiredDuringSchedulingIgnoredDuringExecution == nil || len(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) == 0 {
+		newSelectorTerms = b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
+	} else {
+		for _, aTerms := range a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+			for _, bTerms := range b.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+				term := aTerms.DeepCopy()
+				if len(bTerms.MatchExpressions) != 0 {
+					term.MatchExpressions = append(term.MatchExpressions, bTerms.MatchExpressions...)
+				}
+				if len(bTerms.MatchFields) != 0 {
+					term.MatchFields = append(term.MatchFields, bTerms.MatchFields...)
+				}
+				newSelectorTerms = append(newSelectorTerms, *term)
 			}
 		}
 	}
+
+	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = newSelectorTerms
 }
 
 func ReturnPodAffinityOrNil(a core.PodAffinity) *core.PodAffinity {

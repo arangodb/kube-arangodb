@@ -673,14 +673,15 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 					Subdomain: testDeploymentName + "-int",
 					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
-							n := core.NodeSelectorTerm{
-								MatchFields: []core.NodeSelectorRequirement{
-									{
-										Key: "key",
-									},
+							f := a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0]
+
+							f.MatchFields = []core.NodeSelectorRequirement{
+								{
+									Key: "key",
 								},
 							}
-							a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, n)
+
+							a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0] = f
 						}),
 				},
 			},
