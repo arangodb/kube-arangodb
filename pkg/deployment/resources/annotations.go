@@ -258,7 +258,7 @@ func getDefaultMode(annotations map[string]string) api.LabelsMode {
 func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	group := getObjectGroup(obj)
-	groupSpec :=  spec.GetServerGroupSpec(group)
+	groupSpec := spec.GetServerGroupSpec(group)
 	expected := collection.MergeAnnotations(spec.Labels, groupSpec.Labels)
 
 	ignoredList := append(spec.LabelsIgnoreList, groupSpec.LabelsIgnoreList...)
@@ -269,7 +269,7 @@ func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 }
 
 func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
-	patchCmd func(name string, d []byte) error	) bool {
+	patchCmd func(name string, d []byte) error) bool {
 	expected := spec.Labels
 	ignored := spec.AnnotationsIgnoreList
 
@@ -281,7 +281,7 @@ func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 	patchCmd func(name string, d []byte) error) bool {
 	group := getObjectGroup(obj)
-	groupSpec :=  spec.GetServerGroupSpec(group)
+	groupSpec := spec.GetServerGroupSpec(group)
 	expected := collection.MergeAnnotations(spec.Annotations, groupSpec.Annotations)
 
 	ignoredList := append(spec.AnnotationsIgnoreList, groupSpec.AnnotationsIgnoreList...)
@@ -292,7 +292,7 @@ func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.Deployment
 }
 
 func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
-	patchCmd func(name string, d []byte) error	) bool {
+	patchCmd func(name string, d []byte) error) bool {
 	expected := spec.Annotations
 	ignored := spec.AnnotationsIgnoreList
 
@@ -303,9 +303,9 @@ func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 
 func ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,
 	expected, actual map[string]string,
-	patchGetter func(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ... string) patch.Patch,
+	patchGetter func(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch,
 	patchCmd func(name string, d []byte) error,
-	ignored ... string) bool {
+	ignored ...string) bool {
 	p := patchGetter(mode, expected, actual, ignored...)
 
 	if len(p) == 0 {

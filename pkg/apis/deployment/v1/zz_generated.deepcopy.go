@@ -334,12 +334,32 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.AnnotationsIgnoreList != nil {
+		in, out := &in.AnnotationsIgnoreList, &out.AnnotationsIgnoreList
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.AnnotationsMode != nil {
+		in, out := &in.AnnotationsMode, &out.AnnotationsMode
+		*out = new(LabelsMode)
+		**out = **in
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.LabelsIgnoreList != nil {
+		in, out := &in.LabelsIgnoreList, &out.LabelsIgnoreList
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.LabelsMode != nil {
+		in, out := &in.LabelsMode, &out.LabelsMode
+		*out = new(LabelsMode)
+		**out = **in
 	}
 	if in.RestoreFrom != nil {
 		in, out := &in.RestoreFrom, &out.RestoreFrom
@@ -1133,12 +1153,32 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.AnnotationsIgnoreList != nil {
+		in, out := &in.AnnotationsIgnoreList, &out.AnnotationsIgnoreList
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.AnnotationsMode != nil {
+		in, out := &in.AnnotationsMode, &out.AnnotationsMode
+		*out = new(LabelsMode)
+		**out = **in
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.LabelsIgnoreList != nil {
+		in, out := &in.LabelsIgnoreList, &out.LabelsIgnoreList
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.LabelsMode != nil {
+		in, out := &in.LabelsMode, &out.LabelsMode
+		*out = new(LabelsMode)
+		**out = **in
 	}
 	if in.Envs != nil {
 		in, out := &in.Envs, &out.Envs

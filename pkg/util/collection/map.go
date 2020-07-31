@@ -23,10 +23,11 @@
 package collection
 
 import (
+	"regexp"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"regexp"
 )
 
 const (
@@ -64,7 +65,7 @@ func MergeAnnotations(annotations ...map[string]string) map[string]string {
 	return ret
 }
 
-func NewRestrictedList(param ... string) RestrictedList {
+func NewRestrictedList(param ...string) RestrictedList {
 	return param
 }
 
@@ -102,7 +103,7 @@ func init() {
 	arangoAnnotationRegex = r
 }
 
-func LabelsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ... string) patch.Patch {
+func LabelsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch {
 	return getFieldPatch(mode, "labels", expected, actual, func(k, v string) bool {
 		if reservedLabels.IsRestricted(k) {
 			return true
@@ -116,7 +117,7 @@ func LabelsPatch(mode api.LabelsMode, expected map[string]string, actual map[str
 	})
 }
 
-func AnnotationsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ... string) patch.Patch {
+func AnnotationsPatch(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch {
 	return getFieldPatch(mode, "annotations", expected, actual, func(k, v string) bool {
 		if kubernetesAnnotationRegex.MatchString(k) {
 			return true
@@ -134,7 +135,7 @@ func AnnotationsPatch(mode api.LabelsMode, expected map[string]string, actual ma
 	})
 }
 
-func getFieldPatch(mode api.LabelsMode, section string, expected map[string]string, actual map[string]string, filtered func(k ,v string) bool) patch.Patch {
+func getFieldPatch(mode api.LabelsMode, section string, expected map[string]string, actual map[string]string, filtered func(k, v string) bool) patch.Patch {
 	p := patch.NewPatch()
 
 	switch mode {
