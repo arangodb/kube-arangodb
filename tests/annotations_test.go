@@ -23,6 +23,7 @@
 package tests
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/map"
 	"testing"
 	"time"
 
@@ -111,7 +112,7 @@ func ensurePodAnnotations(t *testing.T, client kubernetes.Interface, depl *api.A
 	require.True(t, len(pods) > 0)
 	for _, pod := range pods {
 		group := getPodGroup(pod)
-		combinedAnnotations := k8sutil.MergeAnnotations(depl.Spec.Annotations, depl.Spec.GetServerGroupSpec(group).Annotations)
+		combinedAnnotations := collection.MergeAnnotations(depl.Spec.Annotations, depl.Spec.GetServerGroupSpec(group).Annotations)
 		if !k8sutil.CompareAnnotations(pod.GetAnnotations(), combinedAnnotations) {
 			log.Info().Msgf("Annotations for Pod does not match on %s", pod.Name)
 			return nil
