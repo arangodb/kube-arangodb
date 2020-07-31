@@ -136,11 +136,6 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				continue
 			}
 
-			if !newPlan.IsEmpty() {
-				// Only rotate/upgrade 1 pod at a time
-				continue
-			}
-
 			pod, found := cachedStatus.Pod(m.PodName)
 			if !found {
 				continue
