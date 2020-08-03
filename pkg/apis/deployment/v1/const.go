@@ -24,12 +24,16 @@ type LabelsMode string
 
 const (
 	// LabelsDisabledMode disable annotations/labels override. Default if there is no annotations/labels set in ArangoDeployment
-	LabelsDisabledMode = "disabled"
+	LabelsDisabledMode LabelsMode = "disabled"
 	// LabelsAppendMode add new annotations/labels without affecting old ones
-	LabelsAppendMode = "append"
+	LabelsAppendMode LabelsMode = "append"
 	// LabelsReplaceMode replace existing annotations/labels
-	LabelsReplaceMode = "replace"
+	LabelsReplaceMode LabelsMode = "replace"
 )
+
+func (a LabelsMode) New() *LabelsMode {
+	return &a
+}
 
 func (a *LabelsMode) Get(def LabelsMode) LabelsMode {
 	if a == nil {
