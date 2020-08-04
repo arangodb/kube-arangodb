@@ -285,7 +285,7 @@ func createTestCommandForSingleMode(name string, tls, auth, encryptionRocksDB bo
 	command = append(command, "--database.directory=/data", "--foxx.queues=true", "--log.level=INFO",
 		"--log.output=+")
 
-	if encryptionRocksDB {
+	if encryptionRocksDB {	
 		command = append(command, "--rocksdb.encryption-keyfile=/secrets/rocksdb/encryption/key")
 	}
 

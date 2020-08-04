@@ -65,6 +65,24 @@ func MergeAnnotations(annotations ...map[string]string) map[string]string {
 	return ret
 }
 
+func Compare(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for ak, av := range a {
+		bv, ok := b[ak]
+		if !ok {
+			return false
+		}
+		if av != bv {
+			return false
+		}
+	}
+
+	return true
+}
+
 func NewRestrictedList(param ...string) RestrictedList {
 	return param
 }
