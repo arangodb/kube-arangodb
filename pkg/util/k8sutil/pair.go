@@ -54,7 +54,24 @@ func (o *OptionPairs) Addf(key, format string, i ...interface{}) {
 	o.Add(key, fmt.Sprintf(format, i...))
 }
 
-func (o *OptionPairs) Add(key, value string) {
+func (o *OptionPairs) Add(key string, value interface{}) {
+	switch v := value.(type) {
+	case string:
+		o.add(key, v)
+	case bool:
+		f := "false"
+		if v {
+			f = "true"
+		}
+		o.add(key, f)
+	case int:
+		o.add(key, fmt.Sprintf("%d", v))
+	default:
+		o.add(key, fmt.Sprintf("%s", v))
+	}
+}
+
+func (o *OptionPairs) add(key, value string) {
 	o.Append(OptionPair{
 		Key:   key,
 		Value: value,
@@ -69,6 +86,31 @@ func (o *OptionPairs) Merge(pairs ...OptionPairs) {
 
 		o.Append(pair...)
 	}
+}
+
+func (o OptionPairs) Unique() OptionPairs {
+	r := make(OptionPairs, 0, len(o))
+
+	for _, pair := range o {
+		replaced := false
+		for id, existing := range r {
+			if replaced {
+				break
+			}
+			if existing.Key == pair.Key {
+				r[id] = pair
+				replaced = true
+			}
+		}
+
+		if replaced {
+			continue
+		}
+
+		r = append(r, pair)
+	}
+
+	return r
 }
 
 func (o OptionPairs) Copy() OptionPairs {

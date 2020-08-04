@@ -197,120 +197,153 @@ func createHTTPTestProbe(secure bool, authorization string, endpoint string, por
 	}
 }
 
-func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool) []string {
+func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
+
+	args := k8sutil.OptionPairs{}
+
 	if tls {
-		command = append(command, "--cluster.my-address=ssl://"+testDeploymentName+"-"+
-			api.ServerGroupDBServersString+"-"+name+".test-int.default.svc:8529")
+		args.Addf("--cluster.my-address", "ssl://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupDBServersString,
+			name)
 	} else {
-		command = append(command, "--cluster.my-address=tcp://"+testDeploymentName+"-"+
-			api.ServerGroupDBServersString+"-"+name+".test-int.default.svc:8529")
+		args.Addf("--cluster.my-address", "tcp://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupDBServersString,
+			name)
 	}
 
-	command = append(command, "--cluster.my-role=PRIMARY", "--database.directory=/data",
-		"--foxx.queues=false", "--log.level=INFO", "--log.output=+")
+	args.Add("--cluster.my-role", "PRIMARY")
+	args.Add("--database.directory", "/data")
+	args.Add("--foxx.queues", "false")
+	args.Add("--log.level", "INFO")
+	args.Add("--log.output", "+")
 
 	if encryptionRocksDB {
-		command = append(command, "--rocksdb.encryption-keyfile=/secrets/rocksdb/encryption/key")
+		args.Add("--rocksdb.encryption-keyfile", "/secrets/rocksdb/encryption/key")
+	}
+
+	args.Add("--server.authentication", auth)
+
+	if tls {
+		args.Add("--server.endpoint", "ssl://[::]:8529")
+	} else {
+		args.Add("--server.endpoint", "tcp://[::]:8529")
 	}
 
 	if auth {
-		command = append(command, "--server.authentication=true")
-	} else {
-		command = append(command, "--server.authentication=false")
+		args.Add("--server.jwt-secret-keyfile", "/secrets/cluster/jwt/token")
 	}
+
+	args.Add("--server.statistics", "true")
+	args.Add("--server.storage-engine", "rocksdb")
 
 	if tls {
-		command = append(command, "--server.endpoint=ssl://[::]:8529")
-	} else {
-		command = append(command, "--server.endpoint=tcp://[::]:8529")
+		args.Add("--ssl.ecdh-curve", "")
+		args.Add("--ssl.keyfile", "/secrets/tls/tls.keyfile")
 	}
 
-	if auth {
-		command = append(command, "--server.jwt-secret-keyfile=/secrets/cluster/jwt/token")
+	for _, mod := range mods {
+		args.Merge(mod())
 	}
 
-	command = append(command, "--server.statistics=true", "--server.storage-engine=rocksdb")
-
-	if tls {
-		command = append(command, "--ssl.ecdh-curve=", "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-	return command
+	return append(command, args.Unique().AsArgs()...)
 }
 
-func createTestCommandForCoordinator(name string, tls, auth, encryptionRocksDB bool) []string {
+func createTestCommandForCoordinator(name string, tls, auth, encryptionRocksDB bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
+
+	args := k8sutil.OptionPairs{}
+
 	if tls {
-		command = append(command, "--cluster.my-address=ssl://"+testDeploymentName+"-"+
-			api.ServerGroupCoordinatorsString+"-"+name+".test-int.default.svc:8529")
+		args.Addf("--cluster.my-address", "ssl://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupCoordinatorsString,
+			name)
 	} else {
-		command = append(command, "--cluster.my-address=tcp://"+testDeploymentName+"-"+
-			api.ServerGroupCoordinatorsString+"-"+name+".test-int.default.svc:8529")
+		args.Addf("--cluster.my-address", "tcp://%s-%s-%s.test-int.default.svc:8529",
+			testDeploymentName,
+			api.ServerGroupCoordinatorsString,
+			name)
 	}
 
-	command = append(command, "--cluster.my-role=COORDINATOR", "--database.directory=/data",
-		"--foxx.queues=true", "--log.level=INFO", "--log.output=+")
+	args.Add("--cluster.my-role", "COORDINATOR")
+	args.Add("--database.directory", "/data")
+	args.Add("--foxx.queues", "true")
+	args.Add("--log.level", "INFO")
+	args.Add("--log.output", "+")
 
 	if encryptionRocksDB {
-		command = append(command, "--rocksdb.encryption-keyfile=/secrets/rocksdb/encryption/key")
+		args.Add("--rocksdb.encryption-keyfile", "/secrets/rocksdb/encryption/key")
+	}
+
+	args.Add("--server.authentication", auth)
+
+	if tls {
+		args.Add("--server.endpoint", "ssl://[::]:8529")
+	} else {
+		args.Add("--server.endpoint", "tcp://[::]:8529")
 	}
 
 	if auth {
-		command = append(command, "--server.authentication=true")
-	} else {
-		command = append(command, "--server.authentication=false")
+		args.Add("--server.jwt-secret-keyfile", "/secrets/cluster/jwt/token")
 	}
+
+	args.Add("--server.statistics", "true")
+	args.Add("--server.storage-engine", "rocksdb")
 
 	if tls {
-		command = append(command, "--server.endpoint=ssl://[::]:8529")
-	} else {
-		command = append(command, "--server.endpoint=tcp://[::]:8529")
+		args.Add("--ssl.ecdh-curve", "")
+		args.Add("--ssl.keyfile", "/secrets/tls/tls.keyfile")
 	}
 
-	if auth {
-		command = append(command, "--server.jwt-secret-keyfile=/secrets/cluster/jwt/token")
+	for _, mod := range mods {
+		args.Merge(mod())
 	}
 
-	command = append(command, "--server.statistics=true", "--server.storage-engine=rocksdb")
-
-	if tls {
-		command = append(command, "--ssl.ecdh-curve=", "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-	return command
+	return append(command, args.Unique().AsArgs()...)
 }
 
-func createTestCommandForSingleMode(name string, tls, auth, encryptionRocksDB bool) []string {
+func createTestCommandForSingleMode(name string, tls, auth, encryptionRocksDB bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
 
-	command = append(command, "--database.directory=/data", "--foxx.queues=true", "--log.level=INFO",
-		"--log.output=+")
+	args := k8sutil.OptionPairs{}
+
+	args.Add("--database.directory", "/data")
+	args.Add("--foxx.queues", "true")
+	args.Add("--log.level", "INFO")
+	args.Add("--log.output", "+")
 
 	if encryptionRocksDB {
-		command = append(command, "--rocksdb.encryption-keyfile=/secrets/rocksdb/encryption/key")
+		args.Add("--rocksdb.encryption-keyfile", "/secrets/rocksdb/encryption/key")
+	}
+
+	args.Add("--server.authentication", auth)
+
+	if tls {
+		args.Add("--server.endpoint", "ssl://[::]:8529")
+	} else {
+		args.Add("--server.endpoint", "tcp://[::]:8529")
 	}
 
 	if auth {
-		command = append(command, "--server.authentication=true")
-	} else {
-		command = append(command, "--server.authentication=false")
+		args.Add("--server.jwt-secret-keyfile", "/secrets/cluster/jwt/token")
 	}
+
+	args.Add("--server.statistics", "true")
+	args.Add("--server.storage-engine", "rocksdb")
 
 	if tls {
-		command = append(command, "--server.endpoint=ssl://[::]:8529")
-	} else {
-		command = append(command, "--server.endpoint=tcp://[::]:8529")
+		args.Add("--ssl.ecdh-curve", "")
+		args.Add("--ssl.keyfile", "/secrets/tls/tls.keyfile")
 	}
 
-	if auth {
-		command = append(command, "--server.jwt-secret-keyfile=/secrets/cluster/jwt/token")
+	for _, mod := range mods {
+		args.Merge(mod())
 	}
 
-	command = append(command, "--server.statistics=true", "--server.storage-engine=rocksdb")
-
-	if tls {
-		command = append(command, "--ssl.ecdh-curve=", "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-	return command
+	return append(command, args.Unique().AsArgs()...)
 }
 
 func createTestCommandForAgent(name string, tls, auth, encryptionRocksDB bool) []string {
