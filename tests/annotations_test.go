@@ -23,7 +23,6 @@
 package tests
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/map"
 	"testing"
 	"time"
 
