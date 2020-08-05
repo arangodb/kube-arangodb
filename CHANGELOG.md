@@ -1,10 +1,13 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.0.5](https://github.com/arangodb/kube-arangodb/tree/1.0.5) (2020-08-05)
 - Add Labels and Annotations to ServiceMonitor
 - Allow to expose Exporter in HTTP with secured Deployments
 - Change rotation by annotation order (coordinator before dbserver)
 - Fix NodeAffinity propagation
+- Allow to disable Foxx Queues on Cluster mode
 
 ## [1.0.4](https://github.com/arangodb/kube-arangodb/tree/1.0.4) (2020-07-28)
 - Add Encryption Key rotation feature for ArangoDB EE 3.7+
