@@ -108,7 +108,7 @@ func createArangodArgs(input pod.Input) []string {
 		options.Add("--agency.my-address", myTCPURL)
 		options.Addf("--agency.size", "%d", input.Deployment.Agents.GetCount())
 		options.Add("--agency.supervision", "true")
-		options.Add("--foxx.queues", "false")
+		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "false")
 		for _, p := range input.Status.Members.Agents {
 			if p.ID != input.ID {
@@ -120,19 +120,19 @@ func createArangodArgs(input pod.Input) []string {
 		addAgentEndpoints = true
 		options.Add("--cluster.my-address", myTCPURL)
 		options.Add("--cluster.my-role", "PRIMARY")
-		options.Add("--foxx.queues", "false")
+		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "true")
 	case api.ServerGroupCoordinators:
 		addAgentEndpoints = true
 		options.Add("--cluster.my-address", myTCPURL)
 		options.Add("--cluster.my-role", "COORDINATOR")
-		options.Add("--foxx.queues", "true")
+		options.Add("--foxx.queues", input.Deployment.Features.GetFoxxQueues())
 		options.Add("--server.statistics", "true")
 		if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
 			options.Add("--cluster.my-advertised-endpoint", input.Deployment.ExternalAccess.GetAdvertisedEndpoint())
 		}
 	case api.ServerGroupSingle:
-		options.Add("--foxx.queues", "true")
+		options.Add("--foxx.queues", input.Deployment.Features.GetFoxxQueues())
 		options.Add("--server.statistics", "true")
 		if input.Deployment.GetMode() == api.DeploymentModeActiveFailover {
 			addAgentEndpoints = true
