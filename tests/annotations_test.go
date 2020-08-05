@@ -23,6 +23,7 @@
 package tests
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"testing"
 	"time"
 
@@ -88,7 +89,7 @@ func ensureSecretAnnotations(t *testing.T, client kubernetes.Interface, depl *ap
 	require.NoError(t, err)
 	require.True(t, len(secrets) > 0)
 	for _, secret := range secrets {
-		if !k8sutil.CompareAnnotations(secret.GetAnnotations(), depl.Spec.Annotations) {
+		if !collection.Compare(secret.GetAnnotations(), depl.Spec.Annotations) {
 			log.Info().Msgf("Annotations for Secret does not match on %s", secret.Name)
 			return nil
 		}
@@ -111,8 +112,8 @@ func ensurePodAnnotations(t *testing.T, client kubernetes.Interface, depl *api.A
 	require.True(t, len(pods) > 0)
 	for _, pod := range pods {
 		group := getPodGroup(pod)
-		combinedAnnotations := k8sutil.MergeAnnotations(depl.Spec.Annotations, depl.Spec.GetServerGroupSpec(group).Annotations)
-		if !k8sutil.CompareAnnotations(pod.GetAnnotations(), combinedAnnotations) {
+		combinedAnnotations := collection.MergeAnnotations(depl.Spec.Annotations, depl.Spec.GetServerGroupSpec(group).Annotations)
+		if !collection.Compare(pod.GetAnnotations(), combinedAnnotations) {
 			log.Info().Msgf("Annotations for Pod does not match on %s", pod.Name)
 			return nil
 		}
@@ -126,7 +127,7 @@ func ensurePDBAnnotation(t *testing.T, client kubernetes.Interface, depl *api.Ar
 	require.NoError(t, err)
 	require.True(t, len(podDisruptionBudgets) > 0)
 	for _, podDisruptionBudget := range podDisruptionBudgets {
-		if !k8sutil.CompareAnnotations(podDisruptionBudget.GetAnnotations(), depl.Spec.Annotations) {
+		if !collection.Compare(podDisruptionBudget.GetAnnotations(), depl.Spec.Annotations) {
 			log.Info().Msgf("Annotations for PDB does not match on %s", podDisruptionBudget.Name)
 			return nil
 		}
@@ -140,7 +141,7 @@ func ensurePVCAnnotation(t *testing.T, client kubernetes.Interface, depl *api.Ar
 	require.NoError(t, err)
 	require.True(t, len(persistentVolumeClaims) > 0)
 	for _, persistentVolumeClaim := range persistentVolumeClaims {
-		if !k8sutil.CompareAnnotations(persistentVolumeClaim.GetAnnotations(), depl.Spec.Annotations) {
+		if !collection.Compare(persistentVolumeClaim.GetAnnotations(), depl.Spec.Annotations) {
 			log.Info().Msgf("Annotations for PVC does not match on %s", persistentVolumeClaim.Name)
 			return nil
 		}
@@ -154,7 +155,7 @@ func ensureServiceAnnotation(t *testing.T, client kubernetes.Interface, depl *ap
 	require.NoError(t, err)
 	require.True(t, len(services) > 0)
 	for _, service := range services {
-		if !k8sutil.CompareAnnotations(service.GetAnnotations(), depl.Spec.Annotations) {
+		if !collection.Compare(service.GetAnnotations(), depl.Spec.Annotations) {
 			log.Info().Msgf("Annotations for Service does not match on %s", service.Name)
 			return nil
 		}
@@ -167,7 +168,7 @@ func ensureServiceAccountAnnotation(t *testing.T, client kubernetes.Interface, d
 	serviceAccounts, err := k8sutil.GetServiceAccountsForParent(client.CoreV1().ServiceAccounts(depl.Namespace), deployment.ArangoDeploymentResourceKind, depl.Name, depl.Namespace)
 	require.NoError(t, err)
 	for _, serviceAccount := range serviceAccounts {
-		if !k8sutil.CompareAnnotations(serviceAccount.GetAnnotations(), depl.Spec.Annotations) {
+		if !collection.Compare(serviceAccount.GetAnnotations(), depl.Spec.Annotations) {
 			log.Info().Msgf("Annotations for Service Account does not match on %s", serviceAccount.Name)
 			return nil
 		}

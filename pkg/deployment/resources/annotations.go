@@ -23,16 +23,16 @@
 package resources
 
 import (
-	"time"
-
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringTypedClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
@@ -53,7 +53,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
@@ -80,7 +80,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
@@ -108,22 +108,19 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspector.Inspector) error {
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations); err != nil {
+		r.context.GetSpec()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
-		if !k8sutil.CompareAnnotations(secret.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for Secret %s", secret.Name)
-			if err := setSecretAnnotations(client, secret, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureAnnotationsMap(secret.Kind, secret, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(secret *core.Secret) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, secret)
@@ -134,33 +131,12 @@ func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus ins
 	return nil
 }
 
-func setSecretAnnotations(client typedCore.SecretInterface, secret *core.Secret, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentSecret, err := client.Get(secret.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentSecret.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentSecret.Annotations), annotations)
-
-		_, err = client.Update(currentSecret)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
-		if !k8sutil.CompareAnnotations(serviceAccount.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for ServiceAccount %s", serviceAccount.Name)
-			if err := setServiceAccountAnnotations(client, serviceAccount, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(serviceAccount *core.ServiceAccount) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceAccount)
@@ -171,33 +147,12 @@ func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, 
 	return nil
 }
 
-func setServiceAccountAnnotations(client typedCore.ServiceAccountInterface, serviceAccount *core.ServiceAccount, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentServiceAccount, err := client.Get(serviceAccount.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentServiceAccount.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentServiceAccount.Annotations), annotations)
-
-		_, err = client.Update(currentServiceAccount)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
-		if !k8sutil.CompareAnnotations(service.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for Service %s", service.Name)
-			if err := setServiceAnnotations(client, service, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureAnnotationsMap(service.Kind, service, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(service *core.Service) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, service)
@@ -208,33 +163,12 @@ func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus i
 	return nil
 }
 
-func setServiceAnnotations(client typedCore.ServiceInterface, service *core.Service, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentService, err := client.Get(service.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentService.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentService.Annotations), annotations)
-
-		_, err = client.Update(currentService)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
-		if !k8sutil.CompareAnnotations(podDisruptionBudget.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for PodDisruptionBudget %s", podDisruptionBudget.Name)
-			if err := setPdbAnnotations(client, podDisruptionBudget, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
@@ -245,33 +179,12 @@ func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cach
 	return nil
 }
 
-func setPdbAnnotations(client policyTyped.PodDisruptionBudgetInterface, podDisruptionBudget *policy.PodDisruptionBudget, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentPodDistributionBudget, err := client.Get(podDisruptionBudget.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentPodDistributionBudget.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentPodDistributionBudget.Annotations), annotations)
-
-		_, err = client.Update(currentPodDistributionBudget)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
-		if !k8sutil.CompareAnnotations(persistentVolumeClaim.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for PVC %s", persistentVolumeClaim.Name)
-			if err := setPvcAnnotations(client, persistentVolumeClaim, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, persistentVolumeClaim)
@@ -282,33 +195,12 @@ func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cach
 	return nil
 }
 
-func setPvcAnnotations(client typedCore.PersistentVolumeClaimInterface, persistentVolumeClaim *core.PersistentVolumeClaim, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentVolumeClaim, err := client.Get(persistentVolumeClaim.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentVolumeClaim.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentVolumeClaim.Annotations), annotations)
-
-		_, err = client.Update(currentVolumeClaim)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonitorInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string) error {
+func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonitorInterface, cachedStatus inspector.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
-		if !k8sutil.CompareAnnotations(serviceMonitor.GetAnnotations(), annotations) {
-			log.Info().Msgf("Replacing annotations for ServiceMonitors %s", serviceMonitor.Name)
-			if err := setServiceMonitorAnnotations(client, serviceMonitor, annotations); err != nil {
-				return err
-			}
-		}
-
+		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceMonitor)
@@ -317,24 +209,6 @@ func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonito
 	}
 
 	return nil
-}
-
-func setServiceMonitorAnnotations(client monitoringTypedClient.ServiceMonitorInterface, serviceMonitor *monitoring.ServiceMonitor, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentServiceMonitor, err := client.Get(serviceMonitor.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentServiceMonitor.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentServiceMonitor.Annotations), annotations)
-
-		_, err = client.Update(currentServiceMonitor)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
 }
 
 func getObjectGroup(obj meta.Object) api.ServerGroup {
@@ -353,16 +227,10 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 
 func ensurePodsAnnotations(client typedCore.PodInterface, cachedStatus inspector.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
-		group := getObjectGroup(pod)
-		mergedAnnotations := k8sutil.MergeAnnotations(annotations, spec.GetServerGroupSpec(group).Annotations)
-
-		if !k8sutil.CompareAnnotations(pod.GetAnnotations(), mergedAnnotations) {
-			log.Info().Msgf("Replacing annotations for Pod %s", pod.Name)
-			if err := setPodAnnotations(client, pod, mergedAnnotations); err != nil {
-				return err
-			}
-		}
-
+		ensureGroupAnnotationsMap(pod.Kind, pod, spec, func(name string, d []byte) error {
+			_, err := client.Patch(name, types.JSONPatchType, d)
+			return err
+		})
 		return nil
 	}, func(pod *core.Pod) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, pod)
@@ -373,27 +241,89 @@ func ensurePodsAnnotations(client typedCore.PodInterface, cachedStatus inspector
 	return nil
 }
 
-func setPodAnnotations(client typedCore.PodInterface, pod *core.Pod, annotations map[string]string) error {
-	return utils.Retry(5, 200*time.Millisecond, func() error {
-		currentPod, err := client.Get(pod.Name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		currentPod.Annotations = k8sutil.MergeAnnotations(k8sutil.GetSecuredAnnotations(currentPod.Annotations), annotations)
-
-		_, err = client.Update(currentPod)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
 func (r *Resources) isChildResource(obj meta.Object) bool {
 	return k8sutil.IsChildResource(deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
 		obj)
+}
+
+func getDefaultMode(annotations map[string]string) api.LabelsMode {
+	if len(annotations) == 0 {
+		return api.LabelsDisabledMode
+	}
+	return api.LabelsReplaceMode
+}
+
+func ensureGroupLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+	patchCmd func(name string, d []byte) error) bool {
+	group := getObjectGroup(obj)
+	groupSpec := spec.GetServerGroupSpec(group)
+	expected := collection.MergeAnnotations(spec.Labels, groupSpec.Labels)
+
+	ignoredList := append(spec.LabelsIgnoreList, groupSpec.LabelsIgnoreList...)
+
+	mode := groupSpec.LabelsMode.Get(spec.LabelsMode.Get(getDefaultMode(expected)))
+
+	return ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignoredList...)
+}
+
+func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+	patchCmd func(name string, d []byte) error) bool {
+	expected := spec.Labels
+	ignored := spec.AnnotationsIgnoreList
+
+	mode := spec.LabelsMode.Get(getDefaultMode(expected))
+
+	return ensureObjectMap(kind, obj, mode, expected, obj.GetLabels(), collection.LabelsPatch, patchCmd, ignored...)
+}
+
+func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+	patchCmd func(name string, d []byte) error) bool {
+	group := getObjectGroup(obj)
+	groupSpec := spec.GetServerGroupSpec(group)
+	expected := collection.MergeAnnotations(spec.Annotations, groupSpec.Annotations)
+
+	ignoredList := append(spec.AnnotationsIgnoreList, groupSpec.AnnotationsIgnoreList...)
+
+	mode := groupSpec.AnnotationsMode.Get(spec.AnnotationsMode.Get(getDefaultMode(expected)))
+
+	return ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
+}
+
+func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
+	patchCmd func(name string, d []byte) error) bool {
+	expected := spec.Annotations
+	ignored := spec.AnnotationsIgnoreList
+
+	mode := spec.AnnotationsMode.Get(getDefaultMode(expected))
+
+	return ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignored...)
+}
+
+func ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,
+	expected, actual map[string]string,
+	patchGetter func(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch,
+	patchCmd func(name string, d []byte) error,
+	ignored ...string) bool {
+	p := patchGetter(mode, expected, actual, ignored...)
+
+	if len(p) == 0 {
+		return false
+	}
+
+	log.Info().Msgf("Replacing annotations for %s %s", kind, obj.GetName())
+
+	d, err := p.Marshal()
+	if err != nil {
+		log.Warn().Err(err).Msgf("Unable to marshal kubernetes patch instruction")
+		return false
+	}
+
+	if err := patchCmd(obj.GetName(), d); err != nil {
+		log.Warn().Err(err).Msgf("Unable to patch Pod")
+		return false
+	}
+
+	return true
 }

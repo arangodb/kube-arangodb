@@ -64,10 +64,18 @@ type DeploymentSpec struct {
 
 	NetworkAttachedVolumes *bool `json:"networkAttachedVolumes,omitempty"`
 
-	// Annotations specified the annotations added to all resources
+	// Annotations specified the annotations added to Pods in this group.
 	Annotations map[string]string `json:"annotations,omitempty"`
-	// Labels specified the labels added to all resources
+	// AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
+	AnnotationsIgnoreList []string `json:"annotationsIgnoreList,omitempty"`
+	// AnnotationsMode Define annotations mode which should be use while overriding annotations
+	AnnotationsMode *LabelsMode `json:"annotationsMode,omitempty"`
+	// Labels specified the labels added to Pods in this group.
 	Labels map[string]string `json:"labels,omitempty"`
+	// LabelsIgnoreList list regexp or plain definitions which labels should be ignored
+	LabelsIgnoreList []string `json:"labelsIgnoreList,omitempty"`
+	// LabelsMode Define labels mode which should be use while overriding labels
+	LabelsMode *LabelsMode `json:"labelsMode,omitempty"`
 
 	RestoreFrom *string `json:"restoreFrom,omitempty"`
 

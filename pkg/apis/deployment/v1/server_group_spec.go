@@ -58,8 +58,16 @@ type ServerGroupSpec struct {
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
+	AnnotationsIgnoreList []string `json:"annotationsIgnoreList,omitempty"`
+	// AnnotationsMode Define annotations mode which should be use while overriding annotations
+	AnnotationsMode *LabelsMode `json:"annotationsMode,omitempty"`
 	// Labels specified the labels added to Pods in this group.
 	Labels map[string]string `json:"labels,omitempty"`
+	// LabelsIgnoreList list regexp or plain definitions which labels should be ignored
+	LabelsIgnoreList []string `json:"labelsIgnoreList,omitempty"`
+	// LabelsMode Define labels mode which should be use while overriding labels
+	LabelsMode *LabelsMode `json:"labelsMode,omitempty"`
 	// Envs allow to specify additional envs in this group.
 	Envs ServerGroupEnvVars `json:"envs,omitempty"`
 	// ServiceAccountName specifies the name of the service account used for Pods in this group.
