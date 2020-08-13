@@ -1,5 +1,5 @@
 {{ if .Values.rbac.enabled -}}
-{{ if neq .Values.operator.scope "namespaced" -}}
+{{ if not (eq .Values.operator.scope "namespaced") -}}
 {{ if .Values.operator.features.deployment -}}
 
 apiVersion: rbac.authorization.k8s.io/v1
