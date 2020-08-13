@@ -17,7 +17,7 @@ rules:
       verbs: ["*"]
     - apiGroups: ["apiextensions.k8s.io"]
       resources: ["customresourcedefinitions"]
-      verbs: ["get"]
+      verbs: ["get", "list", "watch"]
     - apiGroups: [""]
       resources: ["namespaces", "nodes"]
       verbs: ["get", "list"]
@@ -27,5 +27,6 @@ rules:
     - apiGroups: ["storage.arangodb.com"]
       resources: ["arangolocalstorages"]
       verbs: ["*"]
+
 {{- end }}
 {{- end }}

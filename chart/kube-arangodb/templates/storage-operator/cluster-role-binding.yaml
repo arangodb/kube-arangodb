@@ -20,6 +20,5 @@ subjects:
       name: {{ template "kube-arangodb.operatorName" . }}
       namespace: {{ .Release.Namespace }}
 
-
 {{- end }}
 {{- end }}

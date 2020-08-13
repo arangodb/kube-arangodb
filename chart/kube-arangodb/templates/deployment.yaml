@@ -1,7 +1,12 @@
 {{- if eq .Values.operator.scope "legacy" -}}
 # Scope "legacy" selected
-{{ else -}}
-{{ fail (printf "Operator Scope %s is not supported!" .Values.operator.scope) }}
+{{ elif eq .Values.operator.scope "namespaced" -}}
+# Scope "namespaced" selected
+{{- if .Values.operator.features.storage -}}
+{{- fail (printf "Storage Operator not supported in %s scope!" .Values.operator.scope) -}}
+{{- end -}}
+{{- else -}}
+{{- fail (printf "Operator Scope %s is not supported!" .Values.operator.scope) -}}
 {{- end -}}
 apiVersion: apps/v1
 kind: Deployment

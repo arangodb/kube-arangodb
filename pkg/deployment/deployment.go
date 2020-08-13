@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -63,6 +65,7 @@ type Config struct {
 	OperatorUUIDInitImage string
 	MetricsExporterImage  string
 	ArangoImage           string
+	Scope                 scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment

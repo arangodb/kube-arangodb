@@ -1,4 +1,5 @@
 {{ if .Values.rbac.enabled -}}
+{{ if neq .Values.operator.scope "namespaced" -}}
 {{ if .Values.operator.features.backup -}}
 
 apiVersion: rbac.authorization.k8s.io/v1
@@ -20,6 +21,6 @@ subjects:
       name: {{ template "kube-arangodb.operatorName" . }}
       namespace: {{ .Release.Namespace }}
 
-
+{{- end }}
 {{- end }}
 {{- end }}

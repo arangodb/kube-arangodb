@@ -44,6 +44,11 @@ const (
 
 // FindOtherOperators looks up references to other operators in the same Kubernetes cluster.
 func (o *Operator) FindOtherOperators() []server.OperatorReference {
+	if o.Scope.IsNamespaced() {
+		// In namespaced scope nothing to do
+		return []server.OperatorReference{}
+	}
+
 	log := o.log
 	var result []server.OperatorReference
 	namespaces, err := o.Dependencies.KubeCli.CoreV1().Namespaces().List(metav1.ListOptions{})
@@ -94,6 +99,9 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		return nil
 	}
 	nodeFetcher := func() (v1.NodeList, error) {
+		if o.Scope.IsNamespaced() {
+			return v1.NodeList{}, nil
+		}
 		result, err := o.Dependencies.KubeCli.CoreV1().Nodes().List(metav1.ListOptions{})
 		if err != nil {
 			return v1.NodeList{}, maskAny(err)

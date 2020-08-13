@@ -84,8 +84,6 @@ type ActionContext interface {
 	// GetPvc returns PVC info about PVC with given name in the namespace
 	// of the deployment.
 	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
-	// GetPv returns PV info about PV with given name.
-	GetPv(pvName string) (*v1.PersistentVolume, error)
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
 	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
@@ -185,10 +183,6 @@ func (ac *actionContext) UpdateClusterCondition(conditionType api.ConditionType,
 	return ac.context.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
 		return s.Conditions.Update(conditionType, status, reason, message)
 	})
-}
-
-func (ac *actionContext) GetPv(pvName string) (*v1.PersistentVolume, error) {
-	return ac.context.GetPv(pvName)
 }
 
 func (ac *actionContext) GetAPIObject() k8sutil.APIObject {

@@ -75,6 +75,7 @@ Default: `legacy`
 
 Supported modes:
 - `legacy` - mode with limited cluster scope access
+- `namespaced` - mode with namespace access only
 
 ### `operator.service.type`
 
