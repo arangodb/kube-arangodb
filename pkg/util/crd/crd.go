@@ -33,6 +33,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 )
 
+// WaitReady waits for a check to be ready.
+func WaitReady(check func() error) error {
+	if err := retry.Retry(check, time.Second*30); err != nil {
+		return maskAny(err)
+	}
+	return nil
+}
+
 // WaitCRDReady waits for a custom resource definition with given name to be ready.
 func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error {
 	op := func() error {
@@ -54,8 +62,5 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 		}
 		return maskAny(fmt.Errorf("Retry needed"))
 	}
-	if err := retry.Retry(op, time.Second*30); err != nil {
-		return maskAny(err)
-	}
-	return nil
+	return WaitReady(op)
 }

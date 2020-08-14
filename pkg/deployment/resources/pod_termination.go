@@ -54,9 +54,9 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 		return nil
 	}
 
-	// Check node the pod is scheduled on
+	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
-	if p.Spec.NodeName != "" {
+	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
 		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")
@@ -165,7 +165,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
-	if p.Spec.NodeName != "" {
+	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
 		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")

@@ -210,6 +210,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 		MetricsExporterImage:  o.MetricsExporterImage,
 		ArangoImage:           o.ArangoImage,
 		AllowChaos:            o.Config.AllowChaos,
+		Scope:                 o.Scope,
 	}
 	deps := deployment.Dependencies{
 		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().

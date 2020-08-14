@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -63,6 +65,7 @@ type Config struct {
 	OperatorUUIDInitImage string
 	MetricsExporterImage  string
 	ArangoImage           string
+	Scope                 scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -466,7 +469,12 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 // once at creation time of the deployment and then always if the CRD
 // informer is triggered.
 func (d *Deployment) lookForServiceMonitorCRD() {
-	_, err := d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+	var err error
+	if d.GetScope().IsNamespaced() {
+		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(metav1.ListOptions{})
+	} else {
+		_, err = d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+	}
 	log := d.deps.Log
 	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
 	if err == nil {

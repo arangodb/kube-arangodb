@@ -83,8 +83,6 @@ type Context interface {
 	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
 	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
-	// GetPv returns PV info about PV with given name.
-	GetPv(pvName string) (*v1.PersistentVolume, error)
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)

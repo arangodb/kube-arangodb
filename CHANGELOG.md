@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add Operator Namespaced mode (Alpha)
 
 ## [1.0.5](https://github.com/arangodb/kube-arangodb/tree/1.0.5) (2020-08-05)
 - Add Labels and Annotations to ServiceMonitor

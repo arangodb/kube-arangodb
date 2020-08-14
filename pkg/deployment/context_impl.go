@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -82,6 +84,10 @@ func (d *Deployment) GetKubeCli() kubernetes.Interface {
 
 func (d *Deployment) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
 	return d.deps.KubeMonitoringCli
+}
+
+func (d *Deployment) GetScope() scope.Scope {
+	return d.config.Scope
 }
 
 // GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
@@ -423,16 +429,6 @@ func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
 	}
 
 	return maskAny(err)
-}
-
-// GetPv returns PV info about PV with given name.
-func (d *Deployment) GetPv(pvName string) (*v1.PersistentVolume, error) {
-	pv, err := d.GetKubeCli().CoreV1().PersistentVolumes().Get(pvName, meta.GetOptions{})
-	if err == nil {
-		return pv, nil
-	}
-
-	return nil, maskAny(err)
 }
 
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.

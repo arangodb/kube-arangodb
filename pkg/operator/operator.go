@@ -27,6 +27,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
@@ -63,27 +65,6 @@ const (
 	initRetryWaitTime = 30 * time.Second
 )
 
-func AsScope(s string) (Scope, bool) {
-	switch s {
-	case LegacyScope.String():
-		return LegacyScope, true
-	}
-
-	return "", false
-}
-
-type Scope string
-
-func (s Scope) String() string {
-	return string(s)
-}
-
-const (
-	LegacyScope Scope = "legacy"
-
-	DefaultScope = LegacyScope
-)
-
 type Event struct {
 	Type                  kwatch.EventType
 	Deployment            *deplapi.ArangoDeployment
@@ -116,7 +97,7 @@ type Config struct {
 	EnableBackup                bool
 	AllowChaos                  bool
 	SingleMode                  bool
-	Scope                       Scope
+	Scope                       scope.Scope
 }
 
 type Dependencies struct {

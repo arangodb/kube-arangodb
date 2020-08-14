@@ -129,17 +129,8 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		return false, true, err
 	}
 
-	pv, err := a.actionCtx.GetPv(pvc.Spec.VolumeName)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return true, false, nil
-		}
-
-		return false, true, err
-	}
-
 	if requestedSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-		if volumeSize, ok := pv.Spec.Capacity[core.ResourceStorage]; ok {
+		if volumeSize, ok := pvc.Status.Capacity[core.ResourceStorage]; ok {
 			cmp := volumeSize.Cmp(requestedSize)
 			if cmp >= 0 {
 				return true, false, nil
