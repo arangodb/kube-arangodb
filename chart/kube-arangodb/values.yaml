@@ -41,3 +41,6 @@ operator:
     arango: arangodb/arangodb:latest
 rbac:
   enabled: true
+
+serviceAccount:
+  create: true

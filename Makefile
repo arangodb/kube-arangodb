@@ -44,11 +44,9 @@ ifeq ($(HELM),)
 endif
 
 HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
-                           -d "$(ROOTDIR)/bin/charts" \
-                           --save=false
+                           -d "$(ROOTDIR)/bin/charts"
 
-HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
-         	       --name "$(NAME)" \
+HELM_CMD = $(HELM) template "$(NAME)" "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --set "operator.image=$(OPERATORIMAGE)" \
          	       --set "operator.imagePullPolicy=Always" \
          	       --set "operator.resources=null" \
@@ -72,14 +70,12 @@ ifndef MANIFESTSUFFIX
 	MANIFESTSUFFIX := -dev
 endif
 endif
-MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
@@ -315,8 +311,6 @@ endef
 .PHONY: manifests
 manifests:
 
-$(eval $(call manifest-generator, crd, kube-arangodb-crd))
-
 $(eval $(call manifest-generator, test, kube-arangodb-test))
 
 $(eval $(call manifest-generator, deployment, kube-arangodb, \
@@ -348,13 +342,6 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=true" \
        --set "operator.features.backup=true"))
-
-.PHONY: chart-crd
-chart-crd: export CHART_NAME := kube-arangodb-crd
-chart-crd: helm
-	@mkdir -p "$(ROOTDIR)/bin/charts"
-	@$(HELM_PACKAGE_CMD)
-manifests: chart-crd
 
 .PHONY: chart-operator
 chart-operator: export CHART_NAME := kube-arangodb
@@ -403,7 +390,6 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f $(MANIFESTPATHCRD)
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
@@ -423,7 +409,6 @@ ifneq ($(DEPLOYMENTNAMESPACE), default)
 	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
 	kubectl create namespace $(DEPLOYMENTNAMESPACE)
 endif
-	kubectl apply -f $(MANIFESTPATHCRD)
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
@@ -532,11 +517,9 @@ delete-operator:
 	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHBACKUP) --ignore-not-found
 	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
 
 .PHONY: redeploy-operator
 redeploy-operator: delete-operator manifests
-	kubectl apply -f $(MANIFESTPATHCRD)
 	kubectl apply -f $(MANIFESTPATHSTORAGE)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
 	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)

@@ -46,7 +46,11 @@ spec:
 {{ toYaml .Values.operator.annotations | indent 16 }}
 {{- end }}
         spec:
+{{- if .Values.serviceAccount.create }}
             serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
+{{- else if .Values.serviceAccount.name }}
+            serviceAccountName: {{ .Values.serviceAccount.name }}
+{{- end }}
             affinity:
               nodeAffinity:
                 requiredDuringSchedulingIgnoredDuringExecution:
