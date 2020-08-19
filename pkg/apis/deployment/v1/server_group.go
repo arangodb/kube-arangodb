@@ -53,8 +53,8 @@ const (
 var (
 	// AllServerGroups contains a constant list of all known server groups
 	AllServerGroups = []ServerGroup{
-		ServerGroupSingle,
 		ServerGroupAgents,
+		ServerGroupSingle,
 		ServerGroupDBServers,
 		ServerGroupCoordinators,
 		ServerGroupSyncMasters,
