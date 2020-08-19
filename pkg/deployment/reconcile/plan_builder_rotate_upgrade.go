@@ -40,8 +40,8 @@ import (
 var (
 	// rotationByAnnotationOrder - Change order of execution - Coordinators and Agents should be executed before DBServer to save time
 	rotationByAnnotationOrder = []api.ServerGroup{
-		api.ServerGroupSingle,
 		api.ServerGroupAgents,
+		api.ServerGroupSingle,
 		api.ServerGroupCoordinators,
 		api.ServerGroupDBServers,
 		api.ServerGroupSyncMasters,
