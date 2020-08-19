@@ -221,16 +221,6 @@ func githubCreateRelease(version string) {
 			log.Fatalf("Failed to upload asset '%s': %v\n", name, err)
 		}
 	}
-	// Finalize release
-	args = []string{
-		"edit",
-		"--user", ghUser,
-		"--repo", ghRepo,
-		"--tag", version,
-	}
-	if err := run(ghRelease, args, nil); err != nil {
-		log.Fatalf("Failed to finalize github release: %v\n", err)
-	}
 }
 
 func run(cmd string, args []string, envVars map[string]string) error {
