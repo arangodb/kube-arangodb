@@ -84,6 +84,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 					c,
 				},
 				NodeSelector: apiObject.Spec.NodeSelector,
+				Tolerations:  apiObject.Spec.Tolerations,
 			},
 		},
 	}

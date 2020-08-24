@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 )
 
 // LocalStorageSpec contains the specification part of
@@ -34,6 +35,7 @@ type LocalStorageSpec struct {
 	StorageClass StorageClassSpec  `json:"storageClass"`
 	LocalPath    []string          `json:"localPath,omitempty"`
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	Tolerations  []v1.Toleration   `json:"tolerations,omitempty"`
 }
 
 // Validate the given spec, returning an error on validation
