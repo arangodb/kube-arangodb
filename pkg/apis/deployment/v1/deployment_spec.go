@@ -95,6 +95,8 @@ type DeploymentSpec struct {
 
 	ID *ServerIDGroupSpec `json:"id,omitempty"`
 
+	Database *DatabaseSpec `json:"database,omitempty"`
+
 	Single       ServerGroupSpec `json:"single"`
 	Agents       ServerGroupSpec `json:"agents"`
 	DBServers    ServerGroupSpec `json:"dbservers"`
@@ -294,6 +296,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 
 	if s.AllowUnsafeUpgrade == nil {
 		s.AllowUnsafeUpgrade = util.NewBoolOrNil(source.AllowUnsafeUpgrade)
+	}
+	if s.Database == nil {
+		s.Database = source.Database.DeepCopy()
 	}
 
 	s.License.SetDefaultsFrom(source.License)

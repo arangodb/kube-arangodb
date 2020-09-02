@@ -26,37 +26,47 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/rs/zerolog"
 )
 
 func init() {
-	registerAction(api.ActionTypeEnableClusterScaling, newEnableScalingCluster)
+	registerAction(api.ActionTypeEnableMaintenance, newEnableMaintenanceAction)
 }
 
-// newEnableScalingCluster creates the new action with enabling scaling DBservers and coordinators.
-func newEnableScalingCluster(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &actionEnableScalingCluster{}
+func newEnableMaintenanceAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionEnableMaintenance{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, 0, util.NewString(""))
+	a.actionImpl = newActionImpl(log, action, actionCtx, addMemberTimeout, &a.newMemberID)
 
 	return a
 }
 
-// actionEnableScalingCluster implements enabling scaling DBservers and coordinators.
-type actionEnableScalingCluster struct {
+type actionEnableMaintenance struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
-	// actionEmptyCheckProgress implement check progress with empty implementation
 	actionEmptyCheckProgress
+
+	newMemberID string
 }
 
-// Start enables scaling DBservers and coordinators
-func (a *actionEnableScalingCluster) Start(ctx context.Context) (bool, error) {
-	err := a.actionCtx.EnableScalingCluster()
-	if err != nil {
-		return false, err
+func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {
+	switch a.actionCtx.GetMode() {
+	case api.DeploymentModeSingle:
+		return true, nil
 	}
+
+	client, err := a.actionCtx.GetDatabaseClient(ctx)
+	if err != nil {
+		a.log.Error().Err(err).Msgf("Unable to get agency client")
+		return true, nil
+	}
+
+	if err := agency.SetMaintenanceMode(ctx, client, true); err != nil {
+		a.log.Error().Err(err).Msgf("Unable to set maintenance")
+		return true, nil
+	}
+
 	return true, nil
 }

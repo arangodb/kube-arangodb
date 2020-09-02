@@ -26,4 +26,6 @@ const (
 	ArangoKey          = "arango"
 	PlanKey            = "Plan"
 	PlanCollectionsKey = "Collections"
+	PlanSupervision    = "Supervision"
+	PlanMaintenance    = "Maintenance2"
 )

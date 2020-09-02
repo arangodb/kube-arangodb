@@ -20,20 +20,25 @@
 // Author Adam Janikowski
 //
 
-package features
+package reconcile
 
-func init() {
-	registerFeature(encryptionRotation)
-}
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+)
 
-var encryptionRotation = &feature{
-	name:               "encryption-rotation",
-	description:        "Encryption Key rotation in runtime",
-	version:            "3.7.0",
-	enterpriseRequired: true,
-	enabledByDefault:   false,
-}
+func withMaintenance(plan ...api.Action) api.Plan {
+	if !features.Maintenance().Enabled() {
+		return plan
+	}
 
-func EncryptionRotation() Feature {
-	return encryptionRotation
+	var newPlan api.Plan
+
+	newPlan = append(newPlan, api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
+
+	newPlan = append(newPlan, plan...)
+
+	newPlan = append(newPlan, api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "", "Disable maintenance after actions"))
+
+	return newPlan
 }

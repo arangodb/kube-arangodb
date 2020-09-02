@@ -17,6 +17,8 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+//
 
 package features
 
@@ -70,7 +72,7 @@ func Init(cmd *cobra.Command) {
 			if v != "" && feature.EnterpriseRequired() {
 				z = fmt.Sprintf("%s - Required version %s and Enterprise Edition", feature.Description(), v)
 			} else if v != "" {
-				z = fmt.Sprintf("%s. Required version %s", feature.Description(), v)
+				z = fmt.Sprintf("%s - Required version %s", feature.Description(), v)
 			} else if feature.EnterpriseRequired() {
 				z = fmt.Sprintf("%s - Required Enterprise Edition", feature.Description())
 			} else {

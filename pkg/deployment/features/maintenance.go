@@ -23,17 +23,17 @@
 package features
 
 func init() {
-	registerFeature(encryptionRotation)
+	registerFeature(maintenance)
 }
 
-var encryptionRotation = &feature{
-	name:               "encryption-rotation",
-	description:        "Encryption Key rotation in runtime",
-	version:            "3.7.0",
-	enterpriseRequired: true,
+var maintenance = &feature{
+	name:               "maintenance",
+	description:        "Database maintenance mode management",
+	version:            "3.5.0",
+	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
 
-func EncryptionRotation() Feature {
-	return encryptionRotation
+func Maintenance() Feature {
+	return maintenance
 }

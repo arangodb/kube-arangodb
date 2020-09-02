@@ -20,20 +20,16 @@
 // Author Adam Janikowski
 //
 
-package features
+package v1
 
-func init() {
-	registerFeature(encryptionRotation)
+type DatabaseSpec struct {
+	Maintenance *bool `json:"maintenance,omitempty"`
 }
 
-var encryptionRotation = &feature{
-	name:               "encryption-rotation",
-	description:        "Encryption Key rotation in runtime",
-	version:            "3.7.0",
-	enterpriseRequired: true,
-	enabledByDefault:   false,
-}
+func (m *DatabaseSpec) GetMaintenance() bool {
+	if m == nil || m.Maintenance == nil {
+		return false
+	}
 
-func EncryptionRotation() Feature {
-	return encryptionRotation
+	return *m.Maintenance
 }
