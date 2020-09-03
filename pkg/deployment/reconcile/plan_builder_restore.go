@@ -75,12 +75,23 @@ func createRestorePlan(ctx context.Context,
 			}
 		}
 
-		return api.Plan{
-			api.NewAction(api.ActionTypeBackupRestore, api.ServerGroupUnknown, ""),
-		}
+		return restorePlan(spec.Mode.Get())
 	}
 
 	return nil
+}
+
+func restorePlan(mode api.DeploymentMode) api.Plan {
+	p := api.Plan{
+		api.NewAction(api.ActionTypeBackupRestore, api.ServerGroupUnknown, ""),
+	}
+
+	switch mode {
+	case api.DeploymentModeActiveFailover:
+		p = withMaintenance(p...)
+	}
+
+	return p
 }
 
 func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) (bool, api.Plan) {

@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/go-driver/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -69,6 +71,8 @@ type PlanBuilderContext interface {
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name
 	GetName() string
+	// GetAgency returns a connection to the entire agency.
+	GetAgency(ctx context.Context) (agency.Agency, error)
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

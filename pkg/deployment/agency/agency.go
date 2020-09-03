@@ -22,41 +22,25 @@
 
 package agency
 
-type ArangoPlanDatabases map[string]ArangoPlanCollections
+import (
+	"context"
 
-func (a ArangoPlanDatabases) IsDBServerInDatabases(name string) bool {
-	for _, collections := range a {
-		if collections.IsDBServerInCollections(name) {
-			return true
+	"github.com/arangodb/go-driver/agency"
+	"github.com/pkg/errors"
+)
+
+type Fetcher func(ctx context.Context, i interface{}, keyParts ...string) error
+
+func NewFetcher(a agency.Agency) Fetcher {
+	return func(ctx context.Context, i interface{}, keyParts ...string) error {
+		if err := a.ReadKey(ctx, []string{
+			ArangoKey,
+			PlanKey,
+			PlanCollectionsKey,
+		}, i); err != nil {
+			return errors.WithStack(err)
 		}
+
+		return nil
 	}
-	return false
 }
-
-type ArangoPlanCollections map[string]ArangoPlanCollection
-
-func (a ArangoPlanCollections) IsDBServerInCollections(name string) bool {
-	for _, collection := range a {
-		if collection.IsDBServerInShards(name) {
-			return true
-		}
-	}
-	return false
-}
-
-type ArangoPlanCollection struct {
-	Shards ArangoPlanShard `json:"shards"`
-}
-
-func (a ArangoPlanCollection) IsDBServerInShards(name string) bool {
-	for _, dbservers := range a.Shards {
-		for _, dbserver := range dbservers {
-			if dbserver == name {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-type ArangoPlanShard map[string][]string

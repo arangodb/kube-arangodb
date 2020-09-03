@@ -97,13 +97,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 		agencyCtx, agencyCancel := goContext.WithTimeout(ctx, time.Minute)
 		defer agencyCancel()
 
-		ret := &agency.ArangoPlanDatabases{}
-
-		if err := context.GetAgencyData(agencyCtx, cache, agency.ArangoKey, agency.PlanKey, agency.PlanCollectionsKey); err != nil {
-			return nil, err
-		}
-
-		return ret, nil
+		return agency.GetAgencyCollections(agencyCtx, context.GetAgencyData)
 	} else {
 		return nil, fmt.Errorf("not able to read from agency when agency is down")
 	}
@@ -212,6 +206,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	if plan.IsEmpty() {
 		plan = pb.Apply(createJWTStatusUpdate)
+	}
+
+	if plan.IsEmpty() {
+		plan = pb.Apply(createMaintenanceManagementPlan)
 	}
 
 	// Check for scale up/down

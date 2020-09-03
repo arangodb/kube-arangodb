@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add Operator Maintenance Management feature
 
 ## [1.0.6](https://github.com/arangodb/kube-arangodb/tree/1.0.6) (2020-08-19)
 - Add Operator Namespaced mode (Alpha)

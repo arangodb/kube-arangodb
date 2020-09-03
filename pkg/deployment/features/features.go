@@ -17,6 +17,8 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+//
 
 package features
 

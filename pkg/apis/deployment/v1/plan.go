@@ -119,6 +119,10 @@ const (
 	ActionTypeJWTPropagated ActionType = "JWTPropagated"
 	// ActionTypeClusterMemberCleanup removes member from cluster
 	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
+	// ActionTypeEnableMaintenance enables maintenance on cluster.
+	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
+	// ActionTypeEnableMaintenance disables maintenance on cluster.
+	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 )
 
 const (
