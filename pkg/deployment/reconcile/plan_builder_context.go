@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	"github.com/arangodb/go-driver/agency"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -65,6 +67,8 @@ type PlanBuilderContext interface {
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetServerClient returns a cached client for a specific server.
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	// GetAuthentication return authentication for members
+	GetAuthentication() conn.Auth
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource

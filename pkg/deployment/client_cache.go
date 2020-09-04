@@ -107,6 +107,10 @@ func (cc *clientCache) Get(ctx context.Context, group api.ServerGroup, id string
 	return cc.get(ctx, group, id)
 }
 
+func (cc clientCache) GetAuth() conn.Auth {
+	return cc.factory.GetAuth()
+}
+
 func (cc *clientCache) getDatabaseClient() (driver.Client, error) {
 	if c := cc.databaseClient; c != nil {
 		return c, nil

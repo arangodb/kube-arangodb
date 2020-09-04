@@ -32,6 +32,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/go-driver"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -399,7 +401,7 @@ func createKeyfileRenewalPlanMode(
 	return mode
 }
 
-func checkServerValidCertRequest(ctx context.Context, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
+func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
 	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSName(apiObject, group.AsRole(), member.ID), k8sutil.ArangoPort)
 
 	tlsConfig := &tls.Config{
@@ -408,7 +410,23 @@ func checkServerValidCertRequest(ctx context.Context, apiObject k8sutil.APIObjec
 	transport := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: transport, Timeout: time.Second}
 
-	resp, err := client.Get(endpoint)
+	auth, err := context.GetAuthentication()()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if auth != nil && auth.Type() == driver.AuthenticationTypeRaw {
+		if h := auth.Get("value"); h != "" {
+			req.Header.Add("Authorization", h)
+		}
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +455,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		return false, false
 	}
 
-	res, err := checkServerValidCertRequest(ctx, apiObject, group, member, ca)
+	res, err := checkServerValidCertRequest(ctx, context, apiObject, group, member, ca)
 	if err != nil {
 		switch v := err.(type) {
 		case *url.Error:

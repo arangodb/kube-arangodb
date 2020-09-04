@@ -37,6 +37,8 @@ type Factory interface {
 
 	Client(hosts ...string) (driver.Client, error)
 	Agency(hosts ...string) (agency.Agency, error)
+
+	GetAuth() Auth
 }
 
 func NewFactory(auth Auth, config Config) Factory {
@@ -49,6 +51,10 @@ func NewFactory(auth Auth, config Config) Factory {
 type factory struct {
 	auth   Auth
 	config Config
+}
+
+func (f factory) GetAuth() Auth {
+	return f.auth
 }
 
 func (f factory) AgencyConnection(hosts ...string) (driver.Connection, error) {
