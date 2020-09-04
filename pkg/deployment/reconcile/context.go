@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -116,4 +118,6 @@ type Context interface {
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name
 	GetName() string
+	// GetAuthentication return authentication for members
+	GetAuthentication() conn.Auth
 }

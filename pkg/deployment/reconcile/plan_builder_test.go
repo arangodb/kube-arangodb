@@ -28,6 +28,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/pkg/errors"
@@ -62,6 +64,12 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetAuthentication() conn.Auth {
+	return func() (authentication driver.Authentication, err error) {
+		return nil, nil
+	}
 }
 
 func (c *testContext) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {

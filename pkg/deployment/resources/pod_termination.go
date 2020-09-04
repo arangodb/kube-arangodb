@@ -218,6 +218,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 				}
 			}
 		}
+		return maskAny(err)
 	}
 	cleanedOut, err := cluster.IsCleanedOut(ctx, memberStatus.ID)
 	if err != nil {

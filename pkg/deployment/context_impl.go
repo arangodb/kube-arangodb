@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -197,6 +199,11 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 		return nil, maskAny(err)
 	}
 	return c, nil
+}
+
+// GetAuthentication return authentication for members
+func (d *Deployment) GetAuthentication() conn.Auth {
+	return d.clientCache.factory.GetAuth()
 }
 
 // GetAgencyClients returns a client connection for every agency member.
