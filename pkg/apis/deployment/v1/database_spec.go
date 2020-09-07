@@ -23,6 +23,7 @@
 package v1
 
 type DatabaseSpec struct {
+	// Maintenance manage maintenance mode on Cluster side. Requires maintenance feature to be enabled
 	Maintenance *bool `json:"maintenance,omitempty"`
 }
 
