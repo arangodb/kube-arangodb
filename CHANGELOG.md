@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Always use JWT Authorized requests in internal communication
 - Add Operator Maintenance Management feature
+- Add support for ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES ArangoDB Environment Variable
 
 ## [1.0.6](https://github.com/arangodb/kube-arangodb/tree/1.0.6) (2020-08-19)
 - Add Operator Namespaced mode (Alpha)

@@ -1191,6 +1191,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.OverrideDetectedNumberOfCores != nil {
+		in, out := &in.OverrideDetectedNumberOfCores, &out.OverrideDetectedNumberOfCores
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Tolerations != nil {
 		in, out := &in.Tolerations, &out.Tolerations
 		*out = make([]corev1.Toleration, len(*in))
