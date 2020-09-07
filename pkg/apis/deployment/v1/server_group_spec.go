@@ -54,6 +54,8 @@ type ServerGroupSpec struct {
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
 	// OverrideDetectedTotalMemory determines if memory should be overrided based on values in resources.
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
+	// OverrideDetectedNumberOfCores determines if number of cores should be overrided based on values in resources.
+	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// Annotations specified the annotations added to Pods in this group.
@@ -366,6 +368,24 @@ func (s ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
 		return *s.Probes
 	}
 	return ServerGroupProbesSpec{}
+}
+
+// GetOverrideDetectedTotalMemory returns OverrideDetectedTotalMemory with default value (false)
+func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
+	if s.OverrideDetectedTotalMemory == nil {
+		return false
+	}
+
+	return *s.OverrideDetectedTotalMemory
+}
+
+// OverrideDetectedNumberOfCores returns OverrideDetectedNumberOfCores with default value (false)
+func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
+	if s.OverrideDetectedNumberOfCores == nil {
+		return false
+	}
+
+	return *s.OverrideDetectedNumberOfCores
 }
 
 // Validate the given group spec

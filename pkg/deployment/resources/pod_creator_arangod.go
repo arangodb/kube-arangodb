@@ -42,8 +42,9 @@ import (
 )
 
 const (
-	ArangoDExecutor                        string = "/usr/sbin/arangod"
-	ArangoDBOverrideDetectedTotalMemoryEnv        = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
+	ArangoDExecutor                          string = "/usr/sbin/arangod"
+	ArangoDBOverrideDetectedTotalMemoryEnv          = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
+	ArangoDBOverrideDetectedNumberOfCoresEnv        = "ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -154,11 +155,20 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 		envs.Add(true, k8sutil.GetLifecycleEnv()...)
 	}
 
-	if util.BoolOrDefault(a.groupSpec.OverrideDetectedTotalMemory, false) {
-		if a.groupSpec.Resources.Limits != nil {
+	if a.groupSpec.Resources.Limits != nil {
+		if a.groupSpec.GetOverrideDetectedTotalMemory() {
 			if limits, ok := a.groupSpec.Resources.Limits[core.ResourceMemory]; ok {
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedTotalMemoryEnv,
+					Value: fmt.Sprintf("%d", limits.Value()),
+				})
+			}
+		}
+
+		if a.groupSpec.GetOverrideDetectedNumberOfCores() {
+			if limits, ok := a.groupSpec.Resources.Limits[core.ResourceCPU]; ok {
+				envs.Add(true, core.EnvVar{
+					Name:  ArangoDBOverrideDetectedNumberOfCoresEnv,
 					Value: fmt.Sprintf("%d", limits.Value()),
 				})
 			}

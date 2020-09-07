@@ -95,6 +95,7 @@ type DeploymentSpec struct {
 
 	ID *ServerIDGroupSpec `json:"id,omitempty"`
 
+	// Database holds information about database state, like maintenance mode
 	Database *DatabaseSpec `json:"database,omitempty"`
 
 	Single       ServerGroupSpec `json:"single"`
