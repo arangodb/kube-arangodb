@@ -461,6 +461,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		case *url.Error:
 			switch v.Err.(type) {
 			case x509.UnknownAuthorityError, x509.CertificateInvalidError:
+				log.Warn().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msg("Validation of server cert failed")
 				return true, true
 			default:
 				log.Warn().Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Msg("Validation of server cert failed")
@@ -477,7 +478,12 @@ func keyfileRenewalRequired(ctx context.Context,
 			continue
 		}
 
+		if ca.Contains(cert) {
+			continue
+		}
+
 		if time.Now().Add(CertificateRenewalMargin).After(cert.NotAfter) {
+			log.Warn().Msg("Renewal margin exceeded")
 			return true, true
 		}
 	}
@@ -512,6 +518,7 @@ func keyfileRenewalRequired(ctx context.Context,
 		keyfileSha := util.SHA256(keyfile)
 
 		if tls.Result.KeyFile.GetSHA().Checksum() != keyfileSha {
+			log.Warn().Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Msg("Unable to get tls details")
 			return true, false
 		}
 	}
