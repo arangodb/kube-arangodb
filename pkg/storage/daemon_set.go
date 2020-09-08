@@ -26,9 +26,11 @@ import (
 	"fmt"
 	"strconv"
 
-	v1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
+	apps "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
@@ -45,7 +47,7 @@ const (
 func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error {
 	log := ls.deps.Log
 	ns := ls.config.Namespace
-	c := corev1.Container{
+	c := core.Container{
 		Name:            "provisioner",
 		Image:           ls.image,
 		ImagePullPolicy: ls.imagePullPolicy,
@@ -54,60 +56,68 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 			"provisioner",
 			"--port=" + strconv.Itoa(provisioner.DefaultPort),
 		},
-		Ports: []corev1.ContainerPort{
-			corev1.ContainerPort{
+		Ports: []core.ContainerPort{
+			core.ContainerPort{
 				ContainerPort: int32(provisioner.DefaultPort),
 			},
 		},
-		Env: []corev1.EnvVar{
-			corev1.EnvVar{
+		Env: []core.EnvVar{
+			core.EnvVar{
 				Name: constants.EnvOperatorNodeName,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
+				ValueFrom: &core.EnvVarSource{
+					FieldRef: &core.ObjectFieldSelector{
 						FieldPath: "spec.nodeName",
 					},
 				},
 			},
 		},
 	}
+
+	if apiObject.Spec.GetPrivileged() {
+		c.SecurityContext = &core.SecurityContext{
+			Privileged: util.NewBool(true),
+		}
+	}
+
 	dsLabels := k8sutil.LabelsForLocalStorage(apiObject.GetName(), roleProvisioner)
-	dsSpec := v1.DaemonSetSpec{
-		Selector: &metav1.LabelSelector{
+	dsSpec := apps.DaemonSetSpec{
+		Selector: &meta.LabelSelector{
 			MatchLabels: dsLabels,
 		},
-		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
+		Template: core.PodTemplateSpec{
+			ObjectMeta: meta.ObjectMeta{
 				Labels: dsLabels,
 			},
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{
+			Spec: core.PodSpec{
+				Containers: []core.Container{
 					c,
 				},
 				NodeSelector: apiObject.Spec.NodeSelector,
 			},
 		},
 	}
+
 	for i, lp := range apiObject.Spec.LocalPath {
 		volName := fmt.Sprintf("local-path-%d", i)
 		c := &dsSpec.Template.Spec.Containers[0]
 		c.VolumeMounts = append(c.VolumeMounts,
-			corev1.VolumeMount{
+			core.VolumeMount{
 				Name:      volName,
 				MountPath: lp,
 			})
-		hostPathType := corev1.HostPathDirectoryOrCreate
-		dsSpec.Template.Spec.Volumes = append(dsSpec.Template.Spec.Volumes, corev1.Volume{
+		hostPathType := core.HostPathDirectoryOrCreate
+		dsSpec.Template.Spec.Volumes = append(dsSpec.Template.Spec.Volumes, core.Volume{
 			Name: volName,
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
+			VolumeSource: core.VolumeSource{
+				HostPath: &core.HostPathVolumeSource{
 					Path: lp,
 					Type: &hostPathType,
 				},
 			},
 		})
 	}
-	ds := &v1.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
+	ds := &apps.DaemonSet{
+		ObjectMeta: meta.ObjectMeta{
 			Name:   apiObject.GetName(),
 			Labels: dsLabels,
 		},
@@ -134,7 +144,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		attempt++
 
 		// Load current DS
-		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(ds.GetName(), metav1.GetOptions{})
+		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(ds.GetName(), meta.GetOptions{})
 		if err != nil {
 			return maskAny(err)
 		}
