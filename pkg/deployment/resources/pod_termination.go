@@ -131,21 +131,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 
-	if c, ok := k8sutil.GetContainerStatusByName(p, k8sutil.ServerContainerName); ok {
-		if t := c.State.Terminated; t != nil {
-			log.Warn().Str("member", memberStatus.ID).
-				Str("pod", p.GetName()).
-				Str("uid", string(p.GetUID())).
-				Int32("exit-code", t.ExitCode).
-				Str("reason", t.Reason).
-				Str("message", t.Message).
-				Int32("signal", t.Signal).
-				Time("started", t.StartedAt.Time).
-				Time("finished", t.FinishedAt.Time).
-				Msgf("Pod failed in unexpected way")
-		}
-	}
-
 	// Inspect deployment deletion state
 	apiObject := r.context.GetAPIObject()
 	if apiObject.GetDeletionTimestamp() != nil {
