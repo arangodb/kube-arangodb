@@ -105,6 +105,11 @@ func (in *LocalStorageSpec) DeepCopyInto(out *LocalStorageSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.Privileged != nil {
+		in, out := &in.Privileged, &out.Privileged
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

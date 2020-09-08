@@ -34,6 +34,7 @@ type LocalStorageSpec struct {
 	StorageClass StorageClassSpec  `json:"storageClass"`
 	LocalPath    []string          `json:"localPath,omitempty"`
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	Privileged   *bool             `json:"privileged,omitempty"`
 }
 
 // Validate the given spec, returning an error on validation
@@ -72,4 +73,12 @@ func (s LocalStorageSpec) ResetImmutableFields(target *LocalStorageSpec) []strin
 	}
 	// TODO NodeSelector
 	return result
+}
+
+func (s LocalStorageSpec) GetPrivileged() bool {
+	if s.Privileged == nil {
+		return false
+	}
+
+	return *s.Privileged
 }
