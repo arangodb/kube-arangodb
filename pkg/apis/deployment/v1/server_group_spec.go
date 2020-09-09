@@ -373,7 +373,7 @@ func (s ServerGroupSpec) GetProbesSpec() ServerGroupProbesSpec {
 // GetOverrideDetectedTotalMemory returns OverrideDetectedTotalMemory with default value (false)
 func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
 	if s.OverrideDetectedTotalMemory == nil {
-		return false
+		return true
 	}
 
 	return *s.OverrideDetectedTotalMemory
@@ -382,7 +382,7 @@ func (s ServerGroupSpec) GetOverrideDetectedTotalMemory() bool {
 // OverrideDetectedNumberOfCores returns OverrideDetectedNumberOfCores with default value (false)
 func (s ServerGroupSpec) GetOverrideDetectedNumberOfCores() bool {
 	if s.OverrideDetectedNumberOfCores == nil {
-		return false
+		return true
 	}
 
 	return *s.OverrideDetectedNumberOfCores
