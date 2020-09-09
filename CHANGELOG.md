@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Change NumberOfCores and MemoryOverride flags to be set to true by default
+- Enable by default and promote to Production Ready - JWT Rotation Feature, TLS Rotation Feature
 
 ## [1.0.7](https://github.com/arangodb/kube-arangodb/tree/1.0.7) (2020-09-09)
 - Always use JWT Authorized requests in internal communication

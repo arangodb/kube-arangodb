@@ -35,13 +35,63 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func resourceLimitAsEnv(t *testing.T, requirements core.ResourceRequirements) core.EnvVar {
+type envFunc func() []core.EnvVar
+
+func withEnvs(t *testing.T, f ... envFunc) []core.EnvVar {
+	var e []core.EnvVar
+
+	for _, c := range f {
+		e = append(e, c()...)
+	}
+
+	return e
+}
+
+func withDefaultEnvs(t *testing.T, requirements core.ResourceRequirements, f ... envFunc) []core.EnvVar {
+	var q []envFunc
+
+	q = append(q, resourceLimitAsEnv(t, requirements))
+
+	q = append(q, f...)
+
+	return withEnvs(t, q...)
+}
+
+func resourceLimitAsEnv(t *testing.T, requirements core.ResourceRequirements) envFunc {
+	return func() []core.EnvVar {
+		var e []core.EnvVar
+		if _, ok := requirements.Limits[core.ResourceMemory]; ok {
+			e = append(e, resourceMemoryLimitAsEnv(t, requirements)()...)
+		}
+		if _, ok := requirements.Limits[core.ResourceCPU]; ok {
+			e = append(e, resourceCPULimitAsEnv(t, requirements)()...)
+		}
+		return e
+	}
+}
+
+func resourceMemoryLimitAsEnv(t *testing.T, requirements core.ResourceRequirements) envFunc {
 	value, ok := requirements.Limits[core.ResourceMemory]
 	require.True(t, ok)
+	return func() []core.EnvVar {
+		return []core.EnvVar{{
+			Name:  resources.ArangoDBOverrideDetectedTotalMemoryEnv,
+			Value: fmt.Sprintf("%d", value.Value()),
+		},
+		}
+	}
+}
 
-	return core.EnvVar{
-		Name:  resources.ArangoDBOverrideDetectedTotalMemoryEnv,
-		Value: fmt.Sprintf("%d", value.Value()),
+func resourceCPULimitAsEnv(t *testing.T, requirements core.ResourceRequirements) envFunc {
+	value, ok := requirements.Limits[core.ResourceCPU]
+	require.True(t, ok)
+
+	return func() []core.EnvVar {
+		return []core.EnvVar{{
+			Name:  resources.ArangoDBOverrideDetectedNumberOfCoresEnv,
+			Value: fmt.Sprintf("%d", value.Value()),
+		},
+		}
 	}
 }
 
@@ -91,6 +141,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
+							Env: withDefaultEnvs(t, resourcesUnfiltered),
 						},
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
@@ -112,7 +163,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 					TLS:            noTLS,
 					DBServers: api.ServerGroupSpec{
 						Resources:                   resourcesUnfiltered,
-						OverrideDetectedTotalMemory: util.NewBool(true),
+						OverrideDetectedTotalMemory: util.NewBool(false),
 					},
 				},
 			},
@@ -145,9 +196,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							Env: []core.EnvVar{
-								resourceLimitAsEnv(t, resourcesUnfiltered),
-							},
+							Env: withEnvs(t, resourceCPULimitAsEnv(t, resourcesUnfiltered)),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
