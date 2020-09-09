@@ -31,7 +31,7 @@ var jwtRotation = &feature{
 	description:        "JWT Token rotation in runtime",
 	version:            "3.7.0",
 	enterpriseRequired: true,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 }
 
 func JWTRotation() Feature {
