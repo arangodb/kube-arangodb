@@ -1,7 +1,7 @@
 ---
 
 name: kube-arangodb
-version: 1.0.7
+version: 1.0.8
 
 description: "ArangoDB Kubernetes Operator"
 tillerVersion: ">2.7"
