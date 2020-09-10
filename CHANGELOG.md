@@ -2,6 +2,9 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 
+## [1.0.8](https://github.com/arangodb/kube-arangodb/tree/1.0.8) (2020-09-10)
+- Fix Volume rotation on AKS
+
 ## [1.0.7](https://github.com/arangodb/kube-arangodb/tree/1.0.7) (2020-09-09)
 - Always use JWT Authorized requests in internal communication
 - Add Operator Maintenance Management feature
