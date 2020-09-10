@@ -32,7 +32,7 @@ var tlsRotation Feature = &feature{
 	description:        "TLS Keyfile rotation in runtime",
 	version:            "3.7.0",
 	enterpriseRequired: true,
-	enabledByDefault:   true,
+	enabledByDefault:   false,
 }
 
 func TLSRotation() Feature {
