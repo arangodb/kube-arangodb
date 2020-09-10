@@ -129,6 +129,11 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		return false, true, err
 	}
 
+	// If we are pending for FS to be resized - we need to proceed with mounting of PVC
+	if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
+		return true, false, nil
+	}
+
 	if requestedSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
 		if volumeSize, ok := pvc.Status.Capacity[core.ResourceStorage]; ok {
 			cmp := volumeSize.Cmp(requestedSize)
