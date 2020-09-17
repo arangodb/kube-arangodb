@@ -595,7 +595,7 @@ deps-reload: tidy init
 init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 
 .PHONY: tools
-tools:
+tools: update-vendor
 	@echo ">> Fetching goimports"
 	@go get -u golang.org/x/tools/cmd/goimports
 	@echo ">> Fetching license check"
