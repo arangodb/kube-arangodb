@@ -82,7 +82,6 @@ func (i *ImageInfo) Equal(other *ImageInfo) bool {
 		return true
 	}
 
-
 	return i.ArangoDBVersion == other.ArangoDBVersion &&
 		i.Enterprise == other.Enterprise &&
 		i.Image == other.Image &&
