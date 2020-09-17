@@ -8,17 +8,17 @@ replace (
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
-	k8s.io/api => k8s.io/api v0.15.11
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.15.11
-	k8s.io/apimachinery => k8s.io/apimachinery v0.15.11
-	k8s.io/apiserver => k8s.io/apiserver v0.15.11
-	k8s.io/client-go => k8s.io/client-go v0.15.11
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.15.11
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.15.11
+	k8s.io/api => k8s.io/api v0.16.15
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.15
+	k8s.io/apimachinery => k8s.io/apimachinery v0.16.15
+	k8s.io/apiserver => k8s.io/apiserver v0.16.15
+	k8s.io/client-go => k8s.io/client-go v0.16.15
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.15
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.16.15
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
-	k8s.io/component-base => k8s.io/component-base v0.15.11
-	k8s.io/kubernetes => k8s.io/kubernetes v1.15.11
-	k8s.io/metrics => k8s.io/metrics v0.15.11
+	k8s.io/component-base => k8s.io/component-base v0.16.15
+	k8s.io/kubernetes => k8s.io/kubernetes v0.16.15
+	k8s.io/metrics => k8s.io/metrics v0.16.15
 )
 
 require (
@@ -31,11 +31,11 @@ require (
 	github.com/coreos/prometheus-operator v0.37.0
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
-	github.com/google/addlicense v0.0.0-20200622132530-df58acafd6d5 // indirect
+	github.com/google/addlicense v0.0.0-20200906110928-a0294312aa76 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f
 	github.com/julienschmidt/httprouter v1.3.0
@@ -49,9 +49,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
-	golang.org/x/tools v0.0.0-20200721223218-6123e77877b2 // indirect
+	golang.org/x/tools v0.0.0-20200917132429-63098cc47d65 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	k8s.io/api v0.17.3
