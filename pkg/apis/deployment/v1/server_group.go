@@ -119,7 +119,7 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 // IsStateless returns true when the groups runs servers without a persistent volume.
 func (g ServerGroup) IsStateless() bool {
 	switch g {
-	case ServerGroupSyncMasters, ServerGroupSyncWorkers:
+	case ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
 		return true
 	default:
 		return false
