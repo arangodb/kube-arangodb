@@ -152,6 +152,9 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					require.Equal(t, false, exist)
 					_, exist = m.Conditions.Get(api.ConditionTypeAutoUpgrade)
 					require.Equal(t, false, exist)
+
+					require.NotNil(t, m.Image)
+					require.True(t, m.Image.Equal(d.apiObject.Status.CurrentImage))
 				}
 				return nil
 			}

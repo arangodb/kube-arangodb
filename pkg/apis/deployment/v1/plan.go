@@ -81,6 +81,8 @@ const (
 	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
+	// ActionTypeSetCurrentImage replace image of member to current one.
+	ActionTypeSetMemberCurrentImage ActionType = "SetMemberCurrentImage"
 	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators
 	ActionTypeDisableClusterScaling ActionType = "ScalingDisabled"
 	// ActionTypeEnableClusterScaling turns on scaling DBservers and coordinators

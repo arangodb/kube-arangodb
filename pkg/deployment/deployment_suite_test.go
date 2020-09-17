@@ -592,6 +592,13 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
+
+	// Add image info
+	if member, group, ok := deployment.apiObject.Status.Members.ElementByID(memberStatus.ID); ok {
+		member.Image = deployment.apiObject.Status.CurrentImage
+
+		deployment.apiObject.Status.Members.Update(member, group)
+	}
 }
 
 func testCreateExporterContainerWithPortAndSecureEndpoint(secure, exporterSecure bool, resources core.ResourceRequirements, port uint16) core.Container {

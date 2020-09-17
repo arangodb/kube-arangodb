@@ -95,6 +95,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}
@@ -106,6 +107,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}
@@ -117,6 +119,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}
@@ -128,6 +131,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}
@@ -139,6 +143,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}
@@ -150,6 +155,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
+			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
 			return "", maskAny(err)
 		}

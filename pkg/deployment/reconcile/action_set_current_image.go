@@ -30,13 +30,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeSetCurrentImage, newSetCurrentImageAction)
+	registerAction(api.ActionTypeSetMemberCurrentImage, newSetCurrentMemberImageAction)
 }
 
 // newSetCurrentImageAction creates a new Action that implements the given
 // planned SetCurrentImage action.
-func newSetCurrentImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &setCurrentImageAction{}
+func newSetCurrentMemberImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &setCurrentMemberImageAction{}
 
 	a.actionImpl = newActionImplDefRef(log, action, actionCtx, upgradeMemberTimeout)
 
@@ -44,7 +44,7 @@ func newSetCurrentImageAction(log zerolog.Logger, action api.Action, actionCtx A
 }
 
 // setCurrentImageAction implements an SetCurrentImage.
-type setCurrentImageAction struct {
+type setCurrentMemberImageAction struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 }
@@ -52,7 +52,7 @@ type setCurrentImageAction struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *setCurrentImageAction) Start(ctx context.Context) (bool, error) {
+func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
 		return false, maskAny(err)
@@ -62,16 +62,34 @@ func (a *setCurrentImageAction) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *setCurrentImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	log := a.log
 
 	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
 	if !found {
-		return false, false, nil
+		log.Info().Msgf("Image not found")
+		return true, false, nil
 	}
-	if err := a.actionCtx.SetCurrentImage(imageInfo); err != nil {
-		return false, false, maskAny(err)
+
+	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		m, g, found := s.Members.ElementByID(a.action.MemberID)
+		if !found {
+			log.Error().Msg("No such member")
+			return false
+		}
+
+		m.Image = &imageInfo
+
+		if err := s.Members.Update(m, g); err != nil {
+			log.Error().Msg("Member update failed")
+			return false
+		}
+
+		return true
+	}); err != nil {
+		log.Error().Msg("Member failed")
+		return true, false, nil
 	}
-	log.Info().Str("image", a.action.Image).Str("to", imageInfo.Image).Msg("Changed current main image")
+
 	return true, false, nil
 }

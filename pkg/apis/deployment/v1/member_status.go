@@ -67,6 +67,8 @@ type MemberStatus struct {
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
 	// ImageId holds the members ArangoDB image ID
 	ImageID string `json:"image-id,omitempty"`
+	// Image holds image details
+	Image *ImageInfo `json:"image,omitempty"`
 }
 
 // Equal checks for equality
@@ -81,7 +83,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.CleanoutJobID == other.CleanoutJobID &&
 		reflect.DeepEqual(s.SideCarSpecs, other.SideCarSpecs) &&
 		s.ArangoVersion == other.ArangoVersion &&
-		s.ImageID == other.ImageID
+		s.ImageID == other.ImageID &&
+		s.Image.Equal(other.Image)
 }
 
 // Age returns the duration since the creation timestamp of this member.

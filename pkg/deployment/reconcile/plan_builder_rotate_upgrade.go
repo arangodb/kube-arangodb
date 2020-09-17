@@ -260,6 +260,10 @@ func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, 
 		return false, ""
 	}
 
+	if m.Image != nil {
+		imageInfo = *m.Image
+	}
+
 	renderedPod, err := context.RenderPodForMember(cachedStatus, spec, status, m.ID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
@@ -302,14 +306,20 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
-	plan := api.Plan{
+	var plan api.Plan
+	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
+		plan = append(plan,
+			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
+		)
+	}
+	if member.Image == nil || member.Image.Image != imageName {
+		plan = append(plan,
+			api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(imageName),
+		)
+	}
+	plan = append(plan,
 		api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
-	}
-	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
-		plan = append(api.Plan{
-			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
-		}, plan...)
-	}
+	)
 	return plan
 }
