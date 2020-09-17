@@ -416,7 +416,30 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		})
 		return nil
 	}
-	status.CurrentImage = &imageInfo
+
+	if status.CurrentImage == nil {
+		status.CurrentImage = &imageInfo
+	}
+
+	m, group, found := status.Members.ElementByID(memberID)
+	if m.Image == nil {
+		m.Image = status.CurrentImage
+
+		if err := status.Members.Update(m, group); err != nil {
+			return maskAny(err)
+		}
+		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			return maskAny(err)
+		}
+
+		status, lastVersion = r.context.GetStatus()
+
+		m, group, found = status.Members.ElementByID(memberID)
+	}
+
+	if features.UpgradeV2().Enabled() {
+		imageInfo = *m.Image
+	}
 
 	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
@@ -427,7 +450,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	apiObject := r.context.GetAPIObject()
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
-	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
 		return maskAny(fmt.Errorf("Member '%s' not found", memberID))
 	}
@@ -464,6 +486,11 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		}
 
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
+		if m.Image == nil {
+			log.Debug().Str("pod-name", m.PodName).Msg("Created pod with default image")
+		} else {
+			log.Debug().Str("pod-name", m.PodName).Msg("Created pod with predefined image")
+		}
 	} else if group.IsArangosync() {
 		// Check monitoring token secret
 		if group == api.ServerGroupSyncMasters {

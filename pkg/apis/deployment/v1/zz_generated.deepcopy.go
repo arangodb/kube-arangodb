@@ -814,6 +814,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 			(*out)[key] = *val.DeepCopy()
 		}
 	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(ImageInfo)
+		**out = **in
+	}
 	return
 }
 

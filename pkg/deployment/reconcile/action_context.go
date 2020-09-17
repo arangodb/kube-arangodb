@@ -399,12 +399,13 @@ func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
 // SetCurrentImage changes the CurrentImage field in the deployment
 // status to the given image.
 func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
-	status, lastVersion := ac.context.GetStatus()
-	status.CurrentImage = &imageInfo
-	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
-	}
-	return nil
+	return ac.context.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		if s.CurrentImage == nil || s.CurrentImage.Image != imageInfo.Image {
+			s.CurrentImage = &imageInfo
+			return true
+		}
+		return false
+	}, true)
 }
 
 // InvalidateSyncStatus resets the sync state to false and triggers an inspection
