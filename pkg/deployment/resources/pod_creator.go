@@ -437,9 +437,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		m, group, found = status.Members.ElementByID(memberID)
 	}
 
-	if features.UpgradeV2().Enabled() {
-		imageInfo = *m.Image
-	}
+	imageInfo = *m.Image
 
 	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {

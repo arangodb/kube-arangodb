@@ -25,8 +25,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -262,7 +260,7 @@ func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, 
 		return false, ""
 	}
 
-	if features.UpgradeV2().Enabled() && m.Image != nil {
+	if m.Image != nil {
 		imageInfo = *m.Image
 	}
 
