@@ -74,11 +74,14 @@ func (l *ImageInfoList) AddOrUpdate(info ImageInfo) {
 
 // Equal compares to ImageInfo
 func (i *ImageInfo) Equal(other *ImageInfo) bool {
-	if i == nil || other == nil {
+	if i == nil && other == nil {
+		return true
+	} else if i == nil || other == nil {
 		return false
 	} else if i == other {
 		return true
 	}
+
 
 	return i.ArangoDBVersion == other.ArangoDBVersion &&
 		i.Enterprise == other.Enterprise &&

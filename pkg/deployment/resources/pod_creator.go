@@ -428,13 +428,6 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		if err := status.Members.Update(m, group); err != nil {
 			return maskAny(err)
 		}
-		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-			return maskAny(err)
-		}
-
-		status, lastVersion = r.context.GetStatus()
-
-		m, group, found = status.Members.ElementByID(memberID)
 	}
 
 	imageInfo = *m.Image
