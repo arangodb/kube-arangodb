@@ -72,7 +72,6 @@ func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, 
 	}
 
 	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
-		log.Info().Msgf("Resolving member")
 		m, g, found := s.Members.ElementByID(a.action.MemberID)
 		if !found {
 			log.Error().Msg("No such member")

@@ -72,7 +72,6 @@ func (a *setCurrentImageAction) CheckProgress(ctx context.Context) (bool, bool, 
 	if err := a.actionCtx.SetCurrentImage(imageInfo); err != nil {
 		return false, false, maskAny(err)
 	}
-	status := a.actionCtx.GetStatus()
-	log.Info().Str("image", a.action.Image).Str("to", imageInfo.Image).Str("OV", status.CurrentImage.Image).Msg("Changed current main image")
+	log.Info().Str("image", a.action.Image).Str("to", imageInfo.Image).Msg("Changed current main image")
 	return true, false, nil
 }
