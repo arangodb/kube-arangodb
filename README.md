@@ -31,32 +31,26 @@ state and over time move to full "production readiness".
 Operator will supports versions supported on providers and maintained by Kubernetes.
 Once version is not supported anymore it will go into "Deprecating" state and will be marked as deprecated on Minor release.
 
+Kubernetes versions starting from 1.16 are supported and tested, charts and manifests can use API Versions which are not present in older versions.
+
 The following table has the general readiness state, the table below
 covers individual newer features separately.
 
-| Platform            | Kubernetes Version | ArangoDB Version | ArangoDB Operator Version | State                    | Remarks               | Provider Remarks                   |
-|---------------------|--------------------|------------------|---------------------------|--------------------------|-----------------------|------------------------------------|
-| Google GKE          | 1.14               | >= 3.3.13        |                           | Production (Deprecating) | Don't use micro nodes |                                    |
-| Google GKE          | 1.15               | >= 3.3.13        |                           | Production (Deprecating) | Don't use micro nodes |                                    |
-| Google GKE          | 1.16               | >= 3.3.13        |                           | Production               | Don't use micro nodes |                                    |
-| Google GKE          | 1.17               | >= 3.3.13        |                           | Production               | Don't use micro nodes |                                    |
-| Azure AKS           | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
-| Azure AKS           | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
-| Azure AKS           | 1.16               | >= 3.3.13        |                           | Production               |                       |                                    |
-| Azure AKS           | 1.17               | >= 3.3.13        |                           | Production               |                       |                                    |
-| Amazon EKS          | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.16               | >= 3.3.13        |                           | Production               |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.17               | >= 3.3.13        |                           | Production               |                       | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.14               | >= 3.4.6.1       | >= 0.3.11                 | Production               |                       |                                    |
-| OpenShift           | 3.11               | >= 3.3.13        |                           | Production               |                       |                                    |
-| OpenShift           | 4.2                | >= 3.3.13        |                           | In Progress              |                       |                                    |
-| BareMetal (kubeadm) | 1.14               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
-| BareMetal (kubeadm) | 1.15               | >= 3.3.13        |                           | Production (Deprecating) |                       |                                    |
-| BareMetal (kubeadm) | 1.16               | >= 3.3.13        |                           | Production               |                       |                                    |
-| BareMetal (kubeadm) | 1.17               | >= 3.3.13        |                           | Production               |                       |                                    |
-| Minikube            | 1.14+              | >= 3.3.13        |                           | Devel Only               |                       |                                    |
-| Other               | 1.14+              | >= 3.3.13        |                           | Devel Only               |                       |                                    |
+| Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks               | Provider Remarks                   |
+|---------------------|--------------------|------------------|------------|-----------------------|------------------------------------|
+| Google GKE          | 1.16               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.17               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
+| Azure AKS           | 1.16               | >= 3.5.0         | Production |                       |                                    |
+| Azure AKS           | 1.17               | >= 3.5.0         | Production |                       |                                    |
+| Amazon EKS          | 1.16               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.17               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.16               | >= 3.5.0         | Production |                       |                                    |
+| OpenShift           | 3.11               | >= 3.5.0         | Production |                       |                                    |
+| OpenShift           | 4.2                | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.16               | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.17               | >= 3.5.0         | Production |                       |                                    |
+| Minikube            | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
+| Other               | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
 
 Feature-wise production readiness table:
 

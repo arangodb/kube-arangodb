@@ -3,6 +3,8 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Change NumberOfCores and MemoryOverride flags to be set to true by default
 - Enable by default and promote to Production Ready - JWT Rotation Feature, TLS Rotation Feature
+- Deprecate K8S < 1.16
+- Fix Upgrade procedure to safely evict pods during upgrade
 
 ## [1.0.8](https://github.com/arangodb/kube-arangodb/tree/1.0.8) (2020-09-10)
 - Fix Volume rotation on AKS
