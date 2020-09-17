@@ -226,7 +226,7 @@ endif
 .PHONY: update-vendor
 update-vendor:
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator
-	@git clone --branch kubernetes-1.15.11 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
+	@git clone --branch kubernetes-1.16.15 https://github.com/kubernetes/code-generator.git $(VENDORDIR)/k8s.io/code-generator
 	@rm -Rf $(VENDORDIR)/k8s.io/code-generator/.git
 
 
@@ -595,7 +595,7 @@ deps-reload: tidy init
 init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 
 .PHONY: tools
-tools:
+tools: update-vendor
 	@echo ">> Fetching goimports"
 	@go get -u golang.org/x/tools/cmd/goimports
 	@echo ">> Fetching license check"
