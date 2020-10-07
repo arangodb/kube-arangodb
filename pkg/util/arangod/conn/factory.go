@@ -77,6 +77,9 @@ func (f factory) AgencyConnection(hosts ...string) (driver.Connection, error) {
 	if err != nil {
 		return nil, err
 	}
+	if auth == nil {
+		return conn, nil
+	}
 	return conn.SetAuthentication(auth)
 }
 
@@ -96,7 +99,9 @@ func (f factory) Client(hosts ...string) (driver.Client, error) {
 			return nil, err
 		}
 
-		config.Authentication = auth
+		if auth != nil {
+			config.Authentication = auth
+		}
 	}
 
 	return driver.NewClient(config)
@@ -130,6 +135,9 @@ func (f factory) Connection(hosts ...string) (driver.Connection, error) {
 	auth, err := f.auth()
 	if err != nil {
 		return nil, err
+	}
+	if auth == nil {
+		return conn, nil
 	}
 	return conn.SetAuthentication(auth)
 }
