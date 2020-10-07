@@ -570,3 +570,22 @@ func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
 func (d *Deployment) GetName() string {
 	return d.apiObject.GetName()
 }
+
+func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
+	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(meta.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	podList := make([]v1.Pod, 0, len(pods.Items))
+
+	for _, p := range pods.Items {
+		if !d.isOwnerOf(&p) {
+			continue
+		}
+		c := p.DeepCopy()
+		podList = append(podList, *c)
+	}
+
+	return podList, nil
+}

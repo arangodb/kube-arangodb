@@ -164,10 +164,10 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		go d.resources.RunDeploymentHealthLoop(d.stopCh)
 		go d.resources.RunDeploymentShardSyncLoop(d.stopCh)
 	}
-	//if config.AllowChaos {
-	//	d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
-	//	go d.chaosMonkey.Run(d.stopCh)
-	//}
+	if config.AllowChaos {
+		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)
+		go d.chaosMonkey.Run(d.stopCh)
+	}
 
 	return d, nil
 }
