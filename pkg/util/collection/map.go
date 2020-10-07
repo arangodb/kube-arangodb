@@ -160,6 +160,9 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 	case api.LabelsDisabledMode:
 		break
 	case api.LabelsAppendMode:
+		if len(actual) == 0 {
+			return patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", section), expected))
+		}
 		for e, v := range expected {
 			if a, ok := actual[e]; !ok {
 				p.ItemAdd(patch.NewPath("metadata", section, e), v)
@@ -168,6 +171,9 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 			}
 		}
 	case api.LabelsReplaceMode:
+		if len(actual) == 0 {
+			return patch.NewPatch(patch.ItemReplace(patch.NewPath("metadata", section), expected))
+		}
 		for e, v := range expected {
 			if a, ok := actual[e]; !ok {
 				p.ItemAdd(patch.NewPath("metadata", section, e), v)
