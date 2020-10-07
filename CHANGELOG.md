@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Fix Panics in Deployments without authentication
+- Fix ChaosMonkey mode
 
 ## [1.0.8](https://github.com/arangodb/kube-arangodb/tree/1.0.8) (2020-09-10)
 - Fix Volume rotation on AKS
