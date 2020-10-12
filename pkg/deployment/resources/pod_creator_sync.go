@@ -25,6 +25,8 @@ package resources
 import (
 	"math"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
@@ -308,4 +310,12 @@ func (m *MemberSyncPod) Validate(cachedStatus inspector.Inspector) error {
 
 func (m *MemberSyncPod) ApplyPodSpec(spec *core.PodSpec) error {
 	return nil
+}
+
+func (m *MemberSyncPod) Annotations() map[string]string {
+	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+}
+
+func (m *MemberSyncPod) Labels() map[string]string {
+	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
 }
