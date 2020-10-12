@@ -50,6 +50,9 @@ type PodCreator interface {
 	IsDeploymentMode() bool
 	Validate(cachedStatus inspector.Inspector) error
 
+	Annotations() map[string]string
+	Labels() map[string]string
+
 	PodModifier
 }
 

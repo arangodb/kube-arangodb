@@ -539,6 +539,22 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 	// Prepare basic pod
 	p := k8sutil.NewPod(deployment.GetName(), role, id, podName, podCreator)
 
+	for k, v := range podCreator.Annotations() {
+		if p.Annotations == nil {
+			p.Annotations = map[string]string{}
+		}
+
+		p.Annotations[k] = v
+	}
+
+	for k, v := range podCreator.Labels() {
+		if p.Labels == nil {
+			p.Labels = map[string]string{}
+		}
+
+		p.Labels[k] = v
+	}
+
 	podCreator.Init(&p)
 
 	if initContainers, err := podCreator.GetInitContainers(); err != nil {
