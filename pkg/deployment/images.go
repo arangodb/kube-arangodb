@@ -55,6 +55,14 @@ type ImageUpdatePod struct {
 	image     string
 }
 
+func (i *ImageUpdatePod) Annotations() map[string]string {
+	return nil
+}
+
+func (i *ImageUpdatePod) Labels() map[string]string {
+	return nil
+}
+
 type ArangoDImageUpdateContainer struct {
 	spec  api.DeploymentSpec
 	image string
