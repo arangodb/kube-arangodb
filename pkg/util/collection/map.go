@@ -87,6 +87,12 @@ func NewRestrictedList(param ...string) RestrictedList {
 	return param
 }
 
+func ReservedLabels() RestrictedList {
+	l := RestrictedList{}
+	l = append(l, reservedLabels...)
+	return l
+}
+
 type RestrictedList []string
 
 func (r RestrictedList) IsRestricted(s string) bool {
@@ -103,6 +109,20 @@ func (r RestrictedList) IsRestricted(s string) bool {
 	}
 
 	return false
+}
+
+func (r RestrictedList) Filter(m map[string]string) map[string]string {
+	z := map[string]string{}
+
+	for k, v := range m {
+		if r.IsRestricted(k) {
+			continue
+		}
+
+		z[k] = v
+	}
+
+	return z
 }
 
 func init() {

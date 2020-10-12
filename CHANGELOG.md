@@ -4,6 +4,7 @@
 - Fix Panics in Deployments without authentication
 - Fix ChaosMonkey mode
 - Allow append on empty annotations
+- Add annotations and labels on pod creation
 
 ## [1.0.8](https://github.com/arangodb/kube-arangodb/tree/1.0.8) (2020-09-10)
 - Fix Volume rotation on AKS

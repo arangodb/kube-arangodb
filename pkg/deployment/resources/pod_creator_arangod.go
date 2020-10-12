@@ -27,6 +27,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
@@ -475,4 +477,12 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 	p.SecurityContext = m.groupSpec.SecurityContext.NewPodSecurityContext()
 
 	return nil
+}
+
+func (m *MemberArangoDPod) Annotations() map[string]string {
+	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+}
+
+func (m *MemberArangoDPod) Labels() map[string]string {
+	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
 }
