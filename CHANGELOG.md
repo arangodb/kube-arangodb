@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.0.9](https://github.com/arangodb/kube-arangodb/tree/1.0.9) (2020-10-13)
 - Fix Panics in Deployments without authentication
 - Fix ChaosMonkey mode
 - Allow append on empty annotations
