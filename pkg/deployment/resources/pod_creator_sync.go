@@ -267,6 +267,10 @@ func (m *MemberSyncPod) IsDeploymentMode() bool {
 func (m *MemberSyncPod) GetInitContainers() ([]core.Container, error) {
 	var initContainers []core.Container
 
+	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
+		initContainers = append(initContainers, c...)
+	}
+
 	lifecycleImage := m.resources.context.GetLifecycleImage()
 	if lifecycleImage != "" {
 		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,

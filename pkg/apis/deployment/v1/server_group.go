@@ -27,27 +27,30 @@ import "time"
 type ServerGroup int
 
 const (
-	ServerGroupUnknown      ServerGroup = 0
-	ServerGroupSingle       ServerGroup = 1
-	ServerGroupAgents       ServerGroup = 2
-	ServerGroupDBServers    ServerGroup = 3
-	ServerGroupCoordinators ServerGroup = 4
-	ServerGroupSyncMasters  ServerGroup = 5
-	ServerGroupSyncWorkers  ServerGroup = 6
+	ServerGroupUnknown        ServerGroup = 0
+	ServerGroupSingle         ServerGroup = 1
+	ServerGroupAgents         ServerGroup = 2
+	ServerGroupDBServers      ServerGroup = 3
+	ServerGroupCoordinators   ServerGroup = 4
+	ServerGroupSyncMasters    ServerGroup = 5
+	ServerGroupSyncWorkers    ServerGroup = 6
+	ServerGroupImageDiscovery ServerGroup = -1
 
-	ServerGroupSingleString       = "single"
-	ServerGroupAgentsString       = "agent"
-	ServerGroupDBServersString    = "dbserver"
-	ServerGroupCoordinatorsString = "coordinator"
-	ServerGroupSyncMastersString  = "syncmaster"
-	ServerGroupSyncWorkersString  = "syncworker"
+	ServerGroupSingleString         = "single"
+	ServerGroupAgentsString         = "agent"
+	ServerGroupDBServersString      = "dbserver"
+	ServerGroupCoordinatorsString   = "coordinator"
+	ServerGroupSyncMastersString    = "syncmaster"
+	ServerGroupSyncWorkersString    = "syncworker"
+	ServerGroupImageDiscoveryString = "imagediscovery"
 
-	ServerGroupSingleAbbreviatedString       = "sngl"
-	ServerGroupAgentsAbbreviatedString       = "agnt"
-	ServerGroupDBServersAbbreviatedString    = "prmr"
-	ServerGroupCoordinatorsAbbreviatedString = "crdn"
-	ServerGroupSyncMastersAbbreviatedString  = "syma"
-	ServerGroupSyncWorkersAbbreviatedString  = "sywo"
+	ServerGroupSingleAbbreviatedString         = "sngl"
+	ServerGroupAgentsAbbreviatedString         = "agnt"
+	ServerGroupDBServersAbbreviatedString      = "prmr"
+	ServerGroupCoordinatorsAbbreviatedString   = "crdn"
+	ServerGroupSyncMastersAbbreviatedString    = "syma"
+	ServerGroupSyncWorkersAbbreviatedString    = "sywo"
+	ServerGroupImageDiscoveryAbbreviatedString = "id"
 )
 
 var (

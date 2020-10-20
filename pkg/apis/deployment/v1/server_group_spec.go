@@ -100,6 +100,8 @@ type ServerGroupSpec struct {
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
 	// ExtendedRotationCheck extend checks for rotation
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
+	// InitContainers Init containers specification
+	InitContainers *ServerGroupInitContainers `json:"initContainers,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -471,6 +473,7 @@ func (s *ServerGroupSpec) validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceError("volumes", s.Volumes.Validate()),
 		shared.PrefixResourceError("volumeMounts", s.VolumeMounts.Validate()),
+		shared.PrefixResourceError("initContainers", s.InitContainers.Validate()),
 		s.validateVolumes(),
 	)
 }
@@ -482,9 +485,27 @@ func (s *ServerGroupSpec) validateVolumes() error {
 		volumes[volume.Name] = true
 	}
 
+	volumes["arangod-data"] = true
+
 	for _, mount := range s.VolumeMounts {
 		if _, ok := volumes[mount.Name]; !ok {
 			return errors.Errorf("Volume %s is not defined, but required by mount", mount.Name)
+		}
+	}
+
+	for _, container := range s.InitContainers.GetContainers() {
+		for _, mount := range container.VolumeMounts {
+			if _, ok := volumes[mount.Name]; !ok {
+				return errors.Errorf("Volume %s is not defined, but required by mount in init container %s", mount.Name, container.Name)
+			}
+		}
+	}
+
+	for _, container := range s.Sidecars {
+		for _, mount := range s.VolumeMounts {
+			if _, ok := volumes[mount.Name]; !ok {
+				return errors.Errorf("Volume %s is not defined, but required by mount in sidecar %s", mount.Name, container.Name)
+			}
 		}
 	}
 

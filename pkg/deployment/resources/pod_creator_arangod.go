@@ -395,6 +395,10 @@ func (m *MemberArangoDPod) IsDeploymentMode() bool {
 func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 	var initContainers []core.Container
 
+	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
+		initContainers = append(initContainers, c...)
+	}
+
 	executable, err := os.Executable()
 	if err != nil {
 		return nil, err
