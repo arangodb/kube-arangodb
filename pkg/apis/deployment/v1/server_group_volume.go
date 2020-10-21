@@ -112,6 +112,9 @@ type ServerGroupSpecVolume struct {
 
 	// ConfigMap which should be mounted into pod
 	ConfigMap *ServerGroupSpecVolumeConfigMap `json:"configMap,omitempty"`
+
+	// EmptyDir
+	EmptyDir *ServerGroupSpecVolumeEmptyDir `json:"emptyDir,omitempty"`
 }
 
 // Validate if ServerGroupSpec volume is valid
@@ -124,6 +127,7 @@ func (s *ServerGroupSpecVolume) Validate() error {
 		shared.PrefixResourceErrors("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
 		shared.PrefixResourceErrors("secret", s.Secret.Validate()),
 		shared.PrefixResourceErrors("configMap", s.ConfigMap.Validate()),
+		shared.PrefixResourceErrors("emptyDir", s.EmptyDir.Validate()),
 		s.validate(),
 	)
 }
@@ -135,20 +139,41 @@ func (s ServerGroupSpecVolume) Volume() core.Volume {
 		VolumeSource: core.VolumeSource{
 			ConfigMap: (*core.ConfigMapVolumeSource)(s.ConfigMap),
 			Secret:    (*core.SecretVolumeSource)(s.Secret),
+			EmptyDir:  (*core.EmptyDirVolumeSource)(s.EmptyDir),
 		},
 	}
 }
 
 func (s *ServerGroupSpecVolume) validate() error {
-	if s.ConfigMap == nil && s.Secret == nil {
-		return errors.Errorf("at least one option need to be defined: secret or configMap")
+	count := s.notNilFields()
+
+	if count == 0 {
+		return errors.Errorf("at least one option need to be defined: secret, configMap or emptyDir")
 	}
 
-	if s.ConfigMap != nil && s.Secret != nil {
-		return errors.Errorf("only one option can be defined: secret or configMap")
+	if count > 1 {
+		return errors.Errorf("only one option can be defined: secret, configMap or emptyDir")
 	}
 
 	return nil
+}
+
+func (s *ServerGroupSpecVolume) notNilFields() int {
+	i := 0
+
+	if s.ConfigMap != nil {
+		i++
+	}
+
+	if s.Secret != nil {
+		i++
+	}
+
+	if s.EmptyDir != nil {
+		i++
+	}
+
+	return i
 }
 
 type ServerGroupSpecVolumeSecret core.SecretVolumeSource
@@ -173,4 +198,10 @@ func (s *ServerGroupSpecVolumeConfigMap) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceError("name", sharedv1.AsKubernetesResourceName(&s.Name).Validate()),
 	)
+}
+
+type ServerGroupSpecVolumeEmptyDir core.EmptyDirVolumeSource
+
+func (s *ServerGroupSpecVolumeEmptyDir) Validate() error {
+	return nil
 }
