@@ -88,7 +88,7 @@ func Test_Volume_Validation(t *testing.T) {
 
 			fail: true,
 			failedFields: map[string]string{
-				"0": "only one option can be defined: secret or configMap",
+				"0": "only one option can be defined: secret, configMap or emptyDir",
 			},
 
 			volumes: []ServerGroupSpecVolume{
