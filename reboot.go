@@ -482,6 +482,6 @@ func cmdRebootInspectRun(cmd *cobra.Command, args []string) {
 	})
 
 	if http.ListenAndServe(":8080", nil); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to listen and server")
+		cliLog.Fatal().Err(err).Msg("Failed to listen and serve")
 	}
 }
