@@ -58,7 +58,7 @@ func init() {
 
 	f.BoolVarP(&probeInput.SSL, "ssl", "", false, "Determines if SSL is enabled")
 	f.BoolVarP(&probeInput.Auth, "auth", "", false, "Determines if authentication is enabled")
-	f.StringVarP(&probeInput.Endpoint, "endpoint", "", "/_api/version", "Determines if SSL is enabled")
+	f.StringVarP(&probeInput.Endpoint, "endpoint", "", "/_api/version", "Endpoint (path) to call for lifecycle probe")
 	f.StringVarP(&probeInput.JWTPath, "jwt", "", k8sutil.ClusterJWTSecretVolumeMountDir, "Path to the JWT tokens")
 }
 
