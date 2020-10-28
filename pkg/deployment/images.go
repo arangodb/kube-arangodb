@@ -218,7 +218,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		return true, maskAny(err)
 	}
 
-	if _, _, err := resources.CreateArangoPod(ib.KubeCli, ib.APIObject, pod); err != nil {
+	if _, err := resources.CreateArangoPod(ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, maskAny(err)
 	}

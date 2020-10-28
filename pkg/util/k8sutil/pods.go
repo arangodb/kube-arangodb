@@ -373,11 +373,8 @@ func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodC
 	return p
 }
 
-// GetPodSpecChecksum return checksum of requested pod spec
+// GetPodSpecChecksum return checksum of requested pod spec based on deployment and group spec
 func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
-	// Do not calculate init containers
-	podSpec.InitContainers = nil
-
 	data, err := json.Marshal(podSpec)
 	if err != nil {
 		return "", err
@@ -389,18 +386,13 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, string, error) {
+func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	checksum, err := GetPodSpecChecksum(pod.Spec)
-	if err != nil {
-		return "", "", err
-	}
-
 	if pod, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
-		return "", "", maskAny(err)
+		return "", maskAny(err)
 	} else {
-		return pod.UID, checksum, nil
+		return pod.UID, nil
 	}
 }
 

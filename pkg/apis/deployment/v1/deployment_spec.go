@@ -30,7 +30,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 var (
@@ -39,9 +39,9 @@ var (
 
 // validatePullPolicy the image pull policy.
 // Return errors when validation fails, nil on success.
-func validatePullPolicy(v v1.PullPolicy) error {
+func validatePullPolicy(v core.PullPolicy) error {
 	switch v {
-	case "", v1.PullAlways, v1.PullNever, v1.PullIfNotPresent:
+	case "", core.PullAlways, core.PullNever, core.PullIfNotPresent:
 		return nil
 	default:
 		return maskAny(errors.Wrapf(ValidationError, "Unknown pull policy: '%s'", string(v)))
@@ -54,7 +54,7 @@ type DeploymentSpec struct {
 	Environment        *Environment                      `json:"environment,omitempty"`
 	StorageEngine      *StorageEngine                    `json:"storageEngine,omitempty"`
 	Image              *string                           `json:"image,omitempty"`
-	ImagePullPolicy    *v1.PullPolicy                    `json:"imagePullPolicy,omitempty"`
+	ImagePullPolicy    *core.PullPolicy                  `json:"imagePullPolicy,omitempty"`
 	ImagePullSecrets   []string                          `json:"imagePullSecrets,omitempty"`
 	ImageDiscoveryMode *DeploymentImageDiscoveryModeSpec `json:"imageDiscoveryMode,omitempty"`
 	DowntimeAllowed    *bool                             `json:"downtimeAllowed,omitempty"`
@@ -161,7 +161,7 @@ func (s DeploymentSpec) GetSyncImage() string {
 }
 
 // GetImagePullPolicy returns the value of imagePullPolicy.
-func (s DeploymentSpec) GetImagePullPolicy() v1.PullPolicy {
+func (s DeploymentSpec) GetImagePullPolicy() core.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
 }
 
@@ -253,7 +253,7 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 		s.Image = util.NewString(DefaultImage)
 	}
 	if s.GetImagePullPolicy() == "" {
-		s.ImagePullPolicy = util.NewPullPolicy(v1.PullIfNotPresent)
+		s.ImagePullPolicy = util.NewPullPolicy(core.PullIfNotPresent)
 	}
 	s.ExternalAccess.SetDefaults()
 	s.RocksDB.SetDefaults()

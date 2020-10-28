@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -264,13 +266,15 @@ func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, 
 		imageInfo = *m.Image
 	}
 
+	groupSpec := spec.GetServerGroupSpec(group)
+
 	renderedPod, err := context.RenderPodForMember(cachedStatus, spec, status, m.ID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
 		return false, ""
 	}
 
-	checksum, err := k8sutil.GetPodSpecChecksum(renderedPod.Spec)
+	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
 	if err != nil {
 		log.Err(err).Msg("Error while getting pod checksum")
 		return false, ""

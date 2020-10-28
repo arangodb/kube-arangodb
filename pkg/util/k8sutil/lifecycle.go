@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 const (
@@ -38,19 +38,19 @@ const (
 )
 
 // InitLifecycleContainer creates an init-container to copy the lifecycle binary to a shared volume.
-func InitLifecycleContainer(image string, resources *v1.ResourceRequirements, securityContext *v1.SecurityContext) (v1.Container, error) {
+func InitLifecycleContainer(image string, resources *core.ResourceRequirements, securityContext *core.SecurityContext) (core.Container, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
-		return v1.Container{}, maskAny(err)
+		return core.Container{}, maskAny(err)
 	}
-	c := v1.Container{
+	c := core.Container{
 		Name:    initLifecycleContainerName,
 		Image:   image,
 		Command: append([]string{binaryPath}, "lifecycle", "copy", "--target", LifecycleVolumeMountDir),
-		VolumeMounts: []v1.VolumeMount{
+		VolumeMounts: []core.VolumeMount{
 			LifecycleVolumeMount(),
 		},
-		ImagePullPolicy: v1.PullIfNotPresent,
+		ImagePullPolicy: core.PullIfNotPresent,
 		SecurityContext: securityContext,
 	}
 
@@ -61,15 +61,15 @@ func InitLifecycleContainer(image string, resources *v1.ResourceRequirements, se
 }
 
 // NewLifecycle creates a lifecycle structure with preStop handler.
-func NewLifecycle() (*v1.Lifecycle, error) {
+func NewLifecycle() (*core.Lifecycle, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return nil, maskAny(err)
 	}
 	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
-	lifecycle := &v1.Lifecycle{
-		PreStop: &v1.Handler{
-			Exec: &v1.ExecAction{
+	lifecycle := &core.Lifecycle{
+		PreStop: &core.Handler{
+			Exec: &core.ExecAction{
 				Command: append([]string{exePath}, "lifecycle", "preStop"),
 			},
 		},
@@ -78,8 +78,8 @@ func NewLifecycle() (*v1.Lifecycle, error) {
 	return lifecycle, nil
 }
 
-func GetLifecycleEnv() []v1.EnvVar {
-	return []v1.EnvVar{
+func GetLifecycleEnv() []core.EnvVar {
+	return []core.EnvVar{
 		CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
 		CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
 		CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
@@ -88,19 +88,19 @@ func GetLifecycleEnv() []v1.EnvVar {
 }
 
 // LifecycleVolumeMount creates a volume mount structure for shared lifecycle emptyDir.
-func LifecycleVolumeMount() v1.VolumeMount {
-	return v1.VolumeMount{
+func LifecycleVolumeMount() core.VolumeMount {
+	return core.VolumeMount{
 		Name:      lifecycleVolumeName,
 		MountPath: LifecycleVolumeMountDir,
 	}
 }
 
 // LifecycleVolume creates a volume mount structure for shared lifecycle emptyDir.
-func LifecycleVolume() v1.Volume {
-	return v1.Volume{
+func LifecycleVolume() core.Volume {
+	return core.Volume{
 		Name: lifecycleVolumeName,
-		VolumeSource: v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{},
+		VolumeSource: core.VolumeSource{
+			EmptyDir: &core.EmptyDirVolumeSource{},
 		},
 	}
 }

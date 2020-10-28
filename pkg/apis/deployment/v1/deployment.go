@@ -24,18 +24,18 @@ package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoDeploymentList is a list of ArangoDB clusters.
 type ArangoDeploymentList struct {
-	metav1.TypeMeta `json:",inline"`
+	meta.TypeMeta `json:",inline"`
 	// Standard list metadata
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ArangoDeployment `json:"items"`
+	meta.ListMeta `json:"metadata,omitempty"`
+	Items         []ArangoDeployment `json:"items"`
 }
 
 // +genclient
@@ -43,18 +43,18 @@ type ArangoDeploymentList struct {
 
 // ArangoDeployment contains the entire Kubernetes info for an ArangoDB database deployment.
 type ArangoDeployment struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              DeploymentSpec   `json:"spec,omitempty"`
-	Status            DeploymentStatus `json:"status,omitempty"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
+	Spec            DeploymentSpec   `json:"spec,omitempty"`
+	Status          DeploymentStatus `json:"status,omitempty"`
 }
 
 type ServerGroupFunc func(ServerGroup, ServerGroupSpec, *MemberStatusList) error
 
 // AsOwner creates an OwnerReference for the given deployment
-func (d *ArangoDeployment) AsOwner() metav1.OwnerReference {
+func (d *ArangoDeployment) AsOwner() meta.OwnerReference {
 	trueVar := true
-	return metav1.OwnerReference{
+	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       deployment.ArangoDeploymentResourceKind,
 		Name:       d.Name,

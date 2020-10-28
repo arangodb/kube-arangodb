@@ -24,6 +24,7 @@ package resources
 
 import (
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -460,13 +461,18 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			newPhase = api.MemberPhaseUpgrading
 		}
 
-		uid, checksum, err := CreateArangoPod(kubecli, apiObject, pod)
+		sha, err := ChecksumArangoPod(groupSpec, pod)
+		if err != nil {
+			return maskAny(err)
+		}
+
+		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
 			return maskAny(err)
 		}
 
 		m.PodUID = uid
-		m.PodSpecVersion = checksum
+		m.PodSpecVersion = sha
 		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
 		m.ImageID = status.CurrentImage.ImageID
 
@@ -504,14 +510,19 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 		}
 
-		uid, checksum, err := CreateArangoPod(kubecli, apiObject, pod)
+		sha, err := ChecksumArangoPod(groupSpec, pod)
+		if err != nil {
+			return maskAny(err)
+		}
+
+		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
 			return maskAny(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
 		m.PodUID = uid
-		m.PodSpecVersion = checksum
+		m.PodSpecVersion = sha
 	}
 	// Record new member phase
 	m.Phase = newPhase
@@ -589,12 +600,30 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, pod *core.Pod) (types.UID, string, error) {
-	uid, checksum, err := k8sutil.CreatePod(kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
+func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
+	uid, err := k8sutil.CreatePod(kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
-		return "", "", maskAny(err)
+		return "", maskAny(err)
 	}
-	return uid, checksum, nil
+
+	return uid, nil
+}
+
+func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, error) {
+	shaPod := pod.DeepCopy()
+	switch groupSpec.InitContainers.GetMode().Get() {
+	case api.ServerGroupInitContainerUpdateMode:
+		shaPod.Spec.InitContainers = groupSpec.InitContainers.GetContainers()
+	default:
+		shaPod.Spec.InitContainers = nil
+	}
+
+	data, err := json.Marshal(shaPod.Spec)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
 }
 
 // EnsurePods creates all Pods listed in member status
