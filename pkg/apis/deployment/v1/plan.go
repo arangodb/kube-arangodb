@@ -41,6 +41,8 @@ const (
 	ActionTypeIdle ActionType = "Idle"
 	// ActionTypeAddMember causes a member to be added.
 	ActionTypeAddMember ActionType = "AddMember"
+	// ActionTypeMarkToRemoveMember marks member to be removed.
+	ActionTypeMarkToRemoveMember ActionType = "MarkToRemoveMember"
 	// ActionTypeRemoveMember causes a member to be removed.
 	ActionTypeRemoveMember ActionType = "RemoveMember"
 	// ActionTypeRecreateMember recreates member. Used when member is still owner of some shards.

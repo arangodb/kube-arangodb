@@ -26,4 +26,5 @@ const (
 	ArangoDeploymentAnnotationPrefix         = "deployment.arangodb.com"
 	ArangoDeploymentPodMaintenanceAnnotation = ArangoDeploymentAnnotationPrefix + "/maintenance"
 	ArangoDeploymentPodRotateAnnotation      = ArangoDeploymentAnnotationPrefix + "/rotate"
+	ArangoDeploymentPodReplaceAnnotation     = ArangoDeploymentAnnotationPrefix + "/replace"
 )

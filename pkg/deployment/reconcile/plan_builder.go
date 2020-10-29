@@ -214,7 +214,12 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 
 	// Check for scale up/down
 	if plan.IsEmpty() {
-		plan = pb.Apply(createScaleMemeberPlan)
+		plan = pb.Apply(createScaleMemberPlan)
+	}
+
+	// Check for members to be removed
+	if plan.IsEmpty() {
+		plan = pb.Apply(createReplaceMemberPlan)
 	}
 
 	// Check for the need to rotate one or more members

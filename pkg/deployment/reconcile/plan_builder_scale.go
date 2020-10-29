@@ -31,7 +31,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func createScaleMemeberPlan(ctx context.Context,
+func createScaleMemberPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
@@ -100,5 +100,38 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 				Msg("Creating scale-down plan")
 		}
 	}
+	return plan
+}
+
+func createReplaceMemberPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+
+	var plan api.Plan
+
+	// Replace is only allowed for DBServers
+	switch spec.GetMode() {
+	case api.DeploymentModeCluster:
+		status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
+			for _, member := range list {
+				if !plan.IsEmpty() {
+					return nil
+				}
+				if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
+						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
+						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
+					return nil
+				}
+			}
+
+			return nil
+		}, api.ServerGroupDBServers)
+	}
+
 	return plan
 }

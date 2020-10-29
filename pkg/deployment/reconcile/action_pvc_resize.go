@@ -98,9 +98,18 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 
 				return false, nil
 			} else if cmp > 0 {
-				log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-					Msg("Volume size should not shrink")
-				a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
+				if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers {
+					if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+						s.Plan = append(s.Plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
+						return true
+					}); err != nil {
+						log.Error().Err(err).Msg("Unable to mark instance to be replaced")
+					}
+				} else {
+					log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+						Msg("Volume size should not shrink")
+					a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
+				}
 				return false, nil
 			}
 		}

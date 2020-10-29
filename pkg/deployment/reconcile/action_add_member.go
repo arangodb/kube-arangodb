@@ -65,5 +65,20 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 		return false, maskAny(err)
 	}
 	a.newMemberID = newID
+
+	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
+		a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
+			return true
+		})
+	}
+
+	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
+		a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
+			return true
+		})
+	}
+
 	return true, nil
 }

@@ -61,6 +61,8 @@ const (
 	ConditionTypeTerminating ConditionType = "Terminating"
 	// ConditionTypeTerminating indicates that the deployment is up to date.
 	ConditionTypeUpToDate ConditionType = "UpToDate"
+	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
+	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
