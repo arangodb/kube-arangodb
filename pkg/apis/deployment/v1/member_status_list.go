@@ -142,6 +142,12 @@ func (l *MemberStatusList) removeByID(id string) error {
 // Returns an error if the list is empty.
 func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 	if len(l) > 0 {
+		// Try to find member with phase to be removed
+		for _, m := range l {
+			if m.Conditions.IsTrue(ConditionTypeMarkedToRemove) {
+				return m, nil
+			}
+		}
 		// Try to find a not ready member
 		for _, m := range l {
 			if m.Phase == MemberPhaseNone {

@@ -115,8 +115,12 @@ func createRotateServerStoragePlan(ctx context.Context,
 							if cmp < 0 {
 								plan = append(plan, pvcResizePlan(log, group, groupSpec, m.ID)...)
 							} else if cmp > 0 {
-								log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-									Msg("Volume size should not shrink")
+								if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers {
+									plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
+								} else {
+									log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+										Msg("Volume size should not shrink")
+								}
 							}
 						}
 					}

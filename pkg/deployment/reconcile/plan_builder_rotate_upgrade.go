@@ -144,8 +144,14 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			}
 
 			if pod.Annotations != nil {
+				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && group == api.ServerGroupDBServers {
+					newPlan = api.Plan{api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID, "Replace flag present")}
+					continue
+				}
+
 				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
 					newPlan = createRotateMemberPlan(log, m, group, "Rotation flag present")
+					continue
 				}
 			}
 		}
