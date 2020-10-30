@@ -1302,6 +1302,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(PVCResizeMode)
 		**out = **in
 	}
+	if in.VolumeAllowShrink != nil {
+		in, out := &in.VolumeAllowShrink, &out.VolumeAllowShrink
+		*out = new(bool)
+		**out = **in
+	}
 	if in.AntiAffinity != nil {
 		in, out := &in.AntiAffinity, &out.AntiAffinity
 		*out = new(corev1.PodAntiAffinity)
@@ -1646,6 +1651,21 @@ func (in *ServerIDGroupSpec) DeepCopyInto(out *ServerIDGroupSpec) {
 	if in.NodeAffinity != nil {
 		in, out := &in.NodeAffinity, &out.NodeAffinity
 		*out = new(corev1.NodeAffinity)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.ServiceAccountName != nil {
+		in, out := &in.ServiceAccountName, &out.ServiceAccountName
+		*out = new(string)
+		**out = **in
+	}
+	if in.SecurityContext != nil {
+		in, out := &in.SecurityContext, &out.SecurityContext
+		*out = new(ServerGroupSpecSecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(corev1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
 	}
 	return

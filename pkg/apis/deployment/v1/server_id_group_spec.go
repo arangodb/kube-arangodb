@@ -38,6 +38,12 @@ type ServerIDGroupSpec struct {
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
+	// ServiceAccountName specifies the name of the service account used for Pods in this group.
+	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+	// SecurityContext specifies security context for group
+	SecurityContext *ServerGroupSpecSecurityContext `json:"securityContext,omitempty"`
+	// Resources holds resource requests & limits
+	Resources *core.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (s *ServerIDGroupSpec) Get() ServerIDGroupSpec {
@@ -46,4 +52,23 @@ func (s *ServerIDGroupSpec) Get() ServerIDGroupSpec {
 	}
 
 	return ServerIDGroupSpec{}
+}
+
+func (s *ServerIDGroupSpec) GetServiceAccountName() string {
+	if s == nil || s.ServiceAccountName == nil {
+		return ""
+	}
+
+	return *s.ServiceAccountName
+}
+
+func (s *ServerIDGroupSpec) GetResources() core.ResourceRequirements {
+	if s == nil || s.Resources == nil {
+		return core.ResourceRequirements{
+			Limits:   make(core.ResourceList),
+			Requests: make(core.ResourceList),
+		}
+	}
+
+	return *s.Resources
 }

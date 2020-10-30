@@ -235,10 +235,7 @@ func (a *ArangoDImageUpdateContainer) GetProbes() (*core.Probe, *core.Probe, err
 }
 
 func (a *ArangoDImageUpdateContainer) GetResourceRequirements() core.ResourceRequirements {
-	return core.ResourceRequirements{
-		Limits:   make(core.ResourceList),
-		Requests: make(core.ResourceList),
-	}
+	return a.spec.ID.GetResources()
 }
 
 func (a *ArangoDImageUpdateContainer) GetImage() string {
@@ -351,7 +348,7 @@ func (i *ImageUpdatePod) GetNodeSelector() map[string]string {
 }
 
 func (i *ImageUpdatePod) GetServiceAccountName() string {
-	return ""
+	return i.spec.ID.GetServiceAccountName()
 }
 
 func (a *ArangoDImageUpdateContainer) GetPorts() []core.ContainerPort {
@@ -365,9 +362,7 @@ func (a *ArangoDImageUpdateContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoDImageUpdateContainer) GetSecurityContext() *core.SecurityContext {
-	// Default security context
-	var v api.ServerGroupSpecSecurityContext
-	return v.NewSecurityContext()
+	return a.spec.ID.Get().SecurityContext.NewSecurityContext()
 }
 
 func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
