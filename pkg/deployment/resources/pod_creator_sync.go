@@ -77,7 +77,7 @@ func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoSyncContainer) GetExecutor() string {
-	return ArangoSyncExecutor
+	return a.groupSpec.GetEntrypoint(ArangoSyncExecutor)
 }
 
 func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {

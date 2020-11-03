@@ -4,6 +4,7 @@
 - Allow to mount EmptyDir
 - Allow to specify initContainers in pods
 - Add serviceAccount, resources and securityContext fields to ID Group
+- Allow to override Entrypoint
 
 ## [1.1.0](https://github.com/arangodb/kube-arangodb/tree/master) (2020-10-14)
 - Change NumberOfCores and MemoryOverride flags to be set to true by default

@@ -26,6 +26,8 @@ import core "k8s.io/api/core/v1"
 
 // ServerIDGroupSpec contains the specification for Image Discovery image.
 type ServerIDGroupSpec struct {
+	// Entrypoint overrides container executable
+	Entrypoint *string `json:"entrypoint,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
 	// NodeSelector speficies a set of selectors for nodes
@@ -71,4 +73,12 @@ func (s *ServerIDGroupSpec) GetResources() core.ResourceRequirements {
 	}
 
 	return *s.Resources
+}
+
+func (s *ServerIDGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
+	if s == nil || s.Entrypoint == nil {
+		return defaultEntrypoint
+	}
+
+	return *s.Entrypoint
 }
