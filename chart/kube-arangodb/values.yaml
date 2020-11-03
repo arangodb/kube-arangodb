@@ -29,6 +29,8 @@ operator:
 
   allowChaos: false
 
+  nodeSelector: {}
+
   features:
     deployment: true
     deploymentReplications: true

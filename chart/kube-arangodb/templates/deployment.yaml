@@ -46,6 +46,10 @@ spec:
 {{ toYaml .Values.operator.annotations | indent 16 }}
 {{- end }}
         spec:
+{{- if .Values.operator.nodeSelector }}
+            nodeSelector:
+{{ toYaml .Values.operator.nodeSelector | indent 16 }}
+{{- end }}
             serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
             affinity:
               nodeAffinity:
