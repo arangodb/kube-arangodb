@@ -113,6 +113,12 @@ Requested memory for operator pods.
 
 Default: `256Mi`
 
+### `operator.nodeSelector`
+
+NodeSelector for Deployment pods.
+
+Default: `{}`
+
 ### `operator.replicaCount`
 
 Replication count for Operator deployment.
