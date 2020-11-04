@@ -1,13 +1,15 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.1](https://github.com/arangodb/kube-arangodb/tree/1.1.1) (2020-11-04)
 - Allow to mount EmptyDir
 - Allow to specify initContainers in pods
 - Add serviceAccount, resources and securityContext fields to ID Group
 - Allow to override Entrypoint
 - Add NodeSelector to Deployment Helm Chart
 
-## [1.1.0](https://github.com/arangodb/kube-arangodb/tree/master) (2020-10-14)
+## [1.1.0](https://github.com/arangodb/kube-arangodb/tree/1.1.0) (2020-10-14)
 - Change NumberOfCores and MemoryOverride flags to be set to true by default
 - Enable by default and promote to Production Ready - JWT Rotation Feature, TLS Rotation Feature
 - Deprecate K8S < 1.16
