@@ -48,6 +48,8 @@ type ServerGroupSpec struct {
 	MaxCount *int `json:"maxCount,omitempty"`
 	// Args holds additional commandline arguments
 	Args []string `json:"args,omitempty"`
+	// Entrypoint overrides container executable
+	Entrypoint *string `json:"entrypoint,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
@@ -622,4 +624,12 @@ func (s ServerGroupSpec) GetVolumeAllowShrink() bool {
 	}
 
 	return *s.VolumeAllowShrink
+}
+
+func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
+	if s == nil || s.Entrypoint == nil {
+		return defaultEntrypoint
+	}
+
+	return *s.Entrypoint
 }

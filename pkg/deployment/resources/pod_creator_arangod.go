@@ -98,7 +98,7 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
-	return ArangoDExecutor
+	return a.groupSpec.GetEntrypoint(ArangoDExecutor)
 }
 
 func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {

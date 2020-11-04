@@ -227,7 +227,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 }
 
 func (a *ArangoDImageUpdateContainer) GetExecutor() string {
-	return resources.ArangoDExecutor
+	return a.spec.ID.GetEntrypoint(resources.ArangoDExecutor)
 }
 
 func (a *ArangoDImageUpdateContainer) GetProbes() (*core.Probe, *core.Probe, error) {
