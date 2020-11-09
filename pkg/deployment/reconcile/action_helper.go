@@ -30,6 +30,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type TimeoutFetcher func(deploymentSpec api.DeploymentSpec) time.Duration
+
+func NewTimeoutFetcher(t time.Duration) TimeoutFetcher {
+	return func(deploymentSpec api.DeploymentSpec) time.Duration {
+		return t
+	}
+}
+
 type actionEmptyCheckProgress struct {
 }
 
@@ -55,6 +63,18 @@ func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContex
 		panic("Action cannot have nil reference to member!")
 	}
 
+	return newBaseActionImpl(log, action, actionCtx, NewTimeoutFetcher(timeout), memberIDRef)
+}
+
+func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher) actionImpl {
+	return newBaseActionImpl(log, action, actionCtx, timeout, &action.MemberID)
+}
+
+func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher, memberIDRef *string) actionImpl {
+	if memberIDRef == nil {
+		panic("Action cannot have nil reference to member!")
+	}
+
 	return actionImpl{
 		log:         log,
 		action:      action,
@@ -69,13 +89,17 @@ type actionImpl struct {
 	action    api.Action
 	actionCtx ActionContext
 
-	timeout     time.Duration
+	timeout     TimeoutFetcher
 	memberIDRef *string
 }
 
 // Timeout returns the amount of time after which this action will timeout.
-func (a actionImpl) Timeout() time.Duration {
-	return a.timeout
+func (a actionImpl) Timeout(deploymentSpec api.DeploymentSpec) time.Duration {
+	if a.timeout == nil {
+		return defaultTimeout
+	}
+
+	return a.timeout(deploymentSpec)
 }
 
 // Return the MemberID used / created in this action

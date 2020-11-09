@@ -25,7 +25,7 @@ package reconcile
 import "time"
 
 const (
-	addMemberTimeout                 = time.Minute * 5
+	addMemberTimeout                 = time.Minute * 10
 	cleanoutMemberTimeout            = time.Hour * 12
 	removeMemberTimeout              = time.Minute * 15
 	recreateMemberTimeout            = time.Minute * 15

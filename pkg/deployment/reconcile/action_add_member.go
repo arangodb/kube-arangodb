@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -39,7 +40,9 @@ func init() {
 func newAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionAddMember{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, addMemberTimeout, &a.newMemberID)
+	a.actionImpl = newBaseActionImpl(log, action, actionCtx, func(deploymentSpec api.DeploymentSpec) time.Duration {
+		return deploymentSpec.Timeouts.Get().AddMember.Get(addMemberTimeout)
+	}, &a.newMemberID)
 
 	return a
 }

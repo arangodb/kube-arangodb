@@ -127,6 +127,10 @@ const (
 	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
 	// ActionTypeEnableMaintenance disables maintenance on cluster.
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
+	// ActionTypeBootstrapUpdate update bootstrap status to true
+	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
+	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
+	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
 )
 
 const (
@@ -182,9 +186,9 @@ func (a Action) AddParam(key, value string) Action {
 }
 
 // GetParam returns action parameter
-func (a Action) GetParam(key string) (interface{}, bool) {
+func (a Action) GetParam(key string) (string, bool) {
 	if a.Params == nil {
-		return nil, false
+		return "", false
 	}
 
 	i, ok := a.Params[key]
