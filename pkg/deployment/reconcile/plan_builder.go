@@ -279,6 +279,10 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.Apply(createTLSStatusPropagated)
 	}
 
+	if plan.IsEmpty() {
+		plan = pb.Apply(createBootstrapPlan)
+	}
+
 	// Return plan
 	return plan, true
 }

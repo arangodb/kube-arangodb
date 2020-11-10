@@ -40,8 +40,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -204,33 +202,6 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
 		}
-	}
-
-	for username, secretName := range spec.Bootstrap.PasswordSecretNames {
-		if secretName.IsNone() || secretName.IsAuto() {
-			continue
-		}
-
-		_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetNamespace()).Get(string(secretName), metav1.GetOptions{})
-		if k8sutil.IsNotFound(err) {
-			// do nothing when secret was deleted
-			continue
-		}
-
-		getExpectedHash := func() string {
-			if v, ok := getHashes().Users[username]; ok {
-				return v
-			}
-			return ""
-		}
-		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) {
-				dst.Users[username] = h
-			}))
-		}
-
-		// If password changes it should not be set that deployment in 'SecretsChanged' state
-		validate(string(secretName), getExpectedHash, setExpectedHash, changeUserPassword)
 	}
 
 	if len(badSecretNames) > 0 {

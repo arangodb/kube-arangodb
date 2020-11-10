@@ -257,11 +257,6 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "AccessPackage creation failed")
 	}
 
-	// Ensure deployment bootstrap
-	if err := d.EnsureBootstrap(); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Bootstrap failed")
-	}
-
 	// Inspect deployment for obsolete members
 	if err := d.resources.CleanupRemovedMembers(); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")

@@ -34,6 +34,10 @@ const (
 // PasswordSecretName contains user password secret name
 type PasswordSecretName string
 
+func (p PasswordSecretName) Get() string {
+	return string(p)
+}
+
 const (
 	// PasswordSecretNameNone is magic value for no action
 	PasswordSecretNameNone PasswordSecretName = "None"

@@ -136,7 +136,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 					d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
 				} else {
 					// Not ready yet & no abort, check timeout
-					deadline := planAction.CreationTime.Add(action.Timeout())
+					deadline := planAction.CreationTime.Add(action.Timeout(d.context.GetSpec()))
 					if time.Now().After(deadline) {
 						// Timeout has expired
 						deadlineExpired = true

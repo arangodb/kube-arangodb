@@ -110,6 +110,8 @@ type DeploymentSpec struct {
 	Recovery *ArangoDeploymentRecoverySpec `json:"recovery,omitempty"`
 
 	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
+
+	Timeouts *Timeouts `json:"timeouts,omitempty"`
 }
 
 // GetRestoreFrom returns the restore from string or empty string if not set
