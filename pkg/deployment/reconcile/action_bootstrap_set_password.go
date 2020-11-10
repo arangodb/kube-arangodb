@@ -109,11 +109,11 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	}
 
 	// Obtain the user
-	if u, err := client.User(context.TODO(), user); driver.IsNotFound(err) {
-		_, err := client.CreateUser(context.TODO(), user, &driver.UserOptions{Password: password})
+	if u, err := client.User(context.Background(), user); driver.IsNotFound(err) {
+		_, err := client.CreateUser(context.Background(), user, &driver.UserOptions{Password: password})
 		return password, maskAny(err)
 	} else if err == nil {
-		return password, maskAny(u.Update(context.TODO(), driver.UserOptions{
+		return password, maskAny(u.Update(context.Background(), driver.UserOptions{
 			Password: password,
 		}))
 	} else {

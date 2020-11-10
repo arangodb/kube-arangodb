@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Fix Bootstrap phase and move it under Plan
 
 ## [1.1.1](https://github.com/arangodb/kube-arangodb/tree/1.1.1) (2020-11-04)
 - Allow to mount EmptyDir
