@@ -24,6 +24,7 @@ package deployment
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment/v1"
+	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment/v2alpha1"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
@@ -31,6 +32,8 @@ import (
 type Interface interface {
 	// V1 provides access to shared informers for resources in V1.
 	V1() v1.Interface
+	// V2alpha1 provides access to shared informers for resources in V2alpha1.
+	V2alpha1() v2alpha1.Interface
 }
 
 type group struct {
@@ -47,4 +50,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // V1 returns a new v1.Interface.
 func (g *group) V1() v1.Interface {
 	return v1.New(g.factory, g.namespace, g.tweakListOptions)
+}
+
+// V2alpha1 returns a new v2alpha1.Interface.
+func (g *group) V2alpha1() v2alpha1.Interface {
+	return v2alpha1.New(g.factory, g.namespace, g.tweakListOptions)
 }
