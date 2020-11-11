@@ -1,4 +1,4 @@
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
     name: arangodeployments.database.arangodb.com
@@ -9,21 +9,37 @@ metadata:
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
 spec:
-    group: database.arangodb.com
-    names:
-        kind: ArangoDeployment
-        listKind: ArangoDeploymentList
-        plural: arangodeployments
-        shortNames:
-            - arangodb
-            - arango
-        singular: arangodeployment
-    scope: Namespaced
-    version: v1
-    versions:
-      - name: v1
-        served: true
-        storage: true
-      - name: v1alpha
-        served: true
-        storage: false
+  group: database.arangodb.com
+  names:
+    kind: ArangoDeployment
+    listKind: ArangoDeploymentList
+    plural: arangodeployments
+    shortNames:
+      - arangodb
+      - arango
+    singular: arangodeployment
+  scope: Namespaced
+  versions:
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+    - name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+    - name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
