@@ -27,7 +27,9 @@ import (
 
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
+	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
+	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -38,7 +40,9 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
+	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
 	ReplicationV1() replicationv1.ReplicationV1Interface
+	ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface
 	StorageV1alpha() storagev1alpha.StorageV1alphaInterface
 }
 
@@ -46,10 +50,12 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	backupV1       *backupv1.BackupV1Client
-	databaseV1     *databasev1.DatabaseV1Client
-	replicationV1  *replicationv1.ReplicationV1Client
-	storageV1alpha *storagev1alpha.StorageV1alphaClient
+	backupV1            *backupv1.BackupV1Client
+	databaseV1          *databasev1.DatabaseV1Client
+	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
+	replicationV1       *replicationv1.ReplicationV1Client
+	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
+	storageV1alpha      *storagev1alpha.StorageV1alphaClient
 }
 
 // BackupV1 retrieves the BackupV1Client
@@ -62,9 +68,19 @@ func (c *Clientset) DatabaseV1() databasev1.DatabaseV1Interface {
 	return c.databaseV1
 }
 
+// DatabaseV2alpha1 retrieves the DatabaseV2alpha1Client
+func (c *Clientset) DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface {
+	return c.databaseV2alpha1
+}
+
 // ReplicationV1 retrieves the ReplicationV1Client
 func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
 	return c.replicationV1
+}
+
+// ReplicationV2alpha1 retrieves the ReplicationV2alpha1Client
+func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface {
+	return c.replicationV2alpha1
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient
@@ -101,7 +117,15 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.databaseV2alpha1, err = databasev2alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.replicationV1, err = replicationv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.replicationV2alpha1, err = replicationv2alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +147,9 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.backupV1 = backupv1.NewForConfigOrDie(c)
 	cs.databaseV1 = databasev1.NewForConfigOrDie(c)
+	cs.databaseV2alpha1 = databasev2alpha1.NewForConfigOrDie(c)
 	cs.replicationV1 = replicationv1.NewForConfigOrDie(c)
+	cs.replicationV2alpha1 = replicationv2alpha1.NewForConfigOrDie(c)
 	cs.storageV1alpha = storagev1alpha.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
@@ -135,7 +161,9 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)
+	cs.databaseV2alpha1 = databasev2alpha1.New(c)
 	cs.replicationV1 = replicationv1.New(c)
+	cs.replicationV2alpha1 = replicationv2alpha1.New(c)
 	cs.storageV1alpha = storagev1alpha.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
