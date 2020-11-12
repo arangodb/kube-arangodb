@@ -28,8 +28,12 @@ import (
 	fakebackupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1/fake"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	fakedatabasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1/fake"
+	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
+	fakedatabasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1/fake"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	fakereplicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1/fake"
+	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
+	fakereplicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1/fake"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
 	fakestoragev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -96,9 +100,19 @@ func (c *Clientset) DatabaseV1() databasev1.DatabaseV1Interface {
 	return &fakedatabasev1.FakeDatabaseV1{Fake: &c.Fake}
 }
 
+// DatabaseV2alpha1 retrieves the DatabaseV2alpha1Client
+func (c *Clientset) DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface {
+	return &fakedatabasev2alpha1.FakeDatabaseV2alpha1{Fake: &c.Fake}
+}
+
 // ReplicationV1 retrieves the ReplicationV1Client
 func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
 	return &fakereplicationv1.FakeReplicationV1{Fake: &c.Fake}
+}
+
+// ReplicationV2alpha1 retrieves the ReplicationV2alpha1Client
+func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface {
+	return &fakereplicationv2alpha1.FakeReplicationV2alpha1{Fake: &c.Fake}
 }
 
 // StorageV1alpha retrieves the StorageV1alphaClient
