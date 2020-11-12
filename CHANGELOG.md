@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Add v2alpha1 API for ArangoDeployment and ArangoDeploymentReplication
+- Migrate CRD to apiextensions.k8s.io/v1
 
 ## [1.1.2](https://github.com/arangodb/kube-arangodb/tree/1.1.2) (2020-11-11)
 - Fix Bootstrap phase and move it under Plan
