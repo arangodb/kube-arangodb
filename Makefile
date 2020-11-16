@@ -1,3 +1,6 @@
+CURRENT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ROOT:=$(CURRENT)
+
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
 ROOTDIR := $(shell cd $(SCRIPTDIR) && pwd)
@@ -605,3 +608,29 @@ tools: update-vendor
 vendor:
 	@echo ">> Updating vendor"
 	@go mod vendor
+
+set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
+set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
+
+set-deployment-api-version-v1: export API_VERSION=1
+set-deployment-api-version-v1: set-api-version/deployment set-api-version/replication
+
+set-api-version/%:
+	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
+	      "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/operator/" \
+	      "$(ROOT)/pkg/server/" \
+	      "$(ROOT)/pkg/util/" \
+	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/apis/backup/" \
+	  | cut -d ':' -f 1 | sort | uniq \
+	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
+	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
+		  "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/operator/" \
+	      "$(ROOT)/pkg/server/" \
+		  "$(ROOT)/pkg/util/" \
+	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/apis/backup/" \
+	  | cut -d ':' -f 1 | sort | uniq \
+	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
