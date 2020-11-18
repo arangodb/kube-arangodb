@@ -60,6 +60,8 @@ type DeploymentSpec struct {
 	DowntimeAllowed    *bool                             `json:"downtimeAllowed,omitempty"`
 	DisableIPv6        *bool                             `json:"disableIPv6,omitempty"`
 
+	Upgrade *DeploymentUpgradeSpec `json:"upgrade,omitempty"`
+
 	Features *DeploymentFeatures `json:"features,omitempty"`
 
 	NetworkAttachedVolumes *bool `json:"networkAttachedVolumes,omitempty"`

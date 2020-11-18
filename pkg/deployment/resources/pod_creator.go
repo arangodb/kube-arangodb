@@ -58,7 +58,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func createArangodArgs(input pod.Input) []string {
+func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 
 	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
@@ -78,6 +78,8 @@ func createArangodArgs(input pod.Input) []string {
 	// Logging
 	options.Add("--log.level", "INFO")
 
+	options.Append(additionalOptions...)
+
 	// TLS
 	options.Merge(pod.TLS().Args(input))
 
@@ -87,7 +89,6 @@ func createArangodArgs(input pod.Input) []string {
 	options.Add("--database.directory", k8sutil.ArangodVolumeMountDir)
 	options.Add("--log.output", "+")
 
-	options.Merge(pod.AutoUpgrade().Args(input))
 	options.Merge(pod.SNI().Args(input))
 
 	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(input.Version)
@@ -299,7 +300,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	// Render pod
 	if group.IsArangod() {
 		// Prepare arguments
-		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade)
+		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
 
 		memberPod := MemberArangoDPod{
 			status:           m,

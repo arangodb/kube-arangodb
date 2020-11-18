@@ -112,17 +112,12 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	log = log.With().
 		Str("pod-name", m.PodName).
 		Bool("is-upgrading", isUpgrading).Logger()
-	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
+	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
 		// Pod is not yet terminated
 		return false, false, nil
 	}
-	// Pod is terminated, we can now remove it
-	log.Debug().Msg("Deleting pod")
-	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-		return false, false, maskAny(err)
-	}
 	// Pod is now gone, update the member status
-	m.Phase = api.MemberPhaseNone
+	m.Phase = api.MemberPhaseCreated
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	m.CleanoutJobID = ""
 	if err := a.actionCtx.UpdateMember(m); err != nil {
