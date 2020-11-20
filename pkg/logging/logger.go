@@ -29,16 +29,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog"
-)
+	"github.com/pkg/errors"
 
-var (
-	// The defaultLevels list is used during development to increase the
-	// default level for components that we care a little less about.
-	defaultLevels = map[string]string{
-		//"operator": "info",
-		//"something.status": "info",
-	}
+	"github.com/rs/zerolog"
 )
 
 // Service exposes the interfaces for a logger service
@@ -70,7 +63,7 @@ func NewRootLogger() zerolog.Logger {
 }
 
 // NewService creates a new Service.
-func NewService(defaultLevel string) (Service, error) {
+func NewService(defaultLevel string, overrides []string) (Service, error) {
 	l, err := stringToLevel(defaultLevel)
 	if err != nil {
 		return nil, maskAny(err)
@@ -81,8 +74,25 @@ func NewService(defaultLevel string) (Service, error) {
 		defaultLevel: l,
 		levels:       make(map[string]zerolog.Level),
 	}
-	for k, v := range defaultLevels {
-		s.MustSetLevel(k, v)
+
+	for _, override := range overrides {
+		levelParts := strings.Split(override, "=")
+		switch size := len(levelParts); size {
+		case 1:
+			level, err := stringToLevel(levelParts[0])
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			s.defaultLevel = level
+		case 2:
+			level, err := stringToLevel(levelParts[1])
+			if err != nil {
+				return nil, maskAny(err)
+			}
+			s.levels[levelParts[0]] = level
+		default:
+			return nil, errors.Errorf("invalid log definition %s: Length %d is not equal 1 or 2", override, size)
+		}
 	}
 	return s, nil
 }
