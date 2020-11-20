@@ -116,7 +116,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			AutoUpgrade: true,
 			ID:          "id1",
 		}
-		cmdline := createArangodArgs(input)
+		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",
@@ -169,7 +169,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			AutoUpgrade: true,
 			ID:          "id1",
 		}
-		cmdline := createArangodArgs(input)
+		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",

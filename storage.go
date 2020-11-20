@@ -64,7 +64,7 @@ func init() {
 func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	//goflag.CommandLine.Parse([]string{"-logtostderr"})
 	var err error
-	logService, err = logging.NewService(logLevel)
+	logService, err = logging.NewService(logLevels)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}

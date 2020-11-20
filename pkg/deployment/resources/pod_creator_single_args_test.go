@@ -91,7 +91,7 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: true,
 			ID:          "a1",
 		}
-		cmdline := createArangodArgs(input)
+		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
 			[]string{
 				"--database.auto-upgrade=true",

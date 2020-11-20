@@ -58,6 +58,11 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
+func createArangodArgsWithUpgrade(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
+	return createArangodArgs(input, pod.AutoUpgrade().Args(input)...)
+}
+
+// createArangodArgs creates command line arguments for an arangod server in the given group.
 func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 

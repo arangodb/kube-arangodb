@@ -427,11 +427,7 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade {
-			options := k8sutil.CreateOptionPairs()
-
-			options.Merge(pod.AutoUpgrade().Args(m.AsInput()))
-
-			args := createArangodArgs(m.AsInput(), options...)
+			args := createArangodArgsWithUpgrade(m.AsInput())
 
 			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
 			if err != nil {
