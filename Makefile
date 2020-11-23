@@ -649,7 +649,7 @@ set-api-version/%:
 
 synchronize-v2alpha1-with-v1:
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
-	@for file in $(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec basename {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/${file}"; done
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec basename {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
 	@make update-generated
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin
