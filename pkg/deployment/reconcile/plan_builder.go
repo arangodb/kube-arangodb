@@ -50,6 +50,8 @@ type upgradeDecision struct {
 	UpgradeNeeded     bool // If set, the image version has changed
 	UpgradeAllowed    bool // If set, it is an allowed version change
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
+
+	Hold bool
 }
 
 // CreatePlan considers the current specification & status of the deployment creates a plan to

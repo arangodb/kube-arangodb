@@ -69,6 +69,8 @@ type MemberStatus struct {
 	ImageID string `json:"image-id,omitempty"`
 	// Image holds image details
 	Image *ImageInfo `json:"image,omitempty"`
+	// Upgrade define if upgrade should be enforced during next execution
+	Upgrade bool `json:"upgrade,omitempty"`
 }
 
 // Equal checks for equality
@@ -84,7 +86,8 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		reflect.DeepEqual(s.SideCarSpecs, other.SideCarSpecs) &&
 		s.ArangoVersion == other.ArangoVersion &&
 		s.ImageID == other.ImageID &&
-		s.Image.Equal(other.Image)
+		s.Image.Equal(other.Image) &&
+		s.Upgrade == other.Upgrade
 }
 
 // Age returns the duration since the creation timestamp of this member.

@@ -419,9 +419,30 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer("uuid", m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
+		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
+	}
+
+	{
+		// Upgrade container - run in background
+		if m.autoUpgrade {
+			args := createArangodArgsWithUpgrade(m.AsInput())
+
+			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
+			if err != nil {
+				return nil, err
+			}
+
+			_, c.VolumeMounts = m.GetVolumes()
+
+			c.Name = api.ServerGroupReservedInitContainerNameUpgrade
+			c.Lifecycle = nil
+			c.LivenessProbe = nil
+			c.ReadinessProbe = nil
+
+			initContainers = append(initContainers, c)
+		}
 	}
 
 	return initContainers, nil
