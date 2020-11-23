@@ -92,7 +92,7 @@ var (
 		Run: cmdMainRun,
 	}
 
-	logLevel      string
+	logLevels     []string
 	cliLog        = logging.NewRootLogger()
 	logService    logging.Service
 	serverOptions struct {
@@ -131,7 +131,7 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
-	f.StringVar(&logLevel, "log.level", defaultLogLevel, "Set initial log level")
+	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, "Set log levels in format <level> or <logger>=<level>")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
@@ -170,7 +170,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 	// Prepare log service
 	var err error
-	logService, err = logging.NewService(logLevel)
+	logService, err = logging.NewService(defaultLogLevel, logLevels)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to initialize log service")
 	}
