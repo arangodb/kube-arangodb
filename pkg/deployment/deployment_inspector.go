@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -98,6 +100,8 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 			log.Debug().Msg("Deployment is in Failed state.")
 			return nextInterval
 		}
+
+		d.apiObject = updated
 
 		if inspectNextInterval, err := d.inspectDeploymentWithError(ctx, nextInterval, cachedStatus); err != nil {
 			if !operatorErrors.IsReconcile(err) {
@@ -210,7 +214,18 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Create scale/update plan
-	if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
+	if _, ok := d.apiObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
+		if err := d.ApplyPatch(patch.ItemRemove(patch.NewPath("metadata", "annotations", deployment.ArangoDeploymentPlanCleanAnnotation))); err != nil {
+			return minInspectionInterval, errors.Errorf("Unable to create remove annotation patch", err)
+		}
+
+		if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+			s.Plan = nil
+			return true
+		}, true); err != nil {
+			return minInspectionInterval, errors.Errorf("Unable clean plan", err)
+		}
+	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
 		return minInspectionInterval, nil
