@@ -32,11 +32,12 @@ import (
 const (
 	ServerGroupReservedInitContainerNameLifecycle = "init-lifecycle"
 	ServerGroupReservedInitContainerNameUUID      = "uuid"
+	ServerGroupReservedInitContainerNameUpgrade   = "upgrade"
 )
 
 func IsReservedServerGroupInitContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID:
+	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade:
 		return true
 	default:
 		return false

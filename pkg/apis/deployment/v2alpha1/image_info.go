@@ -35,6 +35,10 @@ type ImageInfo struct {
 // ImageInfoList is a list of image infos
 type ImageInfoList []ImageInfo
 
+func (l ImageInfoList) Add(i ...ImageInfo) ImageInfoList {
+	return append(l, i...)
+}
+
 // GetByImage returns the info in the given list for the image with given name.
 // If not found, false is returned.
 func (l ImageInfoList) GetByImage(image string) (ImageInfo, bool) {

@@ -618,6 +618,7 @@ set-deployment-api-version-v1: set-api-version/deployment set-api-version/replic
 set-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/replication/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 	      "$(ROOT)/pkg/util/" \
@@ -627,6 +628,7 @@ set-api-version/%:
 	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
+	      "$(ROOT)/pkg/replication/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
@@ -634,3 +636,20 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
+	@grep -rHn "ReplicationV[A-Za-z0-9]\+()" \
+		  "$(ROOT)/pkg/deployment/" \
+		  "$(ROOT)/pkg/replication/" \
+		  "$(ROOT)/pkg/operator/" \
+		  "$(ROOT)/pkg/server/" \
+		  "$(ROOT)/pkg/util/" \
+		  "$(ROOT)/pkg/backup/" \
+		  "$(ROOT)/pkg/apis/backup/" \
+	  | cut -d ':' -f 1 | sort | uniq \
+	  | xargs -n 1 sed -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
+
+synchronize-v2alpha1-with-v1:
+	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec basename {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
+	@make update-generated
+	@make set-deployment-api-version-v2alpha1 bin
+	@make set-deployment-api-version-v1 bin

@@ -90,7 +90,11 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			}
 
 			// Got pod, compare it with what it should be
-			decision := podNeedsUpgrading(log, pod, spec, status.Images)
+			decision := podNeedsUpgrading(log, m, spec, status.Images)
+			if decision.Hold {
+				return nil
+			}
+
 			if decision.UpgradeNeeded && !decision.UpgradeAllowed {
 				// Oops, upgrade is not allowed
 				upgradeNotAllowed = true
@@ -108,7 +112,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 
 			if decision.UpgradeNeeded {
 				// Yes, upgrade is needed (and allowed)
-				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec.GetImage(), status,
+				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec, status,
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Use new level of rotate logic
@@ -181,70 +185,98 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(log zerolog.Logger, p *core.Pod, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
-	if c, found := k8sutil.GetContainerByName(p, k8sutil.ServerContainerName); found {
-		specImageInfo, found := images.GetByImage(spec.GetImage())
-		if !found {
-			return upgradeDecision{UpgradeNeeded: false}
+func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
+	currentImage, found := currentImageInfo(spec, images)
+	if !found {
+		// Hold rotation tasks - we do not know image
+		return upgradeDecision{Hold: true}
+	}
+
+	memberImage, found := memberImageInfo(spec, status, images)
+	if !found {
+		// Member info not found
+		return upgradeDecision{UpgradeNeeded: false}
+	}
+
+	if currentImage.Image == memberImage.Image {
+		// No change
+		return upgradeDecision{UpgradeNeeded: false}
+	}
+	// Image changed, check if change is allowed
+	specVersion := currentImage.ArangoDBVersion
+	memberVersion := memberImage.ArangoDBVersion
+	asLicense := func(info api.ImageInfo) upgraderules.License {
+		if info.Enterprise {
+			return upgraderules.LicenseEnterprise
 		}
-		podImageInfo, found := images.GetByImageID(c.Image)
-		if !found {
-			return upgradeDecision{UpgradeNeeded: false}
-		}
-		if specImageInfo.ImageID == podImageInfo.ImageID {
-			// No change
-			return upgradeDecision{UpgradeNeeded: false}
-		}
-		// Image changed, check if change is allowed
-		specVersion := specImageInfo.ArangoDBVersion
-		podVersion := podImageInfo.ArangoDBVersion
-		asLicense := func(info api.ImageInfo) upgraderules.License {
-			if info.Enterprise {
-				return upgraderules.LicenseEnterprise
-			}
-			return upgraderules.LicenseCommunity
-		}
-		specLicense := asLicense(specImageInfo)
-		podLicense := asLicense(podImageInfo)
-		if err := upgraderules.CheckUpgradeRulesWithLicense(podVersion, specVersion, podLicense, specLicense); err != nil {
-			// E.g. 3.x -> 4.x, we cannot allow automatically
-			return upgradeDecision{
-				FromVersion:    podVersion,
-				FromLicense:    podLicense,
-				ToVersion:      specVersion,
-				ToLicense:      specLicense,
-				UpgradeNeeded:  true,
-				UpgradeAllowed: false,
-			}
-		}
-		if specVersion.Major() != podVersion.Major() || specVersion.Minor() != podVersion.Minor() {
-			// Is allowed, with `--database.auto-upgrade`
-			log.Info().Str("spec-version", string(specVersion)).Str("pod-version", string(podVersion)).
-				Int("spec-version.major", specVersion.Major()).Int("spec-version.minor", specVersion.Minor()).
-				Int("pod-version.major", podVersion.Major()).Int("pod-version.minor", podVersion.Minor()).
-				Str("pod", p.GetName()).Msg("Deciding to do a upgrade with --auto-upgrade")
-			return upgradeDecision{
-				FromVersion:       podVersion,
-				FromLicense:       podLicense,
-				ToVersion:         specVersion,
-				ToLicense:         specLicense,
-				UpgradeNeeded:     true,
-				UpgradeAllowed:    true,
-				AutoUpgradeNeeded: true,
-			}
-		}
-		// Patch version change, rotate only
+		return upgraderules.LicenseCommunity
+	}
+	specLicense := asLicense(currentImage)
+	memberLicense := asLicense(memberImage)
+	if err := upgraderules.CheckUpgradeRulesWithLicense(memberVersion, specVersion, memberLicense, specLicense); err != nil {
+		// E.g. 3.x -> 4.x, we cannot allow automatically
 		return upgradeDecision{
-			FromVersion:       podVersion,
-			FromLicense:       podLicense,
+			FromVersion:    memberVersion,
+			FromLicense:    memberLicense,
+			ToVersion:      specVersion,
+			ToLicense:      specLicense,
+			UpgradeNeeded:  true,
+			UpgradeAllowed: false,
+		}
+	}
+	if specVersion.Major() != memberVersion.Major() || specVersion.Minor() != memberVersion.Minor() {
+		// Is allowed, with `--database.auto-upgrade`
+		log.Info().Str("spec-version", string(specVersion)).Str("pod-version", string(memberVersion)).
+			Int("spec-version.major", specVersion.Major()).Int("spec-version.minor", specVersion.Minor()).
+			Int("pod-version.major", memberVersion.Major()).Int("pod-version.minor", memberVersion.Minor()).
+			Msg("Deciding to do a upgrade with --auto-upgrade")
+		return upgradeDecision{
+			FromVersion:       memberVersion,
+			FromLicense:       memberLicense,
 			ToVersion:         specVersion,
 			ToLicense:         specLicense,
 			UpgradeNeeded:     true,
 			UpgradeAllowed:    true,
-			AutoUpgradeNeeded: false,
+			AutoUpgradeNeeded: true,
 		}
 	}
-	return upgradeDecision{UpgradeNeeded: false}
+	// Patch version change, rotate only
+	return upgradeDecision{
+		FromVersion:       memberVersion,
+		FromLicense:       memberLicense,
+		ToVersion:         specVersion,
+		ToLicense:         specLicense,
+		UpgradeNeeded:     true,
+		UpgradeAllowed:    true,
+		AutoUpgradeNeeded: false,
+	}
+}
+
+func currentImageInfo(spec api.DeploymentSpec, images api.ImageInfoList) (api.ImageInfo, bool) {
+	if i, ok := images.GetByImage(spec.GetImage()); ok {
+		return i, true
+	}
+	if i, ok := images.GetByImageID(spec.GetImage()); ok {
+		return i, true
+	}
+
+	return api.ImageInfo{}, false
+}
+
+func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images api.ImageInfoList) (api.ImageInfo, bool) {
+	if status.Image != nil {
+		return *status.Image, true
+	}
+
+	if i, ok := images.GetByImage(spec.GetImage()); ok {
+		return i, true
+	}
+
+	if i, ok := images.GetByImageID(spec.GetImage()); ok {
+		return i, true
+	}
+
+	return api.ImageInfo{}, false
 }
 
 // podNeedsRotation returns true when the specification of the
@@ -305,7 +337,7 @@ func clusterReadyForUpgrade(context PlanBuilderContext) bool {
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string, imageName string, status api.DeploymentStatus, rotateStatefull bool) api.Plan {
+	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull bool) api.Plan {
 	upgradeAction := api.ActionTypeUpgradeMember
 	if rotateStatefull || group.IsStateless() {
 		upgradeAction = api.ActionTypeRotateMember
@@ -317,14 +349,14 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
 	var plan api.Plan
-	if status.CurrentImage == nil || status.CurrentImage.Image != imageName {
+	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
 		plan = append(plan,
-			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(imageName),
+			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()),
 		)
 	}
-	if member.Image == nil || member.Image.Image != imageName {
+	if member.Image == nil || member.Image.Image != spec.GetImage() {
 		plan = append(plan,
-			api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(imageName),
+			api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()),
 		)
 	}
 	plan = append(plan,
