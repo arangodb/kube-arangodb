@@ -27,4 +27,5 @@ const (
 	ArangoDeploymentPodMaintenanceAnnotation = ArangoDeploymentAnnotationPrefix + "/maintenance"
 	ArangoDeploymentPodRotateAnnotation      = ArangoDeploymentAnnotationPrefix + "/rotate"
 	ArangoDeploymentPodReplaceAnnotation     = ArangoDeploymentAnnotationPrefix + "/replace"
+	ArangoDeploymentPlanCleanAnnotation      = "plan." + ArangoDeploymentAnnotationPrefix + "/clean"
 )

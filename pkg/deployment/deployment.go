@@ -29,6 +29,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -510,4 +513,24 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 
 func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
 	return d.apiObject
+}
+
+func (d *Deployment) ApplyPatch(p ...patch.Item) error {
+	parser := patch.Patch(p)
+
+	data, err := parser.Marshal()
+	if err != nil {
+		return err
+	}
+
+	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
+
+	depl, err := c.Patch(d.apiObject.GetName(), types.JSONPatchType, data)
+	if err != nil {
+		return err
+	}
+
+	d.apiObject = depl
+
+	return nil
 }

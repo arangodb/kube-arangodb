@@ -5,6 +5,7 @@
 - Migrate CRD to apiextensions.k8s.io/v1
 - Add customizable log levels per service
 - Move Upgrade as InitContainer and fix Direct Image discovery mode
+- Allow to remove currently executed plan by annotation
 
 ## [1.1.2](https://github.com/arangodb/kube-arangodb/tree/1.1.2) (2020-11-11)
 - Fix Bootstrap phase and move it under Plan
