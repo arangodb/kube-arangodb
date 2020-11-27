@@ -216,14 +216,14 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	// Create scale/update plan
 	if _, ok := d.apiObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
 		if err := d.ApplyPatch(patch.ItemRemove(patch.NewPath("metadata", "annotations", deployment.ArangoDeploymentPlanCleanAnnotation))); err != nil {
-			return minInspectionInterval, errors.Errorf("Unable to create remove annotation patch", err)
+			return minInspectionInterval, errors.Wrapf(err, "Unable to create remove annotation patch")
 		}
 
 		if err := d.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
 			s.Plan = nil
 			return true
 		}, true); err != nil {
-			return minInspectionInterval, errors.Errorf("Unable clean plan", err)
+			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
 	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
