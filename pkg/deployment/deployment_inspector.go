@@ -154,6 +154,13 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
+	// Cleanup terminated pods on the beginning of loop
+	if x, err := d.resources.CleanupTerminatedPods(cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
+	} else {
+		nextInterval = nextInterval.ReduceTo(x)
+	}
+
 	if err := d.resources.EnsureSecrets(d.deps.Log, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}

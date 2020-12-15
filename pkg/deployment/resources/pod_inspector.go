@@ -217,6 +217,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 								return maskAny(err)
 							}
 						}
+						fallthrough
 					default:
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.

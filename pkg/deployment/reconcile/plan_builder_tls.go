@@ -217,7 +217,7 @@ func createCARenewalPlan(ctx context.Context,
 	}
 
 	if !k8sutil.IsOwner(apiObject.AsOwner(), caSecret) {
-		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret is not owned by Operator, we wont do anything")
+		log.Debug().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret is not owned by Operator, we wont do anything")
 		return nil
 	}
 

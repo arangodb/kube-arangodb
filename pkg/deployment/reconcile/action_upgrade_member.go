@@ -112,11 +112,17 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	log = log.With().
 		Str("pod-name", m.PodName).
 		Bool("is-upgrading", isUpgrading).Logger()
-	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
-		// Pod is not yet terminated
+
+	act := actionWaitForMemberUp{
+		actionImpl: a.actionImpl,
+	}
+
+	if ok, _, err := act.CheckProgress(ctx); err != nil {
+		return false, false, maskAny(err)
+	} else if !ok {
 		return false, false, nil
 	}
-	// Pod is now gone, update the member status
+	// Pod is now upgraded, update the member status
 	m.Phase = api.MemberPhaseCreated
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	m.CleanoutJobID = ""
