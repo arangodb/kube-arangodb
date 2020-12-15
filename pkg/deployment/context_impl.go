@@ -176,7 +176,7 @@ func (d *Deployment) UpdateMember(member api.MemberStatus) error {
 		return maskAny(err)
 	}
 	if err := d.UpdateStatus(status, lastVersion); err != nil {
-		log.Debug().Err(err).Msg("Updating CR status failed")
+		d.deps.Log.Debug().Err(err).Msg("Updating CR status failed")
 		return maskAny(err)
 	}
 	return nil

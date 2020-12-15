@@ -248,7 +248,7 @@ func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.Dep
 		ToLicense:         specLicense,
 		UpgradeNeeded:     true,
 		UpgradeAllowed:    true,
-		AutoUpgradeNeeded: false,
+		AutoUpgradeNeeded: true,
 	}
 }
 

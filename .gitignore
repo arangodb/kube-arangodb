@@ -6,3 +6,4 @@ logs
 vendor/
 .idea/
 deps/
+.vscode/
