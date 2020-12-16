@@ -202,7 +202,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 					case api.MemberPhaseNone:
 						// Do nothing
 						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
-					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
+					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
@@ -217,6 +217,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 								return maskAny(err)
 							}
 						}
+					case api.MemberPhaseRotating:
 						fallthrough
 					default:
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
