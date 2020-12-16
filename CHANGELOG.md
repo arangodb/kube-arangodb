@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.3](https://github.com/arangodb/kube-arangodb/tree/1.1.3) (2020-12-16)
 - Add v2alpha1 API for ArangoDeployment and ArangoDeploymentReplication
 - Migrate CRD to apiextensions.k8s.io/v1
 - Add customizable log levels per service
