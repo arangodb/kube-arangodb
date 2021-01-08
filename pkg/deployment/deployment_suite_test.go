@@ -24,11 +24,12 @@ package deployment
 
 import (
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 
 	monitoringFakeClient "github.com/coreos/prometheus-operator/pkg/client/versioned/fake"
 
