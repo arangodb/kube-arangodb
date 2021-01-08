@@ -23,7 +23,7 @@
 package inspector
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,7 +77,7 @@ func podDisruptionBudgetsToMap(k kubernetes.Interface, namespace string) (map[st
 	for _, podDisruptionBudget := range podDisruptionBudgets {
 		_, exists := podDisruptionBudgetMap[podDisruptionBudget.GetName()]
 		if exists {
-			return nil, errors.Errorf("PodDisruptionBudget %s already exists in map, error received", podDisruptionBudget.GetName())
+			return nil, errors.Newf("PodDisruptionBudget %s already exists in map, error received", podDisruptionBudget.GetName())
 		}
 
 		podDisruptionBudgetMap[podDisruptionBudget.GetName()] = podDisruptionBudgetPointer(podDisruptionBudget)

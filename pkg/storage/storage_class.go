@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,7 +62,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 		log.Debug().Err(err).
 			Str("storageclass", sc.GetName()).
 			Msg("Failed to create StorageClass")
-		return maskAny(err)
+		return errors.WithStack(err)
 	} else {
 		log.Debug().
 			Str("storageclass", sc.GetName()).
@@ -73,7 +74,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 		list, err := cli.StorageClasses().List(metav1.ListOptions{})
 		if err != nil {
 			log.Debug().Err(err).Msg("Listing StorageClasses failed")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		for _, scX := range list.Items {
 			if !k8sutil.StorageClassIsDefault(&scX) || scX.GetName() == sc.GetName() {
@@ -85,7 +86,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 					Err(err).
 					Str("storageclass", scX.GetName()).
 					Msg("Failed to mark StorageClass as not-default")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			log.Debug().
 				Str("storageclass", scX.GetName()).
@@ -98,7 +99,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 				Err(err).
 				Str("storageclass", sc.GetName()).
 				Msg("Failed to mark StorageClass as default")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().
 			Str("storageclass", sc.GetName()).

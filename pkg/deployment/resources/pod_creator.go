@@ -34,6 +34,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -47,7 +49,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -288,7 +290,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
-		return nil, maskAny(fmt.Errorf("Member '%s' not found", memberID))
+		return nil, errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -325,7 +327,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		args := createArangodArgs(input)
 
 		if err := memberPod.Validate(cachedStatus); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Validation of pods resources failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberPod)
@@ -333,7 +335,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		// Check image
 		if !imageInfo.Enterprise {
 			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
-			return nil, maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
+			return nil, errors.WithStack(errors.Newf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
 		imageInfo := imageInfo
@@ -346,12 +348,12 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
 
 		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
 		}
 
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
 		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 
 		if group == api.ServerGroupSyncMasters {
@@ -361,13 +363,13 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
 				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
-					return nil, maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
+					return nil, errors.WithStack(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
 			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
-				return nil, maskAny(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
+				return nil, errors.WithStack(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
 		}
 
@@ -388,7 +390,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberSyncPod)
 	} else {
-		return nil, errors.Errorf("unable to render Pod")
+		return nil, errors.Newf("unable to render Pod")
 	}
 }
 
@@ -433,7 +435,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		m.Image = status.CurrentImage
 
 		if err := status.Members.Update(m, group); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -441,7 +443,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	kubecli := r.context.GetKubeCli()
@@ -449,7 +451,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	if !found {
-		return maskAny(fmt.Errorf("Member '%s' not found", memberID))
+		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -469,12 +471,12 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		sha, err := ChecksumArangoPod(groupSpec, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		m.PodUID = uid
@@ -512,18 +514,18 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 			owner := apiObject.AsOwner()
 			if err := createTLSServerCertificate(log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
-				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
 
 		sha, err := ChecksumArangoPod(groupSpec, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
@@ -538,10 +540,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
 	if err := status.Members.Update(m, group); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Create event
 	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.PodName, role, apiObject))
@@ -575,14 +577,14 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 	podCreator.Init(&p)
 
 	if initContainers, err := podCreator.GetInitContainers(); err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	} else if initContainers != nil {
 		p.Spec.InitContainers = append(p.Spec.InitContainers, initContainers...)
 	}
 
 	c, err := k8sutil.NewContainer(args, podCreator.GetContainerCreator())
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	p.Spec.Volumes, c.VolumeMounts = podCreator.GetVolumes()
@@ -609,7 +611,7 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
 	uid, err := k8sutil.CreatePod(kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 
 	return uid, nil
@@ -648,14 +650,14 @@ func (r *Resources) EnsurePods(cachedStatus inspector.Inspector) error {
 			}
 			spec := r.context.GetSpec()
 			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 		return nil
 	}
 
 	if err := iterator.ForeachServerGroup(createPodMember, &deploymentStatus); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	return nil

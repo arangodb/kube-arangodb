@@ -32,11 +32,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
-	maskAny = errors.WithStack
 	// BadRequestError indicates invalid arguments.
 	BadRequestError = StatusError{StatusCode: http.StatusBadRequest, message: "bad request"}
 	// InternalServerError indicates an unspecified error inside the server, perhaps a bug.

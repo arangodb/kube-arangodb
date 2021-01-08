@@ -23,13 +23,12 @@
 package logging
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 )
@@ -66,7 +65,7 @@ func NewRootLogger() zerolog.Logger {
 func NewService(defaultLevel string, overrides []string) (Service, error) {
 	l, err := stringToLevel(defaultLevel)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	rootLog := NewRootLogger()
 	s := &loggingService{
@@ -81,17 +80,17 @@ func NewService(defaultLevel string, overrides []string) (Service, error) {
 		case 1:
 			level, err := stringToLevel(levelParts[0])
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			s.defaultLevel = level
 		case 2:
 			level, err := stringToLevel(levelParts[1])
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			s.levels[levelParts[0]] = level
 		default:
-			return nil, errors.Errorf("invalid log definition %s: Length %d is not equal 1 or 2", override, size)
+			return nil, errors.Newf("invalid log definition %s: Length %d is not equal 1 or 2", override, size)
 		}
 	}
 	return s, nil
@@ -144,5 +143,5 @@ func stringToLevel(l string) (zerolog.Level, error) {
 	case "panic":
 		return zerolog.PanicLevel, nil
 	}
-	return zerolog.InfoLevel, fmt.Errorf("Unknown log level '%s'", l)
+	return zerolog.InfoLevel, errors.Newf("Unknown log level '%s'", l)
 }

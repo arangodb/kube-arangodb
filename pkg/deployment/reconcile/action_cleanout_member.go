@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -65,25 +67,25 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	cluster, err := c.Cluster(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	var jobID string
 	ctx = driver.WithJobIDResponse(ctx, &jobID)
 	if err := cluster.CleanOutServer(ctx, a.action.MemberID); err != nil {
 		log.Debug().Err(err).Msg("Failed to cleanout member")
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	log.Debug().Str("job-id", jobID).Msg("Cleanout member started")
 	// Update status
 	m.Phase = api.MemberPhaseCleanOut
 	m.CleanoutJobID = jobID
 	if a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return false, nil
 }
@@ -104,17 +106,17 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	cluster, err := c.Cluster(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	cleanedOut, err := cluster.IsCleanedOut(ctx, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("IsCleanedOut failed")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	if !cleanedOut {
 		// We're not done yet, check job status
@@ -123,17 +125,17 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		c, err := a.actionCtx.GetDatabaseClient(ctx)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client")
-			return false, false, maskAny(err)
+			return false, false, errors.WithStack(err)
 		}
 		agency, err := a.actionCtx.GetAgency(ctx)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
-			return false, false, maskAny(err)
+			return false, false, errors.WithStack(err)
 		}
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, m.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
-			return false, false, maskAny(err)
+			return false, false, errors.WithStack(err)
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
@@ -141,7 +143,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""
 			if a.actionCtx.UpdateMember(m); err != nil {
-				return false, false, maskAny(err)
+				return false, false, errors.WithStack(err)
 			}
 			return false, true, nil
 		}
@@ -150,7 +152,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	// Cleanout completed
 	if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
 		if a.actionCtx.UpdateMember(m); err != nil {
-			return false, false, maskAny(err)
+			return false, false, errors.WithStack(err)
 		}
 	}
 	// Cleanout completed

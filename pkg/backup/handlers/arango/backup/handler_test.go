@@ -28,7 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func Test_ObjectNotFound(t *testing.T) {
@@ -51,7 +51,7 @@ func Test_ObjectNotFound(t *testing.T) {
 			// Assert
 			if shouldFail {
 				require.Error(t, err)
-				require.True(t, errors.IsNotFound(err))
+				require.True(t, apiErrors.IsNotFound(err))
 			} else {
 				require.NoError(t, err)
 			}

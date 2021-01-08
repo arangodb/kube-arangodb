@@ -22,7 +22,7 @@
 
 package v1
 
-import "fmt"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 func (a *ArangoBackup) Validate() error {
 	if err := a.Spec.Validate(); err != nil {
@@ -38,7 +38,7 @@ func (a *ArangoBackup) Validate() error {
 
 func (a *ArangoBackupSpec) Validate() error {
 	if a.Deployment.Name == "" {
-		return fmt.Errorf("deployment name can not be empty")
+		return errors.Newf("deployment name can not be empty")
 	}
 
 	if a.Download != nil {
@@ -58,7 +58,7 @@ func (a *ArangoBackupSpec) Validate() error {
 
 func (a *ArangoBackupSpecOperation) Validate() error {
 	if a.RepositoryURL == "" {
-		return fmt.Errorf("RepositoryURL can not be empty")
+		return errors.Newf("RepositoryURL can not be empty")
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (a *ArangoBackupSpecOperation) Validate() error {
 
 func (a *ArangoBackupSpecDownload) Validate() error {
 	if a.ID == "" {
-		return fmt.Errorf("ID can not be empty")
+		return errors.Newf("ID can not be empty")
 	}
 
 	return a.ArangoBackupSpecOperation.Validate()

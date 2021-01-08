@@ -23,12 +23,8 @@
 package k8sutil
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-)
-
-var (
-	maskAny = errors.WithStack
 )
 
 // IsAlreadyExists returns true if the given error is or is caused by a

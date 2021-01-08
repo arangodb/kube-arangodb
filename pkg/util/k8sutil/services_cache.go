@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ func (sc *servicesCache) Create(s *v1.Service) (*v1.Service, error) {
 	sc.cache = nil
 	result, err := sc.cli.Create(s)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -62,7 +63,7 @@ func (sc *servicesCache) Update(s *v1.Service) (*v1.Service, error) {
 	sc.cache = nil
 	result, err := sc.cli.Update(s)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -70,7 +71,7 @@ func (sc *servicesCache) Update(s *v1.Service) (*v1.Service, error) {
 func (sc *servicesCache) Delete(name string, options *metav1.DeleteOptions) error {
 	sc.cache = nil
 	if err := sc.cli.Delete(name, options); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -79,7 +80,7 @@ func (sc *servicesCache) Get(name string, options metav1.GetOptions) (*v1.Servic
 	if sc.cache == nil {
 		list, err := sc.cli.List(metav1.ListOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		sc.cache = list.Items
 	}
@@ -88,5 +89,5 @@ func (sc *servicesCache) Get(name string, options metav1.GetOptions) (*v1.Servic
 			return &s, nil
 		}
 	}
-	return nil, maskAny(apierrors.NewNotFound(serviceGroupResource, name))
+	return nil, errors.WithStack(apierrors.NewNotFound(serviceGroupResource, name))
 }

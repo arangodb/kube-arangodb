@@ -24,10 +24,11 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"sync/atomic"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -105,7 +106,7 @@ type LocalStorage struct {
 // New creates a new LocalStorage from the given API object.
 func New(config Config, deps Dependencies, apiObject *api.ArangoLocalStorage) (*LocalStorage, error) {
 	if err := apiObject.Spec.Validate(); err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	ls := &LocalStorage{
 		apiObject: apiObject,
@@ -301,7 +302,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	newAPIObject := current.DeepCopy()
@@ -329,7 +330,7 @@ func (ls *LocalStorage) handleArangoLocalStorageUpdatedEvent(event *localStorage
 
 	// Save updated spec
 	if err := ls.updateCRSpec(newAPIObject.Spec); err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoLocalStorage spec: %v", err))
+		return errors.WithStack(errors.Newf("failed to update ArangoLocalStorage spec: %v", err))
 	}
 
 	// Trigger inspect
@@ -375,7 +376,7 @@ func (ls *LocalStorage) updateCRStatus() error {
 		}
 		if err != nil {
 			ls.deps.Log.Debug().Err(err).Msg("failed to patch ArangoLocalStorage status")
-			return maskAny(fmt.Errorf("failed to patch ArangoLocalStorage status: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage status: %v", err))
 		}
 	}
 }
@@ -409,7 +410,7 @@ func (ls *LocalStorage) updateCRSpec(newSpec api.LocalStorageSpec) error {
 		}
 		if err != nil {
 			ls.deps.Log.Debug().Err(err).Msg("failed to patch ArangoLocalStorage spec")
-			return maskAny(fmt.Errorf("failed to patch ArangoLocalStorage spec: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoLocalStorage spec: %v", err))
 		}
 	}
 }
@@ -437,7 +438,7 @@ func (ls *LocalStorage) reportFailedStatus() {
 
 		if !k8sutil.IsConflict(err) {
 			log.Warn().Err(err).Msg("retry report status: fail to update")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		depl, err := ls.deps.StorageCRCli.StorageV1alpha().ArangoLocalStorages().Get(ls.apiObject.Name, metav1.GetOptions{})
@@ -449,10 +450,10 @@ func (ls *LocalStorage) reportFailedStatus() {
 				return nil
 			}
 			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		ls.apiObject = depl
-		return maskAny(fmt.Errorf("retry needed"))
+		return errors.WithStack(errors.Newf("retry needed"))
 	}
 
 	retry.Retry(op, time.Hour*24*365)

@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ func (sc *pvcsCache) Create(s *v1.PersistentVolumeClaim) (*v1.PersistentVolumeCl
 	sc.cache = nil
 	result, err := sc.cli.Create(s)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -62,7 +63,7 @@ func (sc *pvcsCache) Get(name string, options metav1.GetOptions) (*v1.Persistent
 	if sc.cache == nil {
 		list, err := sc.cli.List(metav1.ListOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		sc.cache = list.Items
 	}
@@ -71,5 +72,5 @@ func (sc *pvcsCache) Get(name string, options metav1.GetOptions) (*v1.Persistent
 			return &s, nil
 		}
 	}
-	return nil, maskAny(apierrors.NewNotFound(pvcGroupResource, name))
+	return nil, errors.WithStack(apierrors.NewNotFound(pvcGroupResource, name))
 }

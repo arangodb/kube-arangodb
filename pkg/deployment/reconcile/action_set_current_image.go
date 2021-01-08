@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
@@ -55,7 +57,7 @@ type setCurrentMemberImageAction struct {
 func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return ready, nil
 }

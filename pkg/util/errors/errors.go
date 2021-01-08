@@ -31,10 +31,11 @@ import (
 	"os"
 	"syscall"
 
+	errs "github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 
 	driver "github.com/arangodb/go-driver"
-	errs "github.com/pkg/errors"
 )
 
 var (
@@ -44,6 +45,10 @@ var (
 	Wrap      = errs.Wrap
 	Wrapf     = errs.Wrapf
 )
+
+func Newf(format string, args ...interface{}) error {
+	return New(fmt.Sprintf(format, args...))
+}
 
 // WithMessage annotates err with a new message.
 // The messages of given error is hidden.

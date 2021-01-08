@@ -23,7 +23,7 @@
 package k8sutil
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +40,7 @@ type secretsCache struct {
 }
 
 func (sc *secretsCache) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (*v1.Secret, error) {
-	return nil, errors.Errorf("Not implemented")
+	return nil, errors.Newf("Not implemented")
 }
 
 // NewSecretCache creates a cached version of the given SecretInterface.
@@ -59,7 +59,7 @@ func (sc *secretsCache) Create(s *v1.Secret) (*v1.Secret, error) {
 	sc.cache = nil
 	result, err := sc.cli.Create(s)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -72,7 +72,7 @@ func (sc *secretsCache) Delete(name string, options *metav1.DeleteOptions) error
 	sc.cache = nil
 	err := sc.cli.Delete(name, options)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -81,7 +81,7 @@ func (sc *secretsCache) Get(name string, options metav1.GetOptions) (*v1.Secret,
 	if sc.cache == nil {
 		list, err := sc.cli.List(metav1.ListOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		sc.cache = list.Items
 	}
@@ -90,5 +90,5 @@ func (sc *secretsCache) Get(name string, options metav1.GetOptions) (*v1.Secret,
 			return &s, nil
 		}
 	}
-	return nil, maskAny(apierrors.NewNotFound(secretGroupResource, name))
+	return nil, errors.WithStack(apierrors.NewNotFound(secretGroupResource, name))
 }

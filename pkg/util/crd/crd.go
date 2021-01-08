@@ -23,8 +23,9 @@
 package crd
 
 import (
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -36,7 +37,7 @@ import (
 // WaitReady waits for a check to be ready.
 func WaitReady(check func() error) error {
 	if err := retry.Retry(check, time.Second*30); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -46,7 +47,7 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 	op := func() error {
 		crd, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		for _, cond := range crd.Status.Conditions {
 			switch cond.Type {
@@ -56,11 +57,11 @@ func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error
 				}
 			case apiextensionsv1beta1.NamesAccepted:
 				if cond.Status == apiextensionsv1beta1.ConditionFalse {
-					return maskAny(fmt.Errorf("Name conflict: %v", cond.Reason))
+					return errors.WithStack(errors.Newf("Name conflict: %v", cond.Reason))
 				}
 			}
 		}
-		return maskAny(fmt.Errorf("Retry needed"))
+		return errors.WithStack(errors.Newf("Retry needed"))
 	}
 	return WaitReady(op)
 }

@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -54,7 +55,7 @@ func (ls *LocalStorage) ensureProvisionerService(apiObject *api.ArangoLocalStora
 	svc.SetOwnerReferences(append(svc.GetOwnerReferences(), apiObject.AsOwner()))
 	ns := ls.config.Namespace
 	if _, err := ls.deps.KubeCli.CoreV1().Services(ns).Create(svc); err != nil && !k8sutil.IsAlreadyExists(err) {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

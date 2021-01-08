@@ -22,6 +22,8 @@
 
 package v2alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 // DeploymentReplicationSpec contains the specification part of
 // an ArangoDeploymentReplication.
 type DeploymentReplicationSpec struct {
@@ -33,10 +35,10 @@ type DeploymentReplicationSpec struct {
 // problems or nil if all ok.
 func (s DeploymentReplicationSpec) Validate() error {
 	if err := s.Source.Validate(true); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.Destination.Validate(false); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

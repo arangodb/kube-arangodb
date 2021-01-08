@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
@@ -62,14 +64,14 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	// Set AutoUpgrade condition
 	m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Upgrading", "AutoUpgrade on first restart")
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
 		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 		removeFromCluster := false
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
@@ -82,18 +84,18 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 				return true, nil
 			}
 			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
 		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	}
 	// Update status
 	m.Phase = api.MemberPhaseRotating // We keep the rotation phase here, since only when a new pod is created, it will get the Upgrading phase.
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return false, nil
 }
@@ -118,7 +120,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	}
 
 	if ok, _, err := act.CheckProgress(ctx); err != nil {
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	} else if !ok {
 		return false, false, nil
 	}
@@ -127,7 +129,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	m.CleanoutJobID = ""
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	return isUpgrading, false, nil
 }

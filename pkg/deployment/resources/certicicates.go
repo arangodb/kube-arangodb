@@ -27,10 +27,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
@@ -119,7 +121,7 @@ func GetCertsFromSecret(log zerolog.Logger, secret *core.Secret) Certificates {
 func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspector.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
 	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
 	if !exists {
-		return nil, nil, errors.Errorf("CA Secret does not exists")
+		return nil, nil, errors.Newf("CA Secret does not exists")
 	}
 
 	return GetKeyCertFromSecret(log, caSecret, keyName, certName)
@@ -128,12 +130,12 @@ func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspector.Inspector, s
 func GetKeyCertFromSecret(log zerolog.Logger, secret *core.Secret, certName, keyName string) (Certificates, interface{}, error) {
 	ca, exists := secret.Data[certName]
 	if !exists {
-		return nil, nil, errors.Errorf("Key %s missing in secret", certName)
+		return nil, nil, errors.Newf("Key %s missing in secret", certName)
 	}
 
 	key, exists := secret.Data[keyName]
 	if !exists {
-		return nil, nil, errors.Errorf("Key %s missing in secret", keyName)
+		return nil, nil, errors.Newf("Key %s missing in secret", keyName)
 	}
 
 	cert, keys, err := certificates.LoadFromPEM(string(ca), string(key))

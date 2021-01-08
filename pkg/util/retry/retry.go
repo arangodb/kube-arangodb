@@ -26,12 +26,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/cenkalti/backoff"
-	"github.com/pkg/errors"
-)
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-var (
-	maskAny = errors.WithStack
+	"github.com/cenkalti/backoff"
 )
 
 type permanentError struct {
@@ -100,10 +97,10 @@ func retry(ctx context.Context, op func() error, timeout time.Duration) error {
 	}
 
 	if err := backoff.Retry(wrappedOp, b); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if failure != nil {
-		return maskAny(failure)
+		return errors.WithStack(failure)
 	}
 	return nil
 }
@@ -137,12 +134,12 @@ func RetryWithContext(ctx context.Context, op func(ctx context.Context) error, t
 		lctx, cancel := context.WithTimeout(ctx, timeout/time.Duration(divider))
 		defer cancel()
 		if err := op(lctx); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		return nil
 	}
 	if err := retry(ctx, ctxOp, timeout); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

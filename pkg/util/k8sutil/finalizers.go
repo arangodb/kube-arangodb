@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,7 +40,7 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 	getFunc := func() (metav1.Object, error) {
 		result, err := pods.Get(p.GetName(), metav1.GetOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
@@ -47,13 +48,13 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		updatedPod := updated.(*v1.Pod)
 		result, err := pods.Update(updatedPod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		*p = *result
 		return nil
 	}
 	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -64,7 +65,7 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 	getFunc := func() (metav1.Object, error) {
 		result, err := pvcs.Get(p.GetName(), metav1.GetOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
@@ -72,13 +73,13 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 		updatedPVC := updated.(*v1.PersistentVolumeClaim)
 		result, err := pvcs.Update(updatedPVC)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		*p = *result
 		return nil
 	}
 	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -98,7 +99,7 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 				return nil
 			}
 			log.Warn().Err(err).Msg("Failed to get resource")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		original := obj.GetFinalizers()
 		if len(original) == 0 {
@@ -124,7 +125,7 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 			if err := updateFunc(obj); IsConflict(err) {
 				if attempts > maxRemoveFinalizersAttempts {
 					log.Warn().Err(err).Msg("Failed to update resource with fewer finalizers after many attempts")
-					return maskAny(err)
+					return errors.WithStack(err)
 				} else {
 					// Try again
 					continue
@@ -134,7 +135,7 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 				return nil
 			} else if err != nil {
 				log.Warn().Err(err).Msg("Failed to update resource with fewer finalizers")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		} else {
 			log.Debug().Msg("No finalizers needed removal. Resource unchanged")

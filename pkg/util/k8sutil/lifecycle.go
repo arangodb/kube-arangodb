@@ -26,6 +26,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	core "k8s.io/api/core/v1"
@@ -41,7 +43,7 @@ const (
 func InitLifecycleContainer(image string, resources *core.ResourceRequirements, securityContext *core.SecurityContext) (core.Container, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
-		return core.Container{}, maskAny(err)
+		return core.Container{}, errors.WithStack(err)
 	}
 	c := core.Container{
 		Name:    initLifecycleContainerName,
@@ -64,7 +66,7 @@ func InitLifecycleContainer(image string, resources *core.ResourceRequirements, 
 func NewLifecycle() (*core.Lifecycle, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	exePath := filepath.Join(LifecycleVolumeMountDir, filepath.Base(binaryPath))
 	lifecycle := &core.Lifecycle{

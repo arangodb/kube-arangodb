@@ -23,8 +23,9 @@
 package deployment
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog"
@@ -47,19 +48,19 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 		for len(*members) < spec.GetCount() {
 			id, err := createMember(log, &status, group, "", apiObject)
 			if err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			events = append(events, k8sutil.NewMemberAddEvent(id, group.AsRole(), apiObject))
 		}
 		return nil
 	}, &status); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Save status
 	log.Debug().Msg("saving initial members...")
 	if err := d.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Save events
 	for _, evt := range events {
@@ -97,7 +98,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
@@ -109,7 +110,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
@@ -121,7 +122,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
@@ -133,7 +134,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
@@ -145,7 +146,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
@@ -157,10 +158,10 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
 		}, group); err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 	default:
-		return "", maskAny(fmt.Errorf("Unknown server group %d", group))
+		return "", errors.WithStack(errors.Newf("Unknown server group %d", group))
 	}
 
 	return id, nil

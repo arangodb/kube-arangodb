@@ -24,6 +24,7 @@ package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -57,7 +58,7 @@ func (s RocksDBSpec) IsEncrypted() bool {
 // Validate the given spec
 func (s RocksDBSpec) Validate() error {
 	if err := k8sutil.ValidateOptionalResourceName(s.Encryption.GetKeySecretName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

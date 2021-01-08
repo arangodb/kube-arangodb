@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
@@ -66,7 +68,7 @@ func (a *actionRotateStopMember) Start(ctx context.Context) (bool, error) {
 	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
 	m.CleanoutJobID = ""
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return false, nil
 }

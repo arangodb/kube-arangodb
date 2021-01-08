@@ -27,10 +27,11 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/pkg/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -52,11 +53,11 @@ func ensureJWTFolderSupportFromAction(actionCtx ActionContext) (bool, error) {
 
 func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus) (bool, error) {
 	if !spec.IsAuthenticated() {
-		return false, errors.Errorf("Authentication is disabled")
+		return false, errors.Newf("Authentication is disabled")
 	}
 
 	if image := status.CurrentImage; image == nil {
-		return false, errors.Errorf("Missing image info")
+		return false, errors.Newf("Missing image info")
 	} else {
 		if !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
 			return false, nil

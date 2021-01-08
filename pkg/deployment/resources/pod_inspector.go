@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	v1 "k8s.io/api/core/v1"
@@ -85,7 +87,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 				ignoreNotFound := false
 				if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
-					return maskAny(err)
+					return errors.WithStack(err)
 				}
 			}
 			return nil
@@ -182,7 +184,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
@@ -214,7 +216,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 							}
 							// Save it
 							if err := status.Members.Update(m, group); err != nil {
-								return maskAny(err)
+								return errors.WithStack(err)
 							}
 						}
 					case api.MemberPhaseRotating:
@@ -241,7 +243,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 						if updateMemberNeeded {
 							// Save it
 							if err := status.Members.Update(m, group); err != nil {
-								return maskAny(err)
+								return errors.WithStack(err)
 							}
 						}
 					}
@@ -278,7 +280,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 
 	// Save status
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return 0, maskAny(err)
+		return 0, errors.WithStack(err)
 	}
 
 	// Create events

@@ -26,9 +26,10 @@ import (
 	"math"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
-	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -421,28 +422,28 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			}
 		}
 		if s.GetMinCount() > s.GetMaxCount() {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid min/maxCount. Min (%d) bigger than Max (%d)", s.GetMinCount(), s.GetMaxCount()))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid min/maxCount. Min (%d) bigger than Max (%d)", s.GetMinCount(), s.GetMaxCount()))
 		}
 		if s.GetCount() < s.GetMinCount() {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), s.GetMinCount()))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d", s.GetCount(), s.GetMinCount()))
 		}
 		if s.GetCount() > s.GetMaxCount() {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected <= %d", s.GetCount(), s.GetMaxCount()))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d. Expected <= %d", s.GetCount(), s.GetMaxCount()))
 		}
 		if s.GetCount() < minCount {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d (implicit minimum; by deployment mode)", s.GetCount(), minCount))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d. Expected >= %d (implicit minimum; by deployment mode)", s.GetCount(), minCount))
 		}
 		if s.GetCount() > 1 && group == ServerGroupSingle && mode == DeploymentModeSingle {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d. Expected 1", s.GetCount()))
 		}
 		if name := s.GetServiceAccountName(); name != "" {
 			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid serviceAccountName: %s", err))
+				return errors.WithStack(errors.Wrapf(ValidationError, "Invalid serviceAccountName: %s", err))
 			}
 		}
 		if name := s.GetStorageClassName(); name != "" {
 			if err := k8sutil.ValidateOptionalResourceName(name); err != nil {
-				return maskAny(errors.Wrapf(ValidationError, "Invalid storageClassName: %s", err))
+				return errors.WithStack(errors.Wrapf(ValidationError, "Invalid storageClassName: %s", err))
 			}
 		}
 		for _, arg := range s.Args {
@@ -450,20 +451,20 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 			optionKey := strings.TrimSpace(parts[0])
 			if group.IsArangod() {
 				if arangodOptions.IsCriticalOption(optionKey) {
-					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
+					return errors.WithStack(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}
 			} else if group.IsArangosync() {
 				if arangosyncOptions.IsCriticalOption(optionKey) {
-					return maskAny(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
+					return errors.WithStack(errors.Wrapf(ValidationError, "Critical option '%s' cannot be overriden", optionKey))
 				}
 			}
 		}
 
 		if err := s.validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	} else if s.GetCount() != 0 {
-		return maskAny(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
 	return nil
 }
@@ -492,14 +493,14 @@ func (s *ServerGroupSpec) validateVolumes() error {
 
 	for _, mount := range s.VolumeMounts {
 		if _, ok := volumes[mount.Name]; !ok {
-			return errors.Errorf("Volume %s is not defined, but required by mount", mount.Name)
+			return errors.Newf("Volume %s is not defined, but required by mount", mount.Name)
 		}
 	}
 
 	for _, container := range s.InitContainers.GetContainers() {
 		for _, mount := range container.VolumeMounts {
 			if _, ok := volumes[mount.Name]; !ok {
-				return errors.Errorf("Volume %s is not defined, but required by mount in init container %s", mount.Name, container.Name)
+				return errors.Newf("Volume %s is not defined, but required by mount in init container %s", mount.Name, container.Name)
 			}
 		}
 	}
@@ -507,7 +508,7 @@ func (s *ServerGroupSpec) validateVolumes() error {
 	for _, container := range s.Sidecars {
 		for _, mount := range s.VolumeMounts {
 			if _, ok := volumes[mount.Name]; !ok {
-				return errors.Errorf("Volume %s is not defined, but required by mount in sidecar %s", mount.Name, container.Name)
+				return errors.Newf("Volume %s is not defined, but required by mount in sidecar %s", mount.Name, container.Name)
 			}
 		}
 	}

@@ -24,7 +24,8 @@ package mocks
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/stretchr/testify/mock"
 
@@ -79,7 +80,7 @@ func (m *provisionerMock) GetInfo(ctx context.Context, localPath string) (provis
 // Prepare a volume at the given local path
 func (m *provisionerMock) Prepare(ctx context.Context, localPath string) error {
 	if _, found := m.localPaths[localPath]; found {
-		return fmt.Errorf("Path already exists: %s", localPath)
+		return errors.Newf("Path already exists: %s", localPath)
 	}
 	m.localPaths[localPath] = struct{}{}
 	return nil
@@ -88,7 +89,7 @@ func (m *provisionerMock) Prepare(ctx context.Context, localPath string) error {
 // Remove a volume with the given local path
 func (m *provisionerMock) Remove(ctx context.Context, localPath string) error {
 	if _, found := m.localPaths[localPath]; !found {
-		return fmt.Errorf("Path not found: %s", localPath)
+		return errors.Newf("Path not found: %s", localPath)
 	}
 	delete(m.localPaths, localPath)
 	return nil

@@ -25,11 +25,12 @@ package deployment
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	nhttp "net/http"
 	"strconv"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
@@ -43,11 +44,10 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	goErrors "github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
@@ -155,12 +155,12 @@ func (d *Deployment) updateStatus(status api.DeploymentStatus, lastVersion int32
 			Int32("expected-version", lastVersion).
 			Int32("actual-version", d.status.version).
 			Msg("UpdateStatus version conflict error.")
-		return maskAny(fmt.Errorf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
+		return errors.WithStack(errors.Newf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
 	d.status.version++
 	d.status.last = *status.DeepCopy()
 	if err := d.updateCRStatus(force...); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -170,14 +170,14 @@ func (d *Deployment) UpdateMember(member api.MemberStatus) error {
 	status, lastVersion := d.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
-		return maskAny(fmt.Errorf("Member %s not found", member.ID))
+		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
 	}
 	if err := status.Members.Update(member, group); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := d.UpdateStatus(status, lastVersion); err != nil {
 		d.deps.Log.Debug().Err(err).Msg("Updating CR status failed")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -187,7 +187,7 @@ func (d *Deployment) UpdateMember(member api.MemberStatus) error {
 func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
 	c, err := d.clientCache.GetDatabase(ctx)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -196,14 +196,14 @@ func (d *Deployment) GetDatabaseClient(ctx context.Context) (driver.Client, erro
 func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	c, err := d.clientCache.Get(ctx, group, id)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
 
 // GetAuthentication return authentication for members
 func (d *Deployment) GetAuthentication() conn.Auth {
-	return d.clientCache.factory.GetAuth()
+	return d.clientCache.GetAuth()
 }
 
 // GetAgencyClients returns a client connection for every agency member.
@@ -217,7 +217,7 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 		}
 		client, err := d.GetServerClient(ctx, api.ServerGroupAgents, m.ID)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		conn := client.Connection()
 		result = append(result, conn)
@@ -269,12 +269,12 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		s, err := secrets.Get(d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
 		if err != nil {
-			return nil, goErrors.Errorf("JWT Secret is missing")
+			return nil, errors.Newf("JWT Secret is missing")
 		}
 
 		jwt, ok := s.Data[constants.SecretKeyToken]
 		if !ok {
-			return nil, goErrors.Errorf("JWT Secret is invalid")
+			return nil, errors.Newf("JWT Secret is invalid")
 		}
 
 		secret = string(jwt)
@@ -282,11 +282,11 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		s, err := secrets.Get(pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
-			return nil, goErrors.Errorf("JWT Folder Secret is missing")
+			return nil, errors.Newf("JWT Folder Secret is missing")
 		}
 
 		if len(s.Data) == 0 {
-			return nil, goErrors.Errorf("JWT Folder Secret is empty")
+			return nil, errors.Newf("JWT Folder Secret is empty")
 		}
 
 		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
@@ -301,7 +301,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	return driver.RawAuthentication(jwt), nil
@@ -318,7 +318,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	monitoringToken, err := k8sutil.GetTokenSecret(secrets, secretName)
 	if err != nil {
 		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Fetch server DNS name
@@ -339,7 +339,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	insecureSkipVerify := true
 	c, err := d.syncClientCache.GetClient(d.deps.Log, source, auth, insecureSkipVerify)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -352,12 +352,12 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 	id, err := createMember(log, &status, group, id, d.apiObject)
 	if err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	// Save added member
 	if err := d.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	// Create event about it
 	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
@@ -372,7 +372,7 @@ func (d *Deployment) DeletePod(podName string) error {
 	ns := d.apiObject.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -387,7 +387,7 @@ func (d *Deployment) CleanupPod(p *v1.Pod) error {
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
 	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -403,10 +403,10 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := k8sutil.RemovePodFinalizers(log, d.deps.KubeCli, p, p.GetFinalizers(), true); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -418,7 +418,7 @@ func (d *Deployment) DeletePvc(pvcName string) error {
 	ns := d.apiObject.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -431,11 +431,11 @@ func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
 		return nil
 	}
 
-	if errors.IsNotFound(err) {
+	if apiErrors.IsNotFound(err) {
 		return nil
 	}
 
-	return maskAny(err)
+	return errors.WithStack(err)
 }
 
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.
@@ -445,7 +445,7 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list PVCs")
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	myPVCs := make([]v1.PersistentVolumeClaim, 0, len(pvcs.Items))
 	for _, p := range pvcs.Items {
@@ -461,7 +461,7 @@ func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
 	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return pvc, nil
 }
@@ -474,7 +474,7 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
 	result, err := k8sutil.GetTLSKeyfileSecret(secrets, secretName)
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -485,7 +485,7 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -495,7 +495,7 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 func (d *Deployment) DeleteSecret(secretName string) error {
 	ns := d.apiObject.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

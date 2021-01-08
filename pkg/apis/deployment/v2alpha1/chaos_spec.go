@@ -25,8 +25,9 @@ package v2alpha1
 import (
 	time "time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/pkg/errors"
 )
 
 // ChaosSpec holds configuration for the deployment chaos monkey.
@@ -58,10 +59,10 @@ func (s ChaosSpec) GetKillPodProbability() Percent {
 func (s ChaosSpec) Validate() error {
 	if s.IsEnabled() {
 		if s.GetInterval() <= 0 {
-			return maskAny(errors.Wrapf(ValidationError, "Interval must be > 0"))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Interval must be > 0"))
 		}
 		if err := s.GetKillPodProbability().Validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil

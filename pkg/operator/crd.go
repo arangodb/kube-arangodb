@@ -28,6 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,7 +44,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 				_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(meta.ListOptions{})
 				return err
 			}); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
@@ -53,7 +54,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 				_, err := o.CRCli.ReplicationV1().ArangoDeploymentReplications(o.Namespace).List(meta.ListOptions{})
 				return err
 			}); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
@@ -63,35 +64,35 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 				_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(meta.ListOptions{})
 				return err
 			}); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 	} else {
 		if enableDeployment {
 			log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
 			if err := crd.WaitCRDReady(o.KubeExtCli, deployment.ArangoDeploymentCRDName); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
 		if enableDeploymentReplication {
 			log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
 			if err := crd.WaitCRDReady(o.KubeExtCli, replication.ArangoDeploymentReplicationCRDName); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
 		if enableStorage {
 			log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
 			if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
 		if enableBackup {
 			log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
 			if err := crd.WaitCRDReady(o.KubeExtCli, backup.ArangoBackupCRDName); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 	}

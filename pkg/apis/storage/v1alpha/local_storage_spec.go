@@ -25,7 +25,7 @@ package v1alpha
 import (
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // LocalStorageSpec contains the specification part of
@@ -41,14 +41,14 @@ type LocalStorageSpec struct {
 // problems or nil if all ok.
 func (s LocalStorageSpec) Validate() error {
 	if err := s.StorageClass.Validate(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if len(s.LocalPath) == 0 {
-		return maskAny(errors.Wrapf(ValidationError, "localPath cannot be empty"))
+		return errors.WithStack(errors.Wrapf(ValidationError, "localPath cannot be empty"))
 	}
 	for _, p := range s.LocalPath {
 		if len(p) == 0 {
-			return maskAny(errors.Wrapf(ValidationError, "localPath cannot contain empty strings"))
+			return errors.WithStack(errors.Wrapf(ValidationError, "localPath cannot contain empty strings"))
 		}
 	}
 	return nil

@@ -28,6 +28,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
@@ -42,7 +44,7 @@ func ValidateOptionalResourceName(name string) error {
 		return nil
 	}
 	if err := ValidateResourceName(name); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -52,12 +54,12 @@ func ValidateOptionalResourceName(name string) error {
 // See https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
 func ValidateResourceName(name string) error {
 	if len(name) > 253 {
-		return maskAny(fmt.Errorf("Name '%s' is too long", name))
+		return errors.WithStack(errors.Newf("Name '%s' is too long", name))
 	}
 	if resourceNameRE.MatchString(name) {
 		return nil
 	}
-	return maskAny(fmt.Errorf("Name '%s' is not a valid resource name", name))
+	return errors.WithStack(errors.Newf("Name '%s' is not a valid resource name", name))
 }
 
 // stripArangodPrefix removes well know arangod ID prefixes from the given id.

@@ -23,9 +23,10 @@
 package inspector
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"github.com/pkg/errors"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -77,7 +78,7 @@ func serviceMonitorsToMap(m monitoringClient.MonitoringV1Interface, namespace st
 	for _, serviceMonitor := range serviceMonitors {
 		_, exists := serviceMonitorMap[serviceMonitor.GetName()]
 		if exists {
-			return nil, errors.Errorf("ServiceMonitor %s already exists in map, error received", serviceMonitor.GetName())
+			return nil, errors.Newf("ServiceMonitor %s already exists in map, error received", serviceMonitor.GetName())
 		}
 
 		serviceMonitorMap[serviceMonitor.GetName()] = serviceMonitor

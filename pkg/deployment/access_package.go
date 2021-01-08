@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/ghodss/yaml"
 	v1 "k8s.io/api/core/v1"
@@ -58,7 +60,7 @@ func (d *Deployment) createAccessPackages() error {
 	for _, apSecretName := range spec.Sync.ExternalAccess.AccessPackageSecretNames {
 		apNameMap[apSecretName] = struct{}{}
 		if err := d.ensureAccessPackage(apSecretName); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -66,7 +68,7 @@ func (d *Deployment) createAccessPackages() error {
 	secretList, err := secrets.List(metav1.ListOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list secrets")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	for _, secret := range secretList.Items {
 		if d.isOwnerOf(&secret) {
@@ -111,7 +113,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(secrets, clientAuthSecretName, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Fetch TLS CA public key
@@ -119,14 +121,14 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	tlsCACert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Create keyfile
 	ca, err := certificates.LoadCAFromPEM(clientAuthCert, clientAuthKey)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to parse client-auth CA")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Create certificate
@@ -138,7 +140,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	cert, key, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create client-auth keyfile")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" + strings.TrimSpace(key)
 
@@ -180,12 +182,12 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	keyfileYaml, err := yaml.Marshal(keyfileSecret)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to encode client-auth keyfile Secret")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	tlsCAYaml, err := yaml.Marshal(tlsCASecret)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to encode TLS CA Secret")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	allYaml := strings.TrimSpace(string(keyfileYaml)) + "\n---\n" + strings.TrimSpace(string(tlsCAYaml))
 
@@ -205,7 +207,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
 		log.Debug().Err(err).Str("secret-name", apSecretName).Msg("Failed to create access package Secret")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Write log entry & create event

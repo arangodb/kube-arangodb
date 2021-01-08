@@ -26,9 +26,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	coreosv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -64,11 +65,11 @@ func (r *Resources) EnsureMonitoringClient() (*clientv1.MonitoringV1Client, erro
 	var restConfig *rest.Config
 	restConfig, err := k8sutil.NewKubeConfig()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	mClient, err := clientv1.NewForConfig(restConfig)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	r.monitoringClient = mClient
 	return mClient, nil
@@ -101,7 +102,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 	switch spec.Metrics.Mode.Get() {
 	case deploymentApi.MetricsModeInternal:
 		if spec.Metrics.Authentication.JWTTokenSecretName == nil {
-			return coreosv1.ServiceMonitorSpec{}, errors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
+			return coreosv1.ServiceMonitorSpec{}, apiErrors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
 		}
 
 		endpoint := r.makeEndpoint(spec.IsSecure())
@@ -147,7 +148,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 	mClient, err := r.EnsureMonitoringClient()
 	if err != nil {
 		log.Error().Err(err).Msgf("Cannot get a monitoring client.")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Check if ServiceMonitor already exists
@@ -176,13 +177,13 @@ func (r *Resources) EnsureServiceMonitor() error {
 			smon, err = serviceMonitors.Create(smon)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			log.Debug().Msgf("ServiceMonitor %s successfully created.", serviceMonitorName)
 			return nil
 		} else {
 			log.Error().Err(err).Msgf("Failed to get ServiceMonitor %s", serviceMonitorName)
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	// Check if the service monitor is ours, otherwise we do not touch it:
@@ -229,5 +230,5 @@ func (r *Resources) EnsureServiceMonitor() error {
 		return nil
 	}
 	log.Error().Err(err).Msgf("Could not delete ServiceMonitor %s.", serviceMonitorName)
-	return maskAny(err)
+	return errors.WithStack(err)
 }

@@ -24,8 +24,9 @@ package replication
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,7 +57,7 @@ func (dr *DeploymentReplication) addFinalizers() error {
 	}
 	apiObject.SetFinalizers(append(apiObject.GetFinalizers(), constants.FinalizerDeplReplStopSync))
 	if err := dr.updateCRSpec(apiObject.Spec); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -81,7 +82,7 @@ func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.Arang
 		ignoreNotFound := false
 		if err := removeDeploymentReplicationFinalizers(log, dr.deps.CRCli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update deployment replication (to remove finalizers)")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -106,7 +107,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			abort = true
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get source deployment")
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
 			log.Debug().Msg("Source deployment is being deleted. Abort enabled")
 			abort = true
@@ -122,7 +123,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			cleanupSource = true
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get destinaton deployment")
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if depl.GetDeletionTimestamp() != nil {
 			log.Debug().Msg("Destination deployment is being deleted. Source cleanup enabled")
 			cleanupSource = true
@@ -135,16 +136,16 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 		/*sourceClient, err := dr.createSyncMasterClient(p.Spec.Source)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to create source client")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}*/
 		//sourceClient.Master().C
-		return maskAny(fmt.Errorf("TODO"))
+		return errors.WithStack(errors.Newf("TODO"))
 	} else {
 		// Destination still exists, stop/abort sync
 		destClient, err := dr.createSyncMasterClient(p.Spec.Destination)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to create destination client")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		req := client.CancelSynchronizationRequest{
 			WaitTimeout:  time.Minute * 3,
@@ -159,7 +160,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 			if err := dr.updateCRStatus(); err != nil {
 				log.Warn().Err(err).Msg("Failed to update status to reflect cancel-failures increment")
 			}
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		return nil
 	}
@@ -171,7 +172,7 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 	getFunc := func() (metav1.Object, error) {
 		result, err := repls.Get(p.GetName(), metav1.GetOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
@@ -179,13 +180,13 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 		updatedRepl := updated.(*api.ArangoDeploymentReplication)
 		result, err := repls.Update(updatedRepl)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		*p = *result
 		return nil
 	}
 	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -225,7 +227,7 @@ func wrapperConnectionIssues(t *testing.T, state state.State) {
 		// Arrange
 		handler := newFakeHandler()
 
-		f := newMockArangoClientBackupErrorFactory(fmt.Errorf(errorString))
+		f := newMockArangoClientBackupErrorFactory(errors.Newf(errorString))
 		handler.arangoClientFactory = f
 
 		obj, deployment := newObjectSet(state)

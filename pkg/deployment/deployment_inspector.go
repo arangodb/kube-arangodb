@@ -26,13 +26,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	"github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
@@ -181,7 +181,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 	// Is the deployment in a good state?
 	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
-		return minInspectionInterval, errors.Errorf("Secrets changed")
+		return minInspectionInterval, errors.Newf("Secrets changed")
 	}
 
 	// Ensure we have image info

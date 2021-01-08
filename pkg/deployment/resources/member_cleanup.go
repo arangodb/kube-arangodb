@@ -25,6 +25,8 @@ package resources
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
@@ -50,7 +52,7 @@ func (r *Resources) CleanupRemovedMembers() error {
 		deploymentName := r.context.GetAPIObject().GetName()
 		if err := r.cleanupRemovedClusterMembers(); err != nil {
 			cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Success).Inc()
 		return nil
@@ -137,7 +139,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 			log.Warn().Err(err).Msg("Failed to update deployment status")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 

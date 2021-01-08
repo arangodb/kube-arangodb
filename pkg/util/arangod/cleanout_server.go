@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 )
@@ -89,7 +91,7 @@ func CleanoutServerJobStatus(ctx context.Context, jobID string, client driver.Cl
 		} else if agency.IsKeyNotFound(err) {
 			continue
 		} else {
-			return CleanoutJobStatus{}, maskAny(err)
+			return CleanoutJobStatus{}, errors.WithStack(err)
 		}
 	}
 	// Job not found in any states

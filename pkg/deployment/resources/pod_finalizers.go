@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +72,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 		ignoreNotFound := false
 		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
-			return 0, maskAny(err)
+			return 0, errors.WithStack(err)
 		}
 		log.Debug().Strs("finalizers", removalList).Msg("Removed finalizer(s) from Pod")
 		// Let's do the next inspection quickly, since things may have changed now.
@@ -85,13 +87,13 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	if err := r.prepareAgencyPodTermination(ctx, log, p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		memberStatus = update
 		return nil
 	}); err != nil {
 		// Pod cannot be terminated yet
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Remaining agents are healthy, if we need to perform complete recovery
@@ -100,7 +102,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
 		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Str("pvc-name", memberStatus.PersistentVolumeClaimName).Msg("Removed PVC of member so agency can be completely replaced")
 	}
@@ -113,13 +115,13 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log zerolog.Logger, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	if err := r.prepareDBServerPodTermination(ctx, log, p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		memberStatus = update
 		return nil
 	}); err != nil {
 		// Pod cannot be terminated yet
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// If this DBServer is cleaned out, we need to remove the PVC.
@@ -127,7 +129,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
 		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Str("pvc-name", memberStatus.PersistentVolumeClaimName).Msg("Removed PVC of member")
 	}

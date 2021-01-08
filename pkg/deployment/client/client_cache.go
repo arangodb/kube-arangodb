@@ -17,10 +17,10 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
-package deployment
+package client
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -39,7 +39,23 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-type clientCache struct {
+type Cache interface {
+	GetAuth() conn.Auth
+
+	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	GetDatabase(ctx context.Context) (driver.Client, error)
+	GetAgency(ctx context.Context) (agency.Agency, error)
+}
+
+func NewClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.Factory) Cache {
+	return &cache{
+		clients:         make(map[string]driver.Client),
+		apiObjectGetter: apiObjectGetter,
+		factory:         factory,
+	}
+}
+
+type cache struct {
 	mutex           sync.Mutex
 	clients         map[string]driver.Client
 	apiObjectGetter func() *api.ArangoDeployment
@@ -49,15 +65,7 @@ type clientCache struct {
 	factory conn.Factory
 }
 
-func newClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.Factory) *clientCache {
-	return &clientCache{
-		clients:         make(map[string]driver.Client),
-		apiObjectGetter: apiObjectGetter,
-		factory:         factory,
-	}
-}
-
-func (cc *clientCache) extendHost(host string) string {
+func (cc *cache) extendHost(host string) string {
 	scheme := "http"
 	if cc.apiObjectGetter().Spec.TLS.IsSecure() {
 		scheme = "https"
@@ -66,7 +74,7 @@ func (cc *clientCache) extendHost(host string) string {
 	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(k8sutil.ArangoPort))
 }
 
-func (cc *clientCache) getClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) getClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	key := fmt.Sprintf("%d-%s", group, id)
 	c, found := cc.clients[key]
 	if found {
@@ -76,16 +84,16 @@ func (cc *clientCache) getClient(ctx context.Context, group api.ServerGroup, id 
 	// Not found, create a new client
 	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id)))
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	cc.clients[key] = c
 	return c, nil
 }
 
-func (cc *clientCache) get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	client, err := cc.getClient(ctx, group, id)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	if _, err := client.Version(ctx); err == nil {
@@ -100,18 +108,18 @@ func (cc *clientCache) get(ctx context.Context, group api.ServerGroup, id string
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *clientCache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
 	return cc.get(ctx, group, id)
 }
 
-func (cc clientCache) GetAuth() conn.Auth {
+func (cc cache) GetAuth() conn.Auth {
 	return cc.factory.GetAuth()
 }
 
-func (cc *clientCache) getDatabaseClient() (driver.Client, error) {
+func (cc *cache) getDatabaseClient() (driver.Client, error) {
 	if c := cc.databaseClient; c != nil {
 		return c, nil
 	}
@@ -119,16 +127,16 @@ func (cc *clientCache) getDatabaseClient() (driver.Client, error) {
 	// Not found, create a new client
 	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.apiObjectGetter())))
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	cc.databaseClient = c
 	return c, nil
 }
 
-func (cc *clientCache) getDatabase(ctx context.Context) (driver.Client, error) {
+func (cc *cache) getDatabase(ctx context.Context) (driver.Client, error) {
 	client, err := cc.getDatabaseClient()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	if _, err := client.Version(ctx); err == nil {
@@ -143,14 +151,14 @@ func (cc *clientCache) getDatabase(ctx context.Context) (driver.Client, error) {
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
-func (cc *clientCache) GetDatabase(ctx context.Context) (driver.Client, error) {
+func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
 	return cc.getDatabase(ctx)
 }
 
-func (cc *clientCache) getAgencyClient() (agency.Agency, error) {
+func (cc *cache) getAgencyClient() (agency.Agency, error) {
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.apiObjectGetter().Status.Members.Agents {
@@ -158,18 +166,18 @@ func (cc *clientCache) getAgencyClient() (agency.Agency, error) {
 	}
 
 	if len(dnsNames) == 0 {
-		return nil, errors.Errorf("There is no DNS Name")
+		return nil, errors.Newf("There is no DNS Name")
 	}
 
 	c, err := cc.factory.Agency(dnsNames...)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
 
 // GetDatabase returns a cached client for the agency
-func (cc *clientCache) GetAgency(ctx context.Context) (agency.Agency, error) {
+func (cc *cache) GetAgency(ctx context.Context) (agency.Agency, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 

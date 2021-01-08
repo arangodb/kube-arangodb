@@ -24,9 +24,9 @@ package reconcile
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 
 	driver "github.com/arangodb/go-driver"
@@ -70,7 +70,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
 		client, err := a.actionCtx.GetDatabaseClient(ctx)
 		if err != nil {
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
@@ -79,7 +79,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			} else if driver.IsPreconditionFailed(err) {
 				health, err := a.actionCtx.GetDeploymentHealth()
 				if err != nil {
-					return false, maskAny(errors.Wrapf(err, "failed to get cluster health"))
+					return false, errors.WithStack(errors.Wrapf(err, "failed to get cluster health"))
 				}
 				// We don't care if not found
 				if record, ok := health.Health[driver.ServerID(m.ID)]; ok {
@@ -88,7 +88,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 					if m.Conditions.IsTrue(api.ConditionTypeTerminating) {
 
 						if record.Status != driver.ServerStatusFailed {
-							return false, maskAny(fmt.Errorf("can not remove server from cluster. Not yet terminated. Retry later"))
+							return false, errors.WithStack(errors.Newf("can not remove server from cluster. Not yet terminated. Retry later"))
 						}
 
 						a.log.Debug().Msg("dbserver has shut down")
@@ -101,21 +101,21 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Remove the pod (if any)
 	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	// Remove the pvc (if any)
 	if m.PersistentVolumeClaimName != "" {
 		if err := a.actionCtx.DeletePvc(m.PersistentVolumeClaimName); err != nil {
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	}
 	// Remove member
 	if err := a.actionCtx.RemoveMemberByID(a.action.MemberID); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	// Check that member has been removed
 	if _, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID); found {
-		return false, maskAny(fmt.Errorf("Member %s still exists", a.action.MemberID))
+		return false, errors.WithStack(errors.Newf("Member %s still exists", a.action.MemberID))
 	}
 	return true, nil
 }

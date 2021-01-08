@@ -27,12 +27,14 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 )
 
@@ -47,19 +49,19 @@ func mapTLSSNIConfig(log zerolog.Logger, sni api.TLSSNISpec, cachedStatus inspec
 	for name, servers := range mapping {
 		secret, exists := cachedStatus.Secret(name)
 		if !exists {
-			return nil, errors.Errorf("Secret %s does not exist", name)
+			return nil, errors.Newf("Secret %s does not exist", name)
 		}
 
 		tlsKey, ok := secret.Data[constants.SecretTLSKeyfile]
 		if !ok {
-			return nil, errors.Errorf("Not found tls keyfile key in SNI secret")
+			return nil, errors.Newf("Not found tls keyfile key in SNI secret")
 		}
 
 		tlsKeyChecksum := fmt.Sprintf("%0x", sha256.Sum256(tlsKey))
 
 		for _, server := range servers {
 			if _, ok := fetchedSecrets[server]; ok {
-				return nil, errors.Errorf("Not found tls key in SNI secret")
+				return nil, errors.Newf("Not found tls key in SNI secret")
 			}
 			fetchedSecrets[server] = tlsKeyChecksum
 		}
@@ -82,13 +84,13 @@ func compareTLSSNIConfig(ctx context.Context, c driver.Connection, m map[string]
 	}
 
 	if len(m) != len(tlsDetails.Result.SNI) {
-		return false, errors.Errorf("Count of SNI mounted secrets does not match")
+		return false, errors.Newf("Count of SNI mounted secrets does not match")
 	}
 
 	for key, value := range tlsDetails.Result.SNI {
 		currentValue, ok := m[key]
 		if !ok {
-			return false, errors.Errorf("Unable to fetch TLS SNI state")
+			return false, errors.Newf("Unable to fetch TLS SNI state")
 		}
 
 		if value.GetSHA().Checksum() != currentValue {

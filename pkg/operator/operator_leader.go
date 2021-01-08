@@ -28,6 +28,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -162,9 +164,9 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 		pod, err := pods.Get(o.Config.PodName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Error().Err(err).Msg("Pod not found, so we cannot set its role label")
-			return retry.Permanent(maskAny(err))
+			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		labels := pod.ObjectMeta.GetLabels()
 		if labels == nil {
@@ -174,15 +176,15 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 		pod.ObjectMeta.SetLabels(labels)
 		if _, err := pods.Update(pod); k8sutil.IsConflict(err) {
 			// Retry it
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if err != nil {
 			log.Error().Err(err).Msg("Failed to update Pod wrt 'role' label")
-			return retry.Permanent(maskAny(err))
+			return retry.Permanent(errors.WithStack(err))
 		}
 		return nil
 	}
 	if err := retry.Retry(op, time.Second*15); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

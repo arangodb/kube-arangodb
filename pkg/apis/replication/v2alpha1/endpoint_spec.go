@@ -25,9 +25,10 @@ package v2alpha1
 import (
 	"net/url"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
 )
 
 // EndpointSpec contains the specification used to reach the syncmasters
@@ -58,22 +59,22 @@ func (s EndpointSpec) HasDeploymentName() bool {
 // problems or nil if all ok.
 func (s EndpointSpec) Validate(isSourceEndpoint bool) error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetDeploymentName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	for _, ep := range s.MasterEndpoint {
 		if _, err := url.Parse(ep); err != nil {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid master endpoint '%s': %s", ep, err))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid master endpoint '%s': %s", ep, err))
 		}
 	}
 	hasDeploymentName := s.HasDeploymentName()
 	if !hasDeploymentName && len(s.MasterEndpoint) == 0 {
-		return maskAny(errors.Wrapf(ValidationError, "Provide a deploy name or at least one master endpoint"))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Provide a deploy name or at least one master endpoint"))
 	}
 	if err := s.Authentication.Validate(isSourceEndpoint || !hasDeploymentName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.TLS.Validate(!hasDeploymentName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

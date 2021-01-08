@@ -27,7 +27,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -103,7 +104,7 @@ func (l *MemberStatusList) add(m MemberStatus) error {
 	src := *l
 	for _, x := range src {
 		if x.ID == m.ID {
-			return maskAny(errors.Wrapf(AlreadyExistsError, "Member '%s' already exists", m.ID))
+			return errors.WithStack(errors.Wrapf(AlreadyExistsError, "Member '%s' already exists", m.ID))
 		}
 	}
 	newList := append(src, m)
@@ -121,7 +122,7 @@ func (l MemberStatusList) update(m MemberStatus) error {
 			return nil
 		}
 	}
-	return maskAny(errors.Wrapf(NotFoundError, "Member '%s' is not a member", m.ID))
+	return errors.WithStack(errors.Wrapf(NotFoundError, "Member '%s' is not a member", m.ID))
 }
 
 // RemoveByID a member with given ID from the list.
@@ -134,7 +135,7 @@ func (l *MemberStatusList) removeByID(id string) error {
 			return nil
 		}
 	}
-	return maskAny(errors.Wrapf(NotFoundError, "Member '%s' is not a member", id))
+	return errors.WithStack(errors.Wrapf(NotFoundError, "Member '%s' is not a member", id))
 }
 
 // SelectMemberToRemove selects a member from the given list that should
@@ -168,7 +169,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 			}
 		}
 	}
-	return MemberStatus{}, maskAny(errors.Wrap(NotFoundError, "No member available for removal"))
+	return MemberStatus{}, errors.WithStack(errors.Wrap(NotFoundError, "No member available for removal"))
 }
 
 // MembersReady returns the number of members that are in the Ready state.

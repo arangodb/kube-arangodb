@@ -26,10 +26,12 @@ import (
 	"context"
 	"encoding/base64"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"

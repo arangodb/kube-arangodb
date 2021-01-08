@@ -25,6 +25,8 @@ package k8sutil
 import (
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -111,7 +113,7 @@ func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, d
 	}
 	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
 	if _, err := pvcs.Create(pvc); err != nil && !IsAlreadyExists(err) {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

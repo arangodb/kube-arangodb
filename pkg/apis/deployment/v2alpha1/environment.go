@@ -23,7 +23,7 @@
 package v2alpha1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Environment in which to run the cluster
@@ -43,7 +43,7 @@ func (e Environment) Validate() error {
 	case EnvironmentDevelopment, EnvironmentProduction:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown environment: '%s'", string(e)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown environment: '%s'", string(e)))
 	}
 }
 

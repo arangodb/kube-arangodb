@@ -23,7 +23,7 @@
 package k8sutil
 
 import (
-	goErrors "github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -46,7 +46,7 @@ type SecretInterface interface {
 func ValidateEncryptionKeySecret(secrets SecretInterface, secretName string) error {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return ValidateEncryptionKeyFromSecret(s)
 }
@@ -55,10 +55,10 @@ func ValidateEncryptionKeyFromSecret(s *core.Secret) error {
 	// Check `key` field
 	keyData, found := s.Data[constants.SecretEncryptionKey]
 	if !found {
-		return maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, s.GetName()))
+		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, s.GetName()))
 	}
 	if len(keyData) != 32 {
-		return maskAny(goErrors.Errorf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, s.GetName(), len(keyData)))
+		return errors.WithStack(errors.Newf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, s.GetName(), len(keyData)))
 	}
 	return nil
 }
@@ -66,7 +66,7 @@ func ValidateEncryptionKeyFromSecret(s *core.Secret) error {
 // CreateEncryptionKeySecret creates a secret used to store a RocksDB encryption key.
 func CreateEncryptionKeySecret(secrets SecretInterface, secretName string, key []byte) error {
 	if len(key) != 32 {
-		return maskAny(goErrors.Errorf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
+		return errors.WithStack(errors.Newf("Key in secret '%s' is expected to be 32 bytes long, got %d", secretName, len(key)))
 	}
 	// Create secret
 	secret := &core.Secret{
@@ -79,7 +79,7 @@ func CreateEncryptionKeySecret(secrets SecretInterface, secretName string, key [
 	}
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -89,12 +89,12 @@ func CreateEncryptionKeySecret(secrets SecretInterface, secretName string, key [
 func ValidateCACertificateSecret(secrets SecretInterface, secretName string) error {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Check `ca.crt` field
 	_, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
 	}
 	return nil
 }
@@ -107,12 +107,12 @@ func ValidateCACertificateSecret(secrets SecretInterface, secretName string) err
 func GetCACertficateSecret(secrets SecretInterface, secretName string) (string, error) {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	// Load `ca.crt` field
 	cert, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return "", maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
 	}
 	return string(cert), nil
 }
@@ -125,7 +125,7 @@ func GetCACertficateSecret(secrets SecretInterface, secretName string) (string, 
 func GetCASecret(secrets SecretInterface, secretName string, ownerRef *meta.OwnerReference) (string, string, bool, error) {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return "", "", false, maskAny(err)
+		return "", "", false, errors.WithStack(err)
 	}
 	return GetCAFromSecret(s, ownerRef)
 }
@@ -143,11 +143,11 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 	// Load `ca.crt` field
 	cert, found := s.Data[constants.SecretCACertificate]
 	if !found {
-		return "", "", isOwned, maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCACertificate, s.GetName()))
 	}
 	priv, found := s.Data[constants.SecretCAKey]
 	if !found {
-		return "", "", isOwned, maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
 	}
 	return string(cert), string(priv), isOwned, nil
 }
@@ -168,7 +168,7 @@ func CreateCASecret(secrets SecretInterface, secretName string, certificate, key
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -179,7 +179,7 @@ func CreateCASecret(secrets SecretInterface, secretName string, certificate, key
 func GetTLSKeyfileSecret(secrets SecretInterface, secretName string) (string, error) {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	return GetTLSKeyfileFromSecret(s)
 }
@@ -188,7 +188,7 @@ func GetTLSKeyfileFromSecret(s *core.Secret) (string, error) {
 	// Load `tls.keyfile` field
 	keyfile, found := s.Data[constants.SecretTLSKeyfile]
 	if !found {
-		return "", maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, s.GetName()))
+		return "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, s.GetName()))
 	}
 	return string(keyfile), nil
 }
@@ -209,7 +209,7 @@ func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile 
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -219,7 +219,7 @@ func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile 
 func ValidateTokenSecret(secrets SecretInterface, secretName string) error {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return ValidateTokenFromSecret(s)
 }
@@ -228,7 +228,7 @@ func ValidateTokenFromSecret(s *core.Secret) error {
 	// Check `token` field
 	_, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretKeyToken, s.GetName()))
 	}
 	return nil
 }
@@ -237,7 +237,7 @@ func ValidateTokenFromSecret(s *core.Secret) error {
 func GetTokenSecret(secrets SecretInterface, secretName string) (string, error) {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	return GetTokenFromSecret(s)
 }
@@ -247,7 +247,7 @@ func GetTokenFromSecret(s *core.Secret) (string, error) {
 	// Take the first data from the token key
 	data, found := s.Data[constants.SecretKeyToken]
 	if !found {
-		return "", maskAny(goErrors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return "", errors.WithStack(errors.Newf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
 	}
 	return string(data), nil
 }
@@ -268,7 +268,7 @@ func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerR
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -282,7 +282,7 @@ func CreateJWTTokenFromSecret(secret string, claims map[string]interface{}) (str
 	// Sign and get the complete encoded token as a string using the secret
 	signedToken, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 
 	return signedToken, nil
@@ -293,7 +293,7 @@ func CreateJWTTokenFromSecret(secret string, claims map[string]interface{}) (str
 func CreateJWTFromSecret(secrets SecretInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
 	secret, err := GetTokenSecret(secrets, secretSecretName)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
@@ -302,7 +302,7 @@ func CreateJWTFromSecret(secrets SecretInterface, tokenSecretName, secretSecretN
 	// Sign and get the complete encoded token as a string using the secret
 	signedToken, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	return CreateTokenSecret(secrets, tokenSecretName, signedToken, ownerRef)
@@ -325,7 +325,7 @@ func CreateBasicAuthSecret(secrets SecretInterface, secretName, username, passwo
 	AddOwnerRefToObject(secret, ownerRef)
 	if _, err := secrets.Create(secret); err != nil {
 		// Failed to create secret
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -338,7 +338,7 @@ func CreateBasicAuthSecret(secrets SecretInterface, secretName, username, passwo
 func GetBasicAuthSecret(secrets SecretInterface, secretName string) (string, string, error) {
 	s, err := secrets.Get(secretName, meta.GetOptions{})
 	if err != nil {
-		return "", "", maskAny(err)
+		return "", "", errors.WithStack(err)
 	}
 	return GetSecretAuthCredentials(s)
 }
@@ -347,11 +347,11 @@ func GetBasicAuthSecret(secrets SecretInterface, secretName string) (string, str
 func GetSecretAuthCredentials(secret *core.Secret) (string, string, error) {
 	username, found := secret.Data[constants.SecretUsername]
 	if !found {
-		return "", "", maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
+		return "", "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
 	}
 	password, found := secret.Data[constants.SecretPassword]
 	if !found {
-		return "", "", maskAny(goErrors.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
+		return "", "", errors.WithStack(errors.Newf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
 	}
 	return string(username), string(password), nil
 }

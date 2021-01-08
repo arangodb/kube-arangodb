@@ -23,9 +23,9 @@
 package operation
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,7 +51,7 @@ func NewItemFromString(itemString string) (Item, error) {
 	parts := strings.Split(itemString, "/")
 
 	if len(parts) != 6 {
-		return Item{}, fmt.Errorf("expected 6 parts in %s, got %d", itemString, len(parts))
+		return Item{}, errors.Newf("expected 6 parts in %s, got %d", itemString, len(parts))
 	}
 
 	return NewItem(Operation(parts[0]), parts[1], parts[2], parts[3], parts[4], parts[5])
@@ -94,11 +94,11 @@ type Item struct {
 
 func validateField(name, value string, allowEmpty bool) error {
 	if !allowEmpty && value == "" {
-		return fmt.Errorf(emptyError, name)
+		return errors.Newf(emptyError, name)
 	}
 
 	if index := strings.Index(value, separator); index != -1 {
-		return fmt.Errorf(invalidCharacterError, separator, name)
+		return errors.Newf(invalidCharacterError, separator, name)
 	}
 
 	return nil

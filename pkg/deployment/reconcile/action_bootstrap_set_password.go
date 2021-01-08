@@ -26,7 +26,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -100,20 +101,20 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 
 	client, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 
 	password, err := a.ensureUserPasswordSecret(user, secret)
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 
 	// Obtain the user
 	if u, err := client.User(context.Background(), user); driver.IsNotFound(err) {
 		_, err := client.CreateUser(context.Background(), user, &driver.UserOptions{Password: password})
-		return password, maskAny(err)
+		return password, errors.WithStack(err)
 	} else if err == nil {
-		return password, maskAny(u.Update(context.Background(), driver.UserOptions{
+		return password, errors.WithStack(u.Update(context.Background(), driver.UserOptions{
 			Password: password,
 		}))
 	} else {
@@ -143,6 +144,6 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(user, secret string
 		if err == nil && user == user {
 			return pass, nil
 		}
-		return "", fmt.Errorf("invalid secret format in secret %s", secret)
+		return "", errors.Newf("invalid secret format in secret %s", secret)
 	}
 }

@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,7 +36,7 @@ func (l *LocalStorage) getMyImage() (string, v1.PullPolicy, error) {
 	p, err := l.deps.KubeCli.CoreV1().Pods(ns).Get(l.config.PodName, metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pod-name", l.config.PodName).Msg("Failed to get my own pod")
-		return "", "", maskAny(err)
+		return "", "", errors.WithStack(err)
 	}
 
 	c := p.Spec.Containers[0]

@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -121,7 +123,7 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 				log.Debug().Msg("Creating new PDB")
 				if _, err := pdbcli.Create(pdb); err != nil {
 					log.Error().Err(err).Msg("failed to create PDB")
-					return maskAny(err)
+					return errors.WithStack(err)
 				}
 			}
 			return nil
@@ -142,7 +144,7 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 				// Update the PDB
 				if err := pdbcli.Delete(pdbname, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")
-					return maskAny(err)
+					return errors.WithStack(err)
 				}
 			} else {
 				log.Debug().Msg("PDB already deleted")
@@ -152,7 +154,7 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 				return nil
 			}
 		} else {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Msg("Retry loop for PDB")
 		select {

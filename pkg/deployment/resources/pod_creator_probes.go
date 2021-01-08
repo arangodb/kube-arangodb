@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver"
@@ -220,11 +222,11 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 	return &probes.HTTPProbeConfig{
@@ -326,11 +328,11 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api
 	if spec.IsAuthenticated() {
 		secretData, err := r.getJWTSecret(spec)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{localPath})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 	probeCfg := &probes.HTTPProbeConfig{
@@ -354,18 +356,18 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 		// Use monitoring token
 		token, err := r.getSyncMonitoringToken(spec)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		authorization = "bearer " + token
 	} else if group == api.ServerGroupSyncMasters {
 		// Fall back to JWT secret
 		secretData, err := r.getSyncJWTSecret(spec)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	} else {
 		// Don't have a probe

@@ -23,9 +23,8 @@
 package v2alpha1
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -53,11 +52,11 @@ func (s AuthenticationSpec) IsAuthenticated() bool {
 // Validate the given spec
 func (s AuthenticationSpec) Validate(required bool) error {
 	if required && !s.IsAuthenticated() {
-		return maskAny(errors.Wrap(ValidationError, "JWT secret is required"))
+		return errors.WithStack(errors.Wrap(ValidationError, "JWT secret is required"))
 	}
 	if s.IsAuthenticated() {
 		if err := k8sutil.ValidateResourceName(s.GetJWTSecretName()); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil

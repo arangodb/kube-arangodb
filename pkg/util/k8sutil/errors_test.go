@@ -26,6 +26,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/stretchr/testify/assert"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,21 +43,21 @@ var (
 
 func TestIsAlreadyExists(t *testing.T) {
 	assert.False(t, IsAlreadyExists(conflictError))
-	assert.False(t, IsAlreadyExists(maskAny(invalidError)))
+	assert.False(t, IsAlreadyExists(errors.WithStack(invalidError)))
 	assert.True(t, IsAlreadyExists(existsError))
-	assert.True(t, IsAlreadyExists(maskAny(existsError)))
+	assert.True(t, IsAlreadyExists(errors.WithStack(existsError)))
 }
 
 func TestIsConflict(t *testing.T) {
 	assert.False(t, IsConflict(existsError))
-	assert.False(t, IsConflict(maskAny(invalidError)))
+	assert.False(t, IsConflict(errors.WithStack(invalidError)))
 	assert.True(t, IsConflict(conflictError))
-	assert.True(t, IsConflict(maskAny(conflictError)))
+	assert.True(t, IsConflict(errors.WithStack(conflictError)))
 }
 
 func TestIsNotFound(t *testing.T) {
 	assert.False(t, IsNotFound(invalidError))
-	assert.False(t, IsNotFound(maskAny(invalidError)))
+	assert.False(t, IsNotFound(errors.WithStack(invalidError)))
 	assert.True(t, IsNotFound(notFoundError))
-	assert.True(t, IsNotFound(maskAny(notFoundError)))
+	assert.True(t, IsNotFound(errors.WithStack(notFoundError)))
 }

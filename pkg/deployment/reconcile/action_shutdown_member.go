@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
@@ -69,7 +71,7 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 		removeFromCluster := true
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
@@ -82,18 +84,18 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 				return true, nil
 			}
 			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
 		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	}
 	// Update status
 	m.Phase = api.MemberPhaseShuttingDown
 	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return false, nil
 }
