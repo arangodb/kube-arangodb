@@ -25,6 +25,8 @@ package backup
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/stretchr/testify/require"

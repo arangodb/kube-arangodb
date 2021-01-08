@@ -23,8 +23,9 @@
 package v2alpha1
 
 import (
-	"fmt"
 	"net"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -107,7 +108,7 @@ func (s TLSSpec) GetParsedAltNames() (dnsNames, ipAddresses, emailAddresses []st
 		} else if validation.IsValidEmailAddress(name) {
 			emailAddresses = append(emailAddresses, name)
 		} else {
-			return nil, nil, nil, maskAny(fmt.Errorf("'%s' is not a valid alternate name", name))
+			return nil, nil, nil, errors.WithStack(errors.Newf("'%s' is not a valid alternate name", name))
 		}
 	}
 	return dnsNames, ipAddresses, emailAddresses, nil
@@ -117,13 +118,13 @@ func (s TLSSpec) GetParsedAltNames() (dnsNames, ipAddresses, emailAddresses []st
 func (s TLSSpec) Validate() error {
 	if s.IsSecure() {
 		if err := k8sutil.ValidateResourceName(s.GetCASecretName()); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if _, _, _, err := s.GetParsedAltNames(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if err := s.GetTTL().Validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil

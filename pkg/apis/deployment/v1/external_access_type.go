@@ -23,7 +23,8 @@
 package v1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -66,7 +67,7 @@ func (t ExternalAccessType) Validate() error {
 	case ExternalAccessTypeNone, ExternalAccessTypeAuto, ExternalAccessTypeLoadBalancer, ExternalAccessTypeNodePort:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown external access type: '%s'", string(t)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown external access type: '%s'", string(t)))
 	}
 }
 

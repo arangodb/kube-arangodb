@@ -23,10 +23,11 @@
 package replication
 
 import (
-	"fmt"
 	"reflect"
 	"sync/atomic"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,7 +93,7 @@ type DeploymentReplication struct {
 // New creates a new DeploymentReplication from the given API object.
 func New(config Config, deps Dependencies, apiObject *api.ArangoDeploymentReplication) (*DeploymentReplication, error) {
 	if err := apiObject.Spec.Validate(); err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	dr := &DeploymentReplication{
 		apiObject: apiObject,
@@ -199,7 +200,7 @@ func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(e
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	newAPIObject := current.DeepCopy()
@@ -227,7 +228,7 @@ func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(e
 
 	// Save updated spec
 	if err := dr.updateCRSpec(newAPIObject.Spec); err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeploymentReplication spec: %v", err))
+		return errors.WithStack(errors.Newf("failed to update ArangoDeploymentReplication spec: %v", err))
 	}
 
 	// Trigger inspect
@@ -275,7 +276,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 		}
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to patch ArangoDeploymentReplication status")
-			return maskAny(fmt.Errorf("failed to patch ArangoDeploymentReplication status: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoDeploymentReplication status: %v", err))
 		}
 	}
 }
@@ -312,7 +313,7 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 		}
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to patch ArangoDeploymentReplication spec")
-			return maskAny(fmt.Errorf("failed to patch ArangoDeploymentReplication spec: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoDeploymentReplication spec: %v", err))
 		}
 	}
 }
@@ -342,7 +343,7 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 
 		if !k8sutil.IsConflict(err) {
 			log.Warn().Err(err).Msg("retry report status: fail to update")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		depl, err := repls.Get(dr.apiObject.Name, metav1.GetOptions{})
@@ -354,10 +355,10 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 				return nil
 			}
 			log.Warn().Err(err).Msg("retry report status: fail to get latest version")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		dr.apiObject = depl
-		return maskAny(fmt.Errorf("retry needed"))
+		return errors.WithStack(errors.Newf("retry needed"))
 	}
 
 	retry.Retry(op, time.Hour*24*365)

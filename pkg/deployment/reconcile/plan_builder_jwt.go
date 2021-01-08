@@ -27,10 +27,12 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 
@@ -301,7 +303,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 	}
 
 	if jwtActive, ok := data[pod.ActiveJWTKey]; !ok {
-		return false, errors.Errorf("Missing Active JWT Token in folder")
+		return false, errors.Newf("Missing Active JWT Token in folder")
 	} else if util.SHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
 		log.Info().Str("active", e.Result.Active.GetSHA().Checksum()).Str("expected", util.SHA256(jwtActive)).Msgf("Active key is invalid")
 		return true, nil

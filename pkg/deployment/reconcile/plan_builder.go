@@ -24,8 +24,9 @@ package reconcile
 
 import (
 	goContext "context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -85,7 +86,7 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Insp
 	status.Plan = newPlan
 
 	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err), false
+		return errors.WithStack(err), false
 	}
 	return nil, true
 }
@@ -101,7 +102,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 
 		return agency.GetAgencyCollections(agencyCtx, context.GetAgencyData)
 	} else {
-		return nil, fmt.Errorf("not able to read from agency when agency is down")
+		return nil, errors.Newf("not able to read from agency when agency is down")
 	}
 }
 

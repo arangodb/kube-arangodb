@@ -23,10 +23,11 @@
 package v2alpha1
 
 import (
-	"fmt"
 	"net"
 	"net/url"
 	"strconv"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -62,16 +63,16 @@ func (s SyncExternalAccessSpec) ResolveMasterEndpoint(syncServiceHostName string
 // Validate the given spec
 func (s SyncExternalAccessSpec) Validate() error {
 	if err := s.ExternalAccessSpec.Validate(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	for _, ep := range s.MasterEndpoint {
 		if _, err := url.Parse(ep); err != nil {
-			return maskAny(fmt.Errorf("Failed to parse master endpoint '%s': %s", ep, err))
+			return errors.WithStack(errors.Newf("Failed to parse master endpoint '%s': %s", ep, err))
 		}
 	}
 	for _, name := range s.AccessPackageSecretNames {
 		if err := k8sutil.ValidateResourceName(name); err != nil {
-			return maskAny(fmt.Errorf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
+			return errors.WithStack(errors.Newf("Invalid name '%s' in accessPackageSecretNames: %s", name, err))
 		}
 	}
 	return nil

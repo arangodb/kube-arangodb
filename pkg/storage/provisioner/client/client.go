@@ -27,7 +27,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -35,15 +34,16 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
-	"github.com/pkg/errors"
 )
 
 // New creates a new client for the provisioner API.
 func New(endpoint string) (provisioner.API, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	u.Path = ""
 	return &client{
@@ -85,11 +85,11 @@ var (
 func (c *client) GetNodeInfo(ctx context.Context) (provisioner.NodeInfo, error) {
 	req, err := c.newRequest("GET", "/nodeinfo", nil)
 	if err != nil {
-		return provisioner.NodeInfo{}, maskAny(err)
+		return provisioner.NodeInfo{}, errors.WithStack(err)
 	}
 	var result provisioner.NodeInfo
 	if err := c.do(ctx, req, &result); err != nil {
-		return provisioner.NodeInfo{}, maskAny(err)
+		return provisioner.NodeInfo{}, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -102,11 +102,11 @@ func (c *client) GetInfo(ctx context.Context, localPath string) (provisioner.Inf
 	}
 	req, err := c.newRequest("POST", "/info", input)
 	if err != nil {
-		return provisioner.Info{}, maskAny(err)
+		return provisioner.Info{}, errors.WithStack(err)
 	}
 	var result provisioner.Info
 	if err := c.do(ctx, req, &result); err != nil {
-		return provisioner.Info{}, maskAny(err)
+		return provisioner.Info{}, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -118,10 +118,10 @@ func (c *client) Prepare(ctx context.Context, localPath string) error {
 	}
 	req, err := c.newRequest("POST", "/prepare", input)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := c.do(ctx, req, nil); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -133,10 +133,10 @@ func (c *client) Remove(ctx context.Context, localPath string) error {
 	}
 	req, err := c.newRequest("POST", "/remove", input)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := c.do(ctx, req, nil); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -149,7 +149,7 @@ func (c *client) newRequest(method string, localPath string, body interface{}) (
 		var err error
 		encoded, err = json.Marshal(body)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 
@@ -161,7 +161,7 @@ func (c *client) newRequest(method string, localPath string, body interface{}) (
 	url.Path = localPath
 	req, err := http.NewRequest(method, url.String(), bodyRd)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return req, nil
 }
@@ -172,23 +172,23 @@ func (c *client) do(ctx context.Context, req *http.Request, result interface{}) 
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		// Request failed
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Read content
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Check status
 	statusCode := resp.StatusCode
 	if statusCode != 200 {
 		if err := provisioner.ParseResponseError(resp, body); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
-		return maskAny(fmt.Errorf("Invalid status %d", statusCode))
+		return errors.WithStack(errors.Newf("Invalid status %d", statusCode))
 	}
 
 	// Got a success status

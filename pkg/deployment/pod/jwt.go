@@ -26,13 +26,15 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -124,7 +126,7 @@ func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
 	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		secret, exists := cachedStatus.Secret(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
-			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
+			return errors.Newf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
 		}
 
 		if err := k8sutil.ValidateTokenFromSecret(secret); err != nil {

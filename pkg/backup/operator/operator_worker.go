@@ -23,9 +23,8 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog/log"
 )
@@ -109,7 +108,7 @@ func (o *operator) processObject(obj interface{}) error {
 
 	if err = o.processItem(item); err != nil {
 		o.workqueue.AddRateLimited(key)
-		return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
+		return errors.Newf("error syncing '%s': %s, requeuing", key, err.Error())
 	}
 
 	log.Debug().Msgf("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",

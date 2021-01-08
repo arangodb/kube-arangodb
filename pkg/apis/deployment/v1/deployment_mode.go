@@ -23,7 +23,7 @@
 package v1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // DeploymentMode specifies the type of ArangoDB deployment to create.
@@ -45,7 +45,7 @@ func (m DeploymentMode) Validate() error {
 	case DeploymentModeSingle, DeploymentModeActiveFailover, DeploymentModeCluster:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown deployment mode: '%s'", string(m)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown deployment mode: '%s'", string(m)))
 	}
 }
 

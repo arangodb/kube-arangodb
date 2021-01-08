@@ -23,11 +23,12 @@
 package k8sutil
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -105,7 +106,7 @@ func CreateExporterService(cachedStatus inspector.Inspector, svcs ServiceInterfa
 	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
-		return svcName, false, maskAny(err)
+		return svcName, false, errors.WithStack(err)
 	}
 	return svcName, true, nil
 }
@@ -129,7 +130,7 @@ func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owne
 	serviceType := v1.ServiceTypeClusterIP
 	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
-		return "", false, maskAny(err)
+		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
 }
@@ -158,7 +159,7 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 	publishNotReadyAddresses := false
 	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
-		return "", false, maskAny(err)
+		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
 }
@@ -180,7 +181,7 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 	publishNotReadyAddresses := false
 	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
 	if err != nil {
-		return "", false, maskAny(err)
+		return "", false, errors.WithStack(err)
 	}
 	return svcName, newlyCreated, nil
 }
@@ -212,7 +213,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
 		return false, nil
 	} else if err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return true, nil
 }
@@ -231,7 +232,7 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 		}
 	}
 	if !portFound {
-		return "", maskAny(fmt.Errorf("Cannot find port in service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Newf("Cannot find port in service '%s.%s'", svc.GetName(), svc.GetNamespace()))
 	}
 
 	var host string
@@ -255,10 +256,10 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 		}
 		nodeList, err := nodeFetcher()
 		if err != nil {
-			return "", maskAny(err)
+			return "", errors.WithStack(err)
 		}
 		if len(nodeList.Items) == 0 {
-			return "", maskAny(fmt.Errorf("No nodes found"))
+			return "", errors.WithStack(errors.Newf("No nodes found"))
 		}
 		node := nodeList.Items[rand.Intn(len(nodeList.Items))]
 		if len(node.Status.Addresses) > 0 {
@@ -269,10 +270,10 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 			host = svc.Spec.ClusterIP
 		}
 	default:
-		return "", maskAny(fmt.Errorf("Unknown service type '%s' in service '%s.%s'", svc.Spec.Type, svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Newf("Unknown service type '%s' in service '%s.%s'", svc.Spec.Type, svc.GetName(), svc.GetNamespace()))
 	}
 	if host == "" {
-		return "", maskAny(fmt.Errorf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
+		return "", errors.WithStack(errors.Newf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
 	}
 	if !strings.HasSuffix(scheme, "://") {
 		scheme = scheme + "://"

@@ -26,6 +26,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	"golang.org/x/sys/unix"
 
@@ -78,7 +80,7 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	statfs := &unix.Statfs_t{}
 	if err := unix.Statfs(localPath, statfs); err != nil {
 		log.Error().Err(err).Msg("Statfs failed")
-		return provisioner.Info{}, maskAny(err)
+		return provisioner.Info{}, errors.WithStack(err)
 	}
 
 	// Available is blocks available * fragment size
@@ -109,17 +111,17 @@ func (p *Provisioner) Prepare(ctx context.Context, localPath string) error {
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
 		log.Error().Err(err).Msg("Failed to clean existing directory")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Make sure directory exists
 	if err := os.MkdirAll(localPath, 0755); err != nil {
 		log.Error().Err(err).Msg("Failed to make directory")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Set access rights
 	if err := os.Chmod(localPath, 0777); err != nil {
 		log.Error().Err(err).Msg("Failed to set directory access")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -132,7 +134,7 @@ func (p *Provisioner) Remove(ctx context.Context, localPath string) error {
 	// Make sure directory is empty
 	if err := os.RemoveAll(localPath); err != nil && !os.IsNotExist(err) {
 		log.Error().Err(err).Msg("Failed to clean directory")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

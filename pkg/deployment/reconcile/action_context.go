@@ -24,7 +24,8 @@ package reconcile
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -220,7 +221,7 @@ func (ac *actionContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
 func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
 	c, err := ac.context.GetDatabaseClient(ctx)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -229,7 +230,7 @@ func (ac *actionContext) GetDatabaseClient(ctx context.Context) (driver.Client, 
 func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
 	c, err := ac.context.GetServerClient(ctx, group, id)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -238,7 +239,7 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
 	c, err := ac.context.GetAgencyClients(ctx, nil)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -247,7 +248,7 @@ func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connect
 func (ac *actionContext) GetAgency(ctx context.Context) (agency.Agency, error) {
 	a, err := ac.context.GetAgency(ctx)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return a, nil
 }
@@ -256,7 +257,7 @@ func (ac *actionContext) GetAgency(ctx context.Context) (agency.Agency, error) {
 func (ac *actionContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	c, err := ac.context.GetSyncServerClient(ctx, group, id)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -276,7 +277,7 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 func (ac *actionContext) CreateMember(group api.ServerGroup, id string) (string, error) {
 	result, err := ac.context.CreateMember(group, id)
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -286,14 +287,14 @@ func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
 	status, lastVersion := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
-		return maskAny(fmt.Errorf("Member %s not found", member.ID))
+		return errors.WithStack(errors.Newf("Member %s not found", member.ID))
 	}
 	if err := status.Members.Update(member, group); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -307,11 +308,11 @@ func (ac *actionContext) RemoveMemberByID(id string) error {
 	}
 	if err := status.Members.RemoveByID(id, group); err != nil {
 		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to remove member")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Save removed member
 	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -320,7 +321,7 @@ func (ac *actionContext) RemoveMemberByID(id string) error {
 // of the deployment. If the pod does not exist, the error is ignored.
 func (ac *actionContext) DeletePod(podName string) error {
 	if err := ac.context.DeletePod(podName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -329,7 +330,7 @@ func (ac *actionContext) DeletePod(podName string) error {
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (ac *actionContext) DeletePvc(pvcName string) error {
 	if err := ac.context.DeletePvc(pvcName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -338,7 +339,7 @@ func (ac *actionContext) DeletePvc(pvcName string) error {
 // of the deployment. If the pod does not exist, the error is ignored.
 func (ac *actionContext) RemovePodFinalizers(podName string) error {
 	if err := ac.context.RemovePodFinalizers(podName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -347,7 +348,7 @@ func (ac *actionContext) RemovePodFinalizers(podName string) error {
 // If the secret does not exist, the error is ignored.
 func (ac *actionContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
 	if err := ac.context.DeleteTLSKeyfile(group, member); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -367,12 +368,12 @@ func (ac *actionContext) DeleteTLSCASecret() error {
 	if status.SecretHashes != nil {
 		status.SecretHashes.TLSCA = ""
 		if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	// Do delete the secret
 	if err := ac.context.DeleteSecret(secretName); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

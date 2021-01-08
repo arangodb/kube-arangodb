@@ -22,7 +22,7 @@
 
 package v2alpha1
 
-import "fmt"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 type DeploymentImageDiscoveryModeSpec string
 
@@ -42,7 +42,7 @@ func (d DeploymentImageDiscoveryModeSpec) Validate() error {
 	case DeploymentImageDiscoveryDirectMode:
 		return nil
 	default:
-		return fmt.Errorf("mode %s is not supported", d)
+		return errors.Newf("mode %s is not supported", d)
 	}
 }
 

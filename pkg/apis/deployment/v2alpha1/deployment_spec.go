@@ -28,8 +28,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -44,7 +46,7 @@ func validatePullPolicy(v core.PullPolicy) error {
 	case "", core.PullAlways, core.PullNever, core.PullIfNotPresent:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown pull policy: '%s'", string(v)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown pull policy: '%s'", string(v)))
 	}
 }
 
@@ -328,64 +330,64 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 // Return errors when validation fails, nil on success.
 func (s *DeploymentSpec) Validate() error {
 	if err := s.GetMode().Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.mode"))
+		return errors.WithStack(errors.Wrap(err, "spec.mode"))
 	}
 	if err := s.GetEnvironment().Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.environment"))
+		return errors.WithStack(errors.Wrap(err, "spec.environment"))
 	}
 	if err := s.GetStorageEngine().Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.storageEngine"))
+		return errors.WithStack(errors.Wrap(err, "spec.storageEngine"))
 	}
 	if err := validatePullPolicy(s.GetImagePullPolicy()); err != nil {
-		return maskAny(errors.Wrap(err, "spec.imagePullPolicy"))
+		return errors.WithStack(errors.Wrap(err, "spec.imagePullPolicy"))
 	}
 	if s.GetImage() == "" {
-		return maskAny(errors.Wrapf(ValidationError, "spec.image must be set"))
+		return errors.WithStack(errors.Wrapf(ValidationError, "spec.image must be set"))
 	}
 	if err := s.ExternalAccess.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.externalAccess"))
+		return errors.WithStack(errors.Wrap(err, "spec.externalAccess"))
 	}
 	if err := s.RocksDB.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.rocksdb"))
+		return errors.WithStack(errors.Wrap(err, "spec.rocksdb"))
 	}
 	if err := s.Authentication.Validate(false); err != nil {
-		return maskAny(errors.Wrap(err, "spec.auth"))
+		return errors.WithStack(errors.Wrap(err, "spec.auth"))
 	}
 	if err := s.TLS.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.tls"))
+		return errors.WithStack(errors.Wrap(err, "spec.tls"))
 	}
 	if err := s.Sync.Validate(s.GetMode()); err != nil {
-		return maskAny(errors.Wrap(err, "spec.sync"))
+		return errors.WithStack(errors.Wrap(err, "spec.sync"))
 	}
 	if err := s.Single.Validate(ServerGroupSingle, s.GetMode().HasSingleServers(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.Agents.Validate(ServerGroupAgents, s.GetMode().HasAgents(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.DBServers.Validate(ServerGroupDBServers, s.GetMode().HasDBServers(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.Coordinators.Validate(ServerGroupCoordinators, s.GetMode().HasCoordinators(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.SyncMasters.Validate(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.SyncWorkers.Validate(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode(), s.GetEnvironment()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := s.Metrics.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.metrics"))
+		return errors.WithStack(errors.Wrap(err, "spec.metrics"))
 	}
 	if err := s.Chaos.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.chaos"))
+		return errors.WithStack(errors.Wrap(err, "spec.chaos"))
 	}
 	if err := s.License.Validate(); err != nil {
-		return maskAny(errors.Wrap(err, "spec.licenseKey"))
+		return errors.WithStack(errors.Wrap(err, "spec.licenseKey"))
 	}
 	if err := s.Bootstrap.Validate(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

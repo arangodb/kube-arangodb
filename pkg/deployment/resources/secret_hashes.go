@@ -30,6 +30,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -70,7 +72,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			// Hash fetched succesfully, store it
 			if err := setExpectedHash(hash); err != nil {
 				log.Debug().Msg("Failed to save secret hash")
-				return true, maskAny(err)
+				return true, errors.WithStack(err)
 			}
 			return true, nil
 		}
@@ -95,7 +97,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 
 				if err := setExpectedHash(hash); err != nil {
 					log.Debug().Msg("Failed to change secret hash")
-					return true, maskAny(err)
+					return true, errors.WithStack(err)
 				}
 				return true, nil
 			}
@@ -130,7 +132,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 		}
 		updater(status.SecretHashes)
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		// Reload status
 		status, lastVersion = r.context.GetStatus()
@@ -142,10 +144,10 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			secretName := spec.Authentication.GetJWTSecretName()
 			getExpectedHash := func() string { return getHashes().AuthJWT }
 			setExpectedHash := func(h string) error {
-				return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
+				return errors.WithStack(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
 			}
 			if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			} else if !hashOK {
 				badSecretNames = append(badSecretNames, secretName)
 			}
@@ -154,10 +156,10 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 				secretName := spec.Authentication.GetJWTSecretName()
 				getExpectedHash := func() string { return getHashes().AuthJWT }
 				setExpectedHash := func(h string) error {
-					return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
+					return errors.WithStack(updateHashes(func(dst *api.SecretHashes) { dst.AuthJWT = h }))
 				}
 				if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-					return maskAny(err)
+					return errors.WithStack(err)
 				} else if !hashOK {
 					badSecretNames = append(badSecretNames, secretName)
 				}
@@ -169,10 +171,10 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			secretName := spec.RocksDB.Encryption.GetKeySecretName()
 			getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 			setExpectedHash := func(h string) error {
-				return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
+				return errors.WithStack(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
 			}
 			if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			} else if !hashOK {
 				badSecretNames = append(badSecretNames, secretName)
 			}
@@ -181,10 +183,10 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 				secretName := spec.RocksDB.Encryption.GetKeySecretName()
 				getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 				setExpectedHash := func(h string) error {
-					return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
+					return errors.WithStack(updateHashes(func(dst *api.SecretHashes) { dst.RocksDBEncryptionKey = h }))
 				}
 				if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-					return maskAny(err)
+					return errors.WithStack(err)
 				} else if !hashOK {
 					badSecretNames = append(badSecretNames, secretName)
 				}
@@ -195,10 +197,10 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 		secretName := spec.Sync.TLS.GetCASecretName()
 		getExpectedHash := func() string { return getHashes().SyncTLSCA }
 		setExpectedHash := func(h string) error {
-			return maskAny(updateHashes(func(dst *api.SecretHashes) { dst.SyncTLSCA = h }))
+			return errors.WithStack(updateHashes(func(dst *api.SecretHashes) { dst.SyncTLSCA = h }))
 		}
 		if hashOK, err := validate(secretName, getExpectedHash, setExpectedHash, nil); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if !hashOK {
 			badSecretNames = append(badSecretNames, secretName)
 		}
@@ -211,7 +213,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			log.Warn().Msgf("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
 			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			// Add an event about this
 			r.context.CreateEvent(k8sutil.NewSecretsChangedEvent(badSecretNames, r.context.GetAPIObject()))
@@ -222,7 +224,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error
 			log.Info().Msg("Resetting SecretsChanged condition")
 			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			// Add an event about this
 			r.context.CreateEvent(k8sutil.NewSecretsRestoredEvent(r.context.GetAPIObject()))
@@ -241,7 +243,7 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 	ctx := context.Background()
 	client, err := c.GetDatabaseClient(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	user, err := client.User(ctx, username)
@@ -254,7 +256,7 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 			*options.Active = true
 
 			_, err = client.CreateUser(ctx, username, options)
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		return err
 	}
@@ -263,7 +265,7 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 		Password: password,
 	})
 
-	return maskAny(err)
+	return errors.WithStack(err)
 }
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.

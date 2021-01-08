@@ -22,12 +22,10 @@
 
 package arangod
 
-import "github.com/pkg/errors"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 var (
 	KeyNotFoundError = errors.New("Key not found")
-
-	maskAny = errors.WithStack
 )
 
 // IsKeyNotFound returns true if the given error is (or is caused by) a KeyNotFoundError.

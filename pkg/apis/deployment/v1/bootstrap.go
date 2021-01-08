@@ -21,7 +21,7 @@
 package v1
 
 import (
-	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -84,16 +84,16 @@ func (b *BootstrapSpec) Validate() error {
 	for username, secretname := range b.PasswordSecretNames {
 		// Remove this restriction as soon as we can bootstrap databases
 		if username != UserNameRoot {
-			return fmt.Errorf("only username `root` allowed in passwordSecretNames")
+			return errors.Newf("only username `root` allowed in passwordSecretNames")
 		}
 
 		if secretname.IsNone() {
 			if username != UserNameRoot {
-				return fmt.Errorf("magic value None not allowed for %s", username)
+				return errors.Newf("magic value None not allowed for %s", username)
 			}
 		} else {
 			if err := k8sutil.ValidateResourceName(string(secretname)); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 	}

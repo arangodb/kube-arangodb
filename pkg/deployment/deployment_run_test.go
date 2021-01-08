@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/rs/zerolog/log"

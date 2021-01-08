@@ -23,15 +23,12 @@
 package client
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"k8s.io/client-go/rest"
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-)
-
-var (
-	maskAny = errors.WithStack
 )
 
 // MustNewClient creates an client, or panics
@@ -59,11 +56,11 @@ func MustNew(cfg *rest.Config) versioned.Interface {
 func NewClient() (versioned.Interface, error) {
 	cfg, err := k8sutil.NewKubeConfig()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	cli, err := New(cfg)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return cli, nil
 }
@@ -73,7 +70,7 @@ func NewClient() (versioned.Interface, error) {
 func New(cfg *rest.Config) (versioned.Interface, error) {
 	cli, err := versioned.NewForConfig(cfg)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return cli, nil
 }

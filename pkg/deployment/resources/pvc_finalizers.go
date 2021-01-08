@@ -24,8 +24,9 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
@@ -62,7 +63,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 		ignoreNotFound := false
 		if err := k8sutil.RemovePVCFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
-			return 0, maskAny(err)
+			return 0, errors.WithStack(err)
 		}
 	} else {
 		// Check again at given interval
@@ -106,9 +107,9 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 		pods := r.context.GetKubeCli().CoreV1().Pods(apiObject.GetNamespace())
 		if err := pods.Delete(memberStatus.PodName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Failed to delete pod")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 
-	return maskAny(fmt.Errorf("Member still exists"))
+	return errors.WithStack(errors.Newf("Member still exists"))
 }

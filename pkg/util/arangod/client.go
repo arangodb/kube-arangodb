@@ -25,11 +25,12 @@ package arangod
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	nhttp "net/http"
 	"strconv"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -119,7 +120,7 @@ func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObj
 	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -130,7 +131,7 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -144,11 +145,11 @@ func CreateArangodAgencyConnection(ctx context.Context, apiObject *api.ArangoDep
 	shortTimeout := false
 	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	agencyConn, err := agency.NewAgencyConnection(connConfig)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return agencyConn, nil
 }
@@ -163,25 +164,25 @@ func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, 
 	shortTimeout := false
 	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	agencyConn, err := agency.NewAgencyConnection(connConfig)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	if auth != nil {
 		agencyConn, err = agencyConn.SetAuthentication(auth)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 	a, err := agency.NewAgency(agencyConn)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return a, nil
 }
@@ -193,7 +194,7 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 	dnsName := k8sutil.CreatePodDNSName(deployment, role, id)
 	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName, false)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -202,12 +203,12 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
 	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, []string{dnsName}, shortTimeout)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Create client
@@ -216,12 +217,12 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 	}
 	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	config.Authentication = auth
 	c, err := driver.NewClient(config)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -259,11 +260,11 @@ func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Int
 			secrets := cli.Secrets(apiObject.GetNamespace())
 			s, err := k8sutil.GetTokenSecret(secrets, apiObject.Spec.Authentication.GetJWTSecretName())
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			jwt, err := jwt.CreateArangodJwtAuthorizationHeader(s, "kube-arangodb")
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			return driver.RawAuthentication(jwt), nil
 		}
@@ -271,7 +272,7 @@ func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Int
 		// Authentication is not enabled.
 		if ctx.Value(requireAuthenticationKey{}) != nil {
 			// Context requires authentication
-			return nil, maskAny(fmt.Errorf("Authentication is required by context, but not provided in API object"))
+			return nil, errors.WithStack(errors.Newf("Authentication is required by context, but not provided in API object"))
 		}
 	}
 	return nil, nil

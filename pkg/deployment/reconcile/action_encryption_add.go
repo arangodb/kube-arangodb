@@ -26,11 +26,13 @@ import (
 	"context"
 	"encoding/base64"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -39,14 +41,14 @@ import (
 
 func ensureEncryptionSupport(actionCtx ActionContext) error {
 	if !actionCtx.GetSpec().RocksDB.IsEncrypted() {
-		return errors.Errorf("Encryption is disabled")
+		return errors.Newf("Encryption is disabled")
 	}
 
 	if image, ok := actionCtx.GetCurrentImageInfo(); !ok {
-		return errors.Errorf("Missing image info")
+		return errors.Newf("Missing image info")
 	} else {
 		if !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
-			return errors.Errorf("Supported only in Enterprise Edition 3.7.0+")
+			return errors.Newf("Supported only in Enterprise Edition 3.7.0+")
 		}
 	}
 	return nil

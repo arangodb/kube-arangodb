@@ -27,7 +27,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -69,7 +69,7 @@ func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error
 
 	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apiErrors.IsNotFound(err) {
 			return true, false, nil
 		}
 

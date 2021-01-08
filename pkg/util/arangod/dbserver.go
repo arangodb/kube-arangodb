@@ -24,10 +24,10 @@ package arangod
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/pkg/errors"
 )
 
 // IsDBServerEmpty checks if the dbserver identified by the given ID no longer has any
@@ -38,16 +38,16 @@ import (
 func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error {
 	c, err := client.Cluster(ctx)
 	if err != nil {
-		return maskAny(errors.Wrapf(err, "Cannot obtain Cluster"))
+		return errors.WithStack(errors.Wrapf(err, "Cannot obtain Cluster"))
 	}
 	dbs, err := client.Databases(ctx)
 	if err != nil {
-		return maskAny(errors.Wrapf(err, "Cannot fetch databases"))
+		return errors.WithStack(errors.Wrapf(err, "Cannot fetch databases"))
 	}
 	for _, db := range dbs {
 		inventory, err := c.DatabaseInventory(ctx, db)
 		if err != nil {
-			return maskAny(errors.Wrapf(err, "Cannot fetch inventory for %s", db.Name()))
+			return errors.WithStack(errors.Wrapf(err, "Cannot fetch inventory for %s", db.Name()))
 		}
 		// Go over all collections
 		for _, col := range inventory.Collections {
@@ -56,7 +56,7 @@ func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error
 				for _, serverID := range serverIDs {
 					if string(serverID) == id {
 						// DBServer still used in this shard
-						return maskAny(fmt.Errorf("DBServer still used in shard %s of %s.%s", shardID, col.Parameters.Name, db.Name()))
+						return errors.WithStack(errors.Newf("DBServer still used in shard %s of %s.%s", shardID, col.Parameters.Name, db.Name()))
 					}
 				}
 			}

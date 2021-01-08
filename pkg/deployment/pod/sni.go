@@ -26,6 +26,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -35,7 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -84,12 +86,12 @@ func (s sni) Verify(i Input, cachedStatus inspector.Inspector) error {
 	for _, secret := range util.SortKeys(i.Deployment.TLS.GetSNI().Mapping) {
 		kubeSecret, exists := cachedStatus.Secret(secret)
 		if !exists {
-			return errors.Errorf("SNI Secret not found %s", secret)
+			return errors.Newf("SNI Secret not found %s", secret)
 		}
 
 		_, ok := kubeSecret.Data[constants.SecretTLSKeyfile]
 		if !ok {
-			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
+			return errors.Newf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
 		}
 	}
 	return nil

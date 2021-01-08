@@ -24,8 +24,8 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
 )
 
 // EndpointAuthenticationSpec contains the specification to authentication with the syncmasters
@@ -55,13 +55,13 @@ func (s EndpointAuthenticationSpec) GetUserSecretName() string {
 // problems or nil if all ok.
 func (s EndpointAuthenticationSpec) Validate(keyfileSecretNameRequired bool) error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetKeyfileSecretName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := k8sutil.ValidateOptionalResourceName(s.GetUserSecretName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if keyfileSecretNameRequired && s.GetKeyfileSecretName() == "" {
-		return maskAny(errors.Wrapf(ValidationError, "Provide a keyfileSecretName"))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Provide a keyfileSecretName"))
 	}
 	return nil
 }

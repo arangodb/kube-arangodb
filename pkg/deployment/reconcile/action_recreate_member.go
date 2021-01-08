@@ -24,7 +24,8 @@ package reconcile
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	kubeErrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -62,16 +63,16 @@ type actionRecreateMember struct {
 func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
-		return false, fmt.Errorf("expecting member to be present in list, but it is not")
+		return false, errors.Newf("expecting member to be present in list, but it is not")
 	}
 
 	_, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
 	if err != nil {
 		if kubeErrors.IsNotFound(err) {
-			return false, fmt.Errorf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
+			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
 		}
 
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 
 	if m.Phase == api.MemberPhaseFailed {
@@ -80,7 +81,7 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 	}
 
 	if err = a.actionCtx.UpdateMember(m); err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 
 	return true, nil

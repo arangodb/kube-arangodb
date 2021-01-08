@@ -25,7 +25,7 @@ package agency
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func GetAgencyCollections(ctx context.Context, f Fetcher) (*ArangoPlanDatabases, error) {

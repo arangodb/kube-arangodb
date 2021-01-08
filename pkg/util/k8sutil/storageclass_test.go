@@ -26,6 +26,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -24,8 +24,8 @@ package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
 )
 
 // EndpointTLSSpec contains the specification regarding the TLS connection to the syncmasters
@@ -44,10 +44,10 @@ func (s EndpointTLSSpec) GetCASecretName() string {
 // problems or nil if all ok.
 func (s EndpointTLSSpec) Validate(caSecretNameRequired bool) error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetCASecretName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if caSecretNameRequired && s.GetCASecretName() == "" {
-		return maskAny(errors.Wrapf(ValidationError, "Provide a caSecretName"))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Provide a caSecretName"))
 	}
 	return nil
 }

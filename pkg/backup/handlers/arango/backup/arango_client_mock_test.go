@@ -23,14 +23,16 @@
 package backup
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
@@ -182,7 +184,7 @@ func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, err
 		return meta, nil
 	}
 
-	return driver.BackupMeta{}, fmt.Errorf("not found")
+	return driver.BackupMeta{}, errors.Newf("not found")
 }
 
 func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {

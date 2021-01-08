@@ -27,7 +27,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/rs/zerolog/log"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -81,12 +81,12 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 	deployment, err := h.getArangoDeploymentObject(backup)
 	if err != nil {
 		// If deployment is not found we do not have to delete backup in database
-		if errors.IsNotFound(err) {
+		if apiErrors.IsNotFound(err) {
 			return nil
 		}
 
 		if c, ok := err.(utils.Causer); ok {
-			if errors.IsNotFound(c.Cause()) {
+			if apiErrors.IsNotFound(c.Cause()) {
 				return nil
 			}
 		}

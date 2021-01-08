@@ -28,11 +28,11 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-
-	"github.com/pkg/errors"
 
 	policy "k8s.io/api/policy/v1beta1"
 
@@ -129,7 +129,7 @@ func (c *testContext) UpdateMember(member api.MemberStatus) error {
 }
 
 func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, error) {
-	return nil, errors.Errorf("Client Not Found")
+	return nil, errors.Newf("Client Not Found")
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
@@ -198,13 +198,13 @@ func (c *testContext) EnableScalingCluster() error {
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 // the given member.
 func (c *testContext) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
-	return "", maskAny(fmt.Errorf("Not implemented"))
+	return "", errors.WithStack(errors.Newf("Not implemented"))
 }
 
 // GetTLSCA returns the TLS CA certificate in the secret with given name.
 // Returns: publicKey, privateKey, ownerByDeployment, error
 func (c *testContext) GetTLSCA(secretName string) (string, string, bool, error) {
-	return "", "", false, maskAny(fmt.Errorf("Not implemented"))
+	return "", "", false, errors.WithStack(errors.Newf("Not implemented"))
 }
 
 // CreateEvent creates a given event.

@@ -25,8 +25,9 @@ package agency
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver/agency"
-	"github.com/pkg/errors"
 )
 
 type Fetcher func(ctx context.Context, i interface{}, keyParts ...string) error

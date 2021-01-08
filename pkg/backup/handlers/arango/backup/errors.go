@@ -23,8 +23,9 @@
 package backup
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
@@ -37,7 +38,7 @@ func newTemporaryError(err error) error {
 }
 
 func newTemporaryErrorf(format string, a ...interface{}) error {
-	return newTemporaryError(fmt.Errorf(format, a...))
+	return newTemporaryError(errors.Newf(format, a...))
 }
 
 type temporaryError struct {
@@ -59,7 +60,7 @@ func newFatalError(err error) error {
 }
 
 func newFatalErrorf(format string, a ...interface{}) error {
-	return newFatalError(fmt.Errorf(format, a...))
+	return newFatalError(errors.Newf(format, a...))
 }
 
 type fatalError struct {

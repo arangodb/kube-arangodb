@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 
@@ -38,7 +39,7 @@ func GetPodOwner(kubecli kubernetes.Interface, pod *v1.Pod, ns string) (*appsv1.
 			rSets := kubecli.AppsV1().ReplicaSets(pod.GetNamespace())
 			rSet, err := rSets.Get(ref.Name, metav1.GetOptions{})
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			return rSet, nil
 		}
@@ -54,7 +55,7 @@ func GetReplicaSetOwner(kubecli kubernetes.Interface, rSet *appsv1.ReplicaSet, n
 			depls := kubecli.AppsV1().Deployments(rSet.GetNamespace())
 			depl, err := depls.Get(ref.Name, metav1.GetOptions{})
 			if err != nil {
-				return nil, maskAny(err)
+				return nil, errors.WithStack(err)
 			}
 			return depl, nil
 		}

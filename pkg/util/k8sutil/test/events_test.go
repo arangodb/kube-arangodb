@@ -26,6 +26,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/stretchr/testify/assert"
 
 	v1 "k8s.io/api/core/v1"

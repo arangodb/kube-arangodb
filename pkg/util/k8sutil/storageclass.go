@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,9 +56,9 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		// Fetch current version of StorageClass
 		current, err := stcs.Get(name, metav1.GetOptions{})
 		if IsNotFound(err) {
-			return retry.Permanent(maskAny(err))
+			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		// Tweak annotations
 		ann := current.GetAnnotations()
@@ -69,14 +71,14 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		// Save StorageClass
 		if _, err := stcs.Update(current); IsConflict(err) {
 			// StorageClass has been modified since we read it
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if err != nil {
-			return retry.Permanent(maskAny(err))
+			return retry.Permanent(errors.WithStack(err))
 		}
 		return nil
 	}
 	if err := retry.Retry(op, time.Second*15); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

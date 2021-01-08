@@ -28,11 +28,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"k8s.io/client-go/kubernetes"
 )
@@ -148,7 +149,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 
 	uploadSpec := ac.backup.Spec.Upload
 	if uploadSpec == nil {
-		return "", fmt.Errorf("upload was called but no upload spec was given")
+		return "", errors.Newf("upload was called but no upload spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(uploadSpec.CredentialsSecretName)
@@ -165,7 +166,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 
 	downloadSpec := ac.backup.Spec.Download
 	if downloadSpec == nil {
-		return "", fmt.Errorf("Download was called but not download spec was given")
+		return "", errors.Newf("Download was called but not download spec was given")
 	}
 
 	cred, err := ac.getCredentialsFromSecret(downloadSpec.CredentialsSecretName)
@@ -205,7 +206,7 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 		case "":
 			completedCount++
 		default:
-			return ArangoBackupProgress{}, fmt.Errorf("Unknown transfere status: %s", status.Status)
+			return ArangoBackupProgress{}, errors.Newf("Unknown transfere status: %s", status.Status)
 		}
 	}
 

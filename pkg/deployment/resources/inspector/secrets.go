@@ -23,7 +23,7 @@
 package inspector
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,7 +77,7 @@ func secretsToMap(k kubernetes.Interface, namespace string) (map[string]*core.Se
 	for _, secret := range secrets {
 		_, exists := secretMap[secret.GetName()]
 		if exists {
-			return nil, errors.Errorf("Secret %s already exists in map, error received", secret.GetName())
+			return nil, errors.Newf("Secret %s already exists in map, error received", secret.GetName())
 		}
 
 		secretMap[secret.GetName()] = secretPointer(secret)

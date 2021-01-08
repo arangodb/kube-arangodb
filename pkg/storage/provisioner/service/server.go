@@ -28,8 +28,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
@@ -57,13 +59,13 @@ func runServer(ctx context.Context, log zerolog.Logger, addr string, api provisi
 		defer close(serverErrors)
 		log.Info().Msgf("Listening on %s", addr)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			serverErrors <- maskAny(err)
+			serverErrors <- errors.WithStack(err)
 		}
 	}()
 
 	select {
 	case err := <-serverErrors:
-		return maskAny(err)
+		return errors.WithStack(err)
 	case <-ctx.Done():
 		// Close server
 		log.Debug().Msg("Closing server...")
@@ -142,7 +144,7 @@ func sendJSON(w http.ResponseWriter, status int, body interface{}) error {
 	} else {
 		encoder := json.NewEncoder(w)
 		if err := encoder.Encode(body); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -152,7 +154,7 @@ func parseBody(r *http.Request, data interface{}) error {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := json.Unmarshal(body, data); err != nil {
 		return errors.Wrapf(provisioner.BadRequestError, "Cannot parse request body: %v", err.Error())

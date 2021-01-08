@@ -27,6 +27,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,7 +58,7 @@ func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface,
 	cert, priv, err := certificates.CreateCertificate(options, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := k8sutil.CreateCASecret(secrets, spec.GetCASecretName(), cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
@@ -64,7 +66,7 @@ func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface,
 		} else {
 			log.Debug().Err(err).Msg("Failed to create CA Secret")
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	log.Debug().Msg("Created CA Secret")
 	return nil
@@ -80,19 +82,19 @@ func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, 
 	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Load CA certificate
 	caCert, caKey, _, err := k8sutil.GetCASecret(secrets, spec.GetCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	ca, err := certificates.LoadCAFromPEM(caCert, caKey)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to decode CA certificate")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	options := certificates.CreateCertificateOptions{
@@ -107,7 +109,7 @@ func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, 
 	cert, priv, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create server certificate")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
@@ -117,7 +119,7 @@ func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, 
 		} else {
 			log.Debug().Err(err).Msg("Failed to create server Secret")
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	log.Debug().Msg("Created server Secret")
 	return nil

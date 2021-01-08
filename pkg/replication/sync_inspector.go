@@ -27,6 +27,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/arangosync-client/client"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 )
@@ -208,7 +210,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) (bool, error) {
 	ep, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return !status.Source.Intersection(ep).IsEmpty(), nil
 }
@@ -219,7 +221,7 @@ func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSp
 func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec, reportedEndpoint client.Endpoint) (string, bool, error) {
 	ep, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
-		return "", false, maskAny(err)
+		return "", false, errors.WithStack(err)
 	}
 	ep = ep.Merge(reportedEndpoint...)
 	for _, o := range status.Outgoing {

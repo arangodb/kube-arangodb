@@ -22,13 +22,11 @@
 
 package v1alpha
 
-import "github.com/pkg/errors"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 var (
 	// ValidationError indicates a validation failure
 	ValidationError = errors.New("validation failed")
-
-	maskAny = errors.WithStack
 )
 
 // IsValidation return true when the given error is or is caused by a ValidationError.

@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
@@ -41,7 +43,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/rs/zerolog/log"
 
@@ -233,7 +235,7 @@ func (h *handler) Handle(item operation.Item) error {
 	// Get Backup object. It also cover NotFound case
 	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apiErrors.IsNotFound(err) {
 			return nil
 		}
 
@@ -285,7 +287,7 @@ func (h *handler) Handle(item operation.Item) error {
 
 		b, err = h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if apiErrors.IsNotFound(err) {
 				return nil
 			}
 
@@ -372,7 +374,7 @@ func (h *handler) processArangoBackup(backup *backupApi.ArangoBackup) (*backupAp
 		return f(h, backup)
 	}
 
-	return nil, fmt.Errorf("state %s is not supported", backup.Status.State)
+	return nil, errors.Newf("state %s is not supported", backup.Status.State)
 }
 
 func (h *handler) CanBeHandled(item operation.Item) bool {
@@ -392,7 +394,7 @@ func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*da
 	}
 
 	// Check if object is not found
-	if errors.IsNotFound(err) {
+	if apiErrors.IsNotFound(err) {
 		return nil, newFatalError(err)
 	}
 

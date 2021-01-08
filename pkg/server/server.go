@@ -24,10 +24,11 @@ package server
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb-helper/go-certificates"
 	"github.com/gin-gonic/gin"
@@ -106,15 +107,15 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		// Load TLS certificate from secret
 		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(cfg.TLSSecretName, metav1.GetOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		certBytes, found := s.Data[core.TLSCertKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
+			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
 		}
 		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
 		if !found {
-			return nil, maskAny(fmt.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
+			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
 		}
 		cert = string(certBytes)
 		key = string(keyBytes)
@@ -131,12 +132,12 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		var err error
 		cert, key, err = certificates.CreateCertificate(options, nil)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 	tlsConfig, err := createTLSConfig(cert, key)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	tlsConfig.BuildNameToCertificate()
 	httpServer.TLSConfig = tlsConfig
@@ -210,7 +211,7 @@ func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
 func (s *Server) Run() error {
 	s.deps.Log.Info().Msgf("Serving on %s", s.httpServer.Addr)
 	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -220,7 +221,7 @@ func createTLSConfig(cert, key string) (*tls.Config, error) {
 	var result *tls.Config
 	c, err := tls.X509KeyPair([]byte(cert), []byte(key))
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	result = &tls.Config{
 		Certificates: []tls.Certificate{c},

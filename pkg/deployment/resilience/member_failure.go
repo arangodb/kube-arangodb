@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -109,11 +111,11 @@ func (r *Resilience) CheckMemberFailure() error {
 
 		return nil
 	}); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if updateStatusNeeded {
 		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -130,7 +132,7 @@ func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, grou
 		// All good when remaining agents are health
 		clients, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != m.ID })
 		if err != nil {
-			return false, "", maskAny(err)
+			return false, "", errors.WithStack(err)
 		}
 		if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
 			return false, err.Error(), nil
@@ -139,7 +141,7 @@ func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, grou
 	case api.ServerGroupDBServers:
 		client, err := r.context.GetDatabaseClient(ctx)
 		if err != nil {
-			return false, "", maskAny(err)
+			return false, "", errors.WithStack(err)
 		}
 		if err := arangod.IsDBServerEmpty(ctx, m.ID, client); err != nil {
 			return false, err.Error(), nil

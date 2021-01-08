@@ -25,6 +25,8 @@ package arangod
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	driver "github.com/arangodb/go-driver"
 )
 
@@ -54,18 +56,18 @@ func (n NumberOfServers) GetDBServers() int {
 func GetNumberOfServers(ctx context.Context, conn driver.Connection) (NumberOfServers, error) {
 	req, err := conn.NewRequest("GET", "_admin/cluster/numberOfServers")
 	if err != nil {
-		return NumberOfServers{}, maskAny(err)
+		return NumberOfServers{}, errors.WithStack(err)
 	}
 	resp, err := conn.Do(ctx, req)
 	if err != nil {
-		return NumberOfServers{}, maskAny(err)
+		return NumberOfServers{}, errors.WithStack(err)
 	}
 	if err := resp.CheckStatus(200); err != nil {
-		return NumberOfServers{}, maskAny(err)
+		return NumberOfServers{}, errors.WithStack(err)
 	}
 	var result NumberOfServers
 	if err := resp.ParseBody("", &result); err != nil {
-		return NumberOfServers{}, maskAny(err)
+		return NumberOfServers{}, errors.WithStack(err)
 	}
 	return result, nil
 }
@@ -74,21 +76,21 @@ func GetNumberOfServers(ctx context.Context, conn driver.Connection) (NumberOfSe
 func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinators, noDBServers *int) error {
 	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	input := NumberOfServers{
 		Coordinators: noCoordinators,
 		DBServers:    noDBServers,
 	}
 	if _, err := req.SetBody(input); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	resp, err := conn.Do(ctx, req)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := resp.CheckStatus(200); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -97,17 +99,17 @@ func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinat
 func RemoveServerFromCluster(ctx context.Context, conn driver.Connection, id driver.ServerID) error {
 	req, err := conn.NewRequest("POST", "_admin/cluster/removeServer")
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if _, err := req.SetBody(id); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	resp, err := conn.Do(ctx, req)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := resp.CheckStatus(200); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

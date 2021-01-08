@@ -23,15 +23,16 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,20 +97,20 @@ func newServerAuthentication(log zerolog.Logger, secrets typedv1.SecretInterface
 // Returns username, password, error
 func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	if s.adminSecretName == "" {
-		return "", "", maskAny(fmt.Errorf("No admin secret name specified"))
+		return "", "", errors.WithStack(errors.Newf("No admin secret name specified"))
 	}
 	secret, err := s.secrets.Get(s.adminSecretName, metav1.GetOptions{})
 	if err != nil {
-		return "", "", maskAny(err)
+		return "", "", errors.WithStack(err)
 	}
 	var username, password string
 	if raw, found := secret.Data[v1.BasicAuthUsernameKey]; !found {
-		return "", "", maskAny(fmt.Errorf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthUsernameKey))
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthUsernameKey))
 	} else {
 		username = string(raw)
 	}
 	if raw, found := secret.Data[v1.BasicAuthPasswordKey]; !found {
-		return "", "", maskAny(fmt.Errorf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthPasswordKey))
+		return "", "", errors.WithStack(errors.Newf("Secret '%s' contains no '%s' field", s.adminSecretName, v1.BasicAuthPasswordKey))
 	} else {
 		password = string(raw)
 	}
@@ -132,12 +133,12 @@ func (s *serverAuthentication) checkLogin(username, password string) error {
 		var err error
 		if expectedUsername, expectedPassword, err = s.fetchAdminSecret(); err != nil {
 			s.log.Error().Err(err).Msg("Failed to fetch secret")
-			return maskAny(errors.Wrap(UnauthorizedError, "admin secret cannot be loaded"))
+			return errors.WithStack(errors.Wrap(UnauthorizedError, "admin secret cannot be loaded"))
 		}
 	}
 
 	if expectedUsername != username || expectedPassword != password {
-		return maskAny(errors.Wrap(UnauthorizedError, "invalid credentials"))
+		return errors.WithStack(errors.Wrap(UnauthorizedError, "invalid credentials"))
 	}
 	return nil
 }
@@ -151,7 +152,7 @@ func (s *serverAuthentication) checkAuthentication(c *gin.Context) {
 	// Fetch authorization token
 	authHdr := strings.ToLower(c.Request.Header.Get("Authorization"))
 	if !strings.HasPrefix(authHdr, bearerPrefix) {
-		sendError(c, maskAny(errors.Wrap(UnauthorizedError, "missing bearer token")))
+		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "missing bearer token")))
 		c.Abort()
 		return
 	}
@@ -161,12 +162,12 @@ func (s *serverAuthentication) checkAuthentication(c *gin.Context) {
 	defer s.tokens.mutex.Unlock()
 	if entry, found := s.tokens.tokens[token]; !found {
 		s.log.Debug().Str("token", token).Msg("Invalid token")
-		sendError(c, maskAny(errors.Wrap(UnauthorizedError, "invalid credentials")))
+		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "invalid credentials")))
 		c.Abort()
 		return
 	} else if entry.IsExpired() {
 		s.log.Debug().Str("token", token).Msg("Token expired")
-		sendError(c, maskAny(errors.Wrap(UnauthorizedError, "credentials expired")))
+		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "credentials expired")))
 		c.Abort()
 		return
 	} else {

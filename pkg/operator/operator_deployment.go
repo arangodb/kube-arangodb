@@ -23,11 +23,9 @@
 package operator
 
 import (
-	"fmt"
-
 	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/pkg/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
@@ -154,26 +152,26 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 			delete(o.deployments, apiObject.Name)
 			return nil
 		}
-		return maskAny(fmt.Errorf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
+		return errors.WithStack(errors.Newf("ignore failed deployment (%s). Please delete its CR", apiObject.Name))
 	}
 
 	switch event.Type {
 	case kwatch.Added:
 		if _, ok := o.deployments[apiObject.Name]; ok {
-			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was created before but we received event (%s)", apiObject.Name, event.Type))
 		}
 
 		// Fill in defaults
 		apiObject.Spec.SetDefaults(apiObject.GetName())
 		// Validate deployment spec
 		if err := apiObject.Spec.Validate(); err != nil {
-			return maskAny(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
+			return errors.WithStack(errors.Wrapf(err, "invalid deployment spec. please fix the following problem with the deployment spec: %v", err))
 		}
 
 		cfg, deps := o.makeDeploymentConfigAndDeps(apiObject)
 		nc, err := deployment.New(cfg, deps, apiObject)
 		if err != nil {
-			return maskAny(fmt.Errorf("failed to create deployment: %s", err))
+			return errors.WithStack(errors.Newf("failed to create deployment: %s", err))
 		}
 		o.deployments[apiObject.Name] = nc
 
@@ -183,7 +181,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 	case kwatch.Modified:
 		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
-			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		depl.Update(apiObject)
 		deploymentsModified.Inc()
@@ -191,7 +189,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 	case kwatch.Deleted:
 		depl, ok := o.deployments[apiObject.Name]
 		if !ok {
-			return maskAny(fmt.Errorf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
+			return errors.WithStack(errors.Newf("unsafe state. deployment (%s) was never created but we received event (%s)", apiObject.Name, event.Type))
 		}
 		depl.Delete()
 		delete(o.deployments, apiObject.Name)

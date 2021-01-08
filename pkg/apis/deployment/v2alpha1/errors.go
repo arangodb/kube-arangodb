@@ -22,7 +22,7 @@
 
 package v2alpha1
 
-import "github.com/pkg/errors"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 var (
 	// ValidationError indicates a validation failure
@@ -33,8 +33,6 @@ var (
 
 	// NotFoundError indicates an object that cannot be found
 	NotFoundError = errors.New("not found")
-
-	maskAny = errors.WithStack
 )
 
 // IsValidation return true when the given error is or is caused by a ValidationError.
