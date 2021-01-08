@@ -23,7 +23,6 @@
 package k8sutil
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

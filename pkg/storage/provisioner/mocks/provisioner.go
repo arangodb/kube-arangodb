@@ -30,7 +30,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Provisioner interface {

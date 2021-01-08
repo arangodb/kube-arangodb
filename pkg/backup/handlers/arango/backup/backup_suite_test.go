@@ -31,7 +31,6 @@ import (
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"

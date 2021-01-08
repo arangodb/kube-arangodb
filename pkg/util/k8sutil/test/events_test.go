@@ -23,7 +23,6 @@
 package test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

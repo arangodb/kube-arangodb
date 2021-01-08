@@ -34,7 +34,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

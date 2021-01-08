@@ -24,6 +24,7 @@ package deployment
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -476,7 +477,7 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
 	}
-	d.clientCache = client.newClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)
