@@ -20,11 +20,20 @@
 // Author Adam Janikowski
 //
 
-package agency
+package features
 
-const (
-	ArangoKey          = "arango"
-	PlanKey            = "Plan"
-	CurrentKey         = "Current"
-	PlanCollectionsKey = "Collections"
-)
+func init() {
+	registerFeature(metrics)
+}
+
+var metrics = &feature{
+	name:               "metrics",
+	description:        "Database Advanced metrics",
+	version:            "3.5.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
+func Metrics() Feature {
+	return metrics
+}

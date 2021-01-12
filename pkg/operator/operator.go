@@ -27,6 +27,9 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	metrics "github.com/arangodb/kube-arangodb/pkg/deployment/metrics"
+
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -172,6 +175,15 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 			time.Sleep(initRetryWaitTime)
 		}
 	}
+
+	if features.Metrics().Enabled() {
+		o.log.Error().Msgf("COLLECTING ENABLING")
+		metrics := metrics.NewDeployments(metrics.NewMetricDefinition(), o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace), o.KubeCli)
+		prometheus.MustRegister(metrics)
+	} else {
+		o.log.Error().Msgf("COLLECTING DISABLED")
+	}
+
 	o.runDeployments(stop)
 }
 

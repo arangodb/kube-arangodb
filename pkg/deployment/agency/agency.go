@@ -34,11 +34,7 @@ type Fetcher func(ctx context.Context, i interface{}, keyParts ...string) error
 
 func NewFetcher(a agency.Agency) Fetcher {
 	return func(ctx context.Context, i interface{}, keyParts ...string) error {
-		if err := a.ReadKey(ctx, []string{
-			ArangoKey,
-			PlanKey,
-			PlanCollectionsKey,
-		}, i); err != nil {
+		if err := a.ReadKey(ctx, keyParts, i); err != nil {
 			return errors.WithStack(err)
 		}
 

@@ -25,7 +25,10 @@ package server
 import (
 	"crypto/tls"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -45,14 +48,26 @@ import (
 
 // Config settings for the Server
 type Config struct {
-	Namespace          string
-	Address            string // Address to listen on
+	Namespace string
+	Address   string // Address to listen on
+
+	MetricsServer HTTPServerConfig
+	HealthServer  HTTPServerConfig
+
+	HTTPServerEnabled  bool   // Determines if http server is enabled
 	TLSSecretName      string // Name of secret containing TLS certificate
 	TLSSecretNamespace string // Namespace of secret containing TLS certificate
 	PodName            string // Name of the Pod we're running in
 	PodIP              string // IP address of the Pod we're running in
 	AdminSecretName    string // Name of basic authentication secret containing the admin username+password of the dashboard
 	AllowAnonymous     bool   // If set, anonymous access to dashboard is allowed
+}
+
+type HTTPServerConfig struct {
+	Enabled            bool
+	Address            string
+	TLSSecretName      string // Name of secret containing TLS certificate
+	TLSSecretNamespace string // Namespace of secret containing TLS certificate
 }
 
 type OperatorDependency struct {
@@ -86,14 +101,88 @@ type Operators interface {
 
 // Server is the HTTPS server for the operator.
 type Server struct {
-	cfg        Config
-	deps       Dependencies
-	httpServer *http.Server
-	auth       *serverAuthentication
+	cfg                                             Config
+	deps                                            Dependencies
+	httpServer, metricsHTTPServer, healthHTTPServer *http.Server
+	auth                                            *serverAuthentication
 }
 
 // NewServer creates a new server, fetching/preparing a TLS certificate.
 func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Server, error) {
+	// Builder server
+	s := &Server{
+		cfg:  cfg,
+		deps: deps,
+		auth: newServerAuthentication(deps.Log, deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
+	}
+
+	if http, err := newHttpDashboardServer(s, cli); err != nil {
+		return nil, err
+	} else {
+		s.httpServer = http
+	}
+
+	if http, err := newHttpMetricsServer(s, cli); err != nil {
+		return nil, err
+	} else {
+		s.metricsHTTPServer = http
+	}
+
+	if http, err := newHttpHealthServer(s, cli); err != nil {
+		return nil, err
+	} else {
+		s.healthHTTPServer = http
+	}
+
+	return s, nil
+}
+
+func newHttpMetricsServer(s *Server, cli corev1.CoreV1Interface) (*http.Server, error) {
+	server, err := newHttpServer(s, cli, s.cfg.MetricsServer)
+	if err != nil || server == nil {
+		return server, err
+	}
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
+	server.Handler = r
+	return server, nil
+}
+
+func newHttpHealthServer(s *Server, cli corev1.CoreV1Interface) (*http.Server, error) {
+	server, err := newHttpServer(s, cli, s.cfg.HealthServer)
+	if err != nil || server == nil {
+		return server, err
+	}
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.GET("/health", gin.WrapF(s.deps.LivenessProbe.LivenessHandler))
+
+	var readyProbes []*probe.ReadyProbe
+	if s.deps.Deployment.Enabled {
+		r.GET("/ready/deployment", gin.WrapF(s.deps.Deployment.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.Deployment.Probe)
+	}
+	if s.deps.DeploymentReplication.Enabled {
+		r.GET("/ready/deployment-replication", gin.WrapF(s.deps.DeploymentReplication.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.DeploymentReplication.Probe)
+	}
+	if s.deps.Storage.Enabled {
+		r.GET("/ready/storage", gin.WrapF(s.deps.Storage.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.Storage.Probe)
+	}
+	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
+
+	server.Handler = r
+	return server, nil
+}
+
+func newHttpServer(s *Server, cli corev1.CoreV1Interface, cfg HTTPServerConfig) (*http.Server, error) {
+	if !cfg.Enabled {
+		return nil, nil
+	}
 	httpServer := &http.Server{
 		Addr:              cfg.Address,
 		ReadTimeout:       time.Second * 30,
@@ -102,28 +191,67 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 		TLSNextProto:      make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
-	var cert, key string
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
 		// Load TLS certificate from secret
-		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(cfg.TLSSecretName, metav1.GetOptions{})
+		secret, err := cli.Secrets(cfg.TLSSecretNamespace).Get(cfg.TLSSecretName, metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		certBytes, found := s.Data[core.TLSCertKey]
+		certBytes, found := secret.Data[core.TLSCertKey]
 		if !found {
 			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
 		}
-		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
+		keyBytes, found := secret.Data[core.TLSPrivateKeyKey]
 		if !found {
 			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
+		}
+		cert := string(certBytes)
+		key := string(keyBytes)
+		tlsConfig, err := createTLSConfig(cert, key)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tlsConfig.BuildNameToCertificate()
+		httpServer.TLSConfig = tlsConfig
+	}
+
+	return httpServer, nil
+}
+
+func newHttpDashboardServer(s *Server, cli corev1.CoreV1Interface) (*http.Server, error) {
+	if !s.cfg.HTTPServerEnabled {
+		return nil, nil
+	}
+	httpServer := &http.Server{
+		Addr:              s.cfg.Address,
+		ReadTimeout:       time.Second * 30,
+		ReadHeaderTimeout: time.Second * 15,
+		WriteTimeout:      time.Second * 30,
+		TLSNextProto:      make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+	}
+
+	var cert, key string
+	if s.cfg.TLSSecretName != "" && s.cfg.TLSSecretNamespace != "" {
+		// Load TLS certificate from secret
+		secret, err := cli.Secrets(s.cfg.TLSSecretNamespace).Get(s.cfg.TLSSecretName, metav1.GetOptions{})
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		certBytes, found := secret.Data[core.TLSCertKey]
+		if !found {
+			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSCertKey, s.cfg.TLSSecretName))
+		}
+		keyBytes, found := secret.Data[core.TLSPrivateKeyKey]
+		if !found {
+			return nil, errors.WithStack(errors.Newf("No %s found in secret %s", core.TLSPrivateKeyKey, s.cfg.TLSSecretName))
 		}
 		cert = string(certBytes)
 		key = string(keyBytes)
 	} else {
 		// Secret not specified, create our own TLS certificate
 		options := certificates.CreateCertificateOptions{
-			CommonName: cfg.PodName,
-			Hosts:      []string{cfg.PodName, cfg.PodIP},
+			CommonName: s.cfg.PodName,
+			Hosts:      []string{s.cfg.PodName, s.cfg.PodIP},
 			ValidFrom:  time.Now(),
 			ValidFor:   time.Hour * 24 * 365 * 10,
 			IsCA:       false,
@@ -142,32 +270,24 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	tlsConfig.BuildNameToCertificate()
 	httpServer.TLSConfig = tlsConfig
 
-	// Builder server
-	s := &Server{
-		cfg:        cfg,
-		deps:       deps,
-		httpServer: httpServer,
-		auth:       newServerAuthentication(deps.Log, deps.Secrets, cfg.AdminSecretName, cfg.AllowAnonymous),
-	}
-
 	// Build router
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.GET("/health", gin.WrapF(deps.LivenessProbe.LivenessHandler))
+	r.GET("/health", gin.WrapF(s.deps.LivenessProbe.LivenessHandler))
 
 	var readyProbes []*probe.ReadyProbe
-	if deps.Deployment.Enabled {
-		r.GET("/ready/deployment", gin.WrapF(deps.Deployment.Probe.ReadyHandler))
-		readyProbes = append(readyProbes, deps.Deployment.Probe)
+	if s.deps.Deployment.Enabled {
+		r.GET("/ready/deployment", gin.WrapF(s.deps.Deployment.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.Deployment.Probe)
 	}
-	if deps.DeploymentReplication.Enabled {
-		r.GET("/ready/deployment-replication", gin.WrapF(deps.DeploymentReplication.Probe.ReadyHandler))
-		readyProbes = append(readyProbes, deps.DeploymentReplication.Probe)
+	if s.deps.DeploymentReplication.Enabled {
+		r.GET("/ready/deployment-replication", gin.WrapF(s.deps.DeploymentReplication.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.DeploymentReplication.Probe)
 	}
-	if deps.Storage.Enabled {
-		r.GET("/ready/storage", gin.WrapF(deps.Storage.Probe.ReadyHandler))
-		readyProbes = append(readyProbes, deps.Storage.Probe)
+	if s.deps.Storage.Enabled {
+		r.GET("/ready/storage", gin.WrapF(s.deps.Storage.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, s.deps.Storage.Probe)
 	}
 	r.GET("/ready", gin.WrapF(ready(readyProbes...)))
 	r.GET("/metrics", gin.WrapH(prometheus.Handler()))
@@ -196,7 +316,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	}
 	httpServer.Handler = r
 
-	return s, nil
+	return httpServer, nil
 }
 
 // createAssetFileHandler creates a gin handler to serve the content
@@ -209,10 +329,63 @@ func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
 
 // Run the server until the program stops.
 func (s *Server) Run() error {
-	s.deps.Log.Info().Msgf("Serving on %s", s.httpServer.Addr)
-	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
-		return errors.WithStack(err)
+	var wg sync.WaitGroup
+
+	wg.Add(4)
+
+	go func() {
+		defer wg.Done()
+		if err := s.runServer("Dashboard", s.httpServer); err != nil {
+			s.deps.Log.Error().Err(err).Msgf("Unable to start dashboard server")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := s.runServer("Metrics", s.metricsHTTPServer); err != nil {
+			s.deps.Log.Error().Err(err).Msgf("Unable to start metrics server")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := s.runServer("Health", s.healthHTTPServer); err != nil {
+			s.deps.Log.Error().Err(err).Msgf("Unable to start health server")
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		// Trap signal
+		signals := make(chan os.Signal)
+		defer close(signals)
+		signal.Notify(signals, os.Interrupt, os.Kill)
+		<-signals
+	}()
+
+	wg.Wait()
+
+	return nil
+}
+
+func (s *Server) runServer(name string, server *http.Server) error {
+	if server == nil {
+		s.deps.Log.Info().Msgf("%s Server is disabled", name)
+		return nil
 	}
+	if server.TLSConfig != nil {
+		s.deps.Log.Info().Msgf("Serving TLS %s on %s", name, server.Addr)
+		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+			return errors.WithStack(err)
+		}
+	} else {
+		s.deps.Log.Info().Msgf("Serving %s on %s", name, server.Addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			return errors.WithStack(err)
+		}
+	}
+	s.deps.Log.Info().Msgf("Serving %s on %s Done", name, server.Addr)
 	return nil
 }
 
