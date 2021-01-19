@@ -116,6 +116,8 @@ type DeploymentSpec struct {
 	Bootstrap BootstrapSpec `json:"bootstrap,omitempty"`
 
 	Timeouts *Timeouts `json:"timeouts,omitempty"`
+
+	ClusterDomain *string `json:"ClusterDomain,omitempty"`
 }
 
 // GetRestoreFrom returns the restore from string or empty string if not set

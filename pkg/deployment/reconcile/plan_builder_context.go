@@ -56,6 +56,8 @@ type PlanBuilderContext interface {
 	InvalidateSyncStatus()
 	// GetStatus returns the current status of the deployment
 	GetStatus() (api.DeploymentStatus, int32)
+	// GetStatus returns the current spec of the deployment
+	GetSpec() api.DeploymentSpec
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member

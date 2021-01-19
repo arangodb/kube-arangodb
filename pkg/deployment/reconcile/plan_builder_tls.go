@@ -402,7 +402,7 @@ func createKeyfileRenewalPlanMode(
 }
 
 func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext, apiObject k8sutil.APIObject, group api.ServerGroup, member api.MemberStatus, ca resources.Certificates) (*tls.ConnectionState, error) {
-	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSName(apiObject, group.AsRole(), member.ID), k8sutil.ArangoPort)
+	endpoint := fmt.Sprintf("https://%s:%d", k8sutil.CreatePodDNSNameWithDomain(apiObject, context.GetSpec().ClusterDomain, group.AsRole(), member.ID), k8sutil.ArangoPort)
 
 	tlsConfig := &tls.Config{
 		RootCAs: ca.AsCertPool(),

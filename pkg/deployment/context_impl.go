@@ -322,7 +322,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	}
 
 	// Fetch server DNS name
-	dnsName := k8sutil.CreatePodDNSName(d.apiObject, group.AsRole(), id)
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(d.apiObject, d.apiObject.Spec.ClusterDomain, group.AsRole(), id)
 
 	// Build client
 	port := k8sutil.ArangoSyncMasterPort

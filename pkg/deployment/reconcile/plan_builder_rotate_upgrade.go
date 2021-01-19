@@ -348,7 +348,9 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
-	var plan api.Plan
+	var plan = api.Plan{
+		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
+	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
 		plan = append(plan,
 			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()),

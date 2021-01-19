@@ -24,6 +24,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 )
 

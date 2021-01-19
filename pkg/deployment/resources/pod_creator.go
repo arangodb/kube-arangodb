@@ -34,6 +34,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -108,11 +110,11 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options = append(options,
 			k8sutil.OptionPair{"--log.level", "startup=trace"})
 	}*/
-	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSName(input.ApiObject, input.Group.AsRole(), input.ID), strconv.Itoa(k8sutil.ArangoPort))
+	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, input.Group.AsRole(), input.Member.ID), strconv.Itoa(k8sutil.ArangoPort))
 	addAgentEndpoints := false
 	switch input.Group {
 	case api.ServerGroupAgents:
-		options.Add("--agency.disaster-recovery-id", input.ID)
+		options.Add("--agency.disaster-recovery-id", input.Member.ID)
 		options.Add("--agency.activate", "true")
 		options.Add("--agency.my-address", myTCPURL)
 		options.Addf("--agency.size", "%d", input.Deployment.Agents.GetCount())
@@ -120,8 +122,8 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "false")
 		for _, p := range input.Status.Members.Agents {
-			if p.ID != input.ID {
-				dnsName := k8sutil.CreatePodDNSName(input.ApiObject, api.ServerGroupAgents.AsRole(), p.ID)
+			if p.ID != input.Member.ID {
+				dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
 				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 			}
 		}
@@ -155,7 +157,7 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 	}
 	if addAgentEndpoints {
 		for _, p := range input.Status.Members.Agents {
-			dnsName := k8sutil.CreatePodDNSName(input.ApiObject, api.ServerGroupAgents.AsRole(), p.ID)
+			dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
 			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 		}
 	}
@@ -174,7 +176,7 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
 func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, id string) []string {
+	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -194,7 +196,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
 		port = k8sutil.ArangoSyncMasterPort
-		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), port)
+		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), port)
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
@@ -219,7 +221,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
 	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id), strconv.Itoa(port))
+	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(port))
 	options.Add("--server.endpoint", serverEndpoint)
 	options.Add("--server.port", strconv.Itoa(port))
 
@@ -374,7 +376,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m.ID)
+		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -481,6 +483,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		m.PodUID = uid
 		m.PodSpecVersion = sha
+		m.Endpoint = util.NewString(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
 		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
 		m.ImageID = status.CurrentImage.ImageID
 
@@ -503,10 +506,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 			serverNames := []string{
 				k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName()),
-				k8sutil.CreateSyncMasterClientServiceDNSName(apiObject),
-				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+				k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
+				k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
 			}
-			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), k8sutil.ArangoSyncMasterPort)
+			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), k8sutil.ArangoSyncMasterPort)
 			for _, ep := range masterEndpoint {
 				if u, err := url.Parse(ep); err == nil {
 					serverNames = append(serverNames, u.Hostname())
@@ -530,6 +533,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
 		m.PodUID = uid
+		m.Endpoint = util.NewString(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain))
 		m.PodSpecVersion = sha
 	}
 	// Record new member phase

@@ -50,6 +50,10 @@ type cleanTLSKeyfileCertificateAction struct {
 }
 
 func (a *cleanTLSKeyfileCertificateAction) Start(ctx context.Context) (bool, error) {
+	if !a.actionCtx.GetSpec().TLS.IsSecure() {
+		return true, nil
+	}
+
 	member, exists := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !exists {
 		a.log.Warn().Msgf("Member does not exist")

@@ -38,9 +38,9 @@ type Input struct {
 	GroupSpec   deploymentApi.ServerGroupSpec
 	Group       deploymentApi.ServerGroup
 	Version     driver.Version
+	Member      deploymentApi.MemberStatus
 	Enterprise  bool
 	AutoUpgrade bool
-	ID          string
 }
 
 type Builder interface {

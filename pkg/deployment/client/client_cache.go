@@ -24,7 +24,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -49,7 +48,6 @@ type Cache interface {
 
 func NewClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.Factory) Cache {
 	return &cache{
-		clients:         make(map[string]driver.Client),
 		apiObjectGetter: apiObjectGetter,
 		factory:         factory,
 	}
@@ -57,10 +55,7 @@ func NewClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.F
 
 type cache struct {
 	mutex           sync.Mutex
-	clients         map[string]driver.Client
 	apiObjectGetter func() *api.ArangoDeployment
-
-	databaseClient driver.Client
 
 	factory conn.Factory
 }
@@ -75,18 +70,12 @@ func (cc *cache) extendHost(host string) string {
 }
 
 func (cc *cache) getClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	key := fmt.Sprintf("%d-%s", group, id)
-	c, found := cc.clients[key]
-	if found {
-		return c, nil
-	}
+	m, _, _ := cc.apiObjectGetter().Status.Members.ElementByID(id)
 
-	// Not found, create a new client
-	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id)))
+	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id))))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	cc.clients[key] = c
 	return c, nil
 }
 
@@ -99,7 +88,6 @@ func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (dri
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
 	} else if driver.IsUnauthorized(err) {
-		delete(cc.clients, fmt.Sprintf("%d-%s", group, id))
 		return cc.getClient(ctx, group, id)
 	} else {
 		return client, nil
@@ -120,16 +108,10 @@ func (cc cache) GetAuth() conn.Auth {
 }
 
 func (cc *cache) getDatabaseClient() (driver.Client, error) {
-	if c := cc.databaseClient; c != nil {
-		return c, nil
-	}
-
-	// Not found, create a new client
 	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.apiObjectGetter())))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	cc.databaseClient = c
 	return c, nil
 }
 
@@ -142,7 +124,6 @@ func (cc *cache) getDatabase(ctx context.Context) (driver.Client, error) {
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
 	} else if driver.IsUnauthorized(err) {
-		cc.databaseClient = nil
 		return cc.getDatabaseClient()
 	} else {
 		return client, nil
@@ -162,7 +143,7 @@ func (cc *cache) getAgencyClient() (agency.Agency, error) {
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.apiObjectGetter().Status.Members.Agents {
-		dnsNames = append(dnsNames, cc.extendHost(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), api.ServerGroupAgents.AsRole(), m.ID)))
+		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), api.ServerGroupAgents.AsRole(), m.ID))))
 	}
 
 	if len(dnsNames) == 0 {

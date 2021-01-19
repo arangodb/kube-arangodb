@@ -62,7 +62,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "a1",
+			Member:      api.MemberStatus{ID: "a1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -117,7 +117,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: true,
-			ID:          "a1",
+			Member:      api.MemberStatus{ID: "a1"},
 		}
 		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
@@ -176,7 +176,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "a1",
+			Member:      api.MemberStatus{ID: "a1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -230,7 +230,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "a1",
+			Member:      api.MemberStatus{ID: "a1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -284,7 +284,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "a1",
+			Member:      api.MemberStatus{ID: "a1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,

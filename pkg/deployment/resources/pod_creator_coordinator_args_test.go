@@ -62,7 +62,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -114,7 +114,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: true,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
@@ -167,7 +167,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "3.6.0",
 			Enterprise:  false,
 			AutoUpgrade: true,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
@@ -223,7 +223,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -274,7 +274,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -327,7 +327,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,

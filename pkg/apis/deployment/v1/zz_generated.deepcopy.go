@@ -464,6 +464,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(Timeouts)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ClusterDomain != nil {
+		in, out := &in.ClusterDomain, &out.ClusterDomain
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -843,6 +848,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(ImageInfo)
+		**out = **in
+	}
+	if in.Endpoint != nil {
+		in, out := &in.Endpoint, &out.Endpoint
+		*out = new(string)
 		**out = **in
 	}
 	return
