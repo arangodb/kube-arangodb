@@ -25,6 +25,8 @@ package k8sutil
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/stretchr/testify/assert"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,4 +50,14 @@ func TestCreateDatabaseClientServiceDNSName(t *testing.T) {
 	}
 	n := CreateDatabaseClientServiceDNSName(depl)
 	assert.Equal(t, "test.ns.svc", n)
+}
+
+func TestCreatePodDNSNameWithDomain(t *testing.T) {
+	depl := &metav1.ObjectMeta{
+		Name:      "test",
+		Namespace: "ns",
+	}
+
+	assert.Equal(t, "test-agent-id1.test-int.ns.svc", CreatePodDNSNameWithDomain(depl, nil, "agent", "id1"))
+	assert.Equal(t, "test-agent-id1.test-int.ns.svc.cluster.local", CreatePodDNSNameWithDomain(depl, util.NewString("cluster.local"), "agent", "id1"))
 }

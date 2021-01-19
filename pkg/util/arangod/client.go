@@ -117,7 +117,7 @@ var (
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
 func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id)
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, group.AsRole(), id)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -128,7 +128,7 @@ func CreateArangodClient(ctx context.Context, cli corev1.CoreV1Interface, apiObj
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
 func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
+	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -139,7 +139,7 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 func CreateArangodAgencyConnection(ctx context.Context, apiObject *api.ArangoDeployment) (driver.Connection, error) {
 	var dnsNames []string
 	for _, m := range apiObject.Status.Members.Agents {
-		dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), m.ID)
+		dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, api.ServerGroupAgents.AsRole(), m.ID)
 		dnsNames = append(dnsNames, dnsName)
 	}
 	shortTimeout := false
@@ -158,7 +158,7 @@ func CreateArangodAgencyConnection(ctx context.Context, apiObject *api.ArangoDep
 func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (agency.Agency, error) {
 	var dnsNames []string
 	for _, m := range apiObject.Status.Members.Agents {
-		dnsName := k8sutil.CreatePodDNSName(apiObject, api.ServerGroupAgents.AsRole(), m.ID)
+		dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, api.ServerGroupAgents.AsRole(), m.ID)
 		dnsNames = append(dnsNames, dnsName)
 	}
 	shortTimeout := false
@@ -191,7 +191,7 @@ func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, 
 // running in an Image-ID pod.
 func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreatePodDNSName(deployment, role, id)
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(deployment, nil, role, id)
 	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName, false)
 	if err != nil {
 		return nil, errors.WithStack(err)

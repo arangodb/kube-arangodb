@@ -215,7 +215,7 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 		Version:     m.imageInfo.ArangoDBVersion,
 		Enterprise:  m.imageInfo.Enterprise,
 		AutoUpgrade: m.autoUpgrade,
-		ID:          m.id,
+		Member:      m.status,
 	}
 }
 

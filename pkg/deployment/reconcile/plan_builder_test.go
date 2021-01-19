@@ -719,6 +719,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
 			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, api.ServerGroupAgents, "", "Remove server keyfile and enforce renewal/recreation"),
 				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberInSync, api.ServerGroupAgents, ""),

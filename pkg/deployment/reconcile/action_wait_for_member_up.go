@@ -135,6 +135,10 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 		return false, false, errors.WithStack(err)
 	}
 
+	for _, a := range clients {
+		a.Endpoints()
+	}
+
 	if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")
 		return false, false, nil

@@ -113,7 +113,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
 			return nil, errors.WithStack(err)
 		}
-		dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(depl)
+		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.Spec.ClusterDomain)
 		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
 	}
 	return client.Endpoint(epSpec.MasterEndpoint), nil

@@ -135,6 +135,13 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 						k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
 						k8sutil.CreatePodDNSName(apiObject, role, m.ID),
 					}
+
+					if spec.ClusterDomain != nil {
+						serverNames = append(serverNames,
+							k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
+							k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
+					}
+
 					if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
 						serverNames = append(serverNames, ip)
 					}
