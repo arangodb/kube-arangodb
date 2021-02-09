@@ -91,6 +91,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.ArangoVersion == other.ArangoVersion &&
 		s.ImageID == other.ImageID &&
 		s.Image.Equal(other.Image) &&
+		s.OldImage.Equal(other.OldImage) &&
 		s.Upgrade == other.Upgrade &&
 		util.CompareStringPointers(s.Endpoint, other.Endpoint)
 }
