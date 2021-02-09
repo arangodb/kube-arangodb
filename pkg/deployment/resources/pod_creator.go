@@ -61,7 +61,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
-// createArangodArgs creates command line arguments for an arangod server in the given group.
+// createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
 func createArangodArgsWithUpgrade(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	return createArangodArgs(input, pod.AutoUpgrade().Args(input)...)
 }
@@ -484,8 +484,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		m.PodUID = uid
 		m.PodSpecVersion = sha
 		m.Endpoint = util.NewString(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
-		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
-		m.ImageID = status.CurrentImage.ImageID
+		m.ArangoVersion = m.Image.ArangoDBVersion
+		m.ImageID = m.Image.ImageID
 
 		// Check for missing side cars in
 		m.SideCarSpecs = make(map[string]core.Container)
@@ -543,6 +543,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	m.Conditions.Remove(api.ConditionTypeTerminating)
 	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
+	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
+	m.Upgrade = false
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}

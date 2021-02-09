@@ -129,6 +129,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval, cachedStatus inspector.Inspector) (nextInterval util.Interval, inspectError error) {
 	t := time.Now()
+
 	defer func() {
 		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
 	}()

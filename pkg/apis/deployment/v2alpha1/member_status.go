@@ -69,6 +69,8 @@ type MemberStatus struct {
 	ImageID string `json:"image-id,omitempty"`
 	// Image holds image details
 	Image *ImageInfo `json:"image,omitempty"`
+	// OldImage holds old image defails
+	OldImage *ImageInfo `json:"old-image,omitempty"`
 	// Upgrade define if upgrade should be enforced during next execution
 	Upgrade bool `json:"upgrade,omitempty"`
 	// Endpoint definition how member should be reachable

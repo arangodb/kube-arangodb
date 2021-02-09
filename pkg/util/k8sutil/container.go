@@ -22,33 +22,57 @@
 
 package k8sutil
 
-import v1 "k8s.io/api/core/v1"
+import core "k8s.io/api/core/v1"
 
 // GetContainerByName returns the container in the given pod with the given name.
 // Returns false if not found.
-func GetContainerByName(p *v1.Pod, name string) (v1.Container, bool) {
+func GetContainerByName(p *core.Pod, name string) (core.Container, bool) {
 	for _, c := range p.Spec.Containers {
 		if c.Name == name {
 			return c, true
 		}
 	}
-	return v1.Container{}, false
+	return core.Container{}, false
 }
 
 // GetContainerStatusByName returns the container status in the given pod with the given name.
 // Returns false if not found.
-func GetContainerStatusByName(p *v1.Pod, name string) (v1.ContainerStatus, bool) {
+func GetContainerStatusByName(p *core.Pod, name string) (core.ContainerStatus, bool) {
 	for _, c := range p.Status.ContainerStatuses {
 		if c.Name == name {
 			return c, true
 		}
 	}
-	return v1.ContainerStatus{}, false
+	return core.ContainerStatus{}, false
+}
+
+// GetAnyContainerStatusByName returns the container status in the given ContainerStatus list with the given name.
+// Returns false if not found.
+func GetAnyContainerStatusByName(containers []core.ContainerStatus, name string) (core.ContainerStatus, bool) {
+	for _, c := range containers {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.ContainerStatus{}, false
+}
+
+// GetFailedContainerNames returns list of failed containers from provided list of statuses.
+func GetFailedContainerNames(containers []core.ContainerStatus) []string {
+	var failedContainers []string
+
+	for _, c := range containers {
+		if IsContainerFailed(&c) {
+			failedContainers = append(failedContainers, c.Name)
+		}
+	}
+
+	return failedContainers
 }
 
 // IsResourceRequirementsChanged returns true if the resource requirements have changed.
-func IsResourceRequirementsChanged(wanted, given v1.ResourceRequirements) bool {
-	checkList := func(wanted, given v1.ResourceList) bool {
+func IsResourceRequirementsChanged(wanted, given core.ResourceRequirements) bool {
+	checkList := func(wanted, given core.ResourceList) bool {
 		for k, v := range wanted {
 			if gv, ok := given[k]; !ok {
 				return true

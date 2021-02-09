@@ -850,6 +850,11 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		*out = new(ImageInfo)
 		**out = **in
 	}
+	if in.OldImage != nil {
+		in, out := &in.OldImage, &out.OldImage
+		*out = new(ImageInfo)
+		**out = **in
+	}
 	if in.Endpoint != nil {
 		in, out := &in.Endpoint, &out.Endpoint
 		*out = new(string)

@@ -110,7 +110,33 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 		log.Error().Msg("No such member")
 		return true, false, nil
 	}
+
 	isUpgrading := m.Phase == api.MemberPhaseUpgrading
+
+	if isUpgrading {
+		if m.Conditions.IsTrue(api.ConditionTypeTerminated) {
+			if m.Conditions.IsTrue(api.ConditionTypeUpgradeFailed) {
+				a.log.Error().Msgf("Upgrade of member failed")
+			}
+			// Invalidate plan
+			m.Phase = ""
+			m.Conditions.Remove(api.ConditionTypeTerminated)
+			m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
+
+			if m.OldImage != nil {
+				a.log.Warn().Str("old", m.OldImage.String()).Str("current", m.Image.String()).Msgf("Restoring old image 555TTT555")
+				m.Image = m.OldImage.DeepCopy()
+			}
+
+			if err := a.actionCtx.UpdateMember(m); err != nil {
+				return false, true, nil
+			}
+
+			log.Error().Msgf("Upgrade failed")
+			return false, true, nil
+		}
+	}
+
 	log = log.With().
 		Str("pod-name", m.PodName).
 		Bool("is-upgrading", isUpgrading).Logger()
@@ -128,6 +154,10 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	m.Phase = api.MemberPhaseCreated
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	m.CleanoutJobID = ""
+	if !m.OldImage.Equal(m.Image) && isUpgrading {
+		a.log.Warn().Str("old", m.OldImage.String()).Str("current", m.Image.String()).Msgf("Updating current image 555TTT555")
+		m.OldImage = m.Image.DeepCopy()
+	}
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, false, errors.WithStack(err)
 	}
