@@ -124,7 +124,6 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 			m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
 
 			if m.OldImage != nil {
-				a.log.Warn().Str("old", m.OldImage.String()).Str("current", m.Image.String()).Msgf("Restoring old image 555TTT555")
 				m.Image = m.OldImage.DeepCopy()
 			}
 
@@ -155,7 +154,6 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.
 	m.CleanoutJobID = ""
 	if !m.OldImage.Equal(m.Image) && isUpgrading {
-		a.log.Warn().Str("old", m.OldImage.String()).Str("current", m.Image.String()).Msgf("Updating current image 555TTT555")
 		m.OldImage = m.Image.DeepCopy()
 	}
 	if err := a.actionCtx.UpdateMember(m); err != nil {

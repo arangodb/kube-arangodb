@@ -80,8 +80,6 @@ func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, 
 			return false
 		}
 
-		a.log.Warn().Str("old", m.OldImage.String()).Str("current", m.Image.String()).Str("desired", imageInfo.String()).Msgf("Updating expected image 555TTT555")
-
 		if !m.Image.Equal(&imageInfo) {
 			m.OldImage = m.Image.DeepCopy()
 		}
