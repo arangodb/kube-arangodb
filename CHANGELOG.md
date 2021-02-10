@@ -4,6 +4,7 @@
 - Add support for spec.ClusterDomain to be able to use FQDN in ArangoDB cluster communication
 - Add Version Check feature with extended Upgrade checks
 - Fix Upgrade failures recovery
+- Add ReasignLeadership action before Upgrade, Restart and Shutdown actions
 
 ## [1.1.3](https://github.com/arangodb/kube-arangodb/tree/1.1.3) (2020-12-16)
 - Add v2alpha1 API for ArangoDeployment and ArangoDeploymentReplication
