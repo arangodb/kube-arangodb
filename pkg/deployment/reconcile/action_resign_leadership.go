@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
 package reconcile
@@ -38,6 +38,8 @@ func init() {
 	registerAction(api.ActionTypeResignLeadership, newResignLeadershipAction)
 }
 
+// newResignLeadershipAction creates a new Action that implements the given
+// planned ResignLeadership action.
 func newResignLeadershipAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionResignLeadership{}
 
@@ -46,10 +48,12 @@ func newResignLeadershipAction(log zerolog.Logger, action api.Action, actionCtx 
 	return a
 }
 
+// actionResignLeadership implements an ResignLeadershipAction.
 type actionResignLeadership struct {
 	actionImpl
 }
 
+// Start performs the start of the ReasignLeadership process on DBServer.
 func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 	log := a.log
 	group := a.action.Group
@@ -98,6 +102,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 	}
 }
 
+// CheckProgress checks if Job is completed.
 func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool, error) {
 	log := a.log
 
