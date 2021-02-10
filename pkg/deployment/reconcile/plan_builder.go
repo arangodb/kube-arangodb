@@ -113,7 +113,6 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspector.Inspector,
 	builderCtx PlanBuilderContext) (api.Plan, bool) {
-
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -313,6 +312,11 @@ type planBuilder func(ctx context.Context,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan
 
+type planBuilderCondition func(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) bool
+
 type planBuilderSubPlan func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -335,6 +339,7 @@ func NewWithPlanBuilder(ctx context.Context,
 
 type WithPlanBuilder interface {
 	Apply(p planBuilder) api.Plan
+	ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan
 	ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan
 }
 
@@ -346,6 +351,14 @@ type withPlanBuilder struct {
 	status       api.DeploymentStatus
 	cachedStatus inspector.Inspector
 	context      PlanBuilderContext
+}
+
+func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan {
+	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context) {
+		return api.Plan{}
+	}
+
+	return w.Apply(p)
 }
 
 func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {

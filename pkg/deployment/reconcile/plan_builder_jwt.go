@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -220,12 +221,16 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 func areJWTTokensUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	cachedStatus inspector.Inspector, planCtx PlanBuilderContext,
 	folder *core.Secret) (plan api.Plan, failed bool) {
+	gCtx, c := context.WithTimeout(ctx, 2*time.Second)
+	defer c()
 
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
-			if updateRequired, failedMember := isJWTTokenUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, group, m, folder); failedMember {
+			nCtx, c := context.WithTimeout(gCtx, 500*time.Millisecond)
+			defer c()
+			if updateRequired, failedMember := isJWTTokenUpToDate(nCtx, log, apiObject, spec, status, cachedStatus, planCtx, group, m, folder); failedMember {
 				failed = true
 				continue
 			} else if updateRequired {

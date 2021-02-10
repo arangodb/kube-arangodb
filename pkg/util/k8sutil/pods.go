@@ -121,6 +121,18 @@ func IsPodFailed(pod *core.Pod) bool {
 	}
 }
 
+// IsContainerFailed returns true if the arangodb container
+// has terminated wih a non-zero exit code.
+func IsContainerFailed(container *core.ContainerStatus) bool {
+	if c := container.State.Terminated; c != nil {
+		if c.ExitCode != 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IsPodScheduled returns true if the pod has been scheduled.
 func IsPodScheduled(pod *core.Pod) bool {
 	condition := getPodCondition(&pod.Status, core.PodScheduled)

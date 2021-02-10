@@ -426,7 +426,7 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 
 	{
 		// Upgrade container - run in background
-		if m.autoUpgrade {
+		if m.autoUpgrade || m.status.Upgrade {
 			args := createArangodArgsWithUpgrade(m.AsInput())
 
 			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
@@ -442,6 +442,28 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 			c.ReadinessProbe = nil
 
 			initContainers = append(initContainers, c)
+		}
+
+		// VersionCheck Container
+		{
+			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
+			if len(versionArgs) > 0 {
+				args := createArangodArgs(m.AsInput(), versionArgs...)
+
+				c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
+				if err != nil {
+					return nil, err
+				}
+
+				_, c.VolumeMounts = m.GetVolumes()
+
+				c.Name = api.ServerGroupReservedInitContainerNameVersionCheck
+				c.Lifecycle = nil
+				c.LivenessProbe = nil
+				c.ReadinessProbe = nil
+
+				initContainers = append(initContainers, c)
+			}
 		}
 	}
 

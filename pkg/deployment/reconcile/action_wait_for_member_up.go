@@ -24,6 +24,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -139,7 +140,10 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 		a.Endpoints()
 	}
 
-	if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
+	shortCtx, c := context.WithTimeout(ctx, 3*time.Second)
+	defer c()
+
+	if err := agency.AreAgentsHealthy(shortCtx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")
 		return false, false, nil
 	}

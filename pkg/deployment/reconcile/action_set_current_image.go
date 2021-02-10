@@ -80,6 +80,9 @@ func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, 
 			return false
 		}
 
+		if !m.Image.Equal(&imageInfo) {
+			m.OldImage = m.Image.DeepCopy()
+		}
 		m.Image = &imageInfo
 
 		if err := s.Members.Update(m, g); err != nil {
