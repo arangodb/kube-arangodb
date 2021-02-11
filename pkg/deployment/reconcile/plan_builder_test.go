@@ -720,6 +720,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			ExpectedPlan: []api.Action{
 				api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, api.ServerGroupAgents, "", "Remove server keyfile and enforce renewal/recreation"),
+				api.NewAction(api.ActionTypeResignLeadership, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberInSync, api.ServerGroupAgents, ""),
