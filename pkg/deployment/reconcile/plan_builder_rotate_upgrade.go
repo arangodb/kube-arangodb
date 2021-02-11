@@ -362,8 +362,9 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		)
 	}
 	plan = append(plan,
+		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
 		api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	)
-	return plan
+	return withMaintenance(plan...)
 }

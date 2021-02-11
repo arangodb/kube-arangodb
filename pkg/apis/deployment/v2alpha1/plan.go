@@ -51,6 +51,8 @@ const (
 	ActionTypeCleanOutMember ActionType = "CleanOutMember"
 	// ActionTypeShutdownMember causes a member to be shutdown and removed from the cluster.
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
+	// ActionTypeResignLeadership causes a member to resign leadership.
+	ActionTypeResignLeadership ActionType = "ResignLeadership"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
 	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.
