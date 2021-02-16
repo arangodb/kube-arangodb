@@ -28,6 +28,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -117,6 +119,18 @@ func IsPodFailed(pod *core.Pod) bool {
 
 		return false
 	}
+}
+
+// IsContainerFailed returns true if the arangodb container
+// has terminated wih a non-zero exit code.
+func IsContainerFailed(container *core.ContainerStatus) bool {
+	if c := container.State.Terminated; c != nil {
+		if c.ExitCode != 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IsPodScheduled returns true if the pod has been scheduled.
@@ -390,7 +404,7 @@ func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner met
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	if pod, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	} else {
 		return pod.UID, nil
 	}

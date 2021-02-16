@@ -23,7 +23,7 @@
 package v2alpha1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // DeploymentStatusMembers holds the member status of all server groups
@@ -101,27 +101,27 @@ func (ds DeploymentStatusMembers) ForServerGroup(cb func(group ServerGroup, list
 	switch group {
 	case ServerGroupSingle:
 		if err := cb(ServerGroupSingle, ds.Single); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	case ServerGroupAgents:
 		if err := cb(ServerGroupAgents, ds.Agents); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	case ServerGroupDBServers:
 		if err := cb(ServerGroupDBServers, ds.DBServers); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	case ServerGroupCoordinators:
 		if err := cb(ServerGroupCoordinators, ds.Coordinators); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	case ServerGroupSyncMasters:
 		if err := cb(ServerGroupSyncMasters, ds.SyncMasters); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	case ServerGroupSyncWorkers:
 		if err := cb(ServerGroupSyncWorkers, ds.SyncWorkers); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -184,10 +184,10 @@ func (ds *DeploymentStatusMembers) Add(status MemberStatus, group ServerGroup) e
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.add(status)
 	default:
-		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -209,10 +209,10 @@ func (ds *DeploymentStatusMembers) Update(status MemberStatus, group ServerGroup
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.update(status)
 	default:
-		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -235,10 +235,10 @@ func (ds *DeploymentStatusMembers) RemoveByID(id string, group ServerGroup) erro
 	case ServerGroupSyncWorkers:
 		err = ds.SyncWorkers.removeByID(id)
 	default:
-		return maskAny(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
+		return errors.WithStack(errors.Wrapf(NotFoundError, "ServerGroup %d is not known", group))
 	}
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

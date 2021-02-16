@@ -34,6 +34,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/dchest/uniuri"
@@ -64,11 +66,11 @@ func (ls *LocalStorage) createPVs(ctx context.Context, apiObject *api.ArangoLoca
 	// Find provisioner clients
 	clients, err := ls.createProvisionerClients()
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if len(clients) == 0 {
 		// No provisioners available
-		return maskAny(fmt.Errorf("No ready provisioner endpoints found"))
+		return errors.WithStack(errors.Newf("No ready provisioner endpoints found"))
 	}
 	// Randomize list
 	rand.Shuffle(len(clients), func(i, j int) {
@@ -201,13 +203,13 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				if err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Delete(pv.GetName(), &metav1.DeleteOptions{}); err != nil {
 					log.Error().Err(err).Msg("Failed to delete PV after binding PVC failed")
 				}
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 
 			return nil
 		}
 	}
-	return maskAny(fmt.Errorf("No more nodes available"))
+	return errors.WithStack(errors.Newf("No more nodes available"))
 }
 
 // createValidEndpointList convers the given endpoints list into
@@ -274,7 +276,7 @@ func (ls *LocalStorage) filterAllowedNodes(clients map[string]provisioner.API, d
 		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", k8sutil.LabelKeyArangoDeployment, deploymentName, k8sutil.LabelKeyRole, role),
 	})
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	excludedNodes := make(map[string]struct{})
 	for _, pv := range list.Items {
@@ -303,7 +305,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 		// Fetch latest version of claim
 		updated, err := pvcs.Get(claim.GetName(), metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to load updated PersistentVolumeClaim")
 			continue
@@ -315,7 +317,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 				log.Info().Msg("PersistentVolumeClaim already bound to PersistentVolume")
 				return nil
 			}
-			return maskAny(fmt.Errorf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
+			return errors.WithStack(errors.Newf("PersistentVolumeClaim '%s' no longer needs a volume", claim.GetName()))
 		}
 
 		// Try to bind
@@ -325,13 +327,13 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 			log.Debug().Err(err).Msg("PersistentVolumeClaim has been modified. Retrying.")
 		} else if err != nil {
 			log.Error().Err(err).Msg("Failed to bind PVC to volume")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Msg("Bound volume to PersistentVolumeClaim")
 		return nil
 	}
 	log.Error().Msg("All attempts to bind PVC to volume failed")
-	return maskAny(fmt.Errorf("All attempts to bind PVC to volume failed"))
+	return errors.WithStack(errors.Newf("All attempts to bind PVC to volume failed"))
 }
 
 // shortHash creates a 6 letter hash of the given name.

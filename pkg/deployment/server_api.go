@@ -25,6 +25,8 @@ package deployment
 import (
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -201,7 +203,7 @@ func (d *Deployment) DatabaseURL() string {
 	nodeFetcher := func() (v1.NodeList, error) {
 		result, err := d.deps.KubeCli.CoreV1().Nodes().List(metav1.ListOptions{})
 		if err != nil {
-			return v1.NodeList{}, maskAny(err)
+			return v1.NodeList{}, errors.WithStack(err)
 		}
 		return *result, nil
 	}

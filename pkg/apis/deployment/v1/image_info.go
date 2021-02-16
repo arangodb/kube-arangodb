@@ -22,7 +22,11 @@
 
 package v1
 
-import driver "github.com/arangodb/go-driver"
+import (
+	"fmt"
+
+	driver "github.com/arangodb/go-driver"
+)
 
 // ImageInfo contains an ID of an image and the ArangoDB version inside the image.
 type ImageInfo struct {
@@ -30,6 +34,20 @@ type ImageInfo struct {
 	ImageID         string         `json:"image-id,omitempty"`         // Unique ID (with SHA256) of the image
 	ArangoDBVersion driver.Version `json:"arangodb-version,omitempty"` // ArangoDB version within the image
 	Enterprise      bool           `json:"enterprise,omitempty"`       // If set, this is an enterprise image
+}
+
+func (i *ImageInfo) String() string {
+	if i == nil {
+		return "undefined"
+	}
+
+	e := "Community"
+
+	if i.Enterprise {
+		e = "Enterprise"
+	}
+
+	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(i.ArangoDBVersion), i.Image)
 }
 
 // ImageInfoList is a list of image infos

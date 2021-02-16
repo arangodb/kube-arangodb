@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -65,7 +67,7 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 	newID, err := a.actionCtx.CreateMember(a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member")
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	a.newMemberID = newID
 

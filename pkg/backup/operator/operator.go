@@ -23,9 +23,10 @@
 package operator
 
 import (
-	"fmt"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
@@ -106,7 +107,7 @@ func (o *operator) ProcessItem(item operation.Item) error {
 		defer o.lock.Unlock()
 
 		if !o.started {
-			return fmt.Errorf("operator is not started started")
+			return errors.Newf("operator is not started started")
 		}
 	}
 
@@ -118,12 +119,12 @@ func (o *operator) RegisterHandler(handler Handler) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return fmt.Errorf("operator already started")
+		return errors.Newf("operator already started")
 	}
 
 	for _, registeredHandlers := range o.handlers {
 		if registeredHandlers == handler {
-			return fmt.Errorf("handler already registered")
+			return errors.Newf("handler already registered")
 		}
 	}
 
@@ -137,12 +138,12 @@ func (o *operator) RegisterStarter(starter Starter) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return fmt.Errorf("operator already started")
+		return errors.Newf("operator already started")
 	}
 
 	for _, registeredStarter := range o.starters {
 		if registeredStarter == starter {
-			return fmt.Errorf("starter already registered")
+			return errors.Newf("starter already registered")
 		}
 	}
 
@@ -160,12 +161,12 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 	defer o.lock.Unlock()
 
 	if o.started {
-		return fmt.Errorf("operator already started")
+		return errors.Newf("operator already started")
 	}
 
 	for _, registeredInformer := range o.informers {
 		if registeredInformer == informer {
-			return fmt.Errorf("informer already registered")
+			return errors.Newf("informer already registered")
 		}
 	}
 
@@ -181,7 +182,7 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 	defer o.lock.Unlock()
 
 	if o.started {
-		return fmt.Errorf("operator already started")
+		return errors.Newf("operator already started")
 	}
 
 	o.started = true
@@ -224,7 +225,7 @@ func (o *operator) waitForCacheSync(stopCh <-chan struct{}) error {
 	}
 
 	if ok := cache.WaitForCacheSync(stopCh, cacheSync...); !ok {
-		return fmt.Errorf("cache can not sync")
+		return errors.Newf("cache can not sync")
 	}
 
 	return nil

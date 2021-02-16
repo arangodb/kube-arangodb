@@ -26,6 +26,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -39,7 +41,7 @@ func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
 	listOptions := k8sutil.LocalStorageListOpt(ls.apiObject.GetName(), roleProvisioner)
 	items, err := ls.deps.KubeCli.CoreV1().Endpoints(ns).List(listOptions)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	addrs := createValidEndpointList(items)
 	if len(addrs) == 0 {
@@ -52,7 +54,7 @@ func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
 		var err error
 		clients[i], err = client.New(fmt.Sprintf("http://%s", addr))
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	}
 	return clients, nil
@@ -63,7 +65,7 @@ func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
 func (ls *LocalStorage) GetClientByNodeName(nodeName string) (provisioner.API, error) {
 	clients, err := ls.createProvisionerClients()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Find matching client
@@ -73,5 +75,5 @@ func (ls *LocalStorage) GetClientByNodeName(nodeName string) (provisioner.API, e
 			return c, nil
 		}
 	}
-	return nil, maskAny(fmt.Errorf("No client found for node name '%s'", nodeName))
+	return nil, errors.WithStack(errors.Newf("No client found for node name '%s'", nodeName))
 }

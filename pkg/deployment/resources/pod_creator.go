@@ -34,6 +34,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -47,7 +51,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -57,7 +61,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 	return v.CompareTo("3.4.0") >= 0
 }
 
-// createArangodArgs creates command line arguments for an arangod server in the given group.
+// createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
 func createArangodArgsWithUpgrade(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	return createArangodArgs(input, pod.AutoUpgrade().Args(input)...)
 }
@@ -106,11 +110,11 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options = append(options,
 			k8sutil.OptionPair{"--log.level", "startup=trace"})
 	}*/
-	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSName(input.ApiObject, input.Group.AsRole(), input.ID), strconv.Itoa(k8sutil.ArangoPort))
+	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, input.Group.AsRole(), input.Member.ID), strconv.Itoa(k8sutil.ArangoPort))
 	addAgentEndpoints := false
 	switch input.Group {
 	case api.ServerGroupAgents:
-		options.Add("--agency.disaster-recovery-id", input.ID)
+		options.Add("--agency.disaster-recovery-id", input.Member.ID)
 		options.Add("--agency.activate", "true")
 		options.Add("--agency.my-address", myTCPURL)
 		options.Addf("--agency.size", "%d", input.Deployment.Agents.GetCount())
@@ -118,8 +122,8 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "false")
 		for _, p := range input.Status.Members.Agents {
-			if p.ID != input.ID {
-				dnsName := k8sutil.CreatePodDNSName(input.ApiObject, api.ServerGroupAgents.AsRole(), p.ID)
+			if p.ID != input.Member.ID {
+				dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
 				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 			}
 		}
@@ -153,7 +157,7 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 	}
 	if addAgentEndpoints {
 		for _, p := range input.Status.Members.Agents {
-			dnsName := k8sutil.CreatePodDNSName(input.ApiObject, api.ServerGroupAgents.AsRole(), p.ID)
+			dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
 			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 		}
 	}
@@ -172,7 +176,7 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
 func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, id string) []string {
+	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -192,7 +196,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
 		port = k8sutil.ArangoSyncMasterPort
-		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), port)
+		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), port)
 		keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
@@ -217,7 +221,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
 	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSName(apiObject, group.AsRole(), id), strconv.Itoa(port))
+	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(port))
 	options.Add("--server.endpoint", serverEndpoint)
 	options.Add("--server.port", strconv.Itoa(port))
 
@@ -288,7 +292,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
-		return nil, maskAny(fmt.Errorf("Member '%s' not found", memberID))
+		return nil, errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -325,7 +329,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		args := createArangodArgs(input)
 
 		if err := memberPod.Validate(cachedStatus); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Validation of pods resources failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberPod)
@@ -333,7 +337,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		// Check image
 		if !imageInfo.Enterprise {
 			log.Debug().Str("image", spec.GetImage()).Msg("Image is not an enterprise image")
-			return nil, maskAny(fmt.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
+			return nil, errors.WithStack(errors.Newf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
 		imageInfo := imageInfo
@@ -346,12 +350,12 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
 
 		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Master JWT secret validation failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
 		}
 
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
 		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
-			return nil, maskAny(errors.Wrapf(err, "Monitoring token secret validation failed"))
+			return nil, errors.WithStack(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 
 		if group == api.ServerGroupSyncMasters {
@@ -361,18 +365,18 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
 				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
-					return nil, maskAny(errors.Wrapf(err, "Cluster JWT secret validation failed"))
+					return nil, errors.WithStack(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
 			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
-				return nil, maskAny(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
+				return nil, errors.WithStack(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m.ID)
+		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -388,7 +392,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberSyncPod)
 	} else {
-		return nil, errors.Errorf("unable to render Pod")
+		return nil, errors.Newf("unable to render Pod")
 	}
 }
 
@@ -433,7 +437,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 		m.Image = status.CurrentImage
 
 		if err := status.Members.Update(m, group); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -441,7 +445,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	kubecli := r.context.GetKubeCli()
@@ -449,7 +453,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	if !found {
-		return maskAny(fmt.Errorf("Member '%s' not found", memberID))
+		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
@@ -469,18 +473,19 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 		sha, err := ChecksumArangoPod(groupSpec, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		m.PodUID = uid
 		m.PodSpecVersion = sha
-		m.ArangoVersion = status.CurrentImage.ArangoDBVersion
-		m.ImageID = status.CurrentImage.ImageID
+		m.Endpoint = util.NewString(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
+		m.ArangoVersion = m.Image.ArangoDBVersion
+		m.ImageID = m.Image.ImageID
 
 		// Check for missing side cars in
 		m.SideCarSpecs = make(map[string]core.Container)
@@ -501,10 +506,10 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
 			serverNames := []string{
 				k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName()),
-				k8sutil.CreateSyncMasterClientServiceDNSName(apiObject),
-				k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+				k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
+				k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
 			}
-			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSName(apiObject), k8sutil.ArangoSyncMasterPort)
+			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), k8sutil.ArangoSyncMasterPort)
 			for _, ep := range masterEndpoint {
 				if u, err := url.Parse(ep); err == nil {
 					serverNames = append(serverNames, u.Hostname())
@@ -512,22 +517,23 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			}
 			owner := apiObject.AsOwner()
 			if err := createTLSServerCertificate(log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
-				return maskAny(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
 
 		sha, err := ChecksumArangoPod(groupSpec, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
 		m.PodUID = uid
+		m.Endpoint = util.NewString(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain))
 		m.PodSpecVersion = sha
 	}
 	// Record new member phase
@@ -537,11 +543,13 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	m.Conditions.Remove(api.ConditionTypeTerminating)
 	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
 	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
+	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
+	m.Upgrade = false
 	if err := status.Members.Update(m, group); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	// Create event
 	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.PodName, role, apiObject))
@@ -575,14 +583,14 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 	podCreator.Init(&p)
 
 	if initContainers, err := podCreator.GetInitContainers(); err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	} else if initContainers != nil {
 		p.Spec.InitContainers = append(p.Spec.InitContainers, initContainers...)
 	}
 
 	c, err := k8sutil.NewContainer(args, podCreator.GetContainerCreator())
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	p.Spec.Volumes, c.VolumeMounts = podCreator.GetVolumes()
@@ -609,7 +617,7 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
 	uid, err := k8sutil.CreatePod(kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
-		return "", maskAny(err)
+		return "", errors.WithStack(err)
 	}
 
 	return uid, nil
@@ -648,14 +656,14 @@ func (r *Resources) EnsurePods(cachedStatus inspector.Inspector) error {
 			}
 			spec := r.context.GetSpec()
 			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 		return nil
 	}
 
 	if err := iterator.ForeachServerGroup(createPodMember, &deploymentStatus); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	return nil

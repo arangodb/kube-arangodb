@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	v1 "k8s.io/api/core/v1"
@@ -85,7 +87,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 				ignoreNotFound := false
 				if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
-					return maskAny(err)
+					return errors.WithStack(err)
 				}
 			}
 			return nil
@@ -111,20 +113,64 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
-				if c, ok := k8sutil.GetContainerStatusByName(pod, k8sutil.ServerContainerName); ok {
-					if t := c.State.Terminated; t != nil {
-						log.Warn().Str("member", memberStatus.ID).
-							Str("pod", pod.GetName()).
-							Str("uid", string(pod.GetUID())).
-							Int32("exit-code", t.ExitCode).
-							Str("reason", t.Reason).
-							Str("message", t.Message).
-							Int32("signal", t.Signal).
-							Time("started", t.StartedAt.Time).
-							Time("finished", t.FinishedAt.Time).
-							Msgf("Pod failed in unexpected way")
+				if containers := k8sutil.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
+					for _, container := range containers {
+						switch container {
+						case api.ServerGroupReservedInitContainerNameVersionCheck:
+							if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
+								if t := c.State.Terminated; t != nil {
+									if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
+										memberStatus.Upgrade = true
+										updateMemberStatusNeeded = true
+									}
+								}
+							}
+						case api.ServerGroupReservedInitContainerNameUpgrade:
+							memberStatus.Conditions.Update(api.ConditionTypeUpgradeFailed, true, "Upgrade Failed", "")
+						}
+
+						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
+							if t := c.State.Terminated; t != nil {
+								if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
+									log.Warn().Str("member", memberStatus.ID).
+										Str("pod", pod.GetName()).
+										Str("container", container).
+										Str("uid", string(pod.GetUID())).
+										Int32("exit-code", t.ExitCode).
+										Str("reason", t.Reason).
+										Str("message", t.Message).
+										Int32("signal", t.Signal).
+										Time("started", t.StartedAt.Time).
+										Time("finished", t.FinishedAt.Time).
+										Msgf("Pod failed in unexpected way: Init Container failed")
+								}
+							}
+						}
 					}
 				}
+
+				if containers := k8sutil.GetFailedContainerNames(pod.Status.ContainerStatuses); len(containers) > 0 {
+					for _, container := range containers {
+						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, container); ok {
+							if t := c.State.Terminated; t != nil {
+								if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
+									log.Warn().Str("member", memberStatus.ID).
+										Str("pod", pod.GetName()).
+										Str("container", container).
+										Str("uid", string(pod.GetUID())).
+										Int32("exit-code", t.ExitCode).
+										Str("reason", t.Reason).
+										Str("message", t.Message).
+										Int32("signal", t.Signal).
+										Time("started", t.StartedAt.Time).
+										Time("finished", t.FinishedAt.Time).
+										Msgf("Pod failed in unexpected way: Core Container failed")
+								}
+							}
+						}
+					}
+				}
+
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Terminated to true: Pod Failed")
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
@@ -182,7 +228,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 
 		if updateMemberStatusNeeded {
 			if err := status.Members.Update(memberStatus, group); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 
@@ -202,7 +248,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 					case api.MemberPhaseNone:
 						// Do nothing
 						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
-					case api.MemberPhaseShuttingDown, api.MemberPhaseRotating, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
+					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
@@ -214,9 +260,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 							}
 							// Save it
 							if err := status.Members.Update(m, group); err != nil {
-								return maskAny(err)
+								return errors.WithStack(err)
 							}
 						}
+					case api.MemberPhaseRotating:
+						fallthrough
 					default:
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
@@ -239,7 +287,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 						if updateMemberNeeded {
 							// Save it
 							if err := status.Members.Update(m, group); err != nil {
-								return maskAny(err)
+								return errors.WithStack(err)
 							}
 						}
 					}
@@ -276,7 +324,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 
 	// Save status
 	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
-		return 0, maskAny(err)
+		return 0, errors.WithStack(err)
 	}
 
 	// Create events

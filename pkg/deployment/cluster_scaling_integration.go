@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -144,14 +146,14 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	log := ci.log
 	c, err := ci.depl.clientCache.GetDatabase(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	req, err := arangod.GetNumberOfServers(ctx, c.Connection())
 	if err != nil {
 		if expectSuccess {
 			log.Debug().Err(err).Msg("Failed to get number of servers")
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if req.Coordinators == nil && req.DBServers == nil {
 		// Nothing to check
@@ -191,7 +193,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	apiObject := ci.depl.apiObject
 	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(apiObject.Name, metav1.GetOptions{})
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	newSpec := current.Spec.DeepCopy()
 	if coordinatorsChanged {
@@ -211,7 +213,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	} else {
 		if err := ci.depl.updateCRSpec(*newSpec); err != nil {
 			log.Warn().Err(err).Msg("Failed to update current deployment")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -256,7 +258,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 			if expectSuccess {
 				log.Debug().Err(err).Msg("Failed to set number of servers")
 			}
-			return false, maskAny(err)
+			return false, errors.WithStack(err)
 		}
 	}
 
@@ -293,7 +295,7 @@ func (ci *clusterScalingIntegration) DisableScalingCluster() error {
 	// Turn off scaling DBservers and coordinators in arangoDB for the UI
 	ctx := context.Background()
 	if err := ci.depl.SetNumberOfServers(ctx, nil, nil); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	ci.scaleEnabled.enabled = false
@@ -310,7 +312,7 @@ func (ci *clusterScalingIntegration) EnableScalingCluster() error {
 	}
 
 	if err := ci.setNumberOfServers(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	ci.scaleEnabled.enabled = true
 	return nil

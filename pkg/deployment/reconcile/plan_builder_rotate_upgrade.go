@@ -248,7 +248,7 @@ func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.Dep
 		ToLicense:         specLicense,
 		UpgradeNeeded:     true,
 		UpgradeAllowed:    true,
-		AutoUpgradeNeeded: false,
+		AutoUpgradeNeeded: true,
 	}
 }
 
@@ -348,7 +348,9 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
-	var plan api.Plan
+	var plan = api.Plan{
+		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
+	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
 		plan = append(plan,
 			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()),
@@ -360,8 +362,9 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		)
 	}
 	plan = append(plan,
+		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
 		api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 	)
-	return plan
+	return withMaintenance(plan...)
 }

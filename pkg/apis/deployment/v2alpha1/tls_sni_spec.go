@@ -24,7 +24,7 @@ package v2alpha1
 
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // TLSSNISpec holds TLS SNI additional certificates
@@ -42,7 +42,7 @@ func (s TLSSNISpec) Validate() error {
 
 		for _, value := range values {
 			if _, exists := mapped[value]; exists {
-				return errors.Errorf("sni for host %s is already defined", value)
+				return errors.Newf("sni for host %s is already defined", value)
 			}
 
 			// Mark value as existing

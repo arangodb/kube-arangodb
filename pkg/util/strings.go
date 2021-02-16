@@ -24,6 +24,22 @@ package util
 
 import "fmt"
 
+func CompareStrings(a, b string) bool {
+	return a == b
+}
+
+func CompareStringPointers(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	return CompareStrings(*a, *b)
+}
+
 func CompareStringArray(a, b []string) bool {
 	if len(a) != len(b) {
 		return false

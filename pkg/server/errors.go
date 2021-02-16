@@ -23,17 +23,16 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 var (
-	maskAny           = errors.WithStack
-	NotFoundError     = fmt.Errorf("not found")
-	UnauthorizedError = fmt.Errorf("unauthorized")
+	NotFoundError     = errors.New("not found")
+	UnauthorizedError = errors.New("unauthorized")
 )
 
 func isNotFound(err error) bool {

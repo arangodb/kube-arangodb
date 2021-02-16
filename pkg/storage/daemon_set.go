@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	apps "k8s.io/api/apps/v1"
@@ -130,7 +132,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		if k8sutil.IsAlreadyExists(err) {
 			// Already exists, update it
 		} else {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	} else {
 		// We're done
@@ -146,7 +148,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		// Load current DS
 		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(ds.GetName(), meta.GetOptions{})
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 
 		// Update it
@@ -156,7 +158,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 			continue
 		} else if err != nil {
 			ls.deps.Log.Debug().Err(err).Msg("failed to patch DaemonSet spec")
-			return maskAny(fmt.Errorf("failed to patch DaemonSet spec: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch DaemonSet spec: %v", err))
 		} else {
 			// Update was a success
 			log.Debug().Msg("Updated DaemonSet")

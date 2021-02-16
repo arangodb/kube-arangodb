@@ -24,10 +24,13 @@ package reconcile
 
 import (
 	"context"
+	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	"github.com/pkg/errors"
+
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -59,7 +62,7 @@ type actionWaitForMemberUp struct {
 func (a *actionWaitForMemberUp) Start(ctx context.Context) (bool, error) {
 	ready, _, err := a.CheckProgress(ctx)
 	if err != nil {
-		return false, maskAny(err)
+		return false, errors.WithStack(err)
 	}
 	return ready, nil
 }
@@ -98,11 +101,11 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	return true, false, nil
 }
@@ -114,11 +117,11 @@ func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.
 	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	return true, false, nil
 }
@@ -130,10 +133,17 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 	clients, err := a.actionCtx.GetAgencyClients(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency clients")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 
-	if err := agency.AreAgentsHealthy(ctx, clients); err != nil {
+	for _, a := range clients {
+		a.Endpoints()
+	}
+
+	shortCtx, c := context.WithTimeout(ctx, 3*time.Second)
+	defer c()
+
+	if err := agency.AreAgentsHealthy(shortCtx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")
 		return false, false, nil
 	}
@@ -149,7 +159,7 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 	log := a.log
 	h, err := a.actionCtx.GetDeploymentHealth()
 	if err != nil {
-		return false, false, maskAny(errors.Wrapf(err, "failed to get cluster health"))
+		return false, false, errors.WithStack(errors.Wrapf(err, "failed to get cluster health"))
 	}
 	sh, found := h.Health[driver.ServerID(a.action.MemberID)]
 	if !found {
@@ -184,11 +194,11 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create arangosync client")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	if err := c.Health(ctx); err != nil {
 		log.Debug().Err(err).Msg("Health not ok yet")
-		return false, false, maskAny(err)
+		return false, false, errors.WithStack(err)
 	}
 	return true, false, nil
 }

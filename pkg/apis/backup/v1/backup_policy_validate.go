@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/robfig/cron"
 )
 
@@ -39,9 +39,9 @@ func (a *ArangoBackupPolicy) Validate() error {
 
 func (a *ArangoBackupPolicySpec) Validate() error {
 	if expr, err := cron.ParseStandard(a.Schedule); err != nil {
-		return fmt.Errorf("error while parsing expr: %s", err.Error())
+		return errors.Newf("error while parsing expr: %s", err.Error())
 	} else if expr.Next(time.Now()).IsZero() {
-		return fmt.Errorf("invalid schedule format")
+		return errors.Newf("invalid schedule format")
 	}
 
 	return nil

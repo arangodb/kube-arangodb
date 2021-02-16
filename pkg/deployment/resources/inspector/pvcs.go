@@ -23,7 +23,7 @@
 package inspector
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,7 +77,7 @@ func pvcsToMap(k kubernetes.Interface, namespace string) (map[string]*core.Persi
 	for _, pvc := range pvcs {
 		_, exists := pvcMap[pvc.GetName()]
 		if exists {
-			return nil, errors.Errorf("PersistentVolumeClaim %s already exists in map, error received", pvc.GetName())
+			return nil, errors.Newf("PersistentVolumeClaim %s already exists in map, error received", pvc.GetName())
 		}
 
 		pvcMap[pvc.GetName()] = pvcPointer(pvc)

@@ -23,7 +23,7 @@
 package inspector
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,7 +77,7 @@ func serviceAccountsToMap(k kubernetes.Interface, namespace string) (map[string]
 	for _, serviceAccount := range serviceAccounts {
 		_, exists := serviceAccountMap[serviceAccount.GetName()]
 		if exists {
-			return nil, errors.Errorf("ServiceAccount %s already exists in map, error received", serviceAccount.GetName())
+			return nil, errors.Newf("ServiceAccount %s already exists in map, error received", serviceAccount.GetName())
 		}
 
 		serviceAccountMap[serviceAccount.GetName()] = serviceAccountPointer(serviceAccount)

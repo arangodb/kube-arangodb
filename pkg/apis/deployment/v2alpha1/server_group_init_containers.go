@@ -25,19 +25,21 @@ package v2alpha1
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	core "k8s.io/api/core/v1"
 )
 
 const (
-	ServerGroupReservedInitContainerNameLifecycle = "init-lifecycle"
-	ServerGroupReservedInitContainerNameUUID      = "uuid"
-	ServerGroupReservedInitContainerNameUpgrade   = "upgrade"
+	ServerGroupReservedInitContainerNameLifecycle    = "init-lifecycle"
+	ServerGroupReservedInitContainerNameUUID         = "uuid"
+	ServerGroupReservedInitContainerNameUpgrade      = "upgrade"
+	ServerGroupReservedInitContainerNameVersionCheck = "version-check"
 )
 
 func IsReservedServerGroupInitContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade:
+	case ServerGroupReservedInitContainerNameLifecycle, ServerGroupReservedInitContainerNameUUID, ServerGroupReservedInitContainerNameUpgrade, ServerGroupReservedInitContainerNameVersionCheck:
 		return true
 	default:
 		return false
@@ -46,7 +48,7 @@ func IsReservedServerGroupInitContainerName(name string) bool {
 
 func ValidateServerGroupInitContainerName(name string) error {
 	if IsReservedServerGroupInitContainerName(name) {
-		return errors.Errorf("InitContainer name %s is restricted", name)
+		return errors.Newf("InitContainer name %s is restricted", name)
 	}
 
 	return sharedv1.AsKubernetesResourceName(&name).Validate()
@@ -71,7 +73,7 @@ func (s *ServerGroupInitContainerMode) Validate() error {
 	case ServerGroupInitContainerIgnoreMode, ServerGroupInitContainerUpdateMode:
 		return nil
 	default:
-		return errors.Errorf("Unknown serverGroupInitContainerMode %s", v)
+		return errors.Newf("Unknown serverGroupInitContainerMode %s", v)
 	}
 }
 

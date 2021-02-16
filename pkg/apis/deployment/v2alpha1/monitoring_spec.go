@@ -24,6 +24,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -40,7 +41,7 @@ func (s MonitoringSpec) GetTokenSecretName() string {
 // Validate the given spec
 func (s MonitoringSpec) Validate() error {
 	if err := k8sutil.ValidateOptionalResourceName(s.GetTokenSecretName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

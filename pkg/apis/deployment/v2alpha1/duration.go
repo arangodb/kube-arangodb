@@ -25,7 +25,7 @@ package v2alpha1
 import (
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Duration is a period of time, specified in go time.Duration format.
@@ -37,7 +37,7 @@ type Duration string
 func (d Duration) Validate() error {
 	if d != "" {
 		if _, err := time.ParseDuration(string(d)); err != nil {
-			return maskAny(errors.Wrapf(ValidationError, "Invalid duration: '%s': %s", string(d), err.Error()))
+			return errors.WithStack(errors.Wrapf(ValidationError, "Invalid duration: '%s': %s", string(d), err.Error()))
 		}
 	}
 	return nil

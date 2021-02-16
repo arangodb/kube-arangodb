@@ -25,6 +25,8 @@ package operator
 import (
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/server"
 )
 
@@ -58,7 +60,7 @@ func (o *Operator) GetDeployment(name string) (server.Deployment, error) {
 			return d, nil
 		}
 	}
-	return nil, maskAny(server.NotFoundError)
+	return nil, errors.WithStack(server.NotFoundError)
 }
 
 // DeploymentReplicationOperator provides access to the deployment replication operator.
@@ -91,7 +93,7 @@ func (o *Operator) GetDeploymentReplication(name string) (server.DeploymentRepli
 			return d, nil
 		}
 	}
-	return nil, maskAny(server.NotFoundError)
+	return nil, errors.WithStack(server.NotFoundError)
 }
 
 // StorageOperator provides the local storage operator (if any)
@@ -124,5 +126,5 @@ func (o *Operator) GetLocalStorage(name string) (server.LocalStorage, error) {
 			return ls, nil
 		}
 	}
-	return nil, maskAny(server.NotFoundError)
+	return nil, errors.WithStack(server.NotFoundError)
 }

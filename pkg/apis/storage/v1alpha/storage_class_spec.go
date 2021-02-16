@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -36,7 +37,7 @@ type StorageClassSpec struct {
 // problems or nil if all ok.
 func (s StorageClassSpec) Validate() error {
 	if err := k8sutil.ValidateResourceName(s.Name); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

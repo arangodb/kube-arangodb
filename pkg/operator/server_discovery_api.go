@@ -25,6 +25,8 @@ package operator
 import (
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -104,7 +106,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		}
 		result, err := o.Dependencies.KubeCli.CoreV1().Nodes().List(metav1.ListOptions{})
 		if err != nil {
-			return v1.NodeList{}, maskAny(err)
+			return v1.NodeList{}, errors.WithStack(err)
 		}
 		return *result, nil
 	}

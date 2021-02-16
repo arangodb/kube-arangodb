@@ -26,13 +26,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	"github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
@@ -129,6 +129,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval, cachedStatus inspector.Inspector) (nextInterval util.Interval, inspectError error) {
 	t := time.Now()
+
 	defer func() {
 		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
 	}()
@@ -154,6 +155,13 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
+	// Cleanup terminated pods on the beginning of loop
+	if x, err := d.resources.CleanupTerminatedPods(cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Pod cleanup failed")
+	} else {
+		nextInterval = nextInterval.ReduceTo(x)
+	}
+
 	if err := d.resources.EnsureSecrets(d.deps.Log, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
@@ -174,7 +182,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 	// Is the deployment in a good state?
 	if status.Conditions.IsTrue(api.ConditionTypeSecretsChanged) {
-		return minInspectionInterval, errors.Errorf("Secrets changed")
+		return minInspectionInterval, errors.Newf("Secrets changed")
 	}
 
 	// Ensure we have image info

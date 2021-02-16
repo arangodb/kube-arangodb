@@ -23,9 +23,10 @@
 package v2alpha1
 
 import (
-	"fmt"
 	"net"
 	"net/url"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -75,17 +76,17 @@ func (s ExternalAccessSpec) HasAdvertisedEndpoint() bool {
 // Validate the given spec
 func (s ExternalAccessSpec) Validate() error {
 	if err := s.GetType().Validate(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if s.AdvertisedEndpoint != nil {
 		ep := s.GetAdvertisedEndpoint()
 		if _, err := url.Parse(ep); err != nil {
-			return maskAny(fmt.Errorf("Failed to parse advertised endpoint '%s': %s", ep, err))
+			return errors.WithStack(errors.Newf("Failed to parse advertised endpoint '%s': %s", ep, err))
 		}
 	}
 	for _, x := range s.LoadBalancerSourceRanges {
 		if _, _, err := net.ParseCIDR(x); err != nil {
-			return maskAny(fmt.Errorf("Failed to parse loadbalancer source range '%s': %s", x, err))
+			return errors.WithStack(errors.Newf("Failed to parse loadbalancer source range '%s': %s", x, err))
 		}
 	}
 	return nil

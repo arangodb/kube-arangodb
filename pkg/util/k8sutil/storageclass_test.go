@@ -23,8 +23,9 @@
 package k8sutil
 
 import (
-	"errors"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/stretchr/testify/require"

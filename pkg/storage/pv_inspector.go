@@ -25,6 +25,8 @@ package storage
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,7 +38,7 @@ func (ls *LocalStorage) inspectPVs() (int, error) {
 	log := ls.deps.Log
 	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
 	if err != nil {
-		return 0, maskAny(err)
+		return 0, errors.WithStack(err)
 	}
 	spec := ls.apiObject.Spec
 	availableVolumes := 0

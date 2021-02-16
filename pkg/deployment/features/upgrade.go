@@ -17,13 +17,23 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
-package reconcile
+package features
 
-import "github.com/pkg/errors"
+func init() {
+	registerFeature(upgradeVersionCheck)
+}
 
-var (
-	maskAny = errors.WithStack
-)
+var upgradeVersionCheck Feature = &feature{
+	name:               "upgrade-version-check",
+	description:        "Enable initContainer with pre version check",
+	version:            "3.5.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
+func UpgradeVersionCheck() Feature {
+	return upgradeVersionCheck
+}

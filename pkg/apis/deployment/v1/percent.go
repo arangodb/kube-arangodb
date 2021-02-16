@@ -23,7 +23,7 @@
 package v1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Percent is a percentage between 0 and 100.
@@ -32,7 +32,7 @@ type Percent int
 // Validate the given percentage.
 func (p Percent) Validate() error {
 	if p < 0 || p > 100 {
-		return maskAny(errors.Wrapf(ValidationError, "Percentage must be between 0 and 100, got %d", int(p)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Percentage must be between 0 and 100, got %d", int(p)))
 	}
 	return nil
 }

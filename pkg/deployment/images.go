@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
@@ -89,7 +91,7 @@ func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, bool, 
 		KubeCli:   d.deps.KubeCli,
 		UpdateCRStatus: func(status api.DeploymentStatus) error {
 			if err := d.UpdateStatus(status, lastVersion); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			return nil
 		},
@@ -97,7 +99,7 @@ func (d *Deployment) ensureImages(apiObject *api.ArangoDeployment) (bool, bool, 
 	ctx := context.Background()
 	retrySoon, exists, err := ib.Run(ctx)
 	if err != nil {
-		return retrySoon, exists, maskAny(err)
+		return retrySoon, exists, errors.WithStack(err)
 	}
 	return retrySoon, exists, nil
 }
@@ -111,7 +113,7 @@ func (ib *imagesBuilder) Run(ctx context.Context) (bool, bool, error) {
 		// We need to find the image ID for the ArangoDB image
 		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, ib.Spec.GetImage())
 		if err != nil {
-			return retrySoon, false, maskAny(err)
+			return retrySoon, false, errors.WithStack(err)
 		}
 		return retrySoon, false, nil
 	}
@@ -189,7 +191,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		ib.Status.Images.AddOrUpdate(info)
 		if err := ib.UpdateCRStatus(ib.Status); err != nil {
 			log.Warn().Err(err).Msg("Failed to save Image Info in CR status")
-			return true, maskAny(err)
+			return true, errors.WithStack(err)
 		}
 		// We're done
 		log.Debug().
@@ -215,12 +217,12 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 	pod, err := resources.RenderArangoPod(ib.APIObject, role, id, podName, args, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
-		return true, maskAny(err)
+		return true, errors.WithStack(err)
 	}
 
 	if _, err := resources.CreateArangoPod(ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod); err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
-		return true, maskAny(err)
+		return true, errors.WithStack(err)
 	}
 	// Come back soon to inspect the pod
 	return true, nil

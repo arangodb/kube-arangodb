@@ -24,9 +24,10 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
@@ -114,7 +115,7 @@ func (c *pvCleaner) cleanFirst() (bool, error) {
 
 	// Do actual cleaning
 	if err := c.clean(*first); err != nil {
-		return true, maskAny(err)
+		return true, errors.WithStack(err)
 	}
 
 	// Remove first from list
@@ -134,19 +135,19 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 	// Find local path
 	localSource := pv.Spec.PersistentVolumeSource.Local
 	if localSource == nil {
-		return maskAny(fmt.Errorf("PersistentVolume has no local source"))
+		return errors.WithStack(errors.Newf("PersistentVolume has no local source"))
 	}
 	localPath := localSource.Path
 
 	// Find client that serves the node
 	nodeName := pv.GetAnnotations()[nodeNameAnnotation]
 	if nodeName == "" {
-		return maskAny(fmt.Errorf("PersistentVolume has no node-name annotation"))
+		return errors.WithStack(errors.Newf("PersistentVolume has no node-name annotation"))
 	}
 	client, err := c.clientGetter(nodeName)
 	if err != nil {
 		log.Debug().Err(err).Str("node", nodeName).Msg("Failed to get client for node")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Clean volume through client
@@ -156,7 +157,7 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 			Str("node", nodeName).
 			Str("local-path", localPath).
 			Msg("Failed to remove local path")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Remove persistent volume
@@ -164,7 +165,7 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 		log.Debug().Err(err).
 			Str("name", pv.GetName()).
 			Msg("Failed to remove PersistentVolume")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	return nil

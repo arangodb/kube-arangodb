@@ -24,8 +24,9 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -74,15 +75,15 @@ func (r *Resources) fetchDeploymentHealth() error {
 	defer cancel()
 	client, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	c, err := client.Cluster(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	h, err := c.Health(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Save cluster health
@@ -99,7 +100,7 @@ func (r *Resources) GetDeploymentHealth() (driver.ClusterHealth, error) {
 	r.health.mutex.Lock()
 	defer r.health.mutex.Unlock()
 	if r.health.timestamp.IsZero() {
-		return driver.ClusterHealth{}, fmt.Errorf("No cluster health available")
+		return driver.ClusterHealth{}, errors.Newf("No cluster health available")
 	}
 
 	newhealth := r.health.clusterHealth

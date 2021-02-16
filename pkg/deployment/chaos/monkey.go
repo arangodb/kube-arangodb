@@ -26,6 +26,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -75,7 +77,7 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 func (m Monkey) killRandomPod() error {
 	pods, err := m.context.GetOwnedPods()
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if len(pods) <= 1 {
 		// Not enough pods
@@ -84,7 +86,7 @@ func (m Monkey) killRandomPod() error {
 	p := pods[rand.Intn(len(pods))]
 	m.log.Info().Str("pod-name", p.GetName()).Msg("Killing pod")
 	if err := m.context.DeletePod(p.GetName()); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

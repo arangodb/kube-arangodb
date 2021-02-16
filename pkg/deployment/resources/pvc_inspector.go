@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	v1 "k8s.io/api/core/v1"
 
@@ -70,7 +72,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspector.Insp
 				ignoreNotFound := false
 				if err := k8sutil.RemovePVCFinalizers(log, kubecli, pvc, pvc.GetFinalizers(), ignoreNotFound); err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
-					return maskAny(err)
+					return errors.WithStack(err)
 				}
 			}
 			return nil

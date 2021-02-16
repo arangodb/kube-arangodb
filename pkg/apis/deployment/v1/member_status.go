@@ -69,8 +69,12 @@ type MemberStatus struct {
 	ImageID string `json:"image-id,omitempty"`
 	// Image holds image details
 	Image *ImageInfo `json:"image,omitempty"`
+	// OldImage holds old image defails
+	OldImage *ImageInfo `json:"old-image,omitempty"`
 	// Upgrade define if upgrade should be enforced during next execution
 	Upgrade bool `json:"upgrade,omitempty"`
+	// Endpoint definition how member should be reachable
+	Endpoint *string `json:"endpoint,omitempty"`
 }
 
 // Equal checks for equality
@@ -87,7 +91,9 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.ArangoVersion == other.ArangoVersion &&
 		s.ImageID == other.ImageID &&
 		s.Image.Equal(other.Image) &&
-		s.Upgrade == other.Upgrade
+		s.OldImage.Equal(other.OldImage) &&
+		s.Upgrade == other.Upgrade &&
+		util.CompareStringPointers(s.Endpoint, other.Endpoint)
 }
 
 // Age returns the duration since the creation timestamp of this member.
@@ -113,6 +119,14 @@ func (s *MemberStatus) RemoveTerminationsBefore(timestamp time.Time) int {
 			return removed
 		}
 	}
+}
+
+func (s *MemberStatus) GetEndpoint(defaultEndpoint string) string {
+	if s == nil || s.Endpoint == nil {
+		return defaultEndpoint
+	}
+
+	return *s.Endpoint
 }
 
 // RecentTerminationsSince returns the number of terminations since the given timestamp.

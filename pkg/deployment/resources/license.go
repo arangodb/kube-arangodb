@@ -24,7 +24,7 @@ package resources
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
@@ -39,11 +39,11 @@ func (r *Resources) ValidateLicenseKeySecret(cachedStatus inspector.Inspector) e
 		s, exists := cachedStatus.Secret(secretName)
 
 		if !exists {
-			return errors.Errorf("License secret %s does not exist", s)
+			return errors.Newf("License secret %s does not exist", s)
 		}
 
 		if _, ok := s.Data[constants.SecretKeyToken]; !ok {
-			return errors.Errorf("Invalid secret format")
+			return errors.Newf("Invalid secret format")
 		}
 	}
 

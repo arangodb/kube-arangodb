@@ -26,6 +26,8 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
@@ -42,7 +44,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	// Endpoint
 	source, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	// Authentication
@@ -51,7 +53,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	tlsAuth := tasks.TLSAuthentication{}
 	clientAuthKeyfileSecretName, userSecretName, authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	username := ""
 	password := ""
@@ -60,22 +62,22 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		var err error
 		username, password, err = k8sutil.GetBasicAuthSecret(secrets, userSecretName)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	} else if authJWTSecretName != "" {
 		var err error
 		jwtSecret, err = k8sutil.GetTokenSecret(secrets, authJWTSecretName)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 	} else if clientAuthKeyfileSecretName != "" {
 		keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		kf, err := certificates.NewKeyfile(keyFileContent)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		tlsAuth.TLSClientAuthentication = tasks.TLSClientAuthentication{
 			ClientCertificate: kf.EncodeCertificates(),
@@ -85,7 +87,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	if tlsCASecretName != "" {
 		caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		tlsAuth.CACertificate = caCert
 	}
@@ -96,7 +98,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	// Create client
 	c, err := dr.clientCache.GetClient(log, source, auth, insecureSkipVerify)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -109,9 +111,9 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
-		dnsName := k8sutil.CreateSyncMasterClientServiceDNSName(depl)
+		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.Spec.ClusterDomain)
 		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoSyncMasterPort))}, nil
 	}
 	return client.Endpoint(epSpec.MasterEndpoint), nil
@@ -123,24 +125,24 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	// Fetch secret names of source
 	clientAuthKeyfileSecretName, _, _, tlsCASecretName, err := dr.getEndpointSecretNames(spec.Source)
 	if err != nil {
-		return client.TLSAuthentication{}, maskAny(err)
+		return client.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Fetch keyfile
 	secrets := dr.deps.KubeCli.CoreV1().Secrets(dr.apiObject.GetNamespace())
 	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 	if err != nil {
-		return client.TLSAuthentication{}, maskAny(err)
+		return client.TLSAuthentication{}, errors.WithStack(err)
 	}
 	kf, err := certificates.NewKeyfile(keyFileContent)
 	if err != nil {
-		return client.TLSAuthentication{}, maskAny(err)
+		return client.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Fetch TLS CA certificate for source
 	caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
 	if err != nil {
-		return client.TLSAuthentication{}, maskAny(err)
+		return client.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Create authentication
@@ -168,7 +170,7 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
-			return "", "", "", "", maskAny(err)
+			return "", "", "", "", errors.WithStack(err)
 		}
 		return clientAuthCertKeyfileSecretName, userSecretName, depl.Spec.Sync.Authentication.GetJWTSecretName(), depl.Spec.Sync.TLS.GetCASecretName(), nil
 	}

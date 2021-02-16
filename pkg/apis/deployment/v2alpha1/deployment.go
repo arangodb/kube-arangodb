@@ -24,6 +24,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,22 +75,22 @@ func (d *ArangoDeployment) ForeachServerGroup(cb ServerGroupFunc, status *Deploy
 		status = &d.Status
 	}
 	if err := cb(ServerGroupAgents, d.Spec.Agents, &status.Members.Agents); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupSingle, d.Spec.Single, &status.Members.Single); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupDBServers, d.Spec.DBServers, &status.Members.DBServers); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupCoordinators, d.Spec.Coordinators, &status.Members.Coordinators); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupSyncMasters, d.Spec.SyncMasters, &status.Members.SyncMasters); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := cb(ServerGroupSyncWorkers, d.Spec.SyncWorkers, &status.Members.SyncWorkers); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

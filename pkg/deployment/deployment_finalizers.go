@@ -25,6 +25,8 @@ package deployment
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/rs/zerolog"
@@ -56,7 +58,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
 	updated, err := depls.Get(d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	for _, f := range updated.ObjectMeta.GetFinalizers() {
 		switch f {
@@ -73,7 +75,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	if len(removalList) > 0 {
 		if err := removeDeploymentFinalizers(log, d.deps.DatabaseCRCli, updated, removalList); err != nil {
 			log.Debug().Err(err).Msg("Failed to update ArangoDeployment (to remove finalizers)")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -83,10 +85,10 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 // It returns nil if the finalizer can be removed.
 func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerolog.Logger, depl *api.ArangoDeployment, cachedStatus inspector.Inspector) error {
 	if err := d.removePodFinalizers(cachedStatus); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if err := d.removePVCFinalizers(cachedStatus); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -98,7 +100,7 @@ func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, dep
 	getFunc := func() (metav1.Object, error) {
 		result, err := depls.Get(depl.GetName(), metav1.GetOptions{})
 		if err != nil {
-			return nil, maskAny(err)
+			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
@@ -106,14 +108,14 @@ func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, dep
 		updatedDepl := updated.(*api.ArangoDeployment)
 		result, err := depls.Update(updatedDepl)
 		if err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		*depl = *result
 		return nil
 	}
 	ignoreNotFound := false
 	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

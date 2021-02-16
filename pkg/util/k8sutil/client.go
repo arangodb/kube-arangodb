@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -65,11 +67,11 @@ func NewKubeConfig() (*rest.Config, error) {
 func NewKubeClient() (kubernetes.Interface, error) {
 	cfg, err := NewKubeConfig()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	c, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -87,11 +89,11 @@ func MustNewKubeClient() kubernetes.Interface {
 func NewKubeExtClient() (apiextensionsclient.Interface, error) {
 	cfg, err := NewKubeConfig()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	c, err := apiextensionsclient.NewForConfig(cfg)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
@@ -99,11 +101,11 @@ func NewKubeExtClient() (apiextensionsclient.Interface, error) {
 func NewKubeMonitoringV1Client() (monitoringClient.MonitoringV1Interface, error) {
 	cfg, err := NewKubeConfig()
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	c, err := monitoringClient.NewForConfig(cfg)
 	if err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }

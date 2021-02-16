@@ -23,7 +23,7 @@
 package v2alpha1
 
 import (
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -57,21 +57,21 @@ func (s SyncSpec) HasSyncImage() bool {
 // Validate the given spec
 func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.IsEnabled() && !mode.SupportsSync() {
-		return maskAny(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Cannot enable sync with mode: '%s'", mode))
 	}
 	if s.IsEnabled() {
 		if err := s.ExternalAccess.Validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if err := s.Authentication.Validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if err := s.TLS.Validate(); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	if err := s.Monitoring.Validate(); err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }

@@ -62,7 +62,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -114,7 +114,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: true,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgsWithUpgrade(input)
 		assert.Equal(t,
@@ -123,6 +123,60 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc:8529",
 				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc:8529",
 				"--cluster.my-address=ssl://name-dbserver-id1.name-int.ns.svc:8529",
+				"--cluster.my-role=PRIMARY",
+				"--database.auto-upgrade=true",
+				"--database.directory=/data",
+				"--foxx.queues=false",
+				"--log.level=INFO",
+				"--log.output=+",
+				"--server.authentication=true",
+				"--server.endpoint=ssl://[::]:8529",
+				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.statistics=true",
+				"--server.storage-engine=rocksdb",
+				"--ssl.ecdh-curve=",
+				"--ssl.keyfile=/secrets/tls/tls.keyfile",
+			},
+			cmdline,
+		)
+	}
+
+	// Default+ClusterDomain deployment
+	{
+		apiObject := &api.ArangoDeployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "name",
+				Namespace: "ns",
+			},
+			Spec: api.DeploymentSpec{
+				Mode:          api.NewMode(api.DeploymentModeCluster),
+				ClusterDomain: util.NewString("cluster.local"),
+			},
+		}
+		apiObject.Spec.SetDefaults("test")
+		agents := api.MemberStatusList{
+			api.MemberStatus{ID: "a1"},
+			api.MemberStatus{ID: "a2"},
+			api.MemberStatus{ID: "a3"},
+		}
+		input := pod.Input{
+			ApiObject:   apiObject,
+			Deployment:  apiObject.Spec,
+			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:       api.ServerGroupDBServers,
+			GroupSpec:   apiObject.Spec.DBServers,
+			Version:     "",
+			Enterprise:  false,
+			AutoUpgrade: true,
+			Member:      api.MemberStatus{ID: "id1"},
+		}
+		cmdline := createArangodArgsWithUpgrade(input)
+		assert.Equal(t,
+			[]string{
+				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc.cluster.local:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a2.name-int.ns.svc.cluster.local:8529",
+				"--cluster.agency-endpoint=ssl://name-agent-a3.name-int.ns.svc.cluster.local:8529",
+				"--cluster.my-address=ssl://name-dbserver-id1.name-int.ns.svc.cluster.local:8529",
 				"--cluster.my-role=PRIMARY",
 				"--database.auto-upgrade=true",
 				"--database.directory=/data",
@@ -170,7 +224,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -221,7 +275,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,
@@ -274,7 +328,7 @@ func TestCreateArangodArgsDBServer(t *testing.T) {
 			Version:     "",
 			Enterprise:  false,
 			AutoUpgrade: false,
-			ID:          "id1",
+			Member:      api.MemberStatus{ID: "id1"},
 		}
 		cmdline := createArangodArgs(input)
 		assert.Equal(t,

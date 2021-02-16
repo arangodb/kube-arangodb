@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/rs/zerolog"
@@ -76,7 +78,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 			if err != nil {
 				log.Debug().Err(err).
 					Msg("Failed to start action")
-				return false, maskAny(err)
+				return false, errors.WithStack(err)
 			}
 			{ // action.Start may have changed status, so reload it.
 				status, lastVersion := d.context.GetStatus()
@@ -96,7 +98,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 				// Save plan update
 				if err := d.context.UpdateStatus(status, lastVersion, true); err != nil {
 					log.Debug().Err(err).Msg("Failed to update CR status")
-					return false, maskAny(err)
+					return false, errors.WithStack(err)
 				}
 			}
 			log.Debug().Bool("ready", ready).Msg("Action Start completed")
@@ -107,7 +109,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 			ready, abort, err := action.CheckProgress(ctx)
 			if err != nil {
 				log.Debug().Err(err).Msg("Failed to check action progress")
-				return false, maskAny(err)
+				return false, errors.WithStack(err)
 			}
 			if ready {
 				{ // action.CheckProgress may have changed status, so reload it.
@@ -121,7 +123,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 					// Save plan update
 					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
-						return false, maskAny(err)
+						return false, errors.WithStack(err)
 					}
 				}
 			}
@@ -150,7 +152,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 					status.Plan = api.Plan{}
 					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
-						return false, maskAny(err)
+						return false, errors.WithStack(err)
 					}
 					return true, nil
 				}

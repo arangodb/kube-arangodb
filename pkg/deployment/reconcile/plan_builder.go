@@ -24,8 +24,9 @@ package reconcile
 
 import (
 	goContext "context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -85,7 +86,7 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Insp
 	status.Plan = newPlan
 
 	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
-		return maskAny(err), false
+		return errors.WithStack(err), false
 	}
 	return nil, true
 }
@@ -101,7 +102,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 
 		return agency.GetAgencyCollections(agencyCtx, context.GetAgencyData)
 	} else {
-		return nil, fmt.Errorf("not able to read from agency when agency is down")
+		return nil, errors.Newf("not able to read from agency when agency is down")
 	}
 }
 
@@ -112,7 +113,6 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspector.Inspector,
 	builderCtx PlanBuilderContext) (api.Plan, bool) {
-
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
 		return currentPlan, false
@@ -299,6 +299,8 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Msg("Creating rotation plan")
 	plan := api.Plan{
+		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
+		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
 		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
@@ -310,6 +312,11 @@ type planBuilder func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan
+
+type planBuilderCondition func(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspector.Inspector, context PlanBuilderContext) bool
 
 type planBuilderSubPlan func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -333,6 +340,7 @@ func NewWithPlanBuilder(ctx context.Context,
 
 type WithPlanBuilder interface {
 	Apply(p planBuilder) api.Plan
+	ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan
 	ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan
 }
 
@@ -344,6 +352,14 @@ type withPlanBuilder struct {
 	status       api.DeploymentStatus
 	cachedStatus inspector.Inspector
 	context      PlanBuilderContext
+}
+
+func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan {
+	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context) {
+		return api.Plan{}
+	}
+
+	return w.Apply(p)
 }
 
 func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {

@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -34,7 +36,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -80,16 +82,16 @@ func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []b
 
 func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 	if len(keyfile.Data) == 0 {
-		return "", nil, errors.Errorf("Current encryption key is not valid - missing data section")
+		return "", nil, errors.Newf("Current encryption key is not valid - missing data section")
 	}
 
 	d, ok := keyfile.Data[constants.SecretEncryptionKey]
 	if !ok {
-		return "", nil, errors.Errorf("Current encryption key is not valid - missing field")
+		return "", nil, errors.Newf("Current encryption key is not valid - missing field")
 	}
 
 	if len(d) != 32 {
-		return "", nil, errors.Errorf("Current encryption key is not valid")
+		return "", nil, errors.Newf("Current encryption key is not valid")
 	}
 
 	sha := fmt.Sprintf("%0x", sha256.Sum256(d))
@@ -164,7 +166,7 @@ func (e encryption) Verify(i Input, cachedStatus inspector.Inspector) error {
 	if !MultiFileMode(i) {
 		secret, exists := cachedStatus.Secret(i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		if !exists {
-			return errors.Errorf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
+			return errors.Newf("Encryption key secret does not exist %s", i.Deployment.RocksDB.Encryption.GetKeySecretName())
 		}
 
 		if err := k8sutil.ValidateEncryptionKeyFromSecret(secret); err != nil {

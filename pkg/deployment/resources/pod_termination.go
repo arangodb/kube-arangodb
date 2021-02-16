@@ -24,8 +24,9 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +63,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get node for member")
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if node.Spec.Unschedulable {
 			agentDataWillBeGone = true
 		}
@@ -73,7 +74,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
 		agentDataWillBeGone = true
@@ -93,21 +94,21 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	agencyConns, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if len(agencyConns) == 0 {
 		log.Debug().Err(err).Msg("No more remaining agents, we cannot delete this one")
-		return maskAny(fmt.Errorf("No more remaining agents"))
+		return errors.WithStack(errors.Newf("No more remaining agents"))
 	}
 	if err := agency.AreAgentsHealthy(ctx, agencyConns); err != nil {
 		log.Debug().Err(err).Msg("Remaining agents are not healthy")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	// Complete agent recovery is needed, since data is already gone or not accessible
 	if memberStatus.Conditions.Update(api.ConditionTypeAgentRecoveryNeeded, true, "Data Gone", "") {
 		if err := updateMember(memberStatus); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	}
 	log.Debug().Msg("Agent is ready to be completely recovered.")
@@ -156,7 +157,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
 			log.Warn().Err(err).Msg("Failed to get node for member")
-			return maskAny(err)
+			return errors.WithStack(err)
 		} else if node.Spec.Unschedulable {
 			if !r.context.GetSpec().IsNetworkAttachedVolumes() || !resignJobAvailable {
 				dbserverDataWillBeGone = true
@@ -169,7 +170,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if k8sutil.IsPersistentVolumeClaimMarkedForDeletion(pvc) {
 		dbserverDataWillBeGone = true
@@ -190,7 +191,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	c, err := r.context.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	cluster, err := c.Cluster(ctx)
 	if err != nil {
@@ -203,17 +204,17 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 				}
 			}
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	cleanedOut, err := cluster.IsCleanedOut(ctx, memberStatus.ID)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	if cleanedOut {
 		// Cleanout completed
 		if memberStatus.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
 			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 		}
 		log.Debug().Msg("DBServer is cleaned out.")
@@ -236,7 +237,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 
 		if err := updateMember(memberStatus); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		return nil
 	}
@@ -249,14 +250,14 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			log.Debug().Msg("Server is not yet cleaned out. Triggering a clean out now")
 			if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
 				log.Debug().Err(err).Msg("Failed to clean out server")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			memberStatus.Phase = api.MemberPhaseDrain
 		} else {
 			log.Debug().Msg("Temporary shutdown, resign leadership")
 			if err := cluster.ResignServer(ctx, memberStatus.ID); err != nil {
 				log.Debug().Err(err).Msg("Failed to resign server")
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			memberStatus.Phase = api.MemberPhaseResign
 		}
@@ -264,19 +265,19 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		memberStatus.CleanoutJobID = jobID
 
 		if err := updateMember(memberStatus); err != nil {
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 	} else if memberStatus.Phase == api.MemberPhaseDrain {
 		// Check the job progress
 		agency, err := r.context.GetAgency(ctx)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch job status")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Job failed")
@@ -284,7 +285,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
 			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			log.Error().Msg("Cleanout/Resign server job failed, continue anyway")
 			return nil
@@ -298,12 +299,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		agency, err := r.context.GetAgency(ctx)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch job status")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Resign Job failed")
@@ -311,7 +312,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			memberStatus.Phase = api.MemberPhaseCreated
 			memberStatus.CleanoutJobID = ""
 			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			log.Error().Msg("Cleanout/Resign server job failed, continue anyway")
 			return nil
@@ -321,12 +322,12 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			memberStatus.CleanoutJobID = ""
 			memberStatus.Phase = api.MemberPhaseCreated
 			if err := updateMember(memberStatus); err != nil {
-				return maskAny(err)
+				return errors.WithStack(err)
 			}
 			return nil
 		}
 	}
 
-	return maskAny(fmt.Errorf("Server is not yet cleaned out"))
+	return errors.WithStack(errors.Newf("Server is not yet cleaned out"))
 
 }

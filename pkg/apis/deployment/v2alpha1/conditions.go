@@ -63,6 +63,8 @@ const (
 	ConditionTypeUpToDate ConditionType = "UpToDate"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
+	// ConditionTypeUpgradeFailed indicates that mem
+	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

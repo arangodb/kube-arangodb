@@ -25,7 +25,7 @@ package v1
 import (
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // StorageEngine specifies the type of storage engine used by the cluster
@@ -45,7 +45,7 @@ func (se StorageEngine) Validate() error {
 	case StorageEngineMMFiles, StorageEngineRocksDB:
 		return nil
 	default:
-		return maskAny(errors.Wrapf(ValidationError, "Unknown storage engine: '%s'", string(se)))
+		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown storage engine: '%s'", string(se)))
 	}
 }
 

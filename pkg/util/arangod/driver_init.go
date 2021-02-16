@@ -24,7 +24,7 @@ package arangod
 
 import (
 	driver "github.com/arangodb/go-driver"
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func init() {

@@ -27,8 +27,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	"github.com/arangodb/go-driver"
-	"github.com/pkg/errors"
+
 	"github.com/stretchr/testify/require"
 )
 

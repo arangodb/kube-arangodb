@@ -24,10 +24,12 @@ package deployment
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"k8s.io/apimachinery/pkg/types"
@@ -118,7 +120,7 @@ type Deployment struct {
 	inspectTrigger            trigger.Trigger
 	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
-	clientCache               *clientCache
+	clientCache               deploymentClient.Cache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
@@ -132,7 +134,7 @@ type Deployment struct {
 // New creates a new Deployment from the given API object.
 func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*Deployment, error) {
 	if err := apiObject.Spec.Validate(); err != nil {
-		return nil, maskAny(err)
+		return nil, errors.WithStack(err)
 	}
 
 	d := &Deployment{
@@ -143,7 +145,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:    make(chan struct{}),
 	}
 
-	d.clientCache = newClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
@@ -303,7 +305,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	specBefore := d.apiObject.Spec
@@ -338,7 +340,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 
 	// Save updated spec
 	if err := d.updateCRSpec(newAPIObject.Spec, true); err != nil {
-		return maskAny(fmt.Errorf("failed to update ArangoDeployment spec: %v", err))
+		return errors.WithStack(errors.Newf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
 	{
@@ -350,7 +352,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 		}
 		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
 		if err := d.UpdateStatus(status, lastVersion); err != nil {
-			return maskAny(fmt.Errorf("failed to update ArangoDeployment status: %v", err))
+			return errors.WithStack(errors.Newf("failed to update ArangoDeployment status: %v", err))
 		}
 	}
 
@@ -409,7 +411,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 		}
 		if err != nil {
 			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment status")
-			return maskAny(fmt.Errorf("failed to patch ArangoDeployment status: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment status: %v", err))
 		}
 	}
 }
@@ -453,7 +455,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 		}
 		if err != nil {
 			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment spec")
-			return maskAny(fmt.Errorf("failed to patch ArangoDeployment spec: %v", err))
+			return errors.WithStack(errors.Newf("failed to patch ArangoDeployment spec: %v", err))
 		}
 	}
 }
@@ -501,12 +503,12 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
 	c, err := d.clientCache.GetDatabase(ctx)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 
 	err = arangod.SetNumberOfServers(ctx, c.Connection(), noCoordinators, noDBServers)
 	if err != nil {
-		return maskAny(err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
