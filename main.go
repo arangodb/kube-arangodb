@@ -70,6 +70,8 @@ import (
 const (
 	defaultServerHost           = "0.0.0.0"
 	defaultServerPort           = 8528
+	defaultMetricsServerPort    = 9000
+	defaultHealthServerPort     = 9001
 	defaultLogLevel             = "debug"
 	defaultAdminSecretName      = "arangodb-operator-dashboard"
 	defaultAlpineImage          = "alpine:3.7"
@@ -92,10 +94,21 @@ var (
 		Run: cmdMainRun,
 	}
 
-	logLevels     []string
-	cliLog        = logging.NewRootLogger()
-	logService    logging.Service
+	logLevels           []string
+	cliLog              = logging.NewRootLogger()
+	logService          logging.Service
+	healthServerOptions struct {
+		host string
+		port int
+	}
+	metricServerOptions struct {
+		enabled       bool
+		host          string
+		port          int
+		tlsSecretName string
+	}
 	serverOptions struct {
+		enabled         bool
 		host            string
 		port            int
 		tlsSecretName   string
@@ -128,9 +141,19 @@ func init() {
 	f := cmdMain.Flags()
 	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
 	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
+	f.BoolVar(&serverOptions.enabled, "server.enabled", true, "Enables dashboard server access")
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
+
+	f.BoolVar(&metricServerOptions.enabled, "metrics.enabled", false, "Enables dedicated metric server")
+	f.StringVar(&metricServerOptions.host, "metrics.host", defaultServerHost, "Host to listen on metrics server")
+	f.IntVar(&metricServerOptions.port, "metrics.port", defaultMetricsServerPort, "Port to listen on metrics server")
+	f.StringVar(&metricServerOptions.tlsSecretName, "metrics.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, plain http is used)")
+
+	f.StringVar(&healthServerOptions.host, "health.host", defaultServerHost, "Host to listen on health server")
+	f.IntVar(&healthServerOptions.port, "health.port", defaultHealthServerPort, "Port to listen on health server")
+
 	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, "Set log levels in format <level> or <logger>=<level>")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
@@ -232,8 +255,21 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
 	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
-		Namespace:          namespace,
-		Address:            listenAddr,
+		Namespace: namespace,
+		Address:   listenAddr,
+		MetricsServer: server.HTTPServerConfig{
+			Enabled:            metricServerOptions.enabled,
+			Address:            net.JoinHostPort(metricServerOptions.host, strconv.Itoa(metricServerOptions.port)),
+			TLSSecretName:      metricServerOptions.tlsSecretName,
+			TLSSecretNamespace: namespace,
+		},
+		HealthServer: server.HTTPServerConfig{
+			Enabled:            true,
+			Address:            net.JoinHostPort(healthServerOptions.host, strconv.Itoa(healthServerOptions.port)),
+			TLSSecretName:      "",
+			TLSSecretNamespace: namespace,
+		},
+		HTTPServerEnabled:  serverOptions.enabled,
 		TLSSecretName:      serverOptions.tlsSecretName,
 		TLSSecretNamespace: namespace,
 		PodName:            name,

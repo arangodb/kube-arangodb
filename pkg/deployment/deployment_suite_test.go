@@ -478,7 +478,7 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
 	}
-	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(client.NewAuth(kubernetesClientSet, d.getArangoDeployment), client.NewConfig(d.getArangoDeployment)))
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)

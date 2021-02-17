@@ -17,14 +17,9 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
-package agency
+package metrics
 
-const (
-	ArangoKey          = "arango"
-	PlanKey            = "Plan"
-	CurrentKey         = "Current"
-	PlanCollectionsKey = "Collections"
-)
+type Collector interface {
+	Collect(metrics MetricCollector) error
+}

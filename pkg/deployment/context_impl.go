@@ -24,11 +24,8 @@ package deployment
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
-	nhttp "net/http"
 	"strconv"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -37,13 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/go-driver/http"
-	"github.com/arangodb/go-driver/jwt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -228,83 +218,6 @@ func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id str
 // GetAgency returns a connection to the entire agency.
 func (d *Deployment) GetAgency(ctx context.Context) (agency.Agency, error) {
 	return d.clientCache.GetAgency(ctx)
-}
-
-func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
-	transport := &nhttp.Transport{
-		Proxy: nhttp.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 100 * time.Millisecond,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       100 * time.Millisecond,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-
-	if d.apiObject.Spec.TLS.IsSecure() {
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
-
-	connConfig := http.ConnectionConfig{
-		Transport:          transport,
-		DontFollowRedirect: true,
-	}
-
-	return connConfig, nil
-}
-
-func (d *Deployment) getAuth() (driver.Authentication, error) {
-	if !d.apiObject.Spec.Authentication.IsAuthenticated() {
-		return nil, nil
-	}
-
-	secrets := d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
-
-	var secret string
-	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := secrets.Get(d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
-		if err != nil {
-			return nil, errors.Newf("JWT Secret is missing")
-		}
-
-		jwt, ok := s.Data[constants.SecretKeyToken]
-		if !ok {
-			return nil, errors.Newf("JWT Secret is invalid")
-		}
-
-		secret = string(jwt)
-	} else {
-		s, err := secrets.Get(pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
-		if err != nil {
-			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
-			return nil, errors.Newf("JWT Folder Secret is missing")
-		}
-
-		if len(s.Data) == 0 {
-			return nil, errors.Newf("JWT Folder Secret is empty")
-		}
-
-		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
-			secret = string(q)
-		} else {
-			for _, q := range s.Data {
-				secret = string(q)
-				break
-			}
-		}
-	}
-
-	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return driver.RawAuthentication(jwt), nil
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.

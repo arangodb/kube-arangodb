@@ -17,27 +17,33 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
-package agency
+package metrics
 
 import (
-	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/go-driver/agency"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-type Fetcher func(ctx context.Context, i interface{}, keyParts ...string) error
+func newDeploymentStructure(deployment *deployment) Collector {
+	d := &deploymentStructure{
+		deployment: deployment,
+	}
 
-func NewFetcher(a agency.Agency) Fetcher {
-	return func(ctx context.Context, i interface{}, keyParts ...string) error {
-		if err := a.ReadKey(ctx, keyParts, i); err != nil {
-			return errors.WithStack(err)
+	return d
+}
+
+type deploymentStructure struct {
+	deployment *deployment
+}
+
+func (d deploymentStructure) Collect(metrics MetricCollector) error {
+	d.deployment.deployment.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			metrics.Collect(d.deployment.DeploymentMembers, prometheus.GaugeValue, 1, d.deployment.labels(group.AsRole(), member.ID)...)
 		}
 
 		return nil
-	}
+	})
+	return nil
 }

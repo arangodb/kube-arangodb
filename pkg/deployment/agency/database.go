@@ -61,7 +61,18 @@ func (a ArangoPlanCollections) IsDBServerInCollections(name string) bool {
 }
 
 type ArangoPlanCollection struct {
-	Shards ArangoPlanShard `json:"shards"`
+	Name              *string         `json:"name"`
+	Shards            ArangoPlanShard `json:"shards"`
+	WriteConcern      *int            `json:"writeConcern,omitempty"`
+	ReplicationFactor *int            `json:"replicationFactor,omitempty"`
+}
+
+func (a ArangoPlanCollection) GetName(d string) string {
+	if a.Name == nil {
+		return d
+	}
+
+	return *a.Name
 }
 
 func (a ArangoPlanCollection) IsDBServerInShards(name string) bool {
@@ -76,3 +87,23 @@ func (a ArangoPlanCollection) IsDBServerInShards(name string) bool {
 }
 
 type ArangoPlanShard map[string][]string
+
+func GetCurrentCollections(ctx context.Context, f Fetcher) (*ArangoCurrentDatabases, error) {
+	ret := &ArangoCurrentDatabases{}
+
+	if err := f(ctx, ret, ArangoKey, CurrentKey, PlanCollectionsKey); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return ret, nil
+}
+
+type ArangoCurrentDatabases map[string]ArangoCurrentCollections
+
+type ArangoCurrentCollections map[string]ArangoCurrentShards
+
+type ArangoCurrentShards map[string]ArangoCurrentShard
+
+type ArangoCurrentShard struct {
+	Servers []string `json:"servers"`
+}

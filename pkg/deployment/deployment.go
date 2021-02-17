@@ -145,7 +145,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:    make(chan struct{}),
 	}
 
-	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(deploymentClient.NewAuth(deps.KubeCli, d.getArangoDeployment), deploymentClient.NewConfig(d.getArangoDeployment)))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
