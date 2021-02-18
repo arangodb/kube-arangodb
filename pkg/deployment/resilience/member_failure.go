@@ -56,7 +56,7 @@ func (r *Resilience) CheckMemberFailure() error {
 			switch m.Phase {
 			case api.MemberPhaseNone:
 				continue
-			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut:
+			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
 				if len(status.Plan) == 0 {
 					log.Error().Msgf("No plan but member is in phase %s - marking as failed", m.Phase)
 					m.Phase = api.MemberPhaseFailed
