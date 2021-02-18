@@ -92,7 +92,7 @@ func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Update status
-	m.Phase = api.MemberPhaseRotating
+	m.Phase = api.MemberPhaseRotateStart
 
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, errors.WithStack(err)

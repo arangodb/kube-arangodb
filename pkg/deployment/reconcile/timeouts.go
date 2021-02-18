@@ -33,7 +33,7 @@ const (
 	renewTLSCACertificateTimeout     = time.Minute * 30
 	operationTLSCACertificateTimeout = time.Minute * 30
 	rotateMemberTimeout              = time.Minute * 15
-	pvcResizeTimeout                 = time.Minute * 15
+	pvcResizeTimeout                 = time.Minute * 30
 	pvcResizedTimeout                = time.Minute * 15
 	backupRestoreTimeout             = time.Minute * 15
 	shutdownMemberTimeout            = time.Minute * 30

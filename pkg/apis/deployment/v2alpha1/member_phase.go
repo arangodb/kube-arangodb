@@ -42,6 +42,8 @@ const (
 	MemberPhaseShuttingDown MemberPhase = "ShuttingDown"
 	// MemberPhaseRotating indicates that a member is being rotated
 	MemberPhaseRotating MemberPhase = "Rotating"
+	// MemberPhaseRotateStart indicates that a member is being rotated but wont get up outside of plan
+	MemberPhaseRotateStart MemberPhase = "RotateStart"
 	// MemberPhaseUpgrading indicates that a member is in the process of upgrading its database data format
 	MemberPhaseUpgrading MemberPhase = "Upgrading"
 )

@@ -141,13 +141,23 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 			api.NewAction(api.ActionTypePVCResize, group, memberID),
 		}
 	case api.PVCResizeModeRotate:
-		return api.Plan{
+		var plan api.Plan
+
+		if group == api.ServerGroupDBServers {
+			plan = append(plan,
+				api.NewAction(api.ActionTypeCleanOutMember, group, memberID),
+			)
+		}
+
+		plan = append(plan,
 			api.NewAction(api.ActionTypeRotateStartMember, group, memberID),
 			api.NewAction(api.ActionTypePVCResize, group, memberID),
 			api.NewAction(api.ActionTypePVCResized, group, memberID),
 			api.NewAction(api.ActionTypeRotateStopMember, group, memberID),
 			api.NewAction(api.ActionTypeWaitForMemberUp, group, memberID),
-		}
+		)
+
+		return plan
 	default:
 		log.Error().Str("server-group", group.AsRole()).Str("mode", mode.String()).
 			Msg("Requested mode is not supported")

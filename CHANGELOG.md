@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Fix AKS Volume Resize mode
 
 ## [1.1.4](https://github.com/arangodb/kube-arangodb/tree/1.1.4) (2021-02-15)
 - Add support for spec.ClusterDomain to be able to use FQDN in ArangoDB cluster communication
