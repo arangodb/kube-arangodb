@@ -263,7 +263,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
-	var secrets k8sutil.SecretReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+	var secrets inspector.SecretReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
 	if currentState := d.currentState; currentState != nil {
 		secrets = currentState.SecretReadInterface()
 	}

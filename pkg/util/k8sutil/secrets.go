@@ -32,14 +32,9 @@ import (
 	jg "github.com/dgrijalva/jwt-go"
 )
 
-// SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
-type SecretReadInterface interface {
-	Get(name string, options meta.GetOptions) (*core.Secret, error)
-}
-
 // SecretInterface has methods to work with Secret resources.
 type SecretInterface interface {
-	SecretReadInterface
+	Get(name string, options meta.GetOptions) (*core.Secret, error)
 	Create(*core.Secret) (*core.Secret, error)
 	Update(*core.Secret) (*core.Secret, error)
 	Delete(name string, options *meta.DeleteOptions) error

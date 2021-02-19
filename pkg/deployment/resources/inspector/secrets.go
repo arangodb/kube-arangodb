@@ -24,7 +24,6 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,7 +68,7 @@ func (i *inspector) Secret(name string) (*core.Secret, bool) {
 	return secret, true
 }
 
-func (i *inspector) SecretReadInterface() k8sutil.SecretReadInterface {
+func (i *inspector) SecretReadInterface() SecretReadInterface {
 	return &secretReadInterface{i: i}
 }
 
