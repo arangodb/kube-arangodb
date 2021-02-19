@@ -33,10 +33,7 @@ type PersistentVolumeClaimFilter func(pvc *core.PersistentVolumeClaim) bool
 type PersistentVolumeClaimAction func(pvc *core.PersistentVolumeClaim) error
 
 func (i *inspector) IteratePersistentVolumeClaims(action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, pvc := range i.pvcs {
+	for _, pvc := range i.PersistentVolumeClaims() {
 		if err := i.iteratePersistentVolumeClaim(pvc, action, filters...); err != nil {
 			return err
 		}
@@ -52,6 +49,18 @@ func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim
 	}
 
 	return action(pvc)
+}
+
+func (i *inspector) PersistentVolumeClaims() []*core.PersistentVolumeClaim {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*core.PersistentVolumeClaim
+	for _, persistentVolumeClaim := range i.pvcs {
+		r = append(r, persistentVolumeClaim)
+	}
+
+	return r
 }
 
 func (i *inspector) PersistentVolumeClaim(name string) (*core.PersistentVolumeClaim, bool) {

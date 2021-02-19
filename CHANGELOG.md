@@ -4,6 +4,7 @@
 - Fix AKS Volume Resize mode
 - Use cached status in member client creation
 - Remove failed DBServers
+- Remove deadlock in internal cache
 
 ## [1.1.4](https://github.com/arangodb/kube-arangodb/tree/1.1.4) (2021-02-15)
 - Add support for spec.ClusterDomain to be able to use FQDN in ArangoDB cluster communication

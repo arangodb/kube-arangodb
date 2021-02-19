@@ -33,10 +33,7 @@ type ServiceFilter func(pod *core.Service) bool
 type ServiceAction func(pod *core.Service) error
 
 func (i *inspector) IterateServices(action ServiceAction, filters ...ServiceFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, service := range i.services {
+	for _, service := range i.Services() {
 		if err := i.iterateServices(service, action, filters...); err != nil {
 			return err
 		}
@@ -52,6 +49,18 @@ func (i *inspector) iterateServices(service *core.Service, action ServiceAction,
 	}
 
 	return action(service)
+}
+
+func (i *inspector) Services() []*core.Service {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*core.Service
+	for _, service := range i.services {
+		r = append(r, service)
+	}
+
+	return r
 }
 
 func (i *inspector) Service(name string) (*core.Service, bool) {

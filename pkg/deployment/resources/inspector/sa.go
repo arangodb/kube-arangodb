@@ -33,10 +33,7 @@ type ServiceAccountFilter func(serviceAccount *core.ServiceAccount) bool
 type ServiceAccountAction func(serviceAccount *core.ServiceAccount) error
 
 func (i *inspector) IterateServiceAccounts(action ServiceAccountAction, filters ...ServiceAccountFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, serviceAccount := range i.serviceAccounts {
+	for _, serviceAccount := range i.ServiceAccounts() {
 		if err := i.iterateServiceAccount(serviceAccount, action, filters...); err != nil {
 			return err
 		}
@@ -52,6 +49,18 @@ func (i *inspector) iterateServiceAccount(serviceAccount *core.ServiceAccount, a
 	}
 
 	return action(serviceAccount)
+}
+
+func (i *inspector) ServiceAccounts() []*core.ServiceAccount {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*core.ServiceAccount
+	for _, serviceAccount := range i.serviceAccounts {
+		r = append(r, serviceAccount)
+	}
+
+	return r
 }
 
 func (i *inspector) ServiceAccount(name string) (*core.ServiceAccount, bool) {

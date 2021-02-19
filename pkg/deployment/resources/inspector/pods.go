@@ -33,10 +33,7 @@ type PodFilter func(pod *core.Pod) bool
 type PodAction func(pod *core.Pod) error
 
 func (i *inspector) IteratePods(action PodAction, filters ...PodFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, pod := range i.pods {
+	for _, pod := range i.Pods() {
 		if err := i.iteratePod(pod, action, filters...); err != nil {
 			return err
 		}
@@ -52,6 +49,18 @@ func (i *inspector) iteratePod(pod *core.Pod, action PodAction, filters ...PodFi
 	}
 
 	return action(pod)
+}
+
+func (i *inspector) Pods() []*core.Pod {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*core.Pod
+	for _, pod := range i.pods {
+		r = append(r, pod)
+	}
+
+	return r
 }
 
 func (i *inspector) Pod(name string) (*core.Pod, bool) {
