@@ -88,6 +88,18 @@ func createClusterOperationPlan(ctx context.Context,
 					api.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, string(id)),
 				}
 			}
+		case driver.ServerRoleDBServer:
+			if member.Status != driver.ServerStatusFailed {
+				continue
+			}
+
+			if !member.CanBeDeleted {
+				continue
+			}
+
+			return api.Plan{
+				api.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupDBServers, string(id)),
+			}
 		}
 	}
 

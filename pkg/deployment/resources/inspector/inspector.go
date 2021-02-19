@@ -25,6 +25,8 @@ package inspector
 import (
 	"sync"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
@@ -102,6 +104,7 @@ type Inspector interface {
 
 	Secret(name string) (*core.Secret, bool)
 	IterateSecrets(action SecretAction, filters ...SecretFilter) error
+	SecretReadInterface() k8sutil.SecretReadInterface
 
 	PersistentVolumeClaim(name string) (*core.PersistentVolumeClaim, bool)
 	IteratePersistentVolumeClaims(action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error

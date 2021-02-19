@@ -24,8 +24,11 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -64,6 +67,25 @@ func (i *inspector) Secret(name string) (*core.Secret, bool) {
 	}
 
 	return secret, true
+}
+
+func (i *inspector) SecretReadInterface() k8sutil.SecretReadInterface {
+	return &secretReadInterface{i: i}
+}
+
+type secretReadInterface struct {
+	i *inspector
+}
+
+func (s secretReadInterface) Get(name string, options meta.GetOptions) (*core.Secret, error) {
+	if s, ok := s.i.Secret(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    core.GroupName,
+			Resource: "Secret",
+		}, name)
+	} else {
+		return s, nil
+	}
 }
 
 func secretsToMap(k kubernetes.Interface, namespace string) (map[string]*core.Secret, error) {
