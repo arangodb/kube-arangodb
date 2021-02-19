@@ -121,6 +121,7 @@ type Deployment struct {
 	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
+	currentState              inspector.Inspector
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler

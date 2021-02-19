@@ -25,6 +25,8 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -103,4 +105,7 @@ type Context interface {
 	// GetBackup receives information about a backup resource
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope
+
+	GetCachedStatus() inspector.Inspector
+	SetCachedStatus(i inspector.Inspector)
 }

@@ -263,7 +263,10 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
-	secrets := d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+	var secrets inspector.SecretReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+	if currentState := d.currentState; currentState != nil {
+		secrets = currentState.SecretReadInterface()
+	}
 
 	var secret string
 	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
@@ -588,4 +591,12 @@ func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
 	}
 
 	return podList, nil
+}
+
+func (d *Deployment) GetCachedStatus() inspector.Inspector {
+	return d.currentState
+}
+
+func (d *Deployment) SetCachedStatus(i inspector.Inspector) {
+	d.currentState = i
 }

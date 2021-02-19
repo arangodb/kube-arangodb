@@ -34,9 +34,9 @@ import (
 
 // SecretInterface has methods to work with Secret resources.
 type SecretInterface interface {
+	Get(name string, options meta.GetOptions) (*core.Secret, error)
 	Create(*core.Secret) (*core.Secret, error)
 	Update(*core.Secret) (*core.Secret, error)
-	Get(name string, options meta.GetOptions) (*core.Secret, error)
 	Delete(name string, options *meta.DeleteOptions) error
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (*core.Secret, error)
 }

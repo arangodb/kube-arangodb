@@ -25,6 +25,8 @@ package inspector
 import (
 	"sync"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
@@ -32,6 +34,11 @@ import (
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )
+
+// SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
+type SecretReadInterface interface {
+	Get(name string, options meta.GetOptions) (*core.Secret, error)
+}
 
 func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) (Inspector, error) {
 	pods, err := podsToMap(k, namespace)
@@ -102,6 +109,7 @@ type Inspector interface {
 
 	Secret(name string) (*core.Secret, bool)
 	IterateSecrets(action SecretAction, filters ...SecretFilter) error
+	SecretReadInterface() SecretReadInterface
 
 	PersistentVolumeClaim(name string) (*core.PersistentVolumeClaim, bool)
 	IteratePersistentVolumeClaims(action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error
