@@ -35,10 +35,7 @@ type SecretFilter func(pod *core.Secret) bool
 type SecretAction func(pod *core.Secret) error
 
 func (i *inspector) IterateSecrets(action SecretAction, filters ...SecretFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, secret := range i.secrets {
+	for _, secret := range i.Secrets() {
 		if err := i.iterateSecrets(secret, action, filters...); err != nil {
 			return err
 		}
@@ -54,6 +51,18 @@ func (i *inspector) iterateSecrets(secret *core.Secret, action SecretAction, fil
 	}
 
 	return action(secret)
+}
+
+func (i *inspector) Secrets() []*core.Secret {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*core.Secret
+	for _, secret := range i.secrets {
+		r = append(r, secret)
+	}
+
+	return r
 }
 
 func (i *inspector) Secret(name string) (*core.Secret, bool) {

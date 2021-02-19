@@ -26,7 +26,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,10 +33,7 @@ type ServiceMonitorFilter func(serviceMonitor *monitoring.ServiceMonitor) bool
 type ServiceMonitorAction func(serviceMonitor *monitoring.ServiceMonitor) error
 
 func (i *inspector) IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, serviceMonitor := range i.serviceMonitors {
+	for _, serviceMonitor := range i.ServiceMonitors() {
 		if err := i.iterateServiceMonitor(serviceMonitor, action, filters...); err != nil {
 			return err
 		}
@@ -53,6 +49,18 @@ func (i *inspector) iterateServiceMonitor(serviceMonitor *monitoring.ServiceMoni
 	}
 
 	return action(serviceMonitor)
+}
+
+func (i *inspector) ServiceMonitors() []*monitoring.ServiceMonitor {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var r []*monitoring.ServiceMonitor
+	for _, sms := range i.serviceMonitors {
+		r = append(r, sms)
+	}
+
+	return r
 }
 
 func (i *inspector) ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool) {
