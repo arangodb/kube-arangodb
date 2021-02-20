@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.5](https://github.com/arangodb/kube-arangodb/tree/1.1.5) (2021-02-20)
 - Fix AKS Volume Resize mode
 - Use cached status in member client creation
 - Remove failed DBServers
