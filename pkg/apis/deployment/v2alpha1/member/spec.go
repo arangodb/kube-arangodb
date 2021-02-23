@@ -25,6 +25,6 @@ package member
 import core "k8s.io/api/core/v1"
 
 type Spec struct {
-	Template core.PodTemplate `json:"template"`
-	TemplateChecksum string `json:"templateChecksum"`
+	Template         *core.PodTemplate `json:"template,omitempty"`
+	TemplateChecksum string            `json:"templateChecksum,omitempty"`
 }

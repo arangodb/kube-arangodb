@@ -45,6 +45,6 @@ type ArangoMemberList struct {
 type ArangoMember struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
-	Spec            member.Spec   `json:"spec,omitempty"`
+	Spec            member.Spec  `json:"spec,omitempty"`
 	Status          MemberStatus `json:"status,omitempty"`
 }
