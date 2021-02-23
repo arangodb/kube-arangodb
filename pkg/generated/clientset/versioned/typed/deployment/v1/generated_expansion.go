@@ -23,3 +23,5 @@
 package v1
 
 type ArangoDeploymentExpansion interface{}
+
+type ArangoMemberExpansion interface{}
