@@ -28,6 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ConditionType is a strongly typed condition name
+type ConditionType string
+
 const (
 	// ConditionTypeReady indicates that the member or entire deployment is ready and running normally.
 	ConditionTypeReady ConditionType = "Ready"
@@ -63,9 +66,6 @@ const (
 	// ConditionTypeUpgradeFailed indicates that mem
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 )
-
-// ConditionType is a strongly typed condition name
-type ConditionType string
 
 // Condition represents one current condition of a deployment or deployment member.
 // A condition might not show up if it is not happening.
