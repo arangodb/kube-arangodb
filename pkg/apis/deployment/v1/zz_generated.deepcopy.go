@@ -149,7 +149,7 @@ func (in *ArangoMember) DeepCopyInto(out *ArangoMember) {
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	in.Spec.DeepCopyInto(&out.Spec)
-	in.Status.DeepCopyInto(&out.Status)
+	out.Status = in.Status
 	return
 }
 
