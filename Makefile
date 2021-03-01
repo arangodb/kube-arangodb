@@ -249,7 +249,7 @@ update-generated:
 			"deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"shared:v1" \
+			"shared:v1 deployment:v1/member deployment:v2alpha1/member" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 
@@ -649,7 +649,8 @@ set-api-version/%:
 
 synchronize-v2alpha1-with-v1:
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
-	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec basename {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec realpath --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
+	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec realpath --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | sed "s#package v1#package v2alpha1#g" | sed 's#ArangoDeploymentVersion = "v1"#ArangoDeploymentVersion = "v2alpha1"#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
 	@make update-generated
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin

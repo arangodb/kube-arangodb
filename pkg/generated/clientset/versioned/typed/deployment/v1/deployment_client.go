@@ -31,6 +31,7 @@ import (
 type DatabaseV1Interface interface {
 	RESTClient() rest.Interface
 	ArangoDeploymentsGetter
+	ArangoMembersGetter
 }
 
 // DatabaseV1Client is used to interact with features provided by the database.arangodb.com group.
@@ -40,6 +41,10 @@ type DatabaseV1Client struct {
 
 func (c *DatabaseV1Client) ArangoDeployments(namespace string) ArangoDeploymentInterface {
 	return newArangoDeployments(c, namespace)
+}
+
+func (c *DatabaseV1Client) ArangoMembers(namespace string) ArangoMemberInterface {
+	return newArangoMembers(c, namespace)
 }
 
 // NewForConfig creates a new DatabaseV1Client for the given config.

@@ -29,3 +29,11 @@ type ArangoDeploymentListerExpansion interface{}
 // ArangoDeploymentNamespaceListerExpansion allows custom methods to be added to
 // ArangoDeploymentNamespaceLister.
 type ArangoDeploymentNamespaceListerExpansion interface{}
+
+// ArangoMemberListerExpansion allows custom methods to be added to
+// ArangoMemberLister.
+type ArangoMemberListerExpansion interface{}
+
+// ArangoMemberNamespaceListerExpansion allows custom methods to be added to
+// ArangoMemberNamespaceLister.
+type ArangoMemberNamespaceListerExpansion interface{}

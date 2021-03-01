@@ -36,6 +36,10 @@ func (c *FakeDatabaseV2alpha1) ArangoDeployments(namespace string) v2alpha1.Aran
 	return &FakeArangoDeployments{c, namespace}
 }
 
+func (c *FakeDatabaseV2alpha1) ArangoMembers(namespace string) v2alpha1.ArangoMemberInterface {
+	return &FakeArangoMembers{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeDatabaseV2alpha1) RESTClient() rest.Interface {
