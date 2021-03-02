@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.6](https://github.com/arangodb/kube-arangodb/tree/1.1.6) (2021-03-02)
 - Add ArangoMember Resource and required RBAC rules
 
 ## [1.1.5](https://github.com/arangodb/kube-arangodb/tree/1.1.5) (2021-02-20)
