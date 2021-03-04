@@ -28,6 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+
 	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -121,7 +123,7 @@ type Deployment struct {
 	inspectCRDTrigger         trigger.Trigger
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
-	currentState              inspector.Inspector
+	currentState              inspectorInterface.Inspector
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
@@ -249,7 +251,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetNamespace())
+			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}

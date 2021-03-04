@@ -27,8 +27,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -41,7 +41,7 @@ const secretActionParam = "secret"
 func createRestorePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if spec.RestoreFrom == nil && status.Restore != nil {
 		return api.Plan{
 			api.NewAction(api.ActionTypeBackupRestoreClean, api.ServerGroupUnknown, ""),

@@ -29,7 +29,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -225,7 +224,7 @@ func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
 
-func (m *MemberArangoDPod) Validate(cachedStatus inspector.Inspector) error {
+func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
 	i := m.AsInput()
 
 	if err := pod.SNI().Verify(i, cachedStatus); err != nil {

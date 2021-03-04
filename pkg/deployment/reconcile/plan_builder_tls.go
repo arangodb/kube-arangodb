@@ -38,10 +38,10 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
@@ -52,7 +52,7 @@ const CertificateRenewalMargin = 7 * 24 * time.Hour
 func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -86,7 +86,7 @@ func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
 func createTLSStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -102,7 +102,7 @@ func createTLSStatusUpdate(ctx context.Context,
 func createTLSStatusPropagated(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -119,7 +119,7 @@ func createTLSStatusPropagated(ctx context.Context,
 func createTLSStatusUpdateRequired(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) bool {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
 	if !spec.TLS.IsSecure() {
 		return false
 	}
@@ -157,7 +157,7 @@ func createTLSStatusUpdateRequired(ctx context.Context,
 func createCAAppendPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -205,7 +205,7 @@ func createCAAppendPlan(ctx context.Context,
 func createCARenewalPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -241,7 +241,7 @@ func createCARenewalPlan(ctx context.Context,
 func createCACleanPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -290,7 +290,7 @@ func createCACleanPlan(ctx context.Context,
 func createKeyfileRenewalPlanDefault(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, planCtx PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -328,7 +328,7 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 func createKeyfileRenewalPlanInPlace(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, planCtx PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -362,7 +362,7 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 func createKeyfileRenewalPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, planCtx PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -449,7 +449,7 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 func keyfileRenewalRequired(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
 	group api.ServerGroup, member api.MemberStatus, mode api.TLSRotateMode) (bool, bool) {
 	if !spec.TLS.IsSecure() {
 		return false, false

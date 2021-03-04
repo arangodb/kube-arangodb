@@ -25,11 +25,11 @@ package pod
 import (
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -59,7 +59,7 @@ func (s tls) Envs(i Input) []core.EnvVar {
 	return nil
 }
 
-func (s tls) Verify(i Input, cachedStatus inspector.Inspector) error {
+func (s tls) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !IsTLSEnabled(i) {
 		return nil
 	}

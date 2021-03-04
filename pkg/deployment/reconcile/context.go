@@ -25,9 +25,9 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -107,7 +107,7 @@ type Context interface {
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member
-	RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
+	RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken

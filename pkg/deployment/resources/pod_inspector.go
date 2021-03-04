@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
@@ -54,7 +55,7 @@ const (
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Inspector) (util.Interval, error) {
+func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	log := r.log
 	start := time.Now()
 	apiObject := r.context.GetAPIObject()

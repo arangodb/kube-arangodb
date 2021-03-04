@@ -63,7 +63,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		errs := 0
 		for {
-			cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetNamespace())
+			cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 			require.NoError(t, err)
 			err = d.resources.EnsureSecrets(log.Logger, cache)
 			if err == nil {
@@ -105,7 +105,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Act
-		cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetNamespace())
+		cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 		require.NoError(t, err)
 		err = d.resources.EnsurePods(cache)
 

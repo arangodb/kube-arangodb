@@ -28,15 +28,15 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
 func createBootstrapPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 
 	if !status.Conditions.IsTrue(api.ConditionTypeReady) {
 		return nil

@@ -27,8 +27,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +45,7 @@ var (
 )
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) EnsureServices(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	start := time.Now()
 	kubecli := r.context.GetKubeCli()
@@ -141,7 +140,7 @@ func (r *Resources) EnsureServices(cachedStatus inspector.Inspector) error {
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(cachedStatus inspector.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
+func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false

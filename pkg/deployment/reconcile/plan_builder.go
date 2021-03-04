@@ -26,9 +26,9 @@ import (
 	goContext "context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"golang.org/x/net/context"
 
@@ -58,7 +58,7 @@ type upgradeDecision struct {
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Inspector) (error, bool) {
+func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
 	// Create plan
 	apiObject := d.context.GetAPIObject()
 	spec := d.context.GetSpec()
@@ -93,7 +93,7 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspector.Insp
 
 func fetchAgency(ctx context.Context, log zerolog.Logger,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cache inspector.Inspector, context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
+	cache inspectorInterface.Inspector, context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
 	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
 		return nil, nil
 	} else if status.Members.Agents.MembersReady() > 0 {
@@ -111,7 +111,7 @@ func fetchAgency(ctx context.Context, log zerolog.Logger,
 // Otherwise the new plan is returned with a boolean true.
 func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspector.Inspector,
+	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
 	builderCtx PlanBuilderContext) (api.Plan, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
@@ -311,22 +311,22 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 type planBuilder func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan
 
 type planBuilderCondition func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) bool
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool
 
 type planBuilderSubPlan func(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
 
 func NewWithPlanBuilder(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) WithPlanBuilder {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) WithPlanBuilder {
 	return &withPlanBuilder{
 		ctx:          ctx,
 		log:          log,
@@ -350,7 +350,7 @@ type withPlanBuilder struct {
 	apiObject    k8sutil.APIObject
 	spec         api.DeploymentSpec
 	status       api.DeploymentStatus
-	cachedStatus inspector.Inspector
+	cachedStatus inspectorInterface.Inspector
 	context      PlanBuilderContext
 }
 

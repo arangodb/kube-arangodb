@@ -26,12 +26,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
-func (d *Deployment) removePodFinalizers(cachedStatus inspector.Inspector) error {
+func (d *Deployment) removePodFinalizers(cachedStatus inspectorInterface.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
 
@@ -58,7 +59,7 @@ func (d *Deployment) removePodFinalizers(cachedStatus inspector.Inspector) error
 }
 
 // removePVCFinalizers removes all finalizers from all PVCs owned by us.
-func (d *Deployment) removePVCFinalizers(cachedStatus inspector.Inspector) error {
+func (d *Deployment) removePVCFinalizers(cachedStatus inspectorInterface.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
 

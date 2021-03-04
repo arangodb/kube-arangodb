@@ -25,8 +25,8 @@ package pod
 import (
 	"github.com/arangodb/go-driver"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -47,5 +47,5 @@ type Builder interface {
 	Args(i Input) k8sutil.OptionPairs
 	Volumes(i Input) ([]core.Volume, []core.VolumeMount)
 	Envs(i Input) []core.EnvVar
-	Verify(i Input, cachedStatus inspector.Inspector) error
+	Verify(i Input, cachedStatus interfaces.Inspector) error
 }

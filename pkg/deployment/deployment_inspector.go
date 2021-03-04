@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -67,7 +69,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.apiObject.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -127,7 +129,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	return nextInterval.ReduceTo(maxInspectionInterval)
 }
 
-func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval, cachedStatus inspector.Inspector) (nextInterval util.Interval, inspectError error) {
+func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (nextInterval util.Interval, inspectError error) {
 	t := time.Now()
 
 	d.SetCachedStatus(cachedStatus)
@@ -298,7 +300,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	return
 }
 
-func (d *Deployment) ensureResources(lastInterval util.Interval, cachedStatus inspector.Inspector) (util.Interval, error) {
+func (d *Deployment) ensureResources(lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	// Ensure all resources are created
 	if d.haveServiceMonitorCRD {
 		if err := d.resources.EnsureServiceMonitor(); err != nil {

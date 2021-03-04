@@ -30,6 +30,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -44,8 +48,6 @@ import (
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -86,6 +88,10 @@ func (d *Deployment) GetKubeCli() kubernetes.Interface {
 
 func (d *Deployment) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
 	return d.deps.KubeMonitoringCli
+}
+
+func (d *Deployment) GetArangoCli() versioned.Interface {
+	return d.deps.DatabaseCRCli
 }
 
 func (d *Deployment) GetScope() scope.Scope {
@@ -263,7 +269,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
-	var secrets inspector.SecretReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+	var secrets secret.ReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
 	if currentState := d.currentState; currentState != nil {
 		secrets = currentState.SecretReadInterface()
 	}
@@ -535,7 +541,7 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 	return err
 }
 
-func (d *Deployment) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
+func (d *Deployment) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
 	return d.resources.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
 }
 
@@ -593,10 +599,10 @@ func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
 	return podList, nil
 }
 
-func (d *Deployment) GetCachedStatus() inspector.Inspector {
+func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
 	return d.currentState
 }
 
-func (d *Deployment) SetCachedStatus(i inspector.Inspector) {
+func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
 	d.currentState = i
 }

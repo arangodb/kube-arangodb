@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -42,7 +43,6 @@ import (
 
 	operatorErrors "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -71,7 +71,7 @@ func GetCASecretName(apiObject k8sutil.APIObject) string {
 }
 
 // EnsureSecrets creates all secrets needed to run the given deployment
-func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
 	kubecli := r.context.GetKubeCli()
@@ -188,13 +188,13 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspector.Ins
 	return nil
 }
 
-func (r *Resources) refreshCache(cachedStatus inspector.Inspector, err error) error {
+func (r *Resources) refreshCache(cachedStatus inspectorInterface.Inspector, err error) error {
 	if err == nil {
 		return nil
 	}
 
 	if operatorErrors.IsReconcile(err) {
-		if err := cachedStatus.Refresh(r.context.GetKubeCli(), r.context.GetMonitoringV1Cli(), r.context.GetNamespace()); err != nil {
+		if err := cachedStatus.Refresh(r.context.GetKubeCli(), r.context.GetMonitoringV1Cli(), r.context.GetArangoCli(), r.context.GetNamespace()); err != nil {
 			return errors.WithStack(err)
 		}
 	} else {
@@ -204,7 +204,7 @@ func (r *Resources) refreshCache(cachedStatus inspector.Inspector, err error) er
 	return nil
 }
 
-func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, folderSecretName string) error {
+func (r *Resources) ensureTokenSecretFolder(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, folderSecretName string) error {
 	if f, exists := cachedStatus.Secret(folderSecretName); exists {
 		if len(f.Data) == 0 {
 			s, exists := cachedStatus.Secret(secretName)
@@ -290,7 +290,7 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspector.Inspector, se
 	return nil
 }
 
-func (r *Resources) ensureTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
+func (r *Resources) ensureTokenSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createTokenSecret(secrets, secretName)
 	}
@@ -298,7 +298,7 @@ func (r *Resources) ensureTokenSecret(cachedStatus inspector.Inspector, secrets 
 	return nil
 }
 
-func (r *Resources) ensureSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
+func (r *Resources) ensureSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createSecret(secrets, secretName)
 	}
@@ -324,7 +324,7 @@ func (r *Resources) createSecret(secrets k8sutil.SecretInterface, secretName str
 	return operatorErrors.Reconcile()
 }
 
-func (r *Resources) ensureSecretWithEmptyKey(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string) error {
+func (r *Resources) ensureSecretWithEmptyKey(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createSecretWithKey(secrets, secretName, keyName, nil)
 	}
@@ -332,7 +332,7 @@ func (r *Resources) ensureSecretWithEmptyKey(cachedStatus inspector.Inspector, s
 	return nil
 }
 
-func (r *Resources) ensureSecretWithKey(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
+func (r *Resources) ensureSecretWithKey(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createSecretWithKey(secrets, secretName, keyName, value)
 	}
@@ -386,7 +386,7 @@ func (r *Resources) createTokenSecret(secrets k8sutil.SecretInterface, secretNam
 	return operatorErrors.Reconcile()
 }
 
-func (r *Resources) ensureEncryptionKeyfolderSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, keyfileSecretName, secretName string) error {
+func (r *Resources) ensureEncryptionKeyfolderSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, keyfileSecretName, secretName string) error {
 	_, folderExists := cachedStatus.Secret(secretName)
 
 	keyfile, exists := cachedStatus.Secret(keyfileSecretName)
@@ -419,7 +419,7 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(cachedStatus inspector.Inspe
 	return nil
 }
 
-func AppendKeyfileToKeyfolder(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
+func AppendKeyfileToKeyfolder(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, ownerRef *meta.OwnerReference, secretName string, encryptionKey []byte) error {
 	encSha := fmt.Sprintf("%0x", sha256.Sum256(encryptionKey))
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 
@@ -455,7 +455,7 @@ var (
 
 // ensureExporterTokenSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with correct access.
-func (r *Resources) ensureExporterTokenSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
+func (r *Resources) ensureExporterTokenSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, tokenSecretName, secretSecretName string) error {
 	if update, exists, err := r.ensureExporterTokenSecretCreateRequired(cachedStatus, tokenSecretName, secretSecretName); err != nil {
 		return err
 	} else if update {
@@ -476,7 +476,7 @@ func (r *Resources) ensureExporterTokenSecret(cachedStatus inspector.Inspector, 
 	return nil
 }
 
-func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspector.Inspector, tokenSecretName, secretSecretName string) (bool, bool, error) {
+func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspectorInterface.Inspector, tokenSecretName, secretSecretName string) (bool, bool, error) {
 	if secret, exists := cachedStatus.Secret(tokenSecretName); !exists {
 		return true, false, nil
 	} else {
@@ -515,7 +515,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCACertificateSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
+func (r *Resources) ensureTLSCACertificateSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec) error {
 	if _, exists := cachedStatus.Secret(spec.GetCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()
@@ -536,7 +536,7 @@ func (r *Resources) ensureTLSCACertificateSecret(cachedStatus inspector.Inspecto
 
 // ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCAFolderSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec, folderSecretName string) error {
+func (r *Resources) ensureTLSCAFolderSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec, folderSecretName string) error {
 	if spec.CASecretName == nil {
 		return errors.Newf("CA Secret Name is nil")
 	}
@@ -573,7 +573,7 @@ func (r *Resources) ensureTLSCAFolderSecret(cachedStatus inspector.Inspector, se
 
 // ensureClientAuthCACertificateSecret checks if a secret with given name exists in the namespace
 // of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureClientAuthCACertificateSecret(cachedStatus inspector.Inspector, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
+func (r *Resources) ensureClientAuthCACertificateSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec) error {
 	if _, exists := cachedStatus.Secret(spec.GetClientCASecretName()); !exists {
 		// Secret not found, create it
 		apiObject := r.context.GetAPIObject()

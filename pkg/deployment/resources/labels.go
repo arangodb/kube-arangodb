@@ -24,15 +24,15 @@ package resources
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *Resources) EnsureLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureLabels(cachedStatus inspectorInterface.Inspector) error {
 	r.log.Info().Msgf("Ensuring labels")
 
 	if err := r.EnsureSecretLabels(cachedStatus); err != nil {
@@ -66,7 +66,7 @@ func (r *Resources) EnsureLabels(cachedStatus inspector.Inspector) error {
 	return nil
 }
 
-func (r *Resources) EnsureSecretLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureSecretLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
 		if ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
@@ -90,7 +90,7 @@ func (r *Resources) EnsureSecretLabels(cachedStatus inspector.Inspector) error {
 	return nil
 }
 
-func (r *Resources) EnsureServiceAccountsLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureServiceAccountsLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		if ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
@@ -114,7 +114,7 @@ func (r *Resources) EnsureServiceAccountsLabels(cachedStatus inspector.Inspector
 	return nil
 }
 
-func (r *Resources) EnsureServicesLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureServicesLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
 		if ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
@@ -138,7 +138,7 @@ func (r *Resources) EnsureServicesLabels(cachedStatus inspector.Inspector) error
 	return nil
 }
 
-func (r *Resources) EnsureServiceMonitorsLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsureServiceMonitorsLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		if ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
@@ -162,7 +162,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(cachedStatus inspector.Inspector
 	return nil
 }
 
-func (r *Resources) EnsurePodsLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsurePodsLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		if ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
@@ -186,7 +186,7 @@ func (r *Resources) EnsurePodsLabels(cachedStatus inspector.Inspector) error {
 	return nil
 }
 
-func (r *Resources) EnsurePersistentVolumeClaimsLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsurePersistentVolumeClaimsLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
@@ -210,7 +210,7 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(cachedStatus inspector.In
 	return nil
 }
 
-func (r *Resources) EnsurePodDisruptionBudgetsLabels(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsurePodDisruptionBudgetsLabels(cachedStatus inspectorInterface.Inspector) error {
 	changed := false
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(budget *policy.PodDisruptionBudget) error {
 		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {

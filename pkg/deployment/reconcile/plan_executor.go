@@ -28,8 +28,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +40,7 @@ import (
 // ExecutePlan tries to execute the plan as far as possible.
 // Returns true when it has to be called again soon.
 // False otherwise.
-func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Inspector) (bool, error) {
+func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
 	log := d.log
 	firstLoop := true
 
@@ -165,7 +164,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspector.Ins
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action, cachedStatus inspector.Inspector) Action {
+func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) Action {
 	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context, cachedStatus)
 
 	f, ok := getActionFactory(action.Type)

@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type PersistentVolumeClaimFilter func(pvc *core.PersistentVolumeClaim) bool
-type PersistentVolumeClaimAction func(pvc *core.PersistentVolumeClaim) error
-
-func (i *inspector) IteratePersistentVolumeClaims(action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error {
+func (i *inspector) IteratePersistentVolumeClaims(action persistentvolumeclaim.PersistentVolumeClaimAction, filters ...persistentvolumeclaim.PersistentVolumeClaimFilter) error {
 	for _, pvc := range i.PersistentVolumeClaims() {
 		if err := i.iteratePersistentVolumeClaim(pvc, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IteratePersistentVolumeClaims(action PersistentVolumeClaimAc
 	return nil
 }
 
-func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim, action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error {
+func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim, action persistentvolumeclaim.PersistentVolumeClaimAction, filters ...persistentvolumeclaim.PersistentVolumeClaimFilter) error {
 	for _, filter := range filters {
 		if !filter(pvc) {
 			return nil
@@ -121,7 +119,7 @@ func getPersistentVolumeClaims(k kubernetes.Interface, namespace, cont string) (
 	return pvcs.Items, nil
 }
 
-func FilterPersistentVolumeClaimsByLabels(labels map[string]string) PersistentVolumeClaimFilter {
+func FilterPersistentVolumeClaimsByLabels(labels map[string]string) persistentvolumeclaim.PersistentVolumeClaimFilter {
 	return func(pvc *core.PersistentVolumeClaim) bool {
 		for key, value := range labels {
 			v, ok := pvc.Labels[key]
