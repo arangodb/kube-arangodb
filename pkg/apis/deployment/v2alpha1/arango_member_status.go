@@ -20,6 +20,7 @@
 // Author Adam Janikowski
 //
 
-// +k8s:deepcopy-gen=package
-// +groupName=database.arangodb.com
-package member
+package v2alpha1
+
+type ArangoMemberStatus struct {
+}

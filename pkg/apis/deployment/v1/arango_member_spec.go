@@ -20,6 +20,14 @@
 // Author Adam Janikowski
 //
 
-// +k8s:deepcopy-gen=package
-// +groupName=database.arangodb.com
-package member
+package v1
+
+import core "k8s.io/api/core/v1"
+
+type ArangoMemberSpec struct {
+	Group ServerGroup `json:"group,omitempty"`
+	ID string `json:"id,omitempty"`
+
+	Template         *core.PodTemplate `json:"template,omitempty"`
+	TemplateChecksum string            `json:"templateChecksum,omitempty"`
+}

@@ -175,6 +175,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
 	}
 
+	if err := d.resources.EnsureArangoMembers(cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
+	}
+
 	// Inspect secret hashes
 	if err := d.resources.ValidateSecretHashes(cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Secret hash validation failed")
