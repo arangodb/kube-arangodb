@@ -182,7 +182,7 @@ func tlsKeyfileNeedsRenewal(log zerolog.Logger, keyfile string, spec api.TLSSpec
 			}
 			// Check expiration date. Renewal at 2/3 of lifetime.
 			ttl := cert.NotAfter.Sub(cert.NotBefore)
-			expirationDate := cert.NotBefore.Add((ttl / 3) * 2)
+			expirationDate := cert.NotBefore.Add((ttl / 8) * 7)
 			if expirationDate.Before(time.Now()) {
 				// We should renew now
 				log.Debug().
