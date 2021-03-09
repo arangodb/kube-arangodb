@@ -32,15 +32,16 @@ import (
 )
 
 type Input struct {
-	ApiObject   meta.Object
-	Deployment  deploymentApi.DeploymentSpec
-	Status      deploymentApi.DeploymentStatus
-	GroupSpec   deploymentApi.ServerGroupSpec
-	Group       deploymentApi.ServerGroup
-	Version     driver.Version
-	Member      deploymentApi.MemberStatus
-	Enterprise  bool
-	AutoUpgrade bool
+	ApiObject    meta.Object
+	Deployment   deploymentApi.DeploymentSpec
+	Status       deploymentApi.DeploymentStatus
+	GroupSpec    deploymentApi.ServerGroupSpec
+	Group        deploymentApi.ServerGroup
+	Version      driver.Version
+	Member       deploymentApi.MemberStatus
+	ArangoMember deploymentApi.ArangoMember
+	Enterprise   bool
+	AutoUpgrade  bool
 }
 
 type Builder interface {

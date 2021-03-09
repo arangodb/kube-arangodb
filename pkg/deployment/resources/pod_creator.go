@@ -300,6 +300,13 @@ func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 
+	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+
+	member, ok := cachedStatus.ArangoMember(memberName)
+	if !ok {
+		return nil, errors.Newf("Service of member %s not found", memberName)
+	}
+
 	// Update pod name
 	role := group.AsRole()
 	roleAbbr := group.AsRoleAbbreviated()
@@ -322,6 +329,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector
 			autoUpgrade:      autoUpgrade,
 			deploymentStatus: status,
 			id:               memberID,
+			arangoMember:     *member,
 		}
 
 		input := memberPod.AsInput()
@@ -388,6 +396,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector
 			group:                  group,
 			resources:              r,
 			imageInfo:              imageInfo,
+			arangoMember:           *member,
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberSyncPod)

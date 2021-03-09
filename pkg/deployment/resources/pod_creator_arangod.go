@@ -57,6 +57,7 @@ type MemberArangoDPod struct {
 	spec             api.DeploymentSpec
 	deploymentStatus api.DeploymentStatus
 	group            api.ServerGroup
+	arangoMember     api.ArangoMember
 	context          Context
 	resources        *Resources
 	imageInfo        api.ImageInfo
@@ -206,15 +207,16 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 
 func (m *MemberArangoDPod) AsInput() pod.Input {
 	return pod.Input{
-		ApiObject:   m.context.GetAPIObject(),
-		Deployment:  m.spec,
-		Status:      m.deploymentStatus,
-		Group:       m.group,
-		GroupSpec:   m.groupSpec,
-		Version:     m.imageInfo.ArangoDBVersion,
-		Enterprise:  m.imageInfo.Enterprise,
-		AutoUpgrade: m.autoUpgrade,
-		Member:      m.status,
+		ApiObject:    m.context.GetAPIObject(),
+		Deployment:   m.spec,
+		Status:       m.deploymentStatus,
+		Group:        m.group,
+		GroupSpec:    m.groupSpec,
+		Version:      m.imageInfo.ArangoDBVersion,
+		Enterprise:   m.imageInfo.Enterprise,
+		AutoUpgrade:  m.autoUpgrade,
+		Member:       m.status,
+		ArangoMember: m.arangoMember,
 	}
 }
 

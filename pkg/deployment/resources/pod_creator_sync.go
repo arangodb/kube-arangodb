@@ -61,6 +61,7 @@ type MemberSyncPod struct {
 	groupSpec              api.ServerGroupSpec
 	spec                   api.DeploymentSpec
 	group                  api.ServerGroup
+	arangoMember           api.ArangoMember
 	resources              *Resources
 	imageInfo              api.ImageInfo
 }

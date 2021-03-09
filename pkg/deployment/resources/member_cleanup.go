@@ -23,9 +23,10 @@
 package resources
 
 import (
+	"time"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -165,23 +166,23 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspector) error {
 	// Create all missing arangomembers
 
-	s, _ :=r.context.GetStatus()
+	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, member := range list {
-			name := k8sutil.CreatePodHostName(r.context.GetAPIObject().GetName(), group.AsRole(), member.ID)
+			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
 			if _, ok := cachedStatus.ArangoMember(name); !ok {
 				// Create ArangoMember
 				a := api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: name,
+						Name:      name,
 						Namespace: r.context.GetNamespace(),
 					},
-					Spec:       api.ArangoMemberSpec{
+					Spec: api.ArangoMemberSpec{
 						Group: group,
-						ID: member.ID,
+						ID:    member.ID,
 					},
 				}
 

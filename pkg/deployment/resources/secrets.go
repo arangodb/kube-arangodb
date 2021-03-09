@@ -129,23 +129,38 @@ func (r *Resources) EnsureSecrets(log zerolog.Logger, cachedStatus inspectorInte
 			role := group.AsRole()
 
 			for _, m := range list {
-				tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
+				memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+
+				member, ok := cachedStatus.ArangoMember(memberName)
+				if !ok {
+					return errors.Newf("Member %s not found", memberName)
+				}
+
+				service, ok := cachedStatus.Service(memberName)
+				if !ok {
+					return errors.Newf("Service of member %s not found", memberName)
+				}
+
+				tlsKeyfileSecretName := k8sutil.AppendTLSKeyfileSecretPostfix(member.GetName())
 				if _, exists := cachedStatus.Secret(tlsKeyfileSecretName); !exists {
 					serverNames := []string{
 						k8sutil.CreateDatabaseClientServiceDNSName(apiObject),
 						k8sutil.CreatePodDNSName(apiObject, role, m.ID),
+						k8sutil.CreateServiceDNSName(service),
+						service.Spec.ClusterIP,
 					}
 
 					if spec.ClusterDomain != nil {
 						serverNames = append(serverNames,
 							k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
-							k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
+							k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
+							k8sutil.CreateServiceDNSNameWithDomain(service, spec.ClusterDomain))
 					}
 
 					if ip := spec.ExternalAccess.GetLoadBalancerIP(); ip != "" {
 						serverNames = append(serverNames, ip)
 					}
-					owner := apiObject.AsOwner()
+					owner := member.AsOwner()
 					if err := r.refreshCache(cachedStatus, createTLSServerCertificate(log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner)); err != nil && !k8sutil.IsAlreadyExists(err) {
 						return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 					}

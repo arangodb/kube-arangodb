@@ -23,6 +23,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -34,14 +35,19 @@ func (g *ServerGroup) UnmarshalJSON(bytes []byte) error {
 		return nil
 	}
 
-	*g = ServerGroupFromRole(string(bytes))
+	var s string
+
+	if err := json.Unmarshal(bytes, &s); err != nil {
+		return err
+	}
+
+	*g = ServerGroupFromRole(s)
 
 	return nil
 }
 
 func (g ServerGroup) MarshalJSON() ([]byte, error) {
-	s := g.AsRole()
-	return []byte(s), nil
+	return json.Marshal(g.AsRole())
 }
 
 const (

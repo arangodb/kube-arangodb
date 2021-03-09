@@ -26,10 +26,13 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -50,6 +53,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 	start := time.Now()
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
+	status, _ := r.context.GetStatus()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
@@ -59,6 +63,77 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 
 	// Fetch existing services
 	svcs := kubecli.CoreV1().Services(ns)
+
+	// Ensure member services
+	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
+			memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+
+			member, ok := cachedStatus.ArangoMember(memberName)
+			if !ok {
+				return errors.Newf("Member %s not found", memberName)
+			}
+
+			if s, ok := cachedStatus.Service(member.GetName()); !ok {
+				s = &core.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      member.GetName(),
+						Namespace: member.GetNamespace(),
+					},
+					Spec: core.ServiceSpec{
+						Type: core.ServiceTypeClusterIP,
+						Ports: []core.ServicePort{
+							{
+								Name:       "server",
+								Protocol:   "TCP",
+								Port:       k8sutil.ArangoPort,
+								TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
+							},
+						},
+						PublishNotReadyAddresses: true,
+						Selector:                 k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID),
+					},
+				}
+
+				if _, err := svcs.Create(s); err != nil {
+					if !k8sutil.IsConflict(err) {
+						return err
+					}
+				}
+
+				return errors.Reconcile()
+			} else {
+				spec := s.Spec.DeepCopy()
+
+				spec.Type = core.ServiceTypeClusterIP
+				spec.Ports = []core.ServicePort{
+					{
+						Name:       "server",
+						Protocol:   "TCP",
+						Port:       k8sutil.ArangoPort,
+						TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
+					},
+				}
+				spec.PublishNotReadyAddresses = true
+				spec.Selector = k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID)
+
+				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
+					s.Spec = *spec
+
+					if _, err := svcs.Update(s); err != nil {
+						return err
+					}
+
+					return errors.Reconcile()
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	// Headless service
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
@@ -153,8 +228,8 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 		nodePort := spec.GetNodePort()
 		if spec.GetType().IsNone() {
 			if noneIsClusterIP {
-				eaServiceType = v1.ServiceTypeClusterIP
-				if existing.Spec.Type != v1.ServiceTypeClusterIP {
+				eaServiceType = core.ServiceTypeClusterIP
+				if existing.Spec.Type != core.ServiceTypeClusterIP {
 					deleteExternalAccessService = true // Remove the current and replace with proper one
 					createExternalAccessService = true
 				}
@@ -164,24 +239,24 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 			}
 		} else if spec.GetType().IsAuto() {
 			// Inspect existing service.
-			if existing.Spec.Type == v1.ServiceTypeLoadBalancer {
+			if existing.Spec.Type == core.ServiceTypeLoadBalancer {
 				// See if LoadBalancer has been configured & the service is "old enough"
 				oldEnoughTimestamp := time.Now().Add(-1 * time.Minute) // How long does the load-balancer provisioner have to act.
 				if len(existing.Status.LoadBalancer.Ingress) == 0 && existing.GetObjectMeta().GetCreationTimestamp().Time.Before(oldEnoughTimestamp) {
 					log.Info().Str("service", eaServiceName).Msgf("LoadBalancerIP of %s external access service is not set, switching to NodePort", title)
 					createExternalAccessService = true
-					eaServiceType = v1.ServiceTypeNodePort
+					eaServiceType = core.ServiceTypeNodePort
 					deleteExternalAccessService = true // Remove the LoadBalancer ex service, then add the NodePort one
-				} else if existing.Spec.Type == v1.ServiceTypeLoadBalancer && (loadBalancerIP != "" && existing.Spec.LoadBalancerIP != loadBalancerIP) {
+				} else if existing.Spec.Type == core.ServiceTypeLoadBalancer && (loadBalancerIP != "" && existing.Spec.LoadBalancerIP != loadBalancerIP) {
 					deleteExternalAccessService = true // LoadBalancerIP is wrong, remove the current and replace with proper one
 					createExternalAccessService = true
-				} else if existing.Spec.Type == v1.ServiceTypeNodePort && len(existing.Spec.Ports) == 1 && (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
+				} else if existing.Spec.Type == core.ServiceTypeNodePort && len(existing.Spec.Ports) == 1 && (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
 					deleteExternalAccessService = true // NodePort is wrong, remove the current and replace with proper one
 					createExternalAccessService = true
 				}
 			}
 		} else if spec.GetType().IsLoadBalancer() {
-			if existing.Spec.Type != v1.ServiceTypeLoadBalancer || (loadBalancerIP != "" && existing.Spec.LoadBalancerIP != loadBalancerIP) {
+			if existing.Spec.Type != core.ServiceTypeLoadBalancer || (loadBalancerIP != "" && existing.Spec.LoadBalancerIP != loadBalancerIP) {
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
 			}
@@ -190,7 +265,7 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 				existing.Spec.LoadBalancerSourceRanges = loadBalancerSourceRanges
 			}
 		} else if spec.GetType().IsNodePort() {
-			if existing.Spec.Type != v1.ServiceTypeNodePort || len(existing.Spec.Ports) != 1 || (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
+			if existing.Spec.Type != core.ServiceTypeNodePort || len(existing.Spec.Ports) != 1 || (nodePort != 0 && existing.Spec.Ports[0].NodePort != int32(nodePort)) {
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
 			}

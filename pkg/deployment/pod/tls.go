@@ -46,7 +46,7 @@ func IsTLSEnabled(i Input) bool {
 }
 
 func GetTLSKeyfileSecretName(i Input) string {
-	return k8sutil.CreateTLSKeyfileSecretName(i.ApiObject.GetName(), i.Group.AsRole(), i.Member.ID)
+	return k8sutil.AppendTLSKeyfileSecretPostfix(i.ArangoMember.GetName())
 }
 
 func TLS() Builder {

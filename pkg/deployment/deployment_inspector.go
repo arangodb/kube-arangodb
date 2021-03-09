@@ -167,16 +167,16 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = nextInterval.ReduceTo(x)
 	}
 
-	if err := d.resources.EnsureSecrets(d.deps.Log, cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
+	if err := d.resources.EnsureArangoMembers(cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
 	}
 
 	if err := d.resources.EnsureServices(cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Service creation failed")
 	}
 
-	if err := d.resources.EnsureArangoMembers(cachedStatus); err != nil {
-		return minInspectionInterval, errors.Wrapf(err, "ArangoMember creation failed")
+	if err := d.resources.EnsureSecrets(d.deps.Log, cachedStatus); err != nil {
+		return minInspectionInterval, errors.Wrapf(err, "Secret creation failed")
 	}
 
 	// Inspect secret hashes

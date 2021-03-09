@@ -26,7 +26,7 @@ import core "k8s.io/api/core/v1"
 
 type ArangoMemberSpec struct {
 	Group ServerGroup `json:"group,omitempty"`
-	ID string `json:"id,omitempty"`
+	ID    string      `json:"id,omitempty"`
 
 	Template         *core.PodTemplate `json:"template,omitempty"`
 	TemplateChecksum string            `json:"templateChecksum,omitempty"`
