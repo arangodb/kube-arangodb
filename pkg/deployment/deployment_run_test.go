@@ -95,6 +95,41 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			testCase.Resources(t, d)
 		}
 
+		// Set members
+		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+			for _, m := range list {
+				member := api.ArangoMember{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: d.GetNamespace(),
+						Name:      m.ArangoMemberName(d.GetName(), group),
+					},
+					Spec: api.ArangoMemberSpec{
+						Group: group,
+						ID:    m.ID,
+					},
+				}
+
+				c := d.GetArangoCli()
+				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Create(&member); err != nil {
+					return err
+				}
+
+				s := core.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      member.GetName(),
+						Namespace: member.GetNamespace(),
+					},
+				}
+
+				k := d.GetKubeCli()
+				if _, err := k.CoreV1().Services(member.GetNamespace()).Create(&s); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}))
+
 		// Set features
 		{
 			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation

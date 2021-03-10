@@ -72,7 +72,9 @@ func LabelsForExporterService(deploymentName string) map[string]string {
 func LabelsForMember(deploymentName, role, id string) map[string]string {
 	l := LabelsForDeployment(deploymentName, role)
 
-	l[LabelKeyArangoMember] = id
+	if id != "" {
+		l[LabelKeyArangoMember] = id
+	}
 
 	return l
 }
