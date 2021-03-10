@@ -38,6 +38,8 @@ const (
 	LabelKeyRole = "role"
 	// LabelKeyArangoExporter is the key of the label used to indicate that a exporter is present
 	LabelKeyArangoExporter = "arango_exporter"
+	// LabelKeyArangoMember is the key of the label used to store the ArangoDeployment member ID in
+	LabelKeyArangoMember = "deployment.arangodb.com/member"
 
 	// AppName is the fixed value for the "app" label
 	AppName = "arangodb"
@@ -64,6 +66,17 @@ func LabelsForExporterService(deploymentName string) map[string]string {
 		LabelKeyArangoDeployment: deploymentName,
 		LabelKeyApp:              AppName,
 	}
+}
+
+// LabelsForMember returns a map of labels, given to all resources for given deployment name and member id
+func LabelsForMember(deploymentName, role, id string) map[string]string {
+	l := LabelsForDeployment(deploymentName, role)
+
+	if id != "" {
+		l[LabelKeyArangoMember] = id
+	}
+
+	return l
 }
 
 // LabelsForDeployment returns a map of labels, given to all resources for given deployment name

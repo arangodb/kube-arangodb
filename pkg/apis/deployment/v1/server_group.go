@@ -22,9 +22,33 @@
 
 package v1
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ServerGroup int
+
+func (g *ServerGroup) UnmarshalJSON(bytes []byte) error {
+	if bytes == nil {
+		*g = ServerGroupUnknown
+		return nil
+	}
+
+	var s string
+
+	if err := json.Unmarshal(bytes, &s); err != nil {
+		return err
+	}
+
+	*g = ServerGroupFromRole(s)
+
+	return nil
+}
+
+func (g ServerGroup) MarshalJSON() ([]byte, error) {
+	return json.Marshal(g.AsRole())
+}
 
 const (
 	ServerGroupUnknown        ServerGroup = 0

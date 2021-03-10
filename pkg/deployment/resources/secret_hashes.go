@@ -31,12 +31,11 @@ import (
 	"strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/go-driver"
 
@@ -51,7 +50,7 @@ import (
 // If a hash is different, the deployment is marked
 // with a SecretChangedCondition and the operator will not
 // touch it until this is resolved.
-func (r *Resources) ValidateSecretHashes(cachedStatus inspector.Inspector) error {
+func (r *Resources) ValidateSecretHashes(cachedStatus inspectorInterface.Inspector) error {
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
@@ -269,7 +268,7 @@ func changeUserPassword(c Context, secret *v1.Secret) error {
 }
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.
-func (r *Resources) getSecretHash(cachedStatus inspector.Inspector, secretName string) (*v1.Secret, string, bool) {
+func (r *Resources) getSecretHash(cachedStatus inspectorInterface.Inspector, secretName string) (*v1.Secret, string, bool) {
 	s, exists := cachedStatus.Secret(secretName)
 	if !exists {
 		return nil, "", false

@@ -26,10 +26,9 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/go-driver/agency"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -61,7 +60,7 @@ type PlanBuilderContext interface {
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member
-	RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),

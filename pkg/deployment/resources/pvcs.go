@@ -24,10 +24,10 @@ package resources
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // createPVCFinalizers creates a list of finalizers for a PVC created for the given group.
@@ -36,7 +36,7 @@ func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
 }
 
 // EnsurePVCs creates all PVC's listed in member status
-func (r *Resources) EnsurePVCs(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsurePVCs(cachedStatus inspectorInterface.Inspector) error {
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()

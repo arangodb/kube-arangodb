@@ -585,7 +585,7 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	testCase.ExpectedPod.ObjectMeta = metav1.ObjectMeta{
 		Name:      podName,
 		Namespace: testNamespace,
-		Labels:    k8sutil.LabelsForDeployment(testDeploymentName, group.AsRole()),
+		Labels:    k8sutil.LabelsForMember(testDeploymentName, group.AsRole(), memberStatus.ID),
 		OwnerReferences: []metav1.OwnerReference{
 			testCase.ArangoDeployment.AsOwner(),
 		},

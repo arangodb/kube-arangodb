@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type PodFilter func(pod *core.Pod) bool
-type PodAction func(pod *core.Pod) error
-
-func (i *inspector) IteratePods(action PodAction, filters ...PodFilter) error {
+func (i *inspector) IteratePods(action pod.Action, filters ...pod.Filter) error {
 	for _, pod := range i.Pods() {
 		if err := i.iteratePod(pod, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IteratePods(action PodAction, filters ...PodFilter) error {
 	return nil
 }
 
-func (i *inspector) iteratePod(pod *core.Pod, action PodAction, filters ...PodFilter) error {
+func (i *inspector) iteratePod(pod *core.Pod, action pod.Action, filters ...pod.Filter) error {
 	for _, filter := range filters {
 		if !filter(pod) {
 			return nil
@@ -121,7 +119,7 @@ func getPods(k kubernetes.Interface, namespace, cont string) ([]core.Pod, error)
 	return pods.Items, nil
 }
 
-func FilterPodsByLabels(labels map[string]string) PodFilter {
+func FilterPodsByLabels(labels map[string]string) pod.Filter {
 	return func(pod *core.Pod) bool {
 		for key, value := range labels {
 			v, ok := pod.Labels[key]

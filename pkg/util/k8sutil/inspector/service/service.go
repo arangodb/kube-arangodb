@@ -20,7 +20,14 @@
 // Author Adam Janikowski
 //
 
-package member
+package service
 
-type Status struct {
+import core "k8s.io/api/core/v1"
+
+type Inspector interface {
+	Service(name string) (*core.Service, bool)
+	IterateServices(action ServiceAction, filters ...ServiceFilter) error
 }
+
+type ServiceFilter func(pod *core.Service) bool
+type ServiceAction func(pod *core.Service) error

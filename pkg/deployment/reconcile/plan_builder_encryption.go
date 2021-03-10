@@ -30,8 +30,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
@@ -57,7 +56,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, builders ...planBuilder) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -94,7 +93,7 @@ func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 func createEncryptionKey(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -148,7 +147,7 @@ func createEncryptionKey(ctx context.Context,
 func createEncryptionKeyStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -164,7 +163,7 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) bool {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
 	if skipEncryptionPlan(spec, status) {
 		return false
 	}
@@ -187,7 +186,7 @@ func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
 func createEncryptionKeyCleanPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if skipEncryptionPlan(spec, status) {
 		return nil
 	}
@@ -243,7 +242,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 func areEncryptionKeysUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
 	folder *core.Secret) (plan api.Plan, failed bool) {
 
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
@@ -270,7 +269,7 @@ func areEncryptionKeysUpToDate(ctx context.Context,
 func isEncryptionKeyUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
 	group api.ServerGroup, m api.MemberStatus,
 	folder *core.Secret) (updateRequired bool, failed bool) {
 	if m.Phase != api.MemberPhaseCreated {

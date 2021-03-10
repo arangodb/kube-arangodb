@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type PodDisruptionBudgetFilter func(podDisruptionBudget *policy.PodDisruptionBudget) bool
-type PodDisruptionBudgetAction func(podDisruptionBudget *policy.PodDisruptionBudget) error
-
-func (i *inspector) IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error {
+func (i *inspector) IteratePodDisruptionBudgets(action poddisruptionbudget.PodDisruptionBudgetAction, filters ...poddisruptionbudget.PodDisruptionBudgetFilter) error {
 	for _, podDisruptionBudget := range i.PodDisruptionBudgets() {
 		if err := i.iteratePodDisruptionBudget(podDisruptionBudget, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IteratePodDisruptionBudgets(action PodDisruptionBudgetAction
 	return nil
 }
 
-func (i *inspector) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDisruptionBudget, action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error {
+func (i *inspector) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDisruptionBudget, action poddisruptionbudget.PodDisruptionBudgetAction, filters ...poddisruptionbudget.PodDisruptionBudgetFilter) error {
 	for _, filter := range filters {
 		if !filter(podDisruptionBudget) {
 			return nil
@@ -121,7 +119,7 @@ func getPodDisruptionBudgets(k kubernetes.Interface, namespace, cont string) ([]
 	return podDisruptionBudgets.Items, nil
 }
 
-func FilterPodDisruptionBudgetsByLabels(labels map[string]string) PodDisruptionBudgetFilter {
+func FilterPodDisruptionBudgetsByLabels(labels map[string]string) poddisruptionbudget.PodDisruptionBudgetFilter {
 	return func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
 		for key, value := range labels {
 			v, ok := podDisruptionBudget.Labels[key]

@@ -27,6 +27,10 @@ const (
 	ArangoDeploymentResourceKind   = "ArangoDeployment"
 	ArangoDeploymentResourcePlural = "arangodeployments"
 
+	ArangoMemberCRDName        = ArangoMemberResourcePlural + "." + ArangoDeploymentGroupName
+	ArangoMemberResourceKind   = "ArangoMember"
+	ArangoMemberResourcePlural = "arangomembers"
+
 	ArangoDeploymentGroupName = "database.arangodb.com"
 )
 

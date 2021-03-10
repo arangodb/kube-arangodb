@@ -24,6 +24,7 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,10 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type SecretFilter func(pod *core.Secret) bool
-type SecretAction func(pod *core.Secret) error
-
-func (i *inspector) IterateSecrets(action SecretAction, filters ...SecretFilter) error {
+func (i *inspector) IterateSecrets(action secret.Action, filters ...secret.Filter) error {
 	for _, secret := range i.Secrets() {
 		if err := i.iterateSecrets(secret, action, filters...); err != nil {
 			return err
@@ -43,7 +41,7 @@ func (i *inspector) IterateSecrets(action SecretAction, filters ...SecretFilter)
 	return nil
 }
 
-func (i *inspector) iterateSecrets(secret *core.Secret, action SecretAction, filters ...SecretFilter) error {
+func (i *inspector) iterateSecrets(secret *core.Secret, action secret.Action, filters ...secret.Filter) error {
 	for _, filter := range filters {
 		if !filter(secret) {
 			return nil
@@ -77,7 +75,7 @@ func (i *inspector) Secret(name string) (*core.Secret, bool) {
 	return secret, true
 }
 
-func (i *inspector) SecretReadInterface() SecretReadInterface {
+func (i *inspector) SecretReadInterface() secret.ReadInterface {
 	return &secretReadInterface{i: i}
 }
 

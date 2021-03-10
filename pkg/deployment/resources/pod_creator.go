@@ -40,7 +40,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -287,7 +287,7 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
@@ -299,6 +299,13 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	kubecli := r.context.GetKubeCli()
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
+
+	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+
+	member, ok := cachedStatus.ArangoMember(memberName)
+	if !ok {
+		return nil, errors.Newf("Service of member %s not found", memberName)
+	}
 
 	// Update pod name
 	role := group.AsRole()
@@ -322,6 +329,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			autoUpgrade:      autoUpgrade,
 			deploymentStatus: status,
 			id:               memberID,
+			arangoMember:     *member,
 		}
 
 		input := memberPod.AsInput()
@@ -388,6 +396,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			group:                  group,
 			resources:              r,
 			imageInfo:              imageInfo,
+			arangoMember:           *member,
 		}
 
 		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberSyncPod)
@@ -415,7 +424,7 @@ func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentSt
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspector.Inspector) error {
+func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -641,7 +650,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 }
 
 // EnsurePods creates all Pods listed in member status
-func (r *Resources) EnsurePods(cachedStatus inspector.Inspector) error {
+func (r *Resources) EnsurePods(cachedStatus inspectorInterface.Inspector) error {
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}

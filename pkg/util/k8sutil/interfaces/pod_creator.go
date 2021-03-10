@@ -23,9 +23,13 @@
 package interfaces
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	core "k8s.io/api/core/v1"
 )
+
+type Inspector interface {
+	secret.Inspector
+}
 
 type PodModifier interface {
 	ApplyPodSpec(spec *core.PodSpec) error
@@ -48,7 +52,7 @@ type PodCreator interface {
 	GetContainerCreator() ContainerCreator
 	GetImagePullSecrets() []string
 	IsDeploymentMode() bool
-	Validate(cachedStatus inspector.Inspector) error
+	Validate(cachedStatus Inspector) error
 
 	Annotations() map[string]string
 	Labels() map[string]string

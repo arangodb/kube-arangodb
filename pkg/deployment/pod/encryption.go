@@ -27,11 +27,11 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -154,7 +154,7 @@ func (e encryption) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	}
 }
 
-func (e encryption) Verify(i Input, cachedStatus inspector.Inspector) error {
+func (e encryption) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !IsEncryptionEnabled(i) {
 		return nil
 	}

@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,7 +75,7 @@ func CreateExporterClientServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(cachedStatus inspector.Inspector, svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
 
