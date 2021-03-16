@@ -23,6 +23,7 @@
 package replication
 
 import (
+	"context"
 	"net"
 	"strconv"
 
@@ -108,7 +109,7 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
 			return nil, errors.WithStack(err)
@@ -167,7 +168,7 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
-		depl, err := depls.Get(deploymentName, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
 			return "", "", "", "", errors.WithStack(err)

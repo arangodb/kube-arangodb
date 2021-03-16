@@ -23,6 +23,7 @@
 package event
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -70,7 +71,7 @@ func Test_Event_Handler(t *testing.T) {
 			call(p, reason, message)
 
 			// Assert
-			events, err := c.CoreV1().Events(namespace).List(meta.ListOptions{})
+			events, err := c.CoreV1().Events(namespace).List(context.Background(), meta.ListOptions{})
 			require.NoError(t, err)
 			require.Len(t, events.Items, 1)
 
@@ -85,7 +86,7 @@ func Test_Event_Handler(t *testing.T) {
 			assert.Equal(t, namespace, event.InvolvedObject.Namespace)
 			assert.Equal(t, name, event.InvolvedObject.Name)
 
-			require.NoError(t, c.CoreV1().Events(namespace).Delete(event.Name, &meta.DeleteOptions{}))
+			require.NoError(t, c.CoreV1().Events(namespace).Delete(context.Background(), event.Name, meta.DeleteOptions{}))
 		})
 	}
 }

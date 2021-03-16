@@ -24,6 +24,7 @@ package tests
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestCursorSingle(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestCursorActiveFailover(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -137,7 +138,7 @@ func TestCursorCluster(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

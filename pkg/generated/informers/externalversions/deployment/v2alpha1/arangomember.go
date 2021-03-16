@@ -23,6 +23,7 @@
 package v2alpha1
 
 import (
+	"context"
 	time "time"
 
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
@@ -65,13 +66,13 @@ func NewFilteredArangoMemberInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV2alpha1().ArangoMembers(namespace).List(options)
+				return client.DatabaseV2alpha1().ArangoMembers(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV2alpha1().ArangoMembers(namespace).Watch(options)
+				return client.DatabaseV2alpha1().ArangoMembers(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&deploymentv2alpha1.ArangoMember{},

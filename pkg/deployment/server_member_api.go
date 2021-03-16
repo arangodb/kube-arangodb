@@ -23,6 +23,8 @@
 package deployment
 
 import (
+	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -62,7 +64,7 @@ func (m member) PVCName() string {
 func (m member) PVName() string {
 	if status, found := m.status(); found && status.PersistentVolumeClaimName != "" {
 		pvcs := m.d.deps.KubeCli.CoreV1().PersistentVolumeClaims(m.d.Namespace())
-		if pvc, err := pvcs.Get(status.PersistentVolumeClaimName, metav1.GetOptions{}); err == nil {
+		if pvc, err := pvcs.Get(context.Background(), status.PersistentVolumeClaimName, metav1.GetOptions{}); err == nil {
 			return pvc.Spec.VolumeName
 		}
 	}

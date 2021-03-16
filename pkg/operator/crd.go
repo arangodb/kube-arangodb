@@ -23,6 +23,8 @@
 package operator
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
@@ -41,7 +43,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if enableDeployment {
 			log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
 			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(meta.ListOptions{})
+				_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 				return err
 			}); err != nil {
 				return errors.WithStack(err)
@@ -51,7 +53,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if enableDeploymentReplication {
 			log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
 			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.ReplicationV1().ArangoDeploymentReplications(o.Namespace).List(meta.ListOptions{})
+				_, err := o.CRCli.ReplicationV1().ArangoDeploymentReplications(o.Namespace).List(context.Background(), meta.ListOptions{})
 				return err
 			}); err != nil {
 				return errors.WithStack(err)
@@ -61,7 +63,7 @@ func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, ena
 		if enableBackup {
 			log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
 			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(meta.ListOptions{})
+				_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
 				return err
 			}); err != nil {
 				return errors.WithStack(err)

@@ -23,6 +23,7 @@
 package policy
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -99,7 +100,7 @@ func newArangoBackupPolicy(schedule, namespace, name string, selector map[string
 }
 
 func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *backupApi.ArangoBackupPolicy) *backupApi.ArangoBackupPolicy {
-	newPolicy, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Get(policy.Name, meta.GetOptions{})
+	newPolicy, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Get(context.Background(), policy.Name, meta.GetOptions{})
 	require.NoError(t, err)
 
 	return newPolicy
@@ -107,14 +108,14 @@ func refreshArangoBackupPolicy(t *testing.T, h *handler, policy *backupApi.Arang
 
 func createArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
 	for _, policy := range policies {
-		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Create(policy)
+		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Create(context.Background(), policy, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 }
 
 func updateArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.ArangoBackupPolicy) {
 	for _, policy := range policies {
-		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Update(policy)
+		_, err := h.client.BackupV1().ArangoBackupPolicies(policy.Namespace).Update(context.Background(), policy, meta.UpdateOptions{})
 		require.NoError(t, err)
 	}
 }
@@ -142,13 +143,13 @@ func newArangoDeployment(namespace string, labels map[string]string) *database.A
 
 func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
 	for _, deployment := range deployments {
-		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(deployment)
+		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 }
 
 func listArangoBackups(t *testing.T, handler *handler, namespace string) []backupApi.ArangoBackup {
-	result, err := handler.client.BackupV1().ArangoBackups(namespace).List(meta.ListOptions{})
+	result, err := handler.client.BackupV1().ArangoBackups(namespace).List(context.Background(), meta.ListOptions{})
 	require.NoError(t, err)
 
 	return result.Items

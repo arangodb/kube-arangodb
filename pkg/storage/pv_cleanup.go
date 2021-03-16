@@ -161,7 +161,7 @@ func (c *pvCleaner) clean(pv v1.PersistentVolume) error {
 	}
 
 	// Remove persistent volume
-	if err := c.cli.CoreV1().PersistentVolumes().Delete(pv.GetName(), &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := c.cli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).
 			Str("name", pv.GetName()).
 			Msg("Failed to remove PersistentVolume")

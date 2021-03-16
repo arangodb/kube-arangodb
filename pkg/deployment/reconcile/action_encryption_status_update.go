@@ -57,7 +57,7 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	f, err := a.actionCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
+	f, err := a.actionCtx.SecretsInterface().Get(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil

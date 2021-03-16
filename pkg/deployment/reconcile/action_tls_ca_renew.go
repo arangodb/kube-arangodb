@@ -55,7 +55,7 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	s := a.actionCtx.SecretsInterface()
-	if err := s.Delete(a.actionCtx.GetSpec().TLS.GetCASecretName(), &meta.DeleteOptions{}); err != nil {
+	if err := s.Delete(ctx, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			a.log.Warn().Err(err).Msgf("Unable to clean cert %s", a.actionCtx.GetSpec().TLS.GetCASecretName())
 			return true, nil

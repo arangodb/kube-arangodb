@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"context"
 	"strings"
 
 	clientBackup "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
@@ -55,7 +56,7 @@ func inProgress(backup *backupApi.ArangoBackup) bool {
 }
 
 func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoBackupInterface) (bool, error) {
-	backups, err := client.List(meta.ListOptions{})
+	backups, err := client.List(context.Background(), meta.ListOptions{})
 
 	if err != nil {
 		return false, newTemporaryError(err)

@@ -23,6 +23,7 @@
 package inspector
 
 import (
+	"context"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -98,7 +99,7 @@ func arangoMemberPointer(pod api.ArangoMember) *api.ArangoMember {
 }
 
 func getArangoMembers(k versioned.Interface, namespace, cont string) ([]api.ArangoMember, error) {
-	arangoMembers, err := k.DatabaseV1().ArangoMembers(namespace).List(meta.ListOptions{
+	arangoMembers, err := k.DatabaseV1().ArangoMembers(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

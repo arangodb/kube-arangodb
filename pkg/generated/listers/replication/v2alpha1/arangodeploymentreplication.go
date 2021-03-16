@@ -30,8 +30,10 @@ import (
 )
 
 // ArangoDeploymentReplicationLister helps list ArangoDeploymentReplications.
+// All objects returned here must be treated as read-only.
 type ArangoDeploymentReplicationLister interface {
 	// List lists all ArangoDeploymentReplications in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v2alpha1.ArangoDeploymentReplication, err error)
 	// ArangoDeploymentReplications returns an object that can list and get ArangoDeploymentReplications.
 	ArangoDeploymentReplications(namespace string) ArangoDeploymentReplicationNamespaceLister
@@ -62,10 +64,13 @@ func (s *arangoDeploymentReplicationLister) ArangoDeploymentReplications(namespa
 }
 
 // ArangoDeploymentReplicationNamespaceLister helps list and get ArangoDeploymentReplications.
+// All objects returned here must be treated as read-only.
 type ArangoDeploymentReplicationNamespaceLister interface {
 	// List lists all ArangoDeploymentReplications in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v2alpha1.ArangoDeploymentReplication, err error)
 	// Get retrieves the ArangoDeploymentReplication from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v2alpha1.ArangoDeploymentReplication, error)
 	ArangoDeploymentReplicationNamespaceListerExpansion
 }

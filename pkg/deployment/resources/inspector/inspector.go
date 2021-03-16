@@ -23,19 +23,26 @@
 package inspector
 
 import (
+	"context"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sync"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )
+
+// SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
+type SecretReadInterface interface {
+	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
+}
 
 func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
 	pods, err := podsToMap(k, namespace)

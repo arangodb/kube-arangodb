@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -24,7 +25,7 @@ func min(a int, b int) int {
 }
 
 func isPDBAsExpected(kube kubernetes.Interface, name, ns string, expectedMinAvailable int) error {
-	pdb, err := kube.PolicyV1beta1().PodDisruptionBudgets(ns).Get(name, metav1.GetOptions{})
+	pdb, err := kube.PolicyV1beta1().PodDisruptionBudgets(ns).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func TestPDBCreate(t *testing.T) {
 	assert.NoError(t, depl.Spec.Validate())
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

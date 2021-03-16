@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"context"
 	"sort"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -64,7 +65,7 @@ func (ls *LocalStorage) StorageClassIsDefault() bool {
 
 // Volumes returns all volumes created by the local storage resource
 func (ls *LocalStorage) Volumes() []server.Volume {
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		ls.deps.Log.Error().Err(err).Msg("Failed to list persistent volumes")
 		return nil

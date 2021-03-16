@@ -54,7 +54,7 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 }
 
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	keyfolder, err := a.actionCtx.SecretsInterface().Get(pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
+	keyfolder, err := a.actionCtx.SecretsInterface().Get(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Err(err).Msgf("Unable to fetch encryption folder")
 		return true, false, nil

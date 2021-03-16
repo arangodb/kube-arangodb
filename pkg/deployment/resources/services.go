@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -95,7 +96,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 					},
 				}
 
-				if _, err := svcs.Create(s); err != nil {
+				if _, err := svcs.Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
 					if !k8sutil.IsConflict(err) {
 						return err
 					}
@@ -120,7 +121,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
 					s.Spec = *spec
 
-					if _, err := svcs.Update(s); err != nil {
+					if _, err := svcs.Update(context.Background(), s, metav1.UpdateOptions{}); err != nil {
 						return err
 					}
 
@@ -271,7 +272,7 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 			}
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
-			if _, err := svcs.Update(existing); err != nil {
+			if _, err := svcs.Update(context.Background(), existing, metav1.UpdateOptions{}); err != nil {
 				log.Debug().Err(err).Msgf("Failed to update %s external access service", title)
 				return errors.WithStack(err)
 			}
@@ -285,7 +286,7 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		if err := svcs.Delete(eaServiceName, &metav1.DeleteOptions{}); err != nil {
+		if err := svcs.Delete(context.Background(), eaServiceName, metav1.DeleteOptions{}); err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)
 			return errors.WithStack(err)
 		}

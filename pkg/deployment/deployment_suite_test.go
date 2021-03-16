@@ -31,7 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 
-	monitoringFakeClient "github.com/coreos/prometheus-operator/pkg/client/versioned/fake"
+	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 

@@ -57,7 +57,7 @@ var backupAPIAvailable *bool
 func waitUntilBackup(ci versioned.Interface, name, ns string, predicate func(*backupApi.ArangoBackup, error) error, timeout ...time.Duration) (*backupApi.ArangoBackup, error) {
 	var result *backupApi.ArangoBackup
 	op := func() error {
-		obj, err := ci.BackupV1().ArangoBackups(ns).Get(name, metav1.GetOptions{})
+		obj, err := ci.BackupV1().ArangoBackups(ns).Get(context.Background(), name, metav1.GetOptions{})
 		result = obj
 		if predicate != nil {
 			if err := predicate(obj, err); err != nil {
@@ -237,7 +237,7 @@ func statBackupMeta(client driver.Client, backupID driver.BackupID) (bool, drive
 
 func ensureBackup(t *testing.T, deployment, ns string, deploymentClient versioned.Interface, predicate func(*backupApi.ArangoBackup, error) error, options *EnsureBackupOptions) (*backupApi.ArangoBackup, string, driver.BackupID) {
 	backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), deployment, options)
-	_, err := deploymentClient.BackupV1().ArangoBackups(ns).Create(backup)
+	_, err := deploymentClient.BackupV1().ArangoBackups(ns).Create(context.Background(), backup, metav1.CreateOptions{})
 	require.NoError(t, err, "failed to create backup: %s", err)
 	name := backup.GetName()
 
@@ -277,7 +277,7 @@ func newDownload(ID string) *backupApi.ArangoBackupSpecDownload {
 
 func timeoutWaitForBackups(t *testing.T, backupClient backupClient.ArangoBackupInterface, labels metav1.LabelSelector, size int) func() error {
 	return func() error {
-		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		backups, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
 		if err != nil {
 			return err
 		}
@@ -364,11 +364,11 @@ func TestBackupCluster(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 
 	// Create deployment
-	apiObject, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
 	require.NoError(t, err, "failed to create deployment: %s", err)
 
-	api2Object, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl2)
+	api2Object, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl2, metav1.CreateOptions{})
 	defer removeDeployment(deploymentClient, depl2.GetName(), ns)
 	require.NoError(t, err, "failed to create deployment two: %s", err)
 
@@ -407,9 +407,9 @@ func TestBackupCluster(t *testing.T) {
 
 				backup.Labels = labels.MatchLabels
 
-				_, err := backupClient.Create(backup)
+				_, err := backupClient.Create(context.Background(), backup, metav1.CreateOptions{})
 				require.NoError(t, err, "failed to create backup: %s", err)
-				defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+				defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 			}
 		}
 
@@ -419,9 +419,9 @@ func TestBackupCluster(t *testing.T) {
 
 	t.Run("create backup", func(t *testing.T) {
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
-		_, err := backupClient.Create(backup)
+		_, err := backupClient.Create(context.Background(), backup,metav1.CreateOptions{})
 		require.NoError(t, err, "failed to create backup: %s", err)
-		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 		require.NoError(t, err, "backup did not become available: %s", err)
@@ -438,9 +438,9 @@ func TestBackupCluster(t *testing.T) {
 		skipOrRemotePath(t)
 
 		backup := newBackup(fmt.Sprintf("my-backup-%s", uniuri.NewLen(4)), depl.GetName(), nil)
-		_, err := backupClient.Create(backup)
+		_, err := backupClient.Create(context.Background(), backup,metav1.CreateOptions{})
 		require.NoError(t, err, "failed to create backup: %s", err)
-		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
 		require.NoError(t, err, "backup did not become available: %s", err)
@@ -456,12 +456,12 @@ func TestBackupCluster(t *testing.T) {
 
 		t.Logf("Add upload")
 		// add upload part
-		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
+		currentBackup, err := backupClient.Get(context.Background(), backup.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		currentBackup.Spec.Upload = newOperation()
 
-		_, err = backupClient.Update(currentBackup)
+		_, err = backupClient.Update(context.Background(), currentBackup, metav1.UpdateOptions{})
 		require.NoError(t, err)
 
 		// After backup went thru uploading phase wait for finnish
@@ -478,7 +478,7 @@ func TestBackupCluster(t *testing.T) {
 
 	t.Run("create backup and delete", func(t *testing.T) {
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// check that the backup is actually available
 		found, meta, err := statBackupMeta(databaseClient, id)
@@ -487,7 +487,7 @@ func TestBackupCluster(t *testing.T) {
 		compareBackup(t, meta, backup)
 
 		// now remove the backup
-		backupClient.Delete(name, &metav1.DeleteOptions{})
+		backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
 		require.NoError(t, err, "Backup test failed: %s", err)
 
@@ -498,7 +498,7 @@ func TestBackupCluster(t *testing.T) {
 
 	t.Run("remove backup locally", func(t *testing.T) {
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// now remove the backup locally
 		err := databaseClient.Backup().Delete(nil, id)
@@ -521,7 +521,7 @@ func TestBackupCluster(t *testing.T) {
 		// create a backup resource manually with that id
 		var backup *backupApi.ArangoBackup
 		err = timeout(3*time.Second, 2*time.Minute, func() error {
-			backups, err := backupClient.List(metav1.ListOptions{})
+			backups, err := backupClient.List(context.Background(), metav1.ListOptions{})
 			if err != nil {
 				return err
 			}
@@ -539,7 +539,7 @@ func TestBackupCluster(t *testing.T) {
 			return interrupt{}
 		})
 		require.NoError(t, err, "failed to create backup: %s", err)
-		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 
 		// wait until the backup becomes available
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
@@ -582,9 +582,9 @@ func TestBackupCluster(t *testing.T) {
 
 			backup.Labels = labels.MatchLabels
 
-			_, err := backupClient.Create(backup)
+			_, err := backupClient.Create(context.Background(), backup,metav1.CreateOptions{})
 			require.NoError(t, err, "failed to create backup: %s", err)
-			defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+			defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 		}
 
 		err = timeout(time.Second, 5*time.Minute, timeoutWaitForBackups(t, backupClient, labels, size))
@@ -592,7 +592,7 @@ func TestBackupCluster(t *testing.T) {
 		require.NoError(t, err)
 
 		// Get first backup
-		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		backups, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
 		require.NoError(t, err)
 		require.Len(t, backups.Items, size)
 
@@ -601,9 +601,9 @@ func TestBackupCluster(t *testing.T) {
 
 		backup.Labels = labels.MatchLabels
 
-		_, err = backupClient.Create(backup)
+		_, err = backupClient.Create(context.Background(), backup,metav1.CreateOptions{})
 		require.NoError(t, err, "failed to create backup: %s", err)
-		defer backupClient.Delete(backup.GetName(), &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), backup.GetName(), metav1.DeleteOptions{})
 
 		name := backup.Name
 
@@ -670,7 +670,7 @@ func TestBackupCluster(t *testing.T) {
 		})
 
 		// Assert that all of the backups are in valid state
-		backups, err = backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
+		backups, err = backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&labels)})
 		require.NoError(t, err)
 		require.Len(t, backups.Items, size+1)
 
@@ -700,7 +700,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// Now create a backup
 		_, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, nil)
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// insert yet another document
 		meta2, err := col.CreateDocument(ctx, &Book{Title: "Bad book title", Author: "Lars"})
@@ -805,7 +805,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with upload operation
 		backup, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
@@ -823,7 +823,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with upload operation
 		backup, name, _ := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
@@ -836,12 +836,12 @@ func TestBackupCluster(t *testing.T) {
 		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// Remove upload option
-		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
+		currentBackup, err := backupClient.Get(context.Background(), backup.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		currentBackup.Spec.Upload = nil
 
-		_, err = backupClient.Update(currentBackup)
+		_, err = backupClient.Update(context.Background(), currentBackup, metav1.UpdateOptions{})
 		require.NoError(t, err)
 
 		// Wait for uploaded flag to disappear
@@ -849,12 +849,12 @@ func TestBackupCluster(t *testing.T) {
 		require.NoError(t, err, "backup did not become ready: %s", err)
 
 		// Append again upload flag
-		currentBackup, err = backupClient.Get(backup.Name, metav1.GetOptions{})
+		currentBackup, err = backupClient.Get(context.Background(), backup.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		currentBackup.Spec.Upload = newOperation()
 
-		_, err = backupClient.Update(currentBackup)
+		_, err = backupClient.Update(context.Background(), currentBackup, metav1.UpdateOptions{})
 		require.NoError(t, err)
 
 		// Wait for uploaded flag to appear
@@ -868,7 +868,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with upload operation
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
@@ -887,7 +887,7 @@ func TestBackupCluster(t *testing.T) {
 		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// After all remove backup
-		backupClient.Delete(name, &metav1.DeleteOptions{})
+		backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
 		require.NoError(t, err, "Backup test failed: %s", err)
 
@@ -897,7 +897,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
@@ -921,7 +921,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with upload operation
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup will be uploaded
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
@@ -940,7 +940,7 @@ func TestBackupCluster(t *testing.T) {
 		require.True(t, *backup.Status.Backup.Uploaded)
 
 		// After all remove backup
-		backupClient.Delete(name, &metav1.DeleteOptions{})
+		backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
 		require.NoError(t, err, "Backup test failed: %s", err)
 
@@ -950,7 +950,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
@@ -969,12 +969,12 @@ func TestBackupCluster(t *testing.T) {
 		require.True(t, *backup.Status.Backup.Downloaded)
 
 		// Add again upload flag
-		currentBackup, err := backupClient.Get(backup.Name, metav1.GetOptions{})
+		currentBackup, err := backupClient.Get(context.Background(), backup.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		currentBackup.Spec.Upload = newOperation()
 
-		_, err = backupClient.Update(currentBackup)
+		_, err = backupClient.Update(context.Background(), currentBackup, metav1.UpdateOptions{})
 		require.NoError(t, err)
 
 		// Wait for uploaded flag to appear
@@ -1005,7 +1005,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// Now create a backup
 		backup, name, id := ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Upload: newOperation()})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsUploaded)
@@ -1025,13 +1025,13 @@ func TestBackupCluster(t *testing.T) {
 		require.Equal(t, backupApi.ArangoBackupStateDeleted, backup.Status.State)
 
 		// now remove the backup
-		backupClient.Delete(name, &metav1.DeleteOptions{})
+		backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 		_, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsNotFound)
 		require.NoError(t, err, "Backup test failed: %s", err)
 
 		// create backup with download operation
 		backup, name, _ = ensureBackup(t, depl.GetName(), ns, deploymentClient, backupIsAvailable, &EnsureBackupOptions{Download: newDownload(string(id))})
-		defer backupClient.Delete(name, &metav1.DeleteOptions{})
+		defer backupClient.Delete(context.Background(), name, metav1.DeleteOptions{})
 
 		// wait until the backup becomes ready
 		backup, err = waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsReady)
@@ -1102,17 +1102,17 @@ func TestBackupCluster(t *testing.T) {
 		})
 
 		policy := newBackupPolicy(depl.GetName(), "*/1 * * * *", deplLabels, nil)
-		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+		list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
 
-		_, err = backupPolicyClient.Create(policy)
+		_, err = backupPolicyClient.Create(context.Background(), policy,metav1.CreateOptions{})
 		require.NoError(t, err)
-		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+		defer backupPolicyClient.Delete(context.Background(), policy.Name, metav1.DeleteOptions{})
 
 		// Wait until 2 backups are created
 		err = timeout(5*time.Second, 5*time.Minute, func() error {
-			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 
 			if err != nil {
 				return err
@@ -1129,16 +1129,16 @@ func TestBackupCluster(t *testing.T) {
 		require.NoError(t, err)
 
 		// Cleanup scheduler
-		backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+		backupPolicyClient.Delete(context.Background(), policy.Name, metav1.DeleteOptions{})
 
-		backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
+		backups, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
 			MatchLabels: deplLabels,
 		})})
 		require.NoError(t, err)
 
 		for _, backup := range backups.Items {
 			t.Run(fmt.Sprintf("deleting - %s", backup.Name), func(t *testing.T) {
-				defer backupClient.Delete(backup.Name, &metav1.DeleteOptions{})
+				defer backupClient.Delete(context.Background(), backup.Name, metav1.DeleteOptions{})
 
 				currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 				require.NoError(t, err, "backup did not become available: %s", err)
@@ -1155,7 +1155,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// Cleanup
 		err = timeout(time.Second, 2*time.Minute, func() error {
-			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 			if err != nil {
 				return err
 			}
@@ -1180,17 +1180,17 @@ func TestBackupCluster(t *testing.T) {
 		})
 
 		policy := newBackupPolicy(depl.GetName(), "*/1 * * * *", labels, nil)
-		list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+		list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 		require.NoError(t, err)
 		require.Len(t, list.Items, 0, "unexpected matching ArangoBackup objects")
 
-		_, err = backupPolicyClient.Create(policy)
+		_, err = backupPolicyClient.Create(context.Background(), policy,metav1.CreateOptions{})
 		require.NoError(t, err)
-		defer backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+		defer backupPolicyClient.Delete(context.Background(), policy.Name, metav1.DeleteOptions{})
 
 		// Wait until 2 backups are created
 		err = timeout(5*time.Second, 5*time.Minute, func() error {
-			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 
 			if err != nil {
 				return err
@@ -1207,11 +1207,11 @@ func TestBackupCluster(t *testing.T) {
 		require.NoError(t, err)
 
 		// Cleanup scheduler
-		backupPolicyClient.Delete(policy.Name, &metav1.DeleteOptions{})
+		backupPolicyClient.Delete(context.Background(), policy.Name, metav1.DeleteOptions{})
 
 		for _, deployment := range deployments {
 			t.Run(fmt.Sprintf("deployment %s", deployment.Name), func(t *testing.T) {
-				backups, err := backupClient.List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
+				backups, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
 					MatchLabels: deployment.Labels,
 				})})
 				require.NoError(t, err)
@@ -1220,7 +1220,7 @@ func TestBackupCluster(t *testing.T) {
 
 				for _, backup := range backups.Items {
 					t.Run(fmt.Sprintf("deleting - %s", backup.Name), func(t *testing.T) {
-						defer backupClient.Delete(backup.Name, &metav1.DeleteOptions{})
+						defer backupClient.Delete(context.Background(), backup.Name, metav1.DeleteOptions{})
 
 						currentBackup, err := waitUntilBackup(deploymentClient, backup.GetName(), ns, backupIsAvailable)
 						require.NoError(t, err, "backup did not become available: %s", err)
@@ -1239,7 +1239,7 @@ func TestBackupCluster(t *testing.T) {
 
 		// Cleanup
 		err = timeout(time.Second, 2*time.Minute, func() error {
-			list, err := backupClient.List(metav1.ListOptions{LabelSelector: selector})
+			list, err := backupClient.List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 			if err != nil {
 				return err
 			}

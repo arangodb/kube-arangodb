@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	core "k8s.io/api/core/v1"
@@ -98,7 +100,7 @@ func serviceAccountPointer(serviceAccount core.ServiceAccount) *core.ServiceAcco
 }
 
 func getServiceAccounts(k kubernetes.Interface, namespace, cont string) ([]core.ServiceAccount, error) {
-	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(meta.ListOptions{
+	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

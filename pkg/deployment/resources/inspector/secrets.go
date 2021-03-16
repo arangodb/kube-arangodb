@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	core "k8s.io/api/core/v1"
@@ -83,7 +85,7 @@ type secretReadInterface struct {
 	i *inspector
 }
 
-func (s secretReadInterface) Get(name string, options meta.GetOptions) (*core.Secret, error) {
+func (s secretReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error) {
 	if s, ok := s.i.Secret(name); !ok {
 		return nil, apiErrors.NewNotFound(schema.GroupResource{
 			Group:    core.GroupName,
@@ -119,7 +121,7 @@ func secretPointer(pod core.Secret) *core.Secret {
 }
 
 func getSecrets(k kubernetes.Interface, namespace, cont string) ([]core.Secret, error) {
-	secrets, err := k.CoreV1().Secrets(namespace).List(meta.ListOptions{
+	secrets, err := k.CoreV1().Secrets(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
