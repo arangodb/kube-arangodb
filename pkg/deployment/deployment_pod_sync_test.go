@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -99,7 +100,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(secretName, &metav1.DeleteOptions{})
+				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Monitoring token secret validation failed: secrets \"" +
@@ -133,7 +134,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.TLS.GetCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(secretName, &metav1.DeleteOptions{})
+				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Failed to create TLS keyfile secret: secrets \"" +
@@ -161,7 +162,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(secretName, &metav1.DeleteOptions{})
+				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Cluster JWT secret validation failed: secrets \"" +
@@ -189,7 +190,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Authentication.GetClientCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(secretName, &metav1.DeleteOptions{})
+				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Client authentication CA certificate secret validation failed: " +

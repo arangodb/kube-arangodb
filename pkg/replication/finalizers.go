@@ -101,7 +101,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	abort := dr.status.CancelFailures > maxCancelFailures
 	depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
-		depl, err := depls.Get(name, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Debug().Msg("Source deployment is gone. Abort enabled")
 			abort = true
@@ -117,7 +117,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	// Inspect deployment deletion state in destination
 	cleanupSource := false
 	if name := p.Spec.Destination.GetDeploymentName(); name != "" {
-		depl, err := depls.Get(name, metav1.GetOptions{})
+		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Debug().Msg("Destination deployment is gone. Source cleanup enabled")
 			cleanupSource = true
@@ -170,7 +170,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.Interface, p *api.ArangoDeploymentReplication, finalizers []string, ignoreNotFound bool) error {
 	repls := crcli.ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		result, err := repls.Get(p.GetName(), metav1.GetOptions{})
+		result, err := repls.Get(context.Background(), p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -178,7 +178,7 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedRepl := updated.(*api.ArangoDeploymentReplication)
-		result, err := repls.Update(updatedRepl)
+		result, err := repls.Update(context.Background(), updatedRepl, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

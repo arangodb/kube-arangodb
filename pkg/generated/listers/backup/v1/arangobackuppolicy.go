@@ -30,8 +30,10 @@ import (
 )
 
 // ArangoBackupPolicyLister helps list ArangoBackupPolicies.
+// All objects returned here must be treated as read-only.
 type ArangoBackupPolicyLister interface {
 	// List lists all ArangoBackupPolicies in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error)
 	// ArangoBackupPolicies returns an object that can list and get ArangoBackupPolicies.
 	ArangoBackupPolicies(namespace string) ArangoBackupPolicyNamespaceLister
@@ -62,10 +64,13 @@ func (s *arangoBackupPolicyLister) ArangoBackupPolicies(namespace string) Arango
 }
 
 // ArangoBackupPolicyNamespaceLister helps list and get ArangoBackupPolicies.
+// All objects returned here must be treated as read-only.
 type ArangoBackupPolicyNamespaceLister interface {
 	// List lists all ArangoBackupPolicies in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error)
 	// Get retrieves the ArangoBackupPolicy from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.ArangoBackupPolicy, error)
 	ArangoBackupPolicyNamespaceListerExpansion
 }

@@ -32,7 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	policy "k8s.io/api/policy/v1beta1"
 

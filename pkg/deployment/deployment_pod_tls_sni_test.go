@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -51,7 +52,7 @@ func createTLSSNISecret(t *testing.T, client kubernetes.Interface, name, namespa
 		secret.Data[key] = []byte(value)
 	}
 
-	_, err := client.CoreV1().Secrets(namespace).Create(&secret)
+	_, err := client.CoreV1().Secrets(namespace).Create(context.Background(), &secret, meta.CreateOptions{})
 	require.NoError(t, err)
 }
 

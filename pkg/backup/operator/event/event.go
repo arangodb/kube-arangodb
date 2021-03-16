@@ -23,6 +23,7 @@
 package event
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -87,7 +88,7 @@ func (e *eventRecorder) newObjectReference(group, version, kind string, object m
 }
 
 func (e *eventRecorder) event(group, version, kind string, object meta.Object, eventType, reason, message string) {
-	_, err := e.kubeClientSet.CoreV1().Events(object.GetNamespace()).Create(e.newEvent(group, version, kind, object, eventType, reason, message))
+	_, err := e.kubeClientSet.CoreV1().Events(object.GetNamespace()).Create(context.Background(), e.newEvent(group, version, kind, object, eventType, reason, message), meta.CreateOptions{})
 	if err != nil {
 		log.Warn().Err(err).
 			Str("APIVersion", fmt.Sprintf("%s/%s", group, version)).

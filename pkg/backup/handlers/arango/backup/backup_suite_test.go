@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -133,13 +134,13 @@ func newArangoBackup(objectRef, namespace, name string, state state.State) *back
 
 func createArangoBackup(t *testing.T, h *handler, backups ...*backupApi.ArangoBackup) {
 	for _, backup := range backups {
-		_, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Create(backup)
+		_, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Create(context.Background(), backup, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 }
 
 func refreshArangoBackup(t *testing.T, h *handler, backup *backupApi.ArangoBackup) *backupApi.ArangoBackup {
-	obj, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Get(backup.Name, meta.GetOptions{})
+	obj, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Get(context.Background(), backup.Name, meta.GetOptions{})
 	require.NoError(t, err)
 	return obj
 }
@@ -165,7 +166,7 @@ func newArangoDeployment(namespace, name string) *database.ArangoDeployment {
 
 func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
 	for _, deployment := range deployments {
-		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(deployment)
+		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 }

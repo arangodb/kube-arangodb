@@ -36,7 +36,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
@@ -300,7 +300,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(d.apiObject.GetName(), metav1.GetOptions{})
+	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(context.Background(), d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -394,7 +394,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 		if update.GetDeletionTimestamp() == nil {
 			ensureFinalizers(update)
 		}
-		newAPIObject, err := depls.Update(update)
+		newAPIObject, err := depls.Update(context.Background(), update, metav1.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -404,7 +404,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = depls.Get(update.GetName(), metav1.GetOptions{})
+			current, err = depls.Get(context.Background(), update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -438,7 +438,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 		update.Spec = newSpec
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(update)
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(context.Background(), update, metav1.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -448,7 +448,7 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(update.GetName(), metav1.GetOptions{})
+			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -477,9 +477,9 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
-		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(metav1.ListOptions{})
+		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(context.Background(), metav1.ListOptions{})
 	} else {
-		_, err = d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get("servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+		_, err = d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
 	}
 	log := d.deps.Log
 	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
@@ -528,7 +528,7 @@ func (d *Deployment) ApplyPatch(p ...patch.Item) error {
 
 	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
-	depl, err := c.Patch(d.apiObject.GetName(), types.JSONPatchType, data)
+	depl, err := c.Patch(context.Background(), d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}

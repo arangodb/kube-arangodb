@@ -127,7 +127,7 @@ func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Obje
 	kubecli := o.Dependencies.KubeCli
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.With().Str("pod-name", o.Config.PodName).Logger()
-	pod, err := pods.Get(o.Config.PodName, metav1.GetOptions{})
+	pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot find Pod containing this operator")
 		return nil
@@ -161,7 +161,7 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.With().Str("pod-name", o.Config.PodName).Logger()
 	op := func() error {
-		pod, err := pods.Get(o.Config.PodName, metav1.GetOptions{})
+		pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Error().Err(err).Msg("Pod not found, so we cannot set its role label")
 			return retry.Permanent(errors.WithStack(err))
@@ -174,7 +174,7 @@ func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 		}
 		labels[label] = role
 		pod.ObjectMeta.SetLabels(labels)
-		if _, err := pods.Update(pod); k8sutil.IsConflict(err) {
+		if _, err := pods.Update(context.Background(), pod, metav1.UpdateOptions{}); k8sutil.IsConflict(err) {
 			// Retry it
 			return errors.WithStack(err)
 		} else if err != nil {

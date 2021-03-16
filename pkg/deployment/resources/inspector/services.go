@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,7 +102,7 @@ func servicePointer(pod core.Service) *core.Service {
 }
 
 func getServices(k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
-	services, err := k.CoreV1().Services(namespace).List(meta.ListOptions{
+	services, err := k.CoreV1().Services(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

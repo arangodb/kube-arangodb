@@ -23,6 +23,7 @@
 package v1alpha
 
 import (
+	"context"
 	time "time"
 
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -64,13 +65,13 @@ func NewFilteredArangoLocalStorageInformer(client versioned.Interface, resyncPer
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages().List(options)
+				return client.StorageV1alpha().ArangoLocalStorages().List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages().Watch(options)
+				return client.StorageV1alpha().ArangoLocalStorages().Watch(context.TODO(), options)
 			},
 		},
 		&storagev1alpha.ArangoLocalStorage{},

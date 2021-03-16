@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,7 +102,7 @@ func pvcPointer(pvc core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
 }
 
 func getPersistentVolumeClaims(k kubernetes.Interface, namespace, cont string) ([]core.PersistentVolumeClaim, error) {
-	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(meta.ListOptions{
+	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

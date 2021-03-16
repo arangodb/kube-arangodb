@@ -123,14 +123,14 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 		},
 	}
 
-	_, err := kube.CoreV1().PersistentVolumeClaims(ns).Create(&pvcspec)
+	_, err := kube.CoreV1().PersistentVolumeClaims(ns).Create(context.Background(), &pvcspec, metav1.CreateOptions{})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create pvc")
 	}
 	defer func() {
 		if deletePVC {
 			cliLog.Debug().Str("pvc-name", claimname).Msg("deleting pvc")
-			kube.CoreV1().PersistentVolumeClaims(ns).Delete(claimname, &metav1.DeleteOptions{})
+			kube.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), claimname, metav1.DeleteOptions{})
 		}
 	}()
 
@@ -181,13 +181,13 @@ func runVolumeInspector(ctx context.Context, kube kubernetes.Interface, ns, name
 		},
 	}
 
-	_, err = kube.CoreV1().Pods(ns).Create(&podspec)
+	_, err = kube.CoreV1().Pods(ns).Create(context.Background(), &podspec, metav1.CreateOptions{})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create pod")
 	}
-	defer kube.CoreV1().Pods(ns).Delete(podname, &metav1.DeleteOptions{})
+	defer kube.CoreV1().Pods(ns).Delete(context.Background(), podname, metav1.DeleteOptions{})
 
-	podwatch, err := kube.CoreV1().Pods(ns).Watch(metav1.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", podname).String()})
+	podwatch, err := kube.CoreV1().Pods(ns).Watch(context.Background(), metav1.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", podname).String()})
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to watch for pod")
 	}
@@ -264,7 +264,7 @@ func doVolumeInspection(ctx context.Context, kube kubernetes.Interface, ns, name
 }
 
 func checkVolumeAvailable(kube kubernetes.Interface, vname string) (VolumeInfo, error) {
-	volume, err := kube.CoreV1().PersistentVolumes().Get(vname, metav1.GetOptions{})
+	volume, err := kube.CoreV1().PersistentVolumes().Get(context.Background(), vname, metav1.GetOptions{})
 	if err != nil {
 		return VolumeInfo{}, errors.Wrapf(err, "failed to GET volume %s", vname)
 	}
@@ -275,7 +275,7 @@ func checkVolumeAvailable(kube kubernetes.Interface, vname string) (VolumeInfo, 
 	case corev1.VolumeReleased:
 		// we have to remove the claim reference
 		volume.Spec.ClaimRef = nil
-		if _, err := kube.CoreV1().PersistentVolumes().Update(volume); err != nil {
+		if _, err := kube.CoreV1().PersistentVolumes().Update(context.Background(), volume, metav1.UpdateOptions{}); err != nil {
 			return VolumeInfo{}, errors.Wrapf(err, "failed to remove claim reference")
 		}
 	default:
@@ -306,7 +306,7 @@ func preflightChecks(kube kubernetes.Interface, volumes []string) (VolumeListInf
 }
 
 func getMyImage(kube kubernetes.Interface, ns, name string) (string, error) {
-	pod, err := kube.CoreV1().Pods(ns).Get(name, metav1.GetOptions{})
+	pod, err := kube.CoreV1().Pods(ns).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -367,7 +367,7 @@ func createArangoDeployment(cli acli.Interface, ns, deplname, arangoimage string
 		})
 	}
 
-	if _, err := cli.DatabaseV1().ArangoDeployments(ns).Create(&depl); err != nil {
+	if _, err := cli.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), &depl, metav1.CreateOptions{}); err != nil {
 		return errors.Wrap(err, "failed to create ArangoDeployment")
 	}
 

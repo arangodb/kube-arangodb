@@ -74,7 +74,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	}
 
 	// Check deployment still exists
-	updated, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(deploymentName, metav1.GetOptions{})
+	updated, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(context.Background(), deploymentName, metav1.GetOptions{})
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")

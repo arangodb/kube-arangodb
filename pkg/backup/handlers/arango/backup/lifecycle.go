@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"context"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
@@ -44,7 +45,7 @@ func (h *handler) LifecyclePreStart() error {
 	}()
 
 	for {
-		_, err := h.client.BackupV1().ArangoBackups(h.operator.Namespace()).List(meta.ListOptions{})
+		_, err := h.client.BackupV1().ArangoBackups(h.operator.Namespace()).List(context.Background(), meta.ListOptions{})
 
 		if err != nil {
 			log.Warn().Err(err).Msgf("CR for %s not found", backup.ArangoBackupResourceKind)

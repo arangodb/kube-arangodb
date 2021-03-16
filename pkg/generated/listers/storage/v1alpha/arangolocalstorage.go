@@ -30,10 +30,13 @@ import (
 )
 
 // ArangoLocalStorageLister helps list ArangoLocalStorages.
+// All objects returned here must be treated as read-only.
 type ArangoLocalStorageLister interface {
 	// List lists all ArangoLocalStorages in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error)
 	// Get retrieves the ArangoLocalStorage from the index for a given name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha.ArangoLocalStorage, error)
 	ArangoLocalStorageListerExpansion
 }

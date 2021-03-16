@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -197,7 +198,7 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspector.Inspecto
 			}
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
-			if _, err := svcs.Update(existing); err != nil {
+			if _, err := svcs.Update(context.Background(), existing, metav1.UpdateOptions{}); err != nil {
 				log.Debug().Err(err).Msgf("Failed to update %s external access service", title)
 				return errors.WithStack(err)
 			}
@@ -211,7 +212,7 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspector.Inspecto
 
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		if err := svcs.Delete(eaServiceName, &metav1.DeleteOptions{}); err != nil {
+		if err := svcs.Delete(context.Background(), eaServiceName, metav1.DeleteOptions{}); err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)
 			return errors.WithStack(err)
 		}
