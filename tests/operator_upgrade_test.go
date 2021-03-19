@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -48,7 +49,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
 	defer removeDeployment(c, depl.GetName(), ns)
@@ -59,7 +60,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
 
-	podsWatcher, err := kubecli.CoreV1().Pods(ns).Watch(metav1.ListOptions{
+	podsWatcher, err := kubecli.CoreV1().Pods(ns).Watch(context.Background(), metav1.ListOptions{
 		LabelSelector: fields.OneTermEqualSelector("app", "arangodb").String(),
 	})
 	if err != nil {
@@ -121,7 +122,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 
 func updateOperatorImage(t *testing.T, ns string, kube kubernetes.Interface, newImage string) (string, error) {
 	for {
-		depl, err := kube.AppsV1().Deployments(ns).Get(operatorTestDeploymentName, metav1.GetOptions{})
+		depl, err := kube.AppsV1().Deployments(ns).Get(context.Background(), operatorTestDeploymentName, metav1.GetOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -130,7 +131,7 @@ func updateOperatorImage(t *testing.T, ns string, kube kubernetes.Interface, new
 			return "", err
 		}
 		setOperatorImage(depl, newImage)
-		if _, err := kube.AppsV1().Deployments(ns).Update(depl); k8sutil.IsConflict(err) {
+		if _, err := kube.AppsV1().Deployments(ns).Update(context.Background(), depl, metav1.UpdateOptions{}); k8sutil.IsConflict(err) {
 			continue
 		} else if err != nil {
 			return "", err
@@ -140,7 +141,7 @@ func updateOperatorImage(t *testing.T, ns string, kube kubernetes.Interface, new
 }
 
 func updateOperatorDeployment(ns string, kube kubernetes.Interface) (*appsv1.Deployment, error) {
-	return kube.AppsV1().Deployments(ns).Get(operatorTestDeploymentName, metav1.GetOptions{})
+	return kube.AppsV1().Deployments(ns).Get(context.Background(), operatorTestDeploymentName, metav1.GetOptions{})
 }
 
 func getOperatorImage(depl *appsv1.Deployment) (string, error) {
@@ -164,7 +165,7 @@ func setOperatorImage(depl *appsv1.Deployment, image string) {
 
 func waitForArangoDBPodsGone(ns string, kube kubernetes.Interface) error {
 	return retry.Retry(func() error {
-		_, err := kube.CoreV1().Pods(ns).List(metav1.ListOptions{
+		_, err := kube.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{
 			LabelSelector: fields.OneTermEqualSelector("app", "arangodb").String(),
 		})
 		if k8sutil.IsNotFound(err) {
@@ -176,7 +177,7 @@ func waitForArangoDBPodsGone(ns string, kube kubernetes.Interface) error {
 
 func waitForOperatorImage(ns string, kube kubernetes.Interface, image string) error {
 	return retry.Retry(func() error {
-		pods, err := kube.CoreV1().Pods(ns).List(metav1.ListOptions{
+		pods, err := kube.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{
 			LabelSelector: fields.OneTermEqualSelector("app", operatorTestDeploymentName).String(),
 		})
 		if err != nil {

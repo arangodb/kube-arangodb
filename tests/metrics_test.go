@@ -57,7 +57,7 @@ func TestAddingMetrics(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	require.NoErrorf(t, err, "Create deployment failed")
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
@@ -95,7 +95,7 @@ func TestAddingMetrics(t *testing.T) {
 			return nil
 		}
 		for _, m := range *status {
-			pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+			pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), m.PodName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}

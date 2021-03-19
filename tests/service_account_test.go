@@ -58,7 +58,7 @@ func TestServiceAccountSingle(t *testing.T) {
 	depl.Spec.Single.ServiceAccountName = util.NewString(saName)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -107,7 +107,7 @@ func TestServiceAccountActiveFailover(t *testing.T) {
 	depl.Spec.Agents.ServiceAccountName = util.NewString(saName)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestServiceAccountCluster(t *testing.T) {
 	depl.Spec.Coordinators.ServiceAccountName = util.NewString(saName)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -215,7 +215,7 @@ func TestServiceAccountClusterWithSync(t *testing.T) {
 	depl.Spec.SyncWorkers.ServiceAccountName = util.NewString(saName)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -264,7 +264,7 @@ func mustCreateServiceAccount(kubecli kubernetes.Interface, namePrefix, ns strin
 			Name: strings.ToLower(namePrefix + uniuri.NewLen(4)),
 		},
 	}
-	if _, err := kubecli.CoreV1().ServiceAccounts(ns).Create(&s); err != nil {
+	if _, err := kubecli.CoreV1().ServiceAccounts(ns).Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create service account: %v", err)
 	}
 	return s.GetName()
@@ -272,7 +272,7 @@ func mustCreateServiceAccount(kubecli kubernetes.Interface, namePrefix, ns strin
 
 // deleteServiceAccount deletes a service account with given name in given namespace.
 func deleteServiceAccount(kubecli kubernetes.Interface, name, ns string) error {
-	if err := kubecli.CoreV1().ServiceAccounts(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
+	if err := kubecli.CoreV1().ServiceAccounts(ns).Delete(context.Background(), name, metav1.DeleteOptions{}); err != nil {
 		return maskAny(err)
 	}
 	return nil
@@ -283,7 +283,7 @@ func deleteServiceAccount(kubecli kubernetes.Interface, name, ns string) error {
 func checkMembersUsingServiceAccount(kubecli kubernetes.Interface, ns string, members []api.MemberStatus, serviceAccountName string, t *testing.T) {
 	pods := kubecli.CoreV1().Pods(ns)
 	for _, m := range members {
-		if p, err := pods.Get(m.PodName, metav1.GetOptions{}); err != nil {
+		if p, err := pods.Get(context.Background(), m.PodName, metav1.GetOptions{}); err != nil {
 			t.Errorf("Failed to get pod for member '%s': %v", m.ID, err)
 		} else if p.Spec.ServiceAccountName != serviceAccountName {
 			t.Errorf("Expected pod '%s' to have serviceAccountName '%s', got '%s'", p.GetName(), serviceAccountName, p.Spec.ServiceAccountName)

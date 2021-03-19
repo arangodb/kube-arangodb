@@ -24,6 +24,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"testing"
 
@@ -237,7 +238,7 @@ func runUpgradeTest(t *testing.T, spec UpgradeTest) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

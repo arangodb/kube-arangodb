@@ -24,6 +24,7 @@ package tests
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"testing"
 	"time"
@@ -51,7 +52,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -107,7 +108,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	defer removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -151,7 +152,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -189,7 +190,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -244,7 +245,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	}
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -291,7 +292,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

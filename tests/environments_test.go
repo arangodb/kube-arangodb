@@ -22,6 +22,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -48,7 +49,7 @@ func TestEnvironmentProduction(t *testing.T) {
 	ns := getNamespace(t)
 	kubecli := mustNewKubeClient(t)
 
-	nodeList, err := kubecli.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodeList, err := kubecli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		t.Fatalf("Unable to receive node list: %v", err)
 	}
@@ -75,7 +76,7 @@ func TestEnvironmentProduction(t *testing.T) {
 	}
 
 	// Create deployment
-	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{}); err != nil {
 		// REVIEW - should the test already fail here
 		t.Fatalf("Create deployment failed: %v", err)
 	}

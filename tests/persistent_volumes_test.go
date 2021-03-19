@@ -22,6 +22,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -82,7 +83,7 @@ func TestPVCExists(t *testing.T) {
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(context.Background(), deploymentTemplate, metav1.CreateOptions{})
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
 	_, err = waitUntilDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace, deploymentIsReady())
@@ -116,7 +117,7 @@ func TestPVCResize(t *testing.T) {
 	assert.NoError(t, deploymentTemplate.Spec.Validate())
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(context.Background(), deploymentTemplate, metav1.CreateOptions{})
 	defer removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
@@ -125,7 +126,7 @@ func TestPVCResize(t *testing.T) {
 
 	// Get list of all pvcs for dbservers
 	for _, m := range depl.Status.Members.DBServers {
-		pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+		pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), m.PersistentVolumeClaimName, metav1.GetOptions{})
 		assert.NoError(t, err, "failed to get pvc: %s", err)
 		volumeSize, ok := pvc.Spec.Resources.Requests[corev1.ResourceStorage]
 		assert.True(t, ok, "pvc does not have storage resource")
@@ -147,7 +148,7 @@ func TestPVCResize(t *testing.T) {
 	if err := retry.Retry(func() error {
 		// Get list of all pvcs for dbservers and check for new size
 		for _, m := range depl.Status.Members.DBServers {
-			pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+			pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), m.PersistentVolumeClaimName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -158,7 +159,7 @@ func TestPVCResize(t *testing.T) {
 			if volumeSize.Cmp(size10GB) != 0 {
 				return fmt.Errorf("wrong pvc size: expected: %s, found: %s", size10GB.String(), volumeSize.String())
 			}
-			volume, err := k8sClient.CoreV1().PersistentVolumes().Get(pvc.Spec.VolumeName, metav1.GetOptions{})
+			volume, err := k8sClient.CoreV1().PersistentVolumes().Get(context.Background(), pvc.Spec.VolumeName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -203,7 +204,7 @@ func TestPVCTemplateResize(t *testing.T) {
 	deploymentTemplate.Spec.DBServers.VolumeClaimTemplate.Spec.Resources.Requests[corev1.ResourceStorage] = size08GB
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(deploymentTemplate)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(context.Background(), deploymentTemplate, metav1.CreateOptions{})
 	defer removeDeployment(deploymentClient, deploymentTemplate.GetName(), k8sNameSpace)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 
@@ -212,7 +213,7 @@ func TestPVCTemplateResize(t *testing.T) {
 
 	// Get list of all pvcs for dbservers
 	for _, m := range depl.Status.Members.DBServers {
-		pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+		pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), m.PersistentVolumeClaimName, metav1.GetOptions{})
 		assert.NoError(t, err, "failed to get pvc: %s", err)
 		volumeSize, ok := pvc.Spec.Resources.Requests[corev1.ResourceStorage]
 		assert.True(t, ok, "pvc does not have storage resource")
@@ -234,7 +235,7 @@ func TestPVCTemplateResize(t *testing.T) {
 	if err := retry.Retry(func() error {
 		// Get list of all pvcs for dbservers and check for new size
 		for _, m := range depl.Status.Members.DBServers {
-			pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(m.PersistentVolumeClaimName, metav1.GetOptions{})
+			pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), m.PersistentVolumeClaimName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -245,7 +246,7 @@ func TestPVCTemplateResize(t *testing.T) {
 			if volumeSize.Cmp(size10GB) != 0 {
 				return fmt.Errorf("wrong pvc size: expected: %s, found: %s", size10GB.String(), volumeSize.String())
 			}
-			volume, err := k8sClient.CoreV1().PersistentVolumes().Get(pvc.Spec.VolumeName, metav1.GetOptions{})
+			volume, err := k8sClient.CoreV1().PersistentVolumes().Get(context.Background(), pvc.Spec.VolumeName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -283,10 +284,10 @@ func TestPVCChangeStorage(t *testing.T) {
 	newStorage.ObjectMeta = metav1.ObjectMeta{
 		Name: newStorageClassName,
 	}
-	newStorage, err := kubecli.StorageV1().StorageClasses().Create(newStorage)
+	newStorage, err := kubecli.StorageV1().StorageClasses().Create(context.Background(), newStorage, metav1.CreateOptions{})
 	require.NoError(t, err)
 	defer func() {
-		err := kubecli.StorageV1().StorageClasses().Delete(newStorage.Name, &metav1.DeleteOptions{})
+		err := kubecli.StorageV1().StorageClasses().Delete(context.Background(), newStorage.Name, metav1.DeleteOptions{})
 		assert.NoError(t, err)
 	}()
 
@@ -319,7 +320,7 @@ func TestPVCChangeStorage(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create deployment
-	_, err = arangoClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(depl)
+	_, err = arangoClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(context.Background(), depl, metav1.CreateOptions{})
 	require.NoError(t, err, "failed to create deployment: %s", err)
 	defer deferedCleanupDeployment(arangoClient, depl.GetName(), k8sNameSpace)
 
@@ -356,7 +357,7 @@ func TestPVCChangeStorage(t *testing.T) {
 		}
 
 		for _, server := range deployment.Status.Members.DBServers {
-			pvc, err := kubecli.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(server.PersistentVolumeClaimName, metav1.GetOptions{})
+			pvc, err := kubecli.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), server.PersistentVolumeClaimName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -397,10 +398,10 @@ func TestPVCChangeStorageDeprecated(t *testing.T) {
 	newStorage.ObjectMeta = metav1.ObjectMeta{
 		Name: newStorageClassName,
 	}
-	newStorage, err := kubecli.StorageV1().StorageClasses().Create(newStorage)
+	newStorage, err := kubecli.StorageV1().StorageClasses().Create(context.Background(), newStorage, metav1.CreateOptions{})
 	require.NoError(t, err)
 	defer func() {
-		err := kubecli.StorageV1().StorageClasses().Delete(newStorage.Name, &metav1.DeleteOptions{})
+		err := kubecli.StorageV1().StorageClasses().Delete(context.Background(), newStorage.Name, metav1.DeleteOptions{})
 		assert.NoError(t, err)
 	}()
 
@@ -422,7 +423,7 @@ func TestPVCChangeStorageDeprecated(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create deployment
-	_, err = arangoClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(depl)
+	_, err = arangoClient.DatabaseV1().ArangoDeployments(k8sNameSpace).Create(context.Background(), depl, metav1.CreateOptions{})
 	require.NoError(t, err, "failed to create deployment: %s", err)
 	defer deferedCleanupDeployment(arangoClient, depl.GetName(), k8sNameSpace)
 
@@ -447,7 +448,7 @@ func TestPVCChangeStorageDeprecated(t *testing.T) {
 	// Check for updated deployment
 	isDeprecatedStorageChanged := func(deployment *api.ArangoDeployment) error {
 		for _, server := range deployment.Status.Members.DBServers {
-			pvc, err := kubecli.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(server.PersistentVolumeClaimName, metav1.GetOptions{})
+			pvc, err := kubecli.CoreV1().PersistentVolumeClaims(k8sNameSpace).Get(context.Background(), server.PersistentVolumeClaimName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -473,7 +474,7 @@ func TestPVCChangeStorageDeprecated(t *testing.T) {
 
 func getDefaultStorageClassOrDie(t *testing.T, kubecli kubernetes.Interface) *storagev1.StorageClass {
 	var defaultStorageClass *storagev1.StorageClass
-	storageClasses, err := kubecli.StorageV1().StorageClasses().List(metav1.ListOptions{})
+	storageClasses, err := kubecli.StorageV1().StorageClasses().List(context.Background(), metav1.ListOptions{})
 	require.NoError(t, err)
 
 	for _, sc := range storageClasses.Items {
