@@ -23,6 +23,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -50,7 +51,7 @@ func resourcesAsRequested(kubecli kubernetes.Interface, ns string) func(obj *api
 		return obj.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 
 			for _, m := range *status {
-				pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+				pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), m.PodName, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}

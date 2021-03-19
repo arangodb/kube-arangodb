@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -54,7 +55,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 	stcs := cli.StorageClasses()
 	op := func() error {
 		// Fetch current version of StorageClass
-		current, err := stcs.Get(name, metav1.GetOptions{})
+		current, err := stcs.Get(context.Background(), name, metav1.GetOptions{})
 		if IsNotFound(err) {
 			return retry.Permanent(errors.WithStack(err))
 		} else if err != nil {
@@ -69,7 +70,7 @@ func PatchStorageClassIsDefault(cli storagev1.StorageV1Interface, name string, i
 		current.SetAnnotations(ann)
 
 		// Save StorageClass
-		if _, err := stcs.Update(current); IsConflict(err) {
+		if _, err := stcs.Update(context.Background(), current, metav1.UpdateOptions{}); IsConflict(err) {
 			// StorageClass has been modified since we read it
 			return errors.WithStack(err)
 		} else if err != nil {

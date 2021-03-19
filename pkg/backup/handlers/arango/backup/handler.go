@@ -23,6 +23,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -103,7 +104,7 @@ func (h *handler) start(stopCh <-chan struct{}) {
 }
 
 func (h *handler) refresh() error {
-	deployments, err := h.client.DatabaseV1().ArangoDeployments(h.operator.Namespace()).List(meta.ListOptions{})
+	deployments, err := h.client.DatabaseV1().ArangoDeployments(h.operator.Namespace()).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error
 		return err
 	}
 
-	backups, err := h.client.BackupV1().ArangoBackups(deployment.Namespace).List(meta.ListOptions{})
+	backups, err := h.client.BackupV1().ArangoBackups(deployment.Namespace).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment,
 		},
 	}
 
-	_, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Create(backup)
+	_, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Create(context.Background(), backup, meta.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -202,14 +203,14 @@ func (h *handler) Name() string {
 
 func (h *handler) updateBackupStatus(b *backupApi.ArangoBackup) error {
 	return utils.Retry(retryCount, retryDelay, func() error {
-		backup, err := h.client.BackupV1().ArangoBackups(b.Namespace).Get(b.Name, meta.GetOptions{})
+		backup, err := h.client.BackupV1().ArangoBackups(b.Namespace).Get(context.Background(), b.Name, meta.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		backup.Status = b.Status
 
-		_, err = h.client.BackupV1().ArangoBackups(b.Namespace).UpdateStatus(backup)
+		_, err = h.client.BackupV1().ArangoBackups(b.Namespace).UpdateStatus(context.Background(), backup, meta.UpdateOptions{})
 		return err
 	})
 }
@@ -233,7 +234,7 @@ func (h *handler) getDeploymentMutex(namespace, deployment string) *sync.Mutex {
 
 func (h *handler) Handle(item operation.Item) error {
 	// Get Backup object. It also cover NotFound case
-	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+	b, err := h.client.BackupV1().ArangoBackups(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return nil
@@ -260,7 +261,7 @@ func (h *handler) Handle(item operation.Item) error {
 			item.Namespace,
 			item.Name)
 
-		if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(b); err != nil {
+		if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(context.Background(), b, meta.UpdateOptions{}); err != nil {
 			return err
 		}
 
@@ -274,18 +275,18 @@ func (h *handler) Handle(item operation.Item) error {
 
 	// Add owner reference
 	if b.OwnerReferences == nil || len(b.OwnerReferences) == 0 {
-		deployment, err := h.client.DatabaseV1().ArangoDeployments(b.Namespace).Get(b.Spec.Deployment.Name, meta.GetOptions{})
+		deployment, err := h.client.DatabaseV1().ArangoDeployments(b.Namespace).Get(context.Background(), b.Spec.Deployment.Name, meta.GetOptions{})
 		if err == nil {
 			b.OwnerReferences = []meta.OwnerReference{
 				deployment.AsOwner(),
 			}
 
-			if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(b); err != nil {
+			if _, err = h.client.BackupV1().ArangoBackups(item.Namespace).Update(context.Background(), b, meta.UpdateOptions{}); err != nil {
 				return err
 			}
 		}
 
-		b, err = h.client.BackupV1().ArangoBackups(item.Namespace).Get(item.Name, meta.GetOptions{})
+		b, err = h.client.BackupV1().ArangoBackups(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 		if err != nil {
 			if apiErrors.IsNotFound(err) {
 				return nil
@@ -388,7 +389,7 @@ func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*da
 		return nil, newFatalErrorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
 	}
 
-	obj, err := h.client.DatabaseV1().ArangoDeployments(backup.Namespace).Get(backup.Spec.Deployment.Name, meta.GetOptions{})
+	obj, err := h.client.DatabaseV1().ArangoDeployments(backup.Namespace).Get(context.Background(), backup.Spec.Deployment.Name, meta.GetOptions{})
 	if err == nil {
 		return obj, nil
 	}

@@ -23,6 +23,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -65,13 +66,13 @@ func NewFilteredArangoDeploymentReplicationInformer(client versioned.Interface, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ReplicationV1().ArangoDeploymentReplications(namespace).List(options)
+				return client.ReplicationV1().ArangoDeploymentReplications(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ReplicationV1().ArangoDeploymentReplications(namespace).Watch(options)
+				return client.ReplicationV1().ArangoDeploymentReplications(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&replicationv1.ArangoDeploymentReplication{},

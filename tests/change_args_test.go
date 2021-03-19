@@ -51,7 +51,7 @@ func TestChangeArgsAgents(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeActiveFailover)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestChangeArgsAgents(t *testing.T) {
 		}
 		pods := kubecli.CoreV1().Pods(ns)
 		for _, m := range members.Agents {
-			pod, err := pods.Get(m.PodName, metav1.GetOptions{})
+			pod, err := pods.Get(context.Background(), m.PodName, metav1.GetOptions{})
 			if err != nil {
 				return maskAny(err)
 			}
@@ -130,7 +130,7 @@ func TestChangeArgsDBServer(t *testing.T) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -167,7 +167,7 @@ func TestChangeArgsDBServer(t *testing.T) {
 		}
 		pods := kubecli.CoreV1().Pods(ns)
 		for _, m := range members.DBServers {
-			pod, err := pods.Get(m.PodName, metav1.GetOptions{})
+			pod, err := pods.Get(context.Background(), m.PodName, metav1.GetOptions{})
 			if err != nil {
 				return maskAny(err)
 			}

@@ -54,7 +54,7 @@ func TestSecretHashesRootUser(t *testing.T) {
 	depl.Spec.Bootstrap.PasswordSecretNames[api.UserNameRoot] = api.PasswordSecretNameAuto
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -107,14 +107,14 @@ func TestSecretHashesRootUser(t *testing.T) {
 	}
 
 	secretRoot.Data[constants.SecretPassword] = []byte("1")
-	_, err = kubecli.CoreV1().Secrets(ns).Update(secretRoot)
+	_, err = kubecli.CoreV1().Secrets(ns).Update(context.Background(), secretRoot, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatalf("Root secret '%s' has not been changed: %v", secretRootName, err)
 	}
 
 	err = retry.Retry(func() error {
 		// check if root secret hash has changed
-		depl, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		depl, err = c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get deployment: %v", err)
 		}

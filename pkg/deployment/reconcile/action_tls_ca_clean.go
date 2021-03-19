@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -115,7 +117,7 @@ func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	a.log.Info().Msgf("Removing key %s from truststore", certChecksum)
-	_, err = a.actionCtx.SecretsInterface().Patch(resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch)
+	_, err = a.actionCtx.SecretsInterface().Patch(ctx, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})
 	if err != nil {
 		if !k8sutil.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", string(patch))

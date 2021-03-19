@@ -23,6 +23,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -90,7 +91,7 @@ func cmdLifecyclePreStopRun(cmd *cobra.Command, args []string) {
 	pods := kubecli.CoreV1().Pods(namespace)
 	recentErrors := 0
 	for {
-		p, err := pods.Get(name, metav1.GetOptions{})
+		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			cliLog.Warn().Msg("Pod not found")
 			return

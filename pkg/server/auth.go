@@ -23,6 +23,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -99,7 +100,7 @@ func (s *serverAuthentication) fetchAdminSecret() (string, string, error) {
 	if s.adminSecretName == "" {
 		return "", "", errors.WithStack(errors.Newf("No admin secret name specified"))
 	}
-	secret, err := s.secrets.Get(s.adminSecretName, metav1.GetOptions{})
+	secret, err := s.secrets.Get(context.Background(), s.adminSecretName, metav1.GetOptions{})
 	if err != nil {
 		return "", "", errors.WithStack(err)
 	}

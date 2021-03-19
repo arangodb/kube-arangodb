@@ -23,7 +23,9 @@
 package tests
 
 import (
+	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -58,7 +60,7 @@ func TestResourcesChangeLimitsCluster(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Create deployment
-	_, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := deploymentClient.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	defer removeDeployment(deploymentClient, depl.GetName(), ns)
 	assert.NoError(t, err, "failed to create deplyment: %s", err)
 

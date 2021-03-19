@@ -28,7 +28,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
-	clientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	clientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
 )
 

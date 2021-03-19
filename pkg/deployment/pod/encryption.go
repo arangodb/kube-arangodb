@@ -23,6 +23,7 @@
 package pod
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
@@ -67,7 +68,7 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 }
 
 func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []byte, bool, error) {
-	keyfile, err := secrets.Get(name, meta.GetOptions{})
+	keyfile, err := secrets.Get(context.Background(), name, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return "", nil, false, nil

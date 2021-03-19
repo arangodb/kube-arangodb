@@ -52,7 +52,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -84,17 +84,17 @@ func TestMemberResilienceAgents(t *testing.T) {
 	targetAgent := apiObject.Status.Members.Agents[0]
 	for i := 0; i < 5; i++ {
 		// Get current pod so we can compare UID later
-		originalPod, err := kubecli.CoreV1().Pods(ns).Get(targetAgent.PodName, metav1.GetOptions{})
+		originalPod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetAgent.PodName, metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get pod %s: %v", targetAgent.PodName, err)
 		}
-		if err := kubecli.CoreV1().Pods(ns).Delete(targetAgent.PodName, &metav1.DeleteOptions{}); err != nil {
+		if err := kubecli.CoreV1().Pods(ns).Delete(context.Background(), targetAgent.PodName, metav1.DeleteOptions{}); err != nil {
 			t.Fatalf("Failed to delete pod %s: %v", targetAgent.PodName, err)
 		}
 		if i < 4 {
 			// Wait for pod to return with different UID
 			op := func() error {
-				pod, err := kubecli.CoreV1().Pods(ns).Get(targetAgent.PodName, metav1.GetOptions{})
+				pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetAgent.PodName, metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}
@@ -109,7 +109,7 @@ func TestMemberResilienceAgents(t *testing.T) {
 		} else {
 			// Wait for member to be replaced
 			op := func() error {
-				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}
@@ -153,7 +153,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -176,7 +176,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -185,17 +185,17 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 	targetCoordinator := apiObject.Status.Members.Coordinators[0]
 	for i := 0; i < 5; i++ {
 		// Get current pod so we can compare UID later
-		originalPod, err := kubecli.CoreV1().Pods(ns).Get(targetCoordinator.PodName, metav1.GetOptions{})
+		originalPod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetCoordinator.PodName, metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get pod %s: %v", targetCoordinator.PodName, err)
 		}
-		if err := kubecli.CoreV1().Pods(ns).Delete(targetCoordinator.PodName, &metav1.DeleteOptions{}); err != nil {
+		if err := kubecli.CoreV1().Pods(ns).Delete(context.Background(), targetCoordinator.PodName, metav1.DeleteOptions{}); err != nil {
 			t.Fatalf("Failed to delete pod %s: %v", targetCoordinator.PodName, err)
 		}
 		if i < 4 {
 			// Wait for pod to return with different UID
 			op := func() error {
-				pod, err := kubecli.CoreV1().Pods(ns).Get(targetCoordinator.PodName, metav1.GetOptions{})
+				pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetCoordinator.PodName, metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}
@@ -210,7 +210,7 @@ func TestMemberResilienceCoordinators(t *testing.T) {
 		} else {
 			// Wait for member to be replaced
 			op := func() error {
-				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}
@@ -250,7 +250,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -273,7 +273,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 	}
 
 	// Fetch latest status so we know all member details
-	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+	apiObject, err = c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get deployment: %v", err)
 	}
@@ -282,17 +282,17 @@ func TestMemberResilienceDBServers(t *testing.T) {
 	targetServer := apiObject.Status.Members.DBServers[0]
 	for i := 0; i < 5; i++ {
 		// Get current pod so we can compare UID later
-		originalPod, err := kubecli.CoreV1().Pods(ns).Get(targetServer.PodName, metav1.GetOptions{})
+		originalPod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetServer.PodName, metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get pod %s: %v", targetServer.PodName, err)
 		}
-		if err := kubecli.CoreV1().Pods(ns).Delete(targetServer.PodName, &metav1.DeleteOptions{}); err != nil {
+		if err := kubecli.CoreV1().Pods(ns).Delete(context.Background(), targetServer.PodName, metav1.DeleteOptions{}); err != nil {
 			t.Fatalf("Failed to delete pod %s: %v", targetServer.PodName, err)
 		}
 		if i < 4 {
 			// Wait for pod to return with different UID
 			op := func() error {
-				pod, err := kubecli.CoreV1().Pods(ns).Get(targetServer.PodName, metav1.GetOptions{})
+				pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), targetServer.PodName, metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}
@@ -307,7 +307,7 @@ func TestMemberResilienceDBServers(t *testing.T) {
 		} else {
 			// Wait for member to be replaced
 			op := func() error {
-				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+				updatedObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 				if err != nil {
 					return maskAny(err)
 				}

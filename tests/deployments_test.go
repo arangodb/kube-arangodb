@@ -24,6 +24,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -82,7 +83,7 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	require.NoError(t, err, fmt.Sprintf("Create deployment failed: %v", err))
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
@@ -123,11 +124,11 @@ func TestMultiDeployment(t *testing.T) {
 	depl2.Spec.SetDefaults(depl2.GetName()) // this must be last
 
 	// Create deployments
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl1)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl1, metav1.CreateOptions{})
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 	defer deferedCleanupDeployment(c, depl1.GetName(), ns)
 
-	_, err = c.DatabaseV1().ArangoDeployments(ns).Create(depl2)
+	_, err = c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl2, metav1.CreateOptions{})
 	require.NoError(t, err, fmt.Sprintf("Deployment creation failed: %v", err))
 	defer deferedCleanupDeployment(c, depl2.GetName(), ns)
 

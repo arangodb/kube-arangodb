@@ -23,6 +23,7 @@
 package policy
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -68,7 +69,7 @@ func (h *handler) Handle(item operation.Item) error {
 	}
 
 	// Get Backup object. It also cover NotFound case
-	policy, err := h.client.BackupV1().ArangoBackupPolicies(item.Namespace).Get(item.Name, meta.GetOptions{})
+	policy, err := h.client.BackupV1().ArangoBackupPolicies(item.Namespace).Get(context.Background(), item.Name, meta.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func (h *handler) Handle(item operation.Item) error {
 	policy.Status = status
 
 	// Update status on object
-	if _, err = h.client.BackupV1().ArangoBackupPolicies(item.Namespace).UpdateStatus(policy); err != nil {
+	if _, err = h.client.BackupV1().ArangoBackupPolicies(item.Namespace).UpdateStatus(context.Background(), policy, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 
@@ -150,7 +151,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		listOptions.LabelSelector = meta.FormatLabelSelector(policy.Spec.DeploymentSelector)
 	}
 
-	deployments, err := h.client.DatabaseV1().ArangoDeployments(policy.Namespace).List(listOptions)
+	deployments, err := h.client.DatabaseV1().ArangoDeployments(policy.Namespace).List(context.Background(), listOptions)
 
 	if err != nil {
 		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
@@ -164,7 +165,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 	for _, deployment := range deployments.Items {
 		b := policy.NewBackup(deployment.DeepCopy())
 
-		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(b); err != nil {
+		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(context.Background(), b, meta.CreateOptions{}); err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 			return backupApi.ArangoBackupPolicyStatus{

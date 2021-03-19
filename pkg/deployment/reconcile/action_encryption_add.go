@@ -26,6 +26,8 @@ import (
 	"context"
 	"encoding/base64"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -102,7 +104,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	_, err = a.actionCtx.SecretsInterface().Patch(pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch)
+	_, err = a.actionCtx.SecretsInterface().Patch(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
 	if err != nil {
 		return false, err
 	}

@@ -23,6 +23,8 @@
 package k8sutil
 
 import (
+	"context"
+
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,7 +81,7 @@ func IsChildResource(kind, name, namespace string, resource meta.Object) bool {
 }
 
 func GetSecretsForParent(client typedCore.SecretInterface, kind, name, namespace string) ([]*core.Secret, error) {
-	secrets, err := client.List(meta.ListOptions{})
+	secrets, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +102,7 @@ func GetSecretsForParent(client typedCore.SecretInterface, kind, name, namespace
 }
 
 func GetPDBForParent(client policyTyped.PodDisruptionBudgetInterface, kind, name, namespace string) ([]*policy.PodDisruptionBudget, error) {
-	pdbs, err := client.List(meta.ListOptions{})
+	pdbs, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +123,7 @@ func GetPDBForParent(client policyTyped.PodDisruptionBudgetInterface, kind, name
 }
 
 func GetPVCForParent(client typedCore.PersistentVolumeClaimInterface, kind, name, namespace string) ([]*core.PersistentVolumeClaim, error) {
-	pvcs, err := client.List(meta.ListOptions{})
+	pvcs, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func GetPVCForParent(client typedCore.PersistentVolumeClaimInterface, kind, name
 }
 
 func GetServicesForParent(client typedCore.ServiceInterface, kind, name, namespace string) ([]*core.Service, error) {
-	services, err := client.List(meta.ListOptions{})
+	services, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +165,7 @@ func GetServicesForParent(client typedCore.ServiceInterface, kind, name, namespa
 }
 
 func GetServiceAccountsForParent(client typedCore.ServiceAccountInterface, kind, name, namespace string) ([]*core.ServiceAccount, error) {
-	serviceAccounts, err := client.List(meta.ListOptions{})
+	serviceAccounts, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +186,7 @@ func GetServiceAccountsForParent(client typedCore.ServiceAccountInterface, kind,
 }
 
 func GetPodsForParent(client typedCore.PodInterface, kind, name, namespace string) ([]*core.Pod, error) {
-	podList, err := client.List(meta.ListOptions{})
+	podList, err := client.List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

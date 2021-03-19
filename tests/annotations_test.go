@@ -23,6 +23,7 @@
 package tests
 
 import (
+	"context"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"testing"
 	"time"
@@ -42,13 +43,13 @@ import (
 )
 
 func addAnnotation(t *testing.T, kubeClient kubernetes.Interface, arangoClient versioned.Interface, depl *api.ArangoDeployment, annotations map[string]string) {
-	object, err := arangoClient.DatabaseV1().ArangoDeployments(depl.GetNamespace()).Get(depl.GetName(), meta.GetOptions{})
+	object, err := arangoClient.DatabaseV1().ArangoDeployments(depl.GetNamespace()).Get(context.Background(), depl.GetName(), meta.GetOptions{})
 	require.NoError(t, err)
 
 	object.Spec.Annotations = annotations
 	object.Spec.Coordinators.Annotations = depl.Spec.Coordinators.Annotations
 
-	_, err = arangoClient.DatabaseV1().ArangoDeployments(depl.GetNamespace()).Update(object)
+	_, err = arangoClient.DatabaseV1().ArangoDeployments(depl.GetNamespace()).Update(context.Background(), object, meta.UpdateOptions{})
 	require.NoError(t, err)
 
 	ensureAnnotations(t, kubeClient, object)
@@ -196,7 +197,7 @@ func TestAnnotations(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	depl, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	depl, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, meta.CreateOptions{})
 	require.NoError(t, err)
 
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)

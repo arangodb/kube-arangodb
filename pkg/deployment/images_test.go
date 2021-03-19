@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"testing"
@@ -180,11 +181,11 @@ func TestEnsureImages(t *testing.T) {
 					},
 				}
 
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(&pod)
+				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 			},
@@ -205,11 +206,11 @@ func TestEnsureImages(t *testing.T) {
 						Phase: v1.PodFailed,
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(&pod)
+				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 0)
 			},
@@ -235,11 +236,11 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(&pod)
+				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 			},
@@ -266,11 +267,11 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(&pod)
+				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 			},
@@ -300,11 +301,11 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(&pod)
+				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 			},
@@ -326,7 +327,7 @@ func TestEnsureImages(t *testing.T) {
 			}
 
 			// Create custom resource in the fake kubernetes API
-			_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(d.apiObject)
+			_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 			require.NoError(t, err)
 
 			// Act
@@ -342,7 +343,7 @@ func TestEnsureImages(t *testing.T) {
 			require.NoError(t, err)
 
 			if len(testCase.ExpectedPod.Spec.Containers) > 0 {
-				pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+				pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 				require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)

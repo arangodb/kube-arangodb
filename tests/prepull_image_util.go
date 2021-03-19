@@ -23,6 +23,7 @@
 package tests
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"strings"
@@ -75,16 +76,16 @@ func prepullArangoImage(cli kubernetes.Interface, image, namespace string) error
 		},
 	}
 	// Create DS
-	if _, err := cli.AppsV1().DaemonSets(namespace).Create(ds); err != nil {
+	if _, err := cli.AppsV1().DaemonSets(namespace).Create(context.Background(), ds, metav1.CreateOptions{}); err != nil {
 		return maskAny(err)
 	}
 	// Cleanup on exit
 	defer func() {
-		cli.AppsV1().DaemonSets(namespace).Delete(name, &metav1.DeleteOptions{})
+		cli.AppsV1().DaemonSets(namespace).Delete(context.Background(), name, metav1.DeleteOptions{})
 	}()
 	// Now wait for it to be ready
 	op := func() error {
-		current, err := cli.AppsV1().DaemonSets(namespace).Get(name, metav1.GetOptions{})
+		current, err := cli.AppsV1().DaemonSets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
 			return maskAny(err)
 		}

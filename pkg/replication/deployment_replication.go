@@ -23,6 +23,7 @@
 package replication
 
 import (
+	"context"
 	"reflect"
 	"sync/atomic"
 	"time"
@@ -194,7 +195,7 @@ func (dr *DeploymentReplication) handleArangoDeploymentReplicationUpdatedEvent(e
 	repls := dr.deps.CRCli.ReplicationV1().ArangoDeploymentReplications(dr.apiObject.GetNamespace())
 
 	// Get the most recent version of the deployment replication from the API server
-	current, err := repls.Get(dr.apiObject.GetName(), metav1.GetOptions{})
+	current, err := repls.Get(context.Background(), dr.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment replication from API server")
 		if k8sutil.IsNotFound(err) {
@@ -258,7 +259,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 	for {
 		attempt++
 		update.Status = dr.status
-		newAPIObject, err := repls.Update(update)
+		newAPIObject, err := repls.Update(context.Background(), update, metav1.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			dr.apiObject = newAPIObject
@@ -268,7 +269,7 @@ func (dr *DeploymentReplication) updateCRStatus() error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeploymentReplication
-			current, err = repls.Get(update.GetName(), metav1.GetOptions{})
+			current, err = repls.Get(context.Background(), update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -295,7 +296,7 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 		attempt++
 		update.Spec = newSpec
 		update.Status = dr.status
-		newAPIObject, err := repls.Update(update)
+		newAPIObject, err := repls.Update(context.Background(), update, metav1.UpdateOptions{})
 		if err == nil {
 			// Update internal object
 			dr.apiObject = newAPIObject
@@ -305,7 +306,7 @@ func (dr *DeploymentReplication) updateCRSpec(newSpec api.DeploymentReplicationS
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeploymentReplication
-			current, err = repls.Get(update.GetName(), metav1.GetOptions{})
+			current, err = repls.Get(context.Background(), update.GetName(), metav1.GetOptions{})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -346,7 +347,7 @@ func (dr *DeploymentReplication) reportFailedStatus() {
 			return errors.WithStack(err)
 		}
 
-		depl, err := repls.Get(dr.apiObject.Name, metav1.GetOptions{})
+		depl, err := repls.Get(context.Background(), dr.apiObject.Name, metav1.GetOptions{})
 		if err != nil {
 			// Update (PUT) will return conflict even if object is deleted since we have UID set in object.
 			// Because it will check UID first and return something like:
