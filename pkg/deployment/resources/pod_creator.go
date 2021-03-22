@@ -241,14 +241,19 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 
 // CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
 func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
+	var finalizers []string
+	if d := r.context.GetSpec().GetServerGroupSpec(group).ShutdownDelay; d != nil {
+		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+	}
+
 	switch group {
 	case api.ServerGroupAgents:
-		return []string{constants.FinalizerPodAgencyServing}
+		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
 	case api.ServerGroupDBServers:
-		return []string{constants.FinalizerPodDrainDBServer}
-	default:
-		return nil
+		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
 	}
+
+	return finalizers
 }
 
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
@@ -304,15 +309,17 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 	role := group.AsRole()
 	roleAbbr := group.AsRoleAbbreviated()
 
-	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
+	newMember := m.DeepCopy()
+
+	newMember.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, newMember.ID, CreatePodSuffix(spec))
 
 	// Render pod
 	if group.IsArangod() {
 		// Prepare arguments
-		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
+		autoUpgrade := newMember.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
 
 		memberPod := MemberArangoDPod{
-			status:           m,
+			status:           *newMember,
 			groupSpec:        groupSpec,
 			spec:             spec,
 			group:            group,
@@ -332,7 +339,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
 
-		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberPod)
+		return RenderArangoPod(apiObject, role, newMember.ID, newMember.PodName, args, &memberPod)
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
@@ -360,7 +367,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
-			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
+			tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, newMember.ID)
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
@@ -376,7 +383,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, m)
+		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -390,7 +397,7 @@ func (r *Resources) RenderPodForMember(cachedStatus inspector.Inspector, spec ap
 			imageInfo:              imageInfo,
 		}
 
-		return RenderArangoPod(apiObject, role, m.ID, m.PodName, args, &memberSyncPod)
+		return RenderArangoPod(apiObject, role, newMember.ID, newMember.PodName, args, &memberSyncPod)
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}

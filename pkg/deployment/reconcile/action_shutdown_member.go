@@ -56,42 +56,18 @@ type actionShutdownMember struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 	log := a.log
-	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
 		return true, nil
 	}
-	if group.IsArangod() {
-		// do not try to shut down a pod that is not ready
-		if !m.Conditions.IsTrue(api.ConditionTypeReady) {
-			return true, nil
-		}
-		// Invoke shutdown endpoint
-		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, errors.WithStack(err)
-		}
-		removeFromCluster := true
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
-		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
-			// Shutdown failed. Let's check if we're already done
-			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
-				// We're done
-				return true, nil
-			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, errors.WithStack(err)
-		}
-	} else if group.IsArangosync() {
-		// Terminate pod
-		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, errors.WithStack(err)
-		}
+
+	if ready, err := getShutdownHelper(&a.action, a.actionCtx, a.log).Start(ctx); err != nil {
+		return false, err
+	} else if ready {
+		return true, nil
 	}
+
 	// Update status
 	m.Phase = api.MemberPhaseShuttingDown
 	if err := a.actionCtx.UpdateMember(m); err != nil {
@@ -103,15 +79,9 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
 func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
-	if !found {
-		// Member not long exists
-		return true, false, nil
+	if ready, abort, err := getShutdownHelper(&a.action, a.actionCtx, a.log).CheckProgress(ctx); err != nil {
+		return false, abort, err
+	} else {
+		return ready, false, nil
 	}
-	if m.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		// Shutdown completed
-		return true, false, nil
-	}
-	// Member still not shutdown, retry soon
-	return false, false, nil
 }

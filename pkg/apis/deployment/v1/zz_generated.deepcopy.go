@@ -1404,6 +1404,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(ServerGroupInitContainers)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ShutdownMethod != nil {
+		in, out := &in.ShutdownMethod, &out.ShutdownMethod
+		*out = new(ServerGroupShutdownMethod)
+		**out = **in
+	}
+	if in.ShutdownDelay != nil {
+		in, out := &in.ShutdownDelay, &out.ShutdownDelay
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

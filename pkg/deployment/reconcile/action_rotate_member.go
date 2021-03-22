@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -56,41 +58,17 @@ type actionRotateMember struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRotateMember) Start(ctx context.Context) (bool, error) {
 	log := a.log
-	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
 	}
-	// Remove finalizers, so Kubernetes will quickly terminate the pod
-	if err := a.actionCtx.RemovePodFinalizers(m.PodName); err != nil {
-		return false, errors.WithStack(err)
+
+	if ready, err := getShutdownHelper(&a.action, a.actionCtx, a.log).Start(ctx); err != nil {
+		return false, err
+	} else if ready {
+		return true, nil
 	}
-	if group.IsArangod() {
-		// Invoke shutdown endpoint
-		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, errors.WithStack(err)
-		}
-		removeFromCluster := false
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
-		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
-			// Shutdown failed. Let's check if we're already done
-			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
-				// We're done
-				return true, nil
-			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, errors.WithStack(err)
-		}
-	} else if group.IsArangosync() {
-		// Terminate pod
-		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, errors.WithStack(err)
-		}
-	}
+
 	// Update status
 	m.Phase = api.MemberPhaseRotating
 
@@ -110,13 +88,18 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		log.Error().Msg("No such member")
 		return true, false, nil
 	}
-	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		// Pod is not yet terminated
+
+	if ready, abort, err := getShutdownHelper(&a.action, a.actionCtx, a.log).CheckProgress(ctx); err != nil {
+		return false, abort, err
+	} else if !ready {
 		return false, false, nil
 	}
+
 	// Pod is terminated, we can now remove it
 	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-		return false, false, errors.WithStack(err)
+		if !k8sutil.IsNotFound(err) {
+			return false, false, errors.WithStack(err)
+		}
 	}
 	// Pod is now gone, update the member status
 	m.Phase = api.MemberPhaseNone
