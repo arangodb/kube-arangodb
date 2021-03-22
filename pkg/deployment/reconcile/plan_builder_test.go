@@ -28,6 +28,9 @@ import (
 	"io/ioutil"
 	"testing"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
@@ -64,6 +67,20 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetPod(podName string) (*core.Pod, error) {
+	if c.ErrPods != nil {
+		return nil, c.ErrPods
+	}
+
+	for _, p := range c.Pods {
+		if p.Name == podName {
+			return p.DeepCopy(), nil
+		}
+	}
+
+	return nil, apiErrors.NewNotFound(schema.GroupResource{}, podName)
 }
 
 func (c *testContext) GetAuthentication() conn.Auth {
