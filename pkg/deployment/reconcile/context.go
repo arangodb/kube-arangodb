@@ -71,6 +71,8 @@ type Context interface {
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	// Returns ID, error
 	CreateMember(group api.ServerGroup, id string) (string, error)
+	// GetPod returns pod.
+	GetPod(podName string) (*v1.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error

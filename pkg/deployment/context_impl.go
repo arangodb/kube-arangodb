@@ -368,6 +368,11 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 	return id, nil
 }
 
+// GetPod returns pod.
+func (d *Deployment) GetPod(podName string) (*v1.Pod, error) {
+	return d.deps.KubeCli.CoreV1().Pods(d.GetNamespace()).Get(context.Background(), podName, meta.GetOptions{})
+}
+
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) DeletePod(podName string) error {

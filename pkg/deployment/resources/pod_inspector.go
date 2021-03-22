@@ -78,7 +78,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 
 		memberStatus, group, found := status.Members.MemberStatusByPodName(pod.GetName())
 		if !found {
-			log.Debug().Str("pod", pod.GetName()).Msg("no memberstatus found for pod")
+			log.Warn().Str("pod", pod.GetName()).Strs("existing-pods", status.Members.PodNames()).Msg("no memberstatus found for pod")
 			if k8sutil.IsPodMarkedForDeletion(pod) && len(pod.GetFinalizers()) > 0 {
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
@@ -248,7 +248,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 					case api.MemberPhaseNone:
 						// Do nothing
 						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
-					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart:
+					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
 						// Shutdown was intended, so not need to do anything here.
 						// Just mark terminated
 						wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
@@ -263,8 +263,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspector.Insp
 								return errors.WithStack(err)
 							}
 						}
-					case api.MemberPhaseRotating:
-						fallthrough
 					default:
 						log.Debug().Str("pod-name", podName).Msg("Pod is gone")
 						m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.

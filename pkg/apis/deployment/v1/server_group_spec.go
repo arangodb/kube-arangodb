@@ -53,7 +53,7 @@ func (s *ServerGroupShutdownMethod) Get() ServerGroupShutdownMethod {
 		return s.Default()
 	}
 
-	switch t :=*s; t {
+	switch t := *s; t {
 	case ServerGroupShutdownMethodAPI, ServerGroupShutdownMethodDelete:
 		return t
 	default:
@@ -137,6 +137,8 @@ type ServerGroupSpec struct {
 	InitContainers *ServerGroupInitContainers `json:"initContainers,omitempty"`
 	// ShutdownMethod describe procedure of member shutdown taken by Operator
 	ShutdownMethod *ServerGroupShutdownMethod `json:"shutdownMethod,omitempty"`
+	// ShutdownDelay define how long operator should delay finalizer removal after shutdown
+	ShutdownDelay *int `json:"shutdownDelay,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context

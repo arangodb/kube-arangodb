@@ -53,7 +53,7 @@ func (s *ServerGroupShutdownMethod) Get() ServerGroupShutdownMethod {
 		return s.Default()
 	}
 
-	switch t :=*s; t {
+	switch t := *s; t {
 	case ServerGroupShutdownMethodAPI, ServerGroupShutdownMethodDelete:
 		return t
 	default:
