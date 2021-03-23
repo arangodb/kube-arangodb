@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"k8s.io/client-go/kubernetes"
 )
 

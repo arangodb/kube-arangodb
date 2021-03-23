@@ -23,6 +23,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -65,13 +66,13 @@ func NewFilteredArangoBackupPolicyInformer(client versioned.Interface, namespace
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.BackupV1().ArangoBackupPolicies(namespace).List(options)
+				return client.BackupV1().ArangoBackupPolicies(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.BackupV1().ArangoBackupPolicies(namespace).Watch(options)
+				return client.BackupV1().ArangoBackupPolicies(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&backupv1.ArangoBackupPolicy{},

@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -236,7 +237,7 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspectorInterface.Insp
 			f.Data[pod.ActiveJWTKey] = token
 			f.Data[constants.SecretKeyToken] = token
 
-			if _, err := secrets.Update(f); err != nil {
+			if _, err := secrets.Update(context.Background(), f, meta.UpdateOptions{}); err != nil {
 				return err
 			}
 
@@ -257,7 +258,7 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspectorInterface.Insp
 				return err
 			}
 
-			if _, err := secrets.Patch(folderSecretName, types.JSONPatchType, pdata); err != nil {
+			if _, err := secrets.Patch(context.Background(), folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{}); err != nil {
 				return err
 			}
 		}
@@ -276,7 +277,7 @@ func (r *Resources) ensureTokenSecretFolder(cachedStatus inspectorInterface.Insp
 				return err
 			}
 
-			if _, err := secrets.Patch(folderSecretName, types.JSONPatchType, pdata); err != nil {
+			if _, err := secrets.Patch(context.Background(), folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{}); err != nil {
 				return err
 			}
 		}
@@ -331,7 +332,7 @@ func (r *Resources) createSecret(secrets k8sutil.SecretInterface, secretName str
 	// Attach secret to owner
 	owner := r.context.GetAPIObject().AsOwner()
 	k8sutil.AddOwnerRefToObject(secret, &owner)
-	if _, err := secrets.Create(secret); err != nil {
+	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}
@@ -369,7 +370,7 @@ func (r *Resources) createSecretWithMod(secrets k8sutil.SecretInterface, secretN
 
 	f(secret)
 
-	if _, err := secrets.Create(secret); err != nil {
+	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}
@@ -449,7 +450,7 @@ func AppendKeyfileToKeyfolder(cachedStatus inspectorInterface.Inspector, secrets
 		}
 		// Attach secret to owner
 		k8sutil.AddOwnerRefToObject(secret, ownerRef)
-		if _, err := secrets.Create(secret); err != nil {
+		if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
 			// Failed to create secret
 			return errors.WithStack(err)
 		}

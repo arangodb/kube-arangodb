@@ -23,10 +23,12 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -94,7 +96,7 @@ func serviceMonitorsToMap(m monitoringClient.MonitoringV1Interface, namespace st
 }
 
 func getServiceMonitors(m monitoringClient.MonitoringV1Interface, namespace, cont string) ([]*monitoring.ServiceMonitor, error) {
-	serviceMonitors, err := m.ServiceMonitors(namespace).List(meta.ListOptions{
+	serviceMonitors, err := m.ServiceMonitors(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -65,7 +66,7 @@ func (d *Deployment) createAccessPackages() error {
 	}
 
 	// Remove all access packages that we did build, but are no longer needed
-	secretList, err := secrets.List(metav1.ListOptions{})
+	secretList, err := secrets.List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list secrets")
 		return errors.WithStack(err)
@@ -76,7 +77,7 @@ func (d *Deployment) createAccessPackages() error {
 				// Secret is an access package
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
-					if err := secrets.Delete(secret.GetName(), &metav1.DeleteOptions{
+					if err := secrets.Delete(context.Background(), secret.GetName(), metav1.DeleteOptions{
 						Preconditions: &metav1.Preconditions{UID: &secret.UID},
 					}); err != nil && !k8sutil.IsNotFound(err) {
 						// Not serious enough to stop everything now, just log and create an event
@@ -103,7 +104,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
 	spec := d.apiObject.Spec
 
-	if _, err := secrets.Get(apSecretName, metav1.GetOptions{}); err == nil {
+	if _, err := secrets.Get(context.Background(), apSecretName, metav1.GetOptions{}); err == nil {
 		// Secret already exists
 		return nil
 	}
@@ -204,7 +205,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	}
 	// Attach secret to owner
 	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
-	if _, err := secrets.Create(secret); err != nil {
+	if _, err := secrets.Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
 		// Failed to create secret
 		log.Debug().Err(err).Str("secret-name", apSecretName).Msg("Failed to create access package Secret")
 		return errors.WithStack(err)

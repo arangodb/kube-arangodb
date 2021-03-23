@@ -23,6 +23,7 @@
 package crd
 
 import (
+	"context"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -45,7 +46,7 @@ func WaitReady(check func() error) error {
 // WaitCRDReady waits for a custom resource definition with given name to be ready.
 func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error {
 	op := func() error {
-		crd, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
+		crd, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.Background(), crdName, metav1.GetOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

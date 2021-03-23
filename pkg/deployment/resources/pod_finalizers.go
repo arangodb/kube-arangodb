@@ -100,7 +100,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
-		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		if err := pvcs.Delete(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}
@@ -127,7 +127,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
-		if err := pvcs.Delete(memberStatus.PersistentVolumeClaimName, &metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		if err := pvcs.Delete(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}

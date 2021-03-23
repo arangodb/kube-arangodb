@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"context"
 	"sort"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -53,7 +54,7 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 
 	log := o.log
 	var result []server.OperatorReference
-	namespaces, err := o.Dependencies.KubeCli.CoreV1().Namespaces().List(metav1.ListOptions{})
+	namespaces, err := o.Dependencies.KubeCli.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to list namespaces")
 	} else {
@@ -95,7 +96,7 @@ func (o *Operator) FindOtherOperators() []server.OperatorReference {
 func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace string, typePred func(server.OperatorType) bool) []server.OperatorReference {
 	log = log.With().Str("namespace", namespace).Logger()
 	var result []server.OperatorReference
-	services, err := o.Dependencies.KubeCli.CoreV1().Services(namespace).List(metav1.ListOptions{})
+	services, err := o.Dependencies.KubeCli.CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list services")
 		return nil
@@ -104,7 +105,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log zerolog.Logger, namespace s
 		if o.Scope.IsNamespaced() {
 			return v1.NodeList{}, nil
 		}
-		result, err := o.Dependencies.KubeCli.CoreV1().Nodes().List(metav1.ListOptions{})
+		result, err := o.Dependencies.KubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 		if err != nil {
 			return v1.NodeList{}, errors.WithStack(err)
 		}

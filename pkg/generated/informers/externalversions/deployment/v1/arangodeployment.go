@@ -23,6 +23,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -65,13 +66,13 @@ func NewFilteredArangoDeploymentInformer(client versioned.Interface, namespace s
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoDeployments(namespace).List(options)
+				return client.DatabaseV1().ArangoDeployments(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoDeployments(namespace).Watch(options)
+				return client.DatabaseV1().ArangoDeployments(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&deploymentv1.ArangoDeployment{},

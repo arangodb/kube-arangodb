@@ -30,8 +30,10 @@ import (
 )
 
 // ArangoBackupLister helps list ArangoBackups.
+// All objects returned here must be treated as read-only.
 type ArangoBackupLister interface {
 	// List lists all ArangoBackups in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoBackup, err error)
 	// ArangoBackups returns an object that can list and get ArangoBackups.
 	ArangoBackups(namespace string) ArangoBackupNamespaceLister
@@ -62,10 +64,13 @@ func (s *arangoBackupLister) ArangoBackups(namespace string) ArangoBackupNamespa
 }
 
 // ArangoBackupNamespaceLister helps list and get ArangoBackups.
+// All objects returned here must be treated as read-only.
 type ArangoBackupNamespaceLister interface {
 	// List lists all ArangoBackups in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoBackup, err error)
 	// Get retrieves the ArangoBackup from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.ArangoBackup, error)
 	ArangoBackupNamespaceListerExpansion
 }

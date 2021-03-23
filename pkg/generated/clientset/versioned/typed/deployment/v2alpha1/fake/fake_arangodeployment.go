@@ -23,6 +23,8 @@
 package fake
 
 import (
+	"context"
+
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -43,7 +45,7 @@ var arangodeploymentsResource = schema.GroupVersionResource{Group: "database.ara
 var arangodeploymentsKind = schema.GroupVersionKind{Group: "database.arangodb.com", Version: "v2alpha1", Kind: "ArangoDeployment"}
 
 // Get takes name of the arangoDeployment, and returns the corresponding arangoDeployment object, and an error if there is any.
-func (c *FakeArangoDeployments) Get(name string, options v1.GetOptions) (result *v2alpha1.ArangoDeployment, err error) {
+func (c *FakeArangoDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2alpha1.ArangoDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(arangodeploymentsResource, c.ns, name), &v2alpha1.ArangoDeployment{})
 
@@ -54,7 +56,7 @@ func (c *FakeArangoDeployments) Get(name string, options v1.GetOptions) (result 
 }
 
 // List takes label and field selectors, and returns the list of ArangoDeployments that match those selectors.
-func (c *FakeArangoDeployments) List(opts v1.ListOptions) (result *v2alpha1.ArangoDeploymentList, err error) {
+func (c *FakeArangoDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v2alpha1.ArangoDeploymentList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(arangodeploymentsResource, arangodeploymentsKind, c.ns, opts), &v2alpha1.ArangoDeploymentList{})
 
@@ -76,14 +78,14 @@ func (c *FakeArangoDeployments) List(opts v1.ListOptions) (result *v2alpha1.Aran
 }
 
 // Watch returns a watch.Interface that watches the requested arangoDeployments.
-func (c *FakeArangoDeployments) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeArangoDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(arangodeploymentsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoDeployment and creates it.  Returns the server's representation of the arangoDeployment, and an error, if there is any.
-func (c *FakeArangoDeployments) Create(arangoDeployment *v2alpha1.ArangoDeployment) (result *v2alpha1.ArangoDeployment, err error) {
+func (c *FakeArangoDeployments) Create(ctx context.Context, arangoDeployment *v2alpha1.ArangoDeployment, opts v1.CreateOptions) (result *v2alpha1.ArangoDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(arangodeploymentsResource, c.ns, arangoDeployment), &v2alpha1.ArangoDeployment{})
 
@@ -94,7 +96,7 @@ func (c *FakeArangoDeployments) Create(arangoDeployment *v2alpha1.ArangoDeployme
 }
 
 // Update takes the representation of a arangoDeployment and updates it. Returns the server's representation of the arangoDeployment, and an error, if there is any.
-func (c *FakeArangoDeployments) Update(arangoDeployment *v2alpha1.ArangoDeployment) (result *v2alpha1.ArangoDeployment, err error) {
+func (c *FakeArangoDeployments) Update(ctx context.Context, arangoDeployment *v2alpha1.ArangoDeployment, opts v1.UpdateOptions) (result *v2alpha1.ArangoDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(arangodeploymentsResource, c.ns, arangoDeployment), &v2alpha1.ArangoDeployment{})
 
@@ -106,7 +108,7 @@ func (c *FakeArangoDeployments) Update(arangoDeployment *v2alpha1.ArangoDeployme
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoDeployments) UpdateStatus(arangoDeployment *v2alpha1.ArangoDeployment) (*v2alpha1.ArangoDeployment, error) {
+func (c *FakeArangoDeployments) UpdateStatus(ctx context.Context, arangoDeployment *v2alpha1.ArangoDeployment, opts v1.UpdateOptions) (*v2alpha1.ArangoDeployment, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(arangodeploymentsResource, "status", c.ns, arangoDeployment), &v2alpha1.ArangoDeployment{})
 
@@ -117,7 +119,7 @@ func (c *FakeArangoDeployments) UpdateStatus(arangoDeployment *v2alpha1.ArangoDe
 }
 
 // Delete takes name of the arangoDeployment and deletes it. Returns an error if one occurs.
-func (c *FakeArangoDeployments) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeArangoDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(arangodeploymentsResource, c.ns, name), &v2alpha1.ArangoDeployment{})
 
@@ -125,15 +127,15 @@ func (c *FakeArangoDeployments) Delete(name string, options *v1.DeleteOptions) e
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeArangoDeployments) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangodeploymentsResource, c.ns, listOptions)
+func (c *FakeArangoDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(arangodeploymentsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v2alpha1.ArangoDeploymentList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched arangoDeployment.
-func (c *FakeArangoDeployments) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v2alpha1.ArangoDeployment, err error) {
+func (c *FakeArangoDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoDeployment, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(arangodeploymentsResource, c.ns, name, pt, data, subresources...), &v2alpha1.ArangoDeployment{})
 

@@ -134,12 +134,12 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		Logger()
 
 	// Check if pod exists
-	if pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{}); err == nil {
+	if pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(context.Background(), podName, metav1.GetOptions{}); err == nil {
 		// Pod found
 		if k8sutil.IsPodFailed(pod) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
-				if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
+				if err := ib.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
 					return false, nil
 				}
@@ -176,7 +176,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
-		if err := ib.KubeCli.CoreV1().Pods(ns).Delete(podName, nil); err != nil && !k8sutil.IsNotFound(err) {
+		if err := ib.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
 			return true, nil
 		}

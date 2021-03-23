@@ -23,6 +23,8 @@
 package resources
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -32,8 +34,8 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	coreosv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	clientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	coreosv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	clientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
@@ -82,7 +84,9 @@ func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
 			Interval: "10s",
 			Scheme:   "https",
 			TLSConfig: &coreosv1.TLSConfig{
-				InsecureSkipVerify: true,
+				SafeTLSConfig: coreosv1.SafeTLSConfig{
+					InsecureSkipVerify: true,
+				},
 			},
 		}
 	} else {
@@ -153,7 +157,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 
 	// Check if ServiceMonitor already exists
 	serviceMonitors := mClient.ServiceMonitors(ns)
-	servMon, err := serviceMonitors.Get(serviceMonitorName, metav1.GetOptions{})
+	servMon, err := serviceMonitors.Get(context.Background(), serviceMonitorName, metav1.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			if !wantMetrics {
@@ -174,7 +178,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 				},
 				Spec: spec,
 			}
-			smon, err = serviceMonitors.Create(smon)
+			smon, err = serviceMonitors.Create(context.Background(), smon, metav1.CreateOptions{})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
 				return errors.WithStack(err)
@@ -216,7 +220,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 
 		servMon.Spec = spec
 
-		_, err = serviceMonitors.Update(servMon)
+		_, err = serviceMonitors.Update(context.Background(), servMon, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
@@ -224,7 +228,7 @@ func (r *Resources) EnsureServiceMonitor() error {
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:
-	err = serviceMonitors.Delete(serviceMonitorName, &metav1.DeleteOptions{})
+	err = serviceMonitors.Delete(context.Background(), serviceMonitorName, metav1.DeleteOptions{})
 	if err == nil {
 		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)
 		return nil

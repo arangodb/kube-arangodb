@@ -191,7 +191,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	}
 	// Let's update the spec
 	apiObject := ci.depl.apiObject
-	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(apiObject.Name, metav1.GetOptions{})
+	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(context.Background(), apiObject.Name, metav1.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -323,7 +323,7 @@ func newDeploymentWithValidation(name string, adjustDeployment func(*api.ArangoD
 func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, predicate func(*api.ArangoDeployment) error, timeout ...time.Duration) (*api.ArangoDeployment, error) {
 	var result *api.ArangoDeployment
 	op := func() error {
-		obj, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		obj, err := cli.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -351,7 +351,7 @@ func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, pre
 func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate func(*v1.Secret) error, timeout time.Duration) (*v1.Secret, error) {
 	var result *v1.Secret
 	op := func() error {
-		obj, err := cli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+		obj, err := cli.CoreV1().Secrets(ns).Get(context.Background(), secretName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -376,7 +376,7 @@ func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate 
 func waitUntilService(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Service) error, timeout time.Duration) (*v1.Service, error) {
 	var result *v1.Service
 	op := func() error {
-		obj, err := cli.CoreV1().Services(ns).Get(serviceName, metav1.GetOptions{})
+		obj, err := cli.CoreV1().Services(ns).Get(context.Background(), serviceName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -401,7 +401,7 @@ func waitUntilService(cli kubernetes.Interface, serviceName, ns string, predicat
 func waitUntilEndpoints(cli kubernetes.Interface, serviceName, ns string, predicate func(*v1.Endpoints) error, timeout time.Duration) (*v1.Endpoints, error) {
 	var result *v1.Endpoints
 	op := func() error {
-		obj, err := cli.CoreV1().Endpoints(ns).Get(serviceName, metav1.GetOptions{})
+		obj, err := cli.CoreV1().Endpoints(ns).Get(context.Background(), serviceName, metav1.GetOptions{})
 		if err != nil {
 			result = nil
 			return maskAny(err)
@@ -424,7 +424,7 @@ func waitUntilEndpoints(cli kubernetes.Interface, serviceName, ns string, predic
 // is no longer found.
 func waitUntilSecretNotFound(cli kubernetes.Interface, secretName, ns string, timeout time.Duration) error {
 	op := func() error {
-		if _, err := cli.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := cli.CoreV1().Secrets(ns).Get(context.Background(), secretName, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return maskAny(err)
@@ -597,7 +597,7 @@ func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, de
 	for start := time.Now(); time.Since(start) < 600*time.Second; {
 
 		// Fetch latest status so we know all member details
-		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl.GetName(), metav1.GetOptions{})
+		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get deployment: %v", err)
 		}
@@ -669,12 +669,12 @@ func clusterHealthEqualsSpec(h driver.ClusterHealth, spec api.DeploymentSpec) er
 func updateDeployment(cli versioned.Interface, deploymentName, ns string, update func(*api.DeploymentSpec)) (*api.ArangoDeployment, error) {
 	for {
 		// Get current version
-		current, err := cli.DatabaseV1().ArangoDeployments(ns).Get(deploymentName, metav1.GetOptions{})
+		current, err := cli.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			return nil, maskAny(err)
 		}
 		update(&current.Spec)
-		current, err = cli.DatabaseV1().ArangoDeployments(ns).Update(current)
+		current, err = cli.DatabaseV1().ArangoDeployments(ns).Update(context.Background(), current, metav1.UpdateOptions{})
 		if k8sutil.IsConflict(err) {
 			// Retry
 		} else if err != nil {
@@ -686,7 +686,7 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 
 // removeDeployment removes a deployment
 func removeDeployment(cli versioned.Interface, deploymentName, ns string) error {
-	if err := cli.DatabaseV1().ArangoDeployments(ns).Delete(deploymentName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.DatabaseV1().ArangoDeployments(ns).Delete(context.Background(), deploymentName, metav1.DeleteOptions{}); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -694,7 +694,7 @@ func removeDeployment(cli versioned.Interface, deploymentName, ns string) error 
 
 // removeReplication removes a replication
 func removeReplication(cli versioned.Interface, replicationName, ns string) error {
-	if err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Delete(replicationName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.ReplicationV1().ArangoDeploymentReplications(ns).Delete(context.Background(), replicationName, metav1.DeleteOptions{}); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -726,7 +726,7 @@ func deferedCleanupReplication(cli versioned.Interface, replicationName, ns stri
 
 // removeSecret removes a secret
 func removeSecret(cli kubernetes.Interface, secretName, ns string) error {
-	if err := cli.CoreV1().Secrets(ns).Delete(secretName, nil); err != nil && k8sutil.IsNotFound(err) {
+	if err := cli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, metav1.DeleteOptions{}); err != nil && k8sutil.IsNotFound(err) {
 		return maskAny(err)
 	}
 	return nil
@@ -850,7 +850,7 @@ func getPodCreationTimes(t *testing.T, kubecli kubernetes.Interface, depl *api.A
 		for _, m := range *status {
 			// Get pod:
 			fmt.Printf("Looking at pod %s...\n", m.PodName)
-			pod, err := kubecli.CoreV1().Pods(ns).Get(m.PodName, metav1.GetOptions{})
+			pod, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), m.PodName, metav1.GetOptions{})
 			// Simply ignore error and skip pod:
 			if err == nil {
 				fmt.Printf("Found creation time of %v for pod %s\n", pod.GetCreationTimestamp(), m.PodName)

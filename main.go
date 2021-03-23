@@ -23,6 +23,7 @@
 package main
 
 import (
+	"context"
 	goflag "flag"
 	"fmt"
 	"net"
@@ -345,7 +346,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string, string, error) {
 	var image, sa string
 	op := func() error {
-		pod, err := kubecli.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+		pod, err := kubecli.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
 			cliLog.Error().
 				Err(err).

@@ -23,6 +23,7 @@
 package server
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"strings"
@@ -105,7 +106,7 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	var cert, key string
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
 		// Load TLS certificate from secret
-		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(cfg.TLSSecretName, metav1.GetOptions{})
+		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

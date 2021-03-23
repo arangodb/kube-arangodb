@@ -26,6 +26,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
 
@@ -50,7 +51,7 @@ func TestImmutableFields(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

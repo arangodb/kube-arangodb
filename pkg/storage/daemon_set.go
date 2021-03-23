@@ -23,6 +23,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -128,7 +129,7 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 	// Attach DS to ArangoLocalStorage
 	ds.SetOwnerReferences(append(ds.GetOwnerReferences(), apiObject.AsOwner()))
 	// Create DS
-	if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Create(ds); err != nil {
+	if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Create(context.Background(), ds, meta.CreateOptions{}); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			// Already exists, update it
 		} else {
@@ -146,14 +147,14 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 		attempt++
 
 		// Load current DS
-		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(ds.GetName(), meta.GetOptions{})
+		current, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Get(context.Background(), ds.GetName(), meta.GetOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
 		// Update it
 		current.Spec = dsSpec
-		if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Update(current); k8sutil.IsConflict(err) && attempt < 10 {
+		if _, err := ls.deps.KubeCli.AppsV1().DaemonSets(ns).Update(context.Background(), current, meta.UpdateOptions{}); k8sutil.IsConflict(err) && attempt < 10 {
 			// Failed to update, try again
 			continue
 		} else if err != nil {

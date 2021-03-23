@@ -23,6 +23,8 @@
 package deployment
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -42,7 +44,7 @@ func (d *Deployment) removePodFinalizers(cachedStatus inspectorInterface.Inspect
 			return err
 		}
 
-		if err := kubecli.CoreV1().Pods(pod.GetNamespace()).Delete(pod.GetName(), &meta.DeleteOptions{
+		if err := kubecli.CoreV1().Pods(pod.GetNamespace()).Delete(context.Background(), pod.GetName(), meta.DeleteOptions{
 			GracePeriodSeconds: util.NewInt64(1),
 		}); err != nil {
 			if !k8sutil.IsNotFound(err) {

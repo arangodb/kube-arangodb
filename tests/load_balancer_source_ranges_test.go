@@ -54,7 +54,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	depl.Spec.ExternalAccess.LoadBalancerSourceRanges = append(depl.Spec.ExternalAccess.LoadBalancerSourceRanges, "1.2.3.0/24", "0.0.0.0/0")
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	counter := 0
 	var foundExternalIP string
 	for {
-		if svc, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+		if svc, err := svcs.Get(context.Background(), eaServiceName, metav1.GetOptions{}); err == nil {
 			spec := svc.Spec
 			ranges := spec.LoadBalancerSourceRanges
 			if len(ranges) != 2 {
@@ -127,7 +127,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	counter = 0
 	for {
 		time.Sleep(time.Second)
-		if svc, err := svcs.Get(eaServiceName, metav1.GetOptions{}); err == nil {
+		if svc, err := svcs.Get(context.Background(), eaServiceName, metav1.GetOptions{}); err == nil {
 			spec := svc.Spec
 			ranges := spec.LoadBalancerSourceRanges
 			good := true

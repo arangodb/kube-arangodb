@@ -30,8 +30,10 @@ import (
 )
 
 // ArangoMemberLister helps list ArangoMembers.
+// All objects returned here must be treated as read-only.
 type ArangoMemberLister interface {
 	// List lists all ArangoMembers in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoMember, err error)
 	// ArangoMembers returns an object that can list and get ArangoMembers.
 	ArangoMembers(namespace string) ArangoMemberNamespaceLister
@@ -62,10 +64,13 @@ func (s *arangoMemberLister) ArangoMembers(namespace string) ArangoMemberNamespa
 }
 
 // ArangoMemberNamespaceLister helps list and get ArangoMembers.
+// All objects returned here must be treated as read-only.
 type ArangoMemberNamespaceLister interface {
 	// List lists all ArangoMembers in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ArangoMember, err error)
 	// Get retrieves the ArangoMember from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.ArangoMember, error)
 	ArangoMemberNamespaceListerExpansion
 }
