@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type ServiceFilter func(pod *core.Service) bool
-type ServiceAction func(pod *core.Service) error
-
-func (i *inspector) IterateServices(action ServiceAction, filters ...ServiceFilter) error {
+func (i *inspector) IterateServices(action service.ServiceAction, filters ...service.ServiceFilter) error {
 	for _, service := range i.Services() {
 		if err := i.iterateServices(service, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IterateServices(action ServiceAction, filters ...ServiceFilt
 	return nil
 }
 
-func (i *inspector) iterateServices(service *core.Service, action ServiceAction, filters ...ServiceFilter) error {
+func (i *inspector) iterateServices(service *core.Service, action service.ServiceAction, filters ...service.ServiceFilter) error {
 	for _, filter := range filters {
 		if !filter(service) {
 			return nil

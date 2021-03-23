@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
@@ -39,7 +40,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -49,7 +49,7 @@ import (
 func createJWTKeyUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if folder, err := ensureJWTFolderSupport(spec, status); err != nil || !folder {
 		return nil
 	}
@@ -120,7 +120,7 @@ func createJWTKeyUpdate(ctx context.Context,
 func createJWTStatusUpdate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if _, err := ensureJWTFolderSupport(spec, status); err != nil {
 		return nil
 	}
@@ -135,7 +135,7 @@ func createJWTStatusUpdate(ctx context.Context,
 func createJWTStatusUpdateRequired(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) bool {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
 	folder, err := ensureJWTFolderSupport(spec, status)
 	if err != nil {
 		log.Error().Err(err).Msgf("Action not supported")
@@ -221,7 +221,7 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 func areJWTTokensUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, planCtx PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext,
 	folder *core.Secret) (plan api.Plan, failed bool) {
 	gCtx, c := context.WithTimeout(ctx, 2*time.Second)
 	defer c()
@@ -248,7 +248,7 @@ func areJWTTokensUpToDate(ctx context.Context,
 func isJWTTokenUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
 	group api.ServerGroup, m api.MemberStatus,
 	folder *core.Secret) (updateRequired bool, failed bool) {
 	if m.Phase != api.MemberPhaseCreated {

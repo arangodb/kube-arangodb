@@ -25,9 +25,9 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -129,11 +129,11 @@ type ActionContext interface {
 	// GetName receives information about a deployment name
 	GetName() string
 	// GetNameget current cached state of deployment
-	GetCachedStatus() inspector.Inspector
+	GetCachedStatus() inspectorInterface.Inspector
 }
 
 // newActionContext creates a new ActionContext implementation.
-func newActionContext(log zerolog.Logger, context Context, cachedStatus inspector.Inspector) ActionContext {
+func newActionContext(log zerolog.Logger, context Context, cachedStatus inspectorInterface.Inspector) ActionContext {
 	return &actionContext{
 		log:          log,
 		context:      context,
@@ -145,10 +145,10 @@ func newActionContext(log zerolog.Logger, context Context, cachedStatus inspecto
 type actionContext struct {
 	log          zerolog.Logger
 	context      Context
-	cachedStatus inspector.Inspector
+	cachedStatus inspectorInterface.Inspector
 }
 
-func (ac *actionContext) GetCachedStatus() inspector.Inspector {
+func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
 	return ac.cachedStatus
 }
 

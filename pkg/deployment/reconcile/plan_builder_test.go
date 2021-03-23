@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
@@ -72,7 +73,7 @@ func (c *testContext) GetAuthentication() conn.Auth {
 	}
 }
 
-func (c *testContext) RenderPodForMember(cachedStatus inspector.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (c *testContext) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	panic("implement me")
 }
 
@@ -559,6 +560,7 @@ func TestCreatePlan(t *testing.T) {
 		ServiceAccounts map[string]*core.ServiceAccount
 		PDBS            map[string]*policy.PodDisruptionBudget
 		ServiceMonitors map[string]*monitoring.ServiceMonitor
+		ArangoMembers   map[string]*api.ArangoMember
 	}{
 		{
 			Name: "Can not create plan for single deployment",
@@ -820,7 +822,7 @@ func TestCreatePlan(t *testing.T) {
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS, testCase.ServiceMonitors))
+			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS, testCase.ServiceMonitors, testCase.ArangoMembers))
 
 			// Assert
 			if testCase.ExpectedEvent != nil {

@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type ServiceAccountFilter func(serviceAccount *core.ServiceAccount) bool
-type ServiceAccountAction func(serviceAccount *core.ServiceAccount) error
-
-func (i *inspector) IterateServiceAccounts(action ServiceAccountAction, filters ...ServiceAccountFilter) error {
+func (i *inspector) IterateServiceAccounts(action serviceaccount.Action, filters ...serviceaccount.Filter) error {
 	for _, serviceAccount := range i.ServiceAccounts() {
 		if err := i.iterateServiceAccount(serviceAccount, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IterateServiceAccounts(action ServiceAccountAction, filters 
 	return nil
 }
 
-func (i *inspector) iterateServiceAccount(serviceAccount *core.ServiceAccount, action ServiceAccountAction, filters ...ServiceAccountFilter) error {
+func (i *inspector) iterateServiceAccount(serviceAccount *core.ServiceAccount, action serviceaccount.Action, filters ...serviceaccount.Filter) error {
 	for _, filter := range filters {
 		if !filter(serviceAccount) {
 			return nil
@@ -121,7 +119,7 @@ func getServiceAccounts(k kubernetes.Interface, namespace, cont string) ([]core.
 	return serviceAccounts.Items, nil
 }
 
-func FilterServiceAccountsByLabels(labels map[string]string) ServiceAccountFilter {
+func FilterServiceAccountsByLabels(labels map[string]string) serviceaccount.Filter {
 	return func(serviceAccount *core.ServiceAccount) bool {
 		for key, value := range labels {
 			v, ok := serviceAccount.Labels[key]

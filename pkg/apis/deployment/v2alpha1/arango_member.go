@@ -23,7 +23,6 @@
 package v2alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1/member"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,6 +44,6 @@ type ArangoMemberList struct {
 type ArangoMember struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
-	Spec            member.Spec   `json:"spec,omitempty"`
-	Status          member.Status `json:"status,omitempty"`
+	Spec            ArangoMemberSpec   `json:"spec,omitempty"`
+	Status          ArangoMemberStatus `json:"status,omitempty"`
 }

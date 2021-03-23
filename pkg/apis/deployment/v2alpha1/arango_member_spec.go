@@ -20,11 +20,14 @@
 // Author Adam Janikowski
 //
 
-package member
+package v2alpha1
 
 import core "k8s.io/api/core/v1"
 
-type Spec struct {
+type ArangoMemberSpec struct {
+	Group ServerGroup `json:"group,omitempty"`
+	ID    string      `json:"id,omitempty"`
+
 	Template         *core.PodTemplate `json:"template,omitempty"`
 	TemplateChecksum string            `json:"templateChecksum,omitempty"`
 }

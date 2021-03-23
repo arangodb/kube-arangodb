@@ -20,7 +20,7 @@
 // Author Adam Janikowski
 //
 
-package member
+package v1
 
-type Status struct {
+type ArangoMemberStatus struct {
 }

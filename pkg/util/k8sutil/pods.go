@@ -194,7 +194,12 @@ func CreatePodHostName(deploymentName, role, id string) string {
 // CreateTLSKeyfileSecretName returns the name of the Secret that holds the TLS keyfile for a member with
 // a given id in a deployment with a given name.
 func CreateTLSKeyfileSecretName(deploymentName, role, id string) string {
-	return CreatePodName(deploymentName, role, id, "-tls-keyfile")
+	return AppendTLSKeyfileSecretPostfix(CreatePodName(deploymentName, role, id, ""))
+}
+
+// AppendTLSKeyfileSecretPostfix returns the name of the Secret extended with TLS keyfile postfix.
+func AppendTLSKeyfileSecretPostfix(name string) string {
+	return fmt.Sprintf("%s-tls-keyfile", name)
 }
 
 // ArangodVolumeMount creates a volume mount structure for arangod.
@@ -359,7 +364,7 @@ func NewPod(deploymentName, role, id, podName string, podCreator interfaces.PodC
 	p := core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       podName,
-			Labels:     LabelsForDeployment(deploymentName, role),
+			Labels:     LabelsForMember(deploymentName, role, id),
 			Finalizers: podCreator.GetFinalizers(),
 		},
 		Spec: core.PodSpec{

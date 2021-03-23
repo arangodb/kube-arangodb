@@ -31,9 +31,9 @@ import (
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,7 +55,7 @@ var (
 func createRotateOrUpgradePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, cachedStatus, context)
@@ -69,7 +69,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 }
 
 func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspector.Inspector, context PlanBuilderContext) (api.Plan, bool) {
+	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (api.Plan, bool) {
 
 	var newPlan api.Plan
 	var upgradeNotAllowed bool
@@ -285,7 +285,7 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 // When true is returned, a reason for the rotation is already returned.
 func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
-	cachedStatus inspector.Inspector, context PlanBuilderContext) (bool, string) {
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (bool, string) {
 	if m.PodUID != p.UID {
 		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
 	}

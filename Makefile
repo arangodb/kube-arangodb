@@ -249,7 +249,7 @@ update-generated:
 			"deepcopy" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"shared:v1 deployment:v1/member deployment:v2alpha1/member" \
+			"shared:v1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 

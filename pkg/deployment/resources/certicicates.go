@@ -28,10 +28,10 @@ import (
 	"encoding/pem"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -118,7 +118,7 @@ func GetCertsFromSecret(log zerolog.Logger, secret *core.Secret) Certificates {
 	return GetCertsFromData(log, caPem)
 }
 
-func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspector.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
+func GetKeyCertFromCache(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, certName, keyName string) (Certificates, interface{}, error) {
 	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
 	if !exists {
 		return nil, nil, errors.Newf("CA Secret does not exists")

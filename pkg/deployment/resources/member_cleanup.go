@@ -25,6 +25,9 @@ package resources
 import (
 	"time"
 
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
@@ -155,6 +158,64 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 		if err := r.context.DeletePvc(pvcName); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pvc", pvcName).Msg("Failed to remove obsolete PVC")
 		}
+	}
+
+	return nil
+}
+
+func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspector) error {
+	// Create all missing arangomembers
+
+	s, _ := r.context.GetStatus()
+	obj := r.context.GetAPIObject()
+
+	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
+
+			if _, ok := cachedStatus.ArangoMember(name); !ok {
+				// Create ArangoMember
+				a := api.ArangoMember{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      name,
+						Namespace: r.context.GetNamespace(),
+					},
+					Spec: api.ArangoMemberSpec{
+						Group: group,
+						ID:    member.ID,
+					},
+				}
+
+				if _, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(&a); err != nil {
+					return err
+				}
+
+				return errors.Reconcile()
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	if err := cachedStatus.IterateArangoMembers(func(member *api.ArangoMember) error {
+		_, g, ok := s.Members.ElementByID(member.Spec.ID)
+
+		if !ok || g != member.Spec.Group {
+			// Remove member
+			if err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(member.GetName(), &metav1.DeleteOptions{}); err != nil {
+				if !k8sutil.IsNotFound(err) {
+					return err
+				}
+			}
+
+			return errors.Reconcile()
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil

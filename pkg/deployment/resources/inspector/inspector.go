@@ -25,7 +25,9 @@ package inspector
 import (
 	"sync"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -35,12 +37,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
-type SecretReadInterface interface {
-	Get(name string, options meta.GetOptions) (*core.Secret, error)
-}
-
-func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) (Inspector, error) {
+func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
 	pods, err := podsToMap(k, namespace)
 	if err != nil {
 		return nil, err
@@ -76,11 +73,16 @@ func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interfa
 		return nil, err
 	}
 
-	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets, serviceMonitors), nil
+	arangoMembers, err := arangoMembersToMap(c, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets, serviceMonitors, arangoMembers), nil
 }
 
-func NewEmptyInspector() Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil)
+func NewEmptyInspector() inspectorInterface.Inspector {
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil)
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -89,7 +91,8 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	services map[string]*core.Service,
 	serviceAccounts map[string]*core.ServiceAccount,
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget,
-	serviceMonitors map[string]*monitoring.ServiceMonitor) Inspector {
+	serviceMonitors map[string]*monitoring.ServiceMonitor,
+	arangoMembers map[string]*api.ArangoMember) inspectorInterface.Inspector {
 	return &inspector{
 		pods:                 pods,
 		secrets:              secrets,
@@ -98,33 +101,8 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 		serviceAccounts:      serviceAccounts,
 		podDisruptionBudgets: podDisruptionBudgets,
 		serviceMonitors:      serviceMonitors,
+		arangoMembers:        arangoMembers,
 	}
-}
-
-type Inspector interface {
-	Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) error
-
-	Pod(name string) (*core.Pod, bool)
-	IteratePods(action PodAction, filters ...PodFilter) error
-
-	Secret(name string) (*core.Secret, bool)
-	IterateSecrets(action SecretAction, filters ...SecretFilter) error
-	SecretReadInterface() SecretReadInterface
-
-	PersistentVolumeClaim(name string) (*core.PersistentVolumeClaim, bool)
-	IteratePersistentVolumeClaims(action PersistentVolumeClaimAction, filters ...PersistentVolumeClaimFilter) error
-
-	Service(name string) (*core.Service, bool)
-	IterateServices(action ServiceAction, filters ...ServiceFilter) error
-
-	ServiceAccount(name string) (*core.ServiceAccount, bool)
-	IterateServiceAccounts(action ServiceAccountAction, filters ...ServiceAccountFilter) error
-
-	PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool)
-	IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error
-
-	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)
-	IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error
 }
 
 type inspector struct {
@@ -137,13 +115,14 @@ type inspector struct {
 	serviceAccounts      map[string]*core.ServiceAccount
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
 	serviceMonitors      map[string]*monitoring.ServiceMonitor
+	arangoMembers        map[string]*api.ArangoMember
 
 	ns string
 	k  kubernetes.Interface
 	m  monitoringClient.MonitoringV1Interface
 }
 
-func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, namespace string) error {
+func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -182,6 +161,11 @@ func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.Monitorin
 		return err
 	}
 
+	arangoMembers, err := arangoMembersToMap(c, namespace)
+	if err != nil {
+		return err
+	}
+
 	i.pods = pods
 	i.secrets = secrets
 	i.pvcs = pvcs
@@ -189,6 +173,7 @@ func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.Monitorin
 	i.serviceAccounts = serviceAccounts
 	i.podDisruptionBudgets = podDisruptionBudgets
 	i.serviceMonitors = serviceMonitors
+	i.arangoMembers = arangoMembers
 
 	return nil
 }

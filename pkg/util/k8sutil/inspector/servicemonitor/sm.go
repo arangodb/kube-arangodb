@@ -20,11 +20,14 @@
 // Author Adam Janikowski
 //
 
-package member
+package servicemonitor
 
-import core "k8s.io/api/core/v1"
+import monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-type Spec struct {
-	Template         *core.PodTemplate `json:"template,omitempty"`
-	TemplateChecksum string            `json:"templateChecksum,omitempty"`
+type Inspector interface {
+	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)
+	IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error
 }
+
+type ServiceMonitorFilter func(serviceMonitor *monitoring.ServiceMonitor) bool
+type ServiceMonitorAction func(serviceMonitor *monitoring.ServiceMonitor) error

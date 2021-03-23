@@ -20,6 +20,14 @@
 // Author Adam Janikowski
 //
 
-// +k8s:deepcopy-gen=package
-// +groupName=database.arangodb.com
-package member
+package poddisruptionbudget
+
+import policy "k8s.io/api/policy/v1beta1"
+
+type Inspector interface {
+	PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool)
+	IteratePodDisruptionBudgets(action PodDisruptionBudgetAction, filters ...PodDisruptionBudgetFilter) error
+}
+
+type PodDisruptionBudgetFilter func(podDisruptionBudget *policy.PodDisruptionBudget) bool
+type PodDisruptionBudgetAction func(podDisruptionBudget *policy.PodDisruptionBudget) error

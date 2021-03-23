@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	v1 "k8s.io/api/core/v1"
@@ -47,7 +48,7 @@ const (
 
 // InspectPVCs lists all PVCs that belong to the given deployment and updates
 // the member status of the deployment accordingly.
-func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspector.Inspector) (util.Interval, error) {
+func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	log := r.log
 	start := time.Now()
 	nextInterval := maxPVCInspectorInterval

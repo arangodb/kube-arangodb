@@ -30,6 +30,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
@@ -41,7 +42,7 @@ const (
 
 // CleanupTerminatedPods removes all pods in Terminated state that belong to a member in Created state.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) CleanupTerminatedPods(cachedStatus inspector.Inspector) (util.Interval, error) {
+func (r *Resources) CleanupTerminatedPods(cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	log := r.log
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 

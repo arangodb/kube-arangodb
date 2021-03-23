@@ -26,12 +26,13 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
@@ -118,7 +119,7 @@ func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	return []core.Volume{vol}, []core.VolumeMount{k8sutil.ClusterJWTVolumeMount()}
 }
 
-func (e jwt) Verify(i Input, cachedStatus inspector.Inspector) error {
+func (e jwt) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !IsAuthenticated(i) {
 		return nil
 	}

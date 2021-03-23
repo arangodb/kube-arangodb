@@ -29,7 +29,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -58,6 +57,7 @@ type MemberArangoDPod struct {
 	spec             api.DeploymentSpec
 	deploymentStatus api.DeploymentStatus
 	group            api.ServerGroup
+	arangoMember     api.ArangoMember
 	context          Context
 	resources        *Resources
 	imageInfo        api.ImageInfo
@@ -207,15 +207,16 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 
 func (m *MemberArangoDPod) AsInput() pod.Input {
 	return pod.Input{
-		ApiObject:   m.context.GetAPIObject(),
-		Deployment:  m.spec,
-		Status:      m.deploymentStatus,
-		Group:       m.group,
-		GroupSpec:   m.groupSpec,
-		Version:     m.imageInfo.ArangoDBVersion,
-		Enterprise:  m.imageInfo.Enterprise,
-		AutoUpgrade: m.autoUpgrade,
-		Member:      m.status,
+		ApiObject:    m.context.GetAPIObject(),
+		Deployment:   m.spec,
+		Status:       m.deploymentStatus,
+		Group:        m.group,
+		GroupSpec:    m.groupSpec,
+		Version:      m.imageInfo.ArangoDBVersion,
+		Enterprise:   m.imageInfo.Enterprise,
+		AutoUpgrade:  m.autoUpgrade,
+		Member:       m.status,
+		ArangoMember: m.arangoMember,
 	}
 }
 
@@ -225,7 +226,7 @@ func (m *MemberArangoDPod) Init(pod *core.Pod) {
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 }
 
-func (m *MemberArangoDPod) Validate(cachedStatus inspector.Inspector) error {
+func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
 	i := m.AsInput()
 
 	if err := pod.SNI().Verify(i, cachedStatus); err != nil {

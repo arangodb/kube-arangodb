@@ -31,7 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -395,7 +394,7 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	return pod.ReturnNodeAffinityOrNil(a)
 }
 
-func (i *ImageUpdatePod) Validate(cachedStatus inspector.Inspector) error {
+func (i *ImageUpdatePod) Validate(cachedStatus interfaces.Inspector) error {
 	return nil
 }
 

@@ -25,8 +25,8 @@ package pod
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	core "k8s.io/api/core/v1"
 )
 
@@ -58,6 +58,6 @@ func (u upgradeVersionCheck) Envs(i Input) []core.EnvVar {
 	return nil
 }
 
-func (u upgradeVersionCheck) Verify(i Input, cachedStatus inspector.Inspector) error {
+func (u upgradeVersionCheck) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	return nil
 }

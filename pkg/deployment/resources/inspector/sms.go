@@ -24,15 +24,13 @@ package inspector
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ServiceMonitorFilter func(serviceMonitor *monitoring.ServiceMonitor) bool
-type ServiceMonitorAction func(serviceMonitor *monitoring.ServiceMonitor) error
-
-func (i *inspector) IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error {
+func (i *inspector) IterateServiceMonitors(action servicemonitor.ServiceMonitorAction, filters ...servicemonitor.ServiceMonitorFilter) error {
 	for _, serviceMonitor := range i.ServiceMonitors() {
 		if err := i.iterateServiceMonitor(serviceMonitor, action, filters...); err != nil {
 			return err
@@ -41,7 +39,7 @@ func (i *inspector) IterateServiceMonitors(action ServiceMonitorAction, filters 
 	return nil
 }
 
-func (i *inspector) iterateServiceMonitor(serviceMonitor *monitoring.ServiceMonitor, action ServiceMonitorAction, filters ...ServiceMonitorFilter) error {
+func (i *inspector) iterateServiceMonitor(serviceMonitor *monitoring.ServiceMonitor, action servicemonitor.ServiceMonitorAction, filters ...servicemonitor.ServiceMonitorFilter) error {
 	for _, filter := range filters {
 		if !filter(serviceMonitor) {
 			return nil
@@ -108,7 +106,7 @@ func getServiceMonitors(m monitoringClient.MonitoringV1Interface, namespace, con
 	return serviceMonitors.Items, nil
 }
 
-func FilterServiceMonitorsByLabels(labels map[string]string) ServiceMonitorFilter {
+func FilterServiceMonitorsByLabels(labels map[string]string) servicemonitor.ServiceMonitorFilter {
 	return func(serviceMonitor *monitoring.ServiceMonitor) bool {
 		for key, value := range labels {
 			v, ok := serviceMonitor.Labels[key]

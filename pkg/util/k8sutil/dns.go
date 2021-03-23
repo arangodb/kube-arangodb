@@ -25,6 +25,8 @@ package k8sutil
 import (
 	"fmt"
 
+	core "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,6 +48,16 @@ func CreatePodDNSName(deployment metav1.Object, role, id string) string {
 // a given deployment.
 func CreatePodDNSNameWithDomain(deployment metav1.Object, domain *string, role, id string) string {
 	return appendDeploymentClusterDomain(CreatePodDNSName(deployment, role, id), domain)
+}
+
+// CreateServiceDNSName returns the DNS of a service.
+func CreateServiceDNSName(svc *core.Service) string {
+	return fmt.Sprintf("%s.%s.svc", svc.GetName(), svc.GetNamespace())
+}
+
+// CreateServiceDNSNameWithDomain returns the DNS of a service extended with domain.
+func CreateServiceDNSNameWithDomain(svc *core.Service, domain *string) string {
+	return appendDeploymentClusterDomain(CreateServiceDNSName(svc), domain)
 }
 
 // CreateDatabaseClientServiceDNSNameWithDomain returns the DNS of the database client service.

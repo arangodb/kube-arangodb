@@ -26,11 +26,11 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
@@ -78,7 +78,7 @@ func (s sni) isSupported(i Input) bool {
 	return GroupSNISupported(i.Deployment.Mode.Get(), i.Group)
 }
 
-func (s sni) Verify(i Input, cachedStatus inspector.Inspector) error {
+func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !s.isSupported(i) {
 		return nil
 	}

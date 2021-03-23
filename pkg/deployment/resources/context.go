@@ -25,7 +25,7 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/go-driver/agency"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -69,6 +70,8 @@ type Context interface {
 	GetKubeCli() kubernetes.Interface
 	// GetMonitoringV1Cli returns monitoring client
 	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
+	// GetArangoCli returns the Arango CRD client
+	GetArangoCli() versioned.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
 	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
@@ -106,6 +109,6 @@ type Context interface {
 	GetBackup(backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope
 
-	GetCachedStatus() inspector.Inspector
-	SetCachedStatus(i inspector.Inspector)
+	GetCachedStatus() inspectorInterface.Inspector
+	SetCachedStatus(i inspectorInterface.Inspector)
 }

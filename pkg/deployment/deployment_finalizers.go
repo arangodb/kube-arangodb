@@ -25,9 +25,9 @@ package deployment
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +51,7 @@ func ensureFinalizers(depl *api.ArangoDeployment) {
 }
 
 // runDeploymentFinalizers goes through the list of ArangoDeployoment finalizers to see if they can be removed.
-func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus inspector.Inspector) error {
+func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := d.deps.Log
 	var removalList []string
 
@@ -83,7 +83,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 
 // inspectRemoveChildFinalizers checks the finalizer condition for remove-child-finalizers.
 // It returns nil if the finalizer can be removed.
-func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerolog.Logger, depl *api.ArangoDeployment, cachedStatus inspector.Inspector) error {
+func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerolog.Logger, depl *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) error {
 	if err := d.removePodFinalizers(cachedStatus); err != nil {
 		return errors.WithStack(err)
 	}
