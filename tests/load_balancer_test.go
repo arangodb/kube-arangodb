@@ -24,6 +24,7 @@ package tests
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -69,7 +70,7 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 	depl.Spec.Mode = api.NewMode(api.DeploymentModeCluster)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

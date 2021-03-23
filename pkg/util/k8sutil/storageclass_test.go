@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"context"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -162,12 +163,12 @@ func TestPatchStorageClassIsDefault(t *testing.T) {
 
 			clientSet := fake.NewSimpleClientset()
 			storageSet := clientSet.StorageV1()
-			_, err = storageSet.StorageClasses().Create(&v1.StorageClass{
+			_, err = storageSet.StorageClasses().Create(context.Background(), &v1.StorageClass{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test",
 				},
-			})
+			}, metav1.CreateOptions{})
 			require.NoError(t, err)
 
 			if testCase.Reactor != nil {

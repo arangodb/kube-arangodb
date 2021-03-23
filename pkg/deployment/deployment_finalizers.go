@@ -56,7 +56,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	var removalList []string
 
 	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
-	updated, err := depls.Get(d.apiObject.GetName(), metav1.GetOptions{})
+	updated, err := depls.Get(context.Background(), d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -98,7 +98,7 @@ func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerol
 func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, depl *api.ArangoDeployment, finalizers []string) error {
 	depls := cli.DatabaseV1().ArangoDeployments(depl.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		result, err := depls.Get(depl.GetName(), metav1.GetOptions{})
+		result, err := depls.Get(context.Background(), depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -106,7 +106,7 @@ func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, dep
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedDepl := updated.(*api.ArangoDeployment)
-		result, err := depls.Update(updatedDepl)
+		result, err := depls.Update(context.Background(), updatedDepl, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

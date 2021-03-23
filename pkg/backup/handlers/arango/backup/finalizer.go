@@ -23,6 +23,8 @@
 package backup
 
 import (
+	"context"
+
 	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
@@ -61,7 +63,7 @@ func (h *handler) finalize(backup *backupApi.ArangoBackup) error {
 			i)
 	}
 
-	if _, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Update(backup); err != nil {
+	if _, err := h.client.BackupV1().ArangoBackups(backup.Namespace).Update(context.Background(), backup, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 
@@ -94,7 +96,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 		return err
 	}
 
-	backups, err := h.client.BackupV1().ArangoBackups(backup.Namespace).List(meta.ListOptions{})
+	backups, err := h.client.BackupV1().ArangoBackups(backup.Namespace).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return err
 	}

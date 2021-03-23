@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -20,13 +21,13 @@ import (
 func waitForPriorityOfServerGroup(kube kubernetes.Interface, c versioned.Interface, depl, ns string, group api.ServerGroup, priority int32) error {
 	return retry.Retry(func() error {
 
-		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(depl, metav1.GetOptions{})
+		apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), depl, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 
 		for _, m := range apiObject.Status.Members.MembersOfGroup(group) {
-			pod, err := kube.CoreV1().Pods(apiObject.Namespace).Get(m.PodName, metav1.GetOptions{})
+			pod, err := kube.CoreV1().Pods(apiObject.Namespace).Get(context.Background(), m.PodName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -59,29 +60,29 @@ func TestPriorityClasses(t *testing.T) {
 	highClassValue := int32(2000)
 
 	// Create two priority classes
-	if _, err := kubecli.SchedulingV1beta1().PriorityClasses().Create(&v1beta1.PriorityClass{
+	if _, err := kubecli.SchedulingV1beta1().PriorityClasses().Create(context.Background(), &v1beta1.PriorityClass{
 		Value:         lowClassValue,
 		GlobalDefault: false,
 		Description:   "Low priority test class",
 		ObjectMeta: metav1.ObjectMeta{
 			Name: lowClassName,
 		},
-	}); err != nil {
+	}, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Could not create PC: %v", err)
 	}
-	defer kubecli.SchedulingV1beta1().PriorityClasses().Delete(lowClassName, &metav1.DeleteOptions{})
+	defer kubecli.SchedulingV1beta1().PriorityClasses().Delete(context.Background(), lowClassName, metav1.DeleteOptions{})
 
-	if _, err := kubecli.SchedulingV1beta1().PriorityClasses().Create(&v1beta1.PriorityClass{
+	if _, err := kubecli.SchedulingV1beta1().PriorityClasses().Create(context.Background(), &v1beta1.PriorityClass{
 		Value:         highClassValue,
 		GlobalDefault: false,
 		Description:   "Low priority test class",
 		ObjectMeta: metav1.ObjectMeta{
 			Name: highClassName,
 		},
-	}); err != nil {
+	}, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Could not create PC: %v", err)
 	}
-	defer kubecli.SchedulingV1beta1().PriorityClasses().Delete(highClassName, &metav1.DeleteOptions{})
+	defer kubecli.SchedulingV1beta1().PriorityClasses().Delete(context.Background(), highClassName, metav1.DeleteOptions{})
 
 	// Prepare deployment config
 	depl := newDeployment("test-pc-" + uniuri.NewLen(4))
@@ -94,7 +95,7 @@ func TestPriorityClasses(t *testing.T) {
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

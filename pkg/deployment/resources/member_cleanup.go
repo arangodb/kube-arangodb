@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"time"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -186,7 +187,7 @@ func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspecto
 					},
 				}
 
-				if _, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(&a); err != nil {
+				if _, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(context.Background(), &a, metav1.CreateOptions{}); err != nil {
 					return err
 				}
 
@@ -204,7 +205,7 @@ func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspecto
 
 		if !ok || g != member.Spec.Group {
 			// Remove member
-			if err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(member.GetName(), &metav1.DeleteOptions{}); err != nil {
+			if err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(context.Background(), member.GetName(), metav1.DeleteOptions{}); err != nil {
 				if !k8sutil.IsNotFound(err) {
 					return err
 				}

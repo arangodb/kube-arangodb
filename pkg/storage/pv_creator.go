@@ -188,7 +188,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			}
 			// Attach PV to ArangoLocalStorage
 			pv.SetOwnerReferences(append(pv.GetOwnerReferences(), apiObject.AsOwner()))
-			if _, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Create(pv); err != nil {
+			if _, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Create(context.Background(), pv, metav1.CreateOptions{}); err != nil {
 				log.Error().Err(err).Msg("Failed to create PersistentVolume")
 				continue
 			}
@@ -200,7 +200,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			// Bind claim to volume
 			if err := ls.bindClaimToVolume(claim, pv.GetName()); err != nil {
 				// Try to delete the PV now
-				if err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Delete(pv.GetName(), &metav1.DeleteOptions{}); err != nil {
+				if err := ls.deps.KubeCli.CoreV1().PersistentVolumes().Delete(context.Background(), pv.GetName(), metav1.DeleteOptions{}); err != nil {
 					log.Error().Err(err).Msg("Failed to delete PV after binding PVC failed")
 				}
 				return errors.WithStack(err)
@@ -272,7 +272,7 @@ func getDeploymentInfo(pvc v1.PersistentVolumeClaim) (string, string, bool) {
 // filterAllowedNodes returns those clients that do not yet have a volume for the given deployment name & role.
 func (ls *LocalStorage) filterAllowedNodes(clients map[string]provisioner.API, deploymentName, role string) ([]provisioner.API, error) {
 	// Find all PVs for given deployment & role
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(metav1.ListOptions{
+	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", k8sutil.LabelKeyArangoDeployment, deploymentName, k8sutil.LabelKeyRole, role),
 	})
 	if err != nil {
@@ -303,7 +303,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 		time.Sleep(time.Millisecond * time.Duration(10*attempt))
 
 		// Fetch latest version of claim
-		updated, err := pvcs.Get(claim.GetName(), metav1.GetOptions{})
+		updated, err := pvcs.Get(context.Background(), claim.GetName(), metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			return errors.WithStack(err)
 		} else if err != nil {
@@ -322,7 +322,7 @@ func (ls *LocalStorage) bindClaimToVolume(claim v1.PersistentVolumeClaim, volume
 
 		// Try to bind
 		updated.Spec.VolumeName = volumeName
-		if _, err := pvcs.Update(updated); k8sutil.IsConflict(err) {
+		if _, err := pvcs.Update(context.Background(), updated, metav1.UpdateOptions{}); k8sutil.IsConflict(err) {
 			// Claim modified already, retry
 			log.Debug().Err(err).Msg("PersistentVolumeClaim has been modified. Retrying.")
 		} else if err != nil {

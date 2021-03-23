@@ -23,11 +23,13 @@
 package resources
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringTypedClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringTypedClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -117,7 +119,7 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
 		ensureAnnotationsMap(secret.Kind, secret, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -133,7 +135,7 @@ func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus ins
 func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -149,7 +151,7 @@ func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, 
 func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
 		ensureAnnotationsMap(service.Kind, service, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -165,7 +167,7 @@ func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus i
 func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
 		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -181,7 +183,7 @@ func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cach
 func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -197,7 +199,7 @@ func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cach
 func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonitorInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil
@@ -227,7 +229,7 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 func ensurePodsAnnotations(client typedCore.PodInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		ensureGroupAnnotationsMap(pod.Kind, pod, spec, func(name string, d []byte) error {
-			_, err := client.Patch(name, types.JSONPatchType, d)
+			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		})
 		return nil

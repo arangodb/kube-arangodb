@@ -23,6 +23,8 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +35,7 @@ import (
 // Returns the PVC's that need a volume.
 func (ls *LocalStorage) inspectPVCs() ([]v1.PersistentVolumeClaim, error) {
 	ns := ls.apiObject.GetNamespace()
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).List(metav1.ListOptions{})
+	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

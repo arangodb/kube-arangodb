@@ -40,7 +40,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
@@ -68,7 +68,7 @@ import (
 
 // GetBackup receives information about a backup resource
 func (d *Deployment) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
-	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(backup, meta.GetOptions{})
+	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(context.Background(), backup, meta.GetOptions{})
 }
 
 // GetAPIObject returns the deployment as k8s object.
@@ -276,7 +276,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 	var secret string
 	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := secrets.Get(d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+		s, err := secrets.Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.Newf("JWT Secret is missing")
 		}
@@ -288,7 +288,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 		secret = string(jwt)
 	} else {
-		s, err := secrets.Get(pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
+		s, err := secrets.Get(context.Background(), pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
 			return nil, errors.Newf("JWT Folder Secret is missing")
@@ -379,7 +379,7 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 func (d *Deployment) DeletePod(podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return errors.WithStack(err)
 	}
@@ -394,7 +394,7 @@ func (d *Deployment) CleanupPod(p *v1.Pod) error {
 	ns := p.GetNamespace()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(podName, options); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, *options); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return errors.WithStack(err)
 	}
@@ -407,7 +407,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 	log := d.deps.Log
 	ns := d.GetNamespace()
 	kubecli := d.deps.KubeCli
-	p, err := kubecli.CoreV1().Pods(ns).Get(podName, meta.GetOptions{})
+	p, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), podName, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -425,7 +425,7 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 func (d *Deployment) DeletePvc(pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(pvcName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), pvcName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return errors.WithStack(err)
 	}
@@ -435,7 +435,7 @@ func (d *Deployment) DeletePvc(pvcName string) error {
 // UpdatePvc updated a persistent volume claim in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
-	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(pvc)
+	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(context.Background(), pvc, meta.UpdateOptions{})
 	if err == nil {
 		return nil
 	}
@@ -451,7 +451,7 @@ func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
 func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 	// Get all current PVCs
 	log := d.deps.Log
-	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).List(k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).List(context.Background(), k8sutil.DeploymentListOpt(d.apiObject.GetName()))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list PVCs")
 		return nil, errors.WithStack(err)
@@ -467,7 +467,7 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
 func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
-	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(pvcName, meta.GetOptions{})
+	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(context.Background(), pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, errors.WithStack(err)
@@ -493,7 +493,7 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -503,7 +503,7 @@ func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberSt
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(secretName, &meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -581,7 +581,7 @@ func (d *Deployment) GetName() string {
 }
 
 func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
-	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(meta.ListOptions{})
+	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(context.Background(), meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

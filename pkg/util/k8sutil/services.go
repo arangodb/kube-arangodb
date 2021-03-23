@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"context"
 	"math/rand"
 	"net"
 	"strconv"
@@ -32,16 +33,16 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ServiceInterface has methods to work with Service resources.
 type ServiceInterface interface {
-	Create(*v1.Service) (*v1.Service, error)
-	Update(*v1.Service) (*v1.Service, error)
-	Delete(name string, options *metav1.DeleteOptions) error
-	Get(name string, options metav1.GetOptions) (*v1.Service, error)
+	Create(ctx context.Context, service *core.Service, opts metav1.CreateOptions) (*core.Service, error)
+	Update(ctx context.Context, service *core.Service, opts metav1.UpdateOptions) (*core.Service, error)
+	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*core.Service, error)
 }
 
 // CreateHeadlessServiceName returns the name of the headless service for the given
@@ -85,17 +86,17 @@ func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface
 		return svcName, false, nil
 	}
 
-	svc := &v1.Service{
+	svc := &core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   svcName,
 			Labels: LabelsForExporterService(deploymentName),
 		},
-		Spec: v1.ServiceSpec{
-			ClusterIP: v1.ClusterIPNone,
-			Ports: []v1.ServicePort{
-				v1.ServicePort{
+		Spec: core.ServiceSpec{
+			ClusterIP: core.ClusterIPNone,
+			Ports: []core.ServicePort{
+				core.ServicePort{
 					Name:     "exporter",
-					Protocol: v1.ProtocolTCP,
+					Protocol: core.ProtocolTCP,
 					Port:     ArangoExporterPort,
 				},
 			},
@@ -103,7 +104,7 @@ func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
+	if _, err := svcs.Create(context.Background(), svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
 		return svcName, false, errors.WithStack(err)
@@ -119,15 +120,15 @@ func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface
 func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
-	ports := []v1.ServicePort{
-		v1.ServicePort{
+	ports := []core.ServicePort{
+		core.ServicePort{
 			Name:     "server",
-			Protocol: v1.ProtocolTCP,
+			Protocol: core.ProtocolTCP,
 			Port:     ArangoPort,
 		},
 	}
 	publishNotReadyAddresses := true
-	serviceType := v1.ServiceTypeClusterIP
+	serviceType := core.ServiceTypeClusterIP
 	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
@@ -142,10 +143,10 @@ func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owne
 func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object, single bool, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
-	ports := []v1.ServicePort{
-		v1.ServicePort{
+	ports := []core.ServicePort{
+		core.ServicePort{
 			Name:     "server",
-			Protocol: v1.ProtocolTCP,
+			Protocol: core.ProtocolTCP,
 			Port:     ArangoPort,
 		},
 	}
@@ -155,7 +156,7 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 	} else {
 		role = "coordinator"
 	}
-	serviceType := v1.ServiceTypeClusterIP
+	serviceType := core.ServiceTypeClusterIP
 	publishNotReadyAddresses := false
 	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
@@ -168,12 +169,12 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, deployment metav1.Object, serviceType v1.ServiceType, port, nodePort int, loadBalancerIP string, loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, deployment metav1.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string, loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
-	ports := []v1.ServicePort{
-		v1.ServicePort{
+	ports := []core.ServicePort{
+		core.ServicePort{
 			Name:     "server",
-			Protocol: v1.ProtocolTCP,
+			Protocol: core.ProtocolTCP,
 			Port:     int32(port),
 			NodePort: int32(nodePort),
 		},
@@ -190,16 +191,16 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string, serviceType v1.ServiceType,
-	ports []v1.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string, publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
+func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string, serviceType core.ServiceType,
+	ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string, publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
-	svc := &v1.Service{
+	svc := &core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        svcName,
 			Labels:      labels,
 			Annotations: map[string]string{},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: core.ServiceSpec{
 			Type:                     serviceType,
 			Ports:                    ports,
 			Selector:                 labels,
@@ -210,7 +211,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(svc); IsAlreadyExists(err) {
+	if _, err := svcs.Create(context.Background(), svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
 		return false, nil
 	} else if err != nil {
 		return false, errors.WithStack(err)
@@ -219,7 +220,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 }
 
 // CreateServiceURL creates a URL used to reach the given service.
-func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.ServicePort) bool, nodeFetcher func() (v1.NodeList, error)) (string, error) {
+func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.ServicePort) bool, nodeFetcher func() (core.NodeList, error)) (string, error) {
 	var port int32
 	var nodePort int32
 	portFound := false
@@ -237,7 +238,7 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 
 	var host string
 	switch svc.Spec.Type {
-	case v1.ServiceTypeLoadBalancer:
+	case core.ServiceTypeLoadBalancer:
 		for _, x := range svc.Status.LoadBalancer.Ingress {
 			if x.IP != "" {
 				host = x.IP
@@ -250,7 +251,7 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 		if host == "" {
 			host = svc.Spec.LoadBalancerIP
 		}
-	case v1.ServiceTypeNodePort:
+	case core.ServiceTypeNodePort:
 		if nodePort > 0 {
 			port = nodePort
 		}
@@ -265,7 +266,7 @@ func CreateServiceURL(svc v1.Service, scheme string, portPredicate func(v1.Servi
 		if len(node.Status.Addresses) > 0 {
 			host = node.Status.Addresses[0].Address
 		}
-	case v1.ServiceTypeClusterIP:
+	case core.ServiceTypeClusterIP:
 		if svc.Spec.ClusterIP != "None" {
 			host = svc.Spec.ClusterIP
 		}

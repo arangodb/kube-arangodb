@@ -22,6 +22,8 @@
 package secret
 
 import (
+	"context"
+
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,7 +37,7 @@ type Inspector interface {
 
 // ReadInterface has methods to work with Secret resources with ReadOnly mode.
 type ReadInterface interface {
-	Get(name string, options meta.GetOptions) (*core.Secret, error)
+	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
 }
 
 type Filter func(pod *core.Secret) bool

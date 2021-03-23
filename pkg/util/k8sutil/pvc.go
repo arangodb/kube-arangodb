@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -35,8 +36,8 @@ import (
 
 // PersistentVolumeClaimInterface has methods to work with PersistentVolumeClaim resources.
 type PersistentVolumeClaimInterface interface {
-	Create(*v1.PersistentVolumeClaim) (*v1.PersistentVolumeClaim, error)
-	Get(name string, options metav1.GetOptions) (*v1.PersistentVolumeClaim, error)
+	Create(ctx context.Context, persistentVolumeClaim *v1.PersistentVolumeClaim, opts metav1.CreateOptions) (*v1.PersistentVolumeClaim, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.PersistentVolumeClaim, error)
 }
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
@@ -112,7 +113,7 @@ func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, d
 		pvc.Spec.StorageClassName = &storageClassName
 	}
 	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
-	if _, err := pvcs.Create(pvc); err != nil && !IsAlreadyExists(err) {
+	if _, err := pvcs.Create(context.Background(), pvc, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

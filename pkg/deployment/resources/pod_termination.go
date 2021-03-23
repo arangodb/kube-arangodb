@@ -58,7 +58,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
 	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(context.Background(), p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
@@ -71,7 +71,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := pvcs.Get(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)
@@ -152,7 +152,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
 	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(p.Spec.NodeName, metav1.GetOptions{})
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(context.Background(), p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
@@ -167,7 +167,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := pvcs.Get(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)

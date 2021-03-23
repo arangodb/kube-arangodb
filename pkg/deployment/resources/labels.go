@@ -23,9 +23,12 @@
 package resources
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
@@ -70,7 +73,7 @@ func (r *Resources) EnsureSecretLabels(cachedStatus inspectorInterface.Inspector
 	changed := false
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
 		if ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -94,7 +97,7 @@ func (r *Resources) EnsureServiceAccountsLabels(cachedStatus inspectorInterface.
 	changed := false
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		if ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().CoreV1().ServiceAccounts(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().CoreV1().ServiceAccounts(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -118,7 +121,7 @@ func (r *Resources) EnsureServicesLabels(cachedStatus inspectorInterface.Inspect
 	changed := false
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
 		if ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().CoreV1().Services(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().CoreV1().Services(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -142,7 +145,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(cachedStatus inspectorInterface.
 	changed := false
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		if ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetMonitoringV1Cli().ServiceMonitors(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetMonitoringV1Cli().ServiceMonitors(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -166,7 +169,7 @@ func (r *Resources) EnsurePodsLabels(cachedStatus inspectorInterface.Inspector) 
 	changed := false
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		if ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().CoreV1().Pods(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().CoreV1().Pods(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -190,7 +193,7 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(cachedStatus inspectorInt
 	changed := false
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true
@@ -214,7 +217,7 @@ func (r *Resources) EnsurePodDisruptionBudgetsLabels(cachedStatus inspectorInter
 	changed := false
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(budget *policy.PodDisruptionBudget) error {
 		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-			_, err := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetAPIObject().GetNamespace()).Patch(name, types.JSONPatchType, d)
+			_, err := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetAPIObject().GetNamespace()).Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
 			return err
 		}) {
 			changed = true

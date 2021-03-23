@@ -22,7 +22,7 @@
 
 package servicemonitor
 
-import monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+import monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 type Inspector interface {
 	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)

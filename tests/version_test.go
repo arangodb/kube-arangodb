@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	"github.com/arangodb/go-driver"
@@ -25,7 +26,7 @@ func TestIsVersionSet(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 	depl.Spec.Image = util.NewString("arangodb/arangodb:" + string(expectedVersion))
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"context"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
@@ -65,7 +66,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 	require.NoError(t, o.Start(4, stopCh))
 
 	for _, name := range objects {
-		_, err := client.CoreV1().Pods("test").Create(&core.Pod{
+		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -73,7 +74,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 
@@ -115,7 +116,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 	require.NoError(t, o.Start(4, stopCh))
 
 	for _, name := range objects {
-		_, err := client.CoreV1().Pods("test").Create(&core.Pod{
+		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -123,10 +124,10 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		_, err = client.CoreV1().Nodes().Create(&core.Node{
+		_, err = client.CoreV1().Nodes().Create(context.Background(), &core.Node{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Node",
@@ -134,7 +135,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 
@@ -175,7 +176,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	require.NoError(t, o.Start(4, stopCh))
 
 	for _, name := range objects {
-		_, err := client.CoreV1().Pods("test").Create(&core.Pod{
+		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -183,10 +184,10 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		_, err = client.CoreV1().Nodes().Create(&core.Node{
+		_, err = client.CoreV1().Nodes().Create(context.Background(), &core.Node{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Node",
@@ -194,7 +195,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 
@@ -253,7 +254,7 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	require.NoError(t, o.Start(4, stopCh))
 
 	for _, name := range objects {
-		_, err := client.CoreV1().Pods("test").Create(&core.Pod{
+		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -261,10 +262,10 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		_, err = client.CoreV1().Nodes().Create(&core.Node{
+		_, err = client.CoreV1().Nodes().Create(context.Background(), &core.Node{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Node",
@@ -272,10 +273,10 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		_, err = client.CoreV1().Services("test").Create(&core.Service{
+		_, err = client.CoreV1().Services("test").Create(context.Background(), &core.Service{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Service",
@@ -283,10 +284,10 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 
-		_, err = client.CoreV1().ServiceAccounts("test").Create(&core.ServiceAccount{
+		_, err = client.CoreV1().ServiceAccounts("test").Create(context.Background(), &core.ServiceAccount{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "ServiceAccount",
@@ -294,7 +295,7 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 			ObjectMeta: meta.ObjectMeta{
 				Name: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 
@@ -343,7 +344,7 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	require.NoError(t, o.Start(4, stopCh))
 
 	for _, name := range objects {
-		_, err := client.CoreV1().Pods(name).Create(&core.Pod{
+		_, err := client.CoreV1().Pods(name).Create(context.Background(), &core.Pod{
 			TypeMeta: meta.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "Pod",
@@ -352,7 +353,7 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 				Name:      name,
 				Namespace: name,
 			},
-		})
+		}, meta.CreateOptions{})
 		require.NoError(t, err)
 	}
 

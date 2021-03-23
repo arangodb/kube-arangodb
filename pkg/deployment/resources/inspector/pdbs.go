@@ -23,6 +23,8 @@
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
 	policy "k8s.io/api/policy/v1beta1"
@@ -98,7 +100,7 @@ func podDisruptionBudgetPointer(podDisruptionBudget policy.PodDisruptionBudget) 
 }
 
 func getPodDisruptionBudgets(k kubernetes.Interface, namespace, cont string) ([]policy.PodDisruptionBudget, error) {
-	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(meta.ListOptions{
+	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(context.Background(), meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})

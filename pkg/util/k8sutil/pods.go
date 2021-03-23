@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
@@ -408,7 +409,7 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if pod, err := kubecli.CoreV1().Pods(ns).Create(pod); err != nil && !IsAlreadyExists(err) {
+	if pod, err := kubecli.CoreV1().Pods(ns).Create(context.Background(), pod, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
 		return "", errors.WithStack(err)
 	} else {
 		return pod.UID, nil

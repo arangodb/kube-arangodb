@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/client-go/tools/clientcmd"

@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -88,7 +89,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Create custom resource in the fake kubernetes API
-		_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(d.apiObject)
+		_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 		require.NoError(t, err)
 
 		if testCase.Resources != nil {
@@ -110,7 +111,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				}
 
 				c := d.GetArangoCli()
-				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Create(&member); err != nil {
+				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Create(context.Background(), &member, metav1.CreateOptions{}); err != nil {
 					return err
 				}
 
@@ -122,7 +123,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				}
 
 				k := d.GetKubeCli()
-				if _, err := k.CoreV1().Services(member.GetNamespace()).Create(&s); err != nil {
+				if _, err := k.CoreV1().Services(member.GetNamespace()).Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
 					return err
 				}
 			}
@@ -154,7 +155,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		require.NoError(t, err)
-		pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(metav1.ListOptions{})
+		pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 		require.NoError(t, err)
 		require.Len(t, pods.Items, 1)
 		if util.BoolOrDefault(testCase.CompareChecksum, true) {

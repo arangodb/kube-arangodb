@@ -24,6 +24,7 @@ package tests
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -49,7 +50,7 @@ func TestScaleClusterNonTLS(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -120,7 +121,7 @@ func TestScaleCluster(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -194,7 +195,7 @@ func TestScaleClusterWithSync(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(depl)
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

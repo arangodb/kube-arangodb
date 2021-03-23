@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
-	monitoringClient "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
