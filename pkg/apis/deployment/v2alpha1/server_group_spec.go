@@ -39,6 +39,35 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+// ServerGroupShutdownMethod enum of possible shutdown methods
+type ServerGroupShutdownMethod string
+
+// Default return default value for ServerGroupShutdownMethod
+func (s *ServerGroupShutdownMethod) Default() ServerGroupShutdownMethod {
+	return ServerGroupShutdownMethodAPI
+}
+
+// Get return current or default value of ServerGroupShutdownMethod
+func (s *ServerGroupShutdownMethod) Get() ServerGroupShutdownMethod {
+	if s == nil {
+		return s.Default()
+	}
+
+	switch t := *s; t {
+	case ServerGroupShutdownMethodAPI, ServerGroupShutdownMethodDelete:
+		return t
+	default:
+		return s.Default()
+	}
+}
+
+const (
+	// ServerGroupShutdownMethodAPI API Shutdown method
+	ServerGroupShutdownMethodAPI ServerGroupShutdownMethod = "api"
+	// ServerGroupShutdownMethodDelete Pod Delete shutdown method
+	ServerGroupShutdownMethodDelete ServerGroupShutdownMethod = "delete"
+)
+
 // ServerGroupSpec contains the specification for all servers in a specific group (e.g. all agents)
 type ServerGroupSpec struct {
 	// Count holds the requested number of servers
@@ -106,6 +135,8 @@ type ServerGroupSpec struct {
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 	// InitContainers Init containers specification
 	InitContainers *ServerGroupInitContainers `json:"initContainers,omitempty"`
+	// ShutdownMethod describe procedure of member shutdown taken by Operator
+	ShutdownMethod *ServerGroupShutdownMethod `json:"shutdownMethod,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context

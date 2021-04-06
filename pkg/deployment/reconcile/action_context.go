@@ -76,6 +76,8 @@ type ActionContext interface {
 	UpdateMember(member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
 	RemoveMemberByID(id string) error
+	// GetPod returns pod.
+	GetPod(podName string) (*v1.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(podName string) error
@@ -315,6 +317,15 @@ func (ac *actionContext) RemoveMemberByID(id string) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+// GetPod returns pod.
+func (ac *actionContext) GetPod(podName string) (*v1.Pod, error) {
+	if pod, err := ac.context.GetPod(podName); err != nil {
+		return nil, errors.WithStack(err)
+	} else {
+		return pod, nil
+	}
 }
 
 // DeletePod deletes a pod with given name in the namespace
