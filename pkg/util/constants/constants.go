@@ -51,6 +51,7 @@ const (
 	FinalizerPodAgencyServing          = "agent.database.arangodb.com/agency-serving"    // Finalizer added to Agents, indicating the need for keeping enough agents alive
 	FinalizerPodDrainDBServer          = "dbserver.database.arangodb.com/drain"          // Finalizer added to DBServers, indicating the need for draining that dbserver
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
+	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 

@@ -32,8 +32,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Action executes a single Plan item.
-type Action interface {
+// ActionCore executes a single Plan item.
+type ActionCore interface {
 	// Start performs the start of the action.
 	// Returns true if the action is completely finished, false in case
 	// the start time needs to be recorded and a ready condition needs to be checked.
@@ -41,6 +41,12 @@ type Action interface {
 	// CheckProgress checks the progress of the action.
 	// Returns: ready, abort, error.
 	CheckProgress(ctx context.Context) (bool, bool, error)
+}
+
+// Action executes a single Plan item.
+type Action interface {
+	ActionCore
+
 	// Timeout returns the amount of time after which this action will timeout.
 	Timeout(deploymentSpec api.DeploymentSpec) time.Duration
 	// Return the MemberID used / created in this action

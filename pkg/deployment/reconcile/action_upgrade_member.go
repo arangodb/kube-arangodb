@@ -56,7 +56,6 @@ type actionUpgradeMember struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	log := a.log
-	group := a.action.Group
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
@@ -66,38 +65,12 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.UpdateMember(m); err != nil {
 		return false, errors.WithStack(err)
 	}
-	if group.IsArangod() {
-		// Invoke shutdown endpoint
-		c, err := a.actionCtx.GetServerClient(ctx, group, a.action.MemberID)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to create member client")
-			return false, errors.WithStack(err)
-		}
-		removeFromCluster := false
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
-		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
-			// Shutdown failed. Let's check if we're already done
-			if ready, _, err := a.CheckProgress(ctx); err == nil && ready {
-				// We're done
-				return true, nil
-			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
-			return false, errors.WithStack(err)
-		}
-	} else if group.IsArangosync() {
-		// Terminate pod
-		if err := a.actionCtx.DeletePod(m.PodName); err != nil {
-			return false, errors.WithStack(err)
-		}
+
+	act := actionRotateMember{
+		actionImpl: a.actionImpl,
 	}
-	// Update status
-	m.Phase = api.MemberPhaseRotating // We keep the rotation phase here, since only when a new pod is created, it will get the Upgrading phase.
-	if err := a.actionCtx.UpdateMember(m); err != nil {
-		return false, errors.WithStack(err)
-	}
-	return false, nil
+
+	return act.Start(ctx)
 }
 
 // CheckProgress checks the progress of the action.
@@ -109,6 +82,18 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	if !found {
 		log.Error().Msg("No such member")
 		return true, false, nil
+	}
+
+	if m.Phase == api.MemberPhaseRotating {
+		act := actionRotateMember{
+			actionImpl: a.actionImpl,
+		}
+
+		if _, abort, err := act.CheckProgress(ctx); err != nil || abort {
+			return false, abort, err
+		}
+
+		return false, true, nil
 	}
 
 	isUpgrading := m.Phase == api.MemberPhaseUpgrading
