@@ -2,6 +2,9 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Bump Kubernetes Dependencies to 1.19.x
+- Add ArangoMember status propagation
+- Add ShutdownMethod option for members
+- Fix Maintenance Plan actions
 
 ## [1.1.6](https://github.com/arangodb/kube-arangodb/tree/1.1.6) (2021-03-02)
 - Add ArangoMember Resource and required RBAC rules
