@@ -65,7 +65,7 @@ func createMaintenanceManagementPlan(ctx context.Context,
 
 	if m.Enabled() && !spec.Database.GetMaintenance() {
 		log.Info().Msgf("Disabling maintenance mode")
-		return api.Plan{api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "")}
+		return api.Plan{api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "")}
 	}
 
 	return nil
