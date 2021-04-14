@@ -1,10 +1,10 @@
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "database.arangodb.com/v1"
 kind: "ArangoDeployment"
 metadata:
   name: "cluster2-with-sync"
 spec:
   mode: Cluster
-  image: arangodb/arangodb:3.6.1
+  image: 'arangodb/arangodb:3.7.10'
   tls:
     altNames: ["kube-01", "kube-02", "kube-03"]
   sync:

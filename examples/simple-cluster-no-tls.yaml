@@ -1,4 +1,4 @@
-apiVersion: "database.arangodb.com/v1alpha"
+apiVersion: "database.arangodb.com/v1"
 kind: "ArangoDeployment"
 metadata:
   name: "example-simple-cluster-no-tls"

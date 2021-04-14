@@ -11,7 +11,7 @@ spec:
       command: ["arangodb_operator", "reboot"]
       args:
         - --deployment-name=my-arangodb-cluster
-        - --image-name=arangodb/enterprise:3.6.1
+        - --image-name=arangodb/enterprise:3.7.10
         - --license-secret-name=arangodb-license-key
         - --coordinators=3
         - pvc-9aa241f7-df94-11e9-b74c-42010aac0044
