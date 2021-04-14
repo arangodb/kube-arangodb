@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.7](https://github.com/arangodb/kube-arangodb/tree/1.1.7) (2021-04-14)
 - Bump Kubernetes Dependencies to 1.19.x
 - Add ArangoMember status propagation
 - Add ShutdownMethod option for members
