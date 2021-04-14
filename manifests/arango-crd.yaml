@@ -6,7 +6,7 @@ metadata:
   name: arangobackuppolicies.backup.arangodb.com
   labels:
     app.kubernetes.io/name: kube-arangodb-crd
-    helm.sh/chart: kube-arangodb-crd-1.1.6
+    helm.sh/chart: kube-arangodb-crd-1.1.7
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: crd
     release: crd
@@ -77,7 +77,7 @@ metadata:
     name: arangobackups.backup.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.1.6
+        helm.sh/chart: kube-arangodb-crd-1.1.7
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -189,7 +189,7 @@ metadata:
     name: arangodeploymentreplications.replication.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.1.6
+        helm.sh/chart: kube-arangodb-crd-1.1.7
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -236,7 +236,7 @@ metadata:
     name: arangodeployments.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.1.6
+        helm.sh/chart: kube-arangodb-crd-1.1.7
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
@@ -280,10 +280,10 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-    name: arangomembmers.database.arangodb.com
+    name: arangomembers.database.arangodb.com
     labels:
         app.kubernetes.io/name: kube-arangodb-crd
-        helm.sh/chart: kube-arangodb-crd-1.1.6
+        helm.sh/chart: kube-arangodb-crd-1.1.7
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: crd
         release: crd
