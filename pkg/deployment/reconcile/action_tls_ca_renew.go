@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -54,8 +55,11 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
 	s := a.actionCtx.SecretsInterface()
-	if err := s.Delete(ctx, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{}); err != nil {
+	if err := s.Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			a.log.Warn().Err(err).Msgf("Unable to clean cert %s", a.actionCtx.GetSpec().TLS.GetCASecretName())
 			return true, nil

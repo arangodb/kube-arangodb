@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -72,7 +73,7 @@ func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
 	// Update status
 	m.Phase = api.MemberPhaseRotateStart
 
-	if err := a.actionCtx.UpdateMember(m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 	return false, nil
@@ -96,7 +97,7 @@ func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool
 	}
 
 	// Pod is terminated, we can now remove it
-	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
+	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, false, errors.WithStack(err)
 		}

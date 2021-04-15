@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -115,7 +116,10 @@ func (a *appendTLSCACertificateAction) Start(ctx context.Context) (bool, error) 
 		return true, nil
 	}
 
-	_, err = a.actionCtx.SecretsInterface().Patch(ctx, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	_, err = a.actionCtx.SecretsInterface().Patch(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})
 	if err != nil {
 		if !k8sutil.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", string(patch))

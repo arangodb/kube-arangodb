@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -227,7 +227,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -306,7 +306,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -408,7 +408,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(

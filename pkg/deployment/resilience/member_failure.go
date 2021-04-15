@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resilience
@@ -42,7 +43,7 @@ const (
 // CheckMemberFailure performs a check for members that should be in failed state because:
 // - They are frequently restarted
 // - They cannot be scheduled for a long time (TODO)
-func (r *Resilience) CheckMemberFailure() error {
+func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 	status, lastVersion := r.context.GetStatus()
 	updateStatusNeeded := false
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
@@ -75,7 +76,8 @@ func (r *Resilience) CheckMemberFailure() error {
 			if !m.Phase.IsFailed() {
 				if m.IsNotReadySince(time.Now().Add(-notReadySinceGracePeriod)) {
 					// Member has terminated too often in recent history.
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(status, group, m)
+
+					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
 					if err != nil {
 						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
 					} else if failureAcceptable {
@@ -94,7 +96,7 @@ func (r *Resilience) CheckMemberFailure() error {
 				count := m.RecentTerminationsSince(time.Now().Add(-recentTerminationsSinceGracePeriod))
 				if count >= recentTerminationThreshold {
 					// Member has terminated too often in recent history.
-					failureAcceptable, reason, err := r.isMemberFailureAcceptable(status, group, m)
+					failureAcceptable, reason, err := r.isMemberFailureAcceptable(ctx, group, m)
 					if err != nil {
 						log.Warn().Err(err).Msg("Failed to check is member failure is acceptable")
 					} else if failureAcceptable {
@@ -114,7 +116,7 @@ func (r *Resilience) CheckMemberFailure() error {
 		return errors.WithStack(err)
 	}
 	if updateStatusNeeded {
-		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -125,12 +127,14 @@ func (r *Resilience) CheckMemberFailure() error {
 // isMemberFailureAcceptable checks if it is currently acceptable to switch the phase of the given member
 // to failed, which means that it will be replaced.
 // Return: failureAcceptable, notAcceptableReason, error
-func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, group api.ServerGroup, m api.MemberStatus) (bool, string, error) {
-	ctx := context.Background()
+func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.ServerGroup, m api.MemberStatus) (bool, string, error) {
+
 	switch group {
 	case api.ServerGroupAgents:
 		// All good when remaining agents are health
-		clients, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != m.ID })
+		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		clients, err := r.context.GetAgencyClients(ctxChild, func(id string) bool { return id != m.ID })
+		cancel()
 		if err != nil {
 			return false, "", errors.WithStack(err)
 		}
@@ -139,7 +143,9 @@ func (r *Resilience) isMemberFailureAcceptable(status api.DeploymentStatus, grou
 		}
 		return true, "", nil
 	case api.ServerGroupDBServers:
-		client, err := r.context.GetDatabaseClient(ctx)
+		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		client, err := r.context.GetDatabaseClient(ctxChild)
+		cancel()
 		if err != nil {
 			return false, "", errors.WithStack(err)
 		}

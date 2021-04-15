@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -66,9 +67,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+var _ resources.Context = &Deployment{}
+
 // GetBackup receives information about a backup resource
-func (d *Deployment) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
-	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(context.Background(), backup, meta.GetOptions{})
+func (d *Deployment) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(ctxChild, backup, meta.GetOptions{})
 }
 
 // GetAPIObject returns the deployment as k8s object.
@@ -147,14 +153,14 @@ func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
 // updates the resources in k8s.
 // If the given last version does not match the actual last version of the status object,
 // an error is returned.
-func (d *Deployment) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+func (d *Deployment) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
-	return d.updateStatus(status, lastVersion, force...)
+	return d.updateStatus(ctx, status, lastVersion, force...)
 }
 
-func (d *Deployment) updateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+func (d *Deployment) updateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	if d.status.version != lastVersion {
 		// Status is obsolete
 		d.deps.Log.Error().
@@ -165,14 +171,14 @@ func (d *Deployment) updateStatus(status api.DeploymentStatus, lastVersion int32
 	}
 	d.status.version++
 	d.status.last = *status.DeepCopy()
-	if err := d.updateCRStatus(force...); err != nil {
+	if err := d.updateCRStatus(ctx, force...); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 // UpdateMember updates the deployment status wrt the given member.
-func (d *Deployment) UpdateMember(member api.MemberStatus) error {
+func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) error {
 	status, lastVersion := d.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
@@ -181,7 +187,7 @@ func (d *Deployment) UpdateMember(member api.MemberStatus) error {
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := d.UpdateStatus(status, lastVersion); err != nil {
+	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 		d.deps.Log.Debug().Err(err).Msg("Updating CR status failed")
 		return errors.WithStack(err)
 	}
@@ -324,7 +330,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	ns := d.apiObject.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecret(secrets, secretName)
+	monitoringToken, err := k8sutil.GetTokenSecret(ctx, secrets, secretName)
 	if err != nil {
 		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return nil, errors.WithStack(err)
@@ -355,7 +361,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, error) {
+func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
 	log := d.deps.Log
 	status, lastVersion := d.GetStatus()
 	id, err := createMember(log, &status, group, id, d.apiObject)
@@ -364,7 +370,7 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 		return "", errors.WithStack(err)
 	}
 	// Save added member
-	if err := d.UpdateStatus(status, lastVersion); err != nil {
+	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return "", errors.WithStack(err)
 	}
@@ -375,16 +381,22 @@ func (d *Deployment) CreateMember(group api.ServerGroup, id string) (string, err
 }
 
 // GetPod returns pod.
-func (d *Deployment) GetPod(podName string) (*v1.Pod, error) {
-	return d.deps.KubeCli.CoreV1().Pods(d.GetNamespace()).Get(context.Background(), podName, meta.GetOptions{})
+func (d *Deployment) GetPod(ctx context.Context, podName string) (*v1.Pod, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	return d.deps.KubeCli.CoreV1().Pods(d.GetNamespace()).Get(ctxChild, podName, meta.GetOptions{})
 }
 
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (d *Deployment) DeletePod(podName string) error {
+func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return errors.WithStack(err)
 	}
@@ -393,13 +405,17 @@ func (d *Deployment) DeletePod(podName string) error {
 
 // CleanupPod deletes a given pod with force and explicit UID.
 // If the pod does not exist, the error is ignored.
-func (d *Deployment) CleanupPod(p *v1.Pod) error {
+func (d *Deployment) CleanupPod(ctx context.Context, p *v1.Pod) error {
 	log := d.deps.Log
 	podName := p.GetName()
 	ns := p.GetNamespace()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(context.Background(), podName, *options); err != nil && !k8sutil.IsNotFound(err) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, *options)
+	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return errors.WithStack(err)
 	}
@@ -408,18 +424,23 @@ func (d *Deployment) CleanupPod(p *v1.Pod) error {
 
 // RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (d *Deployment) RemovePodFinalizers(podName string) error {
+func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) error {
 	log := d.deps.Log
 	ns := d.GetNamespace()
 	kubecli := d.deps.KubeCli
-	p, err := kubecli.CoreV1().Pods(ns).Get(context.Background(), podName, meta.GetOptions{})
+
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	p, err := kubecli.CoreV1().Pods(ns).Get(ctxChild, podName, meta.GetOptions{})
+	cancel()
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
 		return errors.WithStack(err)
 	}
-	if err := k8sutil.RemovePodFinalizers(log, d.deps.KubeCli, p, p.GetFinalizers(), true); err != nil {
+
+	err = k8sutil.RemovePodFinalizers(ctx, log, d.deps.KubeCli, p, p.GetFinalizers(), true)
+	if err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -427,10 +448,13 @@ func (d *Deployment) RemovePodFinalizers(podName string) error {
 
 // DeletePvc deletes a persistent volume claim with given name in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
-func (d *Deployment) DeletePvc(pvcName string) error {
+func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(context.Background(), pvcName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(ctxChild, pvcName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return errors.WithStack(err)
 	}
@@ -439,8 +463,11 @@ func (d *Deployment) DeletePvc(pvcName string) error {
 
 // UpdatePvc updated a persistent volume claim in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
-func (d *Deployment) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
-	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(context.Background(), pvc, meta.UpdateOptions{})
+func (d *Deployment) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(ctxChild, pvc, meta.UpdateOptions{})
 	if err == nil {
 		return nil
 	}
@@ -471,8 +498,11 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 }
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
-func (d *Deployment) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
-	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(context.Background(), pvcName, meta.GetOptions{})
+func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(ctxChild, pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, errors.WithStack(err)
@@ -495,10 +525,13 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 
 // DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 // If the secret does not exist, the error is ignored.
-func (d *Deployment) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(ctxChild, secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -524,12 +557,12 @@ func (d *Deployment) InvalidateSyncStatus() {
 	d.resources.InvalidateSyncStatus()
 }
 
-func (d *Deployment) DisableScalingCluster() error {
-	return d.clusterScalingIntegration.DisableScalingCluster()
+func (d *Deployment) DisableScalingCluster(ctx context.Context) error {
+	return d.clusterScalingIntegration.DisableScalingCluster(ctx)
 }
 
-func (d *Deployment) EnableScalingCluster() error {
-	return d.clusterScalingIntegration.EnableScalingCluster()
+func (d *Deployment) EnableScalingCluster(ctx context.Context) error {
+	return d.clusterScalingIntegration.EnableScalingCluster(ctx)
 }
 
 // GetAgencyPlan returns agency plan
@@ -546,8 +579,8 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 	return err
 }
 
-func (d *Deployment) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
-	return d.resources.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
+func (d *Deployment) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
+	return d.resources.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
 
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -562,7 +595,7 @@ func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
@@ -574,7 +607,7 @@ func (d *Deployment) WithStatusUpdate(action func(s *api.DeploymentStatus) bool,
 		return nil
 	}
 
-	return d.updateStatus(status, version, force...)
+	return d.updateStatus(ctx, status, version, force...)
 }
 
 func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
@@ -585,8 +618,11 @@ func (d *Deployment) GetName() string {
 	return d.apiObject.GetName()
 }
 
-func (d *Deployment) GetOwnedPods() ([]v1.Pod, error) {
-	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(context.Background(), meta.ListOptions{})
+func (d *Deployment) GetOwnedPods(ctx context.Context) ([]v1.Pod, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(ctxChild, meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

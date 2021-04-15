@@ -23,6 +23,8 @@
 package replication
 
 import (
+	"context"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -58,7 +60,7 @@ func (ep serverEndpoint) AuthUserSecretName() string {
 func (ep serverEndpoint) TLSCACert() string {
 	tlsCASecretName := ep.getSpec().TLS.GetCASecretName()
 	secrets := ep.dr.deps.KubeCli.CoreV1().Secrets(ep.dr.apiObject.GetNamespace())
-	caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
+	caCert, err := k8sutil.GetCACertficateSecret(context.TODO(), secrets, tlsCASecretName)
 	if err != nil {
 		return ""
 	}

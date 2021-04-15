@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"context"
+
 	"github.com/rs/zerolog"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // Reconciler is the service that takes care of bring the a deployment
@@ -43,7 +47,7 @@ func NewReconciler(log zerolog.Logger, context Context) *Reconciler {
 }
 
 // CheckDeployment checks for obviously broken things and fixes them immediately
-func (r *Reconciler) CheckDeployment() error {
+func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 	spec := r.context.GetSpec()
 	status, _ := r.context.GetStatus()
 
@@ -52,19 +56,19 @@ func (r *Reconciler) CheckDeployment() error {
 		if len(status.Members.Coordinators) == 0 {
 			// No more coordinators! Take immediate action
 			r.log.Error().Msg("No Coordinator members! Create one member immediately")
-			_, err := r.context.CreateMember(api.ServerGroupCoordinators, "")
+			_, err := r.context.CreateMember(ctx, api.ServerGroupCoordinators, "")
 			if err != nil {
 				return err
 			}
 		} else if status.Members.Coordinators.AllFailed() {
 			r.log.Error().Msg("All coordinators failed - reset")
 			for _, m := range status.Members.Coordinators {
-				if err := r.context.DeletePod(m.PodName); err != nil {
+				if err := r.context.DeletePod(ctx, m.PodName); err != nil {
 					r.log.Error().Err(err).Msg("Failed to delete pod")
 				}
 				m.Phase = api.MemberPhaseNone
 
-				if err := r.context.UpdateMember(m); err != nil {
+				if err := r.context.UpdateMember(ctx, m); err != nil {
 					r.log.Error().Err(err).Msg("Failed to update member")
 				}
 			}

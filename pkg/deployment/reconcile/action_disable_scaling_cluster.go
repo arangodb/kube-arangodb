@@ -54,7 +54,7 @@ type actionDisableScalingCluster struct {
 
 // Start disables scaling DBservers and coordinators
 func (a *actionDisableScalingCluster) Start(ctx context.Context) (bool, error) {
-	err := a.actionCtx.DisableScalingCluster()
+	err := a.actionCtx.DisableScalingCluster(ctx)
 	if err != nil {
 		return false, err
 	}

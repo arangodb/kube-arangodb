@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -25,6 +26,8 @@ package reconcile
 import (
 	"context"
 	"encoding/base64"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -85,7 +88,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		secret = s
 	}
 
-	sha, d, exists, err := pod.GetEncryptionKey(a.actionCtx.SecretsInterface(), secret)
+	sha, d, exists, err := pod.GetEncryptionKey(ctx, a.actionCtx.SecretsInterface(), secret)
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to fetch current encryption key")
 		return true, nil
@@ -104,7 +107,10 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	_, err = a.actionCtx.SecretsInterface().Patch(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	_, err = a.actionCtx.SecretsInterface().Patch(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
 	if err != nil {
 		return false, err
 	}

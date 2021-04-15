@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -27,6 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -52,7 +54,9 @@ type refreshTLSKeyfileCertificateAction struct {
 }
 
 func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
+	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
@@ -74,7 +78,9 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 
 	client := client.NewClient(c.Connection())
 
-	e, err := client.RefreshTLS(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	e, err := client.RefreshTLS(ctxChild)
+	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to refresh TLS")
 		return true, false, nil

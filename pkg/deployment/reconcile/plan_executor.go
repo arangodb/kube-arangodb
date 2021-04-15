@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -70,7 +71,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 
 		log := logContext.Logger()
 
-		action := d.createAction(ctx, log, planAction, cachedStatus)
+		action := d.createAction(log, planAction, cachedStatus)
 		if planAction.StartTime.IsZero() {
 			// Not started yet
 			ready, err := action.Start(ctx)
@@ -95,7 +96,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 					status.Plan[0].StartTime = &now
 				}
 				// Save plan update
-				if err := d.context.UpdateStatus(status, lastVersion, true); err != nil {
+				if err := d.context.UpdateStatus(ctx, status, lastVersion, true); err != nil {
 					log.Debug().Err(err).Msg("Failed to update CR status")
 					return false, errors.WithStack(err)
 				}
@@ -120,7 +121,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 						status.Plan[0].MemberID = action.MemberID()
 					}
 					// Save plan update
-					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
+					if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
 						return false, errors.WithStack(err)
 					}
@@ -149,7 +150,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 					// Replace plan with empty one and save it.
 					status, lastVersion := d.context.GetStatus()
 					status.Plan = api.Plan{}
-					if err := d.context.UpdateStatus(status, lastVersion); err != nil {
+					if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 						log.Debug().Err(err).Msg("Failed to update CR status")
 						return false, errors.WithStack(err)
 					}
@@ -164,7 +165,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 }
 
 // createAction create action object based on action type
-func (d *Reconciler) createAction(ctx context.Context, log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) Action {
+func (d *Reconciler) createAction(log zerolog.Logger, action api.Action, cachedStatus inspectorInterface.Inspector) Action {
 	actionCtx := newActionContext(log.With().Str("id", action.ID).Str("type", action.Type.String()).Logger(), d.context, cachedStatus)
 
 	f, ok := getActionFactory(action.Type)

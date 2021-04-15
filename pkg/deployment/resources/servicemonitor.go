@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2019 ArangoDB Inc, Cologne, Germany
+// Copyright 2019-2021 ArangoDB Inc, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Max Neunhoeffer
+// Author Tomasz Mielech
 //
 
 package resources
@@ -138,7 +139,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 }
 
 // EnsureServiceMonitor creates or updates a ServiceMonitor.
-func (r *Resources) EnsureServiceMonitor() error {
+func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	// Some preparations:
 	log := r.log
 	apiObject := r.context.GetAPIObject()
@@ -157,7 +158,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 
 	// Check if ServiceMonitor already exists
 	serviceMonitors := mClient.ServiceMonitors(ns)
-	servMon, err := serviceMonitors.Get(context.Background(), serviceMonitorName, metav1.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, metav1.GetOptions{})
+	cancel()
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			if !wantMetrics {
@@ -178,7 +181,10 @@ func (r *Resources) EnsureServiceMonitor() error {
 				},
 				Spec: spec,
 			}
-			smon, err = serviceMonitors.Create(context.Background(), smon, metav1.CreateOptions{})
+
+			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+			smon, err = serviceMonitors.Create(ctxChild, smon, metav1.CreateOptions{})
+			cancel()
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
 				return errors.WithStack(err)
@@ -220,7 +226,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 
 		servMon.Spec = spec
 
-		_, err = serviceMonitors.Update(context.Background(), servMon, metav1.UpdateOptions{})
+		ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		_, err = serviceMonitors.Update(ctxChild, servMon, metav1.UpdateOptions{})
+		cancel()
 		if err != nil {
 			return err
 		}
@@ -228,7 +236,9 @@ func (r *Resources) EnsureServiceMonitor() error {
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:
-	err = serviceMonitors.Delete(context.Background(), serviceMonitorName, metav1.DeleteOptions{})
+	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	err = serviceMonitors.Delete(ctxChild, serviceMonitorName, metav1.DeleteOptions{})
+	cancel()
 	if err == nil {
 		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)
 		return nil

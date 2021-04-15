@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -25,18 +26,16 @@ package reconcile
 import (
 	"context"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // Context provides methods to the reconcile package.
@@ -49,9 +48,9 @@ type Context interface {
 	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
-	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// UpdateMember updates the deployment status wrt the given member.
-	UpdateMember(member api.MemberStatus) error
+	UpdateMember(ctx context.Context, member api.MemberStatus) error
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
@@ -70,29 +69,29 @@ type Context interface {
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	// Returns ID, error
-	CreateMember(group api.ServerGroup, id string) (string, error)
+	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
 	// GetPod returns pod.
-	GetPod(podName string) (*v1.Pod, error)
+	GetPod(ctx context.Context, podName string) (*v1.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(podName string) error
+	DeletePod(ctx context.Context, podName string) error
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(pvcName string) error
+	DeletePvc(ctx context.Context, pvcName string) error
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	RemovePodFinalizers(podName string) error
+	RemovePodFinalizers(ctx context.Context, podName string) error
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
-	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
+	UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
-	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
+	GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error)
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
 	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 	// If the secret does not exist, the error is ignored.
-	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
+	DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error
 	// DeleteSecret removes the Secret with given name.
 	// If the secret does not exist, the error is ignored.
 	DeleteSecret(secretName string) error
@@ -103,21 +102,21 @@ type Context interface {
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
 	// DisableScalingCluster disables scaling DBservers and coordinators
-	DisableScalingCluster() error
+	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
-	EnableScalingCluster() error
+	EnableScalingCluster(ctx context.Context) error
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member
-	RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
+	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
-	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name
 	GetName() string
 	// GetAuthentication return authentication for members

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -56,7 +57,9 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	var removalList []string
 
 	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
-	updated, err := depls.Get(context.Background(), d.apiObject.GetName(), metav1.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
+	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -73,7 +76,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if err := removeDeploymentFinalizers(log, d.deps.DatabaseCRCli, updated, removalList); err != nil {
+		if err := removeDeploymentFinalizers(ctx, log, d.deps.DatabaseCRCli, updated, removalList); err != nil {
 			log.Debug().Err(err).Msg("Failed to update ArangoDeployment (to remove finalizers)")
 			return errors.WithStack(err)
 		}
@@ -83,11 +86,11 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 
 // inspectRemoveChildFinalizers checks the finalizer condition for remove-child-finalizers.
 // It returns nil if the finalizer can be removed.
-func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerolog.Logger, depl *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) error {
-	if err := d.removePodFinalizers(cachedStatus); err != nil {
+func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, _ zerolog.Logger, _ *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) error {
+	if err := d.removePodFinalizers(ctx, cachedStatus); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := d.removePVCFinalizers(cachedStatus); err != nil {
+	if err := d.removePVCFinalizers(ctx, cachedStatus); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -95,10 +98,14 @@ func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, log zerol
 }
 
 // removeDeploymentFinalizers removes the given finalizers from the given PVC.
-func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, depl *api.ArangoDeployment, finalizers []string) error {
+func removeDeploymentFinalizers(ctx context.Context, log zerolog.Logger, cli versioned.Interface,
+	depl *api.ArangoDeployment, finalizers []string) error {
 	depls := cli.DatabaseV1().ArangoDeployments(depl.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		result, err := depls.Get(context.Background(), depl.GetName(), metav1.GetOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+
+		result, err := depls.Get(ctxChild, depl.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -106,7 +113,10 @@ func removeDeploymentFinalizers(log zerolog.Logger, cli versioned.Interface, dep
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedDepl := updated.(*api.ArangoDeployment)
-		result, err := depls.Update(context.Background(), updatedDepl, metav1.UpdateOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+
+		result, err := depls.Update(ctxChild, updatedDepl, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

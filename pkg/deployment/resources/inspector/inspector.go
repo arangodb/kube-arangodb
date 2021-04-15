@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
@@ -46,42 +47,43 @@ type SecretReadInterface interface {
 }
 
 func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
-	pods, err := podsToMap(k, namespace)
+	ctx := context.TODO()
+	pods, err := podsToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	secrets, err := secretsToMap(k, namespace)
+	secrets, err := secretsToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	pvcs, err := pvcsToMap(k, namespace)
+	pvcs, err := pvcsToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	services, err := servicesToMap(k, namespace)
+	services, err := servicesToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceAccounts, err := serviceAccountsToMap(k, namespace)
+	serviceAccounts, err := serviceAccountsToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	podDisruptionBudgets, err := podDisruptionBudgetsToMap(k, namespace)
+	podDisruptionBudgets, err := podDisruptionBudgetsToMap(ctx, k, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceMonitors, err := serviceMonitorsToMap(m, namespace)
+	serviceMonitors, err := serviceMonitorsToMap(ctx, m, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	arangoMembers, err := arangoMembersToMap(c, namespace)
+	arangoMembers, err := arangoMembersToMap(ctx, c, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -130,46 +132,47 @@ type inspector struct {
 	m  monitoringClient.MonitoringV1Interface
 }
 
-func (i *inspector) Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) error {
+func (i *inspector) Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,
+	c versioned.Interface, namespace string) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	pods, err := podsToMap(k, namespace)
+	pods, err := podsToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := secretsToMap(k, namespace)
+	secrets, err := secretsToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	pvcs, err := pvcsToMap(k, namespace)
+	pvcs, err := pvcsToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	services, err := servicesToMap(k, namespace)
+	services, err := servicesToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	serviceAccounts, err := serviceAccountsToMap(k, namespace)
+	serviceAccounts, err := serviceAccountsToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	podDisruptionBudgets, err := podDisruptionBudgetsToMap(k, namespace)
+	podDisruptionBudgets, err := podDisruptionBudgetsToMap(ctx, k, namespace)
 	if err != nil {
 		return err
 	}
 
-	serviceMonitors, err := serviceMonitorsToMap(m, namespace)
+	serviceMonitors, err := serviceMonitorsToMap(ctx, m, namespace)
 	if err != nil {
 		return err
 	}
 
-	arangoMembers, err := arangoMembersToMap(c, namespace)
+	arangoMembers, err := arangoMembersToMap(ctx, c, namespace)
 	if err != nil {
 		return err
 	}

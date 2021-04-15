@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package main
@@ -31,6 +32,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
@@ -114,6 +117,10 @@ var (
 		singleMode bool
 		scope      string
 	}
+	timeouts struct {
+		k8s     time.Duration
+		arangoD time.Duration
+	}
 	chaosOptions struct {
 		allowed bool
 	}
@@ -143,7 +150,8 @@ func init() {
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
-
+	f.DurationVar(&timeouts.k8s, "timeout.k8s", time.Second*3, "The request timeout to the kubernetes")
+	f.DurationVar(&timeouts.arangoD, "timeout.arangod", time.Second*10, "The request timeout to the ArangoDB")
 	features.Init(&cmdMain)
 }
 
@@ -168,6 +176,8 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	ip := os.Getenv(constants.EnvOperatorPodIP)
 
 	deploymentApi.DefaultImage = operatorOptions.arangoImage
+	k8sutil.SetRequestTimeout(timeouts.k8s)
+	arangod.SetRequestTimeout(timeouts.arangoD)
 
 	// Prepare log service
 	var err error

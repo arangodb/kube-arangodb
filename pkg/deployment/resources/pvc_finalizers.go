@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -43,14 +44,15 @@ const (
 )
 
 // runPVCFinalizers goes through the list of PVC finalizers to see if they can be removed.
-func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) (util.Interval, error) {
+func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolumeClaim, group api.ServerGroup,
+	memberStatus api.MemberStatus) (util.Interval, error) {
 	log := r.log.With().Str("pvc-name", p.GetName()).Logger()
 	var removalList []string
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
 		case constants.FinalizerPVCMemberExists:
 			log.Debug().Msg("Inspecting member exists finalizer")
-			if err := r.inspectFinalizerPVCMemberExists(ctx, log, p, group, memberStatus); err == nil {
+			if err := r.inspectFinalizerPVCMemberExists(ctx, log, group, memberStatus); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
@@ -60,8 +62,8 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
 		kubecli := r.context.GetKubeCli()
-		ignoreNotFound := false
-		if err := k8sutil.RemovePVCFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
+		err := k8sutil.RemovePVCFinalizers(ctx, log, kubecli, p, removalList, false)
+		if err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
 			return 0, errors.WithStack(err)
 		}
@@ -74,7 +76,8 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 
 // inspectFinalizerPVCMemberExists checks the finalizer condition for member-exists.
 // It returns nil if the finalizer can be removed.
-func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, p *v1.PersistentVolumeClaim, group api.ServerGroup, memberStatus api.MemberStatus) error {
+func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zerolog.Logger, group api.ServerGroup,
+	memberStatus api.MemberStatus) error {
 	// Inspect member phase
 	if memberStatus.Phase.IsFailed() {
 		log.Debug().Msg("Member is already failed, safe to remove member-exists finalizer")
@@ -105,7 +108,10 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 	if memberStatus.PodName != "" {
 		log.Info().Msg("Removing Pod of member, because PVC is being removed")
 		pods := r.context.GetKubeCli().CoreV1().Pods(apiObject.GetNamespace())
-		if err := pods.Delete(context.Background(), memberStatus.PodName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		err := pods.Delete(ctxChild, memberStatus.PodName, metav1.DeleteOptions{})
+		cancel()
+		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Failed to delete pod")
 			return errors.WithStack(err)
 		}

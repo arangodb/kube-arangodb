@@ -54,7 +54,7 @@ func (a *actionMarkToRemove) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	return true, a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	return true, a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		member, group, ok := s.Members.ElementByID(a.action.MemberID)
 		if !ok {
 			return false

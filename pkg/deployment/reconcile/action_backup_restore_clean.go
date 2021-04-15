@@ -50,7 +50,7 @@ type actionBackupRestoreClean struct {
 }
 
 func (a actionBackupRestoreClean) Start(ctx context.Context) (bool, error) {
-	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if s.Restore == nil {
 			return false
 		}

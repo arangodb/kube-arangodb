@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -66,14 +69,15 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 			a.log.Warn().Msgf("User does not exist in password hashes")
 			return true, nil
 		} else {
-			ctx, c := context.WithTimeout(context.Background(), a.Timeout(spec))
-			defer c()
-			if password, err := a.setUserPassword(ctx, user, secret.Get()); err != nil {
+			ctxChild, cancel := context.WithTimeout(ctx, a.Timeout(spec))
+			defer cancel()
+
+			if password, err := a.setUserPassword(ctxChild, user, secret.Get()); err != nil {
 				return false, err
 			} else {
 				passwordSha := util.SHA256FromString(password)
 
-				if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+				if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 					if s.SecretHashes == nil {
 						s.SecretHashes = &api.SecretHashes{}
 					}
@@ -99,22 +103,30 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, secret string) (string, error) {
 	a.log.Debug().Msgf("Bootstrapping user %s, secret %s", user, secret)
 
-	client, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 
-	password, err := a.ensureUserPasswordSecret(user, secret)
+	password, err := a.ensureUserPasswordSecret(ctx, user, secret)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 
 	// Obtain the user
-	if u, err := client.User(context.Background(), user); driver.IsNotFound(err) {
-		_, err := client.CreateUser(context.Background(), user, &driver.UserOptions{Password: password})
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	u, err := client.User(ctxChild, user)
+	cancel()
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	if driver.IsNotFound(err) {
+		_, err := client.CreateUser(ctxChild, user, &driver.UserOptions{Password: password})
 		return password, errors.WithStack(err)
 	} else if err == nil {
-		return password, errors.WithStack(u.Update(context.Background(), driver.UserOptions{
+		return password, errors.WithStack(u.Update(ctxChild, driver.UserOptions{
 			Password: password,
 		}))
 	} else {
@@ -122,7 +134,7 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	}
 }
 
-func (a actionBootstrapSetPassword) ensureUserPasswordSecret(user, secret string) (string, error) {
+func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context, user, secret string) (string, error) {
 	cache := a.actionCtx.GetCachedStatus()
 
 	if auth, ok := cache.Secret(secret); !ok {
@@ -134,7 +146,8 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(user, secret string
 		token := hex.EncodeToString(tokenData)
 		owner := a.actionCtx.GetAPIObject().AsOwner()
 
-		if err := k8sutil.CreateBasicAuthSecret(a.actionCtx.SecretsInterface(), secret, user, token, &owner); err != nil {
+		err := k8sutil.CreateBasicAuthSecret(ctx, a.actionCtx.SecretsInterface(), secret, user, token, &owner)
+		if err != nil {
 			return "", err
 		}
 

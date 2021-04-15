@@ -48,7 +48,7 @@ type PlanBuilderContext interface {
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
-	GetPvc(pvcName string) (*core.PersistentVolumeClaim, error)
+	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
 	// GetShardSyncStatus returns true if all shards are in sync
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
@@ -60,7 +60,7 @@ type PlanBuilderContext interface {
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// Renders Pod definition for member
-	RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
@@ -73,7 +73,7 @@ type PlanBuilderContext interface {
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
-	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name
 	GetName() string
 	// GetAgency returns a connection to the entire agency.

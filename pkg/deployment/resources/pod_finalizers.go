@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -88,8 +89,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
 		kubecli := r.context.GetKubeCli()
-		ignoreNotFound := false
-		if err := k8sutil.RemovePodFinalizers(log, kubecli, p, removalList, ignoreNotFound); err != nil {
+		if err := k8sutil.RemovePodFinalizers(ctx, log, kubecli, p, removalList, false); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
 			return 0, errors.WithStack(err)
 		}
@@ -119,7 +119,10 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
-		if err := pvcs.Delete(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		err := pvcs.Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
+		cancel()
+		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}
@@ -146,7 +149,10 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
 		pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetNamespace())
-		if err := pvcs.Delete(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		err := pvcs.Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
+		cancel()
+		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete PVC for member")
 			return errors.WithStack(err)
 		}

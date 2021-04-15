@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
@@ -75,8 +78,8 @@ func (i *inspector) ServiceMonitor(name string) (*monitoring.ServiceMonitor, boo
 	return serviceMonitor, true
 }
 
-func serviceMonitorsToMap(m monitoringClient.MonitoringV1Interface, namespace string) (map[string]*monitoring.ServiceMonitor, error) {
-	serviceMonitors, err := getServiceMonitors(m, namespace, "")
+func serviceMonitorsToMap(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace string) (map[string]*monitoring.ServiceMonitor, error) {
+	serviceMonitors, err := getServiceMonitors(ctx, m, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -95,11 +98,13 @@ func serviceMonitorsToMap(m monitoringClient.MonitoringV1Interface, namespace st
 	return serviceMonitorMap, nil
 }
 
-func getServiceMonitors(m monitoringClient.MonitoringV1Interface, namespace, cont string) ([]*monitoring.ServiceMonitor, error) {
-	serviceMonitors, err := m.ServiceMonitors(namespace).List(context.Background(), meta.ListOptions{
+func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) ([]*monitoring.ServiceMonitor, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	serviceMonitors, err := m.ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
+	cancel()
 
 	if err != nil {
 		return []*monitoring.ServiceMonitor{}, nil

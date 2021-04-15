@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -29,6 +30,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -39,24 +41,30 @@ const coordinatorHealthFailedTimeout time.Duration = time.Minute
 func createClusterOperationPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
 
 	if spec.GetMode() != api.DeploymentModeCluster {
 		return nil
 	}
 
-	c, err := context.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	c, err := planCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		return nil
 	}
 
-	cluster, err := c.Cluster(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	cluster, err := c.Cluster(ctxChild)
+	cancel()
 	if err != nil {
 		log.Warn().Err(err).Msgf("Unable to get Cluster client")
 		return nil
 	}
 
-	health, err := cluster.Health(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	health, err := cluster.Health(ctxChild)
+	cancel()
 	if err != nil {
 		log.Warn().Err(err).Msgf("Unable to get Cluster health")
 		return nil

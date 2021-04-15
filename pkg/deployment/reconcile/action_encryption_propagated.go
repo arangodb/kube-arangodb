@@ -56,7 +56,7 @@ func (a *encryptionKeyPropagatedAction) Start(ctx context.Context) (bool, error)
 
 	propagatedFlagBool := propagatedFlag == conditionTrue
 
-	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if s.Hashes.Encryption.Propagated != propagatedFlagBool {
 			s.Hashes.Encryption.Propagated = propagatedFlagBool
 			return true

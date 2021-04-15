@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
@@ -75,8 +78,8 @@ func (i *inspector) ArangoMember(name string) (*api.ArangoMember, bool) {
 	return arangoMember, true
 }
 
-func arangoMembersToMap(k versioned.Interface, namespace string) (map[string]*api.ArangoMember, error) {
-	arangoMembers, err := getArangoMembers(k, namespace, "")
+func arangoMembersToMap(ctx context.Context, k versioned.Interface, namespace string) (map[string]*api.ArangoMember, error) {
+	arangoMembers, err := getArangoMembers(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,18 +102,20 @@ func arangoMemberPointer(pod api.ArangoMember) *api.ArangoMember {
 	return &pod
 }
 
-func getArangoMembers(k versioned.Interface, namespace, cont string) ([]api.ArangoMember, error) {
-	arangoMembers, err := k.DatabaseV1().ArangoMembers(namespace).List(context.Background(), meta.ListOptions{
+func getArangoMembers(ctx context.Context, k versioned.Interface, namespace, cont string) ([]api.ArangoMember, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	arangoMembers, err := k.DatabaseV1().ArangoMembers(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
+	cancel()
 
 	if err != nil {
 		return nil, err
 	}
 
 	if arangoMembers.Continue != "" {
-		nextArangoMembersLayer, err := getArangoMembers(k, namespace, arangoMembers.Continue)
+		nextArangoMembersLayer, err := getArangoMembers(ctx, k, namespace, arangoMembers.Continue)
 		if err != nil {
 			return nil, err
 		}

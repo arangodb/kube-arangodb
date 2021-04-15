@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
@@ -75,8 +78,8 @@ func (i *inspector) Service(name string) (*core.Service, bool) {
 	return service, true
 }
 
-func servicesToMap(k kubernetes.Interface, namespace string) (map[string]*core.Service, error) {
-	services, err := getServices(k, namespace, "")
+func servicesToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Service, error) {
+	services, err := getServices(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,18 +102,20 @@ func servicePointer(pod core.Service) *core.Service {
 	return &pod
 }
 
-func getServices(k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
-	services, err := k.CoreV1().Services(namespace).List(context.Background(), meta.ListOptions{
+func getServices(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	services, err := k.CoreV1().Services(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
+	cancel()
 
 	if err != nil {
 		return nil, err
 	}
 
 	if services.Continue != "" {
-		nextServicesLayer, err := getServices(k, namespace, services.Continue)
+		nextServicesLayer, err := getServices(ctx, k, namespace, services.Continue)
 		if err != nil {
 			return nil, err
 		}

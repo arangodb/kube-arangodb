@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,7 +60,10 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	f, err := a.actionCtx.SecretsInterface().Get(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	f, err := a.actionCtx.SecretsInterface().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil
@@ -65,7 +71,7 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 
 	keyHashes := secretKeysToListWithPrefix("sha256:", f)
 
-	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if len(keyHashes) == 0 {
 			if s.Hashes.Encryption.Keys != nil {
 				s.Hashes.Encryption.Keys = nil

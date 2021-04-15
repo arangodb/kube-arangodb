@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
@@ -96,8 +99,8 @@ func (s secretReadInterface) Get(ctx context.Context, name string, opts meta.Get
 	}
 }
 
-func secretsToMap(k kubernetes.Interface, namespace string) (map[string]*core.Secret, error) {
-	secrets, err := getSecrets(k, namespace, "")
+func secretsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Secret, error) {
+	secrets, err := getSecrets(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -120,18 +123,20 @@ func secretPointer(pod core.Secret) *core.Secret {
 	return &pod
 }
 
-func getSecrets(k kubernetes.Interface, namespace, cont string) ([]core.Secret, error) {
-	secrets, err := k.CoreV1().Secrets(namespace).List(context.Background(), meta.ListOptions{
+func getSecrets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Secret, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	secrets, err := k.CoreV1().Secrets(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
+	cancel()
 
 	if err != nil {
 		return nil, err
 	}
 
 	if secrets.Continue != "" {
-		nextSecretsLayer, err := getSecrets(k, namespace, secrets.Continue)
+		nextSecretsLayer, err := getSecrets(ctx, k, namespace, secrets.Continue)
 		if err != nil {
 			return nil, err
 		}

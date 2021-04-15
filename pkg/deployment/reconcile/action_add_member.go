@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -64,7 +65,7 @@ type actionAddMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
-	newID, err := a.actionCtx.CreateMember(a.action.Group, a.action.MemberID)
+	newID, err := a.actionCtx.CreateMember(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member")
 		return false, errors.WithStack(err)
@@ -72,14 +73,14 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 	a.newMemberID = newID
 
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
-		a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
 			return true
 		})
 	}
 
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
-		a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
 			return true
 		})

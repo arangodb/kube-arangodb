@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
@@ -76,7 +77,8 @@ func CreateExporterClientServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs ServiceInterface,
+	deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
 
@@ -104,7 +106,7 @@ func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(context.Background(), svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
+	if _, err := svcs.Create(ctx, svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
 		return svcName, false, nil
 	} else if err != nil {
 		return svcName, false, errors.WithStack(err)
@@ -117,7 +119,8 @@ func CreateExporterService(cachedStatus service.Inspector, svcs ServiceInterface
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
+func CreateHeadlessService(ctx context.Context, svcs ServiceInterface, deployment metav1.Object,
+	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
 	ports := []core.ServicePort{
@@ -129,7 +132,7 @@ func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owne
 	}
 	publishNotReadyAddresses := true
 	serviceType := core.ServiceTypeClusterIP
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -140,7 +143,8 @@ func CreateHeadlessService(svcs ServiceInterface, deployment metav1.Object, owne
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object, single bool, owner metav1.OwnerReference) (string, bool, error) {
+func CreateDatabaseClientService(ctx context.Context, svcs ServiceInterface, deployment metav1.Object, single bool,
+	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
 	ports := []core.ServicePort{
@@ -158,7 +162,7 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 	}
 	serviceType := core.ServiceTypeClusterIP
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -169,7 +173,9 @@ func CreateDatabaseClientService(svcs ServiceInterface, deployment metav1.Object
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, deployment metav1.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string, loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
+func CreateExternalAccessService(ctx context.Context, svcs ServiceInterface, svcName, role string,
+	deployment metav1.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string,
+	loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	ports := []core.ServicePort{
 		core.ServicePort{
@@ -180,7 +186,7 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 		},
 	}
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -191,8 +197,9 @@ func CreateExternalAccessService(svcs ServiceInterface, svcName, role string, de
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string, serviceType core.ServiceType,
-	ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string, publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
+func createService(ctx context.Context, svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string,
+	serviceType core.ServiceType, ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string,
+	publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
 	svc := &core.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -211,7 +218,7 @@ func createService(svcs ServiceInterface, svcName, deploymentName, ns, clusterIP
 		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
-	if _, err := svcs.Create(context.Background(), svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
+	if _, err := svcs.Create(ctx, svc, metav1.CreateOptions{}); IsAlreadyExists(err) {
 		return false, nil
 	} else if err != nil {
 		return false, errors.WithStack(err)

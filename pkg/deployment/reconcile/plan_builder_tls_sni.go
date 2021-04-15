@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,7 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -39,7 +41,7 @@ import (
 func createRotateTLSServerSNIPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
 	if !spec.TLS.IsSecure() {
 		return nil
 	}
@@ -80,13 +82,18 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				continue
 			}
 
-			c, err := context.GetServerClient(ctx, group, m.ID)
+			ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+			c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
+			cancel()
 			if err != nil {
 				log.Warn().Err(err).Msg("Unable to get client")
 				continue
 			}
 
-			if ok, err := compareTLSSNIConfig(ctx, c.Connection(), fetchedSecrets, false); err != nil {
+			ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+			ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, false)
+			cancel()
+			if err != nil {
 				log.Warn().Err(err).Msg("SNI compare failed")
 				return nil
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,9 +27,10 @@ import (
 	"context"
 
 	"github.com/arangodb/go-driver"
+	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 func init() {
@@ -64,12 +66,14 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	dbc, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		return false, err
 	}
 
-	backupResource, err := a.actionCtx.GetBackup(*spec.RestoreFrom)
+	backupResource, err := a.actionCtx.GetBackup(ctx, *spec.RestoreFrom)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Unable to find backup")
 		return true, nil
@@ -80,7 +84,7 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		result := &api.DeploymentRestoreResult{
 			RequestedFrom: spec.GetRestoreFrom(),
 		}
@@ -94,12 +98,14 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	restoreError := dbc.Backup().Restore(ctxChild, driver.BackupID(backupResource.Status.Backup.ID), nil)
+	cancel()
 	if restoreError != nil {
 		a.log.Error().Err(restoreError).Msg("Restore failed")
 	}
 
-	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		result := &api.DeploymentRestoreResult{
 			RequestedFrom: spec.GetRestoreFrom(),
 		}

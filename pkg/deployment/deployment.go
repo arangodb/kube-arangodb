@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -222,24 +223,24 @@ func (d *Deployment) run() {
 	if d.GetPhase() == api.DeploymentPhaseNone {
 		// Create service monitor
 		if d.haveServiceMonitorCRD {
-			if err := d.resources.EnsureServiceMonitor(); err != nil {
+			if err := d.resources.EnsureServiceMonitor(context.TODO()); err != nil {
 				d.CreateEvent(k8sutil.NewErrorEvent("Failed to create service monitor", err, d.GetAPIObject()))
 			}
 		}
 
 		// Create members
-		if err := d.createInitialMembers(d.apiObject); err != nil {
+		if err := d.createInitialMembers(context.TODO(), d.apiObject); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
 		}
 
 		// Create Pod Disruption Budgets
-		if err := d.resources.EnsurePDBs(); err != nil {
+		if err := d.resources.EnsurePDBs(context.TODO()); err != nil {
 			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pdbs", err, d.GetAPIObject()))
 		}
 
 		status, lastVersion := d.GetStatus()
 		status.Phase = api.DeploymentPhaseRunning
-		if err := d.UpdateStatus(status, lastVersion); err != nil {
+		if err := d.UpdateStatus(context.TODO(), status, lastVersion); err != nil {
 			log.Warn().Err(err).Msg("update initial CR status failed")
 		}
 		log.Info().Msg("start running...")
@@ -257,10 +258,10 @@ func (d *Deployment) run() {
 			}
 			// Remove finalizers from created resources
 			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
-			if err := d.removePodFinalizers(cachedStatus); err != nil {
+			if err := d.removePodFinalizers(context.TODO(), cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
 			}
-			if err := d.removePVCFinalizers(cachedStatus); err != nil {
+			if err := d.removePVCFinalizers(context.TODO(), cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.
@@ -284,7 +285,7 @@ func (d *Deployment) run() {
 			d.lookForServiceMonitorCRD()
 		case <-d.updateDeploymentTrigger.Done():
 			inspectionInterval = minInspectionInterval
-			if err := d.handleArangoDeploymentUpdatedEvent(); err != nil {
+			if err := d.handleArangoDeploymentUpdatedEvent(context.TODO()); err != nil {
 				d.CreateEvent(k8sutil.NewErrorEvent("Failed to handle deployment update", err, d.GetAPIObject()))
 			}
 
@@ -298,11 +299,13 @@ func (d *Deployment) run() {
 }
 
 // handleArangoDeploymentUpdatedEvent is called when the deployment is updated by the user.
-func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
+func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) error {
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(context.Background(), d.apiObject.GetName(), metav1.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -328,7 +331,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
-		if err := d.updateCRSpec(d.apiObject.Spec, true); err != nil {
+		if err := d.updateCRSpec(ctx, d.apiObject.Spec, true); err != nil {
 			log.Error().Err(err).Msg("Restore original spec failed")
 			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
@@ -342,7 +345,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 	}
 
 	// Save updated spec
-	if err := d.updateCRSpec(newAPIObject.Spec, true); err != nil {
+	if err := d.updateCRSpec(ctx, newAPIObject.Spec, true); err != nil {
 		return errors.WithStack(errors.Newf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
@@ -354,7 +357,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent() error {
 			status.ForceStatusReload = nil
 		}
 		status.AcceptedSpec = newAPIObject.Spec.DeepCopy()
-		if err := d.UpdateStatus(status, lastVersion); err != nil {
+		if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 			return errors.WithStack(errors.Newf("failed to update ArangoDeployment status: %v", err))
 		}
 	}
@@ -377,7 +380,7 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 }
 
 // Update the status of the API object from the internal status
-func (d *Deployment) updateCRStatus(force ...bool) error {
+func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 	if len(force) == 0 || !force[0] {
 		if d.apiObject.Status.Equal(d.status.last) {
 			// Nothing has changed
@@ -396,7 +399,9 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 		if update.GetDeletionTimestamp() == nil {
 			ensureFinalizers(update)
 		}
-		newAPIObject, err := depls.Update(context.Background(), update, metav1.UpdateOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		newAPIObject, err := depls.Update(ctxChild, update, metav1.UpdateOptions{})
+		cancel()
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -406,7 +411,10 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = depls.Get(context.Background(), update.GetName(), metav1.GetOptions{})
+
+			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+			current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
+			cancel()
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -422,7 +430,7 @@ func (d *Deployment) updateCRStatus(force ...bool) error {
 // Update the spec part of the API object (d.apiObject)
 // to the given object, while preserving the status.
 // On success, d.apiObject is updated.
-func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) error {
+func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpec, force ...bool) error {
 
 	if len(force) == 0 || !force[0] {
 		if d.apiObject.Spec.Equal(&newSpec) {
@@ -440,7 +448,9 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 		update.Spec = newSpec
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(context.Background(), update, metav1.UpdateOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
+		cancel()
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -450,7 +460,10 @@ func (d *Deployment) updateCRSpec(newSpec api.DeploymentSpec, force ...bool) err
 			// API object may have been changed already,
 			// Reload api object and try again
 			var current *api.ArangoDeployment
-			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), update.GetName(), metav1.GetOptions{})
+
+			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
+			cancel()
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -504,12 +517,16 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
-	c, err := d.clientCache.GetDatabase(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	c, err := d.clientCache.GetDatabase(ctxChild)
+	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = arangod.SetNumberOfServers(ctx, c.Connection(), noCoordinators, noDBServers)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	err = arangod.SetNumberOfServers(ctxChild, c.Connection(), noCoordinators, noDBServers)
+	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -520,7 +537,7 @@ func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
 	return d.apiObject
 }
 
-func (d *Deployment) ApplyPatch(p ...patch.Item) error {
+func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 	parser := patch.Patch(p)
 
 	data, err := parser.Marshal()
@@ -530,7 +547,9 @@ func (d *Deployment) ApplyPatch(p ...patch.Item) error {
 
 	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
-	depl, err := c.Patch(context.Background(), d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
+	cancel()
 	if err != nil {
 		return err
 	}

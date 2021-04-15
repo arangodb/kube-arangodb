@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
@@ -57,13 +60,17 @@ func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get agency client")
 		return true, nil
 	}
 
-	if err := agency.SetMaintenanceMode(ctx, client, true); err != nil {
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	if err := agency.SetMaintenanceMode(ctxChild, client, true); err != nil {
 		a.log.Error().Err(err).Msgf("Unable to set maintenance")
 		return true, nil
 	}

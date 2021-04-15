@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -64,19 +65,28 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 	log := a.log
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return false, errors.WithStack(err)
 	}
-	cluster, err := c.Cluster(ctx)
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	cluster, err := c.Cluster(ctxChild)
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 		return false, errors.WithStack(err)
 	}
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	var jobID string
-	ctx = driver.WithJobIDResponse(ctx, &jobID)
-	if err := cluster.CleanOutServer(ctx, a.action.MemberID); err != nil {
+	ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
+	if err := cluster.CleanOutServer(ctxJobID, a.action.MemberID); err != nil {
 		log.Debug().Err(err).Msg("Failed to cleanout member")
 		return false, errors.WithStack(err)
 	}
@@ -84,7 +94,7 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	// Update status
 	m.Phase = api.MemberPhaseCleanOut
 	m.CleanoutJobID = jobID
-	if a.actionCtx.UpdateMember(m); err != nil {
+	if a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 	return false, nil
@@ -103,17 +113,26 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	if !m.IsInitialized {
 		return true, false, nil
 	}
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
 		return false, false, errors.WithStack(err)
 	}
-	cluster, err := c.Cluster(ctx)
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	cluster, err := c.Cluster(ctxChild)
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 		return false, false, errors.WithStack(err)
 	}
-	cleanedOut, err := cluster.IsCleanedOut(ctx, a.action.MemberID)
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
+	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("IsCleanedOut failed")
 		return false, false, errors.WithStack(err)
@@ -122,17 +141,25 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		// We're not done yet, check job status
 		log.Debug().Msg("IsCleanedOut returned false")
 
-		c, err := a.actionCtx.GetDatabaseClient(ctx)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
+		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client")
 			return false, false, errors.WithStack(err)
 		}
-		agency, err := a.actionCtx.GetAgency(ctx)
+
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		agency, err := a.actionCtx.GetAgency(ctxChild)
+		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
 			return false, false, errors.WithStack(err)
 		}
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, m.CleanoutJobID, c, agency)
+
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
+		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
 			return false, false, errors.WithStack(err)
@@ -142,7 +169,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""
-			if a.actionCtx.UpdateMember(m); err != nil {
+			if a.actionCtx.UpdateMember(ctx, m); err != nil {
 				return false, false, errors.WithStack(err)
 			}
 			return false, true, nil
@@ -151,7 +178,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// Cleanout completed
 	if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
-		if a.actionCtx.UpdateMember(m); err != nil {
+		if a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -44,7 +46,7 @@ const (
 
 // createClientAuthCACertificate creates a client authentication CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createClientAuthCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *metav1.OwnerReference) error {
+func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.SyncAuthenticationSpec, deploymentName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetClientCASecretName()).Logger()
 	options := certificates.CreateCertificateOptions{
 		CommonName:   fmt.Sprintf("%s Client Authentication Root Certificate", deploymentName),
@@ -59,7 +61,7 @@ func createClientAuthCACertificate(log zerolog.Logger, secrets k8sutil.SecretInt
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
 		return errors.WithStack(err)
 	}
-	if err := k8sutil.CreateCASecret(secrets, spec.GetClientCASecretName(), cert, priv, ownerRef); err != nil {
+	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetClientCASecretName(), cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("CA Secret already exists")
 		} else {
@@ -76,7 +78,7 @@ func createClientAuthCACertificate(log zerolog.Logger, secrets k8sutil.SecretInt
 func createClientAuthCertificateKeyfile(log zerolog.Logger, secrets v1.SecretInterface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
-	caCert, caKey, _, err := k8sutil.GetCASecret(secrets, spec.GetClientCASecretName(), nil)
+	caCert, caKey, _, err := k8sutil.GetCASecret(context.TODO(), secrets, spec.GetClientCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return errors.WithStack(err)
@@ -102,7 +104,7 @@ func createClientAuthCertificateKeyfile(log zerolog.Logger, secrets v1.SecretInt
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
-	if err := k8sutil.CreateTLSKeyfileSecret(secrets, secretName, keyfile, ownerRef); err != nil {
+	if err := k8sutil.CreateTLSKeyfileSecret(context.TODO(), secrets, secretName, keyfile, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("Server Secret already exists")
 		} else {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -71,33 +72,33 @@ type ActionContext interface {
 	GetMemberStatusByID(id string) (api.MemberStatus, bool)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(group api.ServerGroup, id string) (string, error)
+	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
 	// UpdateMember updates the deployment status wrt the given member.
-	UpdateMember(member api.MemberStatus) error
+	UpdateMember(ctx context.Context, member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
-	RemoveMemberByID(id string) error
+	RemoveMemberByID(ctx context.Context, id string) error
 	// GetPod returns pod.
-	GetPod(podName string) (*v1.Pod, error)
+	GetPod(ctx context.Context, podName string) (*v1.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(podName string) error
+	DeletePod(ctx context.Context, podName string) error
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(pvcName string) error
+	DeletePvc(ctx context.Context, pvcName string) error
 	// GetPvc returns PVC info about PVC with given name in the namespace
 	// of the deployment.
-	GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error)
+	GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error)
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
-	UpdatePvc(pvc *v1.PersistentVolumeClaim) error
+	UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	RemovePodFinalizers(podName string) error
+	RemovePodFinalizers(ctx context.Context, podName string) error
 	// DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 	// If the secret does not exist, the error is ignored.
-	DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error
+	DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error
 	// DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
-	DeleteTLSCASecret() error
+	DeleteTLSCASecret(ctx context.Context) error
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
 	GetImageInfo(imageName string) (api.ImageInfo, bool)
@@ -106,7 +107,7 @@ type ActionContext interface {
 	GetCurrentImageInfo() (api.ImageInfo, bool)
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
-	SetCurrentImage(imageInfo api.ImageInfo) error
+	SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
 	// GetShardSyncStatus returns true if all shards are in sync
@@ -118,16 +119,16 @@ type ActionContext interface {
 	// GetStatus returns a copy of the status
 	GetStatus() api.DeploymentStatus
 	// DisableScalingCluster disables scaling DBservers and coordinators
-	DisableScalingCluster() error
+	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
-	EnableScalingCluster() error
+	EnableScalingCluster(ctx context.Context) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error
+	UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error
 	SecretsInterface() k8sutil.SecretInterface
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// GetBackup receives information about a backup resource
-	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
 	// GetNameget current cached state of deployment
@@ -166,12 +167,12 @@ func (ac *actionContext) GetStatus() api.DeploymentStatus {
 	return *s
 }
 
-func (ac *actionContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
-	return ac.context.GetBackup(backup)
+func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {
+	return ac.context.GetBackup(ctx, backup)
 }
 
-func (ac *actionContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
-	return ac.context.WithStatusUpdate(action, force...)
+func (ac *actionContext) WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
+	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 
 func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {
@@ -182,8 +183,8 @@ func (ac *actionContext) GetShardSyncStatus() bool {
 	return ac.context.GetShardSyncStatus()
 }
 
-func (ac *actionContext) UpdateClusterCondition(conditionType api.ConditionType, status bool, reason, message string) error {
-	return ac.context.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
+	return ac.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		return s.Conditions.Update(conditionType, status, reason, message)
 	})
 }
@@ -192,16 +193,16 @@ func (ac *actionContext) GetAPIObject() k8sutil.APIObject {
 	return ac.context.GetAPIObject()
 }
 
-func (ac *actionContext) UpdatePvc(pvc *v1.PersistentVolumeClaim) error {
-	return ac.context.UpdatePvc(pvc)
+func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
+	return ac.context.UpdatePvc(ctx, pvc)
 }
 
 func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
 }
 
-func (ac *actionContext) GetPvc(pvcName string) (*v1.PersistentVolumeClaim, error) {
-	return ac.context.GetPvc(pvcName)
+func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error) {
+	return ac.context.GetPvc(ctx, pvcName)
 }
 
 // Gets the specified mode of deployment
@@ -276,8 +277,8 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (ac *actionContext) CreateMember(group api.ServerGroup, id string) (string, error) {
-	result, err := ac.context.CreateMember(group, id)
+func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
+	result, err := ac.context.CreateMember(ctx, group, id)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -285,7 +286,7 @@ func (ac *actionContext) CreateMember(group api.ServerGroup, id string) (string,
 }
 
 // UpdateMember updates the deployment status wrt the given member.
-func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
+func (ac *actionContext) UpdateMember(ctx context.Context, member api.MemberStatus) error {
 	status, lastVersion := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(member.ID)
 	if !found {
@@ -294,7 +295,7 @@ func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
 	if err := status.Members.Update(member, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
+	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		log.Debug().Err(err).Msg("Updating CR status failed")
 		return errors.WithStack(err)
 	}
@@ -302,7 +303,7 @@ func (ac *actionContext) UpdateMember(member api.MemberStatus) error {
 }
 
 // RemoveMemberByID removes a member with given id.
-func (ac *actionContext) RemoveMemberByID(id string) error {
+func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error {
 	status, lastVersion := ac.context.GetStatus()
 	_, group, found := status.Members.ElementByID(id)
 	if !found {
@@ -313,15 +314,15 @@ func (ac *actionContext) RemoveMemberByID(id string) error {
 		return errors.WithStack(err)
 	}
 	// Save removed member
-	if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
+	if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 // GetPod returns pod.
-func (ac *actionContext) GetPod(podName string) (*v1.Pod, error) {
-	if pod, err := ac.context.GetPod(podName); err != nil {
+func (ac *actionContext) GetPod(ctx context.Context, podName string) (*v1.Pod, error) {
+	if pod, err := ac.context.GetPod(ctx, podName); err != nil {
 		return nil, errors.WithStack(err)
 	} else {
 		return pod, nil
@@ -330,8 +331,8 @@ func (ac *actionContext) GetPod(podName string) (*v1.Pod, error) {
 
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (ac *actionContext) DeletePod(podName string) error {
-	if err := ac.context.DeletePod(podName); err != nil {
+func (ac *actionContext) DeletePod(ctx context.Context, podName string) error {
+	if err := ac.context.DeletePod(ctx, podName); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -339,8 +340,8 @@ func (ac *actionContext) DeletePod(podName string) error {
 
 // DeletePvc deletes a persistent volume claim with given name in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
-func (ac *actionContext) DeletePvc(pvcName string) error {
-	if err := ac.context.DeletePvc(pvcName); err != nil {
+func (ac *actionContext) DeletePvc(ctx context.Context, pvcName string) error {
+	if err := ac.context.DeletePvc(ctx, pvcName); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -348,8 +349,8 @@ func (ac *actionContext) DeletePvc(pvcName string) error {
 
 // RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (ac *actionContext) RemovePodFinalizers(podName string) error {
-	if err := ac.context.RemovePodFinalizers(podName); err != nil {
+func (ac *actionContext) RemovePodFinalizers(ctx context.Context, podName string) error {
+	if err := ac.context.RemovePodFinalizers(ctx, podName); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -357,15 +358,15 @@ func (ac *actionContext) RemovePodFinalizers(podName string) error {
 
 // DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 // If the secret does not exist, the error is ignored.
-func (ac *actionContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
-	if err := ac.context.DeleteTLSKeyfile(group, member); err != nil {
+func (ac *actionContext) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
+	if err := ac.context.DeleteTLSKeyfile(ctx, group, member); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
 // DeleteTLSCASecret removes the Secret containing the TLS CA certificate.
-func (ac *actionContext) DeleteTLSCASecret() error {
+func (ac *actionContext) DeleteTLSCASecret(ctx context.Context) error {
 	spec := ac.context.GetSpec().TLS
 	if !spec.IsSecure() {
 		return nil
@@ -378,7 +379,7 @@ func (ac *actionContext) DeleteTLSCASecret() error {
 	status, lastVersion := ac.context.GetStatus()
 	if status.SecretHashes != nil {
 		status.SecretHashes.TLSCA = ""
-		if err := ac.context.UpdateStatus(status, lastVersion); err != nil {
+		if err := ac.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -410,8 +411,8 @@ func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
 
 // SetCurrentImage changes the CurrentImage field in the deployment
 // status to the given image.
-func (ac *actionContext) SetCurrentImage(imageInfo api.ImageInfo) error {
-	return ac.context.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error {
+	return ac.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if s.CurrentImage == nil || s.CurrentImage.Image != imageInfo.Image {
 			s.CurrentImage = &imageInfo
 			return true
@@ -426,11 +427,11 @@ func (ac *actionContext) InvalidateSyncStatus() {
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators
-func (ac *actionContext) DisableScalingCluster() error {
-	return ac.context.DisableScalingCluster()
+func (ac *actionContext) DisableScalingCluster(ctx context.Context) error {
+	return ac.context.DisableScalingCluster(ctx)
 }
 
 // EnableScalingCluster enables scaling DBservers and coordinators
-func (ac *actionContext) EnableScalingCluster() error {
-	return ac.context.EnableScalingCluster()
+func (ac *actionContext) EnableScalingCluster(ctx context.Context) error {
+	return ac.context.EnableScalingCluster(ctx)
 }

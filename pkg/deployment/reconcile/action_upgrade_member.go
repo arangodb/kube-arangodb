@@ -62,7 +62,7 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Set AutoUpgrade condition
 	m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Upgrading", "AutoUpgrade on first restart")
-	if err := a.actionCtx.UpdateMember(m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 
@@ -112,7 +112,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 				m.Image = m.OldImage.DeepCopy()
 			}
 
-			if err := a.actionCtx.UpdateMember(m); err != nil {
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 				return false, true, nil
 			}
 
@@ -141,7 +141,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	if !m.OldImage.Equal(m.Image) && isUpgrading {
 		m.OldImage = m.Image.DeepCopy()
 	}
-	if err := a.actionCtx.UpdateMember(m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, false, errors.WithStack(err)
 	}
 	return isUpgrading, false, nil

@@ -49,7 +49,7 @@ func createRestorePlan(ctx context.Context,
 	}
 
 	if spec.RestoreFrom != nil && status.Restore == nil {
-		backup, err := context.GetBackup(spec.GetRestoreFrom())
+		backup, err := context.GetBackup(ctx, spec.GetRestoreFrom())
 		if err != nil {
 			log.Warn().Err(err).Msg("Backup not found")
 			return nil
@@ -111,7 +111,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		name, _, exists, err := pod.GetEncryptionKey(builderCtx.SecretsInterface(), secret)
+		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.SecretsInterface(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
 			return false, nil

@@ -67,7 +67,7 @@ func (a *actionPVCResized) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	pvc, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return true, false, nil

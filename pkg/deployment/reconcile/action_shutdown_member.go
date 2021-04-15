@@ -70,7 +70,7 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 
 	// Update status
 	m.Phase = api.MemberPhaseShuttingDown
-	if err := a.actionCtx.UpdateMember(m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 	return false, nil

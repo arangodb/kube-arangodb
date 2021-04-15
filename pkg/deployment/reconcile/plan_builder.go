@@ -85,7 +85,7 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInter
 
 	status.Plan = newPlan
 
-	if err := d.context.UpdateStatus(status, lastVersion); err != nil {
+	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err), false
 	}
 	return nil, true
