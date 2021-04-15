@@ -246,7 +246,7 @@ type ServerGroupProbesSpec struct {
 
 	// OldReadinessProbeDisabled if true readinessProbes are disabled
 	//
-	// Deprecated: This field is deprecated, keept only for backward compatibility.
+	// Deprecated: This field is deprecated, kept only for backward compatibility.
 	OldReadinessProbeDisabled *bool `json:"ReadinessProbeDisabled,omitempty"`
 	// ReadinessProbeDisabled override flag for probe disabled in good manner (lowercase) with backward compatibility
 	ReadinessProbeDisabled *bool `json:"readinessProbeDisabled,omitempty"`
