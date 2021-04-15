@@ -48,16 +48,13 @@ func (u autoUpgrade) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 }
 
 func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
-	if !i.AutoUpgrade {
-		return nil
-	}
-
+	// Always add upgrade flag due to fact it is now only in initContainers
 	if i.Version.CompareTo("3.6.0") >= 0 {
 		switch i.Group {
 		case deploymentApi.ServerGroupCoordinators:
-			return k8sutil.NewOptionPair(k8sutil.OptionPair{"--cluster.upgrade", "online"})
+			return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--cluster.upgrade", Value: "online"})
 		}
 	}
 
-	return k8sutil.NewOptionPair(k8sutil.OptionPair{"--database.auto-upgrade", "true"})
+	return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--database.auto-upgrade", Value: "true"})
 }
