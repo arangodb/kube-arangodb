@@ -137,6 +137,10 @@ type ServerGroupSpec struct {
 	InitContainers *ServerGroupInitContainers `json:"initContainers,omitempty"`
 	// ShutdownMethod describe procedure of member shutdown taken by Operator
 	ShutdownMethod *ServerGroupShutdownMethod `json:"shutdownMethod,omitempty"`
+	// ShutdownDelay define how long operator should delay finalizer removal after shutdown
+	ShutdownDelay *int `json:"shutdownDelay,omitempty"`
+	// InternalPort define port used in internal communication, can be accessed over localhost via sidecar
+	InternalPort *int `json:"internalPort,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -497,6 +501,12 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 	} else if s.GetCount() != 0 {
 		return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
+	if port := s.InternalPort; port != nil {
+		switch p := *port; p {
+		case 8529:
+			return errors.WithStack(errors.Wrapf(ValidationError, "Port %d already in use", p))
+		}
+	}
 	return nil
 }
 
@@ -630,6 +640,9 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	setDefaultsFromResourceList(&s.Resources.Requests, source.Resources.Requests)
 	if s.VolumeClaimTemplate == nil {
 		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
+	}
+	if s.InternalPort == nil {
+		s.InternalPort = source.InternalPort
 	}
 }
 

@@ -1512,6 +1512,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.InternalPort != nil {
+		in, out := &in.InternalPort, &out.InternalPort
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

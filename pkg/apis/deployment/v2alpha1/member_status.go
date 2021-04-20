@@ -26,6 +26,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	"k8s.io/apimachinery/pkg/types"
 
 	driver "github.com/arangodb/go-driver"
@@ -154,4 +156,9 @@ func (s MemberStatus) IsNotReadySince(timestamp time.Time) bool {
 	}
 	// A
 	return s.CreatedAt.Time.Before(timestamp)
+}
+
+// ArangoMemberName create member name from given member
+func (s MemberStatus) ArangoMemberName(deploymentName string, group ServerGroup) string {
+	return k8sutil.CreatePodHostName(deploymentName, group.AsRole(), s.ID)
 }

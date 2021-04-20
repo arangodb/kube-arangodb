@@ -57,3 +57,8 @@ func (p MemberPhase) IsFailed() bool {
 func (p MemberPhase) IsCreatedOrDrain() bool {
 	return p == MemberPhaseCreated || p == MemberPhaseDrain
 }
+
+// String returns string from MemberPhase
+func (p MemberPhase) String() string {
+	return string(p)
+}
