@@ -98,9 +98,8 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	restoreError := dbc.Backup().Restore(ctxChild, driver.BackupID(backupResource.Status.Backup.ID), nil)
-	cancel()
+	// The below action can take a while so the full parent timeout context is used.
+	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backupResource.Status.Backup.ID), nil)
 	if restoreError != nil {
 		a.log.Error().Err(restoreError).Msg("Restore failed")
 	}
