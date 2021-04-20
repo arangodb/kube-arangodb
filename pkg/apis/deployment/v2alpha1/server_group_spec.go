@@ -641,9 +641,6 @@ func (s *ServerGroupSpec) SetDefaultsFrom(source ServerGroupSpec) {
 	if s.VolumeClaimTemplate == nil {
 		s.VolumeClaimTemplate = source.VolumeClaimTemplate.DeepCopy()
 	}
-	if s.InternalPort == nil {
-		s.InternalPort = source.InternalPort
-	}
 }
 
 // ResetImmutableFields replaces all immutable fields in the given target with values from the source spec.
