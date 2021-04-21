@@ -1,7 +1,7 @@
 ---
 
 name: kube-arangodb-crd
-version: 1.1.7
+version: 1.1.8
 
 description: "ArangoDB Kubernetes Custom Resource Definitions"
 tillerVersion: ">2.7"
