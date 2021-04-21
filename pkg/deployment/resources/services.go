@@ -80,6 +80,9 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      member.GetName(),
 						Namespace: member.GetNamespace(),
+						OwnerReferences: []metav1.OwnerReference{
+							member.AsOwner(),
+						},
 					},
 					Spec: core.ServiceSpec{
 						Type: core.ServiceTypeClusterIP,

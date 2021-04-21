@@ -164,11 +164,17 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 				memberLog.Msg("Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss")
 				plan = append(plan,
 					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+			case api.ServerGroupSingle:
+				// Do not remove data for singles
+				memberLog.Msg("Restoring old member. Rotation for single servers is not safe")
+				plan = append(plan,
+					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
 			default:
 				memberLog.Msg("Creating member replacement plan because member has failed")
 				plan = append(plan,
 					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 					api.NewAction(api.ActionTypeAddMember, group, ""),
+					api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
 				)
 
 			}

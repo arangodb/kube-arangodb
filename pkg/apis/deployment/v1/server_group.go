@@ -35,6 +35,16 @@ func (g *ServerGroup) UnmarshalJSON(bytes []byte) error {
 		return nil
 	}
 
+	{
+		// Try with int
+		var s int
+
+		if err := json.Unmarshal(bytes, &s); err == nil {
+			*g = ServerGroupFromRole(ServerGroup(s).AsRole())
+			return nil
+		}
+	}
+
 	var s string
 
 	if err := json.Unmarshal(bytes, &s); err != nil {

@@ -93,7 +93,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 			return false, abort, err
 		}
 
-		return false, true, nil
+		return false, false, nil
 	}
 
 	isUpgrading := m.Phase == api.MemberPhaseUpgrading
