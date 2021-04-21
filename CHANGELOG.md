@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Prevent Single member recreation
+- Add OwnerReference to ClusterIP member service
 - Add InternalPort to ServerGroupSpec to allow user to expose tcp connection over localhost for sidecars
 
 ## [1.1.7](https://github.com/arangodb/kube-arangodb/tree/1.1.7) (2021-04-14)
