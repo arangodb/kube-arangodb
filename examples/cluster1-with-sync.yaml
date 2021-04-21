@@ -4,7 +4,7 @@ metadata:
   name: "cluster1-with-sync"
 spec:
   mode: Cluster
-  image: 'arangodb/arangodb:3.6.1'
+  image: 'arangodb/arangodb:3.7.10'
   tls:
     altNames: ["kube-01", "kube-02", "kube-03"]
   sync:
