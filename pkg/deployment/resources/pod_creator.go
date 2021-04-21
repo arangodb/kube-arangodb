@@ -77,6 +77,9 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 	}
 
 	options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
+	if port := input.GroupSpec.InternalPort; port != nil {
+		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", *port)
+	}
 
 	// Authentication
 	options.Merge(pod.JWT().Args(input))
@@ -230,7 +233,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 		runCmd,
 	}
 
-	args = append(args, options.Sort().AsArgs()...)
+	args = append(args, options.Copy().Sort().AsArgs()...)
 
 	if len(groupSpec.Args) > 0 {
 		args = append(args, groupSpec.Args...)

@@ -285,3 +285,19 @@ func (ds DeploymentStatusMembers) MembersOfGroup(group ServerGroup) MemberStatus
 		return MemberStatusList{}
 	}
 }
+
+// PodNames returns all members pod names
+func (ds DeploymentStatusMembers) PodNames() []string {
+	var n []string
+
+	ds.ForeachServerGroup(func(group ServerGroup, list MemberStatusList) error {
+		for _, m := range list {
+			if m.PodName != "" {
+				n = append(n, m.PodName)
+			}
+		}
+		return nil
+	})
+
+	return n
+}

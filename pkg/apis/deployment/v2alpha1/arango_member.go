@@ -23,6 +23,7 @@
 package v2alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,4 +47,18 @@ type ArangoMember struct {
 	meta.ObjectMeta `json:"metadata,omitempty"`
 	Spec            ArangoMemberSpec   `json:"spec,omitempty"`
 	Status          ArangoMemberStatus `json:"status,omitempty"`
+}
+
+// AsOwner creates an OwnerReference for the given member
+func (a *ArangoMember) AsOwner() meta.OwnerReference {
+	trueVar := true
+	return meta.OwnerReference{
+		APIVersion: SchemeGroupVersion.String(),
+		Kind:       deployment.ArangoMemberResourceKind,
+		Name:       a.Name,
+		UID:        a.UID,
+		Controller: &trueVar,
+		// For now BlockOwnerDeletion does not work on OpenShift, so we leave it out.
+		//BlockOwnerDeletion: &trueVar,
+	}
 }

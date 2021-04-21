@@ -500,7 +500,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
 		image = m.spec.Metrics.GetImage()
 	}
 
-	args := createExporterArgs(m.spec)
+	args := createExporterArgs(m.spec, m.groupSpec)
 	if m.spec.Metrics.Mode.Get() == api.MetricsModeSidecar {
 		args = append(args, "--mode=passthru")
 	}

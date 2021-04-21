@@ -21,14 +21,10 @@
 package resources
 
 import (
-	"fmt"
 	"path/filepath"
-	"sort"
-	"strconv"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -63,39 +59,32 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *probe
 	return c
 }
 
-func createExporterArgs(spec api.DeploymentSpec) []string {
+func createExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := make([]k8sutil.OptionPair, 0, 64)
-	scheme := "http"
-	if spec.IsSecure() {
-		scheme = "https"
+	options := k8sutil.CreateOptionPairs(64)
+
+	options.Add("--arangodb.jwt-file", tokenpath)
+
+	if port := groupSpec.InternalPort; port == nil {
+		scheme := "http"
+		if spec.IsSecure() {
+			scheme = "https"
+		}
+		options.Addf("--arangodb.endpoint", "%s://localhost:%d", scheme, k8sutil.ArangoPort)
+	} else {
+		options.Addf("--arangodb.endpoint", "http://localhost:%d", *port)
 	}
-	options = append(options,
-		k8sutil.OptionPair{Key: "--arangodb.jwt-file", Value: tokenpath},
-		k8sutil.OptionPair{Key: "--arangodb.endpoint", Value: scheme + "://localhost:" + strconv.Itoa(k8sutil.ArangoPort)},
-	)
+
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 	if spec.IsSecure() && spec.Metrics.IsTLS() {
-		options = append(options,
-			k8sutil.OptionPair{Key: "--ssl.keyfile", Value: keyPath},
-		)
+		options.Add("--ssl.keyfile", keyPath)
 	}
 
 	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
-		options = append(options,
-			k8sutil.OptionPair{Key: "--server.address", Value: fmt.Sprintf(":%d", port)},
-		)
+		options.Addf("--server.address", ":%d", port)
 	}
 
-	args := make([]string, 0, 2+len(options))
-	sort.Slice(options, func(i, j int) bool {
-		return options[i].CompareTo(options[j]) < 0
-	})
-	for _, o := range options {
-		args = append(args, o.Key+"="+o.Value)
-	}
-
-	return args
+	return options.Sort().AsArgs()
 }
 
 func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {
