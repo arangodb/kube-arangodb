@@ -61,8 +61,8 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
-	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil

@@ -108,9 +108,9 @@ func (r *Resources) inspectFinalizerPVCMemberExists(ctx context.Context, log zer
 	if memberStatus.PodName != "" {
 		log.Info().Msg("Removing Pod of member, because PVC is being removed")
 		pods := r.context.GetKubeCli().CoreV1().Pods(apiObject.GetNamespace())
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err := pods.Delete(ctxChild, memberStatus.PodName, metav1.DeleteOptions{})
-		cancel()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return pods.Delete(ctxChild, memberStatus.PodName, metav1.DeleteOptions{})
+		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Failed to delete pod")
 			return errors.WithStack(err)

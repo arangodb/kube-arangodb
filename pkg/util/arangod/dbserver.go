@@ -38,15 +38,15 @@ import (
 // is not empty, or nil when the dbserver is found to be empty.
 func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error {
 	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
 	c, err := client.Cluster(ctxChild)
-	cancel()
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Cannot obtain Cluster"))
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
 	dbs, err := client.Databases(ctxChild)
-	cancel()
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Cannot fetch databases"))
 	}

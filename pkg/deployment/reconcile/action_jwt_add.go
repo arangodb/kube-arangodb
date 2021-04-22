@@ -117,10 +117,10 @@ func (a *jwtAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	_, err = a.actionCtx.SecretsInterface().Patch(ctxChild, pod.JWTSecretFolder(a.actionCtx.GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := a.actionCtx.SecretsInterface().Patch(ctxChild, pod.JWTSecretFolder(a.actionCtx.GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+		return err
+	})
 	if err != nil {
 		if !k8sutil.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", pod.JWTSecretFolder(a.actionCtx.GetName()))

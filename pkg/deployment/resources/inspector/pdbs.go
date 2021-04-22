@@ -104,11 +104,11 @@ func podDisruptionBudgetPointer(podDisruptionBudget policy.PodDisruptionBudget) 
 
 func getPodDisruptionBudgets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]policy.PodDisruptionBudget, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

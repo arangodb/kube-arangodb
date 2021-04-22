@@ -104,11 +104,11 @@ func serviceAccountPointer(serviceAccount core.ServiceAccount) *core.ServiceAcco
 
 func getServiceAccounts(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.ServiceAccount, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

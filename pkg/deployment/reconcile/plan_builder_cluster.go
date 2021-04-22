@@ -48,23 +48,23 @@ func createClusterOperationPlan(ctx context.Context,
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := planCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		return nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
-	cancel()
 	if err != nil {
 		log.Warn().Err(err).Msgf("Unable to get Cluster client")
 		return nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	health, err := cluster.Health(ctxChild)
-	cancel()
 	if err != nil {
 		log.Warn().Err(err).Msgf("Unable to get Cluster health")
 		return nil

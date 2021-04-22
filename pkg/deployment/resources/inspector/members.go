@@ -104,11 +104,11 @@ func arangoMemberPointer(pod api.ArangoMember) *api.ArangoMember {
 
 func getArangoMembers(ctx context.Context, k versioned.Interface, namespace, cont string) ([]api.ArangoMember, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	arangoMembers, err := k.DatabaseV1().ArangoMembers(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

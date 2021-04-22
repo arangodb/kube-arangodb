@@ -104,8 +104,8 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	a.log.Debug().Msgf("Bootstrapping user %s, secret %s", user, secret)
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -117,20 +117,26 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 
 	// Obtain the user
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	u, err := client.User(ctxChild, user)
-	cancel()
-
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
 	defer cancel()
-	if driver.IsNotFound(err) {
-		_, err := client.CreateUser(ctxChild, user, &driver.UserOptions{Password: password})
+	if u, err := client.User(ctxChild, user); err != nil {
+		if !driver.IsNotFound(err) {
+			return "", err
+		}
+
+		err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := client.CreateUser(ctxChild, user, &driver.UserOptions{Password: password})
+			return err
+		})
+
 		return password, errors.WithStack(err)
-	} else if err == nil {
-		return password, errors.WithStack(u.Update(ctxChild, driver.UserOptions{
-			Password: password,
-		}))
 	} else {
-		return "", err
+		err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return u.Update(ctxChild, driver.UserOptions{
+				Password: password,
+			})
+		})
+
+		return password, errors.WithStack(err)
 	}
 }
 

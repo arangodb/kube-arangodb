@@ -100,11 +100,11 @@ func serviceMonitorsToMap(ctx context.Context, m monitoringClient.MonitoringV1In
 
 func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) ([]*monitoring.ServiceMonitor, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	serviceMonitors, err := m.ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return []*monitoring.ServiceMonitor{}, nil

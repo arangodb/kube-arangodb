@@ -136,16 +136,16 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 
 	// Check if pod exists
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(ctxChild, podName, metav1.GetOptions{})
-	cancel()
 	if err == nil {
 		// Pod found
 		if k8sutil.IsPodFailed(pod) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
-				ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				err := ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
-				cancel()
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					return ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
+				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
 					return false, nil
@@ -175,8 +175,8 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 			return true, nil
 		}
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		v, err := client.Version(ctxChild)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch version from Image ID Pod")
 			return true, nil
@@ -185,9 +185,9 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
-		ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err = ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
-		cancel()
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
+		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
 			return true, nil
@@ -231,10 +231,11 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		return true, errors.WithStack(err)
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	if _, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod); err != nil {
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
+		return err
+	})
+	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create image ID pod")
 		return true, errors.WithStack(err)
 	}

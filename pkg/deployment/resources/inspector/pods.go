@@ -103,11 +103,11 @@ func podPointer(pod core.Pod) *core.Pod {
 
 func getPods(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Pod, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	pods, err := k.CoreV1().Pods(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

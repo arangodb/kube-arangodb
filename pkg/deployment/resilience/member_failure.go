@@ -133,8 +133,8 @@ func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.Se
 	case api.ServerGroupAgents:
 		// All good when remaining agents are health
 		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		clients, err := r.context.GetAgencyClients(ctxChild, func(id string) bool { return id != m.ID })
-		cancel()
 		if err != nil {
 			return false, "", errors.WithStack(err)
 		}
@@ -144,8 +144,8 @@ func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.Se
 		return true, "", nil
 	case api.ServerGroupDBServers:
 		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		client, err := r.context.GetDatabaseClient(ctxChild)
-		cancel()
 		if err != nil {
 			return false, "", errors.WithStack(err)
 		}

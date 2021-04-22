@@ -104,11 +104,11 @@ func pvcPointer(pvc core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
 
 func getPersistentVolumeClaims(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.PersistentVolumeClaim, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

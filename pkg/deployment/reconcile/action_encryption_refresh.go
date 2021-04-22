@@ -59,16 +59,16 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	keyfolder, err := a.actionCtx.SecretsInterface().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
-	cancel()
 	if err != nil {
 		a.log.Err(err).Msgf("Unable to fetch encryption folder")
 		return true, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
-	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
@@ -76,8 +76,8 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 
 	client := client.NewClient(c.Connection())
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	e, err := client.RefreshEncryption(ctxChild)
-	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to refresh encryption")
 		return true, false, nil

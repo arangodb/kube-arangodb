@@ -50,6 +50,8 @@ type (
 	requireAuthenticationKey struct{}
 )
 
+type TimeoutRunFunc k8sutil.TimeoutRunFunc
+
 const (
 	minArangoDDefaultTimeout = time.Second * 10
 )
@@ -59,6 +61,16 @@ var requestTimeout = minArangoDDefaultTimeout
 // GetRequestTimeout gets request timeout for one call to kubernetes.
 func GetRequestTimeout() time.Duration {
 	return requestTimeout
+}
+
+// RunWithTimeout runs the function with the provided timeout or with default timeout.
+func RunWithTimeout(ctx context.Context, run TimeoutRunFunc, timeout ...time.Duration) error {
+	t := GetRequestTimeout()
+	if len(timeout) > 0 {
+		t = timeout[0]
+	}
+
+	return k8sutil.RunWithTimeout(ctx, k8sutil.TimeoutRunFunc(run), t)
 }
 
 // SetRequestTimeout sets request timeout for one call to kubernetes.
@@ -278,8 +290,8 @@ func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Int
 		if ctx.Value(skipAuthenticationKey{}) == nil {
 			secrets := cli.Secrets(apiObject.GetNamespace())
 			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+			defer cancel()
 			s, err := k8sutil.GetTokenSecret(ctxChild, secrets, apiObject.Spec.Authentication.GetJWTSecretName())
-			cancel()
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

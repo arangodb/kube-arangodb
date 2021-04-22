@@ -285,8 +285,8 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 	mlog := log.With().Str("group", group.AsRole()).Str("member", m.ID).Logger()
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
-	cancel()
 	if err != nil {
 		mlog.Warn().Err(err).Msg("Unable to get client")
 		return false, true
@@ -295,8 +295,8 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 	client := client.NewClient(c.Connection())
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	e, err := client.GetEncryption(ctxChild)
-	cancel()
 	if err != nil {
 		mlog.Error().Err(err).Msgf("Unable to fetch encryption keys")
 		return false, true

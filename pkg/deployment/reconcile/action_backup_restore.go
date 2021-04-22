@@ -67,8 +67,8 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		return false, err
 	}

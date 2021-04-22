@@ -50,12 +50,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	log.Info().Msgf("Ensuring annotations")
 
 	patchSecret := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.CoreV1().Secrets(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
-			meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Secrets(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensureSecretsAnnotations(patchSecret,
@@ -68,12 +67,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchServiceAccount := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.CoreV1().ServiceAccounts(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
-			meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().ServiceAccounts(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensureServiceAccountsAnnotations(patchServiceAccount,
@@ -86,12 +84,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchService := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.CoreV1().Services(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
-			meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Services(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensureServicesAnnotations(patchService,
@@ -104,12 +101,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPDB := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace()).Patch(ctxChild, name,
-			types.JSONPatchType, d, meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensurePdbsAnnotations(patchPDB,
@@ -122,12 +118,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPVC := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Patch(ctxChild, name,
-			types.JSONPatchType, d, meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensurePvcsAnnotations(patchPVC,
@@ -140,12 +135,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPod := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := kubecli.CoreV1().Pods(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
-			meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Pods(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensurePodsAnnotations(patchPod,
@@ -159,12 +153,11 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchServiceMonitor := func(name string, d []byte) error {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-
-		_, err := monitoringcli.ServiceMonitors(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
-			meta.PatchOptions{})
-		return err
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := monitoringcli.ServiceMonitors(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
 	}
 
 	if err := ensureServiceMonitorsAnnotations(patchServiceMonitor,

@@ -304,8 +304,8 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 
 	// Get the most recent version of the deployment from the API server
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -518,15 +518,16 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := d.clientCache.GetDatabase(ctxChild)
-	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	err = arangod.SetNumberOfServers(ctxChild, c.Connection(), noCoordinators, noDBServers)
-	cancel()
+	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return arangod.SetNumberOfServers(ctxChild, c.Connection(), noCoordinators, noDBServers)
+	})
+
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -548,8 +549,8 @@ func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
-	cancel()
 	if err != nil {
 		return err
 	}

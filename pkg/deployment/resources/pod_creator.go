@@ -369,17 +369,17 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		// Check master JWT secret
 
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err := k8sutil.ValidateTokenSecret(ctxChild, secrets, masterJWTSecretName)
-		cancel()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, secrets, masterJWTSecretName)
+		})
 		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
 		}
 
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
-		ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err = k8sutil.ValidateTokenSecret(ctxChild, secrets, monitoringTokenSecretName)
-		cancel()
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, secrets, monitoringTokenSecretName)
+		})
 		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
@@ -390,19 +390,18 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-				ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				err = k8sutil.ValidateTokenSecret(ctxChild, secrets, clusterJWTSecretName)
-				cancel()
+				err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					return k8sutil.ValidateTokenSecret(ctxChild, secrets, clusterJWTSecretName)
+				})
 				if err != nil {
 					return nil, errors.WithStack(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
-
-			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			err = k8sutil.ValidateCACertificateSecret(ctxChild, secrets, clientAuthCASecretName)
-			cancel()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.ValidateCACertificateSecret(ctxChild, secrets, clientAuthCASecretName)
+			})
 			if err != nil {
 				return nil, errors.WithStack(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
@@ -511,8 +510,8 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 		}
 
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
-		cancel()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -564,8 +563,8 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 		}
 
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
-		cancel()
 		if err != nil {
 			return errors.WithStack(err)
 		}

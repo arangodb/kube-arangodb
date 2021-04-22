@@ -393,10 +393,10 @@ func (d *Deployment) GetPod(ctx context.Context, podName string) (*v1.Pod, error
 func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	if err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, meta.DeleteOptions{})
+	})
+	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
 		return errors.WithStack(err)
 	}
@@ -411,10 +411,9 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *v1.Pod) error {
 	ns := p.GetNamespace()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	err := d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, *options)
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, *options)
+	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
 		return errors.WithStack(err)
@@ -430,8 +429,8 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 	kubecli := d.deps.KubeCli
 
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	p, err := kubecli.CoreV1().Pods(ns).Get(ctxChild, podName, meta.GetOptions{})
-	cancel()
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -451,10 +450,10 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	log := d.deps.Log
 	ns := d.apiObject.GetNamespace()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	if err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(ctxChild, pvcName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(ctxChild, pvcName, meta.DeleteOptions{})
+	})
+	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
 		return errors.WithStack(err)
 	}
@@ -464,10 +463,10 @@ func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 // UpdatePvc updated a persistent volume claim in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(ctxChild, pvc, meta.UpdateOptions{})
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(ctxChild, pvc, meta.UpdateOptions{})
+		return err
+	})
 	if err == nil {
 		return nil
 	}
@@ -528,10 +527,10 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
 	ns := d.apiObject.GetNamespace()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(ctxChild, secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return d.deps.KubeCli.CoreV1().Secrets(ns).Delete(ctxChild, secretName, meta.DeleteOptions{})
+	})
+	if err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil

@@ -90,8 +90,8 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 
 	// Load CA certificate
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, spec.GetCASecretName(), nil)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return errors.WithStack(err)
@@ -118,10 +118,11 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
-	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
 
-	if err := k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef); err != nil {
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef)
+	})
+	if err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("Server Secret already exists")
 		} else {

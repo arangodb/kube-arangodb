@@ -188,9 +188,10 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 					},
 				}
 
-				ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(ctxChild, &a, metav1.CreateOptions{})
-				cancel()
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(ctxChild, &a, metav1.CreateOptions{})
+					return err
+				})
 				if err != nil {
 					return err
 				}
@@ -210,9 +211,9 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		if !ok || g != member.Spec.Group {
 			// Remove member
 
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
-			cancel()
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
+			})
 			if err != nil {
 				if !k8sutil.IsNotFound(err) {
 					return err

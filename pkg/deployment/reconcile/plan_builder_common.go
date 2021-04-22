@@ -50,16 +50,16 @@ func createMaintenanceManagementPlan(ctx context.Context,
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	client, err := planCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get agency client")
 		return nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	m, err := agency.GetMaintenanceMode(ctxChild, client)
-	cancel()
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get agency maintenance mode")
 		return nil

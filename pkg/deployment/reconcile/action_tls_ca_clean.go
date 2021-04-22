@@ -119,10 +119,10 @@ func (a *cleanTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 
 	a.log.Info().Msgf("Removing key %s from truststore", certChecksum)
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	_, err = a.actionCtx.SecretsInterface().Patch(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := a.actionCtx.SecretsInterface().Patch(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), types.JSONPatchType, patch, meta.PatchOptions{})
+		return err
+	})
 	if err != nil {
 		if !k8sutil.IsInvalid(err) {
 			return false, errors.Wrapf(err, "Unable to update secret: %s", string(patch))

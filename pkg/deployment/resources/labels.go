@@ -74,12 +74,11 @@ func (r *Resources) EnsureSecretLabels(ctx context.Context, cachedStatus inspect
 	changed := false
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
 		if ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
-				name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().CoreV1().Secrets(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
+					name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -102,12 +101,11 @@ func (r *Resources) EnsureServiceAccountsLabels(ctx context.Context, cachedStatu
 	changed := false
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		if ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().CoreV1().ServiceAccounts(r.context.GetAPIObject().GetNamespace()).
-				Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().CoreV1().ServiceAccounts(r.context.GetAPIObject().GetNamespace()).
+					Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -130,12 +128,11 @@ func (r *Resources) EnsureServicesLabels(ctx context.Context, cachedStatus inspe
 	changed := false
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
 		if ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().CoreV1().Services(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
-				name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().CoreV1().Services(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
+					name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -158,12 +155,11 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 	changed := false
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		if ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetMonitoringV1Cli().ServiceMonitors(r.context.GetAPIObject().GetNamespace()).
-				Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetMonitoringV1Cli().ServiceMonitors(r.context.GetAPIObject().GetNamespace()).
+					Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -186,12 +182,11 @@ func (r *Resources) EnsurePodsLabels(ctx context.Context, cachedStatus inspector
 	changed := false
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		if ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().CoreV1().Pods(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
-				name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().CoreV1().Pods(r.context.GetAPIObject().GetNamespace()).Patch(ctxChild,
+					name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -214,12 +209,11 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 	changed := false
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetAPIObject().GetNamespace()).
-				Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(r.context.GetAPIObject().GetNamespace()).
+					Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}
@@ -242,12 +236,11 @@ func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cached
 	changed := false
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(budget *policy.PodDisruptionBudget) error {
 		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			defer cancel()
-
-			_, err := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetAPIObject().
-				GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
+			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetAPIObject().
+					GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
+				return err
+			})
 		}) {
 			changed = true
 		}

@@ -159,8 +159,8 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	// Check if ServiceMonitor already exists
 	serviceMonitors := mClient.ServiceMonitors(ns)
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, metav1.GetOptions{})
-	cancel()
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			if !wantMetrics {
@@ -182,9 +182,10 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 				Spec: spec,
 			}
 
-			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			smon, err = serviceMonitors.Create(ctxChild, smon, metav1.CreateOptions{})
-			cancel()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := serviceMonitors.Create(ctxChild, smon, metav1.CreateOptions{})
+				return err
+			})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to create ServiceMonitor %s", serviceMonitorName)
 				return errors.WithStack(err)
@@ -226,9 +227,10 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 
 		servMon.Spec = spec
 
-		ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		_, err = serviceMonitors.Update(ctxChild, servMon, metav1.UpdateOptions{})
-		cancel()
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := serviceMonitors.Update(ctxChild, servMon, metav1.UpdateOptions{})
+			return err
+		})
 		if err != nil {
 			return err
 		}
@@ -236,9 +238,9 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:
-	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	err = serviceMonitors.Delete(ctxChild, serviceMonitorName, metav1.DeleteOptions{})
-	cancel()
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return serviceMonitors.Delete(ctxChild, serviceMonitorName, metav1.DeleteOptions{})
+	})
 	if err == nil {
 		log.Debug().Msgf("Deleted ServiceMonitor %s", serviceMonitorName)
 		return nil

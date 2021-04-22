@@ -58,8 +58,8 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 
 	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
-	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}

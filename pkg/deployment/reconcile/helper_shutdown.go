@@ -68,8 +68,8 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
 		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create member client")
 			return false, errors.WithStack(err)

@@ -72,22 +72,22 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 	id := driver.ServerID(a.MemberID())
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		return err
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
-	cancel()
 	if err != nil {
 		return err
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	health, err := cluster.Health(ctxChild)
-	cancel()
 	if err != nil {
 		return err
 	}
@@ -96,12 +96,7 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 		return nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-
-	if err := cluster.RemoveServer(ctxChild, id); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return cluster.RemoveServer(ctxChild, id)
+	})
 }

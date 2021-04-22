@@ -70,8 +70,8 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get client")
 		return true, errors.WithStack(err)
@@ -80,8 +80,8 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 	switch group {
 	case api.ServerGroupDBServers:
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		cluster, err := client.Cluster(ctxChild)
-		cancel()
 		if err != nil {
 			log.Error().Err(err).Msgf("Unable to get cluster client")
 			return true, errors.WithStack(err)
@@ -120,24 +120,24 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	agency, err := a.actionCtx.GetAgency(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency client")
 		return false, false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return false, false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
-	cancel()
 	if err != nil {
 		if driver.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Job not found, but proceeding")

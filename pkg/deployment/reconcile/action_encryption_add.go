@@ -107,10 +107,10 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	_, err = a.actionCtx.SecretsInterface().Patch(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := a.actionCtx.SecretsInterface().Patch(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+		return err
+	})
 	if err != nil {
 		return false, err
 	}

@@ -100,9 +100,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					},
 				}
 
-				ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				_, err := svcs.Create(ctxChild, s, metav1.CreateOptions{})
-				cancel()
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := svcs.Create(ctxChild, s, metav1.CreateOptions{})
+					return err
+				})
 				if err != nil {
 					if !k8sutil.IsConflict(err) {
 						return err
@@ -128,9 +129,10 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
 					s.Spec = *spec
 
-					ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-					_, err := svcs.Update(ctxChild, s, metav1.UpdateOptions{})
-					cancel()
+					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						_, err := svcs.Update(ctxChild, s, metav1.UpdateOptions{})
+						return err
+					})
 					if err != nil {
 						return err
 					}
@@ -149,8 +151,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, owner)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create headless service")
 			return errors.WithStack(err)
@@ -165,8 +167,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, owner)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client service")
 			return errors.WithStack(err)
@@ -214,8 +216,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 	if spec.Metrics.IsEnabled() {
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, svcs, apiObject, apiObject.AsOwner())
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
@@ -288,9 +290,10 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 			}
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			_, err := svcs.Update(ctxChild, existing, metav1.UpdateOptions{})
-			cancel()
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := svcs.Update(ctxChild, existing, metav1.UpdateOptions{})
+				return err
+			})
 			if err != nil {
 				log.Debug().Err(err).Msgf("Failed to update %s external access service", title)
 				return errors.WithStack(err)
@@ -305,9 +308,9 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err := svcs.Delete(ctxChild, eaServiceName, metav1.DeleteOptions{})
-		cancel()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return svcs.Delete(ctxChild, eaServiceName, metav1.DeleteOptions{})
+		})
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)
 			return errors.WithStack(err)
@@ -319,8 +322,8 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
 		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return errors.WithStack(err)

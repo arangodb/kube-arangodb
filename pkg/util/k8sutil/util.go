@@ -24,11 +24,14 @@
 package k8sutil
 
 import (
+	"context"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
+
+type TimeoutRunFunc func(ctxChild context.Context) error
 
 const (
 	// LabelKeyArangoDeployment is the key of the label used to store the ArangoDeployment name in
@@ -56,6 +59,19 @@ var requestTimeout = minDefaultRequestTimeout
 // GetRequestTimeout gets request timeout for one call to kubernetes.
 func GetRequestTimeout() time.Duration {
 	return requestTimeout
+}
+
+// RunWithTimeout runs the function with the provided timeout or with default timeout.
+func RunWithTimeout(ctx context.Context, run TimeoutRunFunc, timeout ...time.Duration) error {
+	t := GetRequestTimeout()
+	if len(timeout) > 0 {
+		t = timeout[0]
+	}
+
+	ctxChild, cancel := context.WithTimeout(ctx, t)
+	defer cancel()
+
+	return run(ctxChild)
 }
 
 // SetRequestTimeout sets request timeout for one call to kubernetes.

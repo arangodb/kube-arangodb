@@ -67,16 +67,16 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	log := a.log
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 		return false, errors.WithStack(err)
@@ -115,24 +115,24 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
 		return false, false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 		return false, false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
-	cancel()
 	if err != nil {
 		log.Debug().Err(err).Msg("IsCleanedOut failed")
 		return false, false, errors.WithStack(err)
@@ -142,24 +142,24 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		log.Debug().Msg("IsCleanedOut returned false")
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client")
 			return false, false, errors.WithStack(err)
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		agency, err := a.actionCtx.GetAgency(ctxChild)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
 			return false, false, errors.WithStack(err)
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
-		cancel()
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
 			return false, false, errors.WithStack(err)

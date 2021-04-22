@@ -302,8 +302,8 @@ func CreateJWTTokenFromSecret(secret string, claims map[string]interface{}) (str
 // result in a new secret called tokenSecretName
 func CreateJWTFromSecret(ctx context.Context, secrets SecretInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
 	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
 	secret, err := GetTokenSecret(ctxChild, secrets, secretSecretName)
-	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -317,9 +317,9 @@ func CreateJWTFromSecret(ctx context.Context, secrets SecretInterface, tokenSecr
 		return errors.WithStack(err)
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, GetRequestTimeout())
-	defer cancel()
-	return CreateTokenSecret(ctxChild, secrets, tokenSecretName, signedToken, ownerRef)
+	return RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return CreateTokenSecret(ctxChild, secrets, tokenSecretName, signedToken, ownerRef)
+	})
 }
 
 // CreateBasicAuthSecret creates a secret with given name in given namespace
@@ -338,9 +338,11 @@ func CreateBasicAuthSecret(ctx context.Context, secrets SecretInterface, secretN
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
-	defer cancel()
-	if _, err := secrets.Create(ctxChild, secret, meta.CreateOptions{}); err != nil {
+	err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
+		return err
+	})
+	if err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}

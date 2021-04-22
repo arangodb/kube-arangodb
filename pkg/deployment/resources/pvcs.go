@@ -65,9 +65,9 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			resources := spec.Resources
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			err := k8sutil.CreatePersistentVolumeClaim(ctxChild, pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
-			cancel()
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.CreatePersistentVolumeClaim(ctxChild, pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
+			})
 			if err != nil {
 				return errors.WithStack(err)
 			}

@@ -55,8 +55,8 @@ type refreshTLSKeyfileCertificateAction struct {
 
 func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
-	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
@@ -79,8 +79,8 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 	client := client.NewClient(c.Connection())
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	e, err := client.RefreshTLS(ctxChild)
-	cancel()
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to refresh TLS")
 		return true, false, nil

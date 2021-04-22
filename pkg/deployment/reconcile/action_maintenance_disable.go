@@ -60,16 +60,17 @@ func (a *actionDisableMaintenance) Start(ctx context.Context) (bool, error) {
 	}
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	cancel()
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get agency client")
 		return true, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-	if err := agency.SetMaintenanceMode(ctxChild, client, false); err != nil {
+	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return agency.SetMaintenanceMode(ctxChild, client, false)
+	})
+	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to disable maintenance")
 		return true, nil
 	}

@@ -240,9 +240,10 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			f.Data[pod.ActiveJWTKey] = token
 			f.Data[constants.SecretKeyToken] = token
 
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			_, err := secrets.Update(ctxChild, f, meta.UpdateOptions{})
-			cancel()
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := secrets.Update(ctxChild, f, meta.UpdateOptions{})
+				return err
+			})
 			if err != nil {
 				return err
 			}
@@ -264,10 +265,10 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			_, err = secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
-			cancel()
-
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
+				return err
+			})
 			if err != nil {
 				return err
 			}
@@ -287,9 +288,10 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			_, err = secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
-			cancel()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
+				return err
+			})
 			if err != nil {
 				return err
 			}
@@ -383,9 +385,10 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets k8sutil.Sec
 
 	f(secret)
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
-	cancel()
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
+		return err
+	})
 	if err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
@@ -407,9 +410,9 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets k8sutil.Secre
 
 	// Create secret
 	owner := r.context.GetAPIObject().AsOwner()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	err := k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, token, &owner)
-	cancel()
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, token, &owner)
+	})
 	if k8sutil.IsAlreadyExists(err) {
 		// Secret added while we tried it also
 		return nil
@@ -448,9 +451,9 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 	}
 
 	owner := r.context.GetAPIObject().AsOwner()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	err := AppendKeyfileToKeyfolder(ctxChild, cachedStatus, secrets, &owner, secretName, d)
-	cancel()
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return AppendKeyfileToKeyfolder(ctxChild, cachedStatus, secrets, &owner, secretName, d)
+	})
 	if err != nil {
 		return errors.Wrapf(err, "Unable to create keyfolder secret")
 	}
@@ -562,9 +565,9 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err := createTLSCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
-		cancel()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return createTLSCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil
@@ -623,9 +626,9 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		err := createClientAuthCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
-		cancel()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return createClientAuthCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
+		})
 		if k8sutil.IsAlreadyExists(err) {
 			// Secret added while we tried it also
 			return nil

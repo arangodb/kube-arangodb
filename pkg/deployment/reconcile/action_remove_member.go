@@ -70,8 +70,8 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	// For safety, remove from cluster
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
 		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
 		client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-		cancel()
 		if err != nil {
 			return false, errors.WithStack(err)
 		}

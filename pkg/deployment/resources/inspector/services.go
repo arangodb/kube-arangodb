@@ -104,11 +104,11 @@ func servicePointer(pod core.Service) *core.Service {
 
 func getServices(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	services, err := k.CoreV1().Services(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

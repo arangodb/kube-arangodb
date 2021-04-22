@@ -125,11 +125,11 @@ func secretPointer(pod core.Secret) *core.Secret {
 
 func getSecrets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Secret, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	secrets, err := k.CoreV1().Secrets(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, err

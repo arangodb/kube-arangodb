@@ -121,9 +121,10 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				// No PDB found - create new
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
-				ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				_, err := pdbcli.Create(ctxChild, pdb, metav1.CreateOptions{})
-				cancel()
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := pdbcli.Create(ctxChild, pdb, metav1.CreateOptions{})
+					return err
+				})
 				if err != nil {
 					log.Error().Err(err).Msg("failed to create PDB")
 					return errors.WithStack(err)
@@ -145,9 +146,9 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			// Trigger deletion only if not already deleted
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
-				ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-				err := pdbcli.Delete(ctxChild, pdbname, metav1.DeleteOptions{})
-				cancel()
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					return pdbcli.Delete(ctxChild, pdbname, metav1.DeleteOptions{})
+				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")
 					return errors.WithStack(err)

@@ -148,15 +148,15 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	log := ci.log
 
 	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
-	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
-	cancel()
 	if err != nil {
 		if expectSuccess {
 			log.Debug().Err(err).Msg("Failed to get number of servers")
@@ -200,8 +200,8 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	// Let's update the spec
 	apiObject := ci.depl.apiObject
 	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
 	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
-	cancel()
 	if err != nil {
 		return errors.WithStack(err)
 	}
