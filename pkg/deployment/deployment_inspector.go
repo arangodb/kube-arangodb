@@ -47,7 +47,7 @@ import (
 )
 
 const (
-	twentySeconds = time.Second * 20
+	timeoutReconciliationPerNode = time.Second * 20
 )
 
 var (
@@ -65,7 +65,7 @@ func (d *Deployment) getReconciliationTimeout() (time.Duration, error) {
 		return 0, errors.Wrapf(err, "Unable to get nodes")
 	}
 
-	if timeout := twentySeconds * time.Duration(len(nodes.Items)); timeout > time.Minute {
+	if timeout := timeoutReconciliationPerNode * time.Duration(len(nodes.Items)); timeout > time.Minute {
 		return timeout, nil
 	}
 
@@ -91,8 +91,8 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	}
 
 	ctxReconciliation, cancelReconciliation := context.WithTimeout(context.Background(), timeout)
+	defer cancelReconciliation()
 	defer func() {
-		cancelReconciliation()
 		d.deps.Log.Info().Msgf("Inspect loop took %s", time.Since(start))
 	}()
 
