@@ -109,9 +109,12 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	}
 
 	// Check deployment still exists
-	ctx, cancel := context.WithTimeout(ctxReconciliation, k8sutil.GetRequestTimeout())
-	updated, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctx, deploymentName, metav1.GetOptions{})
-	cancel()
+	var updated *api.ArangoDeployment
+	err = k8sutil.RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
+		var err error
+		updated, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
+		return err
+	})
 	if k8sutil.IsNotFound(err) {
 		// Deployment is gone
 		log.Info().Msg("Deployment is gone")

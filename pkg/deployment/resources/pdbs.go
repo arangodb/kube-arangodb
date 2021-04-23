@@ -113,9 +113,12 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
 	for {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		pdb, err := pdbcli.Get(ctxChild, pdbname, metav1.GetOptions{})
-		cancel()
+		var pdb *policyv1beta1.PodDisruptionBudget
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			pdb, err = pdbcli.Get(ctxChild, pdbname, metav1.GetOptions{})
+			return err
+		})
 		if k8sutil.IsNotFound(err) {
 			if wantedMinAvail != 0 {
 				// No PDB found - create new

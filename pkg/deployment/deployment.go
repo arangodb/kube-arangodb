@@ -399,9 +399,14 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 		if update.GetDeletionTimestamp() == nil {
 			ensureFinalizers(update)
 		}
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		newAPIObject, err := depls.Update(ctxChild, update, metav1.UpdateOptions{})
-		cancel()
+
+		var newAPIObject *api.ArangoDeployment
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			newAPIObject, err = depls.Update(ctxChild, update, metav1.UpdateOptions{})
+
+			return err
+		})
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -412,9 +417,12 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
-			cancel()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				var err error
+				current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
+
+				return err
+			})
 			if err == nil {
 				update = current.DeepCopy()
 				continue
@@ -448,9 +456,13 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 		update.Spec = newSpec
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		newAPIObject, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
-		cancel()
+		var newAPIObject *api.ArangoDeployment
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
+
+			return err
+		})
 		if err == nil {
 			// Update internal object
 			d.apiObject = newAPIObject
@@ -461,9 +473,12 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-			current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
-			cancel()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				var err error
+				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
+
+				return err
+			})
 			if err == nil {
 				update = current.DeepCopy()
 				continue

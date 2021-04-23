@@ -51,10 +51,14 @@ func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error
 		return errors.WithStack(errors.Wrapf(err, "Cannot fetch databases"))
 	}
 
+	var inventory driver.DatabaseInventory
 	for _, db := range dbs {
-		ctxChild, cancel = context.WithTimeout(ctx, GetRequestTimeout())
-		inventory, err := c.DatabaseInventory(ctxChild, db)
-		cancel()
+		err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			inventory, err = c.DatabaseInventory(ctxChild, db)
+
+			return err
+		})
 		if err != nil {
 			return errors.WithStack(errors.Wrapf(err, "Cannot fetch inventory for %s", db.Name()))
 		}
