@@ -62,7 +62,7 @@ func (a *jwtPropagatedAction) Start(ctx context.Context) (bool, error) {
 
 	propagatedFlagBool := propagatedFlag == conditionTrue
 
-	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if s.Hashes.JWT.Propagated != propagatedFlagBool {
 			s.Hashes.JWT.Propagated = propagatedFlagBool
 			return true

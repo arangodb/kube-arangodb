@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
@@ -25,11 +26,12 @@ package k8sutil
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -37,10 +39,14 @@ const (
 )
 
 // RemovePodFinalizers removes the given finalizers from the given pod.
-func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.Pod, finalizers []string, ignoreNotFound bool) error {
+func RemovePodFinalizers(ctx context.Context, log zerolog.Logger, kubecli kubernetes.Interface, p *v1.Pod,
+	finalizers []string, ignoreNotFound bool) error {
 	pods := kubecli.CoreV1().Pods(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		result, err := pods.Get(context.Background(), p.GetName(), metav1.GetOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		defer cancel()
+
+		result, err := pods.Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -48,7 +54,10 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedPod := updated.(*v1.Pod)
-		result, err := pods.Update(context.Background(), updatedPod, metav1.UpdateOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		defer cancel()
+
+		result, err := pods.Update(ctxChild, updatedPod, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -62,10 +71,14 @@ func RemovePodFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 }
 
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
-func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
+func RemovePVCFinalizers(ctx context.Context, log zerolog.Logger, kubecli kubernetes.Interface,
+	p *v1.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
 	pvcs := kubecli.CoreV1().PersistentVolumeClaims(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		result, err := pvcs.Get(context.Background(), p.GetName(), metav1.GetOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		defer cancel()
+
+		result, err := pvcs.Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -73,7 +86,10 @@ func RemovePVCFinalizers(log zerolog.Logger, kubecli kubernetes.Interface, p *v1
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedPVC := updated.(*v1.PersistentVolumeClaim)
-		result, err := pvcs.Update(context.Background(), updatedPVC, metav1.UpdateOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		defer cancel()
+
+		result, err := pvcs.Update(ctxChild, updatedPVC, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

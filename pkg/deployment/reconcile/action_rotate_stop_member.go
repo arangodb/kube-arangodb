@@ -67,7 +67,7 @@ func (a *actionRotateStopMember) Start(ctx context.Context) (bool, error) {
 	m.Phase = api.MemberPhaseNone
 	m.RecentTerminations = nil // Since we're rotating, we do not care about old terminations.
 	m.CleanoutJobID = ""
-	if err := a.actionCtx.UpdateMember(m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 	return false, nil

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package deployment
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -102,7 +104,7 @@ func createTestLifecycle() *core.Lifecycle {
 func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []string) (string, error) {
 
 	name := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
 	if err != nil {
 		return "", err
 	}

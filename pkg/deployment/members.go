@@ -23,6 +23,7 @@
 package deployment
 
 import (
+	"context"
 	"strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -37,7 +38,7 @@ import (
 
 // createInitialMembers creates all members needed for the initial state of the deployment.
 // Note: This does not create any pods of PVCs
-func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error {
+func (d *Deployment) createInitialMembers(ctx context.Context, apiObject *api.ArangoDeployment) error {
 	log := d.deps.Log
 	log.Debug().Msg("creating initial members...")
 
@@ -59,7 +60,7 @@ func (d *Deployment) createInitialMembers(apiObject *api.ArangoDeployment) error
 
 	// Save status
 	log.Debug().Msg("saving initial members...")
-	if err := d.UpdateStatus(status, lastVersion); err != nil {
+	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err)
 	}
 	// Save events

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -70,8 +71,8 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				ignoreNotFound := false
-				if err := k8sutil.RemovePVCFinalizers(log, kubecli, pvc, pvc.GetFinalizers(), ignoreNotFound); err != nil {
+				err := k8sutil.RemovePVCFinalizers(ctx, log, kubecli, pvc, pvc.GetFinalizers(), false)
+				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
 					return errors.WithStack(err)
 				}

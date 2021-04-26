@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package chaos
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -34,7 +37,7 @@ type Context interface {
 	GetSpec() api.DeploymentSpec
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(podName string) error
+	DeletePod(ctx context.Context, podName string) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
-	GetOwnedPods() ([]v1.Pod, error)
+	GetOwnedPods(ctx context.Context) ([]v1.Pod, error)
 }

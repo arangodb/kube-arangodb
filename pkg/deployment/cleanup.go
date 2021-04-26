@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -25,26 +26,30 @@ package deployment
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
-func (d *Deployment) removePodFinalizers(cachedStatus inspectorInterface.Inspector) error {
+func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
 
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
-		if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), true); err != nil {
+		if err := k8sutil.RemovePodFinalizers(ctx, log, kubecli, pod, pod.GetFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove pod finalizers")
 			return err
 		}
 
-		if err := kubecli.CoreV1().Pods(pod.GetNamespace()).Delete(context.Background(), pod.GetName(), meta.DeleteOptions{
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+
+		if err := kubecli.CoreV1().Pods(pod.GetNamespace()).Delete(ctxChild, pod.GetName(), meta.DeleteOptions{
 			GracePeriodSeconds: util.NewInt64(1),
 		}); err != nil {
 			if !k8sutil.IsNotFound(err) {
@@ -61,12 +66,12 @@ func (d *Deployment) removePodFinalizers(cachedStatus inspectorInterface.Inspect
 }
 
 // removePVCFinalizers removes all finalizers from all PVCs owned by us.
-func (d *Deployment) removePVCFinalizers(cachedStatus inspectorInterface.Inspector) error {
+func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := d.deps.Log
 	kubecli := d.GetKubeCli()
 
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(pvc *core.PersistentVolumeClaim) error {
-		if err := k8sutil.RemovePVCFinalizers(log, kubecli, pvc, pvc.GetFinalizers(), true); err != nil {
+		if err := k8sutil.RemovePVCFinalizers(ctx, log, kubecli, pvc, pvc.GetFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			return err
 		}

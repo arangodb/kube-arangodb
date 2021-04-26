@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -60,7 +61,7 @@ func (a *cleanTLSKeyfileCertificateAction) Start(ctx context.Context) (bool, err
 		return true, nil
 	}
 
-	if err := a.actionCtx.DeleteTLSKeyfile(a.action.Group, member); err != nil {
+	if err := a.actionCtx.DeleteTLSKeyfile(ctx, a.action.Group, member); err != nil {
 		a.log.Warn().Err(err).Msgf("Unable to remove keyfile")
 		if !k8sutil.IsNotFound(err) {
 			return false, err

@@ -73,7 +73,7 @@ func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, 
 		return true, false, nil
 	}
 
-	if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		m, g, found := s.Members.ElementByID(a.action.MemberID)
 		if !found {
 			log.Error().Msg("No such member")

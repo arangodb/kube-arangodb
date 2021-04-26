@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -65,7 +66,7 @@ type Context interface {
 	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
-	UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error
+	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
 	// GetKubeCli returns the kubernetes client
 	GetKubeCli() kubernetes.Interface
 	// GetMonitoringV1Cli returns monitoring client
@@ -89,13 +90,13 @@ type Context interface {
 	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(p *v1.Pod) error
+	CleanupPod(ctx context.Context, p *v1.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(podName string) error
+	DeletePod(ctx context.Context, podName string) error
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
-	DeletePvc(pvcName string) error
+	DeletePvc(ctx context.Context, pvcName string) error
 	// GetAgencyClients returns a client connection for every agency member.
 	GetAgencyClients(ctx context.Context, predicate func(memberID string) bool) ([]driver.Connection, error)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
@@ -104,9 +105,9 @@ type Context interface {
 	// GetAgency returns a connection to the entire agency.
 	GetAgency(ctx context.Context) (agency.Agency, error)
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error
+	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// GetBackup receives information about a backup resource
-	GetBackup(backup string) (*backupApi.ArangoBackup, error)
+	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope
 
 	GetCachedStatus() inspectorInterface.Inspector

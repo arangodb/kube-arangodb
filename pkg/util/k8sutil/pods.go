@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
@@ -406,10 +407,10 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
+func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if pod, err := kubecli.CoreV1().Pods(ns).Create(context.Background(), pod, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
+	if pod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
 		return "", errors.WithStack(err)
 	} else {
 		return pod.UID, nil

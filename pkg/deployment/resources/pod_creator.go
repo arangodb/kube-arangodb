@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"context"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/json"
@@ -295,7 +297,7 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
-func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
@@ -365,14 +367,20 @@ func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector
 
 		var tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName, clusterJWTSecretName string
 		// Check master JWT secret
-		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
 
-		if err := k8sutil.ValidateTokenSecret(secrets, masterJWTSecretName); err != nil {
+		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, secrets, masterJWTSecretName)
+		})
+		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
 		}
 
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
-		if err := k8sutil.ValidateTokenSecret(secrets, monitoringTokenSecretName); err != nil {
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, secrets, monitoringTokenSecretName)
+		})
+		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Monitoring token secret validation failed"))
 		}
 
@@ -382,13 +390,19 @@ func (r *Resources) RenderPodForMember(cachedStatus inspectorInterface.Inspector
 			// Check cluster JWT secret
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
-				if err := k8sutil.ValidateTokenSecret(secrets, clusterJWTSecretName); err != nil {
+				err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					return k8sutil.ValidateTokenSecret(ctxChild, secrets, clusterJWTSecretName)
+				})
+				if err != nil {
 					return nil, errors.WithStack(errors.Wrapf(err, "Cluster JWT secret validation failed"))
 				}
 			}
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
-			if err := k8sutil.ValidateCACertificateSecret(secrets, clientAuthCASecretName); err != nil {
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.ValidateCACertificateSecret(ctxChild, secrets, clientAuthCASecretName)
+			})
+			if err != nil {
 				return nil, errors.WithStack(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
 			}
 		}
@@ -434,7 +448,7 @@ func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentSt
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -462,7 +476,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 
 	imageInfo = *m.Image
 
-	pod, err := r.RenderPodForMember(cachedStatus, spec, status, memberID, imageInfo)
+	pod, err := r.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -495,7 +509,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			return errors.WithStack(err)
 		}
 
-		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -535,7 +551,8 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 				}
 			}
 			owner := apiObject.AsOwner()
-			if err := createTLSServerCertificate(log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
+			err := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
+			if err != nil && !k8sutil.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
@@ -545,7 +562,9 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 			return errors.WithStack(err)
 		}
 
-		uid, err := CreateArangoPod(kubecli, apiObject, spec, group, pod)
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -567,7 +586,7 @@ func (r *Resources) createPodForMember(spec api.DeploymentSpec, memberID string,
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}
-	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+	if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err)
 	}
 	// Create event
@@ -633,8 +652,8 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
-	uid, err := k8sutil.CreatePod(kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
+func CreateArangoPod(ctx context.Context, kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
+	uid, err := k8sutil.CreatePod(ctx, kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -660,7 +679,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 }
 
 // EnsurePods creates all Pods listed in member status
-func (r *Resources) EnsurePods(cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
@@ -674,7 +693,7 @@ func (r *Resources) EnsurePods(cachedStatus inspectorInterface.Inspector) error 
 				continue
 			}
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
+			if err := r.createPodForMember(ctx, spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
 				return errors.WithStack(err)
 			}
 		}

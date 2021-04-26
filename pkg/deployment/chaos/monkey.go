@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package chaos
 
 import (
+	"context"
 	"math/rand"
 	"time"
 
@@ -50,6 +52,9 @@ func NewMonkey(log zerolog.Logger, context Context) *Monkey {
 
 // Run the monkey until the given channel is closed.
 func (m Monkey) Run(stopCh <-chan struct{}) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for {
 		spec := m.context.GetSpec()
 		if spec.Chaos.IsEnabled() {
@@ -57,7 +62,7 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 			chance := float64(spec.Chaos.GetKillPodProbability()) / 100.0
 			if rand.Float64() < chance {
 				// Let's introduce pod chaos
-				if err := m.killRandomPod(); err != nil {
+				if err := m.killRandomPod(ctx); err != nil {
 					log.Info().Err(err).Msg("Failed to kill random pod")
 				}
 			}
@@ -74,8 +79,8 @@ func (m Monkey) Run(stopCh <-chan struct{}) {
 }
 
 // killRandomPod fetches all owned pods and tries to kill one.
-func (m Monkey) killRandomPod() error {
-	pods, err := m.context.GetOwnedPods()
+func (m Monkey) killRandomPod(ctx context.Context) error {
+	pods, err := m.context.GetOwnedPods(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -85,7 +90,7 @@ func (m Monkey) killRandomPod() error {
 	}
 	p := pods[rand.Intn(len(pods))]
 	m.log.Info().Str("pod-name", p.GetName()).Msg("Killing pod")
-	if err := m.context.DeletePod(p.GetName()); err != nil {
+	if err := m.context.DeletePod(ctx, p.GetName()); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

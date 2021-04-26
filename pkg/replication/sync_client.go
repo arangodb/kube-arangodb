@@ -67,7 +67,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		}
 	} else if authJWTSecretName != "" {
 		var err error
-		jwtSecret, err = k8sutil.GetTokenSecret(secrets, authJWTSecretName)
+		jwtSecret, err = k8sutil.GetTokenSecret(context.TODO(), secrets, authJWTSecretName)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -86,7 +86,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		}
 	}
 	if tlsCASecretName != "" {
-		caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
+		caCert, err := k8sutil.GetCACertficateSecret(context.TODO(), secrets, tlsCASecretName)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -141,7 +141,7 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch TLS CA certificate for source
-	caCert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
+	caCert, err := k8sutil.GetCACertficateSecret(context.TODO(), secrets, tlsCASecretName)
 	if err != nil {
 		return client.TLSAuthentication{}, errors.WithStack(err)
 	}

@@ -18,11 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
@@ -37,7 +40,8 @@ import (
 )
 
 type Inspector interface {
-	Refresh(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) error
+	Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,
+		c versioned.Interface, namespace string) error
 
 	pod.Inspector
 	secret.Inspector

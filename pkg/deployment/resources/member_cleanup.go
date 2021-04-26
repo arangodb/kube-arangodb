@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -49,12 +50,12 @@ var (
 )
 
 // CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
-func (r *Resources) CleanupRemovedMembers() error {
+func (r *Resources) CleanupRemovedMembers(ctx context.Context) error {
 	// Decide what to do depending on cluster mode
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
 		deploymentName := r.context.GetAPIObject().GetName()
-		if err := r.cleanupRemovedClusterMembers(); err != nil {
+		if err := r.cleanupRemovedClusterMembers(ctx); err != nil {
 			cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
 			return errors.WithStack(err)
 		}
@@ -67,7 +68,7 @@ func (r *Resources) CleanupRemovedMembers() error {
 }
 
 // cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
-func (r *Resources) cleanupRemovedClusterMembers() error {
+func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context) error {
 	log := r.log
 
 	// Fetch recent cluster health
@@ -141,7 +142,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	if updateStatusNeeded {
 		log.Debug().Msg("UpdateStatus needed")
 
-		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			log.Warn().Err(err).Msg("Failed to update deployment status")
 			return errors.WithStack(err)
 		}
@@ -149,14 +150,14 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 
 	for _, podName := range podNamesToRemove {
 		log.Info().Str("pod", podName).Msg("Removing obsolete member pod")
-		if err := r.context.DeletePod(podName); err != nil && !k8sutil.IsNotFound(err) {
+		if err := r.context.DeletePod(ctx, podName); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pod", podName).Msg("Failed to remove obsolete pod")
 		}
 	}
 
 	for _, pvcName := range pvcNamesToRemove {
 		log.Info().Str("pvc", pvcName).Msg("Removing obsolete member PVC")
-		if err := r.context.DeletePvc(pvcName); err != nil && !k8sutil.IsNotFound(err) {
+		if err := r.context.DeletePvc(ctx, pvcName); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pvc", pvcName).Msg("Failed to remove obsolete PVC")
 		}
 	}
@@ -164,7 +165,7 @@ func (r *Resources) cleanupRemovedClusterMembers() error {
 	return nil
 }
 
-func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	// Create all missing arangomembers
 
 	s, _ := r.context.GetStatus()
@@ -187,7 +188,11 @@ func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspecto
 					},
 				}
 
-				if _, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(context.Background(), &a, metav1.CreateOptions{}); err != nil {
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(ctxChild, &a, metav1.CreateOptions{})
+					return err
+				})
+				if err != nil {
 					return err
 				}
 
@@ -205,7 +210,11 @@ func (r *Resources) EnsureArangoMembers(cachedStatus inspectorInterface.Inspecto
 
 		if !ok || g != member.Spec.Group {
 			// Remove member
-			if err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(context.Background(), member.GetName(), metav1.DeleteOptions{}); err != nil {
+
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
+			})
+			if err != nil {
 				if !k8sutil.IsNotFound(err) {
 					return err
 				}

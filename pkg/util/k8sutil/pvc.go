@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
@@ -84,7 +85,7 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(ctx context.Context, pvcs PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{
@@ -113,7 +114,7 @@ func CreatePersistentVolumeClaim(pvcs PersistentVolumeClaimInterface, pvcName, d
 		pvc.Spec.StorageClassName = &storageClassName
 	}
 	AddOwnerRefToObject(pvc.GetObjectMeta(), &owner)
-	if _, err := pvcs.Create(context.Background(), pvc, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
+	if _, err := pvcs.Create(ctx, pvc, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
 		return errors.WithStack(err)
 	}
 	return nil

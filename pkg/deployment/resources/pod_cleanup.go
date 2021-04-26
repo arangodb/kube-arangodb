@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -42,7 +43,7 @@ const (
 
 // CleanupTerminatedPods removes all pods in Terminated state that belong to a member in Created state.
 // Returns: Interval_till_next_inspection, error
-func (r *Resources) CleanupTerminatedPods(cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
+func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {
 	log := r.log
 	nextInterval := maxPodInspectorInterval // Large by default, will be made smaller if needed in the rest of the function
 
@@ -84,7 +85,7 @@ func (r *Resources) CleanupTerminatedPods(cachedStatus inspectorInterface.Inspec
 
 		// Ok, we can delete the pod
 		log.Debug().Str("pod-name", pod.GetName()).Msg("Cleanup terminated pod")
-		if err := r.context.CleanupPod(pod); err != nil {
+		if err := r.context.CleanupPod(ctx, pod); err != nil {
 			log.Warn().Err(err).Str("pod-name", pod.GetName()).Msg("Failed to cleanup pod")
 		}
 

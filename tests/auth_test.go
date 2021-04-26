@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package tests
@@ -102,7 +103,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateTokenSecret(secrets, depl.Spec.Authentication.GetJWTSecretName(), "foo", nil); err != nil {
+	if err := k8sutil.CreateTokenSecret(context.Background(), secrets, depl.Spec.Authentication.GetJWTSecretName(), "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 	defer removeSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns)
@@ -152,7 +153,7 @@ func TestAuthenticationNoneSingle(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -240,12 +241,12 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create secret
-	if err := k8sutil.CreateTokenSecret(secrets, depl.Spec.Authentication.GetJWTSecretName(), "foo", nil); err != nil {
+	if err := k8sutil.CreateTokenSecret(context.Background(), secrets, depl.Spec.Authentication.GetJWTSecretName(), "foo", nil); err != nil {
 		t.Fatalf("Create JWT secret failed: %v", err)
 	}
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
@@ -292,7 +293,7 @@ func TestAuthenticationNoneCluster(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName())
 
 	// Create deployment
-	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl,metav1.CreateOptions{})
+	apiObject, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}

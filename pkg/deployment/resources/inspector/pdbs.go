@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
@@ -75,8 +78,8 @@ func (i *inspector) PodDisruptionBudget(name string) (*policy.PodDisruptionBudge
 	return podDisruptionBudget, true
 }
 
-func podDisruptionBudgetsToMap(k kubernetes.Interface, namespace string) (map[string]*policy.PodDisruptionBudget, error) {
-	podDisruptionBudgets, err := getPodDisruptionBudgets(k, namespace, "")
+func podDisruptionBudgetsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*policy.PodDisruptionBudget, error) {
+	podDisruptionBudgets, err := getPodDisruptionBudgets(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +102,10 @@ func podDisruptionBudgetPointer(podDisruptionBudget policy.PodDisruptionBudget) 
 	return &podDisruptionBudget
 }
 
-func getPodDisruptionBudgets(k kubernetes.Interface, namespace, cont string) ([]policy.PodDisruptionBudget, error) {
-	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(context.Background(), meta.ListOptions{
+func getPodDisruptionBudgets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]policy.PodDisruptionBudget, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
@@ -110,7 +115,7 @@ func getPodDisruptionBudgets(k kubernetes.Interface, namespace, cont string) ([]
 	}
 
 	if podDisruptionBudgets.Continue != "" {
-		nextPodDisruptionBudgetsLayer, err := getPodDisruptionBudgets(k, namespace, podDisruptionBudgets.Continue)
+		nextPodDisruptionBudgetsLayer, err := getPodDisruptionBudgets(ctx, k, namespace, podDisruptionBudgets.Continue)
 		if err != nil {
 			return nil, err
 		}

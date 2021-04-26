@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -58,7 +59,9 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
 	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(context.Background(), p.Spec.NodeName, metav1.GetOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(ctxChild, p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
@@ -71,7 +74,9 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	pvc, err := pvcs.Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)
@@ -88,10 +93,11 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Inspect agency state
 	log.Debug().Msg("Agent data will be gone, so we will check agency serving status first")
-	ctx = agency.WithAllowNoLeader(ctx)                     // The ID we're checking may be the leader, so ignore situations where all other agents are followers
-	ctx, cancel := context.WithTimeout(ctx, time.Second*15) // Force a quick check
+	ctxChild, cancel = context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
-	agencyConns, err := r.context.GetAgencyClients(ctx, func(id string) bool { return id != memberStatus.ID })
+	ctxLeader := agency.WithAllowNoLeader(ctxChild) // The ID we're checking may be the leader, so ignore situations where all other agents are followers
+
+	agencyConns, err := r.context.GetAgencyClients(ctxLeader, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return errors.WithStack(err)
@@ -100,7 +106,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 		log.Debug().Err(err).Msg("No more remaining agents, we cannot delete this one")
 		return errors.WithStack(errors.Newf("No more remaining agents"))
 	}
-	if err := agency.AreAgentsHealthy(ctx, agencyConns); err != nil {
+	if err := agency.AreAgentsHealthy(ctxLeader, agencyConns); err != nil {
 		log.Debug().Err(err).Msg("Remaining agents are not healthy")
 		return errors.WithStack(err)
 	}
@@ -152,7 +158,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
 	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(context.Background(), p.Spec.NodeName, metav1.GetOptions{})
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(ctxChild, p.Spec.NodeName, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {
 			log.Warn().Msg("Node not found")
 		} else if err != nil {
@@ -167,7 +175,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 
 	// Check PVC
 	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
-	pvc, err := pvcs.Get(context.Background(), memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	pvc, err := pvcs.Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)
@@ -188,12 +198,16 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Inspect cleaned out state
-	c, err := r.context.GetDatabaseClient(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := r.context.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return errors.WithStack(err)
 	}
-	cluster, err := c.Cluster(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
 
@@ -206,7 +220,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 		return errors.WithStack(err)
 	}
-	cleanedOut, err := cluster.IsCleanedOut(ctx, memberStatus.ID)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	cleanedOut, err := cluster.IsCleanedOut(ctxChild, memberStatus.ID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -244,18 +260,21 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	if memberStatus.Phase == api.MemberPhaseCreated {
 		// No cleanout job triggered
 		var jobID string
-		ctx = driver.WithJobIDResponse(ctx, &jobID)
+		ctxChild, cancelChild := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancelChild()
+
+		ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 		// Ensure the cleanout is triggered
 		if dbserverDataWillBeGone {
 			log.Debug().Msg("Server is not yet cleaned out. Triggering a clean out now")
-			if err := cluster.CleanOutServer(ctx, memberStatus.ID); err != nil {
+			if err := cluster.CleanOutServer(ctxJobID, memberStatus.ID); err != nil {
 				log.Debug().Err(err).Msg("Failed to clean out server")
 				return errors.WithStack(err)
 			}
 			memberStatus.Phase = api.MemberPhaseDrain
 		} else {
 			log.Debug().Msg("Temporary shutdown, resign leadership")
-			if err := cluster.ResignServer(ctx, memberStatus.ID); err != nil {
+			if err := cluster.ResignServer(ctxJobID, memberStatus.ID); err != nil {
 				log.Debug().Err(err).Msg("Failed to resign server")
 				return errors.WithStack(err)
 			}
@@ -269,12 +288,16 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 	} else if memberStatus.Phase == api.MemberPhaseDrain {
 		// Check the job progress
-		agency, err := r.context.GetAgency(ctx)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
 			return errors.WithStack(err)
 		}
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, memberStatus.CleanoutJobID, c, agency)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch job status")
 			return errors.WithStack(err)
@@ -296,12 +319,17 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 	} else if memberStatus.Phase == api.MemberPhaseResign {
 		// Check the job progress
-		agency, err := r.context.GetAgency(ctx)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
 			return errors.WithStack(err)
 		}
-		jobStatus, err := arangod.CleanoutServerJobStatus(ctx, memberStatus.CleanoutJobID, c, agency)
+
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch job status")
 			return errors.WithStack(err)

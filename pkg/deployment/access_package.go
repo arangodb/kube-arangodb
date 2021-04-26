@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -46,7 +47,7 @@ const (
 
 // createAccessPackages creates a arangosync access packages specified
 // in spec.sync.externalAccess.accessPackageSecretNames.
-func (d *Deployment) createAccessPackages() error {
+func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	log := d.deps.Log
 	spec := d.apiObject.Spec
 	secrets := d.deps.KubeCli.CoreV1().Secrets(d.GetNamespace())
@@ -60,13 +61,15 @@ func (d *Deployment) createAccessPackages() error {
 	apNameMap := make(map[string]struct{})
 	for _, apSecretName := range spec.Sync.ExternalAccess.AccessPackageSecretNames {
 		apNameMap[apSecretName] = struct{}{}
-		if err := d.ensureAccessPackage(apSecretName); err != nil {
+		if err := d.ensureAccessPackage(ctx, apSecretName); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
 	// Remove all access packages that we did build, but are no longer needed
-	secretList, err := secrets.List(context.Background(), metav1.ListOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	secretList, err := secrets.List(ctxChild, metav1.ListOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list secrets")
 		return errors.WithStack(err)
@@ -77,9 +80,12 @@ func (d *Deployment) createAccessPackages() error {
 				// Secret is an access package
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
-					if err := secrets.Delete(context.Background(), secret.GetName(), metav1.DeleteOptions{
-						Preconditions: &metav1.Preconditions{UID: &secret.UID},
-					}); err != nil && !k8sutil.IsNotFound(err) {
+					err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						return secrets.Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
+							Preconditions: &metav1.Preconditions{UID: &secret.UID},
+						})
+					})
+					if err != nil && !k8sutil.IsNotFound(err) {
 						// Not serious enough to stop everything now, just log and create an event
 						log.Warn().Err(err).Msg("Failed to remove obsolete access package secret")
 						d.CreateEvent(k8sutil.NewErrorEvent("Access Package cleanup failed", err, d.apiObject))
@@ -98,20 +104,29 @@ func (d *Deployment) createAccessPackages() error {
 
 // ensureAccessPackage creates an arangosync access package with given name
 // it is does not already exist.
-func (d *Deployment) ensureAccessPackage(apSecretName string) error {
+func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
 	log := d.deps.Log
 	ns := d.GetNamespace()
 	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
 	spec := d.apiObject.Spec
 
-	if _, err := secrets.Get(context.Background(), apSecretName, metav1.GetOptions{}); err == nil {
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := secrets.Get(ctxChild, apSecretName, metav1.GetOptions{})
+		return err
+	})
+	if err == nil {
 		// Secret already exists
 		return nil
+	} else if !k8sutil.IsNotFound(err) {
+		log.Debug().Err(err).Str("name", apSecretName).Msg("Failed to get arangosync access package secret")
+		return errors.WithStack(err)
 	}
 
 	// Fetch client authentication CA
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
-	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(secrets, clientAuthSecretName, nil)
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, clientAuthSecretName, nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get client-auth CA secret")
 		return errors.WithStack(err)
@@ -119,7 +134,7 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 
 	// Fetch TLS CA public key
 	tlsCASecretName := spec.Sync.TLS.GetCASecretName()
-	tlsCACert, err := k8sutil.GetCACertficateSecret(secrets, tlsCASecretName)
+	tlsCACert, err := k8sutil.GetCACertficateSecret(ctx, secrets, tlsCASecretName)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get TLS CA secret")
 		return errors.WithStack(err)
@@ -205,7 +220,11 @@ func (d *Deployment) ensureAccessPackage(apSecretName string) error {
 	}
 	// Attach secret to owner
 	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
-	if _, err := secrets.Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := secrets.Create(ctxChild, secret, metav1.CreateOptions{})
+		return err
+	})
+	if err != nil {
 		// Failed to create secret
 		log.Debug().Err(err).Str("secret-name", apSecretName).Msg("Failed to create access package Secret")
 		return errors.WithStack(err)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -27,6 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -56,7 +58,9 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	f, err := a.actionCtx.SecretsInterface().Get(ctx, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	f, err := a.actionCtx.SecretsInterface().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil
@@ -64,7 +68,7 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 	keyHashes := secretKeysToListWithPrefix("sha256:", f)
 
-	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		r := false
 		if len(keyHashes) == 1 {
 			if s.Hashes.TLS.CA == nil || *s.Hashes.TLS.CA != keyHashes[0] {

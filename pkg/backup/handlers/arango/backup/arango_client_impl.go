@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Lars Maier
+// Author Tomasz Mielech
 //
 
 package backup
@@ -128,9 +129,10 @@ func (ac *arangoClientBackupImpl) Get(backupID driver.BackupID) (driver.BackupMe
 	}
 }
 
-func (ac *arangoClientBackupImpl) getCredentialsFromSecret(secretName string) (interface{}, error) {
-
-	token, err := k8sutil.GetTokenSecret(ac.kubecli.CoreV1().Secrets(ac.backup.Namespace), secretName)
+func (ac *arangoClientBackupImpl) getCredentialsFromSecret(ctx context.Context, secretName string) (interface{}, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	token, err := k8sutil.GetTokenSecret(ctxChild, ac.kubecli.CoreV1().Secrets(ac.backup.Namespace), secretName)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +154,7 @@ func (ac *arangoClientBackupImpl) Upload(backupID driver.BackupID) (driver.Backu
 		return "", errors.Newf("upload was called but no upload spec was given")
 	}
 
-	cred, err := ac.getCredentialsFromSecret(uploadSpec.CredentialsSecretName)
+	cred, err := ac.getCredentialsFromSecret(ctx, uploadSpec.CredentialsSecretName)
 	if err != nil {
 		return "", err
 	}
@@ -169,7 +171,7 @@ func (ac *arangoClientBackupImpl) Download(backupID driver.BackupID) (driver.Bac
 		return "", errors.Newf("Download was called but not download spec was given")
 	}
 
-	cred, err := ac.getCredentialsFromSecret(downloadSpec.CredentialsSecretName)
+	cred, err := ac.getCredentialsFromSecret(ctx, downloadSpec.CredentialsSecretName)
 	if err != nil {
 		return "", err
 	}

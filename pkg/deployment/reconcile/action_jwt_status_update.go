@@ -106,7 +106,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 		keySha := fmt.Sprintf("sha256:%s", util.SHA256(key))
 
-		if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+		if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			if s.Hashes.JWT.Passive != nil {
 				s.Hashes.JWT.Passive = nil
 				return true
@@ -131,7 +131,7 @@ func (a *jwtStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err = a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) (update bool) {
+	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) (update bool) {
 		activeKeyData, active := f.Data[pod.ActiveJWTKey]
 		activeKeyShort := util.SHA256(activeKeyData)
 		activeKey := fmt.Sprintf("sha256:%s", activeKeyShort)

@@ -50,7 +50,7 @@ import (
 // If a hash is different, the deployment is marked
 // with a SecretChangedCondition and the operator will not
 // touch it until this is resolved.
-func (r *Resources) ValidateSecretHashes(cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	// validate performs a secret hash comparison for a single secret.
 	// Return true if all is good, false when the SecretChanged condition
 	// must be set.
@@ -130,7 +130,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspectorInterface.Inspect
 			status.SecretHashes.Users = make(map[string]string)
 		}
 		updater(status.SecretHashes)
-		if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+		if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 			return errors.WithStack(err)
 		}
 		// Reload status
@@ -210,7 +210,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspectorInterface.Inspect
 		if status.Conditions.Update(api.ConditionTypeSecretsChanged, true,
 			"Secrets have changed", fmt.Sprintf("Found %d changed secrets", len(badSecretNames))) {
 			log.Warn().Msgf("Found %d changed secrets. Settings SecretsChanged condition", len(badSecretNames))
-			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}
@@ -221,7 +221,7 @@ func (r *Resources) ValidateSecretHashes(cachedStatus inspectorInterface.Inspect
 		// All good, we van remove the SecretsChanged condition
 		if status.Conditions.Remove(api.ConditionTypeSecretsChanged) {
 			log.Info().Msg("Resetting SecretsChanged condition")
-			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 				log.Error().Err(err).Msg("Failed to save SecretsChanged condition")
 				return errors.WithStack(err)
 			}

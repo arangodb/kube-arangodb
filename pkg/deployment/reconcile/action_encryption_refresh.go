@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -25,11 +26,14 @@ package reconcile
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/rs/zerolog"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func init() {
@@ -54,21 +58,26 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 }
 
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	keyfolder, err := a.actionCtx.SecretsInterface().Get(ctx, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	keyfolder, err := a.actionCtx.SecretsInterface().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
 		a.log.Err(err).Msgf("Unable to fetch encryption folder")
 		return true, false, nil
 	}
 
-	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
 	}
 
 	client := client.NewClient(c.Connection())
-
-	e, err := client.RefreshEncryption(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	e, err := client.RefreshEncryption(ctxChild)
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to refresh encryption")
 		return true, false, nil

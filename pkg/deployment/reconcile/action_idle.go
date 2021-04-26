@@ -55,6 +55,6 @@ type actionIdle struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionIdle) Start(ctx context.Context) (bool, error) {
+func (a *actionIdle) Start(_ context.Context) (bool, error) {
 	return true, nil
 }

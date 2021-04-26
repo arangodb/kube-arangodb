@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
@@ -26,6 +27,7 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,8 +77,8 @@ func (i *inspector) Pod(name string) (*core.Pod, bool) {
 	return pod, true
 }
 
-func podsToMap(k kubernetes.Interface, namespace string) (map[string]*core.Pod, error) {
-	pods, err := getPods(k, namespace, "")
+func podsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Pod, error) {
+	pods, err := getPods(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +101,10 @@ func podPointer(pod core.Pod) *core.Pod {
 	return &pod
 }
 
-func getPods(k kubernetes.Interface, namespace, cont string) ([]core.Pod, error) {
-	pods, err := k.CoreV1().Pods(namespace).List(context.Background(), meta.ListOptions{
+func getPods(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Pod, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	pods, err := k.CoreV1().Pods(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
@@ -110,7 +114,8 @@ func getPods(k kubernetes.Interface, namespace, cont string) ([]core.Pod, error)
 	}
 
 	if pods.Continue != "" {
-		nextPodsLayer, err := getPods(k, namespace, pods.Continue)
+		// pass the original context
+		nextPodsLayer, err := getPods(ctx, k, namespace, pods.Continue)
 		if err != nil {
 			return nil, err
 		}

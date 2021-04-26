@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
 
 import (
+	"context"
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
+
+type TimeoutRunFunc func(ctxChild context.Context) error
 
 const (
 	// LabelKeyArangoDeployment is the key of the label used to store the ArangoDeployment name in
@@ -43,7 +49,37 @@ const (
 
 	// AppName is the fixed value for the "app" label
 	AppName = "arangodb"
+
+	// minDefaultRequestTimeout is minimum default request timeout to k8s.
+	minDefaultRequestTimeout = time.Second * 3
 )
+
+var requestTimeout = minDefaultRequestTimeout
+
+// GetRequestTimeout gets request timeout for one call to kubernetes.
+func GetRequestTimeout() time.Duration {
+	return requestTimeout
+}
+
+// RunWithTimeout runs the function with the provided timeout or with default timeout.
+func RunWithTimeout(ctx context.Context, run TimeoutRunFunc, timeout ...time.Duration) error {
+	t := GetRequestTimeout()
+	if len(timeout) > 0 {
+		t = timeout[0]
+	}
+
+	ctxChild, cancel := context.WithTimeout(ctx, t)
+	defer cancel()
+
+	return run(ctxChild)
+}
+
+// SetRequestTimeout sets request timeout for one call to kubernetes.
+func SetRequestTimeout(timeout time.Duration) {
+	if timeout > minDefaultRequestTimeout {
+		requestTimeout = timeout
+	}
+}
 
 // AddOwnerRefToObject adds given owner reference to given object
 func AddOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {

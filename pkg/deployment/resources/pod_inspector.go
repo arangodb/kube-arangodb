@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -85,8 +86,8 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
 				kubecli := r.context.GetKubeCli()
-				ignoreNotFound := false
-				if err := k8sutil.RemovePodFinalizers(log, kubecli, pod, pod.GetFinalizers(), ignoreNotFound); err != nil {
+				err := k8sutil.RemovePodFinalizers(ctx, log, kubecli, pod, pod.GetFinalizers(), false)
+				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
 					return errors.WithStack(err)
 				}
@@ -322,7 +323,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 	}
 
 	// Save status
-	if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+	if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return 0, errors.WithStack(err)
 	}
 

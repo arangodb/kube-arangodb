@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -28,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/rs/zerolog"
 )
 
@@ -58,12 +60,17 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
 		a.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
 	}
-	if invalid, err := isMemberJWTTokenInvalid(ctx, client.NewClient(c.Connection()), folder.Data, true); err != nil {
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection()), folder.Data, true); err != nil {
 		a.log.Warn().Err(err).Msg("Error while getting JWT Status")
 		return true, false, nil
 	} else if invalid {

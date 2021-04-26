@@ -51,7 +51,7 @@ type actionBootstrapUpdate struct {
 }
 
 func (a actionBootstrapUpdate) Start(ctx context.Context) (bool, error) {
-	if err := a.actionCtx.WithStatusUpdate(func(status *api.DeploymentStatus) bool {
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(status *api.DeploymentStatus) bool {
 		if errMessage, ok := a.action.GetParam("error"); ok {
 			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap failed", fmt.Sprintf("%s", errMessage))
 			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, false, "Bootstrap failed", fmt.Sprintf("%s", errMessage))

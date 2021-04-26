@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package resources
@@ -44,7 +45,7 @@ func min(a int, b int) int {
 }
 
 // EnsurePDBs ensures Pod Disruption Budgets for different server groups in Cluster mode
-func (r *Resources) EnsurePDBs() error {
+func (r *Resources) EnsurePDBs(ctx context.Context) error {
 
 	// Only in Cluster and Production Mode
 	spec := r.context.GetSpec()
@@ -65,19 +66,19 @@ func (r *Resources) EnsurePDBs() error {
 		}
 
 		// Ensure all PDBs as calculated
-		if err := r.ensurePDBForGroup(api.ServerGroupAgents, minAgents); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupAgents, minAgents); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(api.ServerGroupDBServers, minDBServers); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupDBServers, minDBServers); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(api.ServerGroupCoordinators, minCoordinators); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupCoordinators, minCoordinators); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(api.ServerGroupSyncMasters, minSyncMaster); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncMasters, minSyncMaster); err != nil {
 			return err
 		}
-		if err := r.ensurePDBForGroup(api.ServerGroupSyncWorkers, minSyncWorker); err != nil {
+		if err := r.ensurePDBForGroup(ctx, api.ServerGroupSyncWorkers, minSyncWorker); err != nil {
 			return err
 		}
 	}
@@ -105,23 +106,29 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 }
 
 // ensurePDBForGroup ensure pdb for a specific server group, if wantMinAvail is zero, the PDB is removed and not recreated
-func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int) error {
+func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
 	deplname := r.context.GetAPIObject().GetName()
 	pdbname := PDBNameForGroup(deplname, group)
 	pdbcli := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace())
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	for {
-		pdb, err := pdbcli.Get(context.Background(), pdbname, metav1.GetOptions{})
+		var pdb *policyv1beta1.PodDisruptionBudget
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			pdb, err = pdbcli.Get(ctxChild, pdbname, metav1.GetOptions{})
+			return err
+		})
 		if k8sutil.IsNotFound(err) {
 			if wantedMinAvail != 0 {
 				// No PDB found - create new
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
-				if _, err := pdbcli.Create(context.Background(), pdb, metav1.CreateOptions{}); err != nil {
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := pdbcli.Create(ctxChild, pdb, metav1.CreateOptions{})
+					return err
+				})
+				if err != nil {
 					log.Error().Err(err).Msg("failed to create PDB")
 					return errors.WithStack(err)
 				}
@@ -142,7 +149,10 @@ func (r *Resources) ensurePDBForGroup(group api.ServerGroup, wantedMinAvail int)
 			// Trigger deletion only if not already deleted
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
-				if err := pdbcli.Delete(context.Background(), pdbname, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					return pdbcli.Delete(ctxChild, pdbname, metav1.DeleteOptions{})
+				})
+				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")
 					return errors.WithStack(err)
 				}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package resources
@@ -29,7 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringTypedClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
@@ -39,17 +39,25 @@ import (
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
-	policyTyped "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
 )
 
-func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector) error {
+type PatchFunc func(name string, d []byte) error
+
+func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	kubecli := r.context.GetKubeCli()
 	monitoringcli := r.context.GetMonitoringV1Cli()
 
 	log.Info().Msgf("Ensuring annotations")
 
-	if err := ensureSecretsAnnotations(kubecli.CoreV1().Secrets(r.context.GetNamespace()),
+	patchSecret := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Secrets(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensureSecretsAnnotations(patchSecret,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -58,7 +66,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensureServiceAccountsAnnotations(kubecli.CoreV1().ServiceAccounts(r.context.GetNamespace()),
+	patchServiceAccount := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().ServiceAccounts(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensureServiceAccountsAnnotations(patchServiceAccount,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -67,7 +83,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensureServicesAnnotations(kubecli.CoreV1().Services(r.context.GetNamespace()),
+	patchService := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Services(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensureServicesAnnotations(patchService,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -76,7 +100,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensurePdbsAnnotations(kubecli.PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace()),
+	patchPDB := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensurePdbsAnnotations(patchPDB,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -85,7 +117,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensurePvcsAnnotations(kubecli.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()),
+	patchPVC := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().PersistentVolumeClaims(r.context.GetNamespace()).Patch(ctxChild, name,
+				types.JSONPatchType, d, meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensurePvcsAnnotations(patchPVC,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -94,7 +134,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensurePodsAnnotations(kubecli.CoreV1().Pods(r.context.GetNamespace()),
+	patchPod := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := kubecli.CoreV1().Pods(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensurePodsAnnotations(patchPod,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -104,7 +152,15 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 		return err
 	}
 
-	if err := ensureServiceMonitorsAnnotations(monitoringcli.ServiceMonitors(r.context.GetNamespace()),
+	patchServiceMonitor := func(name string, d []byte) error {
+		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			_, err := monitoringcli.ServiceMonitors(r.context.GetNamespace()).Patch(ctxChild, name, types.JSONPatchType, d,
+				meta.PatchOptions{})
+			return err
+		})
+	}
+
+	if err := ensureServiceMonitorsAnnotations(patchServiceMonitor,
 		cachedStatus,
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
@@ -116,12 +172,9 @@ func (r *Resources) EnsureAnnotations(cachedStatus inspectorInterface.Inspector)
 	return nil
 }
 
-func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensureSecretsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
-		ensureAnnotationsMap(secret.Kind, secret, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureAnnotationsMap(secret.Kind, secret, spec, patch)
 		return nil
 	}, func(secret *core.Secret) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, secret)
@@ -132,12 +185,9 @@ func ensureSecretsAnnotations(client typedCore.SecretInterface, cachedStatus ins
 	return nil
 }
 
-func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensureServiceAccountsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
-		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureAnnotationsMap(serviceAccount.Kind, serviceAccount, spec, patch)
 		return nil
 	}, func(serviceAccount *core.ServiceAccount) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceAccount)
@@ -148,12 +198,9 @@ func ensureServiceAccountsAnnotations(client typedCore.ServiceAccountInterface, 
 	return nil
 }
 
-func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensureServicesAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
-		ensureAnnotationsMap(service.Kind, service, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureAnnotationsMap(service.Kind, service, spec, patch)
 		return nil
 	}, func(service *core.Service) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, service)
@@ -164,12 +211,9 @@ func ensureServicesAnnotations(client typedCore.ServiceInterface, cachedStatus i
 	return nil
 }
 
-func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensurePdbsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(podDisruptionBudget *policy.PodDisruptionBudget) error {
-		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureAnnotationsMap(podDisruptionBudget.Kind, podDisruptionBudget, spec, patch)
 		return nil
 	}, func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, podDisruptionBudget)
@@ -180,12 +224,9 @@ func ensurePdbsAnnotations(client policyTyped.PodDisruptionBudgetInterface, cach
 	return nil
 }
 
-func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensurePvcsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
-		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureGroupAnnotationsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, spec, patch)
 		return nil
 	}, func(persistentVolumeClaim *core.PersistentVolumeClaim) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, persistentVolumeClaim)
@@ -196,12 +237,9 @@ func ensurePvcsAnnotations(client typedCore.PersistentVolumeClaimInterface, cach
 	return nil
 }
 
-func ensureServiceMonitorsAnnotations(client monitoringTypedClient.ServiceMonitorInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
+func ensureServiceMonitorsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
-		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureAnnotationsMap(serviceMonitor.Kind, serviceMonitor, spec, patch)
 		return nil
 	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, serviceMonitor)
@@ -226,12 +264,9 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 	return api.ServerGroupFromRole(group)
 }
 
-func ensurePodsAnnotations(client typedCore.PodInterface, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
+func ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
-		ensureGroupAnnotationsMap(pod.Kind, pod, spec, func(name string, d []byte) error {
-			_, err := client.Patch(context.Background(), name, types.JSONPatchType, d, meta.PatchOptions{})
-			return err
-		})
+		ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
 		return nil
 	}, func(pod *core.Pod) bool {
 		return k8sutil.IsChildResource(kind, name, namespace, pod)
@@ -292,8 +327,7 @@ func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.Deployment
 	return ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
 }
 
-func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
-	patchCmd func(name string, d []byte) error) bool {
+func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec, patchCmd PatchFunc) bool {
 	expected := spec.Annotations
 	ignored := spec.AnnotationsIgnoreList
 
@@ -305,7 +339,7 @@ func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 func ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,
 	expected, actual map[string]string,
 	patchGetter func(mode api.LabelsMode, expected map[string]string, actual map[string]string, ignored ...string) patch.Patch,
-	patchCmd func(name string, d []byte) error,
+	patchCmd PatchFunc,
 	ignored ...string) bool {
 	p := patchGetter(mode, expected, actual, ignored...)
 

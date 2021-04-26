@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/go-driver"
 
@@ -68,17 +71,23 @@ func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 	id := driver.ServerID(a.MemberID())
 
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.Cluster(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
 		return err
 	}
 
-	health, err := cluster.Health(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	health, err := cluster.Health(ctxChild)
 	if err != nil {
 		return err
 	}
@@ -87,9 +96,7 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 		return nil
 	}
 
-	if err := cluster.RemoveServer(ctx, id); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return cluster.RemoveServer(ctxChild, id)
+	})
 }

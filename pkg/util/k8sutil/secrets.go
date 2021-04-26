@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package k8sutil
@@ -88,8 +89,8 @@ func CreateEncryptionKeySecret(secrets SecretInterface, secretName string, key [
 
 // ValidateCACertificateSecret checks that a secret with given name in given namespace
 // exists and it contains a 'ca.crt' data field.
-func ValidateCACertificateSecret(secrets SecretInterface, secretName string) error {
-	s, err := secrets.Get(context.Background(), secretName, meta.GetOptions{})
+func ValidateCACertificateSecret(ctx context.Context, secrets SecretInterface, secretName string) error {
+	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -106,8 +107,11 @@ func ValidateCACertificateSecret(secrets SecretInterface, secretName string) err
 // If the secret does not exists the field is missing,
 // an error is returned.
 // Returns: certificate, error
-func GetCACertficateSecret(secrets SecretInterface, secretName string) (string, error) {
-	s, err := secrets.Get(context.Background(), secretName, meta.GetOptions{})
+func GetCACertficateSecret(ctx context.Context, secrets SecretInterface, secretName string) (string, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
+
+	s, err := secrets.Get(ctxChild, secretName, meta.GetOptions{})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -124,8 +128,9 @@ func GetCACertficateSecret(secrets SecretInterface, secretName string) (string, 
 // If the secret does not exists or one of the fields is missing,
 // an error is returned.
 // Returns: certificate, private-key, isOwnedByDeployment, error
-func GetCASecret(secrets SecretInterface, secretName string, ownerRef *meta.OwnerReference) (string, string, bool, error) {
-	s, err := secrets.Get(context.Background(), secretName, meta.GetOptions{})
+func GetCASecret(ctx context.Context, secrets SecretInterface, secretName string,
+	ownerRef *meta.OwnerReference) (string, string, bool, error) {
+	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
 	if err != nil {
 		return "", "", false, errors.WithStack(err)
 	}
@@ -155,7 +160,8 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 }
 
 // CreateCASecret creates a secret used to store a PEM encoded CA certificate & private key.
-func CreateCASecret(secrets SecretInterface, secretName string, certificate, key string, ownerRef *meta.OwnerReference) error {
+func CreateCASecret(ctx context.Context, secrets SecretInterface, secretName string, certificate, key string,
+	ownerRef *meta.OwnerReference) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -168,7 +174,7 @@ func CreateCASecret(secrets SecretInterface, secretName string, certificate, key
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
+	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}
@@ -197,7 +203,8 @@ func GetTLSKeyfileFromSecret(s *core.Secret) (string, error) {
 
 // CreateTLSKeyfileSecret creates a secret used to store a PEM encoded keyfile
 // in the format ArangoDB accepts it for its `--ssl.keyfile` option.
-func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile string, ownerRef *meta.OwnerReference) error {
+func CreateTLSKeyfileSecret(ctx context.Context, secrets SecretInterface, secretName string, keyfile string,
+	ownerRef *meta.OwnerReference) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -209,7 +216,7 @@ func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile 
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
+	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}
@@ -218,8 +225,8 @@ func CreateTLSKeyfileSecret(secrets SecretInterface, secretName string, keyfile 
 
 // ValidateTokenSecret checks that a secret with given name in given namespace
 // exists and it contains a 'token' data field.
-func ValidateTokenSecret(secrets SecretInterface, secretName string) error {
-	s, err := secrets.Get(context.Background(), secretName, meta.GetOptions{})
+func ValidateTokenSecret(ctx context.Context, secrets SecretInterface, secretName string) error {
+	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -236,8 +243,8 @@ func ValidateTokenFromSecret(s *core.Secret) error {
 }
 
 // GetTokenSecret loads the token secret from a Secret with given name.
-func GetTokenSecret(secrets SecretInterface, secretName string) (string, error) {
-	s, err := secrets.Get(context.Background(), secretName, meta.GetOptions{})
+func GetTokenSecret(ctx context.Context, secrets SecretInterface, secretName string) (string, error) {
+	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -256,7 +263,8 @@ func GetTokenFromSecret(s *core.Secret) (string, error) {
 
 // CreateTokenSecret creates a secret with given name in given namespace
 // with a given token as value.
-func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerRef *meta.OwnerReference) error {
+func CreateTokenSecret(ctx context.Context, secrets SecretInterface, secretName, token string,
+	ownerRef *meta.OwnerReference) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -268,7 +276,7 @@ func CreateTokenSecret(secrets SecretInterface, secretName, token string, ownerR
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
+	if _, err := secrets.Create(ctx, secret, meta.CreateOptions{}); err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}
@@ -292,8 +300,10 @@ func CreateJWTTokenFromSecret(secret string, claims map[string]interface{}) (str
 
 // CreateJWTFromSecret creates a JWT using the secret stored in secretSecretName and stores the
 // result in a new secret called tokenSecretName
-func CreateJWTFromSecret(secrets SecretInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
-	secret, err := GetTokenSecret(secrets, secretSecretName)
+func CreateJWTFromSecret(ctx context.Context, secrets SecretInterface, tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
+	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
+	secret, err := GetTokenSecret(ctxChild, secrets, secretSecretName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -307,12 +317,15 @@ func CreateJWTFromSecret(secrets SecretInterface, tokenSecretName, secretSecretN
 		return errors.WithStack(err)
 	}
 
-	return CreateTokenSecret(secrets, tokenSecretName, signedToken, ownerRef)
+	return RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return CreateTokenSecret(ctxChild, secrets, tokenSecretName, signedToken, ownerRef)
+	})
 }
 
 // CreateBasicAuthSecret creates a secret with given name in given namespace
 // with a given username and password as value.
-func CreateBasicAuthSecret(secrets SecretInterface, secretName, username, password string, ownerRef *meta.OwnerReference) error {
+func CreateBasicAuthSecret(ctx context.Context, secrets SecretInterface, secretName, username, password string,
+	ownerRef *meta.OwnerReference) error {
 	// Create secret
 	secret := &core.Secret{
 		ObjectMeta: meta.ObjectMeta{
@@ -325,7 +338,11 @@ func CreateBasicAuthSecret(secrets SecretInterface, secretName, username, passwo
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
+	err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
+		return err
+	})
+	if err != nil {
 		// Failed to create secret
 		return errors.WithStack(err)
 	}

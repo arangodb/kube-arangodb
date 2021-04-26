@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -45,7 +47,8 @@ const (
 
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.TLSSpec, deploymentName string, ownerRef *metav1.OwnerReference) error {
+func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.TLSSpec,
+	deploymentName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
 
 	options := certificates.CreateCertificateOptions{
@@ -60,7 +63,7 @@ func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface,
 		log.Debug().Err(err).Msg("Failed to create CA certificate")
 		return errors.WithStack(err)
 	}
-	if err := k8sutil.CreateCASecret(secrets, spec.GetCASecretName(), cert, priv, ownerRef); err != nil {
+	if err := k8sutil.CreateCASecret(ctx, secrets, spec.GetCASecretName(), cert, priv, ownerRef); err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("CA Secret already exists")
 		} else {
@@ -74,7 +77,7 @@ func createTLSCACertificate(log zerolog.Logger, secrets k8sutil.SecretInterface,
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec,
+func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec,
 	secretName string, ownerRef *metav1.OwnerReference) error {
 
 	log = log.With().Str("secret", secretName).Logger()
@@ -86,7 +89,9 @@ func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, 
 	}
 
 	// Load CA certificate
-	caCert, caKey, _, err := k8sutil.GetCASecret(secrets, spec.GetCASecretName(), nil)
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, spec.GetCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
 		return errors.WithStack(err)
@@ -113,7 +118,11 @@ func createTLSServerCertificate(log zerolog.Logger, secrets v1.SecretInterface, 
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
-	if err := k8sutil.CreateTLSKeyfileSecret(secrets, secretName, keyfile, ownerRef); err != nil {
+
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef)
+	})
+	if err != nil {
 		if k8sutil.IsAlreadyExists(err) {
 			log.Debug().Msg("Server Secret already exists")
 		} else {

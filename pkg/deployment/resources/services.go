@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
@@ -49,7 +50,7 @@ var (
 )
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	start := time.Now()
 	kubecli := r.context.GetKubeCli()
@@ -99,7 +100,11 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 					},
 				}
 
-				if _, err := svcs.Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					_, err := svcs.Create(ctxChild, s, metav1.CreateOptions{})
+					return err
+				})
+				if err != nil {
 					if !k8sutil.IsConflict(err) {
 						return err
 					}
@@ -124,7 +129,11 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
 					s.Spec = *spec
 
-					if _, err := svcs.Update(context.Background(), s, metav1.UpdateOptions{}); err != nil {
+					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						_, err := svcs.Update(ctxChild, s, metav1.UpdateOptions{})
+						return err
+					})
+					if err != nil {
 						return err
 					}
 
@@ -141,7 +150,9 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 	// Headless service
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
-		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(svcs, apiObject, owner)
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create headless service")
 			return errors.WithStack(err)
@@ -155,7 +166,9 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 	single := spec.GetMode().HasSingleServers()
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
-		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(svcs, apiObject, single, owner)
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, owner)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client service")
 			return errors.WithStack(err)
@@ -167,7 +180,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 			status, lastVersion := r.context.GetStatus()
 			if status.ServiceName != svcName {
 				status.ServiceName = svcName
-				if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+				if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 					return errors.WithStack(err)
 				}
 			}
@@ -180,7 +193,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(cachedStatus, svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
+	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -189,20 +202,22 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(cachedStatus, svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
+		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
 			return errors.WithStack(err)
 		}
 		status, lastVersion := r.context.GetStatus()
 		if status.SyncServiceName != eaServiceName {
 			status.SyncServiceName = eaServiceName
-			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 				return errors.WithStack(err)
 			}
 		}
 	}
 
 	if spec.Metrics.IsEnabled() {
-		name, _, err := k8sutil.CreateExporterService(cachedStatus, svcs, apiObject, apiObject.AsOwner())
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, svcs, apiObject, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
@@ -210,7 +225,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 		status, lastVersion := r.context.GetStatus()
 		if status.ExporterServiceName != name {
 			status.ExporterServiceName = name
-			if err := r.context.UpdateStatus(status, lastVersion); err != nil {
+			if err := r.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -219,7 +234,7 @@ func (r *Resources) EnsureServices(cachedStatus inspectorInterface.Inspector) er
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
+func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false
@@ -275,7 +290,11 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 			}
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
-			if _, err := svcs.Update(context.Background(), existing, metav1.UpdateOptions{}); err != nil {
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				_, err := svcs.Update(ctxChild, existing, metav1.UpdateOptions{})
+				return err
+			})
+			if err != nil {
 				log.Debug().Err(err).Msgf("Failed to update %s external access service", title)
 				return errors.WithStack(err)
 			}
@@ -289,7 +308,10 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		if err := svcs.Delete(context.Background(), eaServiceName, metav1.DeleteOptions{}); err != nil {
+		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return svcs.Delete(ctxChild, eaServiceName, metav1.DeleteOptions{})
+		})
+		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to remove %s external access service", title)
 			return errors.WithStack(err)
 		}
@@ -299,7 +321,9 @@ func (r *Resources) ensureExternalAccessServices(cachedStatus inspectorInterface
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
-		_, newlyCreated, err := k8sutil.CreateExternalAccessService(svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
+		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		defer cancel()
+		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
 		if err != nil {
 			log.Debug().Err(err).Msgf("Failed to create %s external access service", title)
 			return errors.WithStack(err)

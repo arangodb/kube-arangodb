@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,7 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	core "k8s.io/api/core/v1"
 
@@ -269,7 +271,7 @@ func areEncryptionKeysUpToDate(ctx context.Context,
 func isEncryptionKeyUpToDate(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext,
 	group api.ServerGroup, m api.MemberStatus,
 	folder *core.Secret) (updateRequired bool, failed bool) {
 	if m.Phase != api.MemberPhaseCreated {
@@ -282,7 +284,9 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 
 	mlog := log.With().Str("group", group.AsRole()).Str("member", m.ID).Logger()
 
-	c, err := context.GetServerClient(ctx, group, m.ID)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
 	if err != nil {
 		mlog.Warn().Err(err).Msg("Unable to get client")
 		return false, true
@@ -290,7 +294,9 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 
 	client := client.NewClient(c.Connection())
 
-	e, err := client.GetEncryption(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	e, err := client.GetEncryption(ctxChild)
 	if err != nil {
 		mlog.Error().Err(err).Msgf("Unable to fetch encryption keys")
 		return false, true

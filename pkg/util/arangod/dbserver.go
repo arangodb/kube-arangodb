@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package arangod
@@ -36,16 +37,28 @@ import (
 // The functions returns an error when the check could not be completed or the dbserver
 // is not empty, or nil when the dbserver is found to be empty.
 func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error {
-	c, err := client.Cluster(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
+	c, err := client.Cluster(ctxChild)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Cannot obtain Cluster"))
 	}
-	dbs, err := client.Databases(ctx)
+
+	ctxChild, cancel = context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
+	dbs, err := client.Databases(ctxChild)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Cannot fetch databases"))
 	}
+
+	var inventory driver.DatabaseInventory
 	for _, db := range dbs {
-		inventory, err := c.DatabaseInventory(ctx, db)
+		err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			inventory, err = c.DatabaseInventory(ctxChild, db)
+
+			return err
+		})
 		if err != nil {
 			return errors.WithStack(errors.Wrapf(err, "Cannot fetch inventory for %s", db.Name()))
 		}

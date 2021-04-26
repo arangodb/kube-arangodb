@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/rs/zerolog"
 )
 
@@ -68,13 +70,17 @@ func (t *tlsSNIUpdate) CheckProgress(ctx context.Context) (bool, bool, error) {
 		return true, false, nil
 	}
 
-	c, err := t.actionCtx.GetServerClient(ctx, t.action.Group, t.action.MemberID)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := t.actionCtx.GetServerClient(ctxChild, t.action.Group, t.action.MemberID)
 	if err != nil {
 		t.log.Warn().Err(err).Msg("Unable to get client")
 		return true, false, nil
 	}
 
-	if ok, err := compareTLSSNIConfig(ctx, c.Connection(), fetchedSecrets, true); err != nil {
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	if ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, true); err != nil {
 		t.log.Warn().Err(err).Msg("Unable to compare TLS config")
 		return true, false, nil
 	} else {

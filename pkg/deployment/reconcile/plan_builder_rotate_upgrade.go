@@ -58,7 +58,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, cachedStatus, context)
+	newPlan, idle := createRotateOrUpgradePlanInternal(ctx, log, apiObject, spec, status, cachedStatus, context)
 	if idle {
 		plan = append(plan,
 			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
@@ -68,7 +68,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	return plan
 }
 
-func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (api.Plan, bool) {
 
 	var newPlan api.Plan
@@ -116,7 +116,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Use new level of rotate logic
-				rotNeeded, reason := podNeedsRotation(log, pod, apiObject, spec, group, status, m, cachedStatus, context)
+				rotNeeded, reason := podNeedsRotation(ctx, log, pod, apiObject, spec, group, status, m, cachedStatus, context)
 				if rotNeeded {
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
@@ -283,9 +283,9 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+func podNeedsRotation(ctx context.Context, log zerolog.Logger, p *core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (bool, string) {
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (bool, string) {
 	if m.PodUID != p.UID {
 		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
 	}
@@ -294,7 +294,7 @@ func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, 
 		return true, "Pod Spec Version is nil - recreating pod"
 	}
 
-	imageInfo, imageFound := context.SelectImage(spec, status)
+	imageInfo, imageFound := planCtx.SelectImage(spec, status)
 	if !imageFound {
 		// Image is not found, so rotation is not needed
 		return false, ""
@@ -306,7 +306,7 @@ func podNeedsRotation(log zerolog.Logger, p *core.Pod, apiObject metav1.Object, 
 
 	groupSpec := spec.GetServerGroupSpec(group)
 
-	renderedPod, err := context.RenderPodForMember(cachedStatus, spec, status, m.ID, imageInfo)
+	renderedPod, err := planCtx.RenderPodForMember(ctx, cachedStatus, spec, status, m.ID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
 		return false, ""

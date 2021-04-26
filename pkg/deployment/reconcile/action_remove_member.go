@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -68,11 +69,16 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	// For safety, remove from cluster
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
-		client, err := a.actionCtx.GetDatabaseClient(ctx)
+		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 		if err != nil {
 			return false, errors.WithStack(err)
 		}
-		if err := arangod.RemoveServerFromCluster(ctx, client.Connection(), driver.ServerID(m.ID)); err != nil {
+
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {
 				a.log.Err(err).Str("member-id", m.ID).Msgf("Failed to remove server from cluster")
 				// ignore this error, maybe all coordinators are failed and no connction to cluster is possible
@@ -100,17 +106,17 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 		}
 	}
 	// Remove the pod (if any)
-	if err := a.actionCtx.DeletePod(m.PodName); err != nil {
+	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 		return false, errors.WithStack(err)
 	}
 	// Remove the pvc (if any)
 	if m.PersistentVolumeClaimName != "" {
-		if err := a.actionCtx.DeletePvc(m.PersistentVolumeClaimName); err != nil {
+		if err := a.actionCtx.DeletePvc(ctx, m.PersistentVolumeClaimName); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
 	// Remove member
-	if err := a.actionCtx.RemoveMemberByID(a.action.MemberID); err != nil {
+	if err := a.actionCtx.RemoveMemberByID(ctx, a.action.MemberID); err != nil {
 		return false, errors.WithStack(err)
 	}
 	// Check that member has been removed

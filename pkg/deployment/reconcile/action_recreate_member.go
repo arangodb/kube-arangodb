@@ -66,7 +66,7 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		return false, errors.Newf("expecting member to be present in list, but it is not")
 	}
 
-	_, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	_, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
 	if err != nil {
 		if kubeErrors.IsNotFound(err) {
 			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
@@ -80,7 +80,7 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		m.Phase = api.MemberPhaseNone
 	}
 
-	if err = a.actionCtx.UpdateMember(m); err != nil {
+	if err = a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 

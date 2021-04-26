@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -80,14 +81,14 @@ func (ci *clusterScalingIntegration) SendUpdateToCluster(spec api.DeploymentSpec
 
 // checkScalingCluster checks if inspection
 // returns true if inspection occurred
-func (ci *clusterScalingIntegration) checkScalingCluster(expectSuccess bool) bool {
+func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, expectSuccess bool) bool {
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
 
 	if !ci.scaleEnabled.enabled {
 		// Check if it is possible to turn on scaling without any issue
 		status, _ := ci.depl.GetStatus()
-		if status.Plan.IsEmpty() && ci.setNumberOfServers() == nil {
+		if status.Plan.IsEmpty() && ci.setNumberOfServers(ctx) == nil {
 			// Scaling should be enabled because there is no Plan.
 			// It can happen when the enabling action fails
 			ci.scaleEnabled.enabled = true
@@ -100,8 +101,6 @@ func (ci *clusterScalingIntegration) checkScalingCluster(expectSuccess bool) boo
 	}
 
 	// Update cluster with our state
-	ctx := context.Background()
-	//expectSuccess := *goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
 	safeToAskCluster, err := ci.updateClusterServerCount(ctx, expectSuccess)
 	if err != nil {
 		if expectSuccess {
@@ -124,10 +123,13 @@ func (ci *clusterScalingIntegration) checkScalingCluster(expectSuccess bool) boo
 func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct{}) {
 	start := time.Now()
 	goodInspections := 0
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for {
 		expectSuccess := goodInspections > 0 || time.Since(start) > maxClusterBootstrapTime
 
-		if ci.checkScalingCluster(expectSuccess) {
+		if ci.checkScalingCluster(ctx, expectSuccess) {
 			goodInspections++
 		}
 
@@ -144,11 +146,17 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 // Perform a single inspection of the cluster
 func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectSuccess bool) error {
 	log := ci.log
-	c, err := ci.depl.clientCache.GetDatabase(ctx)
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	req, err := arangod.GetNumberOfServers(ctx, c.Connection())
+
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
 		if expectSuccess {
 			log.Debug().Err(err).Msg("Failed to get number of servers")
@@ -191,7 +199,9 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	}
 	// Let's update the spec
 	apiObject := ci.depl.apiObject
-	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(context.Background(), apiObject.Name, metav1.GetOptions{})
+	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -211,7 +221,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 		// Restore original spec in cluster
 		ci.SendUpdateToCluster(current.Spec)
 	} else {
-		if err := ci.depl.updateCRSpec(*newSpec); err != nil {
+		if err := ci.depl.updateCRSpec(ctx, *newSpec); err != nil {
 			log.Warn().Err(err).Msg("Failed to update current deployment")
 			return errors.WithStack(err)
 		}
@@ -288,12 +298,11 @@ func (ci *clusterScalingIntegration) GetLastNumberOfServers() arangod.NumberOfSe
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators
-func (ci *clusterScalingIntegration) DisableScalingCluster() error {
+func (ci *clusterScalingIntegration) DisableScalingCluster(ctx context.Context) error {
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
 
 	// Turn off scaling DBservers and coordinators in arangoDB for the UI
-	ctx := context.Background()
 	if err := ci.depl.SetNumberOfServers(ctx, nil, nil); err != nil {
 		return errors.WithStack(err)
 	}
@@ -303,7 +312,7 @@ func (ci *clusterScalingIntegration) DisableScalingCluster() error {
 }
 
 // EnableScalingCluster enables scaling DBservers and coordinators
-func (ci *clusterScalingIntegration) EnableScalingCluster() error {
+func (ci *clusterScalingIntegration) EnableScalingCluster(ctx context.Context) error {
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
 
@@ -311,15 +320,14 @@ func (ci *clusterScalingIntegration) EnableScalingCluster() error {
 		return nil
 	}
 
-	if err := ci.setNumberOfServers(); err != nil {
+	if err := ci.setNumberOfServers(ctx); err != nil {
 		return errors.WithStack(err)
 	}
 	ci.scaleEnabled.enabled = true
 	return nil
 }
 
-func (ci *clusterScalingIntegration) setNumberOfServers() error {
-	ctx := context.Background()
+func (ci *clusterScalingIntegration) setNumberOfServers(ctx context.Context) error {
 	spec := ci.depl.GetSpec()
 	numOfCoordinators := spec.Coordinators.GetCount()
 	numOfDBServers := spec.DBServers.GetCount()

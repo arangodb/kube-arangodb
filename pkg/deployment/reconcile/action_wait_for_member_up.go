@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
@@ -75,22 +77,26 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		a.log.Debug().Msg("Member in failed phase")
 		return true, false, nil
 	}
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+
 	if a.action.Group.IsArangosync() {
-		return a.checkProgressArangoSync(ctx)
+		return a.checkProgressArangoSync(ctxChild)
 	}
 	switch a.actionCtx.GetMode() {
 	case api.DeploymentModeSingle:
-		return a.checkProgressSingle(ctx)
+		return a.checkProgressSingle(ctxChild)
 	case api.DeploymentModeActiveFailover:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctx)
+			return a.checkProgressAgent(ctxChild)
 		}
-		return a.checkProgressSingleInActiveFailover(ctx)
+		return a.checkProgressSingleInActiveFailover(ctxChild)
 	default:
 		if a.action.Group == api.ServerGroupAgents {
-			return a.checkProgressAgent(ctx)
+			return a.checkProgressAgent(ctxChild)
 		}
-		return a.checkProgressCluster(ctx)
+		return a.checkProgressCluster(ctxChild)
 	}
 }
 
@@ -98,6 +104,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 // of a single server.
 func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, bool, error) {
 	log := a.log
+
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")

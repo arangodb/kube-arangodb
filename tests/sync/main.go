@@ -143,7 +143,7 @@ func newArangoSyncTestJob(ns, name string) *batchv1.Job {
 
 func waitForSyncDeploymentReady(ctx context.Context, ns, name string, kubecli kubernetes.Interface, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		deployment, err := c.DatabaseV1().ArangoDeployments(ns).Get(name, metav1.GetOptions{})
+		deployment, err := c.DatabaseV1().ArangoDeployments(ns).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -420,7 +420,7 @@ func mustNewArangoDBSyncClient(ctx context.Context, kubecli kubernetes.Interface
 	ns := deployment.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := deployment.Spec.Sync.Authentication.GetJWTSecretName()
-	jwtSecret, err := k8sutil.GetTokenSecret(secrets, secretName)
+	jwtSecret, err := k8sutil.GetTokenSecret(ctx, secrets, secretName)
 	if err != nil {
 		return nil, err
 	}

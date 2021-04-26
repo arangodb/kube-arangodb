@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -70,7 +71,7 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
-func (c *testContext) GetPod(podName string) (*core.Pod, error) {
+func (c *testContext) GetPod(_ context.Context, podName string) (*core.Pod, error) {
 	if c.ErrPods != nil {
 		return nil, c.ErrPods
 	}
@@ -90,7 +91,7 @@ func (c *testContext) GetAuthentication() conn.Auth {
 	}
 }
 
-func (c *testContext) RenderPodForMember(cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+func (c *testContext) RenderPodForMember(_ context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	panic("implement me")
 }
 
@@ -98,7 +99,7 @@ func (c *testContext) GetName() string {
 	panic("implement me")
 }
 
-func (c *testContext) GetBackup(backup string) (*backupApi.ArangoBackup, error) {
+func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.ArangoBackup, error) {
 	panic("implement me")
 }
 
@@ -106,7 +107,7 @@ func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
 	panic("implement me")
 }
 
-func (c *testContext) WithStatusUpdate(action func(s *api.DeploymentStatus) bool, force ...bool) error {
+func (c *testContext) WithStatusUpdate(_ context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
 	panic("implement me")
 }
 
@@ -114,7 +115,7 @@ func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.Deployment
 	panic("implement me")
 }
 
-func (c *testContext) UpdatePvc(pvc *core.PersistentVolumeClaim) error {
+func (c *testContext) UpdatePvc(_ context.Context, pvc *core.PersistentVolumeClaim) error {
 	panic("implement me")
 }
 
@@ -137,12 +138,12 @@ func (c *testContext) GetSpec() api.DeploymentSpec {
 	return c.ArangoDeployment.Spec
 }
 
-func (c *testContext) UpdateStatus(status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+func (c *testContext) UpdateStatus(_ context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
 	c.ArangoDeployment.Status = status
 	return nil
 }
 
-func (c *testContext) UpdateMember(member api.MemberStatus) error {
+func (c *testContext) UpdateMember(_ context.Context, member api.MemberStatus) error {
 	panic("implement me")
 }
 
@@ -166,23 +167,23 @@ func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerG
 	panic("implement me")
 }
 
-func (c *testContext) CreateMember(group api.ServerGroup, id string) (string, error) {
+func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string) (string, error) {
 	panic("implement me")
 }
 
-func (c *testContext) DeletePod(podName string) error {
+func (c *testContext) DeletePod(_ context.Context, podName string) error {
 	panic("implement me")
 }
 
-func (c *testContext) DeletePvc(pvcName string) error {
+func (c *testContext) DeletePvc(_ context.Context, pvcName string) error {
 	panic("implement me")
 }
 
-func (c *testContext) RemovePodFinalizers(podName string) error {
+func (c *testContext) RemovePodFinalizers(_ context.Context, podName string) error {
 	panic("implement me")
 }
 
-func (c *testContext) GetOwnedPods() ([]core.Pod, error) {
+func (c *testContext) GetOwnedPods(_ context.Context) ([]core.Pod, error) {
 	if c.ErrPods != nil {
 		return nil, c.ErrPods
 	}
@@ -193,7 +194,7 @@ func (c *testContext) GetOwnedPods() ([]core.Pod, error) {
 	return c.Pods, c.ErrPods
 }
 
-func (c *testContext) DeleteTLSKeyfile(group api.ServerGroup, member api.MemberStatus) error {
+func (c *testContext) DeleteTLSKeyfile(_ context.Context, group api.ServerGroup, member api.MemberStatus) error {
 	panic("implement me")
 }
 
@@ -205,11 +206,11 @@ func (c *testContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
 	panic("implement me")
 }
 
-func (c *testContext) DisableScalingCluster() error {
+func (c *testContext) DisableScalingCluster(_ context.Context) error {
 	panic("implement me")
 }
 
-func (c *testContext) EnableScalingCluster() error {
+func (c *testContext) EnableScalingCluster(_ context.Context) error {
 	panic("implement me")
 }
 
@@ -232,7 +233,7 @@ func (c *testContext) CreateEvent(evt *k8sutil.Event) {
 }
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
-func (c *testContext) GetPvc(pvcName string) (*core.PersistentVolumeClaim, error) {
+func (c *testContext) GetPvc(_ context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
 	return c.PVC, c.PVCErr
 }
 

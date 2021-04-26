@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -68,7 +69,9 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get client")
 		return true, errors.WithStack(err)
@@ -76,14 +79,18 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 	switch group {
 	case api.ServerGroupDBServers:
-		cluster, err := client.Cluster(ctx)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		cluster, err := client.Cluster(ctxChild)
 		if err != nil {
 			log.Error().Err(err).Msgf("Unable to get cluster client")
 			return true, errors.WithStack(err)
 		}
 
 		var jobID string
-		jobCtx := driver.WithJobIDResponse(ctx, &jobID)
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
 		log.Debug().Msg("Temporary shutdown, resign leadership")
 		if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
 			log.Debug().Err(err).Msg("Failed to resign server")
@@ -92,7 +99,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 		m.CleanoutJobID = jobID
 
-		if err := a.actionCtx.UpdateMember(m); err != nil {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return true, errors.WithStack(err)
 		}
 
@@ -112,19 +119,25 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	agency, err := a.actionCtx.GetAgency(ctx)
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	agency, err := a.actionCtx.GetAgency(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency client")
 		return false, false, errors.WithStack(err)
 	}
 
-	c, err := a.actionCtx.GetDatabaseClient(ctx)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return false, false, errors.WithStack(err)
 	}
 
-	jobStatus, err := arangod.CleanoutServerJobStatus(ctx, m.CleanoutJobID, c, agency)
+	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
 	if err != nil {
 		if driver.IsNotFound(err) {
 			log.Debug().Err(err).Msg("Job not found, but proceeding")
@@ -136,7 +149,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 
 	if jobStatus.IsFailed() {
 		m.CleanoutJobID = ""
-		if err := a.actionCtx.UpdateMember(m); err != nil {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		log.Error().Msg("Resign server job failed")
@@ -145,7 +158,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 
 	if jobStatus.IsFinished() {
 		m.CleanoutJobID = ""
-		if err := a.actionCtx.UpdateMember(m); err != nil {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil

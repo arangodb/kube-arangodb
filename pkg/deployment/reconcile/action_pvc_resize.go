@@ -71,7 +71,7 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	pvc, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return true, nil
@@ -92,14 +92,14 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 			cmp := volumeSize.Cmp(requestedSize)
 			if cmp < 0 {
 				pvc.Spec.Resources.Requests[core.ResourceStorage] = requestedSize
-				if err := a.actionCtx.UpdatePvc(pvc); err != nil {
+				if err := a.actionCtx.UpdatePvc(ctx, pvc); err != nil {
 					return false, err
 				}
 
 				return false, nil
 			} else if cmp > 0 {
 				if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers {
-					if err := a.actionCtx.WithStatusUpdate(func(s *api.DeploymentStatus) bool {
+					if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 						s.Plan = append(s.Plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
 						return true
 					}); err != nil {
@@ -129,7 +129,7 @@ func (a *actionPVCResize) CheckProgress(ctx context.Context) (bool, bool, error)
 		return true, false, nil
 	}
 
-	pvc, err := a.actionCtx.GetPvc(m.PersistentVolumeClaimName)
+	pvc, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return true, false, nil

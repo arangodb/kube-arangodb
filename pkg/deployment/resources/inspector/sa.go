@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
@@ -75,8 +78,8 @@ func (i *inspector) ServiceAccount(name string) (*core.ServiceAccount, bool) {
 	return serviceAccount, true
 }
 
-func serviceAccountsToMap(k kubernetes.Interface, namespace string) (map[string]*core.ServiceAccount, error) {
-	serviceAccounts, err := getServiceAccounts(k, namespace, "")
+func serviceAccountsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.ServiceAccount, error) {
+	serviceAccounts, err := getServiceAccounts(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +102,10 @@ func serviceAccountPointer(serviceAccount core.ServiceAccount) *core.ServiceAcco
 	return &serviceAccount
 }
 
-func getServiceAccounts(k kubernetes.Interface, namespace, cont string) ([]core.ServiceAccount, error) {
-	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(context.Background(), meta.ListOptions{
+func getServiceAccounts(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.ServiceAccount, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	serviceAccounts, err := k.CoreV1().ServiceAccounts(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
@@ -110,7 +115,7 @@ func getServiceAccounts(k kubernetes.Interface, namespace, cont string) ([]core.
 	}
 
 	if serviceAccounts.Continue != "" {
-		nextServiceAccountsLayer, err := getServiceAccounts(k, namespace, serviceAccounts.Continue)
+		nextServiceAccountsLayer, err := getServiceAccounts(ctx, k, namespace, serviceAccounts.Continue)
 		if err != nil {
 			return nil, err
 		}

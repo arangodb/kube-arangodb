@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package reconcile
@@ -26,6 +27,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
@@ -60,23 +62,25 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
-	if err := s.actionCtx.RemovePodFinalizers(m.PodName); err != nil {
+	if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
 		return false, errors.WithStack(err)
 	}
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
-		c, err := s.actionCtx.GetServerClient(ctx, group, s.action.MemberID)
+		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create member client")
 			return false, errors.WithStack(err)
 		}
 		removeFromCluster := false
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
-		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
-		if err := c.Shutdown(ctx, removeFromCluster); err != nil {
+		if err := c.Shutdown(ctxChild, removeFromCluster); err != nil {
 			// Shutdown failed. Let's check if we're already done
-			if ready, _, err := s.CheckProgress(ctx); err == nil && ready {
+			if ready, _, err := s.CheckProgress(ctxChild); err == nil && ready {
 				// We're done
 				return true, nil
 			}
@@ -85,7 +89,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
-		if err := s.actionCtx.DeletePod(m.PodName); err != nil {
+		if err := s.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -127,7 +131,7 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 	}
 
 	// Terminate pod
-	if err := s.actionCtx.DeletePod(m.PodName); err != nil {
+	if err := s.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, errors.WithStack(err)
 		}
@@ -153,7 +157,7 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 	}
 
 	if m.PodName != "" {
-		if _, err := s.actionCtx.GetPod(m.PodName); err == nil {
+		if _, err := s.actionCtx.GetPod(ctx, m.PodName); err == nil {
 			log.Warn().Msgf("Pod still exists")
 			return false, false, nil
 		} else if !k8sutil.IsNotFound(err) {

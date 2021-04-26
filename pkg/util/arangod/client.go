@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package arangod
@@ -48,6 +49,36 @@ type (
 	// requireAuthenticationKey is the context key used to indicate that authentication is required
 	requireAuthenticationKey struct{}
 )
+
+type TimeoutRunFunc k8sutil.TimeoutRunFunc
+
+const (
+	minArangoDDefaultTimeout = time.Second * 10
+)
+
+var requestTimeout = minArangoDDefaultTimeout
+
+// GetRequestTimeout gets request timeout for one call to kubernetes.
+func GetRequestTimeout() time.Duration {
+	return requestTimeout
+}
+
+// RunWithTimeout runs the function with the provided timeout or with default timeout.
+func RunWithTimeout(ctx context.Context, run TimeoutRunFunc, timeout ...time.Duration) error {
+	t := GetRequestTimeout()
+	if len(timeout) > 0 {
+		t = timeout[0]
+	}
+
+	return k8sutil.RunWithTimeout(ctx, k8sutil.TimeoutRunFunc(run), t)
+}
+
+// SetRequestTimeout sets request timeout for one call to kubernetes.
+func SetRequestTimeout(timeout time.Duration) {
+	if timeout > minArangoDDefaultTimeout {
+		requestTimeout = timeout
+	}
+}
 
 // WithSkipAuthentication prepares a context that when given to functions in
 // this file will avoid creating any authentication for arango clients.
@@ -258,7 +289,9 @@ func createArangodClientAuthentication(ctx context.Context, cli corev1.CoreV1Int
 		// Should we skip using it?
 		if ctx.Value(skipAuthenticationKey{}) == nil {
 			secrets := cli.Secrets(apiObject.GetNamespace())
-			s, err := k8sutil.GetTokenSecret(secrets, apiObject.Spec.Authentication.GetJWTSecretName())
+			ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+			defer cancel()
+			s, err := k8sutil.GetTokenSecret(ctxChild, secrets, apiObject.Spec.Authentication.GetJWTSecretName())
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

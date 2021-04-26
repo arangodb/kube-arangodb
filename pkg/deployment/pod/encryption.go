@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -67,8 +68,11 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 	}
 }
 
-func GetEncryptionKey(secrets k8sutil.SecretInterface, name string) (string, []byte, bool, error) {
-	keyfile, err := secrets.Get(context.Background(), name, meta.GetOptions{})
+func GetEncryptionKey(ctx context.Context, secrets k8sutil.SecretInterface, name string) (string, []byte, bool, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+
+	keyfile, err := secrets.Get(ctxChild, name, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return "", nil, false, nil

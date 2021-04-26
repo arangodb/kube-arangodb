@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package inspector
 
 import (
 	"context"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
@@ -75,8 +78,8 @@ func (i *inspector) PersistentVolumeClaim(name string) (*core.PersistentVolumeCl
 	return pvc, true
 }
 
-func pvcsToMap(k kubernetes.Interface, namespace string) (map[string]*core.PersistentVolumeClaim, error) {
-	pvcs, err := getPersistentVolumeClaims(k, namespace, "")
+func pvcsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.PersistentVolumeClaim, error) {
+	pvcs, err := getPersistentVolumeClaims(ctx, k, namespace, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +102,10 @@ func pvcPointer(pvc core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
 	return &pvc
 }
 
-func getPersistentVolumeClaims(k kubernetes.Interface, namespace, cont string) ([]core.PersistentVolumeClaim, error) {
-	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(context.Background(), meta.ListOptions{
+func getPersistentVolumeClaims(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.PersistentVolumeClaim, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	pvcs, err := k.CoreV1().PersistentVolumeClaims(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    128,
 		Continue: cont,
 	})
@@ -110,7 +115,7 @@ func getPersistentVolumeClaims(k kubernetes.Interface, namespace, cont string) (
 	}
 
 	if pvcs.Continue != "" {
-		nextPersistentVolumeClaimsLayer, err := getPersistentVolumeClaims(k, namespace, pvcs.Continue)
+		nextPersistentVolumeClaimsLayer, err := getPersistentVolumeClaims(ctx, k, namespace, pvcs.Continue)
 		if err != nil {
 			return nil, err
 		}

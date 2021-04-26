@@ -43,14 +43,14 @@ type actionEmptyCheckProgress struct {
 
 // CheckProgress define optional check progress for action
 // Returns: ready, abort, error.
-func (e actionEmptyCheckProgress) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (e actionEmptyCheckProgress) CheckProgress(_ context.Context) (bool, bool, error) {
 	return true, false, nil
 }
 
 type actionEmptyStart struct {
 }
 
-func (e actionEmptyStart) Start(ctx context.Context) (bool, error) {
+func (e actionEmptyStart) Start(_ context.Context) (bool, error) {
 	return false, nil
 }
 

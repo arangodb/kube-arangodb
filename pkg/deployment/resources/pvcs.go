@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"context"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -36,7 +39,7 @@ func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
 }
 
 // EnsurePVCs creates all PVC's listed in member status
-func (r *Resources) EnsurePVCs(cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
@@ -62,7 +65,10 @@ func (r *Resources) EnsurePVCs(cachedStatus inspectorInterface.Inspector) error 
 			resources := spec.Resources
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
-			if err := k8sutil.CreatePersistentVolumeClaim(pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner); err != nil {
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.CreatePersistentVolumeClaim(ctxChild, pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
+			})
+			if err != nil {
 				return errors.WithStack(err)
 			}
 		}
