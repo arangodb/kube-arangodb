@@ -132,7 +132,7 @@ func CreateHeadlessService(ctx context.Context, svcs ServiceInterface, deploymen
 	}
 	publishNotReadyAddresses := true
 	serviceType := core.ServiceTypeClusterIP
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, ClusterIPNone, "", serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -162,7 +162,7 @@ func CreateDatabaseClientService(ctx context.Context, svcs ServiceInterface, dep
 	}
 	serviceType := core.ServiceTypeClusterIP
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, "", role, serviceType, ports, "", nil, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -186,7 +186,7 @@ func CreateExternalAccessService(ctx context.Context, svcs ServiceInterface, svc
 		},
 	}
 	publishNotReadyAddresses := false
-	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, deployment.GetNamespace(), "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
+	newlyCreated, err := createService(ctx, svcs, svcName, deploymentName, "", role, serviceType, ports, loadBalancerIP, loadBalancerSourceRanges, publishNotReadyAddresses, owner)
 	if err != nil {
 		return "", false, errors.WithStack(err)
 	}
@@ -197,7 +197,7 @@ func CreateExternalAccessService(ctx context.Context, svcs ServiceInterface, svc
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(ctx context.Context, svcs ServiceInterface, svcName, deploymentName, ns, clusterIP, role string,
+func createService(ctx context.Context, svcs ServiceInterface, svcName, deploymentName, clusterIP, role string,
 	serviceType core.ServiceType, ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string,
 	publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)

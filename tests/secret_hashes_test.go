@@ -101,7 +101,7 @@ func TestSecretHashesRootUser(t *testing.T) {
 	rootHashSecret := depl.Status.SecretHashes.Users[api.UserNameRoot]
 
 	secretRootName := string(depl.Spec.Bootstrap.PasswordSecretNames[api.UserNameRoot])
-	secretRoot, err := waitUntilSecret(kubecli, secretRootName, ns, nil, time.Second)
+	secretRoot, err := waitUntilSecret(kubecli, secretRootName, ns, time.Second)
 	if err != nil {
 		t.Fatalf("Root secret '%s' not found: %v", secretRootName, err)
 	}

@@ -54,7 +54,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 			}
 			return !firstLoop, nil
 		}
-		firstLoop = false
+		firstLoop = false // nolint:ineffassign
 
 		// Take first action
 		planAction := loopStatus.Plan[0]

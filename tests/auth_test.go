@@ -25,10 +25,11 @@ package tests
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"testing"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dchest/uniuri"
 
@@ -65,7 +66,7 @@ func TestAuthenticationSingleDefaultSecret(t *testing.T) {
 	}
 
 	// Secret must now exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
@@ -133,7 +134,7 @@ func TestAuthenticationSingleCustomSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must still exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 }
@@ -203,7 +204,7 @@ func TestAuthenticationClusterDefaultSecret(t *testing.T) {
 	}
 
 	// Secret must now exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 
@@ -270,7 +271,7 @@ func TestAuthenticationClusterCustomSecret(t *testing.T) {
 	removeDeployment(c, depl.GetName(), ns)
 
 	// Secret must still exist
-	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, nil, time.Second); err != nil {
+	if _, err := waitUntilSecret(kubecli, depl.Spec.Authentication.GetJWTSecretName(), ns, time.Second); err != nil {
 		t.Fatalf("JWT secret '%s' not found: %v", depl.Spec.Authentication.GetJWTSecretName(), err)
 	}
 

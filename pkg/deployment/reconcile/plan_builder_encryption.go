@@ -132,7 +132,7 @@ func createEncryptionKey(ctx context.Context,
 		}
 	}
 
-	plan, failed := areEncryptionKeysUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, keyfolder)
+	plan, failed := areEncryptionKeysUpToDate(ctx, log, spec, status, context, keyfolder)
 	if !plan.IsEmpty() {
 		return plan
 	}
@@ -154,7 +154,7 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 		return nil
 	}
 
-	if createEncryptionKeyStatusUpdateRequired(ctx, log, apiObject, spec, status, cachedStatus, context) {
+	if createEncryptionKeyStatusUpdateRequired(log, spec, status, cachedStatus, context) {
 		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyStatusUpdate, api.ServerGroupUnknown, "")}
 	}
 
@@ -162,9 +162,7 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 
 }
 
-func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
+func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
 	if skipEncryptionPlan(spec, status) {
 		return false
@@ -176,7 +174,7 @@ func createEncryptionKeyStatusUpdateRequired(ctx context.Context,
 		return false
 	}
 
-	keyHashes := secretKeysToListWithPrefix("sha256:", keyfolder)
+	keyHashes := secretKeysToListWithPrefix(keyfolder)
 
 	if !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys) {
 		return true
@@ -241,11 +239,8 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 	return api.Plan{}
 }
 
-func areEncryptionKeysUpToDate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
-	folder *core.Secret) (plan api.Plan, failed bool) {
+func areEncryptionKeysUpToDate(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec,
+	status api.DeploymentStatus, context PlanBuilderContext, folder *core.Secret) (plan api.Plan, failed bool) {
 
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		if !pod.GroupEncryptionSupported(spec.Mode.Get(), group) {
@@ -253,7 +248,7 @@ func areEncryptionKeysUpToDate(ctx context.Context,
 		}
 
 		for _, m := range list {
-			if updateRequired, failedMember := isEncryptionKeyUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, group, m, folder); failedMember {
+			if updateRequired, failedMember := isEncryptionKeyUpToDate(ctx, log, status, context, group, m, folder); failedMember {
 				failed = true
 				continue
 			} else if updateRequired {
@@ -269,9 +264,8 @@ func areEncryptionKeysUpToDate(ctx context.Context,
 }
 
 func isEncryptionKeyUpToDate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext,
+	log zerolog.Logger, status api.DeploymentStatus,
+	planCtx PlanBuilderContext,
 	group api.ServerGroup, m api.MemberStatus,
 	folder *core.Secret) (updateRequired bool, failed bool) {
 	if m.Phase != api.MemberPhaseCreated {

@@ -329,43 +329,9 @@ func (r *Resources) ensureTokenSecret(ctx context.Context, cachedStatus inspecto
 	return nil
 }
 
-func (r *Resources) ensureSecret(cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName string) error {
-	if _, exists := cachedStatus.Secret(secretName); !exists {
-		return r.createSecret(secrets, secretName)
-	}
-
-	return nil
-}
-
-func (r *Resources) createSecret(secrets k8sutil.SecretInterface, secretName string) error {
-	// Create secret
-	secret := &core.Secret{
-		ObjectMeta: meta.ObjectMeta{
-			Name: secretName,
-		},
-	}
-	// Attach secret to owner
-	owner := r.context.GetAPIObject().AsOwner()
-	k8sutil.AddOwnerRefToObject(secret, &owner)
-	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
-		// Failed to create secret
-		return errors.WithStack(err)
-	}
-
-	return operatorErrors.Reconcile()
-}
-
 func (r *Resources) ensureSecretWithEmptyKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string) error {
 	if _, exists := cachedStatus.Secret(secretName); !exists {
 		return r.createSecretWithKey(ctx, secrets, secretName, keyName, nil)
-	}
-
-	return nil
-}
-
-func (r *Resources) ensureSecretWithKey(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, keyName string, value []byte) error {
-	if _, exists := cachedStatus.Secret(secretName); !exists {
-		return r.createSecretWithKey(ctx, secrets, secretName, keyName, value)
 	}
 
 	return nil
@@ -577,43 +543,6 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		}
 
 		return operatorErrors.Reconcile()
-	}
-	return nil
-}
-
-// ensureTLSCACertificateSecret checks if a secret with given name exists in the namespace
-// of the deployment. If not, it will add such a secret with a generated CA certificate.
-func (r *Resources) ensureTLSCAFolderSecret(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, spec api.TLSSpec, folderSecretName string) error {
-	if spec.CASecretName == nil {
-		return errors.Newf("CA Secret Name is nil")
-	}
-
-	caSecret, ok := cachedStatus.Secret(*spec.CASecretName)
-	if !ok {
-		return errors.Newf("CA Secret is missing")
-	}
-
-	if _, exists := cachedStatus.Secret(spec.GetCASecretName()); !exists {
-		ca, _, err := GetKeyCertFromSecret(r.log, caSecret, CACertName, CAKeyName)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		if len(ca) == 0 {
-			return errors.WithStack(err)
-		}
-
-		caData, err := ca.ToPem()
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		certSha := util.SHA256(caData)
-
-		// Secret not found, create it
-		return r.createSecretWithMod(ctx, secrets, folderSecretName, func(s *core.Secret) {
-			s.Data[certSha] = caData
-		})
 	}
 	return nil
 }

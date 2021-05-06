@@ -24,9 +24,10 @@ package tests
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -238,14 +239,14 @@ func runUpgradeTest(t *testing.T, spec UpgradeTest) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Create deployment failed: %v", err)
 	}
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
+	deployment, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	if err != nil {
 		t.Fatalf("Deployment not running in time: %v", err)
 	}
@@ -258,7 +259,7 @@ func runUpgradeTest(t *testing.T, spec UpgradeTest) {
 	}
 
 	// Try to change image version
-	deployment, err = updateDeployment(c, depl.GetName(), ns,
+	_, err = updateDeployment(c, depl.GetName(), ns,
 		func(depl *api.DeploymentSpec) {
 			depl.Image = util.NewString(spec.ToImage())
 		})

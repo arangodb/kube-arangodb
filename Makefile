@@ -138,9 +138,9 @@ ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
+EXCLUDE_DIRS := tests vendor .gobuild deps tools
 SOURCES_QUERY := find $(SRCDIR) -name '*.go' -type f -not -path '$(SRCDIR)/tests/*' -not -path '$(SRCDIR)/vendor/*' -not -path '$(SRCDIR)/.gobuild/*' -not -path '$(SRCDIR)/deps/*' -not -path '$(SRCDIR)/tools/*'
 SOURCES := $(shell $(SOURCES_QUERY))
-SOURCES_PACKAGES := $(shell $(SOURCES_QUERY) -exec dirname {} \; | sort | uniq)
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
 
 ifndef ARANGOSYNCSRCDIR
@@ -174,10 +174,8 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
-GOLANGCI_ENABLED=deadcode gocyclo golint varcheck structcheck maligned errcheck \
-                 ineffassign interfacer unconvert goconst \
-                 megacheck
-
+GOLANGCI_ENABLED=deadcode govet ineffassign staticcheck structcheck typecheck unconvert unparam unused varcheck
+#GOLANGCI_ENABLED=gocyclo goconst golint maligned errcheck interfacer megacheck
 #GOLANGCI_ENABLED+=dupl - disable dupl check
 
 .PHONY: license-verify
@@ -201,11 +199,10 @@ fmt-verify: license-verify
 	@if [ X"$$(go run golang.org/x/tools/cmd/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; go run golang.org/x/tools/cmd/goimports -l $(SOURCES); exit 1; fi
 
 .PHONY: linter
-linter: fmt
-	@golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --disable-all \
-	                  $(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE) ) \
-	                  --exclude-use-default=false \
-	                  $(SOURCES_PACKAGES)
+linter:
+	$(GOPATH)/bin/golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
+	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
+	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) ./...
 
 .PHONY: build
 build: docker manifests
@@ -599,6 +596,8 @@ init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 
 .PHONY: tools
 tools: update-vendor
+	@echo ">> Fetching golangci-lint linter"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	@echo ">> Fetching goimports"
 	@go get -u golang.org/x/tools/cmd/goimports
 	@echo ">> Fetching license check"

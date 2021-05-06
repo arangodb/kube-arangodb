@@ -64,7 +64,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 }
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
-func createArangodArgsWithUpgrade(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
+func createArangodArgsWithUpgrade(input pod.Input) []string {
 	return createArangodArgs(input, pod.AutoUpgrade().Args(input)...)
 }
 
@@ -171,7 +171,7 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options.Add("--rocksdb.encryption-key-rotation", "true")
 	}
 
-	args := append(options.Copy().Sort().AsArgs())
+	args := options.Copy().Sort().AsArgs()
 	if len(input.GroupSpec.Args) > 0 {
 		args = append(args, input.GroupSpec.Args...)
 	}

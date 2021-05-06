@@ -24,10 +24,11 @@ package tests
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/require"
@@ -296,17 +297,17 @@ func runCursorTests(t *testing.T, client driver.Client) {
 	contexts := []queryTestContext{
 		queryTestContext{nil, false},
 		queryTestContext{context.Background(), false},
-		queryTestContext{driver.WithQueryCount(nil), true},
-		queryTestContext{driver.WithQueryCount(nil, true), true},
-		queryTestContext{driver.WithQueryCount(nil, false), false},
-		queryTestContext{driver.WithQueryBatchSize(nil, 1), false},
-		queryTestContext{driver.WithQueryCache(nil), false},
-		queryTestContext{driver.WithQueryCache(nil, true), false},
-		queryTestContext{driver.WithQueryCache(nil, false), false},
-		queryTestContext{driver.WithQueryMemoryLimit(nil, 600000), false},
-		queryTestContext{driver.WithQueryTTL(nil, time.Minute), false},
-		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(nil), 1), true},
-		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(nil, 2))), true},
+		queryTestContext{driver.WithQueryCount(context.Background()), true},
+		queryTestContext{driver.WithQueryCount(context.Background(), true), true},
+		queryTestContext{driver.WithQueryCount(context.Background(), false), false},
+		queryTestContext{driver.WithQueryBatchSize(context.Background(), 1), false},
+		queryTestContext{driver.WithQueryCache(context.Background()), false},
+		queryTestContext{driver.WithQueryCache(context.Background(), true), false},
+		queryTestContext{driver.WithQueryCache(context.Background(), false), false},
+		queryTestContext{driver.WithQueryMemoryLimit(context.Background(), 600000), false},
+		queryTestContext{driver.WithQueryTTL(context.Background(), time.Minute), false},
+		queryTestContext{driver.WithQueryBatchSize(driver.WithQueryCount(context.Background()), 1), true},
+		queryTestContext{driver.WithQueryCache(driver.WithQueryCount(driver.WithQueryBatchSize(context.Background(), 2))), true},
 	}
 
 	// Run tests for every context alternative

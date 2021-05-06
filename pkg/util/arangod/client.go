@@ -34,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/go-driver/http"
 	"github.com/arangodb/go-driver/jwt"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -167,57 +166,6 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 	return c, nil
 }
 
-func CreateArangodAgencyConnection(ctx context.Context, apiObject *api.ArangoDeployment) (driver.Connection, error) {
-	var dnsNames []string
-	for _, m := range apiObject.Status.Members.Agents {
-		dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, api.ServerGroupAgents.AsRole(), m.ID)
-		dnsNames = append(dnsNames, dnsName)
-	}
-	shortTimeout := false
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	agencyConn, err := agency.NewAgencyConnection(connConfig)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return agencyConn, nil
-}
-
-// CreateArangodAgencyClient creates a go-driver client for accessing the agents of the given deployment.
-func CreateArangodAgencyClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment) (agency.Agency, error) {
-	var dnsNames []string
-	for _, m := range apiObject.Status.Members.Agents {
-		dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.Spec.ClusterDomain, api.ServerGroupAgents.AsRole(), m.ID)
-		dnsNames = append(dnsNames, dnsName)
-	}
-	shortTimeout := false
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, dnsNames, shortTimeout)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	agencyConn, err := agency.NewAgencyConnection(connConfig)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	if auth != nil {
-		agencyConn, err = agencyConn.SetAuthentication(auth)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-	a, err := agency.NewAgency(agencyConn)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return a, nil
-}
-
 // CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
 // running in an Image-ID pod.
 func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
@@ -232,10 +180,7 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
-	connConfig, err := createArangodHTTPConfigForDNSNames(ctx, apiObject, []string{dnsName}, shortTimeout)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
 	// TODO deal with TLS with proper CA checking
 	conn, err := http.NewConnection(connConfig)
 	if err != nil {
@@ -259,7 +204,7 @@ func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interfa
 }
 
 // createArangodHTTPConfigForDNSNames creates a go-driver HTTP connection config for a given DNS names.
-func createArangodHTTPConfigForDNSNames(ctx context.Context, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (http.ConnectionConfig, error) {
+func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) http.ConnectionConfig {
 	scheme := "http"
 	transport := sharedHTTPTransport
 	if shortTimeout {
@@ -279,7 +224,7 @@ func createArangodHTTPConfigForDNSNames(ctx context.Context, apiObject *api.Aran
 	for _, dnsName := range dnsNames {
 		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 	}
-	return connConfig, nil
+	return connConfig
 }
 
 // createArangodClientAuthentication creates a go-driver authentication for the servers in the given deployment.

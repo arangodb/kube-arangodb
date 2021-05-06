@@ -66,7 +66,7 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	keyHashes := secretKeysToListWithPrefix("sha256:", f)
+	keyHashes := secretKeysToListWithPrefix(f)
 
 	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		r := false

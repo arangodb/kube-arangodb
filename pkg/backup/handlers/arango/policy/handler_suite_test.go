@@ -69,7 +69,7 @@ func newItem(o operation.Operation, namespace, name string) operation.Item {
 	}
 }
 
-func newItemFromBackupPolicy(operation operation.Operation, policy *backupApi.ArangoBackupPolicy) operation.Item {
+func newItemFromBackupPolicy(operation operation.Operation, policy *backupApi.ArangoBackupPolicy) operation.Item { // nolint:unparam
 	return newItem(operation, policy.Namespace, policy.Name)
 }
 

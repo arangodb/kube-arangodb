@@ -79,10 +79,7 @@ func (i *inspector) ServiceMonitor(name string) (*monitoring.ServiceMonitor, boo
 }
 
 func serviceMonitorsToMap(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace string) (map[string]*monitoring.ServiceMonitor, error) {
-	serviceMonitors, err := getServiceMonitors(ctx, m, namespace, "")
-	if err != nil {
-		return nil, err
-	}
+	serviceMonitors := getServiceMonitors(ctx, m, namespace, "")
 
 	serviceMonitorMap := map[string]*monitoring.ServiceMonitor{}
 
@@ -98,7 +95,7 @@ func serviceMonitorsToMap(ctx context.Context, m monitoringClient.MonitoringV1In
 	return serviceMonitorMap, nil
 }
 
-func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) ([]*monitoring.ServiceMonitor, error) {
+func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) []*monitoring.ServiceMonitor {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 	serviceMonitors, err := m.ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
@@ -107,10 +104,10 @@ func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Inte
 	})
 
 	if err != nil {
-		return []*monitoring.ServiceMonitor{}, nil
+		return []*monitoring.ServiceMonitor{}
 	}
 
-	return serviceMonitors.Items, nil
+	return serviceMonitors.Items
 }
 
 func FilterServiceMonitorsByLabels(labels map[string]string) servicemonitor.ServiceMonitorFilter {

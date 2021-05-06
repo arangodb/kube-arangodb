@@ -108,7 +108,7 @@ func retry(ctx context.Context, op func() error, timeout time.Duration) error {
 // Retry the given operation until it succeeds,
 // has a permanent failure or times out.
 func Retry(op func() error, timeout time.Duration) error {
-	return retry(nil, op, timeout)
+	return retry(nil, op, timeout) // nolint:staticcheck
 }
 
 // RetryWithContext retries the given operation until it succeeds,

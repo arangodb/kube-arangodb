@@ -34,7 +34,7 @@ import (
 
 // updateExistingDocument updates an existing document with an optional explicit revision.
 // The operation is expected to succeed.
-func (t *simpleTest) updateExistingDocument(c *collection, key, rev string) (string, error) {
+func (t *simpleTest) updateExistingDocument(c *collection, key string) (string, error) {
 	ctx := context.Background()
 	col, err := t.db.Collection(ctx, c.name)
 	if err != nil {
