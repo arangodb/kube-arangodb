@@ -57,7 +57,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 		return nil
 	}
 
-	fetchedSecrets, err := mapTLSSNIConfig(log, *sni, cachedStatus)
+	fetchedSecrets, err := mapTLSSNIConfig(*sni, cachedStatus)
 	if err != nil {
 		log.Warn().Err(err).Msg("Unable to get SNI desired state")
 		return nil

@@ -29,8 +29,6 @@ const (
 	cleanoutMemberTimeout            = time.Hour * 12
 	removeMemberTimeout              = time.Minute * 15
 	recreateMemberTimeout            = time.Minute * 15
-	renewTLSCertificateTimeout       = time.Minute * 30
-	renewTLSCACertificateTimeout     = time.Minute * 30
 	operationTLSCACertificateTimeout = time.Minute * 30
 	rotateMemberTimeout              = time.Minute * 15
 	pvcResizeTimeout                 = time.Minute * 30

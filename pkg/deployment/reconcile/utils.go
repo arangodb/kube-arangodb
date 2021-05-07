@@ -29,8 +29,8 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func secretKeysToListWithPrefix(prefix string, s *core.Secret) []string {
-	return util.PrefixStringArray(secretKeysToList(s), prefix)
+func secretKeysToListWithPrefix(s *core.Secret) []string {
+	return util.PrefixStringArray(secretKeysToList(s), "sha256:")
 }
 
 func secretKeysToList(s *core.Secret) []string {

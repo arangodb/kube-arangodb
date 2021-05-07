@@ -21,7 +21,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/pkg/errors"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -132,15 +131,6 @@ func newReplication(ns, name string) *rapi.ArangoDeploymentReplication {
 	}
 }
 
-func newArangoSyncTestJob(ns, name string) *batchv1.Job {
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: ns,
-		},
-	}
-}
-
 func waitForSyncDeploymentReady(ctx context.Context, ns, name string, kubecli kubernetes.Interface, c versioned.Interface) error {
 	return retry.Retry(func() error {
 		deployment, err := c.DatabaseV1().ArangoDeployments(ns).Get(ctx, name, metav1.GetOptions{})
@@ -171,15 +161,15 @@ func setupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c vers
 	dstSpec := newSyncDeployment(namespace, dstDeploymentName, false)
 	srcSpec := newSyncDeployment(namespace, srcDeploymentName, true)
 
-	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(srcSpec); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(ctx, srcSpec, metav1.CreateOptions{}); err != nil {
 		return err
 	}
-	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(dstSpec); err != nil {
+	if _, err := c.DatabaseV1().ArangoDeployments(namespace).Create(ctx, dstSpec, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
 	replSpec := newReplication(namespace, replicationResourceName)
-	if _, err := c.ReplicationV1().ArangoDeploymentReplications(namespace).Create(replSpec); err != nil {
+	if _, err := c.ReplicationV1().ArangoDeploymentReplications(namespace).Create(ctx, replSpec, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
@@ -200,7 +190,7 @@ func setupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c vers
 
 func waitForReplicationGone(ns, name string, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := c.ReplicationV1().ArangoDeploymentReplications(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := c.ReplicationV1().ArangoDeploymentReplications(ns).Get(context.Background(), name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
@@ -211,7 +201,7 @@ func waitForReplicationGone(ns, name string, c versioned.Interface) error {
 
 func waitForDeploymentGone(ns, name string, c versioned.Interface) error {
 	return retry.Retry(func() error {
-		if _, err := c.DatabaseV1().ArangoDeployments(ns).Get(name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
+		if _, err := c.DatabaseV1().ArangoDeployments(ns).Get(context.Background(), name, metav1.GetOptions{}); k8sutil.IsNotFound(err) {
 			return nil
 		} else if err != nil {
 			return err
@@ -221,7 +211,7 @@ func waitForDeploymentGone(ns, name string, c versioned.Interface) error {
 }
 
 func removeReplicationWaitForCompletion(ns, name string, c versioned.Interface) error {
-	if err := c.ReplicationV1().ArangoDeploymentReplications(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
+	if err := c.ReplicationV1().ArangoDeploymentReplications(ns).Delete(context.Background(), name, metav1.DeleteOptions{}); err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
@@ -234,7 +224,7 @@ func removeReplicationWaitForCompletion(ns, name string, c versioned.Interface) 
 }
 
 func removeDeploymentWaitForCompletion(ns, name string, c versioned.Interface) error {
-	if err := c.DatabaseV1().ArangoDeployments(ns).Delete(name, &metav1.DeleteOptions{}); err != nil {
+	if err := c.DatabaseV1().ArangoDeployments(ns).Delete(context.Background(), name, metav1.DeleteOptions{}); err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
 		}
@@ -246,7 +236,7 @@ func removeDeploymentWaitForCompletion(ns, name string, c versioned.Interface) e
 	return nil
 }
 
-func cleanupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c versioned.Interface) error {
+func cleanupArangoDBCluster(c versioned.Interface) error {
 	if err := removeReplicationWaitForCompletion(namespace, replicationResourceName, c); err != nil {
 		return err
 	}
@@ -261,7 +251,7 @@ func cleanupArangoDBCluster(ctx context.Context, kube kubernetes.Interface, c ve
 
 func waitForPodRunning(ns, name string, kube kubernetes.Interface) error {
 	return retry.Retry(func() error {
-		pod, err := kube.CoreV1().Pods(ns).Get(name, metav1.GetOptions{})
+		pod, err := kube.CoreV1().Pods(ns).Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -277,7 +267,7 @@ func waitForPodRunning(ns, name string, kube kubernetes.Interface) error {
 func copyPodLogs(ns, name string, kube kubernetes.Interface) error {
 	logs, err := kube.CoreV1().Pods(ns).GetLogs(name, &corev1.PodLogOptions{
 		Follow: true,
-	}).Stream()
+	}).Stream(context.Background())
 	if err != nil {
 		return err
 	}
@@ -358,9 +348,9 @@ func createArangoSyncTestPod(ns, name string) *corev1.Pod {
 func runArangoSyncTests(kube kubernetes.Interface) error {
 
 	// Start a new pod with the test image
-	defer kube.CoreV1().Pods(namespace).Delete(arangosyncTestPodName, &metav1.DeleteOptions{})
+	defer kube.CoreV1().Pods(namespace).Delete(context.Background(), arangosyncTestPodName, metav1.DeleteOptions{})
 	podspec := createArangoSyncTestPod(namespace, arangosyncTestPodName)
-	if _, err := kube.CoreV1().Pods(namespace).Create(podspec); err != nil {
+	if _, err := kube.CoreV1().Pods(namespace).Create(context.Background(), podspec, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
@@ -376,7 +366,7 @@ func runArangoSyncTests(kube kubernetes.Interface) error {
 		return err
 	}
 
-	pod, err := kube.CoreV1().Pods(namespace).Get(arangosyncTestPodName, metav1.GetOptions{})
+	pod, err := kube.CoreV1().Pods(namespace).Get(context.Background(), arangosyncTestPodName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -409,7 +399,7 @@ func main() {
 		exitCode = 1
 	}
 
-	if err := cleanupArangoDBCluster(ctx, kube, c); err != nil {
+	if err := cleanupArangoDBCluster(c); err != nil {
 		log.Printf("Failed to clean up deployments: %s", err.Error())
 	}
 

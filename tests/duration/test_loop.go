@@ -35,18 +35,7 @@ import (
 )
 
 var (
-	delayBeforeCompare        = time.Minute
-	testPeriod                = time.Minute * 2
-	systemCollectionsToIgnore = map[string]bool{
-		"_appbundles":    true,
-		"_apps":          true,
-		"_jobs":          true,
-		"_queues":        true,
-		"_routing":       true,
-		"_statistics":    true,
-		"_statisticsRaw": true,
-		"_statistics15":  true,
-	}
+	testPeriod = time.Minute * 2
 )
 
 // runTestLoop keeps running tests until the given context is canceled.

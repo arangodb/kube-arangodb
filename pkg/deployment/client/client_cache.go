@@ -69,7 +69,7 @@ func (cc *cache) extendHost(host string) string {
 	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(k8sutil.ArangoPort))
 }
 
-func (cc *cache) getClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
 	m, _, _ := cc.apiObjectGetter().Status.Members.ElementByID(id)
 
 	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id))))
@@ -80,7 +80,7 @@ func (cc *cache) getClient(ctx context.Context, group api.ServerGroup, id string
 }
 
 func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	client, err := cc.getClient(ctx, group, id)
+	client, err := cc.getClient(group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -88,7 +88,7 @@ func (cc *cache) get(ctx context.Context, group api.ServerGroup, id string) (dri
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
 	} else if driver.IsUnauthorized(err) {
-		return cc.getClient(ctx, group, id)
+		return cc.getClient(group, id)
 	} else {
 		return client, nil
 	}
@@ -103,7 +103,7 @@ func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (dri
 	return cc.get(ctx, group, id)
 }
 
-func (cc cache) GetAuth() conn.Auth {
+func (cc *cache) GetAuth() conn.Auth {
 	return cc.factory.GetAuth()
 }
 

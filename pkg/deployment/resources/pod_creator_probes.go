@@ -58,7 +58,7 @@ func nilProbeBuilder(spec api.DeploymentSpec, group api.ServerGroup, version dri
 }
 
 func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	if !r.isReadinessProbeEnabled(spec, group, version) {
+	if !r.isReadinessProbeEnabled(spec, group) {
 		return nil, nil
 	}
 
@@ -88,7 +88,7 @@ func (r *Resources) getReadinessProbe(spec api.DeploymentSpec, group api.ServerG
 }
 
 func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	if !r.isLivenessProbeEnabled(spec, group, version) {
+	if !r.isLivenessProbeEnabled(spec, group) {
 		return nil, nil
 	}
 
@@ -117,7 +117,7 @@ func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGr
 	return config, nil
 }
 
-func (r *Resources) isReadinessProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) bool {
+func (r *Resources) isReadinessProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup) bool {
 	probe := pod.ReadinessSpec(group)
 
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -131,7 +131,7 @@ func (r *Resources) isReadinessProbeEnabled(spec api.DeploymentSpec, group api.S
 	return probe.CanBeEnabled && probe.EnabledByDefault
 }
 
-func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) bool {
+func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup) bool {
 	probe := pod.LivenessSpec(group)
 
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -174,7 +174,7 @@ func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	}
 }
 
-func (r *Resources) probeCommand(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version, endpoint string) ([]string, error) {
+func (r *Resources) probeCommand(spec api.DeploymentSpec, endpoint string) ([]string, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return nil, err
@@ -207,7 +207,7 @@ func (r *Resources) probeBuilderLivenessCoreSelect() probeBuilder {
 }
 
 func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	args, err := r.probeCommand(spec, group, version, "/_api/version")
+	args, err := r.probeCommand(spec, "/_api/version")
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 		localPath = "/_admin/server/availability"
 	}
 
-	args, err := r.probeCommand(spec, group, version, localPath)
+	args, err := r.probeCommand(spec, localPath)
 	if err != nil {
 		return nil, err
 	}

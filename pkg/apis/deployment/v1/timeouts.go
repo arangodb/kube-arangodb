@@ -28,10 +28,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	addMemberTimeout = time.Minute * 5
-)
-
 type Timeouts struct {
 	AddMember *Timeout `json:"addMember,omitempty"`
 }

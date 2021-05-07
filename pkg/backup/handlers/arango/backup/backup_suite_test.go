@@ -264,7 +264,6 @@ func wrapperProgressMissing(t *testing.T, state state.State) {
 		newObj := refreshArangoBackup(t, handler, obj)
 		require.Equal(t, newObj.Status.State, backupApi.ArangoBackupStateFailed)
 
-		require.Equal(t, newObj.Status.Message, createStateMessage(state, backupApi.ArangoBackupStateFailed, fmt.Sprintf("missing field .status.backup")))
-
+		require.Equal(t, newObj.Status.Message, createStateMessage(state, backupApi.ArangoBackupStateFailed, "missing field .status.backup"))
 	})
 }

@@ -34,11 +34,11 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 		t.Fatalf("Remaining arangodb pods did not vanish, can not start test: %v", err)
 	}
 
-	currentimage, err := updateOperatorImage(t, ns, kubecli, oldOperatorTestImage)
+	currentimage, err := updateOperatorImage(ns, kubecli, oldOperatorTestImage)
 	if err != nil {
 		t.Fatalf("Could not replace operator with old image: %v", err)
 	}
-	defer updateOperatorImage(t, ns, kubecli, currentimage)
+	defer updateOperatorImage(ns, kubecli, currentimage)
 
 	if err := waitForOperatorImage(ns, kubecli, oldOperatorTestImage); err != nil {
 		t.Fatalf("Old Operator not ready in time: %v", err)
@@ -87,23 +87,20 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 						if !k8sutil.IsPodReady(pod) {
 							errorChannel <- fmt.Errorf("Pod no longer ready: %s", pod.GetName())
 						}
-						break
 					case watch.Deleted:
 						errorChannel <- fmt.Errorf("Pod was deleted: %s", pod.GetName())
-						break
 					case watch.Added:
 						if len(addedPods) >= 9 {
 							errorChannel <- fmt.Errorf("New pod was created: %s", pod.GetName())
 						}
 						addedPods = append(addedPods, pod.GetName())
-						break
 					}
 				}
 			}
 		}
 	}()
 
-	if _, err := updateOperatorImage(t, ns, kubecli, currentimage); err != nil {
+	if _, err := updateOperatorImage(ns, kubecli, currentimage); err != nil {
 		t.Fatalf("Failed to replace new ")
 	}
 
@@ -120,7 +117,7 @@ func TestOperatorUpgradeFrom038(t *testing.T) {
 	}
 }
 
-func updateOperatorImage(t *testing.T, ns string, kube kubernetes.Interface, newImage string) (string, error) {
+func updateOperatorImage(ns string, kube kubernetes.Interface, newImage string) (string, error) {
 	for {
 		depl, err := kube.AppsV1().Deployments(ns).Get(context.Background(), operatorTestDeploymentName, metav1.GetOptions{})
 		if err != nil {
@@ -138,10 +135,6 @@ func updateOperatorImage(t *testing.T, ns string, kube kubernetes.Interface, new
 		}
 		return old, nil
 	}
-}
-
-func updateOperatorDeployment(ns string, kube kubernetes.Interface) (*appsv1.Deployment, error) {
-	return kube.AppsV1().Deployments(ns).Get(context.Background(), operatorTestDeploymentName, metav1.GetOptions{})
 }
 
 func getOperatorImage(depl *appsv1.Deployment) (string, error) {

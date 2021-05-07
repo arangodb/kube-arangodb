@@ -59,6 +59,8 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
+const pvcName = "pvc_test"
+
 var _ PlanBuilderContext = &testContext{}
 var _ Context = &testContext{}
 
@@ -614,7 +616,7 @@ func TestCreatePlan(t *testing.T) {
 		{
 			Name: "Change Storage for DBServers",
 			PVCS: map[string]*core.PersistentVolumeClaim{
-				"pvc_test": {
+				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
@@ -633,7 +635,7 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = "pvc_test"
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
 			},
 			ExpectedPlan: []api.Action{
 				api.NewAction(api.ActionTypeDisableClusterScaling, api.ServerGroupDBServers, ""),
@@ -649,7 +651,7 @@ func TestCreatePlan(t *testing.T) {
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
 			PVCS: map[string]*core.PersistentVolumeClaim{
-				"pvc_test": {
+				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
@@ -664,7 +666,7 @@ func TestCreatePlan(t *testing.T) {
 					StorageClassName: util.NewString("newStorage"),
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
+				ad.Status.Members.Agents[0].PersistentVolumeClaimName = pvcName
 			},
 			ExpectedPlan: []api.Action{
 				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupAgents, ""),
@@ -677,7 +679,7 @@ func TestCreatePlan(t *testing.T) {
 		{
 			Name: "Storage for Coordinators is not possible",
 			PVCS: map[string]*core.PersistentVolumeClaim{
-				"pvc_test": {
+				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
 						StorageClassName: util.NewString("oldStorage"),
 					},
@@ -696,7 +698,7 @@ func TestCreatePlan(t *testing.T) {
 					},
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = "pvc_test"
+				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
 			},
 			ExpectedPlan: []api.Action{},
 			ExpectedLog:  "Storage class has changed - pod needs replacement",

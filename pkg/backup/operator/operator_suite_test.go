@@ -102,8 +102,8 @@ func mockSimpleObject(name string, canBeHandled bool) (Handler, chan operation.I
 	})
 }
 
-func waitForItems(t *testing.T, i <-chan operation.Item, expectedSize int, timeout time.Duration) []operation.Item {
-	tmout := time.NewTimer(timeout)
+func waitForItems(t *testing.T, i <-chan operation.Item, expectedSize int) []operation.Item {
+	tmout := time.NewTimer(time.Second)
 	defer tmout.Stop()
 	received := make([]operation.Item, 0, expectedSize)
 	for {

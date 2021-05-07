@@ -96,7 +96,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		if a.action.Group == api.ServerGroupAgents {
 			return a.checkProgressAgent(ctxChild)
 		}
-		return a.checkProgressCluster(ctxChild)
+		return a.checkProgressCluster()
 	}
 }
 
@@ -162,7 +162,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
-func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 	log := a.log
 	h, err := a.actionCtx.GetDeploymentHealth()
 	if err != nil {

@@ -95,7 +95,7 @@ func TestSyncSimple(t *testing.T) {
 	// Wait for deployments to be ready
 	// Wait for access package
 	// Deploy access package
-	_, err = waitUntilSecret(kubecli, apname, ns, nil, deploymentReadyTimeout)
+	_, err = waitUntilSecret(kubecli, apname, ns, deploymentReadyTimeout)
 	if err != nil {
 		t.Fatalf("Failed to get access package: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestSyncToggleEnabled(t *testing.T) {
 	}
 
 	// Wait until sync jwt secret has been created
-	if _, err := waitUntilSecret(kubecli, updated.Spec.Sync.Authentication.GetJWTSecretName(), ns, nil, deploymentReadyTimeout); err != nil {
+	if _, err := waitUntilSecret(kubecli, updated.Spec.Sync.Authentication.GetJWTSecretName(), ns, deploymentReadyTimeout); err != nil {
 		t.Fatalf("Sync JWT secret not created in time: %v", err)
 	}
 
@@ -210,7 +210,7 @@ func TestSyncToggleEnabled(t *testing.T) {
 	syncClient := mustNewArangoSyncClient(ctx, kubecli, apiObject, t)
 
 	// Wait for syncmasters to be available
-	if err := waitUntilSyncVersionUp(syncClient, nil); err != nil {
+	if err := waitUntilSyncVersionUp(syncClient); err != nil {
 		t.Fatalf("SyncMasters not running returning version in time: %v", err)
 	}
 

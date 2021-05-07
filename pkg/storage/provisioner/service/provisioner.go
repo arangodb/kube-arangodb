@@ -84,10 +84,10 @@ func (p *Provisioner) GetInfo(ctx context.Context, localPath string) (provisione
 	}
 
 	// Available is blocks available * fragment size
-	available := int64(statfs.Bavail) * int64(statfs.Bsize)
+	available := int64(statfs.Bavail) * statfs.Bsize
 
 	// Capacity is total block count * fragment size
-	capacity := int64(statfs.Blocks) * int64(statfs.Bsize)
+	capacity := int64(statfs.Blocks) * statfs.Bsize
 
 	log.Debug().
 		Str("node-name", p.NodeName).

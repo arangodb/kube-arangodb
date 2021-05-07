@@ -31,9 +31,8 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func modifyAffinity(name, group string, required bool, role string, mods ...func(a *core.Affinity)) *core.Affinity {
-	affinity := k8sutil.CreateAffinity(name, group,
-		required, role)
+func modifyAffinity(group string, required bool, role string, mods ...func(a *core.Affinity)) *core.Affinity { // nolint:unparam
+	affinity := k8sutil.CreateAffinity(testDeploymentName, group, required, role)
 
 	for _, mod := range mods {
 		mod(affinity)
@@ -108,7 +107,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, testAffinity)
 						}),
@@ -170,7 +169,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, weight)
 						}),
@@ -235,7 +234,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, weight)
 							a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, testAffinity)
@@ -305,7 +304,7 @@ func TestEnsurePod_ArangoDB_AntiAffinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, weight, weight, weight, weight)
 							a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(a.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, testAffinity, testAffinity)
@@ -384,7 +383,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							if a.PodAffinity == nil {
 								a.PodAffinity = &core.PodAffinity{}
@@ -449,7 +448,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							if a.PodAffinity == nil {
 								a.PodAffinity = &core.PodAffinity{}
@@ -517,7 +516,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							if a.PodAffinity == nil {
 								a.PodAffinity = &core.PodAffinity{}
@@ -590,7 +589,7 @@ func TestEnsurePod_ArangoDB_Affinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							if a.PodAffinity == nil {
 								a.PodAffinity = &core.PodAffinity{}
@@ -671,7 +670,7 @@ func TestEnsurePod_ArangoDB_NodeAffinity(t *testing.T) {
 					Hostname: testDeploymentName + "-" + api.ServerGroupDBServersString + "-" +
 						firstDBServerStatus.ID,
 					Subdomain: testDeploymentName + "-int",
-					Affinity: modifyAffinity(testDeploymentName, api.ServerGroupDBServersString,
+					Affinity: modifyAffinity(api.ServerGroupDBServersString,
 						false, "", func(a *core.Affinity) {
 							f := a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0]
 

@@ -79,7 +79,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 	}
 
 	// Assert
-	res := waitForItems(t, i, size, time.Second)
+	res := waitForItems(t, i, size)
 	assert.Len(t, res, size)
 
 	time.Sleep(50 * time.Millisecond)
@@ -140,7 +140,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 	}
 
 	// Assert
-	res := waitForItems(t, i, size*2, time.Second)
+	res := waitForItems(t, i, size*2)
 	assert.Len(t, res, size*2)
 
 	time.Sleep(50 * time.Millisecond)
@@ -200,7 +200,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	}
 
 	// Assert
-	res := waitForItems(t, i, size, time.Second)
+	res := waitForItems(t, i, size)
 	assert.Len(t, res, size)
 
 	time.Sleep(50 * time.Millisecond)
@@ -300,10 +300,10 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	}
 
 	// Assert
-	assert.Len(t, waitForItems(t, ip, size, time.Second), size)
-	assert.Len(t, waitForItems(t, in, size, time.Second), size)
-	assert.Len(t, waitForItems(t, is, size, time.Second), size)
-	assert.Len(t, waitForItems(t, id, size, time.Second), size)
+	assert.Len(t, waitForItems(t, ip, size), size)
+	assert.Len(t, waitForItems(t, in, size), size)
+	assert.Len(t, waitForItems(t, is, size), size)
+	assert.Len(t, waitForItems(t, id, size), size)
 
 	time.Sleep(50 * time.Millisecond)
 	assert.Len(t, ip, 0)
@@ -358,7 +358,7 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	}
 
 	// Assert
-	res := waitForItems(t, i, 1, time.Second)
+	res := waitForItems(t, i, 1)
 	assert.Len(t, res, 1)
 
 	time.Sleep(50 * time.Millisecond)

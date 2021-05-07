@@ -74,7 +74,7 @@ func main() {
 
 	// Start running tests
 	ctx, cancel := context.WithCancel(context.Background())
-	sigChannel := make(chan os.Signal)
+	sigChannel := make(chan os.Signal, 1)
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 	go handleSignal(sigChannel, cancel)
 	runTestLoop(ctx, client, testDuration)

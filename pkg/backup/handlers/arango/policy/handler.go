@@ -74,11 +74,7 @@ func (h *handler) Handle(item operation.Item) error {
 		return err
 	}
 
-	status, err := h.processBackupPolicy(policy.DeepCopy())
-	if err != nil {
-		return err
-	}
-
+	status := h.processBackupPolicy(policy.DeepCopy())
 	// Nothing to update, objects are equal
 	if reflect.DeepEqual(policy.Status, status) {
 		return nil
@@ -94,13 +90,13 @@ func (h *handler) Handle(item operation.Item) error {
 	return nil
 }
 
-func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (backupApi.ArangoBackupPolicyStatus, error) {
+func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) backupApi.ArangoBackupPolicyStatus {
 	if err := policy.Validate(); err != nil {
 		h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
 		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("Validation error: %s", err.Error()),
-		}, nil
+		}
 	}
 
 	now := time.Now()
@@ -111,7 +107,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 
 		return backupApi.ArangoBackupPolicyStatus{
 			Message: fmt.Sprintf("error while parsing expr: %s", err.Error()),
-		}, nil
+		}
 	}
 
 	if policy.Status.Scheduled.IsZero() {
@@ -121,7 +117,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 			Scheduled: meta.Time{
 				Time: next,
 			},
-		}, nil
+		}
 	}
 
 	// Check if schedule is required
@@ -135,10 +131,10 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 				Scheduled: meta.Time{
 					Time: next,
 				},
-			}, nil
+			}
 		}
 
-		return policy.Status, nil
+		return policy.Status
 	}
 
 	// Schedule new deployments
@@ -159,7 +155,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		return backupApi.ArangoBackupPolicyStatus{
 			Scheduled: policy.Status.Scheduled,
 			Message:   fmt.Sprintf("deployments listing failed: %s", err.Error()),
-		}, nil
+		}
 	}
 
 	for _, deployment := range deployments.Items {
@@ -171,7 +167,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 			return backupApi.ArangoBackupPolicyStatus{
 				Scheduled: policy.Status.Scheduled,
 				Message:   fmt.Sprintf("backup creation failed: %s", err.Error()),
-			}, nil
+			}
 		}
 
 		h.eventRecorder.Normal(policy, backupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
@@ -185,7 +181,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) (bac
 		Scheduled: meta.Time{
 			Time: next,
 		},
-	}, nil
+	}
 }
 
 func (*handler) CanBeHandled(item operation.Item) bool {

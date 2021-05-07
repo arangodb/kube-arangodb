@@ -118,7 +118,7 @@ func setFailedState(backup *backupApi.ArangoBackup, err error) (*backupApi.Arang
 		updateStatusAvailable(false))
 }
 
-func createStateMessage(from, to state.State, message string) string {
+func createStateMessage(from, to state.State, message string) string { // nolint:unparam
 	return fmt.Sprintf("Transiting from %s to %s: %s", from, to, message)
 }
 

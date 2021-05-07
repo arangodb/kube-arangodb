@@ -115,7 +115,7 @@ func TestLoadBalancingSourceRanges(t *testing.T) {
 	}
 
 	// Now change the deployment spec to use different ranges:
-	depl, err = updateDeployment(c, depl.GetName(), ns,
+	_, err = updateDeployment(c, depl.GetName(), ns,
 		func(spec *api.DeploymentSpec) {
 			spec.ExternalAccess.LoadBalancerSourceRanges = []string{"4.5.0.0/16"}
 		})

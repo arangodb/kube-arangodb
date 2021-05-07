@@ -30,7 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
-	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
@@ -61,7 +60,7 @@ func createRestorePlan(ctx context.Context,
 		}
 
 		if spec.RocksDB.IsEncrypted() {
-			if ok, p := createRestorePlanEncryption(ctx, log, spec, status, context, backup); !ok {
+			if ok, p := createRestorePlanEncryption(ctx, log, spec, status, context); !ok {
 				return nil
 			} else if !p.IsEmpty() {
 				return p
@@ -94,7 +93,7 @@ func restorePlan(mode api.DeploymentMode) api.Plan {
 	return p
 }
 
-func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext, backup *backupv1.ArangoBackup) (bool, api.Plan) {
+func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, builderCtx PlanBuilderContext) (bool, api.Plan) {
 	if spec.RestoreEncryptionSecret != nil {
 		if !spec.RocksDB.IsEncrypted() {
 			return true, nil

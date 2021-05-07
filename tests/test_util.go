@@ -52,7 +52,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	rapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -75,13 +74,10 @@ var (
 	showEnterpriseImageOnce sync.Once
 )
 
-// CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
+// createArangodVSTClientForDNSName creates a go-driver client for a given DNS name.
+func createArangodVSTClientForDNSName(apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
 	config := driver.ClientConfig{}
-	connConfig, err := createArangodVSTConfigForDNSNames(ctx, cli, apiObject, []string{dnsName}, shortTimeout)
-	if err != nil {
-		return nil, maskAny(err)
-	}
+	connConfig := createArangodVSTConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
 	// TODO deal with TLS with proper CA checking
 	conn, err := vst.NewConnection(connConfig)
 	if err != nil {
@@ -106,7 +102,7 @@ func createArangodVSTClientForDNSName(ctx context.Context, cli corev1.CoreV1Inte
 }
 
 // createArangodVSTConfigForDNSNames creates a go-driver VST connection config for a given DNS names.
-func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) (vst.ConnectionConfig, error) {
+func createArangodVSTConfigForDNSNames(apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) vst.ConnectionConfig {
 	scheme := "http"
 	tlsConfig := &tls.Config{}
 	timeout := 90 * time.Second
@@ -128,14 +124,14 @@ func createArangodVSTConfigForDNSNames(ctx context.Context, cli corev1.CoreV1Int
 	for _, dnsName := range dnsNames {
 		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
 	}
-	return connConfig, nil
+	return connConfig
 }
 
-// CreateArangodDatabaseVSTClient creates a go-driver client for accessing the entire cluster (or single server) via VST
-func createArangodDatabaseVSTClient(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
+// createArangodDatabaseVSTClient creates a go-driver client for accessing the entire cluster (or single server) via VST
+func createArangodDatabaseVSTClient(apiObject *api.ArangoDeployment, shortTimeout bool) (driver.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSName(apiObject)
-	c, err := createArangodVSTClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout)
+	c, err := createArangodVSTClientForDNSName(apiObject, dnsName, shortTimeout)
 	if err != nil {
 		return nil, maskAny(err)
 	}
@@ -168,10 +164,6 @@ func getEnterpriseImageOrSkip(t *testing.T) string {
 const testEnterpriseLicenseKeySecretName = "arangodb-jenkins-license-key"
 const testBackupRemoteSecretName = "arangodb-backup-remote-secret"
 
-func getEnterpriseLicenseKey() string {
-	return strings.TrimSpace(os.Getenv("ENTERPRISELICENSE"))
-}
-
 // shouldCleanDeployments returns true when deployments created
 // by tests should be removed, even when the test fails.
 func shouldCleanDeployments() bool {
@@ -202,7 +194,7 @@ func mustNewArangodDatabaseClient(ctx context.Context, kubecli kubernetes.Interf
 	shortTimeout := options != nil && options.ShortTimeout
 	useVST := options != nil && options.UseVST
 	if useVST {
-		c, err = createArangodDatabaseVSTClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
+		c, err = createArangodDatabaseVSTClient(apiObject, shortTimeout)
 	} else {
 		c, err = arangod.CreateArangodDatabaseClient(ctx, kubecli.CoreV1(), apiObject, shortTimeout)
 	}
@@ -349,7 +341,7 @@ func waitUntilDeployment(cli versioned.Interface, deploymentName, ns string, pre
 
 // waitUntilSecret waits until a secret with given name in given namespace
 // reached a state where the given predicate returns true.
-func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate func(*v1.Secret) error, timeout time.Duration) (*v1.Secret, error) {
+func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, timeout time.Duration) (*v1.Secret, error) {
 	var result *v1.Secret
 	op := func() error {
 		obj, err := cli.CoreV1().Secrets(ns).Get(context.Background(), secretName, metav1.GetOptions{})
@@ -358,11 +350,6 @@ func waitUntilSecret(cli kubernetes.Interface, secretName, ns string, predicate 
 			return maskAny(err)
 		}
 		result = obj
-		if predicate != nil {
-			if err := predicate(obj); err != nil {
-				return maskAny(err)
-			}
-		}
 		return nil
 	}
 	if err := retry.Retry(op, timeout); err != nil {
@@ -517,14 +504,12 @@ func waitUntilVersionUp(cli driver.Client, predicate func(driver.VersionInfo) er
 // waitUntilSyncVersionUp waits until the syncmasters responds to
 // an `/_api/version` request without an error. An additional Predicate
 // can do a check on the VersionInfo object returned by the server.
-func waitUntilSyncVersionUp(cli client.API, predicate func(client.VersionInfo) error) error {
+func waitUntilSyncVersionUp(cli client.API) error {
 	ctx := context.Background()
 
 	op := func() error {
-		if version, err := cli.Version(ctx); err != nil {
+		if _, err := cli.Version(ctx); err != nil {
 			return maskAny(err)
-		} else if predicate != nil {
-			return predicate(version)
 		}
 		return nil
 	}
@@ -589,7 +574,7 @@ func createEqualVersionsPredicate(version driver.Version) func(driver.VersionInf
 }
 
 // clusterSidecarsEqualSpec returns nil if sidecars from spec and cluster match
-func waitUntilClusterSidecarsEqualSpec(t *testing.T, spec api.DeploymentMode, depl api.ArangoDeployment) error {
+func waitUntilClusterSidecarsEqualSpec(t *testing.T, depl api.ArangoDeployment) error {
 
 	c := cl.MustNewClient()
 	ns := getNamespace(t)
@@ -678,6 +663,7 @@ func updateDeployment(cli versioned.Interface, deploymentName, ns string, update
 		current, err = cli.DatabaseV1().ArangoDeployments(ns).Update(context.Background(), current, metav1.UpdateOptions{})
 		if k8sutil.IsConflict(err) {
 			// Retry
+			continue
 		} else if err != nil {
 			return nil, maskAny(err)
 		}
@@ -927,7 +913,6 @@ func (d *DocumentGenerator) generate(t *testing.T, generator func(int) interface
 	d.documentsMeta, errorSlice, err = collection.CreateDocuments(context.Background(), items)
 	require.NoError(t, err, "failed to create documents")
 	require.Equal(t, errorSlice, errorSliceExpected)
-	return
 }
 
 func (d *DocumentGenerator) check(t *testing.T) {

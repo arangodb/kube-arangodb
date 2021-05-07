@@ -116,17 +116,17 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 
 // listenForSecretEvents keep listening for changes in Secrets's until the given channel is closed.
 func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
-	getSecret := func(obj interface{}) (*v1.Secret, bool) {
-		secret, ok := obj.(*v1.Secret)
+	getSecret := func(obj interface{}) bool {
+		_, ok := obj.(*v1.Secret)
 		if !ok {
 			tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 			if !ok {
-				return nil, false
+				return false
 			}
-			secret, ok = tombstone.Obj.(*v1.Secret)
-			return secret, ok
+			_, ok = tombstone.Obj.(*v1.Secret)
+			return ok
 		}
-		return secret, true
+		return true
 	}
 
 	rw := k8sutil.NewResourceWatcher(
@@ -138,17 +138,17 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 		cache.ResourceEventHandlerFuncs{
 			// Note: For secrets we look at all of them because they do not have to be owned by this deployment.
 			AddFunc: func(obj interface{}) {
-				if _, ok := getSecret(obj); ok {
+				if getSecret(obj) {
 					d.triggerInspection()
 				}
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				if _, ok := getSecret(newObj); ok {
+				if getSecret(newObj) {
 					d.triggerInspection()
 				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				if _, ok := getSecret(obj); ok {
+				if getSecret(obj) {
 					d.triggerInspection()
 				}
 			},
