@@ -31,8 +31,6 @@ PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 DOCKERFILE := Dockerfile
-DOCKERTESTFILE := Dockerfile.test
-DOCKERDURATIONTESTFILE := tests/duration/Dockerfile
 
 HELM ?= $(shell which helm)
 
@@ -101,12 +99,6 @@ endif
 ifndef OPERATORUBIIMAGE
 	OPERATORUBIIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)-ubi
 endif
-ifndef TESTIMAGE
-	TESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-test$(IMAGESUFFIX)
-endif
-ifndef DURATIONTESTIMAGE
-	DURATIONTESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-durationtest$(IMAGESUFFIX)
-endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
 endif
@@ -121,19 +113,9 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-TESTBINNAME := $(PROJECT)_test
-TESTBIN := $(BINDIR)/$(TESTBINNAME)
-DURATIONTESTBINNAME := $(PROJECT)_duration_test
-DURATIONTESTBIN := $(BINDIR)/$(DURATIONTESTBINNAME)
 RELEASE := $(GOBUILDDIR)/bin/release
 GHRELEASE := $(GOBUILDDIR)/bin/github-release
 
-TESTLENGTHOPTIONS := -test.short
-TESTTIMEOUT := 30m
-ifeq ($(LONG), 1)
-	TESTLENGTHOPTIONS :=
-	TESTTIMEOUT := 300m
-endif
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
@@ -142,22 +124,6 @@ EXCLUDE_DIRS := tests vendor .gobuild deps tools
 SOURCES_QUERY := find $(SRCDIR) -name '*.go' -type f -not -path '$(SRCDIR)/tests/*' -not -path '$(SRCDIR)/vendor/*' -not -path '$(SRCDIR)/.gobuild/*' -not -path '$(SRCDIR)/deps/*' -not -path '$(SRCDIR)/tools/*'
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js' -not -path './test/*') $(DASHBOARDDIR)/package.json
-
-ifndef ARANGOSYNCSRCDIR
-	ARANGOSYNCSRCDIR := $(SCRIPTDIR)/arangosync
-endif
-DOCKERARANGOSYNCCTRLFILE=tests/sync/Dockerfile
-ifndef ARANGOSYNCTESTCTRLIMAGE
-	ARANGOSYNCTESTCTRLIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync-test-ctrl$(IMAGESUFFIX)
-endif
-ifndef ARANGOSYNCTESTIMAGE
-	ARANGOSYNCTESTIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync-test$(IMAGESUFFIX)
-endif
-ifndef ARANGOSYNCIMAGE
-	ARANGOSYNCIMAGE := $(DOCKERNAMESPACE)/kube-arangodb-sync$(IMAGESUFFIX)
-endif
-ARANGOSYNCTESTCTRLBINNAME := $(PROJECT)_sync_test_ctrl
-ARANGOSYNCTESTCTRLBIN := $(BINDIR)/$(ARANGOSYNCTESTCTRLBINNAME)
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -267,9 +233,6 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 
 .PHONY: bin
 bin: $(BIN)
-
-.PHONY: test-bin
-test-bin: $(TESTBIN)
 
 $(BIN): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)
@@ -381,78 +344,6 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/util/validation \
 		$(REPOPATH)/pkg/backup/...
 
-$(TESTBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go test -c -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(TESTBIN) $(REPOPATH)/tests
-
-
-.PHONY: docker-test
-docker-test: $(TESTBIN)
-	docker build --quiet -f $(DOCKERTESTFILE) -t $(TESTIMAGE) .
-
-.PHONY: run-upgrade-tests
-run-upgrade-tests:
-	TESTOPTIONS="-test.run=TestUpgrade" make run-tests
-
-.PHONY: prepare-run-tests
-prepare-run-tests:
-ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
-endif
-ifneq ($(DEPLOYMENTNAMESPACE), default)
-	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
-	kubectl create namespace $(DEPLOYMENTNAMESPACE)
-endif
-	kubectl apply -f $(MANIFESTPATHCRD)
-	kubectl apply -f $(MANIFESTPATHSTORAGE)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
-	kubectl apply -f $(MANIFESTPATHBACKUP)
-	kubectl apply -f $(MANIFESTPATHTEST)
-	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
-
-.PHONY: run-tests
-run-tests: docker-test
-ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
-	docker push $(TESTIMAGE)
-endif
-ifneq ($(DEPLOYMENTNAMESPACE), default)
-	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
-	kubectl create namespace $(DEPLOYMENTNAMESPACE)
-endif
-	kubectl apply -f $(MANIFESTPATHCRD)
-	kubectl apply -f $(MANIFESTPATHSTORAGE)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
-	kubectl apply -f $(MANIFESTPATHBACKUP)
-	kubectl apply -f $(MANIFESTPATHTEST)
-	$(ROOTDIR)/scripts/kube_create_storage.sh $(DEPLOYMENTNAMESPACE)
-	$(ROOTDIR)/scripts/kube_create_license_key_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(ENTERPRISELICENSE)'
-	$(ROOTDIR)/scripts/kube_create_backup_remote_secret.sh "$(DEPLOYMENTNAMESPACE)" '$(TEST_REMOTE_SECRET)'
-	$(ROOTDIR)/scripts/kube_run_tests.sh $(DEPLOYMENTNAMESPACE) $(TESTIMAGE) "$(ARANGODIMAGE)" '$(ENTERPRISEIMAGE)' '$(TESTTIMEOUT)' '$(TESTLENGTHOPTIONS)' '$(TESTOPTIONS)' '$(TEST_REMOTE_REPOSITORY)'
-
-$(DURATIONTESTBIN): $(SOURCES)
-	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(DURATIONTESTBINNAME) $(REPOPATH)/tests/duration
-
-
-.PHONY: docker-duration-test
-docker-duration-test: $(DURATIONTESTBIN)
-	docker build --quiet -f $(DOCKERDURATIONTESTFILE) -t $(DURATIONTESTIMAGE) .
-ifdef PUSHIMAGES
-	docker push $(DURATIONTESTIMAGE)
-endif
-
-.PHONY: cleanup-tests
-cleanup-tests:
-	kubectl delete ArangoDeployment -n $(DEPLOYMENTNAMESPACE) --all
-	sleep 10
-ifneq ($(DEPLOYMENTNAMESPACE), default)
-	$(ROOTDIR)/scripts/kube_delete_namespace.sh $(DEPLOYMENTNAMESPACE)
-endif
-
 # Release building
 
 .PHONY: patch-readme
@@ -469,16 +360,6 @@ patch-release: patch-readme patch-examples
 .PHONY: patch-chart
 patch-chart:
 	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
-
-.PHONY: changelog
-changelog:
-	docker run --rm \
-		-e CHANGELOG_GITHUB_TOKEN=$(shell cat ~/.arangodb/github-token) \
-		-v "$(ROOTDIR)":/usr/local/src/your-app \
-		ferrarimarco/github-changelog-generator:1.14.3 \
-		--user arangodb \
-		--project kube-arangodb \
-		--no-author
 
 .PHONY: docker-push
 docker-push: docker
@@ -519,71 +400,6 @@ release-minor: $(RELEASE)
 release-major: $(RELEASE)
 	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major
 
-## Kubernetes utilities
-
-.PHONY: minikube-start
-minikube-start:
-	minikube start --cpus=4 --memory=6144
-
-.PHONY: delete-operator
-delete-operator:
-	kubectl delete -f $(MANIFESTPATHTEST) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHDEPLOYMENT) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHDEPLOYMENTREPLICATION) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHBACKUP) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHSTORAGE) --ignore-not-found
-	kubectl delete -f $(MANIFESTPATHCRD) --ignore-not-found
-
-.PHONY: redeploy-operator
-redeploy-operator: delete-operator manifests
-	kubectl apply -f $(MANIFESTPATHCRD)
-	kubectl apply -f $(MANIFESTPATHSTORAGE)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENT)
-	kubectl apply -f $(MANIFESTPATHDEPLOYMENTREPLICATION)
-	kubectl apply -f $(MANIFESTPATHBACKUP)
-	kubectl apply -f $(MANIFESTPATHTEST)
-	kubectl get pods
-
-## ArangoSync Tests
-
-$(ARANGOSYNCTESTCTRLBIN): $(GOBUILDDIR) $(SOURCES)
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(ARANGOSYNCTESTCTRLBIN) $(REPOPATH)/tests/sync
-
-.PHONY: check-sync-vars
-check-sync-vars:
-ifndef ARANGOSYNCSRCDIR
-	@echo ARANGOSYNCSRCDIR must point to the arangosync source directory
-	@exit 1
-endif
-ifndef ARANGODIMAGE
-	@echo ARANGODIMAGE must point to the usable arangodb enterprise image
-	@exit 1
-endif
-ifndef ENTERPRISELICENSE
-	@echo For tests using ArangoSync you most likely need the license key. Please set ENTERPRISELICENSE.
-	@exit 1
-endif
-	@echo Using ArangoSync source at $(ARANGOSYNCSRCDIR)
-	@echo Using ArangoDB image $(ARANGODIMAGE)
-
-.PHONY: docker-sync
-docker-sync: check-sync-vars
-	SYNCIMAGE=$(ARANGOSYNCIMAGE) TESTIMAGE=$(ARANGOSYNCTESTIMAGE) $(MAKE) -C $(ARANGOSYNCSRCDIR) docker docker-test
-
-.PHONY:
-docker-sync-test-ctrl: $(ARANGOSYNCTESTCTRLBIN)
-	docker build --quiet -f $(DOCKERARANGOSYNCCTRLFILE) -t $(ARANGOSYNCTESTCTRLIMAGE) .
-
-.PHONY:
-run-sync-tests: check-vars docker-sync docker-sync-test-ctrl prepare-run-tests
-ifdef PUSHIMAGES
-	docker push $(ARANGOSYNCTESTCTRLIMAGE)
-	docker push $(ARANGOSYNCTESTIMAGE)
-	docker push $(ARANGOSYNCIMAGE)
-endif
-	$(ROOTDIR)/scripts/kube_run_sync_tests.sh $(DEPLOYMENTNAMESPACE) '$(ARANGODIMAGE)' '$(ARANGOSYNCIMAGE)' '$(ARANGOSYNCTESTIMAGE)' '$(ARANGOSYNCTESTCTRLIMAGE)' '$(TESTOPTIONS)'
-
 .PHONY: tidy
 tidy:
 	@go mod tidy
@@ -592,7 +408,7 @@ tidy:
 deps-reload: tidy init
 
 .PHONY: init
-init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
+init: tools update-generated $(GHRELEASE) $(RELEASE) $(BIN) vendor
 
 .PHONY: tools
 tools: update-vendor
