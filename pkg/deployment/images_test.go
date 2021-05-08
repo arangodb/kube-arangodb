@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -331,7 +333,7 @@ func TestEnsureImages(t *testing.T) {
 			require.NoError(t, err)
 
 			// Act
-			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject)
+			retrySoon, _, err := d.ensureImages(context.Background(), d.apiObject, inspector.NewEmptyInspector())
 
 			// Assert
 			assert.EqualValues(t, testCase.RetrySoon, retrySoon)

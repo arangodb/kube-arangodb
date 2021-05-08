@@ -25,6 +25,8 @@ package resources
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,7 +56,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -91,7 +97,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: true,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgsWithUpgrade(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.auto-upgrade=true",
@@ -132,7 +142,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -168,7 +182,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -206,7 +224,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -243,7 +265,11 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--database.directory=/data",
@@ -292,7 +318,12 @@ func TestCreateArangodArgsSingle(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--cluster.agency-endpoint=ssl://name-agent-a1.name-int.ns.svc:8529",

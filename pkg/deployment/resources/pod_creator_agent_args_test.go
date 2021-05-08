@@ -25,6 +25,11 @@ package resources
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/stretchr/testify/assert"
@@ -33,6 +38,54 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+type inspectorMock interface {
+	AddService(t *testing.T, svc ...*core.Service) inspectorMock
+
+	RegisterMemberStatus(t *testing.T, apiObject *api.ArangoDeployment, group api.ServerGroup, members ...api.MemberStatus) inspectorMock
+
+	Get(t *testing.T) inspectorInterface.Inspector
+}
+
+func newInspectorMock(t *testing.T) inspectorMock {
+	return inspectorMockStruct{
+		services: map[string]*core.Service{},
+	}
+}
+
+type inspectorMockStruct struct {
+	services map[string]*core.Service
+}
+
+func (i inspectorMockStruct) RegisterMemberStatus(t *testing.T, apiObject *api.ArangoDeployment, group api.ServerGroup, members ...api.MemberStatus) inspectorMock {
+	var z inspectorMock = i
+	for _, member := range members {
+		memberName := member.ArangoMemberName(apiObject.GetName(), group)
+
+		svc := core.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: memberName,
+			},
+			Spec: core.ServiceSpec{
+				ClusterIP: "127.0.0.1",
+			},
+		}
+		z = z.AddService(t, &svc)
+	}
+	return z
+}
+
+func (i inspectorMockStruct) AddService(t *testing.T, svc ...*core.Service) inspectorMock {
+	for _, s := range svc {
+		i.services[s.GetName()] = s
+	}
+
+	return i
+}
+
+func (i inspectorMockStruct) Get(t *testing.T) inspectorInterface.Inspector {
+	return inspector.NewInspectorFromData(nil, nil, nil, i.services, nil, nil, nil, nil)
+}
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
 func TestCreateArangodArgsAgent(t *testing.T) {
@@ -64,7 +117,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -119,7 +177,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			AutoUpgrade: true,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgsWithUpgrade(input)
+
+		i := newInspectorMock(t)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -178,7 +241,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -232,7 +300,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",
@@ -286,7 +359,12 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
-		cmdline := createArangodArgs(input)
+
+		i := newInspectorMock(t)
+		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
+
+		cmdline, err := createArangodArgs(i.Get(t), input)
+		require.NoError(t, err)
 		assert.Equal(t,
 			[]string{
 				"--agency.activate=true",

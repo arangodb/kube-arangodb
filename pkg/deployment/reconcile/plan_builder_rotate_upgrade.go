@@ -25,6 +25,10 @@ package reconcile
 import (
 	"context"
 
+	json "github.com/json-iterator/go"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	"github.com/arangodb/go-driver"
@@ -115,7 +119,7 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Use new level of rotate logic
-				rotNeeded, reason := podNeedsRotation(ctx, log, pod, spec, group, status, m, cachedStatus, context)
+				rotNeeded, reason := podNeedsRotation(ctx, log, apiObject, pod, spec, group, status, m, cachedStatus, context)
 				if rotNeeded {
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
@@ -282,9 +286,10 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(ctx context.Context, log zerolog.Logger, p *core.Pod, spec api.DeploymentSpec,
+func podNeedsRotation(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, p *core.Pod, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (bool, string) {
+
 	if m.PodUID != p.UID {
 		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
 	}
@@ -318,7 +323,29 @@ func podNeedsRotation(ctx context.Context, log zerolog.Logger, p *core.Pod, spec
 	}
 
 	if m.PodSpecVersion != checksum {
+		if _, err := json.Marshal(renderedPod); err == nil {
+			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("XXXXXXXXXXX Pod needs rotation - checksum does not match")
+		}
 		return true, "Pod needs rotation - checksum does not match"
+	}
+
+	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, apiObject, spec, group, m)
+	if err != nil {
+		log.Err(err).Msg("Error while getting pod endpoint")
+		return false, ""
+	}
+
+	if e := m.Endpoint; e == nil {
+		if spec.CommunicationMethod == nil {
+			// TODO: Remove in 1.2.0 release to allow rotation
+			return false, "Pod endpoint is not set and CommunicationMethod is not set, do not recreate"
+		}
+
+		return true, "Communication method has been set - ensure endpoint"
+	} else {
+		if *e != endpoint {
+			return true, "Pod endpoint changed"
+		}
 	}
 
 	return false, ""

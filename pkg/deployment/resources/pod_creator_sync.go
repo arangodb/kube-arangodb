@@ -264,7 +264,7 @@ func (m *MemberSyncPod) IsDeploymentMode() bool {
 	return m.spec.IsDevelopment()
 }
 
-func (m *MemberSyncPod) GetInitContainers() ([]core.Container, error) {
+func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
 	var initContainers []core.Container
 
 	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {

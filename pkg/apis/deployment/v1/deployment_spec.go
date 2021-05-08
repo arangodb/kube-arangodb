@@ -50,6 +50,46 @@ func validatePullPolicy(v core.PullPolicy) error {
 	}
 }
 
+// DeploymentCommunicationMethod define communication method used for inter-cluster communication
+type DeploymentCommunicationMethod string
+
+// Get returns communication method from pointer. If pointer is nil default is returned.
+func (d *DeploymentCommunicationMethod) Get() DeploymentCommunicationMethod {
+	if d == nil {
+		return DefaultDeploymentCommunicationMethod
+	}
+
+	switch v := *d; v {
+	case DeploymentCommunicationMethodHeadlessService, DeploymentCommunicationMethodDNS, DeploymentCommunicationMethodIP, DeploymentCommunicationMethodShortDNS:
+		return v
+	default:
+		return DefaultDeploymentCommunicationMethod
+	}
+}
+
+// String returns string representation of method.
+func (d DeploymentCommunicationMethod) String() string {
+	return string(d)
+}
+
+// New returns pointer.
+func (d DeploymentCommunicationMethod) New() *DeploymentCommunicationMethod {
+	return &d
+}
+
+const (
+	// DefaultDeploymentCommunicationMethod define default communication method.
+	DefaultDeploymentCommunicationMethod = DeploymentCommunicationMethodHeadlessService
+	// DeploymentCommunicationMethodHeadlessService define old communication mechanism, based on headless service.
+	DeploymentCommunicationMethodHeadlessService DeploymentCommunicationMethod = "headless"
+	// DeploymentCommunicationMethodDNS define ClusterIP Service DNS based communication.
+	DeploymentCommunicationMethodDNS DeploymentCommunicationMethod = "dns"
+	// DeploymentCommunicationMethodDNS define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
+	DeploymentCommunicationMethodShortDNS DeploymentCommunicationMethod = "short-dns"
+	// DeploymentCommunicationMethodIP define ClusterIP Servce IP based communication.
+	DeploymentCommunicationMethodIP DeploymentCommunicationMethod = "ip"
+)
+
 // DeploymentSpec contains the spec part of a ArangoDeployment resource.
 type DeploymentSpec struct {
 	Mode               *DeploymentMode                   `json:"mode,omitempty"`
@@ -118,6 +158,9 @@ type DeploymentSpec struct {
 	Timeouts *Timeouts `json:"timeouts,omitempty"`
 
 	ClusterDomain *string `json:"ClusterDomain,omitempty"`
+
+	// CommunicationMethod define communication method used in deployment
+	CommunicationMethod *DeploymentCommunicationMethod `json:"communicationMethod,omitempty"`
 }
 
 // GetRestoreFrom returns the restore from string or empty string if not set

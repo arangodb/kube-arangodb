@@ -64,12 +64,12 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 }
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
-func createArangodArgsWithUpgrade(input pod.Input) []string {
-	return createArangodArgs(input, pod.AutoUpgrade().Args(input)...)
+func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input, additionalOptions ...k8sutil.OptionPair) ([]string, error) {
+	return createArangodArgs(cachedStatus, input, pod.AutoUpgrade().Args(input)...)
 }
 
 // createArangodArgs creates command line arguments for an arangod server in the given group.
-func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
+func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, additionalOptions ...k8sutil.OptionPair) ([]string, error) {
 	options := k8sutil.CreateOptionPairs(64)
 
 	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
@@ -107,15 +107,13 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 
 	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(input.Version)
 
-	/*	if config.ServerThreads != 0 {
-		options = append(options,
-			k8sutil.OptionPair{"--server.threads", strconv.Itoa(config.ServerThreads)})
-	}*/
-	/*if config.DebugCluster {
-		options = append(options,
-			k8sutil.OptionPair{"--log.level", "startup=trace"})
-	}*/
-	myTCPURL := scheme + "://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, input.Group.AsRole(), input.Member.ID), strconv.Itoa(k8sutil.ArangoPort))
+	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, input.ApiObject, input.Deployment, input.Group, input.Member)
+	if err != nil {
+		return nil, err
+	}
+	endpoint = util.StringOrDefault(input.Member.Endpoint, endpoint)
+
+	myTCPURL := scheme + "://" + net.JoinHostPort(endpoint, strconv.Itoa(k8sutil.ArangoPort))
 	addAgentEndpoints := false
 	switch input.Group {
 	case api.ServerGroupAgents:
@@ -128,8 +126,11 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		options.Add("--server.statistics", "false")
 		for _, p := range input.Status.Members.Agents {
 			if p.ID != input.Member.ID {
-				dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
-				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
+				dnsName, err := pod.GenerateMemberEndpoint(cachedStatus, input.ApiObject, input.Deployment, api.ServerGroupAgents, p)
+				if err != nil {
+					return nil, err
+				}
+				options.Addf("--agency.endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(k8sutil.ArangoPort)))
 			}
 		}
 	case api.ServerGroupDBServers:
@@ -162,8 +163,11 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 	}
 	if addAgentEndpoints {
 		for _, p := range input.Status.Members.Agents {
-			dnsName := p.GetEndpoint(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, api.ServerGroupAgents.AsRole(), p.ID))
-			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(dnsName, strconv.Itoa(k8sutil.ArangoPort)))
+			dnsName, err := pod.GenerateMemberEndpoint(cachedStatus, input.ApiObject, input.Deployment, api.ServerGroupAgents, p)
+			if err != nil {
+				return nil, err
+			}
+			options.Addf("--cluster.agency-endpoint", "%s://%s", scheme, net.JoinHostPort(util.StringOrDefault(p.Endpoint, dnsName), strconv.Itoa(k8sutil.ArangoPort)))
 		}
 	}
 
@@ -176,12 +180,12 @@ func createArangodArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair)
 		args = append(args, input.GroupSpec.Args...)
 	}
 
-	return args
+	return args, nil
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+func createArangoSyncArgs(cachedStatus interfaces.Inspector, apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
+	groupSpec api.ServerGroupSpec, member api.MemberStatus) ([]string, error) {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -241,7 +245,7 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 		args = append(args, groupSpec.Args...)
 	}
 
-	return args
+	return args, nil
 }
 
 // CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
@@ -314,7 +318,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 	member, ok := cachedStatus.ArangoMember(memberName)
 	if !ok {
-		return nil, errors.Newf("Service of member %s not found", memberName)
+		return nil, errors.Newf("ArangoMember %s not found", memberName)
 	}
 
 	// Update pod name
@@ -346,13 +350,16 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 		input := memberPod.AsInput()
 
-		args := createArangodArgs(input)
+		args, err := createArangodArgs(cachedStatus, input)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 
 		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
 
-		return RenderArangoPod(apiObject, role, newMember.ID, newMember.PodName, args, &memberPod)
+		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberPod)
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
@@ -408,7 +415,10 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
+		args, err := createArangoSyncArgs(cachedStatus, apiObject, spec, group, groupSpec, *newMember)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -423,7 +433,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			arangoMember:           *member,
 		}
 
-		return RenderArangoPod(apiObject, role, newMember.ID, newMember.PodName, args, &memberSyncPod)
+		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberSyncPod)
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}
@@ -476,13 +486,27 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 	imageInfo = *m.Image
 
+	kubecli := r.context.GetKubeCli()
+	apiObject := r.context.GetAPIObject()
+
+	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, apiObject, spec, group, m)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if m.Endpoint == nil || *m.Endpoint != endpoint {
+		// Update endpoint
+		m.Endpoint = &endpoint
+		if err := status.Members.Update(m, group); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	pod, err := r.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	kubecli := r.context.GetKubeCli()
-	apiObject := r.context.GetAPIObject()
 	ns := r.context.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	if !found {
@@ -518,7 +542,6 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 		m.PodUID = uid
 		m.PodSpecVersion = sha
-		m.Endpoint = util.NewString(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID))
 		m.ArangoVersion = m.Image.ArangoDBVersion
 		m.ImageID = m.Image.ImageID
 
@@ -571,7 +594,7 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
 		m.PodUID = uid
-		m.Endpoint = util.NewString(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain))
+		m.Endpoint = &endpoint
 		m.PodSpecVersion = sha
 	}
 	// Record new member phase
@@ -596,7 +619,7 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 }
 
 // RenderArangoPod renders new ArangoD Pod
-func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
+func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sutil.APIObject, role, id, podName string,
 	args []string, podCreator interfaces.PodCreator) (*core.Pod, error) {
 
 	// Prepare basic pod
@@ -620,7 +643,7 @@ func RenderArangoPod(deployment k8sutil.APIObject, role, id, podName string,
 
 	podCreator.Init(&p)
 
-	if initContainers, err := podCreator.GetInitContainers(); err != nil {
+	if initContainers, err := podCreator.GetInitContainers(cachedStatus); err != nil {
 		return nil, errors.WithStack(err)
 	} else if initContainers != nil {
 		p.Spec.InitContainers = append(p.Spec.InitContainers, initContainers...)

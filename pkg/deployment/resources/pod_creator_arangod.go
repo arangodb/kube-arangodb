@@ -391,7 +391,7 @@ func (m *MemberArangoDPod) IsDeploymentMode() bool {
 	return m.spec.IsDevelopment()
 }
 
-func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
+func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
 	var initContainers []core.Container
 
 	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
@@ -426,7 +426,10 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade || m.status.Upgrade {
-			args := createArangodArgsWithUpgrade(m.AsInput())
+			args, err := createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
+			if err != nil {
+				return nil, err
+			}
 
 			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
 			if err != nil {
@@ -447,7 +450,10 @@ func (m *MemberArangoDPod) GetInitContainers() ([]core.Container, error) {
 		{
 			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
 			if len(versionArgs) > 0 {
-				args := createArangodArgs(m.AsInput(), versionArgs...)
+				args, err := createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
+				if err != nil {
+					return nil, err
+				}
 
 				c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
 				if err != nil {

@@ -567,6 +567,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.CommunicationMethod != nil {
+		in, out := &in.CommunicationMethod, &out.CommunicationMethod
+		*out = new(DeploymentCommunicationMethod)
+		**out = **in
+	}
 	return
 }
 

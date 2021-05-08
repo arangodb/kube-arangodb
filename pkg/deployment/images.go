@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -81,7 +83,7 @@ type imagesBuilder struct {
 
 // ensureImages creates pods needed to detect ImageID for specified images.
 // Returns: retrySoon, error
-func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDeployment) (bool, bool, error) {
+func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) (bool, bool, error) {
 	status, lastVersion := d.GetStatus()
 	ib := imagesBuilder{
 		APIObject: apiObject,
@@ -96,8 +98,7 @@ func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDepl
 			return nil
 		},
 	}
-
-	retrySoon, exists, err := ib.Run(ctx)
+	retrySoon, exists, err := ib.Run(ctx, cachedStatus)
 	if err != nil {
 		return retrySoon, exists, errors.WithStack(err)
 	}
@@ -107,11 +108,11 @@ func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDepl
 // Run creates pods needed to detect ImageID for specified images and puts the found
 // image ID's into the status.Images list.
 // Returns: retrySoon, error
-func (ib *imagesBuilder) Run(ctx context.Context) (bool, bool, error) {
+func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, bool, error) {
 	// Check ArangoDB image
 	if _, found := ib.Status.Images.GetByImage(ib.Spec.GetImage()); !found {
 		// We need to find the image ID for the ArangoDB image
-		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, ib.Spec.GetImage())
+		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, cachedStatus, ib.Spec.GetImage())
 		if err != nil {
 			return retrySoon, false, errors.WithStack(err)
 		}
@@ -124,7 +125,7 @@ func (ib *imagesBuilder) Run(ctx context.Context) (bool, bool, error) {
 // fetchArangoDBImageIDAndVersion checks a running pod for fetching the ID of the given image.
 // When no pod exists, it is created, otherwise the ID is fetched & version detected.
 // Returns: retrySoon, error
-func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, image string) (bool, error) {
+func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector, image string) (bool, error) {
 	role := k8sutil.ImageIDAndVersionRole
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
@@ -225,7 +226,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, ima
 		apiObject: ib.APIObject,
 	}
 
-	pod, err = resources.RenderArangoPod(ib.APIObject, role, id, podName, args, &imagePod)
+	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, args, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
 		return true, errors.WithStack(err)
@@ -324,7 +325,7 @@ func (i *ImageUpdatePod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 func (i *ImageUpdatePod) GetSidecars(*core.Pod) {
 }
 
-func (i *ImageUpdatePod) GetInitContainers() ([]core.Container, error) {
+func (i *ImageUpdatePod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
 	return nil, nil
 }
 
