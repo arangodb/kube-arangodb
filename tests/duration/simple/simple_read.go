@@ -33,37 +33,37 @@ import (
 
 // readExistingDocument reads an existing document with an optional explicit revision.
 // The operation is expected to succeed.
-func (t *simpleTest) readExistingDocument(c *collection, key, rev string, updateRevision, skipExpectedValueCheck bool) (string, error) {
+func (t *simpleTest) readExistingDocument(c *collection, key string, updateRevision bool) error {
 	ctx := context.Background()
 	var result UserDocument
 	col, err := t.db.Collection(ctx, c.name)
 	if err != nil {
-		return "", maskAny(err)
+		return maskAny(err)
 	}
-	m, err := col.ReadDocument(ctx, key, &result)
+	_, err = col.ReadDocument(ctx, key, &result)
 	if err != nil {
 		// This is a failure
 		t.readExistingCounter.failed++
 		t.reportFailure(test.NewFailure("Failed to read existing document '%s' in collection '%s': %v", key, c.name, err))
-		return "", maskAny(err)
+		return maskAny(err)
 	}
 	// Compare document against expected document
-	if !skipExpectedValueCheck {
-		expected := c.existingDocs[key]
-		if result.Value != expected.Value || result.Name != expected.Name || result.Odd != expected.Odd {
-			// This is a failure
-			t.readExistingCounter.failed++
-			t.reportFailure(test.NewFailure("Read existing document '%s' returned different values '%s': got %q expected %q", key, c.name, result, expected))
-			return "", maskAny(fmt.Errorf("Read returned invalid values"))
-		}
+
+	expected := c.existingDocs[key]
+	if result.Value != expected.Value || result.Name != expected.Name || result.Odd != expected.Odd {
+		// This is a failure
+		t.readExistingCounter.failed++
+		t.reportFailure(test.NewFailure("Read existing document '%s' returned different values '%s': got %v expected %v", key, c.name, result, expected))
+		return maskAny(fmt.Errorf("Read returned invalid values"))
 	}
+
 	if updateRevision {
 		// Store read document so we have the last revision
 		c.existingDocs[key] = result
 	}
 	t.readExistingCounter.succeeded++
 	t.log.Info().Msgf("Reading existing document '%s' from '%s' succeeded", key, c.name)
-	return m.Rev, nil
+	return nil
 }
 
 // readNonExistingDocument reads a non-existing document.

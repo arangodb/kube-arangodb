@@ -57,12 +57,12 @@ func TestAddingMetrics(t *testing.T) {
 	depl.Spec.SetDefaults(depl.GetName()) // this must be last
 
 	// Create deployment
-	deployment, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
+	_, err := c.DatabaseV1().ArangoDeployments(ns).Create(context.Background(), depl, metav1.CreateOptions{})
 	require.NoErrorf(t, err, "Create deployment failed")
 	defer deferedCleanupDeployment(c, depl.GetName(), ns)
 
 	// Wait for deployment to be ready
-	deployment, err = waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
+	deployment, err := waitUntilDeployment(c, depl.GetName(), ns, deploymentIsReady())
 	require.NoErrorf(t, err, "Deployment not running in time")
 
 	// Create a database client

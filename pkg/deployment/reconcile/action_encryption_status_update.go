@@ -69,7 +69,7 @@ func (a *encryptionKeyStatusUpdateAction) Start(ctx context.Context) (bool, erro
 		return true, nil
 	}
 
-	keyHashes := secretKeysToListWithPrefix("sha256:", f)
+	keyHashes := secretKeysToListWithPrefix(f)
 
 	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		if len(keyHashes) == 0 {

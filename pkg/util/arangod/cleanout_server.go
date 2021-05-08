@@ -74,10 +74,6 @@ type agencyJob struct {
 	Type   string `json:"type,omitempty"`
 }
 
-const (
-	agencyJobTypeCleanOutServer = "cleanOutServer"
-)
-
 // CleanoutServerJobStatus checks the status of a cleanout-server job with given ID.
 func CleanoutServerJobStatus(ctx context.Context, jobID string, client driver.Client, agencyClient agency.Agency) (CleanoutJobStatus, error) {
 	for _, keyPrefix := range agencyJobStateKeyPrefixes {

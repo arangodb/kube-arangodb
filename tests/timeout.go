@@ -34,7 +34,6 @@ func timeout(interval, timeout time.Duration, action func() error) error {
 				}
 				return err
 			}
-			break
 		case <-timeoutT.C:
 			return fmt.Errorf("function timeouted")
 		}

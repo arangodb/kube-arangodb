@@ -38,7 +38,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func createTLSSNISecret(t *testing.T, client kubernetes.Interface, name, namespace, key, value string) {
+func createTLSSNISecret(t *testing.T, client kubernetes.Interface, name, namespace string) {
 	secret := core.Secret{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
@@ -47,10 +47,7 @@ func createTLSSNISecret(t *testing.T, client kubernetes.Interface, name, namespa
 		Type: core.SecretTypeOpaque,
 		Data: map[string][]byte{},
 	}
-
-	if key != "" {
-		secret.Data[key] = []byte(value)
-	}
+	secret.Data[constants.SecretTLSKeyfile] = []byte("")
 
 	_, err := client.CoreV1().Secrets(namespace).Create(context.Background(), &secret, meta.CreateOptions{})
 	require.NoError(t, err)
@@ -88,8 +85,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace())
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -113,7 +110,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -163,8 +160,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace())
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -188,7 +185,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -238,8 +235,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace())
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -263,7 +260,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -313,8 +310,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace())
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -355,7 +352,7 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
 							Command: func() []string {
-								args := createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false, false)
+								args := createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, false)
 								args = append(args, fmt.Sprintf("--ssl.server-name-indication=a=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
 									fmt.Sprintf("--ssl.server-name-indication=b=%s/sni1/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
 									fmt.Sprintf("--ssl.server-name-indication=c=%s/sni2/tls.keyfile", k8sutil.TLSSNIKeyfileVolumeMountDir),
@@ -421,8 +418,8 @@ func TestEnsurePod_ArangoDB_TLS_SNI(t *testing.T) {
 				TLSSNI: true,
 			},
 			Resources: func(t *testing.T, deployment *Deployment) {
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace(), constants.SecretTLSKeyfile, "")
-				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace(), constants.SecretTLSKeyfile, "")
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni1", deployment.Namespace())
+				createTLSSNISecret(t, deployment.GetKubeCli(), "sni2", deployment.Namespace())
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{

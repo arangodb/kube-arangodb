@@ -37,7 +37,7 @@ import (
 
 type envFunc func() []core.EnvVar
 
-func withEnvs(t *testing.T, f ...envFunc) []core.EnvVar {
+func withEnvs(f ...envFunc) []core.EnvVar {
 	var e []core.EnvVar
 
 	for _, c := range f {
@@ -47,14 +47,12 @@ func withEnvs(t *testing.T, f ...envFunc) []core.EnvVar {
 	return e
 }
 
-func withDefaultEnvs(t *testing.T, requirements core.ResourceRequirements, f ...envFunc) []core.EnvVar {
+func withDefaultEnvs(t *testing.T, requirements core.ResourceRequirements) []core.EnvVar {
 	var q []envFunc
 
 	q = append(q, resourceLimitAsEnv(t, requirements))
 
-	q = append(q, f...)
-
-	return withEnvs(t, q...)
+	return withEnvs(q...)
 }
 
 func resourceLimitAsEnv(t *testing.T, requirements core.ResourceRequirements) envFunc {
@@ -196,7 +194,7 @@ func TestEnsurePod_ArangoDB_Resources(t *testing.T) {
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 							},
-							Env:             withEnvs(t, resourceCPULimitAsEnv(t, resourcesUnfiltered)),
+							Env:             withEnvs(resourceCPULimitAsEnv(t, resourcesUnfiltered)),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),

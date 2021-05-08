@@ -35,7 +35,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -94,8 +93,6 @@ type LocalStorage struct {
 	eventCh chan *localStorageEvent
 	stopCh  chan struct{}
 	stopped int32
-
-	eventsCli corev1.EventInterface
 
 	image           string
 	imagePullPolicy v1.PullPolicy

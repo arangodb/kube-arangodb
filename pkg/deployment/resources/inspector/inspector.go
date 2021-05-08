@@ -126,10 +126,6 @@ type inspector struct {
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget
 	serviceMonitors      map[string]*monitoring.ServiceMonitor
 	arangoMembers        map[string]*api.ArangoMember
-
-	ns string
-	k  kubernetes.Interface
-	m  monitoringClient.MonitoringV1Interface
 }
 
 func (i *inspector) Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,

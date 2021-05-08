@@ -175,7 +175,7 @@ func hasFinalizers(backup *backupApi.ArangoBackup) bool {
 	}
 
 	for _, finalizer := range backupApi.FinalizersArangoBackup {
-		if !hasFinalizer(backup, finalizer) {
+		if !hasFinalizer(finalizer) {
 			return false
 		}
 	}
@@ -183,7 +183,7 @@ func hasFinalizers(backup *backupApi.ArangoBackup) bool {
 	return true
 }
 
-func hasFinalizer(backup *backupApi.ArangoBackup, finalizer string) bool {
+func hasFinalizer(finalizer string) bool {
 	if backupApi.FinalizersArangoBackup == nil {
 		return false
 	}
@@ -209,7 +209,7 @@ func appendFinalizers(backup *backupApi.ArangoBackup) []string {
 	old := backup.Finalizers
 
 	for _, finalizer := range backupApi.FinalizersArangoBackup {
-		if !hasFinalizer(backup, finalizer) {
+		if !hasFinalizer(finalizer) {
 			old = append(old, finalizer)
 		}
 	}

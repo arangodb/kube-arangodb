@@ -185,7 +185,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							},
 							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
-							ReadinessProbe:  createTestReadinessSimpleProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							ReadinessProbe:  createTestReadinessSimpleProbe(httpProbe, false, ""),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -292,7 +292,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 							},
 							Resources:       emptyResources,
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
-							ReadinessProbe:  createTestReadinessSimpleProbe(httpProbe, false, "", k8sutil.ArangoPort),
+							ReadinessProbe:  createTestReadinessSimpleProbe(httpProbe, false, ""),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
@@ -336,7 +336,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
@@ -392,7 +392,7 @@ func TestEnsurePod_ArangoDB_Probe(t *testing.T) {
 						{
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, false),
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false),
 							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),

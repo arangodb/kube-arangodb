@@ -32,7 +32,7 @@ import (
 
 // removeExistingDocument removes an existing document with an optional explicit revision.
 // The operation is expected to succeed.
-func (t *simpleTest) removeExistingDocument(collectionName string, key, rev string) error {
+func (t *simpleTest) removeExistingDocument(collectionName string, key string) error {
 	ctx := context.Background()
 	col, err := t.db.Collection(ctx, collectionName)
 	if err != nil {

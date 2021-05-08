@@ -147,7 +147,6 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 		deployment.ArangoDeploymentResourceKind,
 		r.context.GetAPIObject().GetName(),
 		r.context.GetAPIObject().GetNamespace(),
-		r.context.GetSpec().Annotations,
 		r.context.GetSpec()); err != nil {
 		return err
 	}
@@ -264,7 +263,7 @@ func getObjectGroup(obj meta.Object) api.ServerGroup {
 	return api.ServerGroupFromRole(group)
 }
 
-func ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, annotations map[string]string, spec api.DeploymentSpec) error {
+func ensurePodsAnnotations(patch PatchFunc, cachedStatus inspectorInterface.Inspector, kind, name, namespace string, spec api.DeploymentSpec) error {
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		ensureGroupAnnotationsMap(pod.Kind, pod, spec, patch)
 		return nil
@@ -315,7 +314,7 @@ func ensureLabelsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
 }
 
 func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec,
-	patchCmd func(name string, d []byte) error) bool {
+	patchCmd func(name string, d []byte) error) {
 	group := getObjectGroup(obj)
 	groupSpec := spec.GetServerGroupSpec(group)
 	expected := collection.MergeAnnotations(spec.Annotations, groupSpec.Annotations)
@@ -324,16 +323,16 @@ func ensureGroupAnnotationsMap(kind string, obj meta.Object, spec api.Deployment
 
 	mode := groupSpec.AnnotationsMode.Get(spec.AnnotationsMode.Get(getDefaultMode(expected)))
 
-	return ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
+	ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignoredList...)
 }
 
-func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec, patchCmd PatchFunc) bool {
+func ensureAnnotationsMap(kind string, obj meta.Object, spec api.DeploymentSpec, patchCmd PatchFunc) {
 	expected := spec.Annotations
 	ignored := spec.AnnotationsIgnoreList
 
 	mode := spec.AnnotationsMode.Get(getDefaultMode(expected))
 
-	return ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignored...)
+	ensureObjectMap(kind, obj, mode, expected, obj.GetAnnotations(), collection.AnnotationsPatch, patchCmd, ignored...)
 }
 
 func ensureObjectMap(kind string, obj meta.Object, mode api.LabelsMode,

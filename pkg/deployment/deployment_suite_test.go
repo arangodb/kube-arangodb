@@ -120,7 +120,7 @@ func modTestLivenessProbe(mode string, secure bool, authorization string, port i
 	return probe
 }
 
-func createTestReadinessSimpleProbe(mode string, secure bool, authorization string, port int) *core.Probe {
+func createTestReadinessSimpleProbe(mode string, secure bool, authorization string) *core.Probe {
 	probe := createTestReadinessProbe(mode, secure, authorization)
 
 	probe.InitialDelaySeconds = 15
@@ -255,7 +255,7 @@ func createTestCommandForDBServer(name string, tls, auth, encryptionRocksDB bool
 	return append(command, args.Unique().AsArgs()...)
 }
 
-func createTestCommandForCoordinator(name string, tls, auth, encryptionRocksDB bool, mods ...func() k8sutil.OptionPairs) []string {
+func createTestCommandForCoordinator(name string, tls, auth bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
 
 	args := k8sutil.OptionPairs{}
@@ -277,11 +277,6 @@ func createTestCommandForCoordinator(name string, tls, auth, encryptionRocksDB b
 	args.Add("--foxx.queues", "true")
 	args.Add("--log.level", "INFO")
 	args.Add("--log.output", "+")
-
-	if encryptionRocksDB {
-		args.Add("--rocksdb.encryption-keyfile", "/secrets/rocksdb/encryption/key")
-	}
-
 	args.Add("--server.authentication", auth)
 
 	if tls {
@@ -309,7 +304,7 @@ func createTestCommandForCoordinator(name string, tls, auth, encryptionRocksDB b
 	return append(command, args.Unique().AsArgs()...)
 }
 
-func createTestCommandForSingleMode(name string, tls, auth, encryptionRocksDB bool, mods ...func() k8sutil.OptionPairs) []string {
+func createTestCommandForSingleMode(tls, auth bool, mods ...func() k8sutil.OptionPairs) []string {
 	command := []string{resources.ArangoDExecutor}
 
 	args := k8sutil.OptionPairs{}
@@ -318,11 +313,6 @@ func createTestCommandForSingleMode(name string, tls, auth, encryptionRocksDB bo
 	args.Add("--foxx.queues", "true")
 	args.Add("--log.level", "INFO")
 	args.Add("--log.output", "+")
-
-	if encryptionRocksDB {
-		args.Add("--rocksdb.encryption-keyfile", "/secrets/rocksdb/encryption/key")
-	}
-
 	args.Add("--server.authentication", auth)
 
 	if tls {

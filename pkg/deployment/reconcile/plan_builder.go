@@ -91,9 +91,8 @@ func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInter
 	return nil, true
 }
 
-func fetchAgency(ctx context.Context, log zerolog.Logger,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cache inspectorInterface.Inspector, context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
+func fetchAgency(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
 	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
 		return nil, nil
 	} else if status.Members.Agents.MembersReady() > 0 {
@@ -119,7 +118,7 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	}
 
 	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(ctx, log, spec, status, cachedStatus, builderCtx)
+	agencyPlan, agencyErr := fetchAgency(ctx, spec, status, builderCtx)
 
 	// Check for various scenario's
 	var plan api.Plan

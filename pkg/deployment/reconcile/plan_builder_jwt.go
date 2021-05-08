@@ -88,7 +88,7 @@ func createJWTKeyUpdate(ctx context.Context,
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key and add token field").AddParam(checksum, jwtSha))
 	}
 
-	plan, failed := areJWTTokensUpToDate(ctx, log, apiObject, spec, status, cachedStatus, context, folder)
+	plan, failed := areJWTTokensUpToDate(ctx, log, status, context, folder)
 	if len(plan) > 0 {
 		return plan
 	}
@@ -125,17 +125,15 @@ func createJWTStatusUpdate(ctx context.Context,
 		return nil
 	}
 
-	if createJWTStatusUpdateRequired(ctx, log, apiObject, spec, status, cachedStatus, context) {
+	if createJWTStatusUpdateRequired(log, apiObject, spec, status, cachedStatus) {
 		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTStatusUpdate, api.ServerGroupUnknown, "", "Update status"))
 	}
 
 	return nil
 }
 
-func createJWTStatusUpdateRequired(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool {
+func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector) bool {
 	folder, err := ensureJWTFolderSupport(spec, status)
 	if err != nil {
 		log.Error().Err(err).Msgf("Action not supported")
@@ -218,11 +216,8 @@ func createJWTStatusUpdateRequired(ctx context.Context,
 	return false
 }
 
-func areJWTTokensUpToDate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext,
-	folder *core.Secret) (plan api.Plan, failed bool) {
+func areJWTTokensUpToDate(ctx context.Context, log zerolog.Logger, status api.DeploymentStatus,
+	planCtx PlanBuilderContext, folder *core.Secret) (plan api.Plan, failed bool) {
 	gCtx, c := context.WithTimeout(ctx, 2*time.Second)
 	defer c()
 
@@ -230,7 +225,7 @@ func areJWTTokensUpToDate(ctx context.Context,
 		for _, m := range list {
 			nCtx, c := context.WithTimeout(gCtx, 500*time.Millisecond)
 			defer c()
-			if updateRequired, failedMember := isJWTTokenUpToDate(nCtx, log, apiObject, spec, status, cachedStatus, planCtx, group, m, folder); failedMember {
+			if updateRequired, failedMember := isJWTTokenUpToDate(nCtx, log, status, planCtx, group, m, folder); failedMember {
 				failed = true
 				continue
 			} else if updateRequired {
@@ -245,12 +240,8 @@ func areJWTTokensUpToDate(ctx context.Context,
 	return
 }
 
-func isJWTTokenUpToDate(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext,
-	group api.ServerGroup, m api.MemberStatus,
-	folder *core.Secret) (updateRequired bool, failed bool) {
+func isJWTTokenUpToDate(ctx context.Context, log zerolog.Logger, status api.DeploymentStatus, context PlanBuilderContext,
+	group api.ServerGroup, m api.MemberStatus, folder *core.Secret) (updateRequired bool, failed bool) {
 	if m.Phase != api.MemberPhaseCreated {
 		return false, true
 	}

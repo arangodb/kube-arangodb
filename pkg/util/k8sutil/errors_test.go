@@ -35,10 +35,10 @@ import (
 )
 
 var (
-	conflictError = apierrors.NewConflict(schema.GroupResource{"groupName", "resourceName"}, "something", os.ErrInvalid)
-	existsError   = apierrors.NewAlreadyExists(schema.GroupResource{"groupName", "resourceName"}, "something")
-	invalidError  = apierrors.NewInvalid(schema.GroupKind{"groupName", "kindName"}, "something", field.ErrorList{})
-	notFoundError = apierrors.NewNotFound(schema.GroupResource{"groupName", "resourceName"}, "something")
+	conflictError = apierrors.NewConflict(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something", os.ErrInvalid)
+	existsError   = apierrors.NewAlreadyExists(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
+	invalidError  = apierrors.NewInvalid(schema.GroupKind{Group: "groupName", Kind: "kindName"}, "something", field.ErrorList{})
+	notFoundError = apierrors.NewNotFound(schema.GroupResource{Group: "groupName", Resource: "resourceName"}, "something")
 )
 
 func TestIsAlreadyExists(t *testing.T) {

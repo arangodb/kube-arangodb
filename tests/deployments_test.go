@@ -24,8 +24,9 @@ package tests
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/assert"
@@ -67,7 +68,7 @@ func TestDeploymentClusterRocksDB(t *testing.T) {
 	deploymentSubTest(t, api.DeploymentModeCluster, api.StorageEngineRocksDB)
 }
 
-func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine) error {
+func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.StorageEngine) {
 	// check environment
 	longOrSkip(t)
 
@@ -98,8 +99,6 @@ func deploymentSubTest(t *testing.T, mode api.DeploymentMode, engine api.Storage
 
 	// Cleanup
 	removeDeployment(c, depl.GetName(), ns)
-
-	return nil
 }
 
 // test a setup containing multiple deployments

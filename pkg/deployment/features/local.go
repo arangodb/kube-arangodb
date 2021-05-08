@@ -101,9 +101,9 @@ func cmdRun(cmd *cobra.Command, args []string) {
 		}
 
 		if feature.EnterpriseRequired() {
-			println(fmt.Sprintf("ArangoDB Edition Required: Enterprise"))
+			println("ArangoDB Edition Required: Enterprise")
 		} else {
-			println(fmt.Sprintf("ArangoDB Edition Required: Community, Enterprise"))
+			println("ArangoDB Edition Required: Community, Enterprise")
 		}
 
 		println()

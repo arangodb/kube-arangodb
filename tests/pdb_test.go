@@ -35,12 +35,6 @@ func isPDBAsExpected(kube kubernetes.Interface, name, ns string, expectedMinAvai
 	return nil
 }
 
-func waitForPDBAsExpected(kube kubernetes.Interface, name, ns string, expectedMinAvailable int) error {
-	return retry.Retry(func() error {
-		return isPDBAsExpected(kube, name, ns, expectedMinAvailable)
-	}, 20*time.Second)
-}
-
 func waitForPDBsOfDeployment(kube kubernetes.Interface, apiObject *api.ArangoDeployment) error {
 	spec := apiObject.Spec
 	return retry.Retry(func() error {

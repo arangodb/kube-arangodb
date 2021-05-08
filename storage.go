@@ -78,10 +78,7 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorNodeName)
 	}
 
-	config, deps, err := newProvisionerConfigAndDeps(nodeName)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create provisioner config & dependencies")
-	}
+	config, deps := newProvisionerConfigAndDeps(nodeName)
 	p, err := service.New(config, deps)
 	if err != nil {
 		cliLog.Fatal().Err(err).Msg("Failed to create provisioner")
@@ -92,7 +89,7 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 }
 
 // newProvisionerConfigAndDeps creates storage provisioner config & dependencies.
-func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Dependencies, error) {
+func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Dependencies) {
 	cfg := service.Config{
 		Address:  net.JoinHostPort("0.0.0.0", strconv.Itoa(storageProvisioner.port)),
 		NodeName: nodeName,
@@ -101,5 +98,5 @@ func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Depen
 		Log: logService.MustGetLogger("provisioner"),
 	}
 
-	return cfg, deps, nil
+	return cfg, deps
 }

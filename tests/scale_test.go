@@ -24,8 +24,9 @@ package tests
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dchest/uniuri"
 
@@ -223,7 +224,7 @@ func TestScaleClusterWithSync(t *testing.T) {
 	}
 
 	// Wait for syncmasters to be available
-	if err := waitUntilSyncVersionUp(syncClient, nil); err != nil {
+	if err := waitUntilSyncVersionUp(syncClient); err != nil {
 		t.Fatalf("SyncMasters not running returning version in time: %v", err)
 	}
 
