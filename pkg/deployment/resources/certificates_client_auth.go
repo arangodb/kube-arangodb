@@ -26,17 +26,14 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	certificates "github.com/arangodb-helper/go-certificates"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	certificates "github.com/arangodb-helper/go-certificates"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -70,48 +67,5 @@ func createClientAuthCACertificate(ctx context.Context, log zerolog.Logger, secr
 		return errors.WithStack(err)
 	}
 	log.Debug().Msg("Created CA Secret")
-	return nil
-}
-
-// createClientAuthCertificateKeyfile creates a client authentication certificate for a specific user and stores
-// it in a secret with the given name.
-func createClientAuthCertificateKeyfile(log zerolog.Logger, secrets v1.SecretInterface, commonName string, ttl time.Duration, spec api.SyncAuthenticationSpec, secretName string, ownerRef *metav1.OwnerReference) error {
-	log = log.With().Str("secret", secretName).Logger()
-	// Load CA certificate
-	caCert, caKey, _, err := k8sutil.GetCASecret(context.TODO(), secrets, spec.GetClientCASecretName(), nil)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to load CA certificate")
-		return errors.WithStack(err)
-	}
-	ca, err := certificates.LoadCAFromPEM(caCert, caKey)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to decode CA certificate")
-		return errors.WithStack(err)
-	}
-
-	options := certificates.CreateCertificateOptions{
-		CommonName:   commonName,
-		ValidFrom:    time.Now(),
-		ValidFor:     ttl,
-		IsCA:         false,
-		IsClientAuth: true,
-		ECDSACurve:   clientAuthECDSACurve,
-	}
-	cert, priv, err := certificates.CreateCertificate(options, &ca)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to create server certificate")
-		return errors.WithStack(err)
-	}
-	keyfile := strings.TrimSpace(cert) + "\n" +
-		strings.TrimSpace(priv)
-	if err := k8sutil.CreateTLSKeyfileSecret(context.TODO(), secrets, secretName, keyfile, ownerRef); err != nil {
-		if k8sutil.IsAlreadyExists(err) {
-			log.Debug().Msg("Server Secret already exists")
-		} else {
-			log.Debug().Err(err).Msg("Failed to create server Secret")
-		}
-		return errors.WithStack(err)
-	}
-	log.Debug().Msg("Created server Secret")
 	return nil
 }

@@ -37,8 +37,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
-	"github.com/arangodb/go-driver"
-
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -231,40 +229,6 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	}
 
 	return nil
-}
-
-func changeUserPassword(c Context, secret *v1.Secret) error {
-	username, password, err := k8sutil.GetSecretAuthCredentials(secret)
-	if err != nil {
-		return nil
-	}
-
-	ctx := context.Background()
-	client, err := c.GetDatabaseClient(ctx)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	user, err := client.User(ctx, username)
-	if err != nil {
-		if driver.IsNotFound(err) {
-			options := &driver.UserOptions{
-				Password: password,
-				Active:   new(bool),
-			}
-			*options.Active = true
-
-			_, err = client.CreateUser(ctx, username, options)
-			return errors.WithStack(err)
-		}
-		return err
-	}
-
-	err = user.Update(ctx, driver.UserOptions{
-		Password: password,
-	})
-
-	return errors.WithStack(err)
 }
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.

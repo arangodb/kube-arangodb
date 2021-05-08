@@ -350,7 +350,7 @@ func (t *simpleTest) testLoop() {
 
 						// Now try to read it, it must exist
 						//t.client.SetCoordinator("")
-						if _, err := t.readExistingDocument(c, userDoc.Key, rev, false, false); err != nil {
+						if err := t.readExistingDocument(c, userDoc.Key, false); err != nil {
 							t.log.Error().Msgf("Failed to read just-created document '%s': %#v", userDoc.Key, err)
 						}
 					}
@@ -363,8 +363,8 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, rev := c.selectRandomKey()
-					if _, err := t.readExistingDocument(c, randomKey, rev, false, false); err != nil {
+					randomKey := c.selectRandomKey()
+					if err := t.readExistingDocument(c, randomKey, false); err != nil {
 						t.log.Error().Msgf("Failed to read existing document '%s': %#v", randomKey, err)
 					}
 				}
@@ -391,8 +391,8 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, rev := c.selectRandomKey()
-					if err := t.removeExistingDocument(c.name, randomKey, rev); err != nil {
+					randomKey := c.selectRandomKey()
+					if err := t.removeExistingDocument(c.name, randomKey); err != nil {
 						t.log.Error().Msgf("Failed to remove existing document '%s': %#v", randomKey, err)
 					} else {
 						// Remove succeeded, key should no longer exist
@@ -428,13 +428,13 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, rev := c.selectRandomKey()
-					if newRev, err := t.updateExistingDocument(c, randomKey, rev); err != nil {
+					randomKey := c.selectRandomKey()
+					if _, err := t.updateExistingDocument(c, randomKey); err != nil {
 						t.log.Error().Msgf("Failed to update existing document '%s': %#v", randomKey, err)
 					} else {
 						// Updated succeeded, now try to read it, it should exist and be updated
 						//t.client.SetCoordinator("")
-						if _, err := t.readExistingDocument(c, randomKey, newRev, false, false); err != nil {
+						if err := t.readExistingDocument(c, randomKey, false); err != nil {
 							t.log.Error().Msgf("Failed to read just-updated document '%s': %#v", randomKey, err)
 						}
 					}
@@ -462,13 +462,13 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, rev := c.selectRandomKey()
-					if newRev, err := t.replaceExistingDocument(c, randomKey, rev); err != nil {
+					randomKey := c.selectRandomKey()
+					if _, err := t.replaceExistingDocument(c, randomKey); err != nil {
 						t.log.Error().Msgf("Failed to replace existing document '%s': %#v", randomKey, err)
 					} else {
 						// Replace succeeded, now try to read it, it should exist and be replaced
 						//t.client.SetCoordinator("")
-						if _, err := t.readExistingDocument(c, randomKey, newRev, false, false); err != nil {
+						if err := t.readExistingDocument(c, randomKey, false); err != nil {
 							t.log.Error().Msgf("Failed to read just-replaced document '%s': %#v", randomKey, err)
 						}
 					}
@@ -517,13 +517,13 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, _ := c.selectRandomKey()
-					if newRev, err := t.queryUpdateDocuments(c, randomKey); err != nil {
+					randomKey := c.selectRandomKey()
+					if _, err := t.queryUpdateDocuments(c, randomKey); err != nil {
 						t.log.Error().Msgf("Failed to update document using AQL query: %#v", err)
 					} else {
 						// Updated succeeded, now try to read it (anywhere), it should exist and be updated
 						//t.client.SetCoordinator("")
-						if _, err := t.readExistingDocument(c, randomKey, newRev, false, false); err != nil {
+						if err := t.readExistingDocument(c, randomKey, false); err != nil {
 							t.log.Error().Msgf("Failed to read just-updated document '%s': %#v", randomKey, err)
 						}
 					}
@@ -536,13 +536,13 @@ func (t *simpleTest) testLoop() {
 			if len(t.collections) > 0 {
 				c := t.selectRandomCollection()
 				if len(c.existingDocs) > 0 {
-					randomKey, _ := c.selectRandomKey()
-					if newRev, err := t.queryUpdateDocumentsLongRunning(c, randomKey); err != nil {
+					randomKey := c.selectRandomKey()
+					if _, err := t.queryUpdateDocumentsLongRunning(c, randomKey); err != nil {
 						t.log.Error().Msgf("Failed to update document using long running AQL query: %#v", err)
 					} else {
 						// Updated succeeded, now try to read it (anywhere), it should exist and be updated
 						//t.client.SetCoordinator("")
-						if _, err := t.readExistingDocument(c, randomKey, newRev, false, false); err != nil {
+						if err := t.readExistingDocument(c, randomKey, false); err != nil {
 							t.log.Error().Msgf("Failed to read just-updated document '%s': %#v", randomKey, err)
 						}
 					}
@@ -622,7 +622,7 @@ func (t *simpleTest) createAndInitCollection() error {
 		if t.shouldStop() || t.pauseRequested {
 			return nil
 		}
-		if _, err := t.readExistingDocument(c, k, "", true, false); err != nil {
+		if err := t.readExistingDocument(c, k, true); err != nil {
 			t.reportFailure(test.NewFailure("Failed to read existing document '%s': %#v", k, err))
 		}
 		t.actions++
@@ -667,23 +667,13 @@ func (c *collection) removeExistingKey(key string) {
 	delete(c.existingDocs, key)
 }
 
-func (c *collection) selectRandomKey() (string, string) {
+func (c *collection) selectRandomKey() string {
 	index := rand.Intn(len(c.existingDocs))
-	for k, v := range c.existingDocs {
+	for k := range c.existingDocs {
 		if index == 0 {
-			return k, v.rev
+			return k
 		}
 		index--
 	}
-	return "", "" // This should never be reached when len(t.existingDocs) > 0
-}
-
-func (c *collection) selectWrongRevision(key string) (string, bool) {
-	correctRev := c.existingDocs[key].rev
-	for _, v := range c.existingDocs {
-		if v.rev != correctRev && v.rev != "" {
-			return v.rev, true
-		}
-	}
-	return "", false // This should never be reached when len(t.existingDocs) > 1
+	return "" // This should never be reached when len(t.existingDocs) > 0
 }

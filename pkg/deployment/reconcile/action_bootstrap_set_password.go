@@ -159,8 +159,8 @@ func (a actionBootstrapSetPassword) ensureUserPasswordSecret(ctx context.Context
 
 		return token, nil
 	} else {
-		user, pass, err := k8sutil.GetSecretAuthCredentials(auth)
-		if err == nil && user == user {
+		_, pass, err := k8sutil.GetSecretAuthCredentials(auth)
+		if err == nil {
 			return pass, nil
 		}
 		return "", errors.Newf("invalid secret format in secret %s", secret)

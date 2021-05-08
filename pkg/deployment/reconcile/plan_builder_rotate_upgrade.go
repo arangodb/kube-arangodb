@@ -36,7 +36,6 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -116,7 +115,7 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 					!decision.AutoUpgradeNeeded)
 			} else {
 				// Use new level of rotate logic
-				rotNeeded, reason := podNeedsRotation(ctx, log, pod, apiObject, spec, group, status, m, cachedStatus, context)
+				rotNeeded, reason := podNeedsRotation(ctx, log, pod, spec, group, status, m, cachedStatus, context)
 				if rotNeeded {
 					newPlan = createRotateMemberPlan(log, m, group, reason)
 				}
@@ -283,7 +282,7 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(ctx context.Context, log zerolog.Logger, p *core.Pod, apiObject metav1.Object, spec api.DeploymentSpec,
+func podNeedsRotation(ctx context.Context, log zerolog.Logger, p *core.Pod, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (bool, string) {
 	if m.PodUID != p.UID {

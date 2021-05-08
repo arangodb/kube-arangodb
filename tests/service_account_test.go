@@ -241,7 +241,7 @@ func TestServiceAccountClusterWithSync(t *testing.T) {
 	syncClient := mustNewArangoSyncClient(ctx, kubecli, apiObject, t)
 
 	// Wait for syncmasters to be available
-	if err := waitUntilSyncVersionUp(syncClient, nil); err != nil {
+	if err := waitUntilSyncVersionUp(syncClient); err != nil {
 		t.Fatalf("SyncMasters not running returning version in time: %v", err)
 	}
 

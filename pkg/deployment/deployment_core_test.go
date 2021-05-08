@@ -1344,7 +1344,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 						{
 							Name:            k8sutil.ServerContainerName,
 							Image:           testImage,
-							Command:         createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, true, false),
+							Command:         createTestCommandForCoordinator(firstCoordinatorStatus.ID, true, true),
 							Ports:           createTestPorts(),
 							ImagePullPolicy: core.PullIfNotPresent,
 							Resources:       emptyResources,
@@ -1410,7 +1410,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 						{
 							Name:            k8sutil.ServerContainerName,
 							Image:           testImage,
-							Command:         createTestCommandForSingleMode(singleStatus.ID, true, true, false),
+							Command:         createTestCommandForSingleMode(true, true),
 							Ports:           createTestPorts(),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),

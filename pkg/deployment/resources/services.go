@@ -40,7 +40,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
 
@@ -193,7 +192,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	if single {
 		role = "single"
 	}
-	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, ns, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log, counterMetric); err != nil {
+	if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "database", k8sutil.ArangoPort, false, spec.ExternalAccess, apiObject, log); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -202,7 +201,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		counterMetric.Inc()
 		eaServiceName := k8sutil.CreateSyncMasterClientServiceName(deploymentName)
 		role := "syncmaster"
-		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, ns, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log, counterMetric); err != nil {
+		if err := r.ensureExternalAccessServices(ctx, cachedStatus, svcs, eaServiceName, role, "sync", k8sutil.ArangoSyncMasterPort, true, spec.Sync.ExternalAccess.ExternalAccessSpec, apiObject, log); err != nil {
 			return errors.WithStack(err)
 		}
 		status, lastVersion := r.context.GetStatus()
@@ -234,7 +233,9 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 }
 
 // EnsureServices creates all services needed to service the deployment
-func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector, svcs k8sutil.ServiceInterface, eaServiceName, ns, svcRole, title string, port int, noneIsClusterIP bool, spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger, counterMetric prometheus.Counter) error {
+func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
+	svcs k8sutil.ServiceInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
+	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger) error {
 	// Database external access service
 	createExternalAccessService := false
 	deleteExternalAccessService := false

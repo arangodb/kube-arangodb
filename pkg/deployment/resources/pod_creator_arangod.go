@@ -43,9 +43,9 @@ import (
 )
 
 const (
-	ArangoDExecutor                          string = "/usr/sbin/arangod"
-	ArangoDBOverrideDetectedTotalMemoryEnv          = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
-	ArangoDBOverrideDetectedNumberOfCoresEnv        = "ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES"
+	ArangoDExecutor                          = "/usr/sbin/arangod"
+	ArangoDBOverrideDetectedTotalMemoryEnv   = "ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY"
+	ArangoDBOverrideDetectedNumberOfCoresEnv = "ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -325,8 +325,6 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 	if len(sidecars) > 0 {
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
-
-	return
 }
 
 func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
@@ -488,10 +486,6 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 		imageInfo: m.imageInfo,
 		groupSpec: m.groupSpec,
 	}
-}
-
-func (m *MemberArangoDPod) isMetricsEnabledForGroup() bool {
-	return m.spec.Metrics.IsEnabled() && m.group.IsExportMetrics()
 }
 
 func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {

@@ -24,9 +24,10 @@ package tests
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -162,7 +163,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Add %s sidecar to group %s ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -189,7 +190,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Add sidecar %s to group %s ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -209,7 +210,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Update %s in group %s with new command line ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -230,7 +231,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Update %s in group %s with new command line arguments ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -251,7 +252,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Change environment variables of %s sidecars for %s ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -272,7 +273,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Update image of sidecar %s in group %s ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -292,7 +293,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Update %s in group %s with new image pull policy ...", name, coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -312,7 +313,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Remove all sidecars from group %s ...", coordinators)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -336,7 +337,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Add %s sidecar to %s and %s ...", name, coordinators, dbservers)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -370,7 +371,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Remove all sidecars ...")
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -390,7 +391,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Add a %s sidecar to %s ...", name, agents)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {
@@ -412,7 +413,7 @@ func runSideCarTest(t *testing.T, spec SideCarTest) {
 		} else {
 			t.Logf("Delete %s containers and add %s sidecars to %s", agents, name, dbservers)
 		}
-		err = waitUntilClusterSidecarsEqualSpec(t, spec.Mode(), *depl)
+		err = waitUntilClusterSidecarsEqualSpec(t, *depl)
 		if err != nil {
 			t.Fatalf("... failed: %v", err)
 		} else {

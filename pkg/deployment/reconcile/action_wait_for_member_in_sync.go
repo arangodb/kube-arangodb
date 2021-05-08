@@ -62,14 +62,14 @@ func (a *actionWaitForMemberInSync) Start(ctx context.Context) (bool, error) {
 
 // CheckProgress checks the progress of the action.
 // Returns true if the action is completely finished, false otherwise.
-func (a *actionWaitForMemberInSync) CheckProgress(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberInSync) CheckProgress(_ context.Context) (bool, bool, error) {
 	member, ok := a.actionCtx.GetMemberStatusByID(a.MemberID())
 	if !ok || member.Phase == api.MemberPhaseFailed {
 		a.log.Debug().Msg("Member in failed phase")
 		return true, false, nil
 	}
 
-	ready, err := a.check(ctx)
+	ready, err := a.check()
 	if err != nil {
 		return false, false, err
 	}
@@ -77,7 +77,7 @@ func (a *actionWaitForMemberInSync) CheckProgress(ctx context.Context) (bool, bo
 	return ready, false, nil
 }
 
-func (a *actionWaitForMemberInSync) check(ctx context.Context) (bool, error) {
+func (a *actionWaitForMemberInSync) check() (bool, error) {
 	spec := a.actionCtx.GetSpec()
 
 	groupSpec := spec.GetServerGroupSpec(a.action.Group)
@@ -88,13 +88,13 @@ func (a *actionWaitForMemberInSync) check(ctx context.Context) (bool, error) {
 
 	switch spec.Mode.Get() {
 	case api.DeploymentModeCluster:
-		return a.checkCluster(ctx, spec, groupSpec)
+		return a.checkCluster()
 	default:
 		return true, nil
 	}
 }
 
-func (a *actionWaitForMemberInSync) checkCluster(ctx context.Context, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (bool, error) {
+func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
 	if !a.actionCtx.GetShardSyncStatus() {
 		a.log.Info().Str("mode", "cluster").Msgf("Shards are not in sync")
 		return false, nil

@@ -24,10 +24,11 @@ package tests
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/dchest/uniuri"
 
@@ -150,7 +151,7 @@ func loadBalancingCursorSubtest(t *testing.T, useVst bool) {
 
 	var r driver.Response
 	// Setup context
-	ctx = driver.WithResponse(driver.WithQueryBatchSize(nil, 1), &r)
+	ctx = driver.WithResponse(driver.WithQueryBatchSize(context.Background(), 1), &r)
 
 	// keep track of whether at least one request was forwarded internally to the
 	// correct coordinator behind the load balancer

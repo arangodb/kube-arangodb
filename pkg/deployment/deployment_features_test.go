@@ -187,7 +187,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", true)
@@ -250,7 +250,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", false)
@@ -313,7 +313,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForCoordinator(firstCoordinatorStatus.ID, false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", true)
@@ -375,7 +375,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForSingleMode(singleStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForSingleMode(false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", true)
@@ -440,7 +440,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForSingleMode(singleStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForSingleMode(false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", false)
@@ -505,7 +505,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 						{
 							Name:  k8sutil.ServerContainerName,
 							Image: testImage,
-							Command: createTestCommandForSingleMode(singleStatus.ID, false, false, false, func() k8sutil.OptionPairs {
+							Command: createTestCommandForSingleMode(false, false, func() k8sutil.OptionPairs {
 								args := k8sutil.NewOptionPair()
 
 								args.Add("--foxx.queues", true)

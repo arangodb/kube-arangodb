@@ -81,7 +81,7 @@ func getNodeInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http
 		if err != nil {
 			handleError(w, err)
 		} else {
-			sendJSON(w, http.StatusOK, result)
+			sendJSON(w, result)
 		}
 	}
 }
@@ -97,7 +97,7 @@ func getInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Req
 			if err != nil {
 				handleError(w, err)
 			} else {
-				sendJSON(w, http.StatusOK, result)
+				sendJSON(w, result)
 			}
 		}
 	}
@@ -113,7 +113,7 @@ func getPrepareHandler(api provisioner.API) func(w http.ResponseWriter, r *http.
 			if err := api.Prepare(ctx, input.LocalPath); err != nil {
 				handleError(w, err)
 			} else {
-				sendJSON(w, http.StatusOK, struct{}{})
+				sendJSON(w, struct{}{})
 			}
 		}
 	}
@@ -129,16 +129,16 @@ func getRemoveHandler(api provisioner.API) func(w http.ResponseWriter, r *http.R
 			if err := api.Remove(ctx, input.LocalPath); err != nil {
 				handleError(w, err)
 			} else {
-				sendJSON(w, http.StatusOK, struct{}{})
+				sendJSON(w, struct{}{})
 			}
 		}
 	}
 }
 
 // sendJSON encodes given body as JSON and sends it to the given writer with given HTTP status.
-func sendJSON(w http.ResponseWriter, status int, body interface{}) error {
+func sendJSON(w http.ResponseWriter, body interface{}) error {
 	w.Header().Set("Content-Type", contentTypeJSON)
-	w.WriteHeader(status)
+	w.WriteHeader(http.StatusOK)
 	if body == nil {
 		w.Write([]byte("{}"))
 	} else {
