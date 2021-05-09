@@ -5,7 +5,7 @@
   "dependencies": {
     "emotion": "^9.2.12",
     "eslint": "^6.5.0",
-    "handlebars": "^4.5.3",
+    "handlebars": "^4.7.7",
     "js-yaml": ">=3.13.1",
     "lodash": "^4.17.19",
     "react": "^16.10.1",
