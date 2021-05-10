@@ -92,13 +92,11 @@ func MergePodAntiAffinity(a, b *core.PodAntiAffinity) {
 		return
 	}
 
-	for _, rule := range b.PreferredDuringSchedulingIgnoredDuringExecution {
-		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
-	}
+	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
+		b.PreferredDuringSchedulingIgnoredDuringExecution...)
 
-	for _, rule := range b.RequiredDuringSchedulingIgnoredDuringExecution {
-		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, rule)
-	}
+	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
+		b.RequiredDuringSchedulingIgnoredDuringExecution...)
 }
 
 func MergePodAffinity(a, b *core.PodAffinity) {
@@ -106,13 +104,11 @@ func MergePodAffinity(a, b *core.PodAffinity) {
 		return
 	}
 
-	for _, rule := range b.PreferredDuringSchedulingIgnoredDuringExecution {
-		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
-	}
+	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
+		b.PreferredDuringSchedulingIgnoredDuringExecution...)
 
-	for _, rule := range b.RequiredDuringSchedulingIgnoredDuringExecution {
-		a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution, rule)
-	}
+	a.RequiredDuringSchedulingIgnoredDuringExecution = append(a.RequiredDuringSchedulingIgnoredDuringExecution,
+		b.RequiredDuringSchedulingIgnoredDuringExecution...)
 }
 
 func MergeNodeAffinity(a, b *core.NodeAffinity) {
@@ -120,9 +116,8 @@ func MergeNodeAffinity(a, b *core.NodeAffinity) {
 		return
 	}
 
-	for _, rule := range b.PreferredDuringSchedulingIgnoredDuringExecution {
-		a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution, rule)
-	}
+	a.PreferredDuringSchedulingIgnoredDuringExecution = append(a.PreferredDuringSchedulingIgnoredDuringExecution,
+		b.PreferredDuringSchedulingIgnoredDuringExecution...)
 
 	var newSelectorTerms []core.NodeSelectorTerm
 

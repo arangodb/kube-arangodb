@@ -24,7 +24,6 @@ package reconcile
 
 import (
 	"context"
-	"fmt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -53,8 +52,8 @@ type actionBootstrapUpdate struct {
 func (a actionBootstrapUpdate) Start(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(status *api.DeploymentStatus) bool {
 		if errMessage, ok := a.action.GetParam("error"); ok {
-			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap failed", fmt.Sprintf("%s", errMessage))
-			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, false, "Bootstrap failed", fmt.Sprintf("%s", errMessage))
+			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap failed", errMessage)
+			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, false, "Bootstrap failed", errMessage)
 		} else {
 			status.Conditions.Update(api.ConditionTypeBootstrapCompleted, true, "Bootstrap successful", "The bootstrap process has been completed successfully")
 			status.Conditions.Update(api.ConditionTypeBootstrapSucceded, true, "Bootstrap successful", "The bootstrap process has been completed successfully")

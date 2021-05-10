@@ -183,10 +183,7 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 	}
 
 	if len(f.Data) == 0 {
-		if status.Hashes.JWT.Passive != nil {
-			return true
-		}
-		return false
+		return status.Hashes.JWT.Passive != nil
 	}
 
 	var keys []string
@@ -200,20 +197,13 @@ func createJWTStatusUpdateRequired(log zerolog.Logger, apiObject k8sutil.APIObje
 	}
 
 	if len(keys) == 0 {
-		if status.Hashes.JWT.Passive != nil {
-			return true
-		}
-		return false
+		return status.Hashes.JWT.Passive != nil
 	}
 
 	sort.Strings(keys)
 	keys = util.PrefixStringArray(keys, "sha256:")
 
-	if !util.CompareStringArray(keys, status.Hashes.JWT.Passive) {
-		return true
-	}
-
-	return false
+	return !util.CompareStringArray(keys, status.Hashes.JWT.Passive)
 }
 
 func areJWTTokensUpToDate(ctx context.Context, log zerolog.Logger, status api.DeploymentStatus,

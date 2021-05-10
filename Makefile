@@ -140,7 +140,7 @@ allall: all
 # Tip: Run `eval $(minikube docker-env)` before calling make if you're developing on minikube.
 #
 
-GOLANGCI_ENABLED=deadcode govet ineffassign staticcheck structcheck typecheck unconvert unparam unused varcheck
+GOLANGCI_ENABLED=deadcode gosimple govet ineffassign staticcheck structcheck typecheck unconvert unparam unused varcheck
 #GOLANGCI_ENABLED=gocyclo goconst golint maligned errcheck interfacer megacheck
 #GOLANGCI_ENABLED+=dupl - disable dupl check
 

@@ -126,9 +126,7 @@ func WithErrors(errs ...error) error {
 
 		switch errType := err.(type) {
 		case MergedErrors:
-			for _, subError := range errType.errors {
-				filteredErrs = append(filteredErrs, subError)
-			}
+			filteredErrs = append(filteredErrs, errType.errors...)
 		default:
 			filteredErrs = append(filteredErrs, err)
 		}
