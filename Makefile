@@ -181,22 +181,22 @@ GOLANGCI_ENABLED=deadcode govet ineffassign staticcheck structcheck typecheck un
 .PHONY: license-verify
 license-verify:
 	@echo ">> Verify license of files"
-	@go run github.com/google/addlicense -f "./tools/codegen/boilerplate.go.txt" -check $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" -check $(SOURCES)
 
 .PHONY: fmt
 fmt:
 	@echo ">> Ensuring style of files"
-	@go run golang.org/x/tools/cmd/goimports -w $(SOURCES)
+	@$(GOPATH)/bin/goimports -w $(SOURCES)
 
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
-	@go run github.com/google/addlicense -f "./tools/codegen/boilerplate.go.txt" $(SOURCES)
+	@$(GOPATH)/bin/addlicense -f "./tools/codegen/boilerplate.go.txt" $(SOURCES)
 
 .PHONY: fmt-verify
 fmt-verify: license-verify
 	@echo ">> Verify files style"
-	@if [ X"$$(go run golang.org/x/tools/cmd/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; go run golang.org/x/tools/cmd/goimports -l $(SOURCES); exit 1; fi
+	@if [ X"$$($(GOPATH)/bin/goimports -l $(SOURCES) | wc -l)" != X"0" ]; then echo ">> Style errors"; $(GOPATH)/bin/goimports -l $(SOURCES); exit 1; fi
 
 .PHONY: linter
 linter:
@@ -597,11 +597,11 @@ init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	@go get github.com/golangci/golangci-lint/cmd/golangci-lint
 	@echo ">> Fetching goimports"
-	@go get -u golang.org/x/tools/cmd/goimports
+	@go get golang.org/x/tools/cmd/goimports
 	@echo ">> Fetching license check"
-	@go get -u github.com/google/addlicense
+	@go get github.com/google/addlicense
 
 .PHONY: vendor
 vendor:
