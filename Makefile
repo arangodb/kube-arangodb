@@ -597,11 +597,11 @@ init: tools update-generated $(GHRELEASE) $(RELEASE) $(TESTBIN) $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@go get github.com/golangci/golangci-lint/cmd/golangci-lint
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.40.0
 	@echo ">> Fetching goimports"
-	@go get golang.org/x/tools/cmd/goimports
+	@go get golang.org/x/tools/cmd/goimports@gopls/v0.6.11
 	@echo ">> Fetching license check"
-	@go get github.com/google/addlicense
+	@go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 
 .PHONY: vendor
 vendor:
