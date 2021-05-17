@@ -1,7 +1,0 @@
-apiVersion: "database.arangodb.com/v1alpha"
-kind: "ArangoDeployment"
-metadata:
-  name: "acceptance-single"
-spec:
-  mode: Single
-  image: arangodb/arangodb:3.3.10

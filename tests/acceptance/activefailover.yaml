@@ -1,7 +1,0 @@
-apiVersion: "database.arangodb.com/v1alpha"
-kind: "ArangoDeployment"
-metadata:
-  name: "acceptance-activefailover"
-spec:
-  mode: ActiveFailover
-  image: arangodb/arangodb:3.3.10
