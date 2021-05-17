@@ -1,4 +1,4 @@
-apiVersion: "storage.arangodb.com/v1"
+apiVersion: "storage.arangodb.com/v1alpha"
 kind: "ArangoLocalStorage"
 metadata:
   name: "arangodb-local-storage"
