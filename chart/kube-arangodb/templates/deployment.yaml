@@ -50,6 +50,10 @@ spec:
             nodeSelector:
 {{ toYaml .Values.operator.nodeSelector | indent 16 }}
 {{- end }}
+{{- if .Values.operator.tolerations }}
+            tolerations:
+{{ toYaml .Values.operator.tolerations | indent 16 }}
+{{- end }}
             serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
             affinity:
               nodeAffinity:
@@ -152,12 +156,4 @@ spec:
                           scheme: HTTPS
                       initialDelaySeconds: 5
                       periodSeconds: 10
-            tolerations:
-                - key: "node.kubernetes.io/unreachable"
-                  operator: "Exists"
-                  effect: "NoExecute"
-                  tolerationSeconds: 5
-                - key: "node.kubernetes.io/not-ready"
-                  operator: "Exists"
-                  effect: "NoExecute"
-                  tolerationSeconds: 5
+            
