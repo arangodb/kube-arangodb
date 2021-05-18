@@ -176,11 +176,7 @@ func createEncryptionKeyStatusUpdateRequired(log zerolog.Logger, spec api.Deploy
 
 	keyHashes := secretKeysToListWithPrefix(keyfolder)
 
-	if !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys) {
-		return true
-	}
-
-	return false
+	return !util.CompareStringArray(keyHashes, status.Hashes.Encryption.Keys)
 }
 
 func createEncryptionKeyCleanPlan(ctx context.Context,

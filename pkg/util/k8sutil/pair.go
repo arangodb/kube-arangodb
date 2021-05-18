@@ -115,10 +115,7 @@ func (o OptionPairs) Unique() OptionPairs {
 
 func (o OptionPairs) Copy() OptionPairs {
 	r := make(OptionPairs, len(o))
-
-	for id, option := range o {
-		r[id] = option
-	}
+	copy(r, o)
 
 	return r
 }
