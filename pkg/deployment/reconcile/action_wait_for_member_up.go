@@ -151,7 +151,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 	shortCtx, c := context.WithTimeout(ctx, 3*time.Second)
 	defer c()
 
-	shortCtx = agency.WithAllowDifferentLeaderEndpoints(ctx)
+	shortCtx = agency.WithAllowDifferentLeaderEndpoints(shortCtx)
 
 	if err := agency.AreAgentsHealthy(shortCtx, clients); err != nil {
 		log.Debug().Err(err).Msg("Not all agents are ready")

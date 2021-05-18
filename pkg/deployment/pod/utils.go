@@ -44,21 +44,16 @@ func GenerateMemberEndpoint(services service.Inspector, apiObject meta.Object, s
 func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
 	if group.IsArangod() {
 		switch method := spec.CommunicationMethod.Get(); method {
-		case api.DeploymentCommunicationMethodDNS, api.DeploymentCommunicationMethodIP:
-			switch method {
-			case api.DeploymentCommunicationMethodDNS:
-				return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
-			case api.DeploymentCommunicationMethodIP:
-				if svc.Spec.ClusterIP == "" {
-					return "", errors.Newf("ClusterIP of service %s is empty", svc.GetName())
-				}
-
-				return svc.Spec.ClusterIP, nil
-			case api.DeploymentCommunicationMethodShortDNS:
-				return svc.GetName(), nil
-			default:
-				return "", errors.Newf("Unexpected method %s", method.String())
+		case api.DeploymentCommunicationMethodDNS:
+			return k8sutil.CreateServiceDNSNameWithDomain(svc, spec.ClusterDomain), nil
+		case api.DeploymentCommunicationMethodIP:
+			if svc.Spec.ClusterIP == "" {
+				return "", errors.Newf("ClusterIP of service %s is empty", svc.GetName())
 			}
+
+			return svc.Spec.ClusterIP, nil
+		case api.DeploymentCommunicationMethodShortDNS:
+			return svc.GetName(), nil
 		default:
 			return k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), nil
 		}

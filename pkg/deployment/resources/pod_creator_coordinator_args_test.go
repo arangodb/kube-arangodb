@@ -67,7 +67,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -124,7 +124,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
@@ -182,7 +182,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
@@ -243,7 +243,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -299,7 +299,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -357,7 +357,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			Member:      api.MemberStatus{ID: "id1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...).RegisterMemberStatus(t, apiObject, input.Group, input.Member)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)

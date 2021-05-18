@@ -64,7 +64,7 @@ func versionHasAdvertisedEndpoint(v driver.Version) bool {
 }
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
-func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input, additionalOptions ...k8sutil.OptionPair) ([]string, error) {
+func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input) ([]string, error) {
 	return createArangodArgs(cachedStatus, input, pod.AutoUpgrade().Args(input)...)
 }
 
@@ -184,8 +184,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(cachedStatus interfaces.Inspector, apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, member api.MemberStatus) ([]string, error) {
+func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -245,7 +244,7 @@ func createArangoSyncArgs(cachedStatus interfaces.Inspector, apiObject metav1.Ob
 		args = append(args, groupSpec.Args...)
 	}
 
-	return args, nil
+	return args
 }
 
 // CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
@@ -415,10 +414,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		}
 
 		// Prepare arguments
-		args, err := createArangoSyncArgs(cachedStatus, apiObject, spec, group, groupSpec, *newMember)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,

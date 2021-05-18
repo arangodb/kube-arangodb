@@ -47,7 +47,7 @@ type inspectorMock interface {
 	Get(t *testing.T) inspectorInterface.Inspector
 }
 
-func newInspectorMock(t *testing.T) inspectorMock {
+func newInspectorMock() inspectorMock {
 	return inspectorMockStruct{
 		services: map[string]*core.Service{},
 	}
@@ -118,7 +118,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -178,7 +178,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
 
 		cmdline, err := createArangodArgsWithUpgrade(i.Get(t), input)
@@ -242,7 +242,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -301,7 +301,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
@@ -360,7 +360,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			Member:      api.MemberStatus{ID: "a1"},
 		}
 
-		i := newInspectorMock(t)
+		i := newInspectorMock()
 		i = i.RegisterMemberStatus(t, apiObject, api.ServerGroupAgents, agents...)
 
 		cmdline, err := createArangodArgs(i.Get(t), input)
