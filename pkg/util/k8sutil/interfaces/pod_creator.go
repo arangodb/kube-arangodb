@@ -24,11 +24,13 @@ package interfaces
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	core "k8s.io/api/core/v1"
 )
 
 type Inspector interface {
 	secret.Inspector
+	service.Inspector
 }
 
 type PodModifier interface {
@@ -41,7 +43,7 @@ type PodCreator interface {
 	GetRole() string
 	GetVolumes() ([]core.Volume, []core.VolumeMount)
 	GetSidecars(*core.Pod)
-	GetInitContainers() ([]core.Container, error)
+	GetInitContainers(cachedStatus Inspector) ([]core.Container, error)
 	GetFinalizers() []string
 	GetTolerations() []core.Toleration
 	GetNodeSelector() map[string]string

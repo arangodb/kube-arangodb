@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add IP, DNS, ShortDNS, HeadlessService (Default) communication methods
 
 ## [1.1.8](https://github.com/arangodb/kube-arangodb/tree/1.1.8) (2021-04-21)
 - Prevent Single member recreation

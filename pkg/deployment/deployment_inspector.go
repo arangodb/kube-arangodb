@@ -235,7 +235,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Ensure we have image info
-	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject); err != nil {
+	if retrySoon, exists, err := d.ensureImages(ctx, d.apiObject, cachedStatus); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Image detection failed")
 	} else if retrySoon || !exists {
 		return minInspectionInterval, nil

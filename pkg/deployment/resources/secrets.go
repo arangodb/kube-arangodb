@@ -150,6 +150,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 						k8sutil.CreatePodDNSName(apiObject, role, m.ID),
 						k8sutil.CreateServiceDNSName(service),
 						service.Spec.ClusterIP,
+						service.GetName(),
 					}
 
 					if spec.ClusterDomain != nil {

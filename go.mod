@@ -3,7 +3,7 @@ module github.com/arangodb/kube-arangodb
 go 1.16
 
 replace (
-	github.com/arangodb/go-driver => github.com/arangodb/go-driver v0.0.0-20200617115956-9dac4c7fed22
+	github.com/arangodb/go-driver => github.com/arangodb/go-driver v0.0.0-20210518064911-4985e8be3d90
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.46.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client => github.com/prometheus-operator/prometheus-operator/pkg/client v0.46.0
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
@@ -42,6 +42,7 @@ require (
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
+	github.com/json-iterator/go v1.1.10
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/kevinburke/rest v0.0.0-20210222204520-f7a2e216372f // indirect
 	github.com/magiconair/properties v1.8.0
@@ -52,7 +53,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.7.1
 	github.com/robfig/cron v1.2.0
-	github.com/rs/zerolog v1.14.3
+	github.com/rs/zerolog v1.19.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
@@ -60,7 +61,6 @@ require (
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
 	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
-	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6 // indirect
 	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
 	golang.org/x/tools v0.1.1-0.20210504181558-0bb7e5c47b1a // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect

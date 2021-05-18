@@ -229,7 +229,7 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
 		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
 		$(DASHBOARDBUILDIMAGE)
-	go run github.com/jessevdk/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
+	$(GOPATH)/bin/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
 .PHONY: bin
 bin: $(BIN)
@@ -418,6 +418,8 @@ tools: update-vendor
 	@go get golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
 	@go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+	@echo ">> Fetching GO Assets Builder"
+	@go get github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 
 .PHONY: vendor
 vendor:
