@@ -1,5 +1,5 @@
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,31 +15,38 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
+// Author Adam Janikowski
 //
 
 package resources
 
 import (
+	"os"
 	"path/filepath"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 )
 
-// ArangodbExporterContainer creates metrics container
-func ArangodbExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
+// ArangodbInternalExporterContainer creates metrics container based on internal exporter
+func ArangodbInternalExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
 	resources v1.ResourceRequirements, securityContext *v1.SecurityContext,
-	spec api.DeploymentSpec) v1.Container {
+	spec api.DeploymentSpec) (v1.Container, error) {
+
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return v1.Container{}, errors.WithStack(err)
+	}
+	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
 
 	c := v1.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   image,
-		Command: append([]string{"/app/arangodb-exporter"}, args...),
+		Command: append([]string{exePath, "exporter"}, args...),
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "exporter",
@@ -50,49 +57,12 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *probe
 		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
 		ImagePullPolicy: v1.PullIfNotPresent,
 		SecurityContext: securityContext,
+		VolumeMounts:    []v1.VolumeMount{k8sutil.LifecycleVolumeMount()},
 	}
 
 	if livenessProbe != nil {
 		c.LivenessProbe = livenessProbe.Create()
 	}
 
-	return c
-}
-
-func createExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
-	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := k8sutil.CreateOptionPairs(64)
-
-	options.Add("--arangodb.jwt-file", tokenpath)
-
-	if port := groupSpec.InternalPort; port == nil {
-		scheme := "http"
-		if spec.IsSecure() {
-			scheme = "https"
-		}
-		options.Addf("--arangodb.endpoint", "%s://localhost:%d", scheme, k8sutil.ArangoPort)
-	} else {
-		options.Addf("--arangodb.endpoint", "http://localhost:%d", *port)
-	}
-
-	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if spec.IsSecure() && spec.Metrics.IsTLS() {
-		options.Add("--ssl.keyfile", keyPath)
-	}
-
-	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
-		options.Addf("--server.address", ":%d", port)
-	}
-
-	return options.Sort().AsArgs()
-}
-
-func createExporterLivenessProbe(isSecure bool) *probes.HTTPProbeConfig {
-	probeCfg := &probes.HTTPProbeConfig{
-		LocalPath: "/",
-		Port:      k8sutil.ArangoExporterPort,
-		Secure:    isSecure,
-	}
-
-	return probeCfg
+	return c, nil
 }

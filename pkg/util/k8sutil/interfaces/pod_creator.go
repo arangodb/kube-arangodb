@@ -42,7 +42,7 @@ type PodCreator interface {
 	GetName() string
 	GetRole() string
 	GetVolumes() ([]core.Volume, []core.VolumeMount)
-	GetSidecars(*core.Pod)
+	GetSidecars(*core.Pod) error
 	GetInitContainers(cachedStatus Inspector) ([]core.Container, error)
 	GetFinalizers() []string
 	GetTolerations() []core.Toleration

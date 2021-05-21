@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,17 +23,17 @@
 package features
 
 func init() {
-	registerFeature(jwtRotation)
+	registerFeature(metricsExporter)
 }
 
-var jwtRotation = &feature{
-	name:               "jwt-rotation",
-	description:        "JWT Token rotation in runtime",
-	version:            "3.7.0",
-	enterpriseRequired: true,
-	enabledByDefault:   true,
+var metricsExporter = &feature{
+	name:               "metrics-exporter",
+	description:        "Define if internal metrics-exporter should be used",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
 }
 
-func JWTRotation() Feature {
-	return jwtRotation
+func MetricsExporter() Feature {
+	return metricsExporter
 }

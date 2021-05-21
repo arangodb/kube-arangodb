@@ -29,8 +29,9 @@ const (
 	ArangoSyncWorkerPort = 8729
 	ArangoExporterPort   = 9101
 
-	ArangoExporterInternalEndpoint = "/_admin/metrics"
-	ArangoExporterDefaultEndpoint  = "/metrics"
+	ArangoExporterInternalEndpoint   = "/_admin/metrics"
+	ArangoExporterInternalEndpointV2 = "/_admin/metrics/v2"
+	ArangoExporterDefaultEndpoint    = "/metrics"
 
 	// K8s constants
 	ClusterIPNone       = "None"

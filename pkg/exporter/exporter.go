@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2018 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,10 @@
 package exporter
 
 import (
-	"fmt"
 	"net/http"
+	"time"
+
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 type Authentication func() (string, error)
@@ -36,13 +38,26 @@ func CreateArangodJwtAuthorizationHeader(jwt string) (string, error) {
 	return "bearer " + jwt, nil
 }
 
-func NewExporter(endpoint string, port int, url string, handler http.Handler) http.Server {
+func NewExporter(endpoint string, url string, handler http.Handler) operatorHTTP.PlainServer {
 	s := http.NewServeMux()
 
 	s.Handle(url, handler)
 
-	return http.Server{
-		Addr:    fmt.Sprintf("%s:%d", endpoint, port),
-		Handler: s,
-	}
+	s.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+             <head><title>ArangoDB Exporter</title></head>
+             <body>
+             <h1>ArangoDB Exporter</h1>
+             <p><a href='/metrics'>Metrics</a></p>
+             </body>
+             </html>`))
+	})
+
+	return operatorHTTP.NewServer(&http.Server{
+		Addr:              endpoint,
+		ReadTimeout:       time.Second * 30,
+		ReadHeaderTimeout: time.Second * 15,
+		WriteTimeout:      time.Second * 30,
+		Handler:           s,
+	})
 }

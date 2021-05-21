@@ -458,7 +458,7 @@ var (
 	exporterTokenClaims = jg.MapClaims{
 		"iss":           "arangodb",
 		"server_id":     "exporter",
-		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint},
+		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint, k8sutil.ArangoExporterInternalEndpointV2},
 	}
 )
 

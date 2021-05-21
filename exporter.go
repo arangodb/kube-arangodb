@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,170 +23,101 @@
 package main
 
 import (
-	"crypto/tls"
-	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
-	"path"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/arangodb/go-driver/jwt"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/exporter"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var (
-	cmdLifecycleProbe = &cobra.Command{
-		Use: "probe",
-		Run: cmdLifecycleProbeCheck,
+	cmdExporter = &cobra.Command{
+		Use: "exporter",
+		Run: cmdExporterCheck,
 	}
 
-	probeInput struct {
-		SSL      bool
-		Auth     bool
-		Endpoint string
-		JWTPath  string
+	exporterInput struct {
+		listenAddress string
+
+		endpoint string
+		jwtFile  string
+		timeout  time.Duration
+
+		keyfile string
 	}
 )
 
 func init() {
-	f := cmdLifecycleProbe.PersistentFlags()
+	f := cmdExporter.PersistentFlags()
 
-	f.BoolVarP(&probeInput.SSL, "ssl", "", false, "Determines if SSL is enabled")
-	f.BoolVarP(&probeInput.Auth, "auth", "", false, "Determines if authentication is enabled")
-	f.StringVarP(&probeInput.Endpoint, "endpoint", "", "/_api/version", "Endpoint (path) to call for lifecycle probe")
-	f.StringVarP(&probeInput.JWTPath, "jwt", "", k8sutil.ClusterJWTSecretVolumeMountDir, "Path to the JWT tokens")
+	f.StringVar(&exporterInput.listenAddress, "server.address", ":9101", "Address the exporter will listen on (IP:port)")
+	f.StringVar(&exporterInput.keyfile, "ssl.keyfile", "", "File containing TLS certificate used for the metrics server. Format equal to ArangoDB keyfiles")
+
+	f.StringVar(&exporterInput.endpoint, "arangodb.endpoint", "http://127.0.0.1:8529", "Endpoint used to reach the ArangoDB server")
+	f.StringVar(&exporterInput.jwtFile, "arangodb.jwt-file", "", "File containing the JWT for authentication with ArangoDB server")
+	f.DurationVar(&exporterInput.timeout, "arangodb.timeout", time.Second*15, "Timeout of statistics requests for ArangoDB")
+
+	cmdMain.AddCommand(cmdExporter)
 }
 
-func probeClient() *http.Client {
-	tr := &http.Transport{}
-
-	if probeInput.SSL {
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-
-	client := &http.Client{
-		Transport: tr,
-	}
-
-	return client
-}
-
-func probeEndpoint(endpoint string) string {
-	proto := "http"
-	if probeInput.SSL {
-		proto = "https"
-	}
-
-	return fmt.Sprintf("%s://%s:%d%s", proto, "127.0.0.1", k8sutil.ArangoPort, endpoint)
-}
-
-func readJWTFile(file string) ([]byte, error) {
-	p := path.Join(probeInput.JWTPath, file)
-	log.Info().Str("path", p).Msgf("Try to use file")
-
-	f, err := os.Open(p)
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func getJWTToken() ([]byte, error) {
-	// Try read default one
-	if token, err := readJWTFile(constants.SecretKeyToken); err == nil {
-		log.Info().Str("token", constants.SecretKeyToken).Msgf("Using JWT Token")
-		return token, nil
-	}
-
-	// Try read active one
-	if token, err := readJWTFile(pod.ActiveJWTKey); err == nil {
-		log.Info().Str("token", pod.ActiveJWTKey).Msgf("Using JWT Token")
-		return token, nil
-	}
-
-	if files, err := ioutil.ReadDir(probeInput.JWTPath); err == nil {
-		for _, file := range files {
-			if token, err := readJWTFile(file.Name()); err == nil {
-				log.Info().Str("token", file.Name()).Msgf("Using JWT Token")
-				return token, nil
-			}
-		}
-	}
-
-	return nil, errors.Errorf("Unable to find any token")
-}
-
-func addAuthHeader(req *http.Request) error {
-	if !probeInput.Auth {
-		return nil
-	}
-
-	token, err := getJWTToken()
-	if err != nil {
-		return err
-	}
-
-	header, err := jwt.CreateArangodJwtAuthorizationHeader(string(token), "probe")
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Authorization", header)
-	return nil
-}
-
-func doRequest() (*http.Response, error) {
-	client := probeClient()
-
-	req, err := http.NewRequest(http.MethodGet, probeEndpoint(probeInput.Endpoint), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := addAuthHeader(req); err != nil {
-		return nil, err
-	}
-
-	return client.Do(req)
-}
-
-func cmdLifecycleProbeCheck(cmd *cobra.Command, args []string) {
-	if err := cmdLifecycleProbeCheckE(); err != nil {
+func cmdExporterCheck(cmd *cobra.Command, args []string) {
+	if err := cmdExporterCheckE(); err != nil {
 		log.Error().Err(err).Msgf("Fatal")
 		os.Exit(1)
 	}
 }
 
-func cmdLifecycleProbeCheckE() error {
-	resp, err := doRequest()
+func onSigterm(f func()) {
+	sigs := make(chan os.Signal, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		defer f()
+		<-sigs
+	}()
+}
+
+func cmdExporterCheckE() error {
+	p, err := exporter.NewPassthru(exporterInput.endpoint, func() (string, error) {
+		if exporterInput.jwtFile == "" {
+			return "", nil
+		}
+
+		data, err := ioutil.ReadFile(exporterInput.jwtFile)
+		if err != nil {
+			return "", err
+		}
+
+		return string(data), nil
+	}, false, 15*time.Second)
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		if resp.Body != nil {
-			defer resp.Body.Close()
-			if data, err := ioutil.ReadAll(resp.Body); err == nil {
-				return errors.Errorf("Unexpected code: %d - %s", resp.StatusCode, string(data))
+	exporter := exporter.NewExporter(exporterInput.listenAddress, "/metrics", p)
+	if exporterInput.keyfile != "" {
+		if e, err := exporter.WithKeyfile(exporterInput.keyfile); err != nil {
+			return err
+		} else {
+			if r, err := e.Start(); err != nil {
+				return err
+			} else {
+				onSigterm(r.Stop)
+				return r.Wait()
 			}
 		}
-
-		return errors.Errorf("Unexpected code: %d", resp.StatusCode)
+	} else {
+		if r, err := exporter.Start(); err != nil {
+			return err
+		} else {
+			onSigterm(r.Stop)
+			return r.Wait()
+		}
 	}
-
-	log.Info().Msgf("Check passed")
-
-	return nil
 }

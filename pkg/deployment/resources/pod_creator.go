@@ -652,7 +652,9 @@ func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sut
 
 	p.Spec.Volumes, c.VolumeMounts = podCreator.GetVolumes()
 	p.Spec.Containers = append(p.Spec.Containers, c)
-	podCreator.GetSidecars(&p)
+	if err := podCreator.GetSidecars(&p); err != nil {
+		return nil, err
+	}
 
 	if err := podCreator.ApplyPodSpec(&p.Spec); err != nil {
 		return nil, err
