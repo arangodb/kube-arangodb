@@ -27,6 +27,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -296,25 +298,33 @@ func (m *MemberArangoDPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
-
+func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	if m.spec.Metrics.IsEnabled() {
 		var c *core.Container
 
-		switch m.spec.Metrics.Mode.Get() {
-		case api.MetricsModeExporter:
-			if !m.group.IsExportMetrics() {
-				break
+		if features.MetricsExporter().Enabled() {
+			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+			if container, err := m.createMetricsExporterSidecarInternalExporter(); err != nil {
+				return err
+			} else {
+				c = container
 			}
-			fallthrough
-		case api.MetricsModeSidecar:
-			c = m.createMetricsExporterSidecar()
+		} else {
+			switch m.spec.Metrics.Mode.Get() {
+			case api.MetricsModeExporter:
+				if !m.group.IsExportMetrics() {
+					break
+				}
+				fallthrough
+			case api.MetricsModeSidecar:
+				c = m.createMetricsExporterSidecarExternalExporter()
 
-			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-		default:
-			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+			default:
+				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+			}
+
 		}
-
 		if c != nil {
 			pod.Spec.Containers = append(pod.Spec.Containers, *c)
 		}
@@ -325,6 +335,8 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) {
 	if len(sidecars) > 0 {
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
+
+	return nil
 }
 
 func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
@@ -352,17 +364,25 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	volumes.Append(pod.Encryption(), m.AsInput())
 
 	if m.spec.Metrics.IsEnabled() {
-		switch m.spec.Metrics.Mode.Get() {
-		case api.MetricsModeExporter:
-			if !m.group.IsExportMetrics() {
-				break
-			}
-			fallthrough
-		case api.MetricsModeSidecar:
+		if features.MetricsExporter().Enabled() {
 			token := m.spec.Metrics.GetJWTTokenSecretName()
 			if token != "" {
 				vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
 				volumes.AddVolume(vol)
+			}
+		} else {
+			switch m.spec.Metrics.Mode.Get() {
+			case api.MetricsModeExporter:
+				if !m.group.IsExportMetrics() {
+					break
+				}
+				fallthrough
+			case api.MetricsModeSidecar:
+				token := m.spec.Metrics.GetJWTTokenSecretName()
+				if token != "" {
+					vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+					volumes.AddVolume(vol)
+				}
 			}
 		}
 	}
@@ -494,7 +514,31 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	}
 }
 
-func (m *MemberArangoDPod) createMetricsExporterSidecar() *core.Container {
+func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
+	image := m.GetContainerCreator().GetImage()
+
+	args := createInternalExporterArgs(m.spec, m.groupSpec, m.imageInfo.ArangoDBVersion)
+
+	c, err := ArangodbInternalExporterContainer(image, args,
+		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
+		m.groupSpec.SecurityContext.NewSecurityContext(),
+		m.spec)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
+	}
+
+	if pod.IsTLSEnabled(m.AsInput()) {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+	}
+
+	return &c, nil
+}
+
+func (m *MemberArangoDPod) createMetricsExporterSidecarExternalExporter() *core.Container {
 	image := m.context.GetMetricsExporterImage()
 	if m.spec.Metrics.HasImage() {
 		image = m.spec.Metrics.GetImage()

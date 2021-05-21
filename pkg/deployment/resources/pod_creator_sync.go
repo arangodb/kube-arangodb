@@ -213,12 +213,14 @@ func (m *MemberSyncPod) GetServiceAccountName() string {
 	return m.groupSpec.GetServiceAccountName()
 }
 
-func (m *MemberSyncPod) GetSidecars(pod *core.Pod) {
+func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
+
+	return nil
 }
 
 func (m *MemberSyncPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {

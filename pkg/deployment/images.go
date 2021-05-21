@@ -322,7 +322,8 @@ func (i *ImageUpdatePod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	return volumes, volumeMounts
 }
 
-func (i *ImageUpdatePod) GetSidecars(*core.Pod) {
+func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
+	return nil
 }
 
 func (i *ImageUpdatePod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,26 +17,23 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
-package k8sutil
+package features
 
-const (
-	// Arango constants
-	ArangoPort           = 8529
-	ArangoSyncMasterPort = 8629
-	ArangoSyncWorkerPort = 8729
-	ArangoExporterPort   = 9101
+func init() {
+	registerFeature(metricsExporter)
+}
 
-	ArangoExporterInternalEndpoint   = "/_admin/metrics"
-	ArangoExporterInternalEndpointV2 = "/_admin/metrics/v2"
-	ArangoExporterDefaultEndpoint    = "/metrics"
+var metricsExporter = &feature{
+	name:               "metrics-exporter",
+	description:        "Define if internal metrics-exporter should be used",
+	version:            "3.6.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
 
-	// K8s constants
-	ClusterIPNone       = "None"
-	TopologyKeyHostname = "kubernetes.io/hostname"
-
-	// Internal constants
-	ImageIDAndVersionRole = "id" // Role use by identification pods
-)
+func MetricsExporter() Feature {
+	return metricsExporter
+}

@@ -23,6 +23,8 @@ package resources
 import (
 	"path/filepath"
 
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 
@@ -57,6 +59,39 @@ func ArangodbExporterContainer(image string, args []string, livenessProbe *probe
 	}
 
 	return c
+}
+
+func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec, version driver.Version) []string {
+	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
+	options := k8sutil.CreateOptionPairs(64)
+
+	options.Add("--arangodb.jwt-file", tokenpath)
+
+	path := k8sutil.ArangoExporterInternalEndpoint
+	if version.CompareTo("3.8.0") >= 0 {
+		path = k8sutil.ArangoExporterInternalEndpointV2
+	}
+
+	if port := groupSpec.InternalPort; port == nil {
+		scheme := "http"
+		if spec.IsSecure() {
+			scheme = "https"
+		}
+		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, k8sutil.ArangoPort, path)
+	} else {
+		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
+	}
+
+	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	if spec.IsSecure() && spec.Metrics.IsTLS() {
+		options.Add("--ssl.keyfile", keyPath)
+	}
+
+	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
+		options.Addf("--server.address", ":%d", port)
+	}
+
+	return options.Sort().AsArgs()
 }
 
 func createExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
