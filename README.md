@@ -187,3 +187,11 @@ kubectl apply -f manifests/arango-storage-dev.yaml
 # To use `ArangoDeploymentReplication`, also run
 kubectl apply -f manifests/arango-deployment-replication-dev.yaml
 ```
+
+## ArangoExporter
+
+[ArangoExporter](https://github.com/arangodb-helper/arangodb-exporter) project has been merged with ArangoOperator.
+Starting from ArangoDB 3.6 Servers expose metrics endpoint with prometheus compatible format. From this point Exporter
+is used only for TLS and/or Authentication termination to be compatible with all Prometheus installations.
+
+ArangoExporter documentation can be found [here](./docs/design/exporter.md)
