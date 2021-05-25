@@ -38,17 +38,30 @@ covers individual newer features separately.
 
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks               | Provider Remarks                   |
 |---------------------|--------------------|------------------|------------|-----------------------|------------------------------------|
-| Google GKE          | 1.16               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
 | Google GKE          | 1.17               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
-| Azure AKS           | 1.16               | >= 3.5.0         | Production |                       |                                    |
-| Azure AKS           | 1.17               | >= 3.5.0         | Production |                       |                                    |
+| Google GKE          | 1.18               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.19               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.20               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
+| Azure AKS           | 1.18               | >= 3.5.0         | Production |                       |                                    |
+| Azure AKS           | 1.19               | >= 3.5.0         | Production |                       |                                    |
+| Azure AKS           | 1.20               | >= 3.5.0         | Production |                       |                                    |
 | Amazon EKS          | 1.16               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
 | Amazon EKS          | 1.17               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.16               | >= 3.5.0         | Production |                       |                                    |
+| Amazon EKS          | 1.18               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.19               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.20               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.17               | >= 3.5.0         | Deprecated |                       |                                    |
+| IBM Cloud           | 1.18               | >= 3.5.0         | Production |                       |                                    |
+| IBM Cloud           | 1.19               | >= 3.5.0         | Production |                       |                                    |
+| IBM Cloud           | 1.20               | >= 3.5.0         | Production |                       |                                    |
 | OpenShift           | 3.11               | >= 3.5.0         | Production |                       |                                    |
 | OpenShift           | 4.2                | >= 3.5.0         | Production |                       |                                    |
 | BareMetal (kubeadm) | 1.16               | >= 3.5.0         | Production |                       |                                    |
 | BareMetal (kubeadm) | 1.17               | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.18               | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.19               | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.20               | >= 3.5.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.21               | >= 3.5.0         | Production |                       |                                    |
 | Minikube            | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
 | Other               | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
 
@@ -78,6 +91,7 @@ Feature-wise production readiness table:
 | Encryption Key Rotation Support         | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.encryption-rotation   | N/A                                                                      |
 | Version Check                           | 1.1.4            | >= 3.5.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.upgrade-version-check | N/A                                                                      |
 | Operator Maintenance Management Support | 1.0.7            | >= 3.5.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.maintenance           | N/A                                                                      |
+| Operator Internal Metrics Exporter      | 1.1.9            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.metrics-exporter      | N/A                                                                      |
 
 ## Release notes for 0.3.16
 
@@ -187,3 +201,11 @@ kubectl apply -f manifests/arango-storage-dev.yaml
 # To use `ArangoDeploymentReplication`, also run
 kubectl apply -f manifests/arango-deployment-replication-dev.yaml
 ```
+
+## ArangoExporter
+
+[ArangoExporter](https://github.com/arangodb-helper/arangodb-exporter) project has been merged with ArangoOperator.
+Starting from ArangoDB 3.6 Servers expose metrics endpoint with prometheus compatible format. From this point Exporter
+is used only for TLS and/or Authentication termination to be compatible with all Prometheus installations.
+
+ArangoExporter documentation can be found [here](./docs/design/exporter.md)
