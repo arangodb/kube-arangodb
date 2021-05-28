@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.9](https://github.com/arangodb/kube-arangodb/tree/1.1.9) (2021-05-28)
 - Add IP, DNS, ShortDNS, HeadlessService (Default) communication methods
 - Migrate ArangoExporter into Operator code
 
