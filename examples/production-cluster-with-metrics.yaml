@@ -6,12 +6,12 @@ spec:
   metrics:
     mode: sidecar
     enabled: true
-    image: 'arangodb/arangodb-exporter:0.1.7'
+    image: 'arangodb/arangodb-exporter:0.1.8'
     tls: false
   annotations:
     prometheus.io/scrape: 'true'
     prometheus.io/port: '9101'
     prometheus.io/scrape_interval: '5s'
   mode: Cluster
-  image: 'arangodb/arangodb:3.7.10'
+  image: 'arangodb/arangodb:3.7.11'
   environment: Production
