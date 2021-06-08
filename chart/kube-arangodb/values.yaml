@@ -5,8 +5,8 @@ operator:
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
-  scope: legacy
-  
+  scope: cluster
+
   architectures:
   - amd64
 
@@ -38,7 +38,7 @@ operator:
   allowChaos: false
 
   nodeSelector: {}
-  
+
   enableCRDManagement: true
 
   features:
