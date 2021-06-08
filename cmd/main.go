@@ -407,20 +407,24 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
 
-	eventRecorder := createRecorder(cliLog, client.Kubernetes(), name, namespace)
-
 	scope, ok := scope.AsScope(operatorOptions.scope)
 	if !ok {
 		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
 	}
 
+	var watchNamespace string
 	if scope.IsCluster() {
-		namespace = metav1.NamespaceAll
+		watchNamespace = metav1.NamespaceAll
+	} else {
+		watchNamespace = namespace
 	}
+
+	eventRecorder := createRecorder(cliLog, client.Kubernetes(), name, watchNamespace)
 
 	cfg := operator.Config{
 		ID:                          id,
 		Namespace:                   namespace,
+		WatchNamespace:              watchNamespace,
 		PodName:                     name,
 		ServiceAccount:              serviceAccount,
 		OperatorImage:               image,
