@@ -51,7 +51,7 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 		o.log,
 		o.Dependencies.CRCli.DatabaseV1().RESTClient(),
 		deploymentType.ArangoDeploymentResourcePlural,
-		o.Config.Namespace,
+		o.Config.WatchNamespace,
 		&api.ArangoDeployment{},
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    o.onAddArangoDeployment,

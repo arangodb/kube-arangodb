@@ -85,6 +85,7 @@ type Operator struct {
 type Config struct {
 	ID                          string
 	Namespace                   string
+	WatchNamespace              string
 	PodName                     string
 	ServiceAccount              string
 	LifecycleImage              string
