@@ -318,6 +318,10 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
 	}
 
+	if scope.IsCluster() {
+		namespace = metav1.NamespaceAll
+	}
+
 	cfg := operator.Config{
 		ID:                          id,
 		Namespace:                   namespace,
