@@ -1,11 +1,11 @@
 ---
 
 operator:
-  image: hub.sharekey.com/library/kube-arangodb:latest
+  image: arangodb/kube-arangodb:1.1.9
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
-  scope: cluster
+  scope: legacy
 
   args: []
 
