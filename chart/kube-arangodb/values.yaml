@@ -5,7 +5,7 @@ operator:
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
-  scope: cluster
+  scope: legacy
 
   architectures:
   - amd64
