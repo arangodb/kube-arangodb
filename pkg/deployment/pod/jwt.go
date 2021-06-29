@@ -46,14 +46,7 @@ func IsAuthenticated(i Input) bool {
 }
 
 func VersionHasJWTSecretKeyfile(v driver.Version) bool {
-	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
-		return true
-	}
-	if v.CompareTo("3.4.2") >= 0 {
-		return true
-	}
-
-	return false
+	return true
 }
 
 func JWTSecretFolder(name string) string {

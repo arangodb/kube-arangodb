@@ -29,7 +29,7 @@ func init() {
 var maintenance = &feature{
 	name:               "maintenance",
 	description:        "Database maintenance mode management",
-	version:            "3.5.0",
+	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
