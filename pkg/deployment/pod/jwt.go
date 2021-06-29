@@ -45,10 +45,6 @@ func IsAuthenticated(i Input) bool {
 	return i.Deployment.IsAuthenticated()
 }
 
-func VersionHasJWTSecretKeyfile(v driver.Version) bool {
-	return true
-}
-
 func JWTSecretFolder(name string) string {
 	return fmt.Sprintf("%s-jwt-folder", name)
 }
@@ -68,11 +64,6 @@ func (e jwt) Envs(i Input) []core.EnvVar {
 		return nil
 	}
 
-	if !VersionHasJWTSecretKeyfile(i.Version) {
-		return []core.EnvVar{k8sutil.CreateEnvSecretKeySelector(constants.EnvArangodJWTSecret,
-			i.Deployment.Authentication.GetJWTSecretName(), constants.SecretKeyToken)}
-	}
-
 	return nil
 }
 
@@ -88,11 +79,9 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 
 	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		options.Add("--server.jwt-secret-folder", k8sutil.ClusterJWTSecretVolumeMountDir)
-	} else if VersionHasJWTSecretKeyfile(i.Version) {
+	} else {
 		keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 		options.Add("--server.jwt-secret-keyfile", keyPath)
-	} else {
-		options.Addf("--server.jwt-secret", "$(%s)", constants.EnvArangodJWTSecret)
 	}
 
 	return options
