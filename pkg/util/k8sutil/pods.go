@@ -274,7 +274,7 @@ func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
-	var command []string = []string{
+	var command = []string{
 		executable,
 		"uuid",
 		"--uuid-path",

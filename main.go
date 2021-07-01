@@ -145,6 +145,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
+	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
 	f.StringVar(&operatorOptions.metricsExporterImage, "operator.metrics-exporter-image", MetricsExporterImageEnv.GetOrDefault(defaultMetricsExporterImage), "Docker image used for metrics containers by default")
 	f.StringVar(&operatorOptions.arangoImage, "operator.arango-image", ArangoImageEnv.GetOrDefault(defaultArangoImage), "Docker image used for arango by default")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
@@ -328,7 +329,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		AllowChaos:                  chaosOptions.allowed,
-		AlpineImage:                 operatorOptions.alpineImage,
 		MetricsExporterImage:        operatorOptions.metricsExporterImage,
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
