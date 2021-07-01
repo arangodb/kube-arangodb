@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Deprecate Alpine image usage
 - Use persistent name and namespace in ArangoDeployment reconcilation loop
 
 ## [1.1.9](https://github.com/arangodb/kube-arangodb/tree/1.1.9) (2021-05-28)

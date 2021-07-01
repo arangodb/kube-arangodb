@@ -88,7 +88,6 @@ type Config struct {
 	PodName                     string
 	ServiceAccount              string
 	LifecycleImage              string
-	AlpineImage                 string
 	ArangoImage                 string
 	MetricsExporterImage        string
 	EnableDeployment            bool
