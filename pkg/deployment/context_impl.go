@@ -114,10 +114,10 @@ func (d *Deployment) GetOperatorUUIDImage() string {
 	return d.config.OperatorUUIDInitImage
 }
 
-// GetNamespSecretsInterfaceace returns the kubernetes namespace that contains
+// GetNamespace returns the kubernetes namespace that contains
 // this deployment.
 func (d *Deployment) GetNamespace() string {
-	return d.apiObject.GetNamespace()
+	return d.namespace
 }
 
 // GetPhase returns the current phase of the deployment
@@ -275,7 +275,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
-	var secrets secret.ReadInterface = d.GetKubeCli().CoreV1().Secrets(d.apiObject.GetNamespace())
+	var secrets secret.ReadInterface = d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
 	if currentState := d.currentState; currentState != nil {
 		secrets = currentState.SecretReadInterface()
 	}
@@ -294,7 +294,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 		secret = string(jwt)
 	} else {
-		s, err := secrets.Get(context.Background(), pod.JWTSecretFolder(d.apiObject.GetName()), meta.GetOptions{})
+		s, err := secrets.Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
 			return nil, errors.Newf("JWT Folder Secret is missing")
@@ -327,7 +327,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	// Fetch monitoring token
 	log := d.deps.Log
 	kubecli := d.deps.KubeCli
-	ns := d.apiObject.GetNamespace()
+	ns := d.GetNamespace()
 	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
 	monitoringToken, err := k8sutil.GetTokenSecret(ctx, secrets, secretName)
@@ -392,7 +392,7 @@ func (d *Deployment) GetPod(ctx context.Context, podName string) (*v1.Pod, error
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 	log := d.deps.Log
-	ns := d.apiObject.GetNamespace()
+	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, meta.DeleteOptions{})
 	})
@@ -449,7 +449,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	log := d.deps.Log
-	ns := d.apiObject.GetNamespace()
+	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(ctxChild, pvcName, meta.DeleteOptions{})
 	})
@@ -482,7 +482,7 @@ func (d *Deployment) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClai
 func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 	// Get all current PVCs
 	log := d.deps.Log
-	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).List(context.Background(), k8sutil.DeploymentListOpt(d.apiObject.GetName()))
+	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.GetNamespace()).List(context.Background(), k8sutil.DeploymentListOpt(d.GetName()))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to list PVCs")
 		return nil, errors.WithStack(err)
@@ -501,7 +501,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*v1.Persistent
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
-	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.apiObject.GetNamespace()).Get(ctxChild, pvcName, meta.GetOptions{})
+	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.GetNamespace()).Get(ctxChild, pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, errors.WithStack(err)
@@ -512,9 +512,8 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*v1.Persistent
 // GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 // the given member.
 func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
-	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
-	ns := d.apiObject.GetNamespace()
-	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
+	secrets := d.deps.KubeCli.CoreV1().Secrets(d.GetNamespace())
 	result, err := k8sutil.GetTLSKeyfileSecret(secrets, secretName)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -525,8 +524,8 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 // DeleteTLSKeyfile removes the Secret containing the TLS keyfile for the given member.
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
-	secretName := k8sutil.CreateTLSKeyfileSecretName(d.apiObject.GetName(), group.AsRole(), member.ID)
-	ns := d.apiObject.GetNamespace()
+	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
+	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.deps.KubeCli.CoreV1().Secrets(ns).Delete(ctxChild, secretName, meta.DeleteOptions{})
 	})
@@ -539,7 +538,7 @@ func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup
 // DeleteSecret removes the Secret with given name.
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
-	ns := d.apiObject.GetNamespace()
+	ns := d.GetNamespace()
 	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
@@ -614,14 +613,14 @@ func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
 }
 
 func (d *Deployment) GetName() string {
-	return d.apiObject.GetName()
+	return d.name
 }
 
 func (d *Deployment) GetOwnedPods(ctx context.Context) ([]v1.Pod, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
-	pods, err := d.GetKubeCli().CoreV1().Pods(d.apiObject.GetNamespace()).List(ctxChild, meta.ListOptions{})
+	pods, err := d.GetKubeCli().CoreV1().Pods(d.GetNamespace()).List(ctxChild, meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

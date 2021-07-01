@@ -465,6 +465,8 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 
 	d := &Deployment{
 		apiObject: arangoDeployment,
+		name:      arangoDeployment.GetName(),
+		namespace: arangoDeployment.GetNamespace(),
 		config:    config,
 		deps:      deps,
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),

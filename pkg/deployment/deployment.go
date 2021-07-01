@@ -107,6 +107,9 @@ const (
 
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
+	name      string
+	namespace string
+
 	apiObject *api.ArangoDeployment // API object
 	status    struct {
 		mutex   sync.Mutex
@@ -143,6 +146,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	d := &Deployment{
 		apiObject: apiObject,
+		name:      apiObject.GetName(),
+		namespace: apiObject.GetNamespace(),
 		config:    config,
 		deps:      deps,
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
