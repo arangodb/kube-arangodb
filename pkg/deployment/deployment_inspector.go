@@ -99,7 +99,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	nextInterval := lastInterval
 	hasError := false
 
-	deploymentName := d.apiObject.GetName()
+	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
 	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
@@ -112,7 +112,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	var updated *api.ArangoDeployment
 	err = k8sutil.RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
 		var err error
-		updated, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
+		updated, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
 		return err
 	})
 	if k8sutil.IsNotFound(err) {

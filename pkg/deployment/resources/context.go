@@ -81,6 +81,8 @@ type Context interface {
 	GetMetricsExporterImage() string
 	// GetArangoImage returns the image name containing the default arango image
 	GetArangoImage() string
+	// GetName returns the name of the deployment
+	GetName() string
 	// GetNamespace returns the namespace that contains the deployment
 	GetNamespace() string
 	// CreateEvent creates a given event.
