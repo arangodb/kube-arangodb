@@ -514,7 +514,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	if d.GetScope().IsNamespaced() {
 		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(context.Background(), metav1.ListOptions{})
 	} else {
-		_, err = d.deps.KubeExtCli.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+		_, err = d.deps.KubeExtCli.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
 	}
 	log := d.deps.Log
 	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
