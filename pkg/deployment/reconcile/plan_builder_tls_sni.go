@@ -91,7 +91,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				return err
 			})
 			if err != nil {
-				log.Warn().Err(err).Msg("Unable to get client")
+				log.Info().Err(err).Msg("Unable to get client")
 				continue
 			}
 
@@ -102,7 +102,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 				return err
 			})
 			if err != nil {
-				log.Warn().Err(err).Msg("SNI compare failed")
+				log.Info().Err(err).Msg("SNI compare failed")
 				return nil
 
 			} else if !ok {
