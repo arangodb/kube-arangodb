@@ -253,7 +253,11 @@ func (d *Deployment) run() {
 
 	d.lookForServiceMonitorCRD()
 
-	inspectionInterval := maxInspectionInterval
+	// Execute inspection for first time without delay of 10s
+	log.Debug().Msg("Initially inspect deployment...")
+	inspectionInterval := d.inspectDeployment(minInspectionInterval)
+	log.Debug().Str("interval", inspectionInterval.String()).Msg("...deployment inspect started")
+
 	for {
 		select {
 		case <-d.stopCh:

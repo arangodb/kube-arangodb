@@ -4,6 +4,7 @@
 - Switch K8S CRD API to V1
 - Deprecate Alpine image usage
 - Use persistent name and namespace in ArangoDeployment reconcilation loop
+- Remove finalizers when Server container is already terminated and reduce initial reconciliation delay
 - Add new logger services - reconciliation and event
 
 ## [1.1.9](https://github.com/arangodb/kube-arangodb/tree/1.1.9) (2021-05-28)

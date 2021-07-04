@@ -82,6 +82,22 @@ func GetPodByName(pods []core.Pod, podName string) (core.Pod, bool) {
 	return core.Pod{}, false
 }
 
+// IsPodServerContainerRunning returns true if the arangodb container of the pod is still running
+func IsPodServerContainerRunning(pod *core.Pod) bool {
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.Name != ServerContainerName {
+			continue
+		}
+
+		if c.State.Terminated != nil {
+			return false
+		} else {
+			return true
+		}
+	}
+	return false
+}
+
 // IsPodSucceeded returns true if the arangodb container of the pod
 // has terminated with exit code 0.
 func IsPodSucceeded(pod *core.Pod) bool {
