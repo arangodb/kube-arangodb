@@ -118,7 +118,7 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
 		Config:                 config,
 		Dependencies:           deps,
-		log:                    deps.LogService.MustGetLogger("operator"),
+		log:                    deps.LogService.MustGetLogger(logging.LoggerNameOperator),
 		deployments:            make(map[string]*deployment.Deployment),
 		deploymentReplications: make(map[string]*replication.DeploymentReplication),
 		localStorages:          make(map[string]*storage.LocalStorage),
@@ -214,7 +214,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		}
 	}
 	operatorName := "arangodb-backup-operator"
-	operator := backupOper.NewOperator(operatorName, o.Namespace)
+	operator := backupOper.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace)
 
 	rand.Seed(time.Now().Unix())
 
@@ -235,7 +235,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		panic(err)
 	}
 
-	eventRecorder := event.NewEventRecorder(operatorName, kubeClientSet)
+	eventRecorder := event.NewEventRecorder(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameEventRecorder), operatorName, kubeClientSet)
 
 	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 

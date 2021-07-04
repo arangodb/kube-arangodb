@@ -26,6 +26,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +45,7 @@ import (
 func Test_Operator_InformerProcessing(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name, name)
+	o := NewOperator(log.Logger, name, name)
 	size := 64
 
 	objects := make([]string, size)
@@ -92,7 +94,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 func Test_Operator_MultipleInformers(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name, name)
+	o := NewOperator(log.Logger, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -153,7 +155,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name, name)
+	o := NewOperator(log.Logger, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -213,7 +215,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name, name)
+	o := NewOperator(log.Logger, name, name)
 	size := 16
 
 	objects := make([]string, size)
@@ -321,7 +323,7 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	// Arrange
 	name := string(uuid.NewUUID())
-	o := NewOperator(name, name)
+	o := NewOperator(log.Logger, name, name)
 	size := 16
 
 	objects := make([]string, size)

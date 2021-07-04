@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
@@ -50,7 +52,7 @@ func newFakeHandler() *handler {
 	h := &handler{
 		client:        f,
 		kubeClient:    k,
-		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
+		eventRecorder: newEventInstance(event.NewEventRecorder(log.Logger, "mock", k)),
 	}
 
 	return h

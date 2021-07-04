@@ -139,7 +139,7 @@ func init() {
 	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
-	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, "Set log levels in format <level> or <logger>=<level>")
+	f.StringArrayVar(&logLevels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(logging.LoggerNames(), ", ")))
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
@@ -193,7 +193,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		return log.With().Str("operator-id", operatorID).Logger()
 	})
 
-	klog.SetOutput(logService.MustGetLogger("klog"))
+	klog.SetOutput(logService.MustGetLogger(logging.LoggerNameKLog))
 	klog.Info("nice to meet you")
 	klog.Flush()
 
@@ -253,7 +253,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		AdminSecretName:    serverOptions.adminSecretName,
 		AllowAnonymous:     serverOptions.allowAnonymous,
 	}, server.Dependencies{
-		Log:           logService.MustGetLogger("server"),
+		Log:           logService.MustGetLogger(logging.LoggerNameServer),
 		LivenessProbe: &livenessProbe,
 		Deployment: server.OperatorDependency{
 			Enabled: cfg.EnableDeployment,

@@ -23,6 +23,7 @@
 package operator
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
@@ -205,7 +206,7 @@ func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStora
 		ServiceAccount: o.Config.ServiceAccount,
 	}
 	deps := storage.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger("storage").With().
+		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameStorage).With().
 			Str("localStorage", apiObject.GetName()).
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,

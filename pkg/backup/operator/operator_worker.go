@@ -25,8 +25,6 @@ package operator
 import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 func (o *operator) worker() {
@@ -39,7 +37,7 @@ func (o *operator) processNextItem() bool {
 	defer func() {
 		// Recover from panic to not shutdown whole operator
 		if err := recover(); err != nil {
-			e := log.Error()
+			e := o.logger.Error()
 
 			switch obj := err.(type) {
 			case error:
@@ -65,7 +63,7 @@ func (o *operator) processNextItem() bool {
 	err := o.processObject(obj)
 
 	if err != nil {
-		log.Error().Err(err).Interface("object", obj).Msgf("Error during object handling")
+		o.logger.Error().Err(err).Interface("object", obj).Msgf("Error during object handling")
 		return true
 	}
 
@@ -98,7 +96,7 @@ func (o *operator) processObject(obj interface{}) error {
 
 	o.objectProcessed.Inc()
 
-	log.Debug().Msgf("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+	o.logger.Trace().Msgf("Received Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,
 		item.Group,
 		item.Version,
@@ -111,7 +109,7 @@ func (o *operator) processObject(obj interface{}) error {
 		return errors.Newf("error syncing '%s': %s, requeuing", key, err.Error())
 	}
 
-	log.Debug().Msgf("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
+	o.logger.Trace().Msgf("Processed Item Action: %s, Type: %s/%s/%s, Namespace: %s, Name: %s",
 		item.Operation,
 		item.Group,
 		item.Version,

@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver"
@@ -59,7 +61,7 @@ func newFakeHandler() *handler {
 		kubeClient: k,
 
 		arangoClientTimeout: defaultArangoClientTimeout,
-		eventRecorder:       newEventInstance(event.NewEventRecorder("mock", k)),
+		eventRecorder:       newEventInstance(event.NewEventRecorder(log.Logger, "mock", k)),
 	}
 }
 
