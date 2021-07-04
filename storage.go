@@ -95,7 +95,7 @@ func newProvisionerConfigAndDeps(nodeName string) (service.Config, service.Depen
 		NodeName: nodeName,
 	}
 	deps := service.Dependencies{
-		Log: logService.MustGetLogger("provisioner"),
+		Log: logService.MustGetLogger(logging.LoggerNameProvisioner),
 	}
 
 	return cfg, deps

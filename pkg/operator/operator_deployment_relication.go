@@ -24,6 +24,7 @@ package operator
 
 import (
 	replication2 "github.com/arangodb/kube-arangodb/pkg/apis/replication"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	kwatch "k8s.io/apimachinery/pkg/watch"
@@ -205,7 +206,7 @@ func (o *Operator) makeDeploymentReplicationConfigAndDeps(apiObject *api.ArangoD
 		Namespace: o.Config.Namespace,
 	}
 	deps := replication.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger("deployment-replication").With().
+		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeploymentReplication).With().
 			Str("deployment-replication", apiObject.GetName()).
 			Logger(),
 		KubeCli:       o.Dependencies.KubeCli,

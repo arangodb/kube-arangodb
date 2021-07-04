@@ -26,13 +26,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -62,10 +63,11 @@ type Operator interface {
 }
 
 // NewOperator creates new operator
-func NewOperator(name, namespace string) Operator {
+func NewOperator(logger zerolog.Logger, name, namespace string) Operator {
 	o := &operator{
 		name:      name,
 		namespace: namespace,
+		logger:    logger,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
 
@@ -79,6 +81,8 @@ type operator struct {
 	lock sync.Mutex
 
 	started bool
+
+	logger zerolog.Logger
 
 	name      string
 	namespace string
@@ -192,14 +196,14 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 
 func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 	// Execute pre checks
-	log.Info().Msgf("Executing Lifecycle PreStart")
+	o.logger.Info().Msgf("Executing Lifecycle PreStart")
 	for _, handler := range o.handlers {
 		if err := ExecLifecyclePreStart(handler); err != nil {
 			return err
 		}
 	}
 
-	log.Info().Msgf("Starting informers")
+	o.logger.Info().Msgf("Starting informers")
 	for _, starter := range o.starters {
 		starter.Start(stopCh)
 	}
@@ -208,12 +212,12 @@ func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	log.Info().Msgf("Starting workers")
+	o.logger.Info().Msgf("Starting workers")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(o.worker, time.Second, stopCh)
 	}
 
-	log.Info().Msgf("Operator started")
+	o.logger.Info().Msgf("Operator started")
 	return nil
 }
 

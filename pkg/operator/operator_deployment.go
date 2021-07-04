@@ -24,6 +24,7 @@ package operator
 
 import (
 	deploymentType "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	kwatch "k8s.io/apimachinery/pkg/watch"
@@ -211,7 +212,7 @@ func (o *Operator) makeDeploymentConfigAndDeps(apiObject *api.ArangoDeployment) 
 		Scope:                 o.Scope,
 	}
 	deps := deployment.Dependencies{
-		Log: o.Dependencies.LogService.MustGetLogger("deployment").With().
+		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeployment).With().
 			Str("deployment", apiObject.GetName()).
 			Logger(),
 		KubeCli:           o.Dependencies.KubeCli,
