@@ -49,10 +49,18 @@ const (
 func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) (util.Interval, error) {
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
+
+	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p)
+
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
 		case constants.FinalizerPodAgencyServing:
 			log.Debug().Msg("Inspecting agency-serving finalizer")
+			if isServerContainerDead {
+				log.Debug().Msg("Server Container is dead, removing finalizer")
+				removalList = append(removalList, f)
+				break
+			}
 			if err := r.inspectFinalizerPodAgencyServing(ctx, log, p, memberStatus, updateMember); err == nil {
 				removalList = append(removalList, f)
 			} else {
@@ -60,12 +68,23 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			}
 		case constants.FinalizerPodDrainDBServer:
 			log.Debug().Msg("Inspecting drain dbserver finalizer")
+			if isServerContainerDead {
+				log.Debug().Msg("Server Container is dead, removing finalizer")
+				removalList = append(removalList, f)
+				break
+			}
 			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus, updateMember); err == nil {
 				removalList = append(removalList, f)
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
 			}
 		case constants.FinalizerDelayPodTermination:
+			if isServerContainerDead {
+				log.Debug().Msg("Server Container is dead, removing finalizer")
+				removalList = append(removalList, f)
+				break
+			}
+
 			s, _ := r.context.GetStatus()
 			_, group, ok := s.Members.ElementByID(memberStatus.ID)
 			if !ok {
