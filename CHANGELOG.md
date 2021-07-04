@@ -4,6 +4,7 @@
 - Switch K8S CRD API to V1
 - Deprecate Alpine image usage
 - Use persistent name and namespace in ArangoDeployment reconcilation loop
+- Add new logger services - reconciliation and event
 
 ## [1.1.9](https://github.com/arangodb/kube-arangodb/tree/1.1.9) (2021-05-28)
 - Add IP, DNS, ShortDNS, HeadlessService (Default) communication methods
