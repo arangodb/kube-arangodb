@@ -39,7 +39,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -67,11 +67,29 @@ type DeploymentAgencyMaintenance interface {
 	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
 }
 
+type DeploymentPodRenderer interface {
+	// RenderPodForMember Renders Pod definition for member
+	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member
+	RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
+}
+
+type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
+type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
+
+type ArangoMemberContext interface {
+	// WithArangoMemberUpdate run action with update of ArangoMember
+	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action ArangoMemberUpdateFunc) error
+	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
+	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
 	DeploymentStatusUpdate
 	DeploymentAgencyMaintenance
+	ArangoMemberContext
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -106,10 +124,10 @@ type Context interface {
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
-	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
+	GetOwnedPVCs() ([]core.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(ctx context.Context, p *v1.Pod) error
+	CleanupPod(ctx context.Context, p *core.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(ctx context.Context, podName string) error

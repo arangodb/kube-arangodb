@@ -161,6 +161,10 @@ const (
 	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
 	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
 	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
+	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
+	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
+	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
+	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
 )
 
 const (

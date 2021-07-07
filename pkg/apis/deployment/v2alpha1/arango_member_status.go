@@ -22,5 +22,19 @@
 
 package v2alpha1
 
+import core "k8s.io/api/core/v1"
+
+const (
+	ArangoMemberConditionPendingRestart ConditionType = "pending-restart"
+)
+
 type ArangoMemberStatus struct {
+	Conditions ConditionList `json:"conditions,omitempty"`
+
+	Template         *core.PodTemplateSpec `json:"template,omitempty"`
+	TemplateChecksum string                `json:"templateChecksum,omitempty"`
+}
+
+func (a ArangoMemberStatus) IsPendingRestart() bool {
+	return a.Conditions.IsTrue(ArangoMemberConditionPendingRestart)
 }

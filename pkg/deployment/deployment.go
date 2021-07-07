@@ -298,7 +298,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+			cachedStatus, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}

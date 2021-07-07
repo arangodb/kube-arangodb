@@ -64,7 +64,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 )
 
 var _ resources.Context = &Deployment{}
@@ -381,7 +381,7 @@ func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id
 }
 
 // GetPod returns pod.
-func (d *Deployment) GetPod(ctx context.Context, podName string) (*v1.Pod, error) {
+func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
@@ -405,7 +405,7 @@ func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 
 // CleanupPod deletes a given pod with force and explicit UID.
 // If the pod does not exist, the error is ignored.
-func (d *Deployment) CleanupPod(ctx context.Context, p *v1.Pod) error {
+func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 	log := d.deps.Log
 	podName := p.GetName()
 	ns := p.GetNamespace()
@@ -462,7 +462,7 @@ func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 
 // UpdatePvc updated a persistent volume claim in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
-func (d *Deployment) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
+func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(ctxChild, pvc, meta.UpdateOptions{})
 		return err
@@ -479,7 +479,7 @@ func (d *Deployment) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClai
 }
 
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.
-func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
+func (d *Deployment) GetOwnedPVCs() ([]core.PersistentVolumeClaim, error) {
 	// Get all current PVCs
 	log := d.deps.Log
 	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.GetNamespace()).List(context.Background(), k8sutil.DeploymentListOpt(d.GetName()))
@@ -487,7 +487,7 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 		log.Debug().Err(err).Msg("Failed to list PVCs")
 		return nil, errors.WithStack(err)
 	}
-	myPVCs := make([]v1.PersistentVolumeClaim, 0, len(pvcs.Items))
+	myPVCs := make([]core.PersistentVolumeClaim, 0, len(pvcs.Items))
 	for _, p := range pvcs.Items {
 		if d.isOwnerOf(&p) {
 			myPVCs = append(myPVCs, p)
@@ -497,7 +497,7 @@ func (d *Deployment) GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error) {
 }
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
-func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error) {
+func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
@@ -577,8 +577,12 @@ func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts 
 	return err
 }
 
-func (d *Deployment) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error) {
+func (d *Deployment) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	return d.resources.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+}
+
+func (d *Deployment) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	return d.resources.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
 
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -616,7 +620,7 @@ func (d *Deployment) GetName() string {
 	return d.name
 }
 
-func (d *Deployment) GetOwnedPods(ctx context.Context) ([]v1.Pod, error) {
+func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
@@ -625,7 +629,7 @@ func (d *Deployment) GetOwnedPods(ctx context.Context) ([]v1.Pod, error) {
 		return nil, err
 	}
 
-	podList := make([]v1.Pod, 0, len(pods.Items))
+	podList := make([]core.Pod, 0, len(pods.Items))
 
 	for _, p := range pods.Items {
 		if !d.isOwnerOf(&p) {
@@ -644,4 +648,37 @@ func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
 
 func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
 	d.currentState = i
+}
+
+func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if action(o) {
+		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Update(ctx, o, meta.UpdateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	status := o.Status.DeepCopy()
+
+	if action(o, status) {
+		o.Status = *status
+		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

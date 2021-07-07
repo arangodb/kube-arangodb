@@ -32,6 +32,6 @@ type ArangoMemberSpec struct {
 	ID            string      `json:"id,omitempty"`
 	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
 
-	Template         *core.PodTemplate `json:"template,omitempty"`
-	TemplateChecksum string            `json:"templateChecksum,omitempty"`
+	Template         *core.PodTemplateSpec `json:"template,omitempty"`
+	TemplateChecksum string                `json:"templateChecksum,omitempty"`
 }

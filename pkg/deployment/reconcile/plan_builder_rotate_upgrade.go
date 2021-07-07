@@ -94,8 +94,22 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 	var fromVersion, toVersion driver.Version
 	var fromLicense, toLicense upgraderules.License
 
+	// Update member specs
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
+			if m.Phase != api.MemberPhaseNone {
+				// We are not in empty phase, not creating
+			}
+		}
 
+		return nil
+	})
+
+	if !newPlan.IsEmpty() {
+		return newPlan, false
+	}
+
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
 				// Only rotate when phase is created
@@ -298,6 +312,60 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 	return api.ImageInfo{}, false
 }
 
+func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (string, *core.Pod, *api.ArangoMember, bool) {
+	imageInfo, imageFound := planCtx.SelectImage(spec, status)
+	if !imageFound {
+		// Image is not found, so rotation is not needed
+		return "", nil, nil, false
+	}
+
+	member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
+	if !ok {
+		return "", nil, nil, false
+	}
+
+	if m.Image != nil {
+		imageInfo = *m.Image
+	}
+
+	groupSpec := spec.GetServerGroupSpec(group)
+
+	renderedPod, err := planCtx.RenderPodForMember(ctx, cachedStatus, spec, status, m.ID, imageInfo)
+	if err != nil {
+		log.Err(err).Msg("Error while rendering pod")
+		return "", nil, nil, false
+	}
+
+	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
+	if err != nil {
+		log.Err(err).Msg("Error while getting pod checksum")
+		return "", nil, nil, false
+	}
+
+	return checksum, renderedPod, member, true
+}
+
+// arangoMemberPodTemplateNeedsUpdate returns true when the specification of the
+// given pod differs from what it should be according to the
+// given deployment spec.
+// When true is returned, a reason for the rotation is already returned.
+func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
+	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (string, bool) {
+	checksum, _, member, valid := getPodDetails(ctx, log, apiObject, spec, group, status, m, cachedStatus, planCtx)
+	if member.Status.TemplateChecksum == "" && member.Status.TemplateChecksum != m.PodSpecVersion {
+		return "Pod Status Checksum is empty", true
+	}
+
+	if valid && checksum != member.Spec.TemplateChecksum {
+		return "Pod Spec changed", true
+	}
+
+	return "", false
+}
+
 // podNeedsRotation returns true when the specification of the
 // given pod differs from what it should be according to the
 // given deployment spec.
@@ -314,33 +382,14 @@ func podNeedsRotation(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		return true, "Pod Spec Version is nil - recreating pod"
 	}
 
-	imageInfo, imageFound := planCtx.SelectImage(spec, status)
-	if !imageFound {
-		// Image is not found, so rotation is not needed
+	member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
+	if !ok {
 		return false, ""
 	}
 
-	if m.Image != nil {
-		imageInfo = *m.Image
-	}
-
-	groupSpec := spec.GetServerGroupSpec(group)
-
-	renderedPod, err := planCtx.RenderPodForMember(ctx, cachedStatus, spec, status, m.ID, imageInfo)
-	if err != nil {
-		log.Err(err).Msg("Error while rendering pod")
-		return false, ""
-	}
-
-	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
-	if err != nil {
-		log.Err(err).Msg("Error while getting pod checksum")
-		return false, ""
-	}
-
-	if m.PodSpecVersion != checksum {
-		if _, err := json.Marshal(renderedPod); err == nil {
-			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("XXXXXXXXXXX Pod needs rotation - checksum does not match")
+	if member.Status.TemplateChecksum != member.Spec.TemplateChecksum {
+		if _, err := json.Marshal(member.Spec); err == nil {
+			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("Pod needs rotation - checksum does not match")
 		}
 		return true, "Pod needs rotation - checksum does not match"
 	}

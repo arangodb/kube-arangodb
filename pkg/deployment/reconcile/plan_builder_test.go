@@ -75,6 +75,18 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
 	panic("implement me")
 }

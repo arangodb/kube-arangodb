@@ -77,21 +77,32 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		return currentPlan, false
 	}
 
-	// Check for various scenario's
+	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+		ApplyIfEmpty(updateMemberPodTemplateSpec).
+		ApplyIfEmpty(updateMemberPhasePlan).
+		ApplyIfEmpty(createCleanOutPlan).
+		Plan(), true
+}
+
+// updateMemberPodTemplateSpec creates plan to update member Spec
+func updateMemberPodTemplateSpec(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	pb := NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx)
+	// Update member specs
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
+		for _, m := range members {
+			if reason, changed := arangoMemberPodTemplateNeedsUpdate(ctx, log, apiObject, spec, group, status, m, cachedStatus, context); changed {
+				plan = append(plan, api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, reason))
+			}
+		}
 
-	if plan.IsEmpty() {
-		plan = pb.Apply(updateMemberPhasePlan)
-	}
+		return nil
+	})
 
-	if plan.IsEmpty() {
-		plan = pb.Apply(createCleanOutPlan)
-	}
-
-	// Return plan
-	return plan, true
+	return plan
 }
 
 // updateMemberPhasePlan creates plan to update member phase
@@ -106,6 +117,7 @@ func updateMemberPhasePlan(ctx context.Context,
 			if m.Phase == api.MemberPhaseNone {
 				plan = append(plan,
 					api.NewAction(api.ActionTypeMemberRIDUpdate, group, m.ID, "Regenerate member RID"),
+					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"),
 					api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
 						"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
 			}

@@ -26,7 +26,6 @@ package inspector
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -35,13 +34,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 type Inspector interface {
-	Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,
-		c versioned.Interface, namespace string) error
+	Refresh(ctx context.Context) error
 
 	pod.Inspector
 	secret.Inspector

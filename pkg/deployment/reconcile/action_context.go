@@ -36,7 +36,7 @@ import (
 
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
@@ -51,6 +51,8 @@ import (
 type ActionContext interface {
 	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
+	resources.ArangoMemberContext
+	resources.DeploymentPodRenderer
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -88,7 +90,7 @@ type ActionContext interface {
 	// RemoveMemberByID removes a member with given id.
 	RemoveMemberByID(ctx context.Context, id string) error
 	// GetPod returns pod.
-	GetPod(ctx context.Context, podName string) (*v1.Pod, error)
+	GetPod(ctx context.Context, podName string) (*core.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(ctx context.Context, podName string) error
@@ -97,10 +99,10 @@ type ActionContext interface {
 	DeletePvc(ctx context.Context, pvcName string) error
 	// GetPvc returns PVC info about PVC with given name in the namespace
 	// of the deployment.
-	GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error)
+	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
-	UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error
+	UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	RemovePodFinalizers(ctx context.Context, podName string) error
@@ -139,8 +141,10 @@ type ActionContext interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
-	// GetNameget current cached state of deployment
+	// GetCachedStatus current cached state of deployment
 	GetCachedStatus() inspectorInterface.Inspector
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -154,8 +158,8 @@ func newActionContext(log zerolog.Logger, context Context, cachedStatus inspecto
 
 // actionContext implements ActionContext
 type actionContext struct {
-	log          zerolog.Logger
 	context      Context
+	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
 }
 
@@ -165,6 +169,26 @@ func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, er
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
+}
+
+func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
+}
+
+func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
+}
+
+func (ac *actionContext) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	return ac.context.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+}
+
+func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+}
+
+func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
+	return ac.context.SelectImage(spec, status)
 }
 
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
@@ -209,7 +233,7 @@ func (ac *actionContext) GetAPIObject() k8sutil.APIObject {
 	return ac.context.GetAPIObject()
 }
 
-func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
+func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
 	return ac.context.UpdatePvc(ctx, pvc)
 }
 
@@ -217,7 +241,7 @@ func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
 }
 
-func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error) {
+func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
 	return ac.context.GetPvc(ctx, pvcName)
 }
 
@@ -346,7 +370,7 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 }
 
 // GetPod returns pod.
-func (ac *actionContext) GetPod(ctx context.Context, podName string) (*v1.Pod, error) {
+func (ac *actionContext) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
 	if pod, err := ac.context.GetPod(ctx, podName); err != nil {
 		return nil, errors.WithStack(err)
 	} else {

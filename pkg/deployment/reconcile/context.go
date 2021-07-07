@@ -37,13 +37,14 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // Context provides methods to the reconcile package.
 type Context interface {
 	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
+	resources.ArangoMemberContext
+	resources.DeploymentPodRenderer
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -112,8 +113,6 @@ type Context interface {
 	EnableScalingCluster(ctx context.Context) error
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
-	// Renders Pod definition for member
-	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// SecretsInterface return secret interface

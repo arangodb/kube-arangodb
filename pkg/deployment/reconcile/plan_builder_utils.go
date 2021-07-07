@@ -29,8 +29,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -65,66 +63,4 @@ func fetchAgency(ctx context.Context, spec api.DeploymentSpec, status api.Deploy
 	} else {
 		return nil, errors.Newf("not able to read from agency when agency is down")
 	}
-}
-
-type planBuilder func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan
-
-type planBuilderCondition func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) bool
-
-type planBuilderSubPlan func(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext, w WithPlanBuilder, plans ...planBuilder) api.Plan
-
-func NewWithPlanBuilder(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) WithPlanBuilder {
-	return &withPlanBuilder{
-		ctx:          ctx,
-		log:          log,
-		apiObject:    apiObject,
-		spec:         spec,
-		status:       status,
-		cachedStatus: cachedStatus,
-		context:      context,
-	}
-}
-
-type WithPlanBuilder interface {
-	Apply(p planBuilder) api.Plan
-	ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan
-	ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan
-}
-
-type withPlanBuilder struct {
-	ctx          context.Context
-	log          zerolog.Logger
-	apiObject    k8sutil.APIObject
-	spec         api.DeploymentSpec
-	status       api.DeploymentStatus
-	cachedStatus inspectorInterface.Inspector
-	context      PlanBuilderContext
-}
-
-func (w withPlanBuilder) ApplyWithCondition(c planBuilderCondition, p planBuilder) api.Plan {
-	if !c(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context) {
-		return api.Plan{}
-	}
-
-	return w.Apply(p)
-}
-
-func (w withPlanBuilder) ApplySubPlan(p planBuilderSubPlan, plans ...planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context, w, plans...)
-}
-
-func (w withPlanBuilder) Apply(p planBuilder) api.Plan {
-	return p(w.ctx, w.log, w.apiObject, w.spec, w.status, w.cachedStatus, w.context)
 }
