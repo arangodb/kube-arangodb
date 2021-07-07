@@ -121,4 +121,8 @@ type Context interface {
 	GetName() string
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
+	// WithArangoMemberUpdate run action with update of ArangoMember
+	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error
+	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
+	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error
 }

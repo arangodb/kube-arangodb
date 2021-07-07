@@ -59,7 +59,7 @@ type PlanBuilderContext interface {
 	GetSpec() api.DeploymentSpec
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
-	// Renders Pod definition for member
+	// RenderPodForMember Renders Pod definition for member
 	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
@@ -78,6 +78,10 @@ type PlanBuilderContext interface {
 	GetName() string
 	// GetAgency returns a connection to the entire agency.
 	GetAgency(ctx context.Context) (agency.Agency, error)
+	// WithArangoMemberUpdate run action with update of ArangoMember
+	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error
+	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
+	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

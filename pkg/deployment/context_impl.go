@@ -645,3 +645,33 @@ func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
 func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
 	d.currentState = i
 }
+
+func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error {
+	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if action(o) {
+		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Update(ctx, o, meta.UpdateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error {
+	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if action(&o.Status) {
+		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
