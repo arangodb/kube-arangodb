@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.1.10](https://github.com/arangodb/kube-arangodb/tree/1.1.10) (2021-07-06)
 - Switch K8S CRD API to V1
 - Deprecate Alpine image usage
 - Use persistent name and namespace in ArangoDeployment reconcilation loop
