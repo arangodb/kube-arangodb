@@ -43,3 +43,6 @@ operator:
     arango: arangodb/arangodb:latest
 rbac:
   enabled: true
+
+port:
+  name: tcp-8529
