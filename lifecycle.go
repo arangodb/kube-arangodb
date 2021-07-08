@@ -29,6 +29,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/version"
+
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -70,7 +72,8 @@ func init() {
 
 // Wait until all finalizers of the current pod have been removed.
 func cmdLifecyclePreStopRun(cmd *cobra.Command, args []string) {
-	cliLog.Info().Msgf("Starting arangodb-operator, lifecycle preStop, version %s build %s", projectVersion, projectBuild)
+
+	cliLog.Info().Msgf("Starting arangodb-operator (%s), lifecycle preStop, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
@@ -119,7 +122,7 @@ func cmdLifecyclePreStopRun(cmd *cobra.Command, args []string) {
 
 // Copy the executable to a given place.
 func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
-	cliLog.Info().Msgf("Starting arangodb-operator, lifecycle copy, version %s build %s", projectVersion, projectBuild)
+	cliLog.Info().Msgf("Starting arangodb-operator (%s), lifecycle copy, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	exePath, err := os.Executable()
 	if err != nil {

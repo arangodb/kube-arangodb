@@ -28,6 +28,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/version"
+
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -70,7 +72,8 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Log version
-	cliLog.Info().Msgf("Starting arangodb local storage provisioner, version %s build %s", projectVersion, projectBuild)
+
+	cliLog.Info().Msgf("Starting arangodb local storage provisioner (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
 	nodeName := os.Getenv(constants.EnvOperatorNodeName)

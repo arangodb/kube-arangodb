@@ -30,6 +30,8 @@ GOVERSION := 1.10.0-alpine
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
+BUILDTIME = $(shell go run "$(ROOT)/tools/dategen/")
+
 DOCKERFILE := Dockerfile
 
 HELM ?= $(shell which helm)
@@ -236,7 +238,7 @@ bin: $(BIN)
 
 $(BIN): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X main.projectVersion=$(VERSION) -X main.projectBuild=$(COMMIT)" -o $(BIN) $(REPOPATH)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(BIN) $(REPOPATH)
 
 .PHONY: docker
 docker: check-vars $(BIN)
