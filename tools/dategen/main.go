@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,22 +23,11 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/arangodb/kube-arangodb/pkg/version"
-	"github.com/spf13/cobra"
+	"io"
+	"os"
+	"time"
 )
 
-func init() {
-	cmdMain.AddCommand(cmdVersion)
-}
-
-var cmdVersion = &cobra.Command{
-	Use: "version",
-	Run: versionRun,
-}
-
-func versionRun(cmd *cobra.Command, args []string) {
-	v := version.GetVersionV1()
-	println(fmt.Sprintf("Version: %s %s, Build: %s, Go: %s, Build Date: %s", v.Edition.Title(), v.Version, v.Build, v.GoVersion, v.BuildDate))
+func main() {
+	io.WriteString(os.Stdout, time.Now().UTC().Format(time.RFC3339))
 }

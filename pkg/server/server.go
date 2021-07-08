@@ -29,6 +29,9 @@ import (
 	"strings"
 	"time"
 
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/version"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb-helper/go-certificates"
@@ -156,6 +159,13 @@ func NewServer(cli corev1.CoreV1Interface, cfg Config, deps Dependencies) (*Serv
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.GET("/health", gin.WrapF(deps.LivenessProbe.LivenessHandler))
+
+	versionV1Responser, err := operatorHTTP.NewSimpleJSONResponse(version.GetVersionV1())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	r.GET("/_api/version", gin.WrapF(versionV1Responser.ServeHTTP))
+	r.GET("/api/v1/version", gin.WrapF(versionV1Responser.ServeHTTP))
 
 	var readyProbes []*probe.ReadyProbe
 	if deps.Deployment.Enabled {

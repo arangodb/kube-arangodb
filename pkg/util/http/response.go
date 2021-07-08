@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2018 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,25 +20,34 @@
 // Author Adam Janikowski
 //
 
-package main
+package http
 
 import (
-	"fmt"
-
-	"github.com/arangodb/kube-arangodb/pkg/version"
-	"github.com/spf13/cobra"
+	"encoding/json"
+	"net/http"
+	"strings"
 )
 
-func init() {
-	cmdMain.AddCommand(cmdVersion)
+// NewSimpleJSONResponse returns handler which server static json on GET request
+func NewSimpleJSONResponse(obj interface{}) (http.Handler, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return simpleJSONResponse{data: data}, nil
 }
 
-var cmdVersion = &cobra.Command{
-	Use: "version",
-	Run: versionRun,
+type simpleJSONResponse struct {
+	data []byte
 }
 
-func versionRun(cmd *cobra.Command, args []string) {
-	v := version.GetVersionV1()
-	println(fmt.Sprintf("Version: %s %s, Build: %s, Go: %s, Build Date: %s", v.Edition.Title(), v.Version, v.Build, v.GoVersion, v.BuildDate))
+func (s simpleJSONResponse) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if strings.ToUpper(request.Method) != http.MethodGet {
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(s.data)
 }

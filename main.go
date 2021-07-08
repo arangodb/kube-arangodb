@@ -33,6 +33,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/version"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
@@ -86,9 +88,6 @@ const (
 )
 
 var (
-	projectVersion = "dev"
-	projectBuild   = "dev"
-
 	maskAny = errors.WithStack
 
 	cmdMain = cobra.Command{
@@ -206,7 +205,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	cliLog.Info().
 		Str("pod-name", name).
 		Str("pod-namespace", namespace).
-		Msgf("Starting arangodb-operator, version %s build %s", projectVersion, projectBuild)
+		Msgf("Starting arangodb-operator (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Check environment
 	if len(namespace) == 0 {

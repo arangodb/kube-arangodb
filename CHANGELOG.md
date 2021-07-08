@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add Operator `/api/v1/version` endpoint
 
 ## [1.1.10](https://github.com/arangodb/kube-arangodb/tree/1.1.10) (2021-07-06)
 - Switch K8S CRD API to V1
