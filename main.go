@@ -310,16 +310,25 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	if err != nil {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
 	}
-	eventRecorder := createRecorder(cliLog, kubecli, name, namespace)
 
 	scope, ok := scope.AsScope(operatorOptions.scope)
 	if !ok {
 		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
 	}
 
+	var watchNamespace string
+	if scope.IsCluster() {
+		watchNamespace = metav1.NamespaceAll
+	} else {
+		watchNamespace = namespace
+	}
+
+	eventRecorder := createRecorder(cliLog, kubecli, name, watchNamespace)
+
 	cfg := operator.Config{
 		ID:                          id,
 		Namespace:                   namespace,
+		WatchNamespace:              watchNamespace,
 		PodName:                     name,
 		ServiceAccount:              serviceAccount,
 		LifecycleImage:              image,
