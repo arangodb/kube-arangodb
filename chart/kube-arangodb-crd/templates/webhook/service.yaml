@@ -1,0 +1,29 @@
+{{ if .Values.webhook.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "kube-arangodb-crd.name" . }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.webhook.annotations }}
+  annotations:
+{{ toYaml .Values.webhook.annotations | indent 8 }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb-crd.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - name: webhook
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/name: {{ template "kube-arangodb-crd.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  type: ClusterIP
+{{ end }}
