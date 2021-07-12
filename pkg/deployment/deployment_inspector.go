@@ -102,7 +102,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP

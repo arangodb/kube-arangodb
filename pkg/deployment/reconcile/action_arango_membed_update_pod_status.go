@@ -25,32 +25,29 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog/log"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
 func init() {
-	registerAction(api.ActionTypeArangoMemberUpdatePodSpec, newArangoMemberUpdatePodSpecAction)
+	registerAction(api.ActionTypeArangoMemberUpdatePodStatus, newArangoMemberUpdatePodStatusAction)
 }
 
-// newArangoMemberUpdatePodSpecAction creates a new Action that implements the given
-// planned ArangoMemberUpdatePodSpec action.
-func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &actionArangoMemberUpdatePodSpec{}
+// newArangoMemberUpdatePodStatusAction creates a new Action that implements the given
+// planned ArangoMemberUpdatePodStatus action.
+func newArangoMemberUpdatePodStatusAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionArangoMemberUpdatePodStatus{}
 
 	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
 
 	return a
 }
 
-// actionArangoMemberUpdatePodSpec implements an ArangoMemberUpdatePodSpec.
-type actionArangoMemberUpdatePodSpec struct {
+// actionArangoMemberUpdatePodStatus implements an ArangoMemberUpdatePodStatus.
+type actionArangoMemberUpdatePodStatus struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
@@ -61,10 +58,7 @@ type actionArangoMemberUpdatePodSpec struct {
 // Start performs the start of the action.
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
-func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, error) {
-	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatus()
-
+func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, error) {
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
 		log.Error().Msg("No such member")
@@ -80,51 +74,11 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return false, err
 	}
 
-	groupSpec := spec.GetServerGroupSpec(a.action.Group)
-
-	imageInfo, imageFound := a.actionCtx.SelectImage(spec, status)
-	if !imageFound {
-		// Image is not found, so rotation is not needed
-		return true, nil
-	}
-
-	if m.Image != nil {
-		imageInfo = *m.Image
-	}
-
-	renderedPod, err := a.actionCtx.RenderPodForMember(ctx, a.actionCtx.GetCachedStatus(), spec, status, a.action.MemberID, imageInfo)
-	if err != nil {
-		log.Err(err).Msg("Error while rendering pod")
-		return false, err
-	}
-
-	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
-	if err != nil {
-		log.Err(err).Msg("Error while getting pod checksum")
-		return false, err
-	}
-
-	if err := a.actionCtx.WithArangoMemberUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember) bool {
-		if member.Spec.TemplateChecksum != checksum {
-			member.Spec.Template = &core.PodTemplate{
-				Template: core.PodTemplateSpec{
-					ObjectMeta: renderedPod.ObjectMeta,
-					Spec:       renderedPod.Spec,
-				},
-			}
-			member.Spec.TemplateChecksum = checksum
-			return true
-		}
-		return false
-	}); err != nil {
-		log.Err(err).Msg("Error while updating member")
-		return false, err
-	}
-
-	if member.Status.TemplateChecksum == "" {
+	if member.Status.TemplateChecksum != member.Spec.TemplateChecksum || member.Status.Template == nil {
 		if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-			if status.TemplateChecksum == "" {
-				status.TemplateChecksum = m.PodSpecVersion
+			if status.TemplateChecksum != obj.Spec.TemplateChecksum || status.Template == nil {
+				status.TemplateChecksum = obj.Spec.TemplateChecksum
+				status.Template = obj.Spec.Template.DeepCopy()
 				return true
 			}
 			return false

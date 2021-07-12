@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -47,6 +49,8 @@ import (
 // ActionContext provides methods to the Action implementations
 // to control their context.
 type ActionContext interface {
+	resources.ArangoMemberContext
+
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
 	// Gets the specified mode of deployment
@@ -137,10 +141,6 @@ type ActionContext interface {
 	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
-	// WithArangoMemberUpdate run action with update of ArangoMember
-	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error
-	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
-	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -159,11 +159,11 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
-func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error {
+func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
 	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
 }
 
-func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error {
+func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
 	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
 }
 

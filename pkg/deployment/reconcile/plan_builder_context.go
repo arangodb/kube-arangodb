@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
@@ -41,6 +43,8 @@ import (
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
+	resources.ArangoMemberContext
+
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
@@ -78,10 +82,6 @@ type PlanBuilderContext interface {
 	GetName() string
 	// GetAgency returns a connection to the entire agency.
 	GetAgency(ctx context.Context) (agency.Agency, error)
-	// WithArangoMemberUpdate run action with update of ArangoMember
-	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error
-	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
-	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

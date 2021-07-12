@@ -454,7 +454,7 @@ func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentSt
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentSpec, member *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -705,7 +705,7 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
 
-	createPodMember := func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhaseNone {
 				continue
@@ -713,15 +713,25 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 				continue
 			}
+
+			member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(r.context.GetName(), group))
+			if !ok {
+				// ArangoMember not found, skip
+				continue
+			}
+
+			if member.Status.Template == nil {
+				// Template is missing, nothing to do
+				continue
+			}
+
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(ctx, spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
+			if err := r.createPodForMember(ctx, spec, member, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
 				return errors.WithStack(err)
 			}
 		}
 		return nil
-	}
-
-	if err := iterator.ForeachServerGroup(createPodMember, &deploymentStatus); err != nil {
+	}, &deploymentStatus); err != nil {
 		return errors.WithStack(err)
 	}
 

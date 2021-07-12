@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -40,6 +42,8 @@ import (
 
 // Context provides methods to the reconcile package.
 type Context interface {
+	resources.ArangoMemberContext
+
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
 	// GetSpec returns the current specification of the deployment
@@ -121,8 +125,4 @@ type Context interface {
 	GetName() string
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
-	// WithArangoMemberUpdate run action with update of ArangoMember
-	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMember) bool) error
-	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
-	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action func(s *api.ArangoMemberStatus) bool) error
 }

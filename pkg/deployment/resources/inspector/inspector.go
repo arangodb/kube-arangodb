@@ -27,6 +27,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -46,49 +48,19 @@ type SecretReadInterface interface {
 	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
 }
 
-func NewInspector(k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
-	ctx := context.TODO()
-	pods, err := podsToMap(ctx, k, namespace)
-	if err != nil {
+func NewInspector(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
+	i := &inspector{
+		namespace: namespace,
+		k:         k,
+		m:         m,
+		c:         c,
+	}
+
+	if err := i.Refresh(ctx); err != nil {
 		return nil, err
 	}
 
-	secrets, err := secretsToMap(ctx, k, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	pvcs, err := pvcsToMap(ctx, k, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	services, err := servicesToMap(ctx, k, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	serviceAccounts, err := serviceAccountsToMap(ctx, k, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	podDisruptionBudgets, err := podDisruptionBudgetsToMap(ctx, k, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	serviceMonitors, err := serviceMonitorsToMap(ctx, m, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	arangoMembers, err := arangoMembersToMap(ctx, c, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewInspectorFromData(pods, secrets, pvcs, services, serviceAccounts, podDisruptionBudgets, serviceMonitors, arangoMembers), nil
+	return i, nil
 }
 
 func NewEmptyInspector() inspectorInterface.Inspector {
@@ -118,6 +90,12 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 type inspector struct {
 	lock sync.Mutex
 
+	namespace string
+
+	k kubernetes.Interface
+	m monitoringClient.MonitoringV1Interface
+	c versioned.Interface
+
 	pods                 map[string]*core.Pod
 	secrets              map[string]*core.Secret
 	pvcs                 map[string]*core.PersistentVolumeClaim
@@ -128,47 +106,50 @@ type inspector struct {
 	arangoMembers        map[string]*api.ArangoMember
 }
 
-func (i *inspector) Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,
-	c versioned.Interface, namespace string) error {
+func (i *inspector) Refresh(ctx context.Context) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	pods, err := podsToMap(ctx, k, namespace)
+	if i.namespace == "" {
+		return errors.New("Inspector created fro mstatic data")
+	}
+
+	pods, err := podsToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := secretsToMap(ctx, k, namespace)
+	secrets, err := secretsToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	pvcs, err := pvcsToMap(ctx, k, namespace)
+	pvcs, err := pvcsToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	services, err := servicesToMap(ctx, k, namespace)
+	services, err := servicesToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	serviceAccounts, err := serviceAccountsToMap(ctx, k, namespace)
+	serviceAccounts, err := serviceAccountsToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	podDisruptionBudgets, err := podDisruptionBudgetsToMap(ctx, k, namespace)
+	podDisruptionBudgets, err := podDisruptionBudgetsToMap(ctx, i.k, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	serviceMonitors, err := serviceMonitorsToMap(ctx, m, namespace)
+	serviceMonitors, err := serviceMonitorsToMap(ctx, i.m, i.namespace)
 	if err != nil {
 		return err
 	}
 
-	arangoMembers, err := arangoMembersToMap(ctx, c, namespace)
+	arangoMembers, err := arangoMembersToMap(ctx, i.c, i.namespace)
 	if err != nil {
 		return err
 	}

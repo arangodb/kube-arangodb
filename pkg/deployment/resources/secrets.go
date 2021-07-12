@@ -213,7 +213,7 @@ func (r *Resources) refreshCache(ctx context.Context, cachedStatus inspectorInte
 	}
 
 	if operatorErrors.IsReconcile(err) {
-		err := cachedStatus.Refresh(ctx, r.context.GetKubeCli(), r.context.GetMonitoringV1Cli(), r.context.GetArangoCli(), r.context.GetNamespace())
+		err := cachedStatus.Refresh(ctx)
 		if err != nil {
 			return errors.WithStack(err)
 		}

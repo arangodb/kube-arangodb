@@ -135,6 +135,8 @@ const (
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
 	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
 	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
+	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
+	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
 )
 
 const (

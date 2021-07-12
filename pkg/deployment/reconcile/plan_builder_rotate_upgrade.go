@@ -340,7 +340,7 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) bool {
 	checksum, _, member, valid := getPodDetails(ctx, log, apiObject, spec, group, status, m, cachedStatus, planCtx)
-	return valid && checksum != member.Spec.TemplateChecksum
+	return member.Status.TemplateChecksum == "" || (valid && checksum != member.Spec.TemplateChecksum)
 }
 
 // podNeedsRotation returns true when the specification of the
