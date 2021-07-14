@@ -593,7 +593,7 @@ func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 

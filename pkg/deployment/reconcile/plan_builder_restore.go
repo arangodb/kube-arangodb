@@ -74,20 +74,20 @@ func createRestorePlan(ctx context.Context,
 			}
 		}
 
-		return restorePlan(spec.Mode.Get())
+		return restorePlan(spec)
 	}
 
 	return nil
 }
 
-func restorePlan(mode api.DeploymentMode) api.Plan {
+func restorePlan(spec api.DeploymentSpec) api.Plan {
 	p := api.Plan{
 		api.NewAction(api.ActionTypeBackupRestore, api.ServerGroupUnknown, ""),
 	}
 
-	switch mode {
+	switch spec.Mode.Get() {
 	case api.DeploymentModeActiveFailover:
-		p = withMaintenance(p...)
+		p = withMaintenance(spec, p...)
 	}
 
 	return p

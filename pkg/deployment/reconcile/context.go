@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
@@ -40,6 +42,8 @@ import (
 
 // Context provides methods to the reconcile package.
 type Context interface {
+	resources.DeploymentStatusUpdate
+
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
 	// GetSpec returns the current specification of the deployment
@@ -111,8 +115,6 @@ type Context interface {
 	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*v1.Pod, error)
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
-	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource

@@ -183,6 +183,7 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 			}
 		}
 	}
+
 	return nil, false
 }
 
@@ -378,19 +379,15 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
-		plan = append(plan,
-			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()),
-		)
+		plan = plan.After(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
 	}
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
-		plan = append(plan,
-			api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()),
-		)
+		plan = plan.After(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
 	}
-	plan = append(plan,
-		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
+
+	plan = plan.After(withResignLeadership(group, member, reason,
 		api.NewAction(upgradeAction, group, member.ID, reason),
-		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
-	)
-	return withMaintenance(plan...)
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))...)
+
+	return withMaintenance(spec, plan...)
 }

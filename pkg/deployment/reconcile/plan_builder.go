@@ -207,16 +207,17 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate)
 	}
 
+	// Refresh maintenance lock
+	if plan.IsEmpty() {
+		plan = pb.Apply(refreshMaintenance)
+	}
+
 	if plan.IsEmpty() {
 		plan = pb.Apply(createTLSStatusUpdate)
 	}
 
 	if plan.IsEmpty() {
 		plan = pb.Apply(createJWTStatusUpdate)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createMaintenanceManagementPlan)
 	}
 
 	// Check for scale up/down
@@ -232,6 +233,11 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 	// Check for the need to rotate one or more members
 	if plan.IsEmpty() {
 		plan = pb.Apply(createRotateOrUpgradePlan)
+	}
+
+	// Disable maintenance if upgrade process was done. Upgrade task throw IDLE Action if upgrade is pending
+	if plan.IsEmpty() {
+		plan = pb.Apply(createMaintenanceManagementPlan)
 	}
 
 	// Add keys

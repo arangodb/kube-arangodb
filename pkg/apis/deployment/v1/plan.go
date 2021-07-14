@@ -129,6 +129,8 @@ const (
 	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
 	// ActionTypeEnableMaintenance disables maintenance on cluster.
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
+	// ActionTypeSetMaintenanceCondition sets maintenance condition.
+	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
 	// ActionTypeBootstrapUpdate update bootstrap status to true
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
 	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
@@ -220,6 +222,11 @@ func (a Action) SetImage(image string) Action {
 	return a
 }
 
+// AsPlan parse action list into plan
+func AsPlan(a []Action) Plan {
+	return a
+}
+
 // Plan is a list of actions that will be taken to update a deployment.
 // Only 1 action is in progress at a time. The operator will wait for that
 // action to be completely and then remove the action.
@@ -244,4 +251,49 @@ func (p Plan) Equal(other Plan) bool {
 // IsEmpty checks if plan is empty
 func (p Plan) IsEmpty() bool {
 	return len(p) == 0
+}
+
+// Add add action at the end of plan
+func (p Plan) After(action ...Action) Plan {
+	n := Plan{}
+
+	for _, a := range p {
+		n = append(n, a)
+	}
+
+	for _, a := range action {
+		n = append(n, a)
+	}
+
+	return n
+}
+
+// Prefix add action at the beginning of plan
+func (p Plan) Before(action ...Action) Plan {
+	n := Plan{}
+
+	for _, a := range action {
+		n = append(n, a)
+	}
+
+	for _, a := range p {
+		n = append(n, a)
+	}
+
+	return n
+}
+
+// Prefix add action at the beginning of plan
+func (p Plan) Wrap(before, after Action) Plan {
+	n := Plan{}
+
+	n = append(n, before)
+
+	for _, a := range p {
+		n = append(n, a)
+	}
+
+	n = append(n, after)
+
+	return n
 }

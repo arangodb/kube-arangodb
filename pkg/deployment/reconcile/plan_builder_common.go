@@ -25,6 +25,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
@@ -35,6 +36,42 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
+
+const (
+	MaintenanceDuration    = time.Hour
+	MaintenanceGracePeriod = MaintenanceDuration / 2
+)
+
+func refreshMaintenance(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
+	if spec.Mode.Get() == api.DeploymentModeSingle {
+		return nil
+	}
+
+	if !features.Maintenance().Enabled() {
+		// Maintenance feature is not enabled
+		return nil
+	}
+
+	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenanceMode)
+
+	if !ok || !condition.IsTrue() {
+		return nil
+	}
+
+	// Check GracePeriod
+	if condition.LastUpdateTime.Add(MaintenanceGracePeriod).After(time.Now()) {
+		if err := planCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+			return s.Conditions.Touch(api.ConditionTypeMaintenanceMode)
+		}); err != nil {
+			return nil
+		}
+	}
+
+	return nil
+}
 
 func createMaintenanceManagementPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -67,12 +104,18 @@ func createMaintenanceManagementPlan(ctx context.Context,
 
 	if !m.Enabled() && spec.Database.GetMaintenance() {
 		log.Info().Msgf("Enabling maintenance mode")
-		return api.Plan{api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "")}
+		return api.Plan{api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
 	}
 
 	if m.Enabled() && !spec.Database.GetMaintenance() {
 		log.Info().Msgf("Disabling maintenance mode")
-		return api.Plan{api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "")}
+		return api.Plan{api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
+	}
+
+	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenanceMode)
+
+	if m.Enabled() != (ok && condition.IsTrue()) {
+		return api.Plan{api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
 	}
 
 	return nil
