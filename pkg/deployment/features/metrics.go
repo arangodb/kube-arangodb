@@ -31,7 +31,7 @@ var metricsExporter = &feature{
 	description:        "Define if internal metrics-exporter should be used",
 	version:            "3.6.0",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 }
 
 func MetricsExporter() Feature {
