@@ -38,7 +38,7 @@ func TestCreateAffinity(t *testing.T) {
 				{
 					MatchExpressions: []v1.NodeSelectorRequirement{
 						{
-							Key:      "beta.kubernetes.io/arch",
+							Key:      "kubernetes.io/arch",
 							Operator: "In",
 							Values:   []string{"amd64"},
 						},

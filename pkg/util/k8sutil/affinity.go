@@ -38,7 +38,7 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 					{
 						MatchExpressions: []v1.NodeSelectorRequirement{
 							{
-								Key:      "beta.kubernetes.io/arch",
+								Key:      "kubernetes.io/arch",
 								Operator: "In",
 								Values:   []string{"amd64"},
 							},
