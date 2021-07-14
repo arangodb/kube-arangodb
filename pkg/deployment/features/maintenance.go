@@ -31,7 +31,7 @@ var maintenance = &feature{
 	description:        "Database maintenance mode management",
 	version:            "3.5.0",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 }
 
 func Maintenance() Feature {
