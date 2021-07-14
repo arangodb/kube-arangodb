@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Enable "Operator Internal Metrics Exporter" by default
 - Enable "Operator Maintenance Management Support" by default
 - Add Operator `/api/v1/version` endpoint
 
