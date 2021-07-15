@@ -56,6 +56,8 @@ github.com/arangodb/go-driver v0.0.0-20210517114204-8cc084268066 h1:NneOFWxfa7rh
 github.com/arangodb/go-driver v0.0.0-20210517114204-8cc084268066/go.mod h1:3NUekcRLpgheFIGEwcOvxilEW73MV1queNKW58k7sdc=
 github.com/arangodb/go-driver v0.0.0-20210518064911-4985e8be3d90 h1:NMnMsS32jOF+e0v+MLXlgRJM7ejSAXxHg1UDv1q417I=
 github.com/arangodb/go-driver v0.0.0-20210518064911-4985e8be3d90/go.mod h1:3NUekcRLpgheFIGEwcOvxilEW73MV1queNKW58k7sdc=
+github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18 h1:3J0tqp5eQ8ptGOeeu7vo92RKf24bOA7MFy0z3uPiTWg=
+github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18/go.mod h1:3NUekcRLpgheFIGEwcOvxilEW73MV1queNKW58k7sdc=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5ttxi/Ygh/39vialtypE23p9KI7P0J2qtoqUV4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21/go.mod h1:RkPIG6JJ2pcJUoymc18NxAJGraZd+iAEVnOTDjZey/w=
 github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e h1:Xg+hGrY2LcQBbxd0ZFdbGSyRKTYMZCfBbw/pMJFOk1g=

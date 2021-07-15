@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -47,6 +49,9 @@ import (
 // ActionContext provides methods to the Action implementations
 // to control their context.
 type ActionContext interface {
+	resources.DeploymentStatusUpdate
+	resources.DeploymentAgencyMaintenance
+
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
 	// Gets the specified mode of deployment
@@ -125,8 +130,6 @@ type ActionContext interface {
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error
 	SecretsInterface() k8sutil.SecretInterface
-	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
@@ -151,6 +154,14 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
+	return ac.context.GetAgencyMaintenanceMode(ctx)
+}
+
+func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
+	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
+}
+
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
 	return ac.cachedStatus
 }
@@ -171,7 +182,7 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
-func (ac *actionContext) WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
+func (ac *actionContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 

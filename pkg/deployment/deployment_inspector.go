@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -270,6 +272,9 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = interval
 	}
 
+	// Refresh maintenance lock
+	d.refreshMaintenanceTTL(ctx)
+
 	// Create scale/update plan
 	if _, ok := d.apiObject.Annotations[deployment.ArangoDeploymentPlanCleanAnnotation]; ok {
 		if err := d.ApplyPatch(ctx, patch.ItemRemove(patch.NewPath("metadata", "annotations", deployment.ArangoDeploymentPlanCleanAnnotation))); err != nil {
@@ -342,6 +347,36 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	return
+}
+
+func (d *Deployment) refreshMaintenanceTTL(ctx context.Context) {
+	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+		return
+	}
+
+	if !features.Maintenance().Enabled() {
+		// Maintenance feature is not enabled
+		return
+	}
+
+	condition, ok := d.status.last.Conditions.Get(api.ConditionTypeMaintenanceMode)
+
+	if !ok || !condition.IsTrue() {
+		return
+	}
+
+	// Check GracePeriod
+	if condition.LastUpdateTime.Add(d.apiObject.Spec.Timeouts.GetMaintenanceGracePeriod()).Before(time.Now()) {
+		if err := d.SetAgencyMaintenanceMode(ctx, true); err != nil {
+			return
+		}
+		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+			return s.Conditions.Touch(api.ConditionTypeMaintenanceMode)
+		}); err != nil {
+			return
+		}
+		d.deps.Log.Info().Msgf("Refreshed maintenance lock")
+	}
 }
 
 func (d *Deployment) ensureResources(ctx context.Context, lastInterval util.Interval, cachedStatus inspectorInterface.Inspector) (util.Interval, error) {

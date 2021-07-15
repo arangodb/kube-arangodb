@@ -53,9 +53,26 @@ type ServerGroupIterator interface {
 	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
+type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
+
+type DeploymentStatusUpdate interface {
+	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc, force ...bool) error
+}
+
+type DeploymentAgencyMaintenance interface {
+	// GetAgencyMaintenanceMode returns info if maintenance mode is enabled
+	GetAgencyMaintenanceMode(ctx context.Context) (bool, error)
+	// SetAgencyMaintenanceMode set maintenance mode info
+	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
+	DeploymentStatusUpdate
+	DeploymentAgencyMaintenance
+
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
@@ -106,8 +123,6 @@ type Context interface {
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 	// GetAgency returns a connection to the entire agency.
 	GetAgency(ctx context.Context) (agency.Agency, error)
-	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
-	WithStatusUpdate(ctx context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope

@@ -63,8 +63,10 @@ const (
 	ConditionTypeUpToDate ConditionType = "UpToDate"
 	// ConditionTypeMarkedToRemove indicates that the member is marked to be removed.
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
-	// ConditionTypeUpgradeFailed indicates that mem
+	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
+	// ConditionTypeMaintenanceMode indicates that Maintenance is enabled
+	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
@@ -144,6 +146,19 @@ func (list ConditionList) Get(conditionType ConditionType) (Condition, bool) {
 	}
 	// Not found
 	return Condition{}, false
+}
+
+// Touch update condition LastUpdateTime if condition exists
+func (list *ConditionList) Touch(conditionType ConditionType) bool {
+	src := *list
+	for i, x := range src {
+		if x.Type == conditionType {
+			src[i].LastUpdateTime = metav1.Now()
+			return true
+		}
+	}
+
+	return false
 }
 
 // Update the condition, replacing an old condition with same type (if any)

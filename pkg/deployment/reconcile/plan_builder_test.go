@@ -29,6 +29,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -73,6 +75,18 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
+	panic("implement me")
+}
+
+func (c *testContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
+	panic("implement me")
+}
+
+func (c *testContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+	panic("implement me")
+}
+
 func (c *testContext) GetPod(_ context.Context, podName string) (*core.Pod, error) {
 	if c.ErrPods != nil {
 		return nil, c.ErrPods
@@ -106,10 +120,6 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 }
 
 func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
-	panic("implement me")
-}
-
-func (c *testContext) WithStatusUpdate(_ context.Context, action func(s *api.DeploymentStatus) bool, force ...bool) error {
 	panic("implement me")
 }
 

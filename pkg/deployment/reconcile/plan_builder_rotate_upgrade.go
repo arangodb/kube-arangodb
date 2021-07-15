@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	json "github.com/json-iterator/go"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -183,6 +185,7 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 			}
 		}
 	}
+
 	return nil, false
 }
 
@@ -378,19 +381,34 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
-		plan = append(plan,
-			api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()),
-		)
+		plan = plan.After(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
 	}
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
-		plan = append(plan,
-			api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()),
-		)
+		plan = plan.After(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
 	}
-	plan = append(plan,
-		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
-		api.NewAction(upgradeAction, group, member.ID, reason),
-		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
-	)
-	return withMaintenance(plan...)
+
+	plan = plan.After(api.NewAction(upgradeAction, group, member.ID, reason),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))
+
+	return withSecureWrap(member, group, spec, plan...)
+}
+
+func withSecureWrap(member api.MemberStatus,
+	group api.ServerGroup, spec api.DeploymentSpec, plan ...api.Action) api.Plan {
+	image := member.Image
+	if image == nil {
+		return plan
+	}
+
+	if skipResignLeadership(spec.GetMode(), image.ArangoDBVersion) {
+		// In this case we skip resign leadership but we enable maintenance
+		return withMaintenanceStart(plan...)
+	} else {
+		return withResignLeadership(group, member, "ResignLeadership", plan...)
+	}
+}
+
+func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
+	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) ||
+		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.12") <= 0))
 }

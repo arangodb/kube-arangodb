@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
@@ -41,6 +43,9 @@ import (
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
+	resources.DeploymentStatusUpdate
+	resources.DeploymentAgencyMaintenance
+
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)

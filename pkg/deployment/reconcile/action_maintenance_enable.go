@@ -26,10 +26,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/rs/zerolog"
 )
 
@@ -60,19 +57,8 @@ func (a *actionEnableMaintenance) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to get agency client")
-		return true, nil
-	}
-
-	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return agency.SetMaintenanceMode(ctxChild, client, true)
-	})
-	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to set maintenance")
+	if err := a.actionCtx.SetAgencyMaintenanceMode(ctx, true); err != nil {
+		a.log.Error().Err(err).Msgf("Unable to enable maintenance")
 		return true, nil
 	}
 

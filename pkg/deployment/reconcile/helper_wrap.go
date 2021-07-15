@@ -32,13 +32,22 @@ func withMaintenance(plan ...api.Action) api.Plan {
 		return plan
 	}
 
-	var newPlan api.Plan
+	return withMaintenanceStart(plan...).After(api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "", "Disable maintenance after actions"))
+}
+func withMaintenanceStart(plan ...api.Action) api.Plan {
+	if !features.Maintenance().Enabled() {
+		return plan
+	}
 
-	newPlan = append(newPlan, api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
+	return api.AsPlan(plan).Before(
+		api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"),
+		api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
+}
 
-	newPlan = append(newPlan, plan...)
+func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
+	if member.Image == nil {
+		return plan
+	}
 
-	newPlan = append(newPlan, api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "", "Disable maintenance after actions"))
-
-	return newPlan
+	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
 }

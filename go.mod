@@ -3,7 +3,7 @@ module github.com/arangodb/kube-arangodb
 go 1.16
 
 replace (
-	github.com/arangodb/go-driver => github.com/arangodb/go-driver v0.0.0-20210518064911-4985e8be3d90
+	github.com/arangodb/go-driver => github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.46.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client => github.com/prometheus-operator/prometheus-operator/pkg/client v0.46.0
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
@@ -26,7 +26,7 @@ require (
 	github.com/aktau/github-release v0.10.0 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.6.3
-	github.com/arangodb/go-driver v0.0.0-20191002124627-11b6bfc64f67
+	github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-semver v0.3.0

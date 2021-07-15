@@ -18,7 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
-// Author Tomasz Mielech
 //
 
 package reconcile
@@ -31,18 +30,18 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeDisableMaintenance, newDisableMaintenanceAction)
+	registerAction(api.ActionTypeSetMaintenanceCondition, newSetMaintenanceConditionAction)
 }
 
-func newDisableMaintenanceAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &actionDisableMaintenance{}
+func newSetMaintenanceConditionAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &actionSetMaintenanceCondition{}
 
 	a.actionImpl = newActionImpl(log, action, actionCtx, addMemberTimeout, &a.newMemberID)
 
 	return a
 }
 
-type actionDisableMaintenance struct {
+type actionSetMaintenanceCondition struct {
 	// actionImpl implement timeout and member id functions
 	actionImpl
 
@@ -51,15 +50,27 @@ type actionDisableMaintenance struct {
 	newMemberID string
 }
 
-func (a *actionDisableMaintenance) Start(ctx context.Context) (bool, error) {
+func (a *actionSetMaintenanceCondition) Start(ctx context.Context) (bool, error) {
 	switch a.actionCtx.GetMode() {
 	case api.DeploymentModeSingle:
 		return true, nil
 	}
 
-	if err := a.actionCtx.SetAgencyMaintenanceMode(ctx, false); err != nil {
-		a.log.Error().Err(err).Msgf("Unable to disable maintenance")
+	if maintenance, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
+		a.log.Error().Err(err).Msgf("Unable to set maintenance condition")
 		return true, nil
+	} else {
+
+		if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+			if maintenance {
+				return s.Conditions.Update(api.ConditionTypeMaintenanceMode, true, "Maintenance", "Maintenance enabled")
+			} else {
+				return s.Conditions.Remove(api.ConditionTypeMaintenanceMode)
+			}
+		}); err != nil {
+			a.log.Error().Err(err).Msgf("Unable to set maintenance condition")
+			return true, nil
+		}
 	}
 
 	return true, nil
