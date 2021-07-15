@@ -75,6 +75,14 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
+	panic("implement me")
+}
+
+func (c *testContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
+	panic("implement me")
+}
+
 func (c *testContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
 	panic("implement me")
 }
