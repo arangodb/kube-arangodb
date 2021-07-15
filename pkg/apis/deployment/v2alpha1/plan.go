@@ -257,13 +257,9 @@ func (p Plan) IsEmpty() bool {
 func (p Plan) After(action ...Action) Plan {
 	n := Plan{}
 
-	for _, a := range p {
-		n = append(n, a)
-	}
+	n = append(n, p...)
 
-	for _, a := range action {
-		n = append(n, a)
-	}
+	n = append(n, action...)
 
 	return n
 }
@@ -272,13 +268,9 @@ func (p Plan) After(action ...Action) Plan {
 func (p Plan) Before(action ...Action) Plan {
 	n := Plan{}
 
-	for _, a := range action {
-		n = append(n, a)
-	}
+	n = append(n, action...)
 
-	for _, a := range p {
-		n = append(n, a)
-	}
+	n = append(n, p...)
 
 	return n
 }
@@ -289,9 +281,7 @@ func (p Plan) Wrap(before, after Action) Plan {
 
 	n = append(n, before)
 
-	for _, a := range p {
-		n = append(n, a)
-	}
+	n = append(n, p...)
 
 	n = append(n, after)
 

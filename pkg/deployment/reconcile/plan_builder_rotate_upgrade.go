@@ -390,10 +390,10 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan = plan.After(api.NewAction(upgradeAction, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))
 
-	return withSecureWrap(log, member, group, spec, plan...)
+	return withSecureWrap(member, group, spec, plan...)
 }
 
-func withSecureWrap(log zerolog.Logger, member api.MemberStatus,
+func withSecureWrap(member api.MemberStatus,
 	group api.ServerGroup, spec api.DeploymentSpec, plan ...api.Action) api.Plan {
 	image := member.Image
 	if image == nil {
