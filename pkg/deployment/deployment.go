@@ -29,6 +29,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	deploymentClient "github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -136,6 +138,41 @@ type Deployment struct {
 	chaosMonkey               *chaos.Monkey
 	syncClientCache           client.ClientCache
 	haveServiceMonitorCRD     bool
+}
+
+func (d *Deployment) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
+	if !d.Mode().HasAgents() {
+		return false, nil
+	}
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+
+	client, err := d.GetAgency(ctxChild)
+	if err != nil {
+		return false, err
+	}
+
+	if enabled, err := agency.GetMaintenanceMode(ctxChild, client); err != nil {
+		return false, err
+	} else {
+		return enabled, nil
+	}
+}
+
+func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
+	if !d.Mode().HasAgents() {
+		return nil
+	}
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	client, err := d.GetDatabaseClient(ctxChild)
+	if err != nil {
+		return err
+	}
+
+	return agency.SetMaintenanceMode(ctxChild, client, enabled)
 }
 
 // New creates a new Deployment from the given API object.

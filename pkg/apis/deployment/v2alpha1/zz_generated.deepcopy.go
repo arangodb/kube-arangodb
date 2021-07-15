@@ -2029,6 +2029,11 @@ func (in *Timeouts) DeepCopyInto(out *Timeouts) {
 		*out = new(Timeout)
 		**out = **in
 	}
+	if in.MaintenanceGracePeriod != nil {
+		in, out := &in.MaintenanceGracePeriod, &out.MaintenanceGracePeriod
+		*out = new(Timeout)
+		**out = **in
+	}
 	return
 }
 

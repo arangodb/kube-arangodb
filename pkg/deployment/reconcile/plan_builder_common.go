@@ -25,53 +25,13 @@ package reconcile
 
 import (
 	"context"
-	"time"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
-
-const (
-	MaintenanceDuration    = time.Hour
-	MaintenanceGracePeriod = MaintenanceDuration / 2
-)
-
-func refreshMaintenance(ctx context.Context,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
-	spec api.DeploymentSpec, status api.DeploymentStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) api.Plan {
-	if spec.Mode.Get() == api.DeploymentModeSingle {
-		return nil
-	}
-
-	if !features.Maintenance().Enabled() {
-		// Maintenance feature is not enabled
-		return nil
-	}
-
-	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenanceMode)
-
-	if !ok || !condition.IsTrue() {
-		return nil
-	}
-
-	// Check GracePeriod
-	if condition.LastUpdateTime.Add(MaintenanceGracePeriod).After(time.Now()) {
-		if err := planCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			return s.Conditions.Touch(api.ConditionTypeMaintenanceMode)
-		}); err != nil {
-			return nil
-		}
-	}
-
-	return nil
-}
 
 func createMaintenanceManagementPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -86,35 +46,25 @@ func createMaintenanceManagementPlan(ctx context.Context,
 		return nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-	client, err := planCtx.GetDatabaseClient(ctxChild)
+	enabled, err := planCtx.GetAgencyMaintenanceMode(ctx)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get agency client")
+		log.Error().Err(err).Msgf("Unable to get agency mode")
 		return nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-	m, err := agency.GetMaintenanceMode(ctxChild, client)
-	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get agency maintenance mode")
-		return nil
-	}
-
-	if !m.Enabled() && spec.Database.GetMaintenance() {
+	if !enabled && spec.Database.GetMaintenance() {
 		log.Info().Msgf("Enabling maintenance mode")
 		return api.Plan{api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
 	}
 
-	if m.Enabled() && !spec.Database.GetMaintenance() {
+	if enabled && !spec.Database.GetMaintenance() {
 		log.Info().Msgf("Disabling maintenance mode")
 		return api.Plan{api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
 	}
 
 	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenanceMode)
 
-	if m.Enabled() != (ok && condition.IsTrue()) {
+	if enabled != (ok && condition.IsTrue()) {
 		return api.Plan{api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
 	}
 

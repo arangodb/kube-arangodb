@@ -50,6 +50,7 @@ import (
 // to control their context.
 type ActionContext interface {
 	resources.DeploymentStatusUpdate
+	resources.DeploymentAgencyMaintenance
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -151,6 +152,14 @@ type actionContext struct {
 	log          zerolog.Logger
 	context      Context
 	cachedStatus inspectorInterface.Inspector
+}
+
+func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
+	return ac.context.GetAgencyMaintenanceMode(ctx)
+}
+
+func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
+	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
 }
 
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {

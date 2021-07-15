@@ -23,27 +23,25 @@
 package reconcile
 
 import (
-	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
-func withMaintenance(spec api.DeploymentSpec, plan ...api.Action) api.Plan {
+func withMaintenance(plan ...api.Action) api.Plan {
 	if !features.Maintenance().Enabled() {
 		return plan
 	}
 
-	if spec.Database.GetMaintenance() {
-		// If maintenance is enabled skip
+	return withMaintenanceStart(plan...).After(api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "", "Disable maintenance after actions"))
+}
+func withMaintenanceStart(plan ...api.Action) api.Plan {
+	if !features.Maintenance().Enabled() {
 		return plan
 	}
 
-	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
-}
-
-func skipResignLeadership(v driver.Version) bool {
-	return (v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) &&
-		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.13") <= 0)
+	return api.AsPlan(plan).Before(
+		api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"),
+		api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
 }
 
 func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
@@ -51,9 +49,5 @@ func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason
 		return plan
 	}
 
-	if skipResignLeadership(member.Image.ArangoDBVersion) {
-		return plan
-	}
-
-	return api.AsPlan(plan).After(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
+	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
 }

@@ -28,8 +28,22 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	DefaultMaintenanceGracePeriod = 30 * time.Minute
+)
+
 type Timeouts struct {
 	AddMember *Timeout `json:"addMember,omitempty"`
+
+	MaintenanceGracePeriod *Timeout `json:"maintenanceGracePeriod,omitempty"`
+}
+
+func (t *Timeouts) GetMaintenanceGracePeriod() time.Duration {
+	if t == nil {
+		return DefaultMaintenanceGracePeriod
+	}
+
+	return t.MaintenanceGracePeriod.Get(DefaultMaintenanceGracePeriod)
 }
 
 func (t *Timeouts) Get() Timeouts {

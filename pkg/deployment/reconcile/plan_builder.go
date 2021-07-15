@@ -207,11 +207,6 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate)
 	}
 
-	// Refresh maintenance lock
-	if plan.IsEmpty() {
-		plan = pb.Apply(refreshMaintenance)
-	}
-
 	if plan.IsEmpty() {
 		plan = pb.Apply(createTLSStatusUpdate)
 	}

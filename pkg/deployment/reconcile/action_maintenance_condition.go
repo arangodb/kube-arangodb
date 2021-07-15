@@ -56,18 +56,21 @@ func (a *actionSetMaintenanceCondition) Start(ctx context.Context) (bool, error)
 		return true, nil
 	}
 
-	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-		maintenance := a.actionCtx.GetSpec().Database.GetMaintenance()
-
-		if maintenance {
-			return s.Conditions.Update(api.ConditionTypeMaintenanceMode, true, "Maintenance", "Maintenance enabled")
-		} else {
-			return s.Conditions.Remove(api.ConditionTypeMaintenanceMode)
-		}
-
-	}); err != nil {
+	if maintenance, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
 		a.log.Error().Err(err).Msgf("Unable to set maintenance condition")
 		return true, nil
+	} else {
+
+		if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+			if maintenance {
+				return s.Conditions.Update(api.ConditionTypeMaintenanceMode, true, "Maintenance", "Maintenance enabled")
+			} else {
+				return s.Conditions.Remove(api.ConditionTypeMaintenanceMode)
+			}
+		}); err != nil {
+			a.log.Error().Err(err).Msgf("Unable to set maintenance condition")
+			return true, nil
+		}
 	}
 
 	return true, nil

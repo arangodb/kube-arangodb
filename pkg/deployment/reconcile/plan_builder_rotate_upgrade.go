@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	json "github.com/json-iterator/go"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -385,9 +387,28 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		plan = plan.After(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
 	}
 
-	plan = plan.After(withResignLeadership(group, member, reason,
-		api.NewAction(upgradeAction, group, member.ID, reason),
-		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))...)
+	plan = plan.After(api.NewAction(upgradeAction, group, member.ID, reason),
+		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))
 
-	return withMaintenance(spec, plan...)
+	return withSecureWrap(log, member, group, spec, plan...)
+}
+
+func withSecureWrap(log zerolog.Logger, member api.MemberStatus,
+	group api.ServerGroup, spec api.DeploymentSpec, plan ...api.Action) api.Plan {
+	image := member.Image
+	if image == nil {
+		return plan
+	}
+
+	if skipResignLeadership(spec.GetMode(), image.ArangoDBVersion) {
+		// In this case we skip resign leadership but we enable maintenance
+		return withMaintenanceStart(plan...)
+	} else {
+		return withResignLeadership(group, member, "ResignLeadership", plan...)
+	}
+}
+
+func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
+	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) ||
+		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.12") <= 0))
 }

@@ -27,8 +27,6 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/rs/zerolog"
 )
 
@@ -59,18 +57,7 @@ func (a *actionDisableMaintenance) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
-	if err != nil {
-		a.log.Error().Err(err).Msgf("Unable to get agency client")
-		return true, nil
-	}
-
-	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return agency.SetMaintenanceMode(ctxChild, client, false)
-	})
-	if err != nil {
+	if err := a.actionCtx.SetAgencyMaintenanceMode(ctx, false); err != nil {
 		a.log.Error().Err(err).Msgf("Unable to disable maintenance")
 		return true, nil
 	}

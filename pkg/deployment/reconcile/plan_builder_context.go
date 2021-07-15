@@ -44,6 +44,7 @@ import (
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
 	resources.DeploymentStatusUpdate
+	resources.DeploymentAgencyMaintenance
 
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.

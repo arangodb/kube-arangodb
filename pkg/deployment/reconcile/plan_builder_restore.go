@@ -87,7 +87,7 @@ func restorePlan(spec api.DeploymentSpec) api.Plan {
 
 	switch spec.Mode.Get() {
 	case api.DeploymentModeActiveFailover:
-		p = withMaintenance(spec, p...)
+		p = withMaintenance(p...)
 	}
 
 	return p

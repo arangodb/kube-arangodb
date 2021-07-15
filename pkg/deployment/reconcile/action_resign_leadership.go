@@ -28,7 +28,6 @@ import (
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -79,6 +78,15 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 	switch group {
 	case api.ServerGroupDBServers:
+		if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
+			log.Warn().Err(err).Msgf("Maintenance is enabled, skipping action")
+			return true, errors.WithStack(err)
+		} else if enabled {
+			// We are done, action cannot be handled on maintenance mode
+			log.Warn().Msgf("Maintenance is enabled, skipping action")
+			return true, nil
+		}
+
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
 		defer cancel()
 		cluster, err := client.Cluster(ctxChild)
@@ -116,6 +124,19 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
+		return true, false, nil
+	}
+
+	if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
+		log.Error().Err(err).Msgf("Unable to get maintenance mode")
+		return false, false, errors.WithStack(err)
+	} else if enabled {
+		log.Warn().Msgf("Maintenance is enabled, skipping action")
+		// We are done, action cannot be handled on maintenance mode
+		m.CleanoutJobID = ""
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+			return false, false, errors.WithStack(err)
+		}
 		return true, false, nil
 	}
 

@@ -43,6 +43,7 @@ import (
 // Context provides methods to the reconcile package.
 type Context interface {
 	resources.DeploymentStatusUpdate
+	resources.DeploymentAgencyMaintenance
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject

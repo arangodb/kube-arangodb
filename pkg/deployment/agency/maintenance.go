@@ -26,40 +26,25 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/arangodb/go-driver/agency"
+
 	"github.com/arangodb/go-driver"
 )
 
-type Maintenance struct {
-	Result string `json:"result"`
-}
+func GetMaintenanceMode(ctx context.Context, client agency.Agency) (bool, error) {
+	var data interface{}
+	err := client.ReadKey(ctx, []string{"arango", "Supervision", "Maintenance"}, &data)
 
-func (m Maintenance) Enabled() bool {
-	return m.Result == "Maintenance"
-}
-
-func GetMaintenanceMode(ctx context.Context, client driver.Client) (Maintenance, error) {
-	conn := client.Connection()
-	r, err := conn.NewRequest(http.MethodGet, "/_admin/cluster/maintenance")
-	if err != nil {
-		return Maintenance{}, err
+	if err == nil {
+		// We got 200
+		return true, nil
 	}
 
-	resp, err := conn.Do(ctx, r)
-	if err != nil {
-		return Maintenance{}, err
+	if agency.IsKeyNotFound(err) {
+		return false, nil
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
-		return Maintenance{}, err
-	}
-
-	var m Maintenance
-
-	if err := resp.ParseBody("", &m); err != nil {
-		return Maintenance{}, err
-	}
-
-	return m, nil
+	return false, err
 }
 
 func SetMaintenanceMode(ctx context.Context, client driver.Client, enabled bool) error {
