@@ -87,9 +87,11 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
 
+	reconcileRequired := k8sutil.NewReconcile()
+
 	if spec.IsAuthenticated() {
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -103,11 +105,11 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 
 		if spec.Metrics.IsEnabled() {
 			if imageFound && pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
-				if err := r.refreshCache(ctx, cachedStatus, r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
+				if err := reconcileRequired.WithError(r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
 					return errors.WithStack(err)
 				}
 			} else {
-				if err := r.refreshCache(ctx, cachedStatus, r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
+				if err := reconcileRequired.WithError(r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), spec.Authentication.GetJWTSecretName())); err != nil {
 					return errors.WithStack(err)
 				}
 			}
@@ -115,11 +117,11 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 	}
 	if spec.IsSecure() {
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.TLS)); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.TLS)); err != nil {
 			return errors.WithStack(err)
 		}
 
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureSecretWithEmptyKey(ctx, cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty")); err != nil {
+		if err := reconcileRequired.WithError(r.ensureSecretWithEmptyKey(ctx, cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty")); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -165,12 +167,8 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 					}
 					owner := member.AsOwner()
 					errCert := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner)
-					if err := r.refreshCache(ctx, cachedStatus, errCert); err != nil && !k8sutil.IsAlreadyExists(err) {
+					if err := reconcileRequired.WithError(errCert); err != nil && !k8sutil.IsAlreadyExists(err) {
 						return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
-					}
-
-					if err := r.refreshCache(ctx, cachedStatus, operatorErrors.Reconcile()); err != nil {
-						return errors.WithStack(err)
 					}
 				}
 			}
@@ -181,47 +179,30 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 	}
 	if spec.RocksDB.IsEncrypted() {
 		if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-			if err := r.refreshCache(ctx, cachedStatus, r.ensureEncryptionKeyfolderSecret(ctx, cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
+			if err := reconcileRequired.WithError(r.ensureEncryptionKeyfolderSecret(ctx, cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
 				return errors.WithStack(err)
 			}
 		}
 	}
 	if spec.Sync.IsEnabled() {
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {
 			return errors.WithStack(err)
 		}
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName())); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Monitoring.GetTokenSecretName())); err != nil {
 			return errors.WithStack(err)
 		}
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.TLS)); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.TLS)); err != nil {
 			return errors.WithStack(err)
 		}
 		counterMetric.Inc()
-		if err := r.refreshCache(ctx, cachedStatus, r.ensureClientAuthCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication)); err != nil {
+		if err := reconcileRequired.WithError(r.ensureClientAuthCACertificateSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication)); err != nil {
 			return errors.WithStack(err)
 		}
 	}
-	return nil
-}
-
-func (r *Resources) refreshCache(ctx context.Context, cachedStatus inspectorInterface.Inspector, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if operatorErrors.IsReconcile(err) {
-		err := cachedStatus.Refresh(ctx, r.context.GetKubeCli(), r.context.GetMonitoringV1Cli(), r.context.GetArangoCli(), r.context.GetNamespace())
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	} else {
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return reconcileRequired.Reconcile()
 }
 
 func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets k8sutil.SecretInterface, secretName, folderSecretName string) error {

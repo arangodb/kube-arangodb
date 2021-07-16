@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -171,20 +173,26 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
+	reconcileRequired := k8sutil.NewReconcile()
+
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, member := range list {
 			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
-			if _, ok := cachedStatus.ArangoMember(name); !ok {
+			if m, ok := cachedStatus.ArangoMember(name); !ok {
 				// Create ArangoMember
 				a := api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      name,
 						Namespace: r.context.GetNamespace(),
+						OwnerReferences: []metav1.OwnerReference{
+							obj.AsOwner(),
+						},
 					},
 					Spec: api.ArangoMemberSpec{
-						Group: group,
-						ID:    member.ID,
+						Group:         group,
+						ID:            member.ID,
+						DeploymentUID: obj.GetUID(),
 					},
 				}
 
@@ -196,12 +204,43 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 					return err
 				}
 
-				return errors.Reconcile()
+				reconcileRequired.Required()
+				continue
+			} else {
+				changed := false
+				if len(m.OwnerReferences) == 0 {
+					m.OwnerReferences = []metav1.OwnerReference{
+						obj.AsOwner(),
+					}
+					changed = true
+				}
+
+				if m.Spec.DeploymentUID == "" {
+					m.Spec.DeploymentUID = obj.GetUID()
+					changed = true
+				}
+				if changed {
+
+					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Update(ctxChild, m, metav1.UpdateOptions{})
+						return err
+					})
+					if err != nil {
+						return err
+					}
+
+					reconcileRequired.Required()
+					continue
+				}
 			}
 		}
 
 		return nil
 	}); err != nil {
+		return err
+	}
+
+	if err := reconcileRequired.Reconcile(); err != nil {
 		return err
 	}
 
@@ -220,11 +259,15 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				}
 			}
 
-			return errors.Reconcile()
+			reconcileRequired.Required()
 		}
 
 		return nil
-	}); err != nil {
+	}, arangomember.FilterByDeploymentUID(obj.GetUID())); err != nil {
+		return err
+	}
+
+	if err := reconcileRequired.Reconcile(); err != nil {
 		return err
 	}
 
