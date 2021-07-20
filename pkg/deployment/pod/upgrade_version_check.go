@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -52,10 +53,6 @@ func (u upgradeVersionCheck) Args(i Input) k8sutil.OptionPairs {
 
 func (u upgradeVersionCheck) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	return nil, nil
-}
-
-func (u upgradeVersionCheck) Envs(i Input) []core.EnvVar {
-	return nil
 }
 
 func (u upgradeVersionCheck) Verify(i Input, cachedStatus interfaces.Inspector) error {

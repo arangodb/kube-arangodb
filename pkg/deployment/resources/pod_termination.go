@@ -148,9 +148,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	resignJobAvailable := false
 	currentVersion := memberStatus.ArangoVersion
 	if currentVersion != "" {
-		if currentVersion.CompareTo("3.4.7") > 0 && currentVersion.CompareTo("3.5") < 0 {
-			resignJobAvailable = true
-		} else if currentVersion.CompareTo("3.5.0") > 0 {
+		if currentVersion.CompareTo("3.5.0") > 0 {
 			resignJobAvailable = true
 		}
 	}
@@ -167,7 +165,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			log.Warn().Err(err).Msg("Failed to get node for member")
 			return errors.WithStack(err)
 		} else if node.Spec.Unschedulable {
-			if !r.context.GetSpec().IsNetworkAttachedVolumes() || !resignJobAvailable {
+			if !r.context.GetSpec().IsNetworkAttachedVolumes() {
 				dbserverDataWillBeGone = true
 			}
 		}
@@ -192,6 +190,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Is this a simple pod restart?
+	// TODO
 	if !dbserverDataWillBeGone && !resignJobAvailable {
 		log.Debug().Msg("Pod is just being restarted, safe to remove dbserver pod")
 		return nil

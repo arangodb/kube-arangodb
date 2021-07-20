@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Drop support for ArangoDB <= 3.5 (versions already EOL)
 
 ## [1.2.0](https://github.com/arangodb/kube-arangodb/tree/1.2.0) (2021-07-16)
 - Enable "Operator Internal Metrics Exporter" by default

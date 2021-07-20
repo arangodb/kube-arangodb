@@ -327,7 +327,7 @@ func podNeedsRotation(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 
 	if m.PodSpecVersion != checksum {
 		if _, err := json.Marshal(renderedPod); err == nil {
-			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("XXXXXXXXXXX Pod needs rotation - checksum does not match")
+			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("Pod needs rotation - checksum does not match")
 		}
 		return true, "Pod needs rotation - checksum does not match"
 	}

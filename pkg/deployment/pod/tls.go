@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -54,10 +55,6 @@ func TLS() Builder {
 }
 
 type tls struct{}
-
-func (s tls) Envs(i Input) []core.EnvVar {
-	return nil
-}
 
 func (s tls) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !IsTLSEnabled(i) {

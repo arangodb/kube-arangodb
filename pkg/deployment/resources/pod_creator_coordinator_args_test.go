@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -34,10 +36,13 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.
 func TestCreateArangodArgsCoordinator(t *testing.T) {
+	jwtSecretFile := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{
@@ -85,7 +90,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
@@ -143,7 +148,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
@@ -261,7 +266,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=tcp://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=true",
 				"--server.storage-engine=rocksdb",
 			},
@@ -375,7 +380,7 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=true",
 				"--server.storage-engine=mmfiles",
 				"--ssl.ecdh-curve=",

@@ -49,7 +49,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -58,10 +57,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-func versionHasAdvertisedEndpoint(v driver.Version) bool {
-	return v.CompareTo("3.4.0") >= 0
-}
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
 func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input) ([]string, error) {
@@ -105,8 +100,6 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 
 	options.Merge(pod.SNI().Args(input))
 
-	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(input.Version)
-
 	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, input.ApiObject, input.Deployment, input.Group, input.Member)
 	if err != nil {
 		return nil, err
@@ -145,7 +138,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 		options.Add("--cluster.my-role", "COORDINATOR")
 		options.Add("--foxx.queues", input.Deployment.Features.GetFoxxQueues())
 		options.Add("--server.statistics", "true")
-		if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+		if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() {
 			options.Add("--cluster.my-advertised-endpoint", input.Deployment.ExternalAccess.GetAdvertisedEndpoint())
 		}
 	case api.ServerGroupSingle:
@@ -156,7 +149,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 			options.Add("--replication.automatic-failover", "true")
 			options.Add("--cluster.my-address", myTCPURL)
 			options.Add("--cluster.my-role", "SINGLE")
-			if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+			if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() {
 				options.Add("--cluster.my-advertised-endpoint", input.Deployment.ExternalAccess.GetAdvertisedEndpoint())
 			}
 		}

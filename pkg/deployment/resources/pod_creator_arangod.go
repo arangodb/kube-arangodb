@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
+// Author Tomasz Mielech
 //
 
 package resources
@@ -143,10 +143,6 @@ func (a *ArangoDContainer) GetImage() string {
 
 func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 	envs := NewEnvBuilder()
-
-	if env := pod.JWT().Envs(a.member.AsInput()); len(env) > 0 {
-		envs.Add(true, env...)
-	}
 
 	if a.spec.License.HasSecretName() {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),

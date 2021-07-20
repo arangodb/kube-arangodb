@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -47,6 +48,5 @@ type Input struct {
 type Builder interface {
 	Args(i Input) k8sutil.OptionPairs
 	Volumes(i Input) ([]core.Volume, []core.VolumeMount)
-	Envs(i Input) []core.EnvVar
 	Verify(i Input, cachedStatus interfaces.Inspector) error
 }

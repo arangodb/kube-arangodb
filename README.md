@@ -38,32 +38,32 @@ covers individual newer features separately.
 
 | Platform            | Kubernetes Version | ArangoDB Version | State      | Remarks               | Provider Remarks                   |
 |---------------------|--------------------|------------------|------------|-----------------------|------------------------------------|
-| Google GKE          | 1.17               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.18               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.19               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
-| Google GKE          | 1.20               | >= 3.5.0         | Production | Don't use micro nodes |                                    |
-| Azure AKS           | 1.18               | >= 3.5.0         | Production |                       |                                    |
-| Azure AKS           | 1.19               | >= 3.5.0         | Production |                       |                                    |
-| Azure AKS           | 1.20               | >= 3.5.0         | Production |                       |                                    |
-| Amazon EKS          | 1.16               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.17               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.18               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.19               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| Amazon EKS          | 1.20               | >= 3.5.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud           | 1.17               | >= 3.5.0         | Deprecated |                       |                                    |
-| IBM Cloud           | 1.18               | >= 3.5.0         | Production |                       |                                    |
-| IBM Cloud           | 1.19               | >= 3.5.0         | Production |                       |                                    |
-| IBM Cloud           | 1.20               | >= 3.5.0         | Production |                       |                                    |
-| OpenShift           | 3.11               | >= 3.5.0         | Production |                       |                                    |
-| OpenShift           | 4.2                | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.16               | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.17               | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.18               | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.19               | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.20               | >= 3.5.0         | Production |                       |                                    |
-| BareMetal (kubeadm) | 1.21               | >= 3.5.0         | Production |                       |                                    |
-| Minikube            | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
-| Other               | 1.14+              | >= 3.5.0         | Devel Only |                       |                                    |
+| Google GKE          | 1.17               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.18               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.19               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
+| Google GKE          | 1.20               | >= 3.6.0         | Production | Don't use micro nodes |                                    |
+| Azure AKS           | 1.18               | >= 3.6.0         | Production |                       |                                    |
+| Azure AKS           | 1.19               | >= 3.6.0         | Production |                       |                                    |
+| Azure AKS           | 1.20               | >= 3.6.0         | Production |                       |                                    |
+| Amazon EKS          | 1.16               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.17               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.18               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.19               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS          | 1.20               | >= 3.6.0         | Production |                       | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud           | 1.17               | >= 3.6.0         | Deprecated |                       |                                    |
+| IBM Cloud           | 1.18               | >= 3.6.0         | Production |                       |                                    |
+| IBM Cloud           | 1.19               | >= 3.6.0         | Production |                       |                                    |
+| IBM Cloud           | 1.20               | >= 3.6.0         | Production |                       |                                    |
+| OpenShift           | 3.11               | >= 3.6.0         | Production |                       |                                    |
+| OpenShift           | 4.2                | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.16               | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.17               | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.18               | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.19               | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.20               | >= 3.6.0         | Production |                       |                                    |
+| BareMetal (kubeadm) | 1.21               | >= 3.6.0         | Production |                       |                                    |
+| Minikube            | 1.14+              | >= 3.6.0         | Devel Only |                       |                                    |
+| Other               | 1.14+              | >= 3.6.0         | Devel Only |                       |                                    |
 
 Feature-wise production readiness table:
 
@@ -89,9 +89,9 @@ Feature-wise production readiness table:
 | JWT Rotation Support                    | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.jwt-rotation          | N/A                                                                      |
 | Encryption Key Rotation Support         | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.encryption-rotation   | N/A                                                                      |
 | Encryption Key Rotation Support         | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.encryption-rotation   | N/A                                                                      |
-| Version Check                           | 1.1.4            | >= 3.5.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.upgrade-version-check | N/A                                                                      |
-| Operator Maintenance Management Support | 1.0.7            | >= 3.5.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.maintenance           | N/A                                                                      |
-| Operator Maintenance Management Support | 1.2.0            | >= 3.5.0         | Community, Enterprise | Production | True    | --deployment.feature.maintenance           | N/A                                                                      |
+| Version Check                           | 1.1.4            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.upgrade-version-check | N/A                                                                      |
+| Operator Maintenance Management Support | 1.0.7            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.maintenance           | N/A                                                                      |
+| Operator Maintenance Management Support | 1.2.0            | >= 3.6.0         | Community, Enterprise | Production | True    | --deployment.feature.maintenance           | N/A                                                                      |
 | Operator Internal Metrics Exporter      | 1.1.9            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.metrics-exporter      | N/A                                                                      |
 | Operator Internal Metrics Exporter      | 1.2.0            | >= 3.6.0         | Community, Enterprise | Production | True    | --deployment.feature.metrics-exporter      | N/A                                                                      |
 

@@ -124,10 +124,6 @@ func Encryption() Builder {
 
 type encryption struct{}
 
-func (e encryption) Envs(i Input) []core.EnvVar {
-	return nil
-}
-
 func (e encryption) Args(i Input) k8sutil.OptionPairs {
 	if !IsEncryptionEnabled(i) {
 		return nil

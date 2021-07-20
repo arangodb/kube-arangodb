@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -45,17 +46,6 @@ func IsAuthenticated(i Input) bool {
 	return i.Deployment.IsAuthenticated()
 }
 
-func VersionHasJWTSecretKeyfile(v driver.Version) bool {
-	if v.CompareTo("3.3.22") >= 0 && v.CompareTo("3.4.0") < 0 {
-		return true
-	}
-	if v.CompareTo("3.4.2") >= 0 {
-		return true
-	}
-
-	return false
-}
-
 func JWTSecretFolder(name string) string {
 	return fmt.Sprintf("%s-jwt-folder", name)
 }
@@ -70,19 +60,6 @@ func JWT() Builder {
 
 type jwt struct{}
 
-func (e jwt) Envs(i Input) []core.EnvVar {
-	if !IsAuthenticated(i) {
-		return nil
-	}
-
-	if !VersionHasJWTSecretKeyfile(i.Version) {
-		return []core.EnvVar{k8sutil.CreateEnvSecretKeySelector(constants.EnvArangodJWTSecret,
-			i.Deployment.Authentication.GetJWTSecretName(), constants.SecretKeyToken)}
-	}
-
-	return nil
-}
-
 func (e jwt) Args(i Input) k8sutil.OptionPairs {
 	if !IsAuthenticated(i) {
 		// Without authentication
@@ -95,11 +72,9 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 
 	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
 		options.Add("--server.jwt-secret-folder", k8sutil.ClusterJWTSecretVolumeMountDir)
-	} else if VersionHasJWTSecretKeyfile(i.Version) {
+	} else {
 		keyPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 		options.Add("--server.jwt-secret-keyfile", keyPath)
-	} else {
-		options.Addf("--server.jwt-secret", "$(%s)", constants.EnvArangodJWTSecret)
 	}
 
 	return options
