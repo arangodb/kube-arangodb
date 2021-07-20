@@ -145,14 +145,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		return nil
 	}
 
-	resignJobAvailable := false
-	currentVersion := memberStatus.ArangoVersion
-	if currentVersion != "" {
-		if currentVersion.CompareTo("3.5.0") > 0 {
-			resignJobAvailable = true
-		}
-	}
-
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
 	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
@@ -187,13 +179,6 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	// Once decided to drain the member, never go back
 	if memberStatus.Phase == api.MemberPhaseDrain {
 		dbserverDataWillBeGone = true
-	}
-
-	// Is this a simple pod restart?
-	// TODO
-	if !dbserverDataWillBeGone && !resignJobAvailable {
-		log.Debug().Msg("Pod is just being restarted, safe to remove dbserver pod")
-		return nil
 	}
 
 	// Inspect cleaned out state
