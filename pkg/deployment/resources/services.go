@@ -65,6 +65,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	// Fetch existing services
 	svcs := kubecli.CoreV1().Services(ns)
 
+	reconcileRequired := k8sutil.NewReconcile()
+
 	// Ensure member services
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
@@ -109,7 +111,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					}
 				}
 
-				return errors.Reconcile()
+				reconcileRequired.Required()
+				continue
 			} else {
 				spec := s.Spec.DeepCopy()
 
@@ -136,7 +139,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 						return err
 					}
 
-					return errors.Reconcile()
+					reconcileRequired.Required()
+					continue
 				}
 			}
 		}
@@ -229,7 +233,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			}
 		}
 	}
-	return nil
+
+	return reconcileRequired.Reconcile()
 }
 
 // EnsureServices creates all services needed to service the deployment

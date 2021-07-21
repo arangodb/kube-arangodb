@@ -20,18 +20,50 @@
 // Author Adam Janikowski
 //
 
-package v1
+package k8sutil
 
-import (
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-)
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-type ArangoMemberSpec struct {
-	Group         ServerGroup `json:"group,omitempty"`
-	ID            string      `json:"id,omitempty"`
-	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
+func NewReconcile() Reconcile {
+	return &reconcile{}
+}
 
-	Template         *core.PodTemplate `json:"template,omitempty"`
-	TemplateChecksum string            `json:"templateChecksum,omitempty"`
+type Reconcile interface {
+	Reconcile() error
+	Required()
+	IsRequired() bool
+	WithError(err error) error
+}
+
+type reconcile struct {
+	required bool
+}
+
+func (r *reconcile) Reconcile() error {
+	if r.required {
+		return errors.Reconcile()
+	}
+
+	return nil
+}
+
+func (r *reconcile) Required() {
+	r.required = true
+}
+
+func (r *reconcile) IsRequired() bool {
+	return r.required
+}
+
+func (r *reconcile) WithError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if errors.IsReconcile(err) {
+		r.Required()
+		return nil
+	}
+
+	return err
 }

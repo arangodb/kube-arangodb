@@ -22,7 +22,10 @@
 
 package arangomember
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"k8s.io/apimachinery/pkg/types"
+)
 
 type Inspector interface {
 	ArangoMember(name string) (*api.ArangoMember, bool)
@@ -31,3 +34,9 @@ type Inspector interface {
 
 type ArangoMemberFilter func(pod *api.ArangoMember) bool
 type ArangoMemberAction func(pod *api.ArangoMember) error
+
+func FilterByDeploymentUID(uid types.UID) ArangoMemberFilter {
+	return func(pod *api.ArangoMember) bool {
+		return pod.Spec.DeploymentUID == "" || pod.Spec.DeploymentUID == uid
+	}
+}
