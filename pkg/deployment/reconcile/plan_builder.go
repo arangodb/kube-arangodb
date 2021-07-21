@@ -169,13 +169,18 @@ func createPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIOb
 				plan = append(plan,
 					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
 			default:
-				memberLog.Msg("Creating member replacement plan because member has failed")
-				plan = append(plan,
-					api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-					api.NewAction(api.ActionTypeAddMember, group, ""),
-					api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
-				)
-
+				if spec.GetAllowMemberRecreation(group) {
+					memberLog.Msg("Creating member replacement plan because member has failed")
+					plan = append(plan,
+						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+						api.NewAction(api.ActionTypeAddMember, group, ""),
+						api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
+					)
+				} else {
+					memberLog.Msg("Restoring old member. Recreation is disabled for group")
+					plan = append(plan,
+						api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+				}
 			}
 		}
 		return nil

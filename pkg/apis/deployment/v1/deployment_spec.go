@@ -163,6 +163,26 @@ type DeploymentSpec struct {
 	CommunicationMethod *DeploymentCommunicationMethod `json:"communicationMethod,omitempty"`
 }
 
+// GetAllowMemberRecreation returns member recreation policy based on group and settings
+func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
+	if s == nil {
+		return false
+	}
+
+	groupSpec := s.GetServerGroupSpec(group)
+
+	switch group {
+	case ServerGroupDBServers, ServerGroupCoordinators:
+		if v := groupSpec.AllowMemberRecreation; v == nil {
+			return true
+		} else {
+			return *v
+		}
+	default:
+		return false
+	}
+}
+
 // GetRestoreFrom returns the restore from string or empty string if not set
 func (s *DeploymentSpec) GetRestoreFrom() string {
 	return util.StringOrDefault(s.RestoreFrom)

@@ -22,11 +22,15 @@
 
 package v2alpha1
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+)
 
 type ArangoMemberSpec struct {
-	Group ServerGroup `json:"group,omitempty"`
-	ID    string      `json:"id,omitempty"`
+	Group         ServerGroup `json:"group,omitempty"`
+	ID            string      `json:"id,omitempty"`
+	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
 
 	Template         *core.PodTemplate `json:"template,omitempty"`
 	TemplateChecksum string            `json:"templateChecksum,omitempty"`

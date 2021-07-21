@@ -141,6 +141,8 @@ type ServerGroupSpec struct {
 	ShutdownDelay *int `json:"shutdownDelay,omitempty"`
 	// InternalPort define port used in internal communication, can be accessed over localhost via sidecar
 	InternalPort *int `json:"internalPort,omitempty"`
+	// AllowMemberRecreation allows to recreate member. Value is used only for Coordinator and DBServer with default to True, for all other groups set to false.
+	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
