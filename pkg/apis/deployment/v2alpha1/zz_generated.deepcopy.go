@@ -1522,6 +1522,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.AllowMemberRecreation != nil {
+		in, out := &in.AllowMemberRecreation, &out.AllowMemberRecreation
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
