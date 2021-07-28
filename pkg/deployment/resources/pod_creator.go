@@ -570,7 +570,7 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 				}
 			}
 			owner := apiObject.AsOwner()
-			err := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
+			_, err := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
 			if err != nil && !k8sutil.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}

@@ -78,14 +78,14 @@ func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets k8s
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
 func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec,
-	secretName string, ownerRef *metav1.OwnerReference) error {
+	secretName string, ownerRef *metav1.OwnerReference) (bool, error) {
 
 	log = log.With().Str("secret", secretName).Logger()
 	// Load alt names
 	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	// Load CA certificate
@@ -94,12 +94,12 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, spec.GetCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	ca, err := certificates.LoadCAFromPEM(caCert, caKey)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to decode CA certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	options := certificates.CreateCertificateOptions{
@@ -114,7 +114,7 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 	cert, priv, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create server certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
@@ -128,8 +128,8 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 		} else {
 			log.Debug().Err(err).Msg("Failed to create server Secret")
 		}
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	log.Debug().Msg("Created server Secret")
-	return nil
+	return true, nil
 }

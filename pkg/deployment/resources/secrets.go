@@ -166,9 +166,10 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 						serverNames = append(serverNames, ip)
 					}
 					owner := member.AsOwner()
-					errCert := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner)
-					if err := reconcileRequired.WithError(errCert); err != nil && !k8sutil.IsAlreadyExists(err) {
+					if created, err := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.TLS, tlsKeyfileSecretName, &owner); err != nil && !k8sutil.IsAlreadyExists(err) {
 						return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
+					} else if created {
+						reconcileRequired.Required()
 					}
 				}
 			}
