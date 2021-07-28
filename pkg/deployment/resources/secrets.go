@@ -54,7 +54,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	jg "github.com/dgrijalva/jwt-go"
+	jg "github.com/golang-jwt/jwt"
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 

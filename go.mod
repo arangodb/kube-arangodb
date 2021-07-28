@@ -31,12 +31,12 @@ require (
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/github-release/github-release v0.10.0 // indirect
+	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/addlicense v0.0.0-20210428195630-6d92264d7170 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15

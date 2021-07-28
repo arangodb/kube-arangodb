@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	jg "github.com/dgrijalva/jwt-go"
+	jg "github.com/golang-jwt/jwt"
 )
 
 // SecretInterface has methods to work with Secret resources.
