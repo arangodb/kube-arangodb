@@ -35,8 +35,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.7.2
 	github.com/github-release/github-release v0.10.0 // indirect
-	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/go-playground/validator/v10 v10.8.0 // indirect
+	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/addlicense v0.0.0-20210428195630-6d92264d7170 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
