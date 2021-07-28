@@ -75,6 +75,11 @@ type ActionContext interface {
 	// Returns member status, true when found, or false
 	// when no such member is found.
 	GetMemberStatusByID(id string) (api.MemberStatus, bool)
+	// GetMemberStatusAndGroupByID returns the current member status and group
+	// for the member with given id.
+	// Returns member status, true when found, or false
+	// when no such member is found.
+	GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
@@ -284,6 +289,15 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 	status, _ := ac.context.GetStatus()
 	m, _, ok := status.Members.ElementByID(id)
 	return m, ok
+}
+
+// GetMemberStatusAndGroupByID returns the current member status and group
+// for the member with given id.
+// Returns member status, true when found, or false
+// when no such member is found.
+func (ac *actionContext) GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool) {
+	status, _ := ac.context.GetStatus()
+	return status.Members.ElementByID(id)
 }
 
 // CreateMember adds a new member to the given group.
