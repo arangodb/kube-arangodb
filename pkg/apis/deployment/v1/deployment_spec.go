@@ -172,7 +172,7 @@ func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
 	groupSpec := s.GetServerGroupSpec(group)
 
 	switch group {
-	case ServerGroupDBServers, ServerGroupCoordinators:
+	case ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
 		if v := groupSpec.AllowMemberRecreation; v == nil {
 			return true
 		} else {
