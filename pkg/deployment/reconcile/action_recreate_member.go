@@ -61,18 +61,21 @@ type actionRecreateMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
+	m, g, ok := a.actionCtx.GetMemberStatusAndGroupByID(a.action.MemberID)
 	if !ok {
 		return false, errors.Newf("expecting member to be present in list, but it is not")
 	}
 
-	_, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
-	if err != nil {
-		if kubeErrors.IsNotFound(err) {
-			return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
-		}
+	switch g {
+	case api.ServerGroupDBServers, api.ServerGroupAgents: // Only DBServers and Agents use persistent data
+		_, err := a.actionCtx.GetPvc(ctx, m.PersistentVolumeClaimName)
+		if err != nil {
+			if kubeErrors.IsNotFound(err) {
+				return false, errors.Newf("PVC is missing %s. Members won't be recreated without old PV", m.PersistentVolumeClaimName)
+			}
 
-		return false, errors.WithStack(err)
+			return false, errors.WithStack(err)
+		}
 	}
 
 	if m.Phase == api.MemberPhaseFailed {
@@ -80,7 +83,7 @@ func (a *actionRecreateMember) Start(ctx context.Context) (bool, error) {
 		m.Phase = api.MemberPhaseNone
 	}
 
-	if err = a.actionCtx.UpdateMember(ctx, m); err != nil {
+	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
 
