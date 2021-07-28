@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.1](https://github.com/arangodb/kube-arangodb/tree/1.2.1) (2021-07-28)
 - Fix ArangoMember race with multiple ArangoDeployments within single namespace
 - Allow to define Member Recreation Policy within group
 - Replace 'github.com/dgrijalva/jwt-go' with 'github.com/golang-jwt/jwt'
