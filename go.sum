@@ -50,6 +50,8 @@ github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680 h1
 github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680/go.mod h1:xDyzBwyYzcEhsaDXtmxCNM4p5BrtuoVYYsRTuJqmCeg=
 github.com/arangodb/arangosync-client v0.6.3 h1:CJL9IxjCNVci2HNuWncZdVzHBeYTz0CeqqTf5Kpj2Ac=
 github.com/arangodb/arangosync-client v0.6.3/go.mod h1:C0DmhtoPKJGm2PO18FrfZf4mVWcG7qW2YPBTFMR2P1g=
+github.com/arangodb/arangosync-client v0.7.0 h1:3vLOVnMyr5vGlPA0OHxJL9Wyy49JJwN0uBYU1HDk0qk=
+github.com/arangodb/arangosync-client v0.7.0/go.mod h1:g+JcxH3C63wKaJPnPr9nggYoGbt/bYCWpfcRG0NSodY=
 github.com/arangodb/go-driver v0.0.0-20200617115956-9dac4c7fed22 h1:3Ken6Y1Qs+VLCTEiv1+807Gx2ToiuRCo8Dd1mPE5FC0=
 github.com/arangodb/go-driver v0.0.0-20200617115956-9dac4c7fed22/go.mod h1:JG79qtPYRxUB6CdGWSH1XwpolSBjthuZX+Iaz/H38rA=
 github.com/arangodb/go-driver v0.0.0-20210517114204-8cc084268066 h1:NneOFWxfa7rhNXIfEYWgxytudmgj2KPZfYSnKXSVGcw=
@@ -75,6 +77,8 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/blang/semver v3.5.0+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/cenkalti/backoff v2.1.1+incompatible h1:tKJnvO2kl0zmb/jA5UKAt4VoEVw1qxKWjE/Bpp46npY=
 github.com/cenkalti/backoff v2.1.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
+github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
+github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=

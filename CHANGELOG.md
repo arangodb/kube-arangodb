@@ -7,6 +7,7 @@
 - Allow to define Member Recreation Policy within group
 - Replace 'github.com/dgrijalva/jwt-go' with 'github.com/golang-jwt/jwt'
 - Update 'github.com/gin-gonic/gin' dependency to v1.7.2
+- Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
 
 ## [1.2.0](https://github.com/arangodb/kube-arangodb/tree/1.2.0) (2021-07-16)
 - Enable "Operator Internal Metrics Exporter" by default
