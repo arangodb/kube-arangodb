@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	v1 "k8s.io/api/core/v1"
 )
 
 // LocalStorageSpec contains the specification part of
@@ -35,6 +36,7 @@ type LocalStorageSpec struct {
 	LocalPath    []string          `json:"localPath,omitempty"`
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	Privileged   *bool             `json:"privileged,omitempty"`
+	Tolerations  []v1.Toleration   `json:"tolerations,omitempty"`
 }
 
 // Validate the given spec, returning an error on validation
