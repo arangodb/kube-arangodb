@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
 
 ## [1.2.1](https://github.com/arangodb/kube-arangodb/tree/1.2.1) (2021-07-28)
 - Fix ArangoMember race with multiple ArangoDeployments within single namespace
