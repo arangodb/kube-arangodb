@@ -25,12 +25,15 @@ package reconcile
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/arangodb/go-driver"
+	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
 func getShutdownHelper(a *api.Action, ctx ActionContext, log zerolog.Logger) ActionCore {
@@ -78,11 +81,24 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			log.Debug().Err(err).Msg("Failed to create member client")
 			return false, errors.WithStack(err)
 		}
+
+		if isShutdownOngoing, err := isShutdownOngoing(ctx, c); err != nil {
+			log.Debug().Err(err).Msg("Failed to check shutdown info")
+			return false, errors.WithStack(err)
+		} else if isShutdownOngoing {
+			return true, nil
+		}
+
 		removeFromCluster := false
-		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
+		gracefulShutdown := true
+
+		log.Debug().
+			Bool("removeFromCluster", removeFromCluster).
+			Bool("gracefulShutdown", gracefulShutdown).
+			Msg("Shutting down member")
 		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
-		if err := c.Shutdown(ctxChild, removeFromCluster); err != nil {
+		if err := c.ShutdownV2(ctxChild, removeFromCluster, gracefulShutdown); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, _, err := s.CheckProgress(ctxChild); err == nil && ready {
 				// We're done
@@ -176,4 +192,22 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 	}
 
 	return true, false, nil
+}
+
+// isShutdownOngoing returns true if the shutdown is ongoing.
+// If ArangoDB does not support checking shutdown then false is returned with error.
+func isShutdownOngoing(ctx context.Context, c driver.Client) (bool, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+
+	info, err := c.ShutdownInfoV2(ctxChild)
+	if err != nil {
+		if driver.IsArangoErrorWithCode(err, http.StatusMethodNotAllowed) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return info.SoftShutdownOngoing, nil
 }

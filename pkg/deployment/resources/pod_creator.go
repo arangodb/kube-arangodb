@@ -257,6 +257,8 @@ func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
 	}
 
 	switch group {
+	case api.ServerGroupCoordinators:
+		finalizers = append(finalizers, constants.FinalizerGracefulShutdown)
 	case api.ServerGroupAgents:
 		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
 	case api.ServerGroupDBServers:
