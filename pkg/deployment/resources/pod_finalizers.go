@@ -78,6 +78,12 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
 			}
+		case constants.FinalizerGracefulShutdown:
+			if isServerContainerDead {
+				log.Debug().Str("finalizer", f).Msg("Server Container is dead, removing finalizer")
+				removalList = append(removalList, f)
+				break
+			}
 		case constants.FinalizerDelayPodTermination:
 			if isServerContainerDead {
 				log.Debug().Msg("Server Container is dead, removing finalizer")

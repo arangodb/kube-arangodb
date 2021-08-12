@@ -89,16 +89,13 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 
-		removeFromCluster := false
-		gracefulShutdown := true
-
 		log.Debug().
-			Bool("removeFromCluster", removeFromCluster).
-			Bool("gracefulShutdown", gracefulShutdown).
+			Bool("removeFromCluster", false).
+			Bool("gracefulShutdown", true).
 			Msg("Shutting down member")
 		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
-		if err := c.ShutdownV2(ctxChild, removeFromCluster, gracefulShutdown); err != nil {
+		if err := c.ShutdownV2(ctxChild, false, true); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, _, err := s.CheckProgress(ctxChild); err == nil && ready {
 				// We're done
