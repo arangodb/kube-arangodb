@@ -84,6 +84,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 				removalList = append(removalList, f)
 				break
 			}
+			// TODO send graceful shutdown here.
 		case constants.FinalizerDelayPodTermination:
 			if isServerContainerDead {
 				log.Debug().Msg("Server Container is dead, removing finalizer")
