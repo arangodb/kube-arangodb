@@ -25,17 +25,19 @@ package resources
 
 import (
 	"context"
+	"net/http"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
+	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -50,65 +52,58 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 
-	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p)
-
-	for _, f := range p.ObjectMeta.GetFinalizers() {
-		switch f {
-		case constants.FinalizerPodAgencyServing:
-			log.Debug().Msg("Inspecting agency-serving finalizer")
-			if isServerContainerDead {
-				log.Debug().Msg("Server Container is dead, removing finalizer")
+	if !k8sutil.IsPodServerContainerRunning(p) {
+		// When the container is dead then remove finalizers.
+		for _, f := range p.ObjectMeta.GetFinalizers() {
+			switch f {
+			case constants.FinalizerPodAgencyServing, constants.FinalizerPodDrainDBServer,
+				constants.FinalizerGracefulShutdown, constants.FinalizerDelayPodTermination:
 				removalList = append(removalList, f)
-				break
-			}
-			if err := r.inspectFinalizerPodAgencyServing(ctx, log, p, memberStatus, updateMember); err == nil {
-				removalList = append(removalList, f)
-			} else {
-				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
-			}
-		case constants.FinalizerPodDrainDBServer:
-			log.Debug().Msg("Inspecting drain dbserver finalizer")
-			if isServerContainerDead {
-				log.Debug().Msg("Server Container is dead, removing finalizer")
-				removalList = append(removalList, f)
-				break
-			}
-			if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus, updateMember); err == nil {
-				removalList = append(removalList, f)
-			} else {
-				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
-			}
-		case constants.FinalizerGracefulShutdown:
-			if isServerContainerDead {
 				log.Debug().Str("finalizer", f).Msg("Server Container is dead, removing finalizer")
-				removalList = append(removalList, f)
-				break
 			}
-			// TODO send graceful shutdown here.
-		case constants.FinalizerDelayPodTermination:
-			if isServerContainerDead {
-				log.Debug().Msg("Server Container is dead, removing finalizer")
-				removalList = append(removalList, f)
-				break
-			}
-
-			s, _ := r.context.GetStatus()
-			_, group, ok := s.Members.ElementByID(memberStatus.ID)
-			if !ok {
-				continue
-			}
-			log.Error().Str("finalizer", f).Msg("Delay finalizer")
-
-			groupSpec := r.context.GetSpec().GetServerGroupSpec(group)
-			d := time.Duration(util.IntOrDefault(groupSpec.ShutdownDelay, 0)) * time.Second
-			if t := p.ObjectMeta.DeletionTimestamp; t != nil {
-				e := p.ObjectMeta.DeletionTimestamp.Time.Sub(time.Now().Add(d))
-				log.Error().Str("finalizer", f).Dur("left", e).Msg("Delay finalizer status")
-				if e < 0 {
+		}
+	} else {
+		for _, f := range p.ObjectMeta.GetFinalizers() {
+			switch f {
+			case constants.FinalizerPodAgencyServing:
+				log.Debug().Msg("Inspecting agency-serving finalizer")
+				if err := r.inspectFinalizerPodAgencyServing(ctx, log, p, memberStatus, updateMember); err == nil {
 					removalList = append(removalList, f)
+				} else {
+					log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
 				}
-			} else {
-				continue
+			case constants.FinalizerPodDrainDBServer:
+				log.Debug().Msg("Inspecting drain dbserver finalizer")
+				if err := r.inspectFinalizerPodDrainDBServer(ctx, log, p, memberStatus, updateMember); err == nil {
+					removalList = append(removalList, f)
+				} else {
+					log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
+				}
+			case constants.FinalizerGracefulShutdown:
+				if err := r.inspectFinalizerGracefulShutdown(ctx, log); err == nil {
+					removalList = append(removalList, f)
+				} else {
+					log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
+				}
+			case constants.FinalizerDelayPodTermination:
+				s, _ := r.context.GetStatus()
+				_, group, ok := s.Members.ElementByID(memberStatus.ID)
+				if !ok {
+					continue
+				}
+				log.Error().Str("finalizer", f).Msg("Delay finalizer")
+
+				groupSpec := r.context.GetSpec().GetServerGroupSpec(group)
+				d := time.Duration(util.IntOrDefault(groupSpec.ShutdownDelay, 0)) * time.Second
+				if t := p.ObjectMeta.DeletionTimestamp; t != nil {
+					e := p.ObjectMeta.DeletionTimestamp.Time.Sub(time.Now().Add(d))
+					log.Error().Str("finalizer", f).Dur("left", e).Msg("Delay finalizer status")
+					if e < 0 {
+						removalList = append(removalList, f)
+					}
+				} else {
+					continue
+				}
 			}
 		}
 	}
@@ -183,6 +178,43 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 			return errors.WithStack(err)
 		}
 		log.Debug().Str("pvc-name", memberStatus.PersistentVolumeClaimName).Msg("Removed PVC of member")
+	}
+
+	return nil
+}
+
+// inspectFinalizerGracefulShutdown sends graceful shutdown request if it was not sent beforehand.
+func (r *Resources) inspectFinalizerGracefulShutdown(ctx context.Context, log zerolog.Logger) error {
+	var c driver.Client
+	c, err := r.context.GetDatabaseClient(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to get database client")
+		return errors.WithStack(err)
+	}
+
+	if shutdownInfo, err := arangod.GetShutdownInfo(ctx, c); err != nil {
+		if !driver.IsArangoErrorWithCode(err, http.StatusMethodNotAllowed) {
+			log.Debug().Err(err).Msg("Failed to check shutdown info")
+			return errors.WithStack(err)
+		}
+	} else if shutdownInfo.SoftShutdownOngoing {
+		return nil
+	}
+
+	log.Debug().
+		Bool("removeFromCluster", false).
+		Bool("gracefulShutdown", true).
+		Msg("Shutting down member")
+
+	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	defer cancel()
+	if err := c.ShutdownV2(ctxChild, false, true); err != nil {
+		log.Debug().
+			Err(err).
+			Bool("removeFromCluster", false).
+			Bool("gracefulShutdown", true).
+			Msg("Failed to shutdown member")
+		return errors.WithStack(err)
 	}
 
 	return nil

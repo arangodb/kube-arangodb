@@ -178,6 +178,20 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 	return c, nil
 }
 
+// GetShutdownInfo returns information about the shutdown process.
+// In older versions of ArangoDB it is not supported, so the error "method not allowed" is returned.
+func GetShutdownInfo(ctx context.Context, c driver.Client) (driver.ShutdownInfo, error) {
+	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	defer cancel()
+
+	info, err := c.ShutdownInfoV2(ctxChild)
+	if err != nil {
+		return driver.ShutdownInfo{}, err
+	}
+
+	return info, nil
+}
+
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
 func createArangodClientForDNSName(ctx context.Context, cli corev1.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool) (driver.Client, error) {
 	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)

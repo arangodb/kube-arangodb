@@ -82,10 +82,12 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			return false, errors.WithStack(err)
 		}
 
-		if isShutdownOngoing, err := isShutdownOngoing(ctx, c); err != nil {
-			log.Debug().Err(err).Msg("Failed to check shutdown info")
-			return false, errors.WithStack(err)
-		} else if isShutdownOngoing {
+		if shutdownInfo, err := arangod.GetShutdownInfo(ctx, c); err != nil {
+			if !driver.IsArangoErrorWithCode(err, http.StatusMethodNotAllowed) {
+				log.Debug().Err(err).Msg("Failed to check shutdown info")
+				return false, errors.WithStack(err)
+			}
+		} else if shutdownInfo.SoftShutdownOngoing {
 			return true, nil
 		}
 
@@ -101,7 +103,12 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 				// We're done
 				return true, nil
 			}
-			log.Debug().Err(err).Msg("Failed to shutdown member")
+			log.Debug().
+				Err(err).
+				Bool("removeFromCluster", false).
+				Bool("gracefulShutdown", true).
+				Msg("Failed to shutdown member")
+
 			return false, errors.WithStack(err)
 		}
 	} else if group.IsArangosync() {
@@ -189,22 +196,4 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 	}
 
 	return true, false, nil
-}
-
-// isShutdownOngoing returns true if the shutdown is ongoing.
-// If ArangoDB does not support checking shutdown then false is returned with error.
-func isShutdownOngoing(ctx context.Context, c driver.Client) (bool, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-
-	info, err := c.ShutdownInfoV2(ctxChild)
-	if err != nil {
-		if driver.IsArangoErrorWithCode(err, http.StatusMethodNotAllowed) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return info.SoftShutdownOngoing, nil
 }
