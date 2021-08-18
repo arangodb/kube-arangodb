@@ -29,11 +29,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ActionPriority define action priority
+type ActionPriority int
+
+const (
+	// ActionPriorityNormal define normal priority plan
+	ActionPriorityNormal ActionPriority = iota
+	// ActionPriorityHigh define high priority plan
+	ActionPriorityHigh
+)
+
 // ActionType is a strongly typed name for a plan action item
 type ActionType string
 
 func (a ActionType) String() string {
 	return string(a)
+}
+
+// Priority returns plan priority
+func (a ActionType) Priority() ActionPriority {
+	switch a {
+	default:
+		return ActionPriorityNormal
+	}
 }
 
 const (

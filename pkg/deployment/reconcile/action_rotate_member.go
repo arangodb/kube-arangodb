@@ -93,6 +93,7 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 	if ready, abort, err := getShutdownHelper(&a.action, a.actionCtx, a.log).CheckProgress(ctx); err != nil {
 		return false, abort, err
 	} else if !ready {
+		log.Error().Msg("Not yet ready!")
 		return false, false, nil
 	}
 
