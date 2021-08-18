@@ -151,7 +151,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 		}
 		// Try to find a not ready member
 		for _, m := range l {
-			if m.Phase == MemberPhaseNone {
+			if m.Phase.IsPending() {
 				return m, nil
 			}
 		}

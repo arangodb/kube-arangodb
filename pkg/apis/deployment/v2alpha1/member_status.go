@@ -41,6 +41,9 @@ type MemberStatus struct {
 	// ID holds the unique ID of the member.
 	// This id is also used within the ArangoDB cluster to identify this server.
 	ID string `json:"id"`
+	// RID holds the ID of the member run.
+	// Value is updated in Pending Phase.
+	RID types.UID `json:"rid,omitempty"`
 	// Phase holds the current lifetime phase of this member
 	Phase MemberPhase `json:"phase"`
 	// CreatedAt holds the creation timestamp of this member.
@@ -82,6 +85,7 @@ type MemberStatus struct {
 // Equal checks for equality
 func (s MemberStatus) Equal(other MemberStatus) bool {
 	return s.ID == other.ID &&
+		s.RID == other.RID &&
 		s.Phase == other.Phase &&
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
 		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
