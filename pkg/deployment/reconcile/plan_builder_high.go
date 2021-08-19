@@ -86,6 +86,10 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		plan = pb.Apply(updateMemberPhasePlan)
 	}
 
+	if plan.IsEmpty() {
+		plan = pb.Apply(createCleanOutPlan)
+	}
+
 	// Return plan
 	return plan, true
 }

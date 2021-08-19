@@ -157,6 +157,8 @@ const (
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
 	// ActionTypeMemberPhaseUpdate updated member phase. High priority
 	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
+	// ActionTypeSetMemberCondition sets member condition. It is high priority action.
+	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
 	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
 	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
 )
