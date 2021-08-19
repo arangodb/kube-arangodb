@@ -63,6 +63,9 @@ type DeploymentStatus struct {
 	// Plan to update this deployment
 	Plan Plan `json:"plan,omitempty"`
 
+	// HighPriorityPlan to update this deployment. Executed before plan
+	HighPriorityPlan Plan `json:"highPriorityPlan,omitempty"`
+
 	// AcceptedSpec contains the last specification that was accepted by the operator.
 	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
 
