@@ -38,22 +38,22 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-type planGetter interface {
+type planner interface {
 	Get(deployment *api.DeploymentStatus) api.Plan
 	Set(deployment *api.DeploymentStatus, p api.Plan) bool
 }
 
-var _ planGetter = planGetterNormal{}
-var _ planGetter = planGetterHigh{}
+var _ planner = plannerNormal{}
+var _ planner = plannerHigh{}
 
-type planGetterNormal struct {
+type plannerNormal struct {
 }
 
-func (p planGetterNormal) Get(deployment *api.DeploymentStatus) api.Plan {
+func (p plannerNormal) Get(deployment *api.DeploymentStatus) api.Plan {
 	return deployment.Plan
 }
 
-func (p planGetterNormal) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
+func (p plannerNormal) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
 	if !deployment.Plan.Equal(plan) {
 		deployment.Plan = plan
 		return true
@@ -62,14 +62,14 @@ func (p planGetterNormal) Set(deployment *api.DeploymentStatus, plan api.Plan) b
 	return false
 }
 
-type planGetterHigh struct {
+type plannerHigh struct {
 }
 
-func (p planGetterHigh) Get(deployment *api.DeploymentStatus) api.Plan {
+func (p plannerHigh) Get(deployment *api.DeploymentStatus) api.Plan {
 	return deployment.HighPriorityPlan
 }
 
-func (p planGetterHigh) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
+func (p plannerHigh) Set(deployment *api.DeploymentStatus, plan api.Plan) bool {
 	if !deployment.HighPriorityPlan.Equal(plan) {
 		deployment.HighPriorityPlan = plan
 		return true
@@ -84,13 +84,13 @@ func (p planGetterHigh) Set(deployment *api.DeploymentStatus, plan api.Plan) boo
 func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
 	var callAgain bool
 
-	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, planGetterHigh{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerHigh{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
 	}
 
-	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, planGetterNormal{}); err != nil {
+	if again, err := d.executePlanStatus(ctx, cachedStatus, d.log, plannerNormal{}); err != nil {
 		return false, errors.WithStack(err)
 	} else if again {
 		callAgain = true
@@ -99,7 +99,7 @@ func (d *Reconciler) ExecutePlan(ctx context.Context, cachedStatus inspectorInte
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, pg planGetter) (bool, error) {
+func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, pg planner) (bool, error) {
 	loopStatus, _ := d.context.GetStatus()
 
 	plan := pg.Get(&loopStatus)
@@ -191,43 +191,42 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 				Msg("Failed to start action")
 			return false, false, false, errors.WithStack(err)
 		}
-		log.Debug().
-			Bool("abort", abort).
-			Bool("ready", ready).
-			Msg("Action Start completed")
 
 		if ready {
 			log.Debug().Bool("ready", ready).Msg("Action Start completed")
 			return true, false, false, nil
 		}
+
 		return false, false, true, nil
-	} else {
-		// First action of plan has been started, check its progress
-		ready, abort, err := action.CheckProgress(ctx)
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to check action progress")
-			return false, false, false, errors.WithStack(err)
-		}
-		log.Debug().
-			Bool("abort", abort).
-			Bool("ready", ready).
-			Msg("Action CheckProgress completed")
-		if ready {
-			return true, false, false, nil
-		} else {
-			if abort {
-				log.Warn().Msg("Action aborted. Removing the entire plan")
-				d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-				return false, true, false, nil
-			} else if time.Now().After(planAction.CreationTime.Add(action.Timeout(d.context.GetSpec()))) {
-				log.Warn().Msg("Action not finished in time. Removing the entire plan")
-				d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-				return false, true, false, nil
-			}
-			// Timeout not yet expired, come back soon
-			return false, false, true, nil
-		}
 	}
+	// First action of plan has been started, check its progress
+	ready, abort, err := action.CheckProgress(ctx)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to check action progress")
+		return false, false, false, errors.WithStack(err)
+	}
+
+	log.Debug().
+		Bool("abort", abort).
+		Bool("ready", ready).
+		Msg("Action CheckProgress completed")
+
+	if ready {
+		return true, false, false, nil
+	}
+
+	if abort {
+		log.Warn().Msg("Action aborted. Removing the entire plan")
+		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+		return false, true, false, nil
+	} else if time.Now().After(planAction.CreationTime.Add(action.Timeout(d.context.GetSpec()))) {
+		log.Warn().Msg("Action not finished in time. Removing the entire plan")
+		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
+		return false, true, false, nil
+	}
+
+	// Timeout not yet expired, come back soon
+	return false, false, true, nil
 }
 
 // createAction create action object based on action type
