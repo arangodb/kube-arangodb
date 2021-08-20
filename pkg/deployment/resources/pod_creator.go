@@ -707,7 +707,7 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 
 	createPodMember := func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			if m.Phase != api.MemberPhaseNone {
+			if m.Phase != api.MemberPhasePending {
 				continue
 			}
 			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {

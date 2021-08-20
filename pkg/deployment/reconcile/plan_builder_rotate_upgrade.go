@@ -56,6 +56,19 @@ var (
 	}
 )
 
+// upgradeDecision is the result of an upgrade check.
+type upgradeDecision struct {
+	FromVersion       driver.Version
+	FromLicense       upgraderules.License
+	ToVersion         driver.Version
+	ToLicense         upgraderules.License
+	UpgradeNeeded     bool // If set, the image version has changed
+	UpgradeAllowed    bool // If set, it is an allowed version change
+	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
+
+	Hold bool
+}
+
 // createRotateOrUpgradePlan goes over all pods to check if an upgrade or rotate is needed.
 func createRotateOrUpgradePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,

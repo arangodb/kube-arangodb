@@ -310,7 +310,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	status.Hashes.TLS.Propagated = true
 	status.Hashes.Encryption.Propagated = true
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -321,7 +321,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -336,7 +336,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 }
@@ -365,7 +365,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -378,7 +378,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -403,7 +403,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -435,7 +435,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -468,7 +468,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -505,7 +505,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)

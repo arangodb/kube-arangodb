@@ -49,6 +49,8 @@ func (a ActionType) String() string {
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
 	switch a {
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate:
+		return ActionPriorityHigh
 	default:
 		return ActionPriorityNormal
 	}
@@ -153,6 +155,10 @@ const (
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
 	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
+	// ActionTypeMemberPhaseUpdate updated member phase. High priority
+	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
+	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
+	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
 )
 
 const (
