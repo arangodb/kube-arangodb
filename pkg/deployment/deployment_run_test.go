@@ -96,6 +96,18 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		if testCase.Resources != nil {
 			testCase.Resources(t, d)
 		}
+		// Set Pending phase
+		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+			for _, m := range list {
+				if m.Phase == api.MemberPhaseNone {
+					m.Phase = api.MemberPhasePending
+					if err := d.status.last.Members.Update(m, group); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		}))
 
 		// Set members
 		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
