@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
 package v2alpha1
@@ -131,6 +132,8 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
+	// EphemeralVolumes keeps information about ephemeral volumes.
+	EphemeralVolumes *EphemeralVolumes `json:"ephemeralVolumes,omitempty"`
 	// ExtendedRotationCheck extend checks for rotation
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 	// InitContainers Init containers specification

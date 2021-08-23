@@ -4,6 +4,7 @@
 - Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
 - Add HighPriorityPlan to ArangoDeployment Status
 - Add Pending Member phase
+- Add Ephemeral Volumes for apps feature
 - Check if the DB server is cleaned out.
 
 ## [1.2.1](https://github.com/arangodb/kube-arangodb/tree/1.2.1) (2021-07-28)
