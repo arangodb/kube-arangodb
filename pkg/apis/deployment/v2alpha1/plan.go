@@ -49,7 +49,7 @@ func (a ActionType) String() string {
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
 	switch a {
-	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate:
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition:
 		return ActionPriorityHigh
 	default:
 		return ActionPriorityNormal
@@ -147,7 +147,7 @@ const (
 	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
 	// ActionTypeEnableMaintenance enables maintenance on cluster.
 	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
-	// ActionTypeEnableMaintenance disables maintenance on cluster.
+	// ActionTypeDisableMaintenance disables maintenance on cluster.
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 	// ActionTypeSetMaintenanceCondition sets maintenance condition.
 	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"

@@ -51,11 +51,6 @@ type actionSetMemberCondition struct {
 	actionEmptyCheckProgress
 }
 
-// Priority returns the high priority for the set member action.
-func (a actionSetMemberCondition) Priority() api.ActionPriority {
-	return api.ActionPriorityHigh
-}
-
 // Start starts the action for changing conditions on the provided member.
 func (a actionSetMemberCondition) Start(ctx context.Context) (bool, error) {
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
