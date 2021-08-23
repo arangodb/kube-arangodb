@@ -132,10 +132,8 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
-	// AppsEphemeralVolumeSize define size of apps ephemeral volume in case if `ephemeral-volumes` feature is enabled
-	AppsEphemeralVolumeSize *resource.Quantity `json:"appsEphemeralVolumeSize,omitempty"`
-	// TMPEphemeralVolumeSize define size of tmp ephemeral volume in case if `ephemeral-volumes` feature is enabled
-	TMPEphemeralVolumeSize *resource.Quantity `json:"tmpEphemeralVolumeSize,omitempty"`
+	// EphemeralVolumes keeps information about ephemeral volumes.
+	EphemeralVolumes *EphemeralVolumes `json:"ephemeralVolumes,omitempty"`
 	// ExtendedRotationCheck extend checks for rotation
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 	// InitContainers Init containers specification
@@ -681,22 +679,4 @@ func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
 	}
 
 	return *s.Entrypoint
-}
-
-// GetAppsEphemeralVolumeSize returns AppsEphemeralVolumeSize. If it is not set, returns default nil value
-func (s *ServerGroupSpec) GetAppsEphemeralVolumeSize() *resource.Quantity {
-	if s == nil || s.AppsEphemeralVolumeSize == nil {
-		return s.AppsEphemeralVolumeSize // TODO: Define limits
-	}
-
-	return s.AppsEphemeralVolumeSize
-}
-
-// GetTMPEphemeralVolumeSize returns TMPEphemeralVolumeSize. If it is not set, returns default nil value
-func (s *ServerGroupSpec) GetTMPEphemeralVolumeSize() *resource.Quantity {
-	if s == nil || s.TMPEphemeralVolumeSize == nil {
-		return s.TMPEphemeralVolumeSize // TODO: Define limits
-	}
-
-	return s.TMPEphemeralVolumeSize
 }

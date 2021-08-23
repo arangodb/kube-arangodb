@@ -57,7 +57,7 @@ func (s security) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 				Name: k8sutil.FoxxAppEphemeralVolumeName,
 				VolumeSource: core.VolumeSource{
 					EmptyDir: &core.EmptyDirVolumeSource{
-						SizeLimit: i.GroupSpec.GetAppsEphemeralVolumeSize(),
+						SizeLimit: i.GroupSpec.EphemeralVolumes.GetAppsSize(),
 					},
 				},
 			})
@@ -68,7 +68,7 @@ func (s security) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 				Name: k8sutil.TMPEphemeralVolumeName,
 				VolumeSource: core.VolumeSource{
 					EmptyDir: &core.EmptyDirVolumeSource{
-						SizeLimit: i.GroupSpec.GetTMPEphemeralVolumeSize(),
+						SizeLimit: i.GroupSpec.EphemeralVolumes.GetTempSize(),
 					},
 				},
 			})
