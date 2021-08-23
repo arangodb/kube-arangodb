@@ -363,6 +363,9 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	// Encryption
 	volumes.Append(pod.Encryption(), m.AsInput())
 
+	// Security
+	volumes.Append(pod.Security(), m.AsInput())
+
 	if m.spec.Metrics.IsEnabled() {
 		if features.MetricsExporter().Enabled() {
 			token := m.spec.Metrics.GetJWTTokenSecretName()
