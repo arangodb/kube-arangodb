@@ -42,7 +42,9 @@ var (
 		k8sutil.RocksdbEncryptionVolumeName,
 		k8sutil.ExporterJWTVolumeName,
 		k8sutil.ClusterJWTSecretVolumeName,
-		"lifecycle",
+		k8sutil.LifecycleVolumeName,
+		k8sutil.FoxxAppEphemeralVolumeName,
+		k8sutil.TMPEphemeralVolumeName,
 	}
 )
 

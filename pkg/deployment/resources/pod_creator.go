@@ -86,6 +86,9 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	// Authentication
 	options.Merge(pod.JWT().Args(input))
 
+	// Security
+	options.Merge(pod.Security().Args(input))
+
 	// Storage engine
 	options.Add("--server.storage-engine", input.Deployment.GetStorageEngine().AsArangoArgument())
 

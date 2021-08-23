@@ -1504,6 +1504,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.AppsEphemeralVolumeSize != nil {
+		in, out := &in.AppsEphemeralVolumeSize, &out.AppsEphemeralVolumeSize
+		x := (*in).DeepCopy()
+		*out = &x
+	}
+	if in.TMPEphemeralVolumeSize != nil {
+		in, out := &in.TMPEphemeralVolumeSize, &out.TMPEphemeralVolumeSize
+		x := (*in).DeepCopy()
+		*out = &x
+	}
 	if in.ExtendedRotationCheck != nil {
 		in, out := &in.ExtendedRotationCheck, &out.ExtendedRotationCheck
 		*out = new(bool)
