@@ -178,7 +178,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// Cleanout completed
 	if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
-		if a.actionCtx.UpdateMember(ctx, m); err != nil {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 	}
