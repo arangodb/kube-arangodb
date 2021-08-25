@@ -27,10 +27,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -46,6 +44,8 @@ type PlanBuilderContext interface {
 	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
+	resources.DeploymentPodRenderer
+	resources.DeploymentImageManager
 
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
@@ -65,10 +65,6 @@ type PlanBuilderContext interface {
 	GetSpec() api.DeploymentSpec
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
-	// RenderPodForMember Renders Pod definition for member
-	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
-	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)

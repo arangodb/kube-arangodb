@@ -72,6 +72,17 @@ type DeploymentPodRenderer interface {
 	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
 	// RenderPodTemplateForMember Renders PodTemplate definition for member
 	RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member from current state
+	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
+	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
+	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+}
+
+type DeploymentImageManager interface {
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// SelectImage select currently used image by pod in member
+	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
 }
 
 type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
@@ -90,6 +101,7 @@ type Context interface {
 	DeploymentStatusUpdate
 	DeploymentAgencyMaintenance
 	ArangoMemberContext
+	DeploymentImageManager
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject

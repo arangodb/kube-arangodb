@@ -28,10 +28,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog/log"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
@@ -46,7 +44,7 @@ func init() {
 func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodSpec{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
 
 	return a
 }
@@ -109,45 +107,46 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		imageInfo = *m.Image
 	}
 
-	renderedPod, err := a.actionCtx.RenderPodForMember(ctx, a.actionCtx.GetCachedStatus(), spec, status, a.action.MemberID, imageInfo)
+	renderedPod, err := a.actionCtx.RenderPodTemplateForMember(ctx, a.actionCtx.GetCachedStatus(), spec, status, a.action.MemberID, imageInfo)
 	if err != nil {
 		log.Err(err).Msg("Error while rendering pod")
 		return false, err
 	}
 
-	checksum, err := resources.ChecksumArangoPod(groupSpec, renderedPod)
+	checksum, err := resources.ChecksumArangoPod(groupSpec, resources.CreatePodFromTemplate(renderedPod))
 	if err != nil {
 		log.Err(err).Msg("Error while getting pod checksum")
 		return false, err
 	}
 
+	template, err := api.GetArangoMemberPodTemplate(renderedPod, checksum)
+	if err != nil {
+		log.Err(err).Msg("Error while getting pod template")
+		return false, err
+	}
+
 	if err := a.actionCtx.WithArangoMemberUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember) bool {
-		if member.Spec.TemplateChecksum != checksum {
-			member.Spec.Template = &core.PodTemplateSpec{
-				ObjectMeta: renderedPod.ObjectMeta,
-				Spec:       renderedPod.Spec,
-			}
-			member.Spec.TemplateChecksum = checksum
+		if !member.Spec.Template.Equals(template) {
+			member.Spec.Template = template.DeepCopy()
 			return true
 		}
+
 		return false
 	}); err != nil {
 		log.Err(err).Msg("Error while updating member")
 		return false, err
 	}
 
-	if member.Status.TemplateChecksum == "" && member.Status.TemplateChecksum != m.PodSpecVersion {
-		if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-			if status.TemplateChecksum == "" && status.TemplateChecksum != m.PodSpecVersion {
-				status.TemplateChecksum = m.PodSpecVersion
-				return true
-			}
-			return false
-		}); err != nil {
-			log.Err(err).Msg("Error while updating member")
-			return false, err
+	if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember, status *api.ArangoMemberStatus) bool {
+		if (status.Template == nil || status.Template.PodSpec == nil) && (m.PodSpecVersion == "" || m.PodSpecVersion == template.PodSpecChecksum) {
+			status.Template = template.DeepCopy()
 		}
+
+		return true
+	}); err != nil {
+		log.Err(err).Msg("Error while updating member status")
+		return false, err
 	}
 
-	return false, nil
+	return true, nil
 }

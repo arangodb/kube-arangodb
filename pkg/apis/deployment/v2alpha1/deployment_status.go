@@ -102,3 +102,7 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 func (ds *DeploymentStatus) IsForceReload() bool {
 	return util.BoolOrDefault(ds.ForceStatusReload, false)
 }
+
+func (ds *DeploymentStatus) IsPlanEmpty() bool {
+	return ds.Plan.IsEmpty() && ds.HighPriorityPlan.IsEmpty()
+}

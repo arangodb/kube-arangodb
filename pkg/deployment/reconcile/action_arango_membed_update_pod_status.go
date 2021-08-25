@@ -41,7 +41,7 @@ func init() {
 func newArangoMemberUpdatePodStatusAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionArangoMemberUpdatePodStatus{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, rotateMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
 
 	return a
 }
@@ -74,11 +74,10 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 		return false, err
 	}
 
-	if member.Status.TemplateChecksum != member.Spec.TemplateChecksum || member.Status.Template == nil {
+	if member.Status.Template == nil || !member.Status.Template.Equals(member.Spec.Template) {
 		if err := a.actionCtx.WithArangoMemberStatusUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(obj *api.ArangoMember, status *api.ArangoMemberStatus) bool {
-			if status.TemplateChecksum != obj.Spec.TemplateChecksum || status.Template == nil {
-				status.TemplateChecksum = obj.Spec.TemplateChecksum
-				status.Template = obj.Spec.Template.DeepCopy()
+			if status.Template == nil || !status.Template.Equals(member.Spec.Template) {
+				status.Template = member.Spec.Template.DeepCopy()
 				return true
 			}
 			return false
@@ -88,5 +87,5 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 		}
 	}
 
-	return false, nil
+	return true, nil
 }

@@ -581,12 +581,24 @@ func (d *Deployment) RenderPodForMember(ctx context.Context, cachedStatus inspec
 	return d.resources.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
 
+func (d *Deployment) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	return d.resources.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
+}
+
 func (d *Deployment) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
 	return d.resources.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
 
+func (d *Deployment) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	return d.resources.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
+}
+
 func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
 	return d.resources.SelectImage(spec, status)
+}
+
+func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+	return d.resources.SelectImageForMember(spec, status, member)
 }
 
 func (d *Deployment) GetMetricsExporterImage() string {

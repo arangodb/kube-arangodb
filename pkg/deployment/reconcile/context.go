@@ -45,6 +45,7 @@ type Context interface {
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer
+	resources.DeploymentImageManager
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -113,8 +114,6 @@ type Context interface {
 	EnableScalingCluster(ctx context.Context) error
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
-	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// SecretsInterface return secret interface
 	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource

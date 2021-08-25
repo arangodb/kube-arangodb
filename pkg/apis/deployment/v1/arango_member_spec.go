@@ -23,7 +23,6 @@
 package v1
 
 import (
-	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -32,6 +31,5 @@ type ArangoMemberSpec struct {
 	ID            string      `json:"id,omitempty"`
 	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
 
-	Template         *core.PodTemplateSpec `json:"template,omitempty"`
-	TemplateChecksum string                `json:"templateChecksum,omitempty"`
+	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 }

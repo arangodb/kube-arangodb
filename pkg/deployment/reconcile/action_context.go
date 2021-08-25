@@ -163,6 +163,14 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	return ac.context.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
+}
+
+func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
+}
+
 func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
 	return ac.context.GetAgencyMaintenanceMode(ctx)
 }

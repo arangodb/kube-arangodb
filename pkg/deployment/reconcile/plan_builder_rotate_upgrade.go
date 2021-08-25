@@ -27,8 +27,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
-	json "github.com/json-iterator/go"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -76,7 +74,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	newPlan, idle := createRotateOrUpgradePlanInternal(ctx, log, apiObject, spec, status, cachedStatus, context)
+	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, cachedStatus, context)
 	if idle {
 		plan = append(plan,
 			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
@@ -86,38 +84,17 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	return plan
 }
 
-func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
-	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (api.Plan, bool) {
+func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (api.Plan, bool) {
 
 	var newPlan api.Plan
 	var upgradeNotAllowed bool
 	var fromVersion, toVersion driver.Version
 	var fromLicense, toLicense upgraderules.License
 
-	// Update member specs
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
-		for _, m := range members {
-			if m.Phase != api.MemberPhaseNone {
-				// We are not in empty phase, not creating
-			}
-		}
-
-		return nil
-	})
-
-	if !newPlan.IsEmpty() {
-		return newPlan, false
-	}
-
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseCreated || m.PodName == "" {
 				// Only rotate when phase is created
-				continue
-			}
-
-			pod, found := cachedStatus.Pod(m.PodName)
-			if !found {
 				continue
 			}
 
@@ -147,10 +124,8 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec, status,
 					!decision.AutoUpgradeNeeded)
 			} else {
-				// Use new level of rotate logic
-				rotNeeded, reason := podNeedsRotation(ctx, log, apiObject, pod, spec, group, status, m, cachedStatus, context)
-				if rotNeeded {
-					newPlan = createRotateMemberPlan(log, m, group, reason)
+				if m.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+					newPlan = createRotateMemberPlan(log, m, group, "Restart flag present")
 				}
 			}
 
@@ -182,11 +157,6 @@ func createRotateOrUpgradePlanInternal(ctx context.Context, log zerolog.Logger, 
 			if pod.Annotations != nil {
 				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && group == api.ServerGroupDBServers {
 					newPlan = api.Plan{api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID, "Replace flag present")}
-					continue
-				}
-
-				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
-					newPlan = createRotateMemberPlan(log, m, group, "Rotation flag present")
 					continue
 				}
 			}
@@ -315,7 +285,7 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (string, *core.Pod, *api.ArangoMember, bool) {
-	imageInfo, imageFound := planCtx.SelectImage(spec, status)
+	imageInfo, imageFound := planCtx.SelectImageForMember(spec, status, m)
 	if !imageFound {
 		// Image is not found, so rotation is not needed
 		return "", nil, nil, false
@@ -324,10 +294,6 @@ func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.AP
 	member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
 	if !ok {
 		return "", nil, nil, false
-	}
-
-	if m.Image != nil {
-		imageInfo = *m.Image
 	}
 
 	groupSpec := spec.GetServerGroupSpec(group)
@@ -355,11 +321,7 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (string, bool) {
 	checksum, _, member, valid := getPodDetails(ctx, log, apiObject, spec, group, status, m, cachedStatus, planCtx)
-	if member.Status.TemplateChecksum == "" && member.Status.TemplateChecksum != m.PodSpecVersion {
-		return "Pod Status Checksum is empty", true
-	}
-
-	if valid && checksum != member.Spec.TemplateChecksum {
+	if valid && !member.Spec.Template.EqualPodSpecChecksum(checksum) {
 		return "Pod Spec changed", true
 	}
 
@@ -370,10 +332,7 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 // given pod differs from what it should be according to the
 // given deployment spec.
 // When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, p *core.Pod, spec api.DeploymentSpec,
-	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
-	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (bool, string) {
-
+func podNeedsRotation(log zerolog.Logger, apiObject k8sutil.APIObject, p *core.Pod, spec api.DeploymentSpec, group api.ServerGroup, m api.MemberStatus, cachedStatus inspectorInterface.Inspector) (bool, string) {
 	if m.PodUID != p.UID {
 		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
 	}
@@ -387,10 +346,12 @@ func podNeedsRotation(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		return false, ""
 	}
 
-	if member.Status.TemplateChecksum != member.Spec.TemplateChecksum {
-		if _, err := json.Marshal(member.Spec); err == nil {
-			log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Str("After", checksum).Msgf("Pod needs rotation - checksum does not match")
-		}
+	if member.Status.Template == nil {
+		return false, ""
+	}
+
+	if member.Status.Template.RotationNeeded(member.Spec.Template) {
+		log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Msgf("Pod needs rotation - templates does not match")
 		return true, "Pod needs rotation - checksum does not match"
 	}
 
