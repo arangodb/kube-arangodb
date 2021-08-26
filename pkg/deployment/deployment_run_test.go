@@ -29,9 +29,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog/log"
 
@@ -65,7 +66,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 		errs := 0
 		for {
-			cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+			cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 			require.NoError(t, err)
 			err = d.resources.EnsureSecrets(context.Background(), log.Logger, cache)
 			if err == nil {
@@ -96,6 +97,16 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		if testCase.Resources != nil {
 			testCase.Resources(t, d)
 		}
+
+		// Set features
+		{
+			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation
+			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
+			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
+			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
+			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
+		}
+
 		// Set Pending phase
 		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 			for _, m := range list {
@@ -110,8 +121,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}))
 
 		// Set members
-		require.NoError(t, d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		if err := d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 			for _, m := range list {
+				c := d.GetArangoCli()
+				k := d.GetKubeCli()
+
 				member := api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: d.GetNamespace(),
@@ -123,7 +137,6 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					},
 				}
 
-				c := d.GetArangoCli()
 				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Create(context.Background(), &member, metav1.CreateOptions{}); err != nil {
 					return err
 				}
@@ -135,26 +148,51 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					},
 				}
 
-				k := d.GetKubeCli()
 				if _, err := k.CoreV1().Services(member.GetNamespace()).Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
+					return err
+				}
+
+				cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+				require.NoError(t, err)
+
+				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
+
+				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
+				require.True(t, ok)
+
+				template, err := d.resources.RenderPodTemplateForMember(context.Background(), cache, d.apiObject.Spec, d.status.last, m.ID, image)
+				if err != nil {
+					return err
+				}
+
+				checksum, err := resources.ChecksumArangoPod(groupSpec, resources.CreatePodFromTemplate(template))
+				require.NoError(t, err)
+
+				podTemplate, err := api.GetArangoMemberPodTemplate(template, checksum)
+				require.NoError(t, err)
+
+				member.Status.Template = podTemplate
+				member.Spec.Template = podTemplate
+
+				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Update(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
+					return err
+				}
+
+				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).UpdateStatus(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
 					return err
 				}
 			}
 
 			return nil
-		}))
-
-		// Set features
-		{
-			*features.EncryptionRotation().EnabledPointer() = testCase.Features.EncryptionRotation
-			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
-			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
-			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
-			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
+		}); err != nil {
+			if testCase.ExpectedError != nil && assert.EqualError(t, err, testCase.ExpectedError.Error()) {
+				return
+			}
+			require.NoError(t, err)
 		}
 
 		// Act
-		cache, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+		cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 		require.NoError(t, err)
 		err = d.resources.EnsurePods(context.Background(), cache)
 

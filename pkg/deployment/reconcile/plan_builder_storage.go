@@ -61,6 +61,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 			}
 			groupSpec := spec.GetServerGroupSpec(group)
 			storageClassName := groupSpec.GetStorageClassName()
+
 			// Load PVC
 			pvc, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
 			if !exists {
@@ -98,9 +99,6 @@ func createRotateServerStoragePlan(ctx context.Context,
 					// Only agents & dbservers are allowed to change their storage class.
 					context.CreateEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
-			} else if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
-				// rotation needed
-				plan = createRotateMemberPlan(log, m, group, "Filesystem resize pending")
 			} else {
 				if groupSpec.HasVolumeClaimTemplate() {
 					res := groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests

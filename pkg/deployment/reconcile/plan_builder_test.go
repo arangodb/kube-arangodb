@@ -75,6 +75,30 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	return &core.PodTemplateSpec{}, nil
+}
+
+func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+	return c.SelectImage(spec, status)
+}
+
+func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
 	panic("implement me")
 }
@@ -108,7 +132,7 @@ func (c *testContext) GetAuthentication() conn.Auth {
 }
 
 func (c *testContext) RenderPodForMember(_ context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	panic("implement me")
+	return &core.Pod{}, nil
 }
 
 func (c *testContext) GetName() string {
@@ -124,7 +148,12 @@ func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
 }
 
 func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
-	panic("implement me")
+	return api.ImageInfo{
+		Image:           "",
+		ImageID:         "",
+		ArangoDBVersion: "",
+		Enterprise:      false,
+	}, true
 }
 
 func (c *testContext) UpdatePvc(_ context.Context, pvc *core.PersistentVolumeClaim) error {
@@ -528,28 +557,60 @@ func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	l.msg = msg
 }
 
+type testCase struct {
+	Name             string
+	context          *testContext
+	Helper           func(*api.ArangoDeployment)
+	ExpectedError    error
+	ExpectedPlan     api.Plan
+	ExpectedHighPlan api.Plan
+	ExpectedLog      string
+	ExpectedEvent    *k8sutil.Event
+
+	Pods            map[string]*core.Pod
+	Secrets         map[string]*core.Secret
+	Services        map[string]*core.Service
+	PVCS            map[string]*core.PersistentVolumeClaim
+	ServiceAccounts map[string]*core.ServiceAccount
+	PDBS            map[string]*policy.PodDisruptionBudget
+	ServiceMonitors map[string]*monitoring.ServiceMonitor
+	ArangoMembers   map[string]*api.ArangoMember
+
+	Extender func(t *testing.T, r *Reconciler, c *testCase)
+}
+
+func (t testCase) Inspector() inspectorInterface.Inspector {
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers)
+}
+
 func TestCreatePlan(t *testing.T) {
 	// Arrange
 	threeCoordinators := api.MemberStatusList{
 		{
-			ID: "1",
+			ID:      "1",
+			PodName: "coordinator1",
 		},
 		{
-			ID: "2",
+			ID:      "2",
+			PodName: "coordinator2",
 		},
 		{
-			ID: "3",
+			ID:      "3",
+			PodName: "coordinator3",
 		},
 	}
 	threeDBServers := api.MemberStatusList{
 		{
-			ID: "1",
+			ID:      "1",
+			PodName: "dbserver1",
 		},
 		{
-			ID: "2",
+			ID:      "2",
+			PodName: "dbserver2",
 		},
 		{
-			ID: "3",
+			ID:      "3",
+			PodName: "dbserver3",
 		},
 	}
 
@@ -574,24 +635,7 @@ func TestCreatePlan(t *testing.T) {
 	addAgentsToStatus(t, &deploymentTemplate.Status, 3)
 	deploymentTemplate.Spec.SetDefaults("createPlanTest")
 
-	testCases := []struct {
-		Name          string
-		context       *testContext
-		Helper        func(*api.ArangoDeployment)
-		ExpectedError error
-		ExpectedPlan  api.Plan
-		ExpectedLog   string
-		ExpectedEvent *k8sutil.Event
-
-		Pods            map[string]*core.Pod
-		Secrets         map[string]*core.Secret
-		Services        map[string]*core.Service
-		PVCS            map[string]*core.PersistentVolumeClaim
-		ServiceAccounts map[string]*core.ServiceAccount
-		PDBS            map[string]*policy.PodDisruptionBudget
-		ServiceMonitors map[string]*monitoring.ServiceMonitor
-		ArangoMembers   map[string]*api.ArangoMember
-	}{
+	testCases := []testCase{
 		{
 			Name: "Can not create plan for single deployment",
 			context: &testContext{
@@ -735,6 +779,52 @@ func TestCreatePlan(t *testing.T) {
 					},
 				},
 			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				// Add ArangoMember
+				builderCtx := newPlanBuilderContext(r.context)
+
+				template, err := builderCtx.RenderPodTemplateForMemberFromCurrent(context.Background(), c.Inspector(), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
+				require.NoError(t, err)
+
+				checksum, err := resources.ChecksumArangoPod(c.context.ArangoDeployment.Spec.Agents, resources.CreatePodFromTemplate(template))
+				require.NoError(t, err)
+
+				templateSpec, err := api.GetArangoMemberPodTemplate(template, checksum)
+				require.NoError(t, err)
+
+				name := c.context.ArangoDeployment.Status.Members.Agents[0].ArangoMemberName(c.context.ArangoDeployment.Name, api.ServerGroupAgents)
+
+				c.ArangoMembers = map[string]*api.ArangoMember{
+					name: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: name,
+						},
+						Spec: api.ArangoMemberSpec{
+							Template: templateSpec,
+						},
+						Status: api.ArangoMemberStatus{
+							Template: templateSpec,
+						},
+					},
+				}
+
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.Agents[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.Agents[0].PodName,
+						},
+					},
+				}
+
+				require.NoError(t, c.context.ArangoDeployment.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+					for _, m := range list {
+						m.Phase = api.MemberPhaseCreated
+						require.NoError(t, c.context.ArangoDeployment.Status.Members.Update(m, group))
+					}
+
+					return nil
+				}))
+			},
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
@@ -750,14 +840,10 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, api.ServerGroupAgents, "", "Remove server keyfile and enforce renewal/recreation"),
-				api.NewAction(api.ActionTypeResignLeadership, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberInSync, api.ServerGroupAgents, ""),
+			ExpectedHighPlan: []api.Action{
+				api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0].ID, "PVC Resize pending"),
 			},
-			ExpectedLog: "Creating rotation plan",
+			ExpectedLog: "PVC Resize pending",
 		},
 		{
 			Name: "Agent in failed state",
@@ -850,11 +936,16 @@ func TestCreatePlan(t *testing.T) {
 			logger := zerolog.New(ioutil.Discard).Hook(h)
 			r := NewReconciler(logger, testCase.context)
 
+			if testCase.Extender != nil {
+				testCase.Extender(t, r, &testCase)
+			}
+
 			// Act
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS, testCase.ServiceMonitors, testCase.ArangoMembers))
+
+			err, _ := r.CreatePlan(ctx, testCase.Inspector())
 
 			// Assert
 			if testCase.ExpectedEvent != nil {
@@ -873,10 +964,25 @@ func TestCreatePlan(t *testing.T) {
 
 			require.NoError(t, err)
 			status, _ := testCase.context.GetStatus()
+
+			if len(testCase.ExpectedHighPlan) > 0 {
+				require.Len(t, status.HighPriorityPlan, len(testCase.ExpectedHighPlan))
+				for i, v := range testCase.ExpectedHighPlan {
+					assert.Equal(t, v.Type, status.HighPriorityPlan[i].Type)
+					assert.Equal(t, v.Group, status.HighPriorityPlan[i].Group)
+					if v.Reason != "*" {
+						assert.Equal(t, v.Reason, status.HighPriorityPlan[i].Reason)
+					}
+				}
+			}
+
 			require.Len(t, status.Plan, len(testCase.ExpectedPlan))
 			for i, v := range testCase.ExpectedPlan {
 				assert.Equal(t, v.Type, status.Plan[i].Type)
 				assert.Equal(t, v.Group, status.Plan[i].Group)
+				if v.Reason != "*" {
+					assert.Equal(t, v.Reason, status.Plan[i].Reason)
+				}
 			}
 		})
 	}

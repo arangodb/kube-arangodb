@@ -104,7 +104,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -293,7 +293,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, nil
 	}
 
-	if d.apiObject.Status.Plan.IsEmpty() && status.AppliedVersion != checksum {
+	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.AppliedVersion = checksum
 			return true
@@ -303,7 +303,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else if status.AppliedVersion == checksum {
-		if !status.Plan.IsEmpty() && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		if !d.apiObject.Status.IsPlanEmpty() && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, "Plan is not empty", "There are pending operations in plan"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
@@ -311,7 +311,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, nil
 		}
 
-		if status.Plan.IsEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		if d.apiObject.Status.IsPlanEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}

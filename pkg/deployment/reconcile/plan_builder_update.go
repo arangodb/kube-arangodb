@@ -20,16 +20,4 @@
 // Author Adam Janikowski
 //
 
-package v1
-
-import (
-	"k8s.io/apimachinery/pkg/types"
-)
-
-type ArangoMemberSpec struct {
-	Group         ServerGroup `json:"group,omitempty"`
-	ID            string      `json:"id,omitempty"`
-	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
-
-	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
-}
+package reconcile

@@ -455,6 +455,17 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		Namespace: testNamespace,
 	}
 
+	arangoDeployment.Status.Images = api.ImageInfoList{
+		{
+			Image:           "arangodb/arangodb:latest",
+			ImageID:         "arangodb/arangodb:latest",
+			ArangoDBVersion: "1.0.0",
+			Enterprise:      false,
+		},
+	}
+
+	arangoDeployment.Status.CurrentImage = &arangoDeployment.Status.Images[0]
+
 	deps := Dependencies{
 		Log:               zerolog.New(ioutil.Discard),
 		KubeCli:           kubernetesClientSet,

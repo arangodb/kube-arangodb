@@ -77,13 +77,49 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		return currentPlan, false
 	}
 
-	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(ctx, spec, status, builderCtx)
+	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+		// Check for failed members
+		ApplyIfEmpty(createMemberFailedRestorePlan).
+		// Check for cleaned out dbserver in created state
+		ApplyIfEmpty(createRemoveCleanedDBServersPlan).
+		// Update status
+		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate).
+		ApplyIfEmpty(createTLSStatusUpdate).
+		ApplyIfEmpty(createJWTStatusUpdate).
+		// Check for scale up/down
+		ApplyIfEmpty(createScaleMemberPlan).
+		// Check for members to be removed
+		ApplyIfEmpty(createReplaceMemberPlan).
+		// Check for the need to rotate one or more members
+		ApplyIfEmpty(createRotateOrUpgradePlan).
+		// Disable maintenance if upgrade process was done. Upgrade task throw IDLE Action if upgrade is pending
+		ApplyIfEmpty(createMaintenanceManagementPlan).
+		// Add keys
+		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKey).
+		ApplyIfEmpty(createJWTKeyUpdate).
+		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCARenewalPlan).
+		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan).
+		ApplyIfEmpty(createKeyfileRenewalPlan).
+		ApplyIfEmpty(createRotateServerStoragePlan).
+		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan).
+		ApplyIfEmpty(createRestorePlan).
+		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan).
+		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCACleanPlan).
+		ApplyIfEmpty(createClusterOperationPlan).
+		// Final
+		ApplyIfEmpty(createTLSStatusPropagated).
+		ApplyIfEmpty(createBootstrapPlan).
+		Plan(), true
+}
 
-	// Check for various scenario's
+func createMemberFailedRestorePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	pb := NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx)
+	// Fetch agency plan
+	agencyPlan, agencyErr := fetchAgency(ctx, spec, status, context)
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
@@ -149,113 +185,29 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 	// Ensure that we were able to get agency info
 	if len(plan) == 0 && agencyErr != nil {
 		log.Err(agencyErr).Msg("unable to build further plan without access to agency")
-		return append(plan,
-			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, "")), true
+		plan = append(plan,
+			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
 	}
 
-	// Check for cleaned out dbserver in created state
+	return plan
+}
+
+func createRemoveCleanedDBServersPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	for _, m := range status.Members.DBServers {
-		if plan.IsEmpty() && m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+		if m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
 				Msg("Creating dbserver replacement plan because server is cleanout in created phase")
-			plan = append(plan,
+			return api.Plan{
 				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
 				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-			)
+			}
 		}
 	}
 
-	// Update status
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createTLSStatusUpdate)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createJWTStatusUpdate)
-	}
-
-	// Check for scale up/down
-	if plan.IsEmpty() {
-		plan = pb.Apply(createScaleMemberPlan)
-	}
-
-	// Check for members to be removed
-	if plan.IsEmpty() {
-		plan = pb.Apply(createReplaceMemberPlan)
-	}
-
-	// Check for the need to rotate one or more members
-	if plan.IsEmpty() {
-		plan = pb.Apply(createRotateOrUpgradePlan)
-	}
-
-	// Disable maintenance if upgrade process was done. Upgrade task throw IDLE Action if upgrade is pending
-	if plan.IsEmpty() {
-		plan = pb.Apply(createMaintenanceManagementPlan)
-	}
-
-	// Add keys
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKey)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createJWTKeyUpdate)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCARenewalPlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createKeyfileRenewalPlan)
-	}
-
-	// Check for changes storage classes or requirements
-	if plan.IsEmpty() {
-		plan = pb.Apply(createRotateServerStoragePlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createRestorePlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.ApplySubPlan(createTLSStatusPropagatedFieldUpdate, createCACleanPlan)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createClusterOperationPlan)
-	}
-
-	// Final
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createTLSStatusPropagated)
-	}
-
-	if plan.IsEmpty() {
-		plan = pb.Apply(createBootstrapPlan)
-	}
-
-	// Return plan
-	return plan, true
+	return nil
 }
