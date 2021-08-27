@@ -55,6 +55,9 @@ func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspecto
 	for id := len(status.Plan); id < len(newPlan); id++ {
 		action := newPlan[id]
 		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
+		if r := action.Reason; r != "" {
+			d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", "Normal").Msgf(r)
+		}
 	}
 
 	status.Plan = newPlan

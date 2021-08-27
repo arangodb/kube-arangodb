@@ -620,6 +620,7 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 		m.PodUID = uid
 		m.PodSpecVersion = template.PodSpecChecksum
 	}
+
 	// Record new member phase
 	m.Phase = newPhase
 	m.Conditions.Remove(api.ConditionTypeReady)
@@ -630,8 +631,10 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
 	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
 	m.Conditions.Remove(api.ConditionTypePendingRestart)
+	m.Conditions.Remove(api.ConditionTypeRestart)
+
 	m.Upgrade = false
-	r.log.Info().Str("DEBUG", "10101").Str("pod", m.PodName).Msgf("Updating member")
+	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}

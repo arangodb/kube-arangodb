@@ -25,7 +25,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -57,6 +58,9 @@ func (d *Reconciler) CreateHighPlan(ctx context.Context, cachedStatus inspectorI
 	for id := len(status.Plan); id < len(newPlan); id++ {
 		action := newPlan[id]
 		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
+		if r := action.Reason; r != "" {
+			d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", "High").Msgf(r)
+		}
 	}
 
 	status.HighPriorityPlan = newPlan
@@ -83,7 +87,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberPodTemplateSpec).
 		ApplyIfEmpty(updateMemberPhasePlan).
 		ApplyIfEmpty(createCleanOutPlan).
-		ApplyIfEmpty(updateMemberRotationFlag).
+		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		Plan(), true
 }
 
@@ -118,11 +122,16 @@ func updateMemberPhasePlan(ctx context.Context,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
 			if m.Phase == api.MemberPhaseNone {
-				plan = append(plan,
+				p := api.Plan{
 					api.NewAction(api.ActionTypeMemberRIDUpdate, group, m.ID, "Regenerate member RID"),
-					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"),
-					api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
-						"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
+				}
+
+				p = append(p, api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
+
+				p = append(p, api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
+					"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
+
+				plan = append(plan, p...)
 			}
 		}
 
@@ -132,66 +141,88 @@ func updateMemberPhasePlan(ctx context.Context,
 	return plan
 }
 
-func updateMemberRotationFlag(ctx context.Context,
+func pendingRestartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
+	return api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingRestart.String(), "T")
+}
+
+func restartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
+	return pendingRestartMemberConditionAction(group, memberID, reason).AddParam(api.ConditionTypeRestart.String(), "T")
+}
+
+func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
+	return api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
+}
+
+func updateMemberRotationConditionsPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
-			p, found := cachedStatus.Pod(m.PodName)
-			if !found {
-				continue
+			p, ok := cachedStatus.Pod(m.PodName)
+			if !ok {
+				p = nil
 			}
 
-			if required, reason := updateMemberRotationFlagConditionCheck(log, apiObject, spec, cachedStatus, m, group, p); required {
-				log.Info().Msgf(reason)
-				plan = append(plan, restartMemberConditionPlan(group, m.ID, reason)...)
+			if p, err := updateMemberRotationConditions(log, apiObject, spec, cachedStatus, m, group, p); err != nil {
+				return err
+			} else if len(p) > 0 {
+				plan = append(plan, p...)
 			}
 		}
 
 		return nil
-	})
+	}); err != nil {
+		log.Err(err).Msgf("Error while generating rotation plan")
+		return nil
+	}
 
 	return plan
 }
 
-func restartMemberConditionPlan(group api.ServerGroup, memberID string, reason string) api.Plan {
-	return api.Plan{
-		api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingRestart.String(), "T"),
-	}
-}
-
-func tlsRotateConditionPlan(group api.ServerGroup, memberID string, reason string) api.Plan {
-	return api.Plan{
-		api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T"),
-	}
-}
-
-func updateMemberRotationFlagConditionCheck(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector, m api.MemberStatus, group api.ServerGroup, p *core.Pod) (bool, string) {
-	if m.Conditions.IsTrue(api.ConditionTypePendingRestart) {
-		return false, ""
+func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector, member api.MemberStatus, group api.ServerGroup, p *core.Pod) (api.Plan, error) {
+	if member.Conditions.IsTrue(api.ConditionTypeRestart) {
+		return nil, nil
 	}
 
-	if m.Conditions.IsTrue(api.ConditionTypePendingTLSRotation) {
-		return true, "TLS Rotation pending"
+	arangoMember, ok := cachedStatus.ArangoMember(member.ArangoMemberName(apiObject.GetName(), group))
+	if !ok {
+		return nil, nil
 	}
 
-	pvc, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
-	if exists {
-		if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
-			return true, "PVC Resize pending"
+	if m, _, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, member, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+		log.Error().Err(err).Msgf("Error while getting rotation details")
+		return nil, err
+	} else {
+		switch m {
+		case rotation.EnforcedRotation:
+			if reason != "" {
+				log.Info().Bool("enforced", true).Msgf(reason)
+			} else {
+				log.Info().Bool("enforced", true).Msgf("Unknown reason")
+			}
+			// We need to do enforced rotation
+			return api.Plan{restartMemberConditionAction(group, member.ID, reason)}, nil
+		case rotation.GracefulRotation, rotation.InPlaceRotation, rotation.SilentRotation: // TODO: Add support for InPlace and Silent rotation
+			if reason != "" {
+				log.Info().Bool("enforced", false).Msgf(reason)
+			} else {
+				log.Info().Bool("enforced", false).Msgf("Unknown reason")
+			}
+			// We need to do graceful rotation
+			if member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+				return nil, nil
+			}
+
+			if spec.MemberPropagationMode.Get() == api.DeploymentMemberPropagationModeAlways {
+				return api.Plan{restartMemberConditionAction(group, member.ID, reason)}, nil
+			} else {
+				return api.Plan{pendingRestartMemberConditionAction(group, member.ID, reason)}, nil
+			}
+		default:
+			return nil, nil
 		}
 	}
-
-	if changed, reason := podNeedsRotation(log, apiObject, p, spec, group, m, cachedStatus); changed {
-		return true, reason
-	}
-
-	if _, ok := p.Annotations[deployment.ArangoDeploymentPodRotateAnnotation]; ok {
-		return true, "Rotation flag present"
-	}
-
-	return false, ""
 }

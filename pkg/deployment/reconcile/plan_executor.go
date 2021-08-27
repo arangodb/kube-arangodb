@@ -159,7 +159,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 		}
 
 		if abort {
-			return plan, true, nil
+			return nil, true, nil
 		}
 
 		if done {

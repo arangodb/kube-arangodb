@@ -73,6 +73,8 @@ const (
 	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
 	// ConditionTypePendingRestart indicates that restart is required
 	ConditionTypePendingRestart ConditionType = "PendingRestart"
+	// ConditionTypeRestart indicates that restart will be started
+	ConditionTypeRestart ConditionType = "Restart"
 	// ConditionTypePendingTLSRotation indicates that TLS rotation is pending
 	ConditionTypePendingTLSRotation ConditionType = "PendingTLSRotation"
 )
