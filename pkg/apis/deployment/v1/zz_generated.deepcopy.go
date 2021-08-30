@@ -583,6 +583,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 	in.Coordinators.DeepCopyInto(&out.Coordinators)
 	in.SyncMasters.DeepCopyInto(&out.SyncMasters)
 	in.SyncWorkers.DeepCopyInto(&out.SyncWorkers)
+	if in.MemberPropagationMode != nil {
+		in, out := &in.MemberPropagationMode, &out.MemberPropagationMode
+		*out = new(DeploymentMemberPropagationMode)
+		**out = **in
+	}
 	in.Chaos.DeepCopyInto(&out.Chaos)
 	if in.Recovery != nil {
 		in, out := &in.Recovery, &out.Recovery

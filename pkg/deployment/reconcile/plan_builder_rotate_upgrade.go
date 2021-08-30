@@ -27,8 +27,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	"github.com/arangodb/go-driver"
@@ -124,7 +122,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec, status,
 					!decision.AutoUpgradeNeeded)
 			} else {
-				if m.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+				if m.Conditions.IsTrue(api.ConditionTypeRestart) {
 					newPlan = createRotateMemberPlan(log, m, group, "Restart flag present")
 				}
 			}
@@ -326,55 +324,6 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 	}
 
 	return "", false
-}
-
-// podNeedsRotation returns true when the specification of the
-// given pod differs from what it should be according to the
-// given deployment spec.
-// When true is returned, a reason for the rotation is already returned.
-func podNeedsRotation(log zerolog.Logger, apiObject k8sutil.APIObject, p *core.Pod, spec api.DeploymentSpec, group api.ServerGroup, m api.MemberStatus, cachedStatus inspectorInterface.Inspector) (bool, string) {
-	if m.PodUID != p.UID {
-		return true, "Pod UID does not match, this pod is not managed by Operator. Recreating"
-	}
-
-	if m.PodSpecVersion == "" {
-		return true, "Pod Spec Version is nil - recreating pod"
-	}
-
-	member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
-	if !ok {
-		return false, ""
-	}
-
-	if member.Status.Template == nil {
-		return false, ""
-	}
-
-	if member.Status.Template.RotationNeeded(member.Spec.Template) {
-		log.Info().Str("id", m.ID).Str("Before", m.PodSpecVersion).Msgf("Pod needs rotation - templates does not match")
-		return true, "Pod needs rotation - checksum does not match"
-	}
-
-	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, apiObject, spec, group, m)
-	if err != nil {
-		log.Err(err).Msg("Error while getting pod endpoint")
-		return false, ""
-	}
-
-	if e := m.Endpoint; e == nil {
-		if spec.CommunicationMethod == nil {
-			// TODO: Remove in 1.2.0 release to allow rotation
-			return false, "Pod endpoint is not set and CommunicationMethod is not set, do not recreate"
-		}
-
-		return true, "Communication method has been set - ensure endpoint"
-	} else {
-		if *e != endpoint {
-			return true, "Pod endpoint changed"
-		}
-	}
-
-	return false, ""
 }
 
 // clusterReadyForUpgrade returns true if the cluster is ready for the next update, that is:

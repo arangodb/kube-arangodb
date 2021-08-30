@@ -7,6 +7,7 @@
 - Add Ephemeral Volumes for apps feature
 - Check if the DB server is cleaned out.
 - Render Pod Template in ArangoMember Spec and Status
+- Add Pod PropagationModes
 
 ## [1.2.1](https://github.com/arangodb/kube-arangodb/tree/1.2.1) (2021-07-28)
 - Fix ArangoMember race with multiple ArangoDeployments within single namespace
