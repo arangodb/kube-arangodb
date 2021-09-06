@@ -43,6 +43,11 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 		return nil
 	}
 
+	if !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		// Do not consider to mark cleanedout servers when changes are propagating
+		return nil
+	}
+
 	cluster, err := getCluster(ctx, planCtx)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Unable to get cluster")
@@ -56,6 +61,8 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 		log.Warn().Err(err).Msgf("Unable to get cluster health")
 		return nil
 	}
+
+	var plan api.Plan
 
 	for id, member := range health.Health {
 		switch member.Role {
@@ -79,13 +86,13 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 					Msgf("server is cleaned out so operator must do the same")
 
 				action := api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupDBServers, string(id),
-					"server is cleaned out so operator must do the same")
-				action = action.AddParam(string(api.ConditionTypeCleanedOut), strconv.FormatBool(true))
+					"server is cleaned out so operator must do the same").
+					AddParam(string(api.ConditionTypeCleanedOut), strconv.FormatBool(true))
 
-				return api.Plan{action}
+				plan = append(plan, action)
 			}
 		}
 	}
 
-	return nil
+	return plan
 }

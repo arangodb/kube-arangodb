@@ -160,6 +160,11 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 				return m, nil
 			}
 		}
+		for _, m := range l {
+			if m.Conditions.IsTrue(ConditionTypeCleanedOut) {
+				return m, nil
+			}
+		}
 		// Pick a random member that is in created state
 		perm := rand.Perm(len(l))
 		for _, idx := range perm {
