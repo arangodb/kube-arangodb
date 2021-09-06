@@ -902,13 +902,13 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
 		{
-			Name: "Scale down DBservers",
+			Name: "CleanOut DBserver",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewInt(3),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].Conditions = api.ConditionList{
@@ -919,10 +919,29 @@ func TestCreatePlan(t *testing.T) {
 				}
 			},
 			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
 				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
+		},
+		{
+			Name: "Scale down DBservers",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+			},
+			ExpectedLog: "Creating scale-down plan",
 		},
 	}
 
