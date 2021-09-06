@@ -83,7 +83,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 				Str("member-id", m.ID).
 				Str("phase", string(m.Phase)).
 				Msg("Found member to remove")
-			plan = append(plan, cleanOutMember(group, m, "")...)
+			plan = append(plan, cleanOutMember(group, m)...)
 			log.Debug().
 				Int("count", count).
 				Int("actual-count", len(members)).

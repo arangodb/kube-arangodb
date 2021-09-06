@@ -205,7 +205,7 @@ func createRemoveCleanedDBServersPlan(ctx context.Context,
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
 				Msg("Creating dbserver replacement plan because server is cleanout in created phase")
-			return cleanOutMember(api.ServerGroupDBServers, m, "")
+			return cleanOutMember(api.ServerGroupDBServers, m)
 		}
 	}
 
