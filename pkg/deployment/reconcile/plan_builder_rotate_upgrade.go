@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -122,7 +124,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec, status,
 					!decision.AutoUpgradeNeeded)
 			} else {
-				if m.Conditions.IsTrue(api.ConditionTypeRestart) {
+				if rotation.CheckPossible(m) && m.Conditions.IsTrue(api.ConditionTypeRestart) {
 					newPlan = createRotateMemberPlan(log, m, group, "Restart flag present")
 				}
 			}

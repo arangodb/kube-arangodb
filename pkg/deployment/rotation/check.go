@@ -49,14 +49,29 @@ func (m Mode) And(b Mode) Mode {
 	return b
 }
 
+// CheckPossible returns true if rotation is possible
+func CheckPossible(member api.MemberStatus) bool {
+	if !member.Phase.IsReady() {
+		// Skip rotation when we are not ready
+		return false
+	}
+
+	if member.Conditions.IsTrue(api.ConditionTypeTerminated) || member.Conditions.IsTrue(api.ConditionTypeTerminating) {
+		// Termination in progress, nothing to do
+		return false
+	}
+
+	return true
+}
+
 func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member api.MemberStatus, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
 	// Determine if rotation is required based on plan and actions
 
 	// Set default mode for return value
 	mode = SkippedRotation
 
-	if member.Phase.IsPending() {
-		// Skip rotation when we are not yet created
+	if !CheckPossible(member) {
+		// Check is not possible due to improper state of member
 		return
 	}
 

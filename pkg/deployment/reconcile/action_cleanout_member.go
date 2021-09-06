@@ -59,6 +59,11 @@ type actionCleanoutMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
+	if a.action.Group != api.ServerGroupDBServers {
+		// Proceed only on DBServers
+		return true, nil
+	}
+
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		// We wanted to remove and it is already gone. All ok
@@ -87,6 +92,10 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	var jobID string
 	ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 	if err := cluster.CleanOutServer(ctxJobID, a.action.MemberID); err != nil {
+		if driver.IsNotFound(err) {
+			// Member not found, it could be that it never connected to the cluster
+			return true, nil
+		}
 		log.Debug().Err(err).Msg("Failed to cleanout member")
 		return false, errors.WithStack(err)
 	}
@@ -182,6 +191,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 			return false, false, errors.WithStack(err)
 		}
 	}
+
 	// Cleanout completed
 	return true, false, nil
 }

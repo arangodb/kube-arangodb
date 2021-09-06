@@ -155,7 +155,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 		done, abort, recall, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
-			return plan, false, errors.WithStack(err)
+			return nil, false, errors.WithStack(err)
 		}
 
 		if abort {

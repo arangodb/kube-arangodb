@@ -61,6 +61,10 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		log.Error().Msg("No such member")
 		return true, nil
 	}
+	if m.PodName == "" {
+		log.Warn().Msgf("Pod is empty")
+		return true, nil
+	}
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
 	if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
 		return false, errors.WithStack(err)
@@ -127,6 +131,11 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 	m, ok := s.actionCtx.GetMemberStatusByID(s.action.MemberID)
 	if !ok {
 		log.Error().Msg("No such member")
+		return true, nil
+	}
+
+	if m.PodName == "" {
+		log.Warn().Msgf("Pod is empty")
 		return true, nil
 	}
 

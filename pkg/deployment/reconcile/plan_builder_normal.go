@@ -83,14 +83,14 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
 		// Check for failed members
 		ApplyIfEmpty(createMemberFailedRestorePlan).
-		// Check for cleaned out dbserver in created state
-		ApplyIfEmpty(createRemoveCleanedDBServersPlan).
 		// Update status
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate).
 		ApplyIfEmpty(createTLSStatusUpdate).
 		ApplyIfEmpty(createJWTStatusUpdate).
 		// Check for scale up/down
 		ApplyIfEmpty(createScaleMemberPlan).
+		// Check for cleaned out dbserver in created state
+		ApplyIfEmpty(createRemoveCleanedDBServersPlan).
 		// Check for members to be removed
 		ApplyIfEmpty(createReplaceMemberPlan).
 		// Check for the need to rotate one or more members
@@ -205,10 +205,7 @@ func createRemoveCleanedDBServersPlan(ctx context.Context,
 				Str("id", m.ID).
 				Str("role", api.ServerGroupDBServers.AsRole()).
 				Msg("Creating dbserver replacement plan because server is cleanout in created phase")
-			return api.Plan{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, m.ID),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-			}
+			return cleanOutMember(api.ServerGroupDBServers, m)
 		}
 	}
 

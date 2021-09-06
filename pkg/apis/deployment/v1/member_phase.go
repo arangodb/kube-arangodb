@@ -60,6 +60,11 @@ func (p MemberPhase) IsFailed() bool {
 	return p == MemberPhaseFailed
 }
 
+// IsReady returns true when given phase == "Created"
+func (p MemberPhase) IsReady() bool {
+	return p == MemberPhaseCreated
+}
+
 // IsCreatedOrDrain returns true when given phase is MemberPhaseCreated or MemberPhaseDrain
 func (p MemberPhase) IsCreatedOrDrain() bool {
 	return p == MemberPhaseCreated || p == MemberPhaseDrain
