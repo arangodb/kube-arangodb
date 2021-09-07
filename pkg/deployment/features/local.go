@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package features
@@ -80,11 +81,16 @@ func Init(cmd *cobra.Command) {
 			}
 		}
 
-		f.BoolVar(feature.EnabledPointer(), fmt.Sprintf("deployment.feature.%s", feature.Name()), feature.EnabledByDefault(), z)
+		featureName := fmt.Sprintf("deployment.feature.%s", feature.Name())
+		if ok, reason := feature.Deprecated(); ok {
+			f.MarkDeprecated(featureName, reason)
+		}
+
+		f.BoolVar(feature.EnabledPointer(), featureName, feature.EnabledByDefault(), z)
 	}
 }
 
-func cmdRun(cmd *cobra.Command, args []string) {
+func cmdRun(_ *cobra.Command, _ []string) {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
 
@@ -104,6 +110,10 @@ func cmdRun(cmd *cobra.Command, args []string) {
 			println("ArangoDB Edition Required: Enterprise")
 		} else {
 			println("ArangoDB Edition Required: Community, Enterprise")
+		}
+
+		if ok, reason := feature.Deprecated(); ok {
+			println(fmt.Sprintf("Deprecated: %s", reason))
 		}
 
 		println()
