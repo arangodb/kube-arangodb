@@ -96,7 +96,7 @@ var (
 
 	metricsSpec = api.MetricsSpec{
 		Enabled: util.NewBool(true),
-		Image:   util.NewString(testExporterImage),
+		Image:   util.NewString(testImage),
 		Authentication: api.MetricsAuthenticationSpec{
 			JWTTokenSecretName: util.NewString(testExporterToken),
 		},
