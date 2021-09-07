@@ -126,7 +126,9 @@ func updateMemberPhasePlan(ctx context.Context,
 					api.NewAction(api.ActionTypeMemberRIDUpdate, group, m.ID, "Regenerate member RID"),
 				}
 
-				p = append(p, api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
+				p = append(p,
+					api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, "Propagating spec of pod"),
+					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
 
 				p = append(p, api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
 					"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))

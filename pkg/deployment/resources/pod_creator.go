@@ -632,6 +632,7 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
 	m.Conditions.Remove(api.ConditionTypePendingRestart)
 	m.Conditions.Remove(api.ConditionTypeRestart)
+	m.Conditions.Remove(api.ConditionTypeCleanedOut)
 
 	m.Upgrade = false
 	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
@@ -748,9 +749,6 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhasePending {
-				continue
-			}
-			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 				continue
 			}
 

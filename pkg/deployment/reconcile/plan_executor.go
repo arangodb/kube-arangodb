@@ -171,6 +171,20 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 			} else {
 				plan = nil
 			}
+
+			if getActionReloadCachedStatus(action) {
+				log.Info().Msgf("Reloading cached status")
+				if err := cachedStatus.Refresh(ctx); err != nil {
+					log.Warn().Err(err).Msgf("Unable to reload cached status")
+					return plan, recall, nil
+				}
+			}
+
+			if newPlan := getActionPlanAppender(action, plan); !newPlan.Equal(plan) {
+				// Our actions have been added to the end of plan
+				log.Info().Msgf("Appending new plan items")
+				return newPlan, true, nil
+			}
 		} else {
 			if plan[0].StartTime.IsZero() {
 				now := metav1.Now()

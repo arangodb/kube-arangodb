@@ -693,13 +693,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeDisableClusterScaling, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeEnableClusterScaling, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeMarkToRemoveMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
