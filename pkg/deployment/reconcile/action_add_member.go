@@ -78,7 +78,7 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 }
 
 // ActionPlanAppender appends wait methods to the plan
-func (a *actionAddMember) ActionPlanAppender(current api.Plan) api.Plan {
+func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) {
 	var app api.Plan
 
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
@@ -88,5 +88,10 @@ func (a *actionAddMember) ActionPlanAppender(current api.Plan) api.Plan {
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
 		app = append(app, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
 	}
-	return append(app, current...)
+
+	if len(app) > 0 {
+		return append(app, current...), true
+	}
+
+	return current, false
 }

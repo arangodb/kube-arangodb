@@ -128,7 +128,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -136,7 +136,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -144,7 +144,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("IsCleanedOut failed")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	if !cleanedOut {
 		// We're not done yet, check job status
@@ -155,7 +155,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -163,7 +163,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		agency, err := a.actionCtx.GetAgency(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -171,14 +171,14 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""
-			if a.actionCtx.UpdateMember(ctx, m); err != nil {
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 				return false, false, errors.WithStack(err)
 			}
 			return false, true, nil

@@ -180,7 +180,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				}
 			}
 
-			if newPlan := getActionPlanAppender(action, plan); !newPlan.Equal(plan) {
+			if newPlan, changed := getActionPlanAppender(action, plan); changed {
 				// Our actions have been added to the end of plan
 				log.Info().Msgf("Appending new plan items")
 				return newPlan, true, nil

@@ -170,7 +170,8 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 			log.Warn().Msgf("Pod still exists")
 			return false, false, nil
 		} else if !k8sutil.IsNotFound(err) {
-			return false, false, errors.WithStack(err)
+			log.Error().Err(err).Msg("Unable to get pod")
+			return false, false, nil
 		}
 	}
 

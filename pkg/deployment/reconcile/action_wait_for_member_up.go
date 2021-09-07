@@ -109,11 +109,11 @@ func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, 
 	c, err := a.actionCtx.GetDatabaseClient(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	return true, false, nil
 }
@@ -125,11 +125,11 @@ func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.
 	c, err := a.actionCtx.GetServerClient(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	if _, err := c.Version(ctx); err != nil {
 		log.Debug().Err(err).Msg("Failed to get version")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	return true, false, nil
 }
@@ -141,7 +141,7 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 	clients, err := a.actionCtx.GetAgencyClients(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency clients")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	for _, a := range clients {
@@ -204,11 +204,11 @@ func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bo
 	c, err := a.actionCtx.GetSyncServerClient(ctx, a.action.Group, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create arangosync client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	if err := c.Health(ctx); err != nil {
 		log.Debug().Err(err).Msg("Health not ok yet")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	return true, false, nil
 }
