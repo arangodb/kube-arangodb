@@ -53,6 +53,22 @@ type Action interface {
 	MemberID() string
 }
 
+// ActionReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
+type ActionReloadCachedStatus interface {
+	Action
+
+	// ReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
+	ReloadCachedStatus() bool
+}
+
+func getActionReloadCachedStatus(a Action) bool {
+	if c, ok := a.(ActionReloadCachedStatus); !ok {
+		return false
+	} else {
+		return c.ReloadCachedStatus()
+	}
+}
+
 type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action
 
 var (

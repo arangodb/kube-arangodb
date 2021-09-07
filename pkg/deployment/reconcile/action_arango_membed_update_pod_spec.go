@@ -49,6 +49,8 @@ func newArangoMemberUpdatePodSpecAction(log zerolog.Logger, action api.Action, a
 	return a
 }
 
+var _ ActionReloadCachedStatus = &actionArangoMemberUpdatePodSpec{}
+
 // actionArangoMemberUpdatePodSpec implements an ArangoMemberUpdatePodSpec.
 type actionArangoMemberUpdatePodSpec struct {
 	// actionImpl implement timeout and member id functions
@@ -149,4 +151,8 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	}
 
 	return true, nil
+}
+
+func (a *actionArangoMemberUpdatePodSpec) ReloadCachedStatus() bool {
+	return true
 }
