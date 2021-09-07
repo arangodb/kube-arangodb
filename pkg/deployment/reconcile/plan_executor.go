@@ -179,6 +179,12 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 					return plan, recall, nil
 				}
 			}
+
+			if newPlan := getActionPlanAppender(action, plan); !newPlan.Equal(plan) {
+				// Our actions have been added to the end of plan
+				log.Info().Msgf("Appending new plan items")
+				return newPlan, true, nil
+			}
 		} else {
 			if plan[0].StartTime.IsZero() {
 				now := metav1.Now()

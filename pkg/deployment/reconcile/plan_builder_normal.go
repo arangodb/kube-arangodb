@@ -200,6 +200,11 @@ func createRemoveCleanedDBServersPlan(ctx context.Context,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	for _, m := range status.Members.DBServers {
+		if !m.Phase.IsReady() {
+			// Ensure that we CleanOut members which are Ready only to ensure data will be moved
+			continue
+		}
+
 		if m.Phase.IsCreatedOrDrain() && m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
 			log.Debug().
 				Str("id", m.ID).

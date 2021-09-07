@@ -50,6 +50,8 @@ func newAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionC
 	return a
 }
 
+var _ ActionPlanAppender = &actionAddMember{}
+
 // actionAddMember implements an AddMemberAction.
 type actionAddMember struct {
 	// actionImpl implement timeout and member id functions
@@ -72,19 +74,19 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 	}
 	a.newMemberID = newID
 
-	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
-		a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
-			return true
-		})
-	}
-
-	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
-		a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-			s.Plan = append(s.Plan, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, newID, "Wait for member in sync after creation"))
-			return true
-		})
-	}
-
 	return true, nil
+}
+
+// ActionPlanAppender appends wait methods to the plan
+func (a *actionAddMember) ActionPlanAppender(current api.Plan) api.Plan {
+	var app api.Plan
+
+	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
+		app = append(app, api.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
+	}
+
+	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
+		app = append(app, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
+	}
+	return append(app, current...)
 }
