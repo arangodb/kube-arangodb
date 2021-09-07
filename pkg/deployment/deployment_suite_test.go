@@ -607,29 +607,3 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		deployment.apiObject.Status.Members.Update(member, group)
 	}
 }
-
-func testCreateExporterContainerWithPortAndSecureEndpoint(secure, exporterSecure bool, resources core.ResourceRequirements, port uint16) core.Container {
-	var securityContext api.ServerGroupSpecSecurityContext
-
-	return core.Container{
-		Name:    k8sutil.ExporterContainerName,
-		Image:   testExporterImage,
-		Command: createTestExporterCommand(secure, exporterSecure, port),
-		Ports:   createTestExporterPorts(port),
-		VolumeMounts: []core.VolumeMount{
-			k8sutil.ExporterJWTVolumeMount(),
-		},
-		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		LivenessProbe:   createTestExporterLivenessProbe(exporterSecure),
-		ImagePullPolicy: core.PullIfNotPresent,
-		SecurityContext: securityContext.NewSecurityContext(),
-	}
-}
-
-func testCreateExporterContainerWithPort(secure bool, resources core.ResourceRequirements, port uint16) core.Container {
-	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, port)
-}
-
-func testCreateExporterContainer(secure bool, resources core.ResourceRequirements) core.Container {
-	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, k8sutil.ArangoExporterPort)
-}
