@@ -1439,43 +1439,21 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 	runTestCases(t, testCases...)
 }
 
-func testArangodbInternalExporterContainer(secure bool, resources core.ResourceRequirements, port ...int32) core.Container {
-	binaryPath, err := os.Executable()
-	if err != nil {
-		return core.Container{}
-	}
-	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+func testArangodbInternalExporterContainer(secure bool, resources core.ResourceRequirements, ports ...int32) core.Container {
 
-	var args []string
-	if secure {
-		args = append(args, "--arangodb.endpoint=https://localhost:8529/_admin/metrics")
-	} else {
-		args = append(args, "--arangodb.endpoint=http://localhost:8529/_admin/metrics")
-	}
-
-	args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
-
-	var localPort int32 = k8sutil.ArangoExporterPort
-	if len(port) > 0 {
-		localPort = port[0]
-	}
-
-	if localPort != k8sutil.ArangoExporterPort {
-		args = append(args, fmt.Sprintf("--server.address=:%d", localPort))
-	}
-
-	if secure {
-		args = append(args, "--ssl.keyfile=/secrets/tls/tls.keyfile")
+	var port int32 = k8sutil.ArangoExporterPort
+	if len(ports) > 0 {
+		port = ports[0]
 	}
 
 	return core.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   testImage,
-		Command: append([]string{exePath, "exporter"}, args...),
+		Command: createTestInternalExporterCommand(secure, port),
 		Ports: []core.ContainerPort{
 			{
-				Name:          "exporter",
-				ContainerPort: localPort,
+				Name:          string(api.MetricsModeExporter),
+				ContainerPort: port,
 				Protocol:      core.ProtocolTCP,
 			},
 		},
@@ -1494,4 +1472,31 @@ func testArangodbInternalExporterContainer(secure bool, resources core.ResourceR
 			k8sutil.ExporterJWTVolumeMount(),
 		},
 	}
+}
+
+func createTestInternalExporterCommand(secure bool, port int32) []string {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return []string{}
+	}
+	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+
+	args := []string{exePath, "exporter"}
+	if secure {
+		args = append(args, "--arangodb.endpoint=https://localhost:8529/_admin/metrics")
+	} else {
+		args = append(args, "--arangodb.endpoint=http://localhost:8529/_admin/metrics")
+	}
+
+	args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
+
+	if port != k8sutil.ArangoExporterPort {
+		args = append(args, fmt.Sprintf("--server.address=:%d", port))
+	}
+
+	if secure {
+		args = append(args, "--ssl.keyfile=/secrets/tls/tls.keyfile")
+	}
+
+	return args
 }

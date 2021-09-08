@@ -68,7 +68,6 @@ const (
 	testServiceAccountName        = "testServiceAccountName"
 	testPriorityClassName         = "testPriority"
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
-	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
 	testImageOperatorUUIDInit     = "image/test-1234:3.7"
 
 	testYes = "yes"
@@ -514,40 +513,6 @@ func createTestImagesWithVersion(enterprise bool, version driver.Version) api.Im
 
 func createTestImages(enterprise bool) api.ImageInfoList {
 	return createTestImagesWithVersion(enterprise, testVersion)
-}
-
-func createTestExporterPorts(port uint16) []core.ContainerPort {
-	return []core.ContainerPort{
-		{
-			Name:          "exporter",
-			ContainerPort: int32(port),
-			Protocol:      "TCP",
-		},
-	}
-}
-
-func createTestExporterCommand(secure, exporterSecure bool, port uint16) []string {
-	command := []string{
-		"/app/arangodb-exporter",
-	}
-
-	if secure {
-		command = append(command, "--arangodb.endpoint=https://localhost:8529")
-	} else {
-		command = append(command, "--arangodb.endpoint=http://localhost:8529")
-	}
-
-	command = append(command, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
-
-	if port != k8sutil.ArangoExporterPort {
-		command = append(command, fmt.Sprintf("--server.address=:%d", port))
-	}
-
-	if exporterSecure {
-		command = append(command, "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-
-	return command
 }
 
 func createTestExporterLivenessProbe(secure bool) *core.Probe {
