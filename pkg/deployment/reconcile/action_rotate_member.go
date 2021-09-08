@@ -99,7 +99,8 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 	// Pod is terminated, we can now remove it
 	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 		if !k8sutil.IsNotFound(err) {
-			return false, false, errors.WithStack(err)
+			log.Error().Err(err).Msg("Unable to delete pod")
+			return false, false, nil
 		}
 	}
 	// Pod is now gone, update the member status

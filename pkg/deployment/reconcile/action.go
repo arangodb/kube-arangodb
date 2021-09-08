@@ -74,12 +74,12 @@ type ActionPlanAppender interface {
 	Action
 
 	// ActionPlanAppender modify plan after action execution
-	ActionPlanAppender(current api.Plan) api.Plan
+	ActionPlanAppender(current api.Plan) (api.Plan, bool)
 }
 
-func getActionPlanAppender(a Action, plan api.Plan) api.Plan {
+func getActionPlanAppender(a Action, plan api.Plan) (api.Plan, bool) {
 	if c, ok := a.(ActionPlanAppender); !ok {
-		return plan
+		return plan, false
 	} else {
 		return c.ActionPlanAppender(plan)
 	}
