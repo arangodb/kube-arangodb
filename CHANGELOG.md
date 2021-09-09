@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.2](https://github.com/arangodb/kube-arangodb/tree/1.2.2) (2021-09-09)
 - Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
 - Add HighPriorityPlan to ArangoDeployment Status
 - Add Pending Member phase
