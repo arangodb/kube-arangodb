@@ -113,12 +113,12 @@ for details.
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.1/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.1/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.2/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.2/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.1/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.2/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.1/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.2/manifests/arango-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -150,12 +150,12 @@ upgrades.
 
 ```bash
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-crd-1.2.1.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-crd-1.2.2.tgz
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-1.2.2.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-1.2.2.tgz --set "operator.features.storage=true"
 ```
 
 ## Upgrading the operator using Helm
@@ -190,9 +190,9 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-1.2.2.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-1.2.2.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
