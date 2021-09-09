@@ -93,7 +93,7 @@ ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
 
-BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.0
+BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.4
 
 ifndef OPERATORIMAGE
 	OPERATORIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)
