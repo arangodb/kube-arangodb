@@ -893,7 +893,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			},
 		},
 		{
-			Name: "Agent Pod can not have metrics exporter", // TODO
+			Name: "Agent Pod can not have metrics exporter",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image:          util.NewString(testImage),
