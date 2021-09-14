@@ -22,16 +22,8 @@
 
 package v1
 
-const (
-	ArangoMemberConditionPendingRestart ConditionType = "pending-restart"
-)
-
 type ArangoMemberStatus struct {
 	Conditions ConditionList `json:"conditions,omitempty"`
 
 	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
-}
-
-func (a ArangoMemberStatus) IsPendingRestart() bool {
-	return a.Conditions.IsTrue(ArangoMemberConditionPendingRestart)
 }

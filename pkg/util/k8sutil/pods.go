@@ -25,10 +25,11 @@ package k8sutil
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"path/filepath"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -420,7 +421,7 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+	return util.SHA256(data), nil
 }
 
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.

@@ -65,15 +65,21 @@ func (a actionSetMemberCondition) Start(ctx context.Context) (bool, error) {
 	}
 
 	for condition, value := range a.action.Params {
-		set, err := strconv.ParseBool(value)
-		if err != nil {
-			a.log.Error().Err(err).Str("value", value).Msg("can not parse string to boolean")
-			continue
+		if value == "" {
+			a.log.Debug().Msg("remove the condition")
+
+			m.Conditions.Remove(api.ConditionType(condition))
+		} else {
+			set, err := strconv.ParseBool(value)
+			if err != nil {
+				a.log.Error().Err(err).Str("value", value).Msg("can not parse string to boolean")
+				continue
+			}
+
+			a.log.Debug().Msg("set the condition")
+
+			m.Conditions.Update(api.ConditionType(condition), set, a.action.Reason, "action set the member condition")
 		}
-
-		a.log.Debug().Msg("set the condition")
-
-		m.Conditions.Update(api.ConditionType(condition), set, a.action.Reason, "action set the member condition")
 	}
 
 	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {

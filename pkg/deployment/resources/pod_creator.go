@@ -26,7 +26,6 @@ package resources
 import (
 	"context"
 	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -737,7 +736,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 		return "", err
 	}
 
-	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+	return util.SHA256(data), nil
 }
 
 // EnsurePods creates all Pods listed in member status

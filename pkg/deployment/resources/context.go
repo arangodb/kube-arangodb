@@ -27,10 +27,10 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -40,7 +40,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	core "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -85,6 +84,15 @@ type DeploymentImageManager interface {
 	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
 }
 
+type DeploymentCLIGetter interface {
+	// GetKubeCli returns the kubernetes client
+	GetKubeCli() kubernetes.Interface
+	// GetMonitoringV1Cli returns monitoring client
+	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
+	// GetArangoCli returns the Arango CRD client
+	GetArangoCli() versioned.Interface
+}
+
 type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
 type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
 
@@ -102,6 +110,7 @@ type Context interface {
 	DeploymentAgencyMaintenance
 	ArangoMemberContext
 	DeploymentImageManager
+	DeploymentCLIGetter
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -114,12 +123,6 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetKubeCli returns the kubernetes client
-	GetKubeCli() kubernetes.Interface
-	// GetMonitoringV1Cli returns monitoring client
-	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
-	// GetArangoCli returns the Arango CRD client
-	GetArangoCli() versioned.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
 	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)

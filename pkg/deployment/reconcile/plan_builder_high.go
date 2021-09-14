@@ -87,6 +87,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberPodTemplateSpec).
 		ApplyIfEmpty(updateMemberPhasePlan).
 		ApplyIfEmpty(createCleanOutPlan).
+		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		Plan(), true
 }
@@ -157,6 +158,38 @@ func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason str
 	return api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
 }
 
+func updateMemberUpdateConditionsPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, m := range list {
+			if m.Conditions.IsTrue(api.ConditionTypeUpdating) {
+				// We are in updating phase
+				if status.Plan.IsEmpty() {
+					// If plan is empty then something went wrong
+					plan = append(plan,
+						api.NewAction(api.ActionTypeSetMemberCondition, group, m.ID, "Clean update actions after failure").
+							AddParam(api.ConditionTypePendingUpdate.String(), "").
+							AddParam(api.ConditionTypeUpdating.String(), "").
+							AddParam(api.ConditionTypeUpdateFailed.String(), "T").
+							AddParam(api.ConditionTypePendingRestart.String(), "T"),
+					)
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		log.Err(err).Msgf("Error while generating update plan")
+		return nil
+	}
+
+	return plan
+}
+
 func updateMemberRotationConditionsPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -196,7 +229,7 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 		return nil, nil
 	}
 
-	if m, _, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, member, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+	if m, _, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
 		log.Error().Err(err).Msgf("Error while getting rotation details")
 		return nil, err
 	} else {
@@ -209,7 +242,20 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 			}
 			// We need to do enforced rotation
 			return api.Plan{restartMemberConditionAction(group, member.ID, reason)}, nil
-		case rotation.GracefulRotation, rotation.InPlaceRotation, rotation.SilentRotation: // TODO: Add support for InPlace and Silent rotation
+		case rotation.InPlaceRotation:
+			if member.Conditions.IsTrue(api.ConditionTypeUpdateFailed) {
+				if !(member.Conditions.IsTrue(api.ConditionTypePendingRestart) || member.Conditions.IsTrue(api.ConditionTypeRestart)) {
+					return api.Plan{pendingRestartMemberConditionAction(group, member.ID, reason)}, nil
+				}
+				return nil, nil
+			} else if member.Conditions.IsTrue(api.ConditionTypeUpdating) || member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
+				return nil, nil
+			}
+			return api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, group, member.ID, reason).AddParam(api.ConditionTypePendingUpdate.String(), "T")}, nil
+		case rotation.SilentRotation:
+			// Propagate changes without restart
+			return api.Plan{api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member.ID, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, arangoMember.Spec.Template.GetChecksum())}, nil
+		case rotation.GracefulRotation:
 			if reason != "" {
 				log.Info().Bool("enforced", false).Msgf(reason)
 			} else {

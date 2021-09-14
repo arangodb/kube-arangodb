@@ -2136,6 +2136,11 @@ func (in *Timeouts) DeepCopyInto(out *Timeouts) {
 		*out = new(Timeout)
 		**out = **in
 	}
+	if in.RuntimeContainerImageUpdate != nil {
+		in, out := &in.RuntimeContainerImageUpdate, &out.RuntimeContainerImageUpdate
+		*out = new(Timeout)
+		**out = **in
+	}
 	return
 }
 
