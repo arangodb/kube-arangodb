@@ -2,7 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Update UBI Image to 8.4
-- Fix ArangoSync Liveness Prove
+- Fix ArangoSync Liveness Probe
 - Allow runtime update of Sidecar images
 - Allow Agent recreation with preserved IDs
 - The internal metrics exporter can not be disabled
