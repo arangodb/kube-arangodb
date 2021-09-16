@@ -63,3 +63,20 @@ func PrefixStringArray(a []string, prefix string) []string {
 
 	return b
 }
+
+// GetDifference returns the elements in `compareWhat` that are not in `compareTo`.
+func GetDifference(compareWhat, compareTo []string) []string {
+	mb := make(map[string]struct{}, len(compareTo))
+	for _, x := range compareTo {
+		mb[x] = struct{}{}
+	}
+
+	var diff []string
+	for _, x := range compareWhat {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+
+	return diff
+}

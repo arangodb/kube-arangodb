@@ -162,3 +162,17 @@ func (o OptionPair) CompareTo(other OptionPair) int {
 func NewOptionPair(pairs ...OptionPair) OptionPairs {
 	return pairs
 }
+
+// TODO test desc
+func ExtractStringToOptionPair(arg string) OptionPair {
+	trimmed := strings.Trim(arg, " ")
+	index := strings.Index(trimmed, "=")
+	if index < 0 {
+		return OptionPair{Key: trimmed}
+	}
+
+	return OptionPair{
+		Key:   trimmed[0:index],
+		Value: trimmed[index:],
+	}
+}

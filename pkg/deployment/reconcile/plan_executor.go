@@ -188,7 +188,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 			if err := getActionPost(action, ctx); err != nil {
 				log.Err(err).Msgf("Post action failed")
-				return nil, true, errors.WithStack(err)
+				return nil, false, errors.WithStack(err)
 			}
 		} else {
 			if plan[0].StartTime.IsZero() {

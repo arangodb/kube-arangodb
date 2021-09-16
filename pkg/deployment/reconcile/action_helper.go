@@ -102,7 +102,7 @@ func (a actionImpl) Timeout(deploymentSpec api.DeploymentSpec) time.Duration {
 	return a.timeout(deploymentSpec)
 }
 
-// Return the MemberID used / created in this action
+// MemberID returns the member ID used / created in the current action.
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
 }

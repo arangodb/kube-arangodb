@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,17 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+// Author Tomasz Mielech
+//
 
 package rotation
 
 import (
+	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -42,7 +49,22 @@ func containersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup,
 
 		for id := range a {
 			if ac, bc := &a[id], &b[id]; ac.Name == k8sutil.ServerContainerName && ac.Name == bc.Name {
-				// Nothing to do
+				foundLogLevelDifference := false
+				for _, arg := range util.GetDifference(ac.Args, bc.Args) {
+					if strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
+						foundLogLevelDifference = true
+					}
+				}
+
+				if !foundLogLevelDifference {
+					continue
+				}
+
+				plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
+					AddParam(ContainerName, ac.Name))
+
+				bc.Args = ac.Args
+				mode = mode.And(InPlaceRotation)
 			} else if ac.Name == bc.Name {
 				if ac.Image != bc.Image {
 					// Image changed
