@@ -210,11 +210,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				// Use the new plan
 				return newPlan, false
 			} else {
-				i := log.Info()
-				for _, p := range newPlan {
-					i = i.Str("Action", p.Type.String())
-				}
-				i.Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 				return nil, true
 			}
 		}
