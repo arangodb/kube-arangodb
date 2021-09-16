@@ -206,8 +206,7 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {
-			log.Debug().Err(err).
-				Msg("Failed to start action")
+			log.Error().Err(err).Msg("Failed to start action")
 			return false, false, false, errors.WithStack(err)
 		}
 

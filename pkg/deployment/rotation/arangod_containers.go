@@ -26,8 +26,6 @@ package rotation
 import (
 	"strings"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -39,7 +37,7 @@ const (
 	ContainerImage = "image"
 )
 
-func containersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		a, b := spec.Containers, status.Containers
 

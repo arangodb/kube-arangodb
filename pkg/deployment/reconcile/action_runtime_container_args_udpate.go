@@ -145,7 +145,6 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	memberName := m.ArangoMemberName(a.actionCtx.GetName(), a.action.Group)
 	member, ok := a.actionCtx.GetCachedStatus().ArangoMember(memberName)
 	if !ok {
-		// TODO only event is created on the top of that func.
 		return false, errors.Errorf("ArangoMember %s not found", memberName)
 	}
 
@@ -164,9 +163,6 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 				continue
 			}
 
-			// TODO
-			a.log.Info().Str("arg", arg).Msg("TEST TODO the arg has changed")
-
 			logLevelOption := k8sutil.ExtractStringToOptionPair(arg)
 			if len(logLevelOption.Value) > 0 {
 				logValueOption := k8sutil.ExtractStringToOptionPair(logLevelOption.Value)
@@ -180,6 +176,7 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 			}
 		}
 
+		// TODO
 		// TODO how to disable old log topics?
 		// TODO how to set the general log level
 
@@ -205,8 +202,8 @@ func checkContainer(member *api.ArangoMember, pod *core.Pod, containerName strin
 		return err
 	}
 
-	ok, id := getIndexContainer(pod, spec, status, containerName)
-	if !ok {
+	id := getIndexContainer(pod, spec, status, containerName)
+	if id < 0 {
 		return api.NotFoundError
 	}
 
@@ -215,18 +212,18 @@ func checkContainer(member *api.ArangoMember, pod *core.Pod, containerName strin
 
 // getIndexContainer returns the index of the container from the list of containers.
 func getIndexContainer(pod *core.Pod, spec *core.PodTemplateSpec, status *core.PodTemplateSpec,
-	containerName string) (bool, int) {
+	containerName string) int {
 
 	for id := range pod.Spec.Containers {
-		if pod.Spec.Containers[id].Name != spec.Spec.Containers[id].Name ||
-			pod.Spec.Containers[id].Name != status.Spec.Containers[id].Name ||
-			pod.Spec.Containers[id].Name != containerName {
+		if pod.Spec.Containers[id].Name == spec.Spec.Containers[id].Name ||
+			pod.Spec.Containers[id].Name == status.Spec.Containers[id].Name ||
+			pod.Spec.Containers[id].Name == containerName {
 
-			return true, id
+			return id
 		}
 	}
 
-	return false, 0
+	return -1
 }
 
 func validateMemberAndPod(member *api.ArangoMember, pod *core.Pod) (*core.PodTemplateSpec, *core.PodTemplateSpec, error) {
