@@ -27,6 +27,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -66,6 +67,9 @@ const (
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
+
+	ServerContainerConditionContainersNotReady = "ContainersNotReady"
+	ServerContainerConditionPrefix             = "containers with unready status: "
 )
 
 // IsPodReady returns true if the PodReady condition on
@@ -73,6 +77,35 @@ const (
 func IsPodReady(pod *core.Pod) bool {
 	condition := getPodCondition(&pod.Status, core.PodReady)
 	return condition != nil && condition.Status == core.ConditionTrue
+}
+
+// IsContainerReady returns true if the PodReady condition on
+// the given pod is set to true.
+func IsContainerReady(pod *core.Pod, container string) bool {
+	condition := getPodCondition(&pod.Status, core.PodReady)
+	if condition == nil {
+		return false
+	}
+
+	if condition.Status == core.ConditionTrue {
+		return true
+	}
+
+	if !IsContainerRunning(pod, container) {
+		return false
+	}
+
+	switch condition.Reason {
+	case ServerContainerConditionContainersNotReady:
+		if strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
+			n := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
+
+			return !strings.Contains(n, container)
+		}
+		return false
+	default:
+		return false
+	}
 }
 
 // GetPodByName returns pod if it exists among the pods' list
@@ -88,8 +121,13 @@ func GetPodByName(pods []core.Pod, podName string) (core.Pod, bool) {
 
 // IsPodServerContainerRunning returns true if the arangodb container of the pod is still running
 func IsPodServerContainerRunning(pod *core.Pod) bool {
+	return IsContainerRunning(pod, ServerContainerName)
+}
+
+// IsContainerRunning returns true if the container of the pod is still running
+func IsContainerRunning(pod *core.Pod, name string) bool {
 	for _, c := range pod.Status.ContainerStatuses {
-		if c.Name != ServerContainerName {
+		if c.Name != name {
 			continue
 		}
 

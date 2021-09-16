@@ -631,6 +631,9 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
 	m.Conditions.Remove(api.ConditionTypePendingRestart)
 	m.Conditions.Remove(api.ConditionTypeRestart)
+	m.Conditions.Remove(api.ConditionTypePendingUpdate)
+	m.Conditions.Remove(api.ConditionTypeUpdating)
+	m.Conditions.Remove(api.ConditionTypeUpdateFailed)
 	m.Conditions.Remove(api.ConditionTypeCleanedOut)
 
 	m.Upgrade = false

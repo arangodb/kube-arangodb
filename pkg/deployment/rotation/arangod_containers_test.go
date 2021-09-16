@@ -21,8 +21,9 @@
 package rotation
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	v1 "k8s.io/api/core/v1"
 

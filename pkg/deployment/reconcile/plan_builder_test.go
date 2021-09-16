@@ -26,11 +26,12 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"io/ioutil"
 	"k8s.io/client-go/kubernetes"
-	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
