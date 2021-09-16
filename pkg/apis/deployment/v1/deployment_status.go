@@ -78,6 +78,9 @@ type DeploymentStatus struct {
 
 	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
 	ForceStatusReload *bool `json:"force-status-reload,omitempty"`
+
+	// Agency keeps information about agency
+	Agency *DeploymentStatusAgencyInfo `json:"agency,omitempty"`
 }
 
 // Equal checks for equality
@@ -95,7 +98,8 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Conditions.Equal(other.Conditions) &&
 		ds.Plan.Equal(other.Plan) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
-		ds.SecretHashes.Equal(other.SecretHashes)
+		ds.SecretHashes.Equal(other.SecretHashes) &&
+		ds.Agency.Equal(other.Agency)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true

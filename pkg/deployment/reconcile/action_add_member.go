@@ -85,7 +85,7 @@ func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) 
 		app = append(app, api.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
 	}
 
-	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
+	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
 		app = append(app, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
 	}
 

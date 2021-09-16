@@ -111,18 +111,30 @@ func createReplaceMemberPlan(ctx context.Context,
 					return nil
 				}
 				if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
-						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
-					log.Debug().
-						Str("role", group.AsRole()).
-						Msg("Creating replacement plan")
-					return nil
+					switch group {
+					case api.ServerGroupDBServers:
+						plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
+							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
+							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+						log.Debug().
+							Str("role", group.AsRole()).
+							Msg("Creating replacement plan")
+						return nil
+					case api.ServerGroupAgents:
+						plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID),
+							api.NewAction(api.ActionTypeAddMember, group, "").
+								AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
+								AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+						log.Debug().
+							Str("role", group.AsRole()).
+							Msg("Creating replacement plan")
+						return nil
+					}
 				}
 			}
 
 			return nil
-		}, api.ServerGroupDBServers)
+		}, api.ServerGroupAgents, api.ServerGroupDBServers)
 	}
 
 	return plan
