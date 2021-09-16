@@ -124,8 +124,41 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				newPlan = createUpgradeMemberPlan(log, m, group, "Version upgrade", spec, status,
 					!decision.AutoUpgradeNeeded)
 			} else {
-				if rotation.CheckPossible(m) && m.Conditions.IsTrue(api.ConditionTypeRestart) {
-					newPlan = createRotateMemberPlan(log, m, group, "Restart flag present")
+				if rotation.CheckPossible(m) {
+					if m.Conditions.IsTrue(api.ConditionTypeRestart) {
+						newPlan = createRotateMemberPlan(log, m, group, "Restart flag present")
+					} else if m.Conditions.IsTrue(api.ConditionTypeUpdating) || m.Conditions.IsTrue(api.ConditionTypeUpdateFailed) {
+						continue
+					} else if m.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
+						arangoMember, ok := cachedStatus.ArangoMember(m.ArangoMemberName(apiObject.GetName(), group))
+						if !ok {
+							continue
+						}
+						p, ok := cachedStatus.Pod(m.PodName)
+						if !ok {
+							p = nil
+						}
+
+						if mode, p, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, m, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+							log.Err(err).Msgf("Error while generating update plan")
+							continue
+						} else if mode != rotation.InPlaceRotation {
+							newPlan = api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, group, m.ID, "Cleaning update").
+								AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T")}
+							continue
+						} else {
+							p = p.After(
+								api.NewAction(api.ActionTypeWaitForMemberUp, group, m.ID),
+								api.NewAction(api.ActionTypeWaitForMemberInSync, group, m.ID))
+
+							p = p.Wrap(api.NewAction(api.ActionTypeSetMemberCondition, group, m.ID, reason).
+								AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
+								api.NewAction(api.ActionTypeSetMemberCondition, group, m.ID, reason).
+									AddParam(api.ConditionTypeUpdating.String(), ""))
+
+							newPlan = p
+						}
+					}
 				}
 			}
 

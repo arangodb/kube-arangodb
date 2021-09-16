@@ -46,6 +46,7 @@ type Context interface {
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer
 	resources.DeploymentImageManager
+	resources.DeploymentCLIGetter
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject

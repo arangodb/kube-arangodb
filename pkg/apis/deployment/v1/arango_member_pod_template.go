@@ -36,10 +36,16 @@ func GetArangoMemberPodTemplate(pod *core.PodTemplateSpec, podSpecChecksum strin
 		return nil, err
 	}
 
+	checksum := fmt.Sprintf("%0x", sha256.Sum256(data))
+
+	if podSpecChecksum == "" {
+		podSpecChecksum = checksum
+	}
+
 	return &ArangoMemberPodTemplate{
 		PodSpec:         pod,
 		PodSpecChecksum: podSpecChecksum,
-		Checksum:        fmt.Sprintf("%0x", sha256.Sum256(data)),
+		Checksum:        checksum,
 	}, nil
 }
 
@@ -47,6 +53,13 @@ type ArangoMemberPodTemplate struct {
 	PodSpec         *core.PodTemplateSpec `json:"podSpec,omitempty"`
 	PodSpecChecksum string                `json:"podSpecChecksum,omitempty"`
 	Checksum        string                `json:"checksum,omitempty"`
+}
+
+func (a *ArangoMemberPodTemplate) GetChecksum() string {
+	if a == nil {
+		return ""
+	}
+	return a.Checksum
 }
 
 func (a *ArangoMemberPodTemplate) Equals(b *ArangoMemberPodTemplate) bool {
@@ -58,7 +71,7 @@ func (a *ArangoMemberPodTemplate) Equals(b *ArangoMemberPodTemplate) bool {
 		return false
 	}
 
-	return a.Checksum == b.Checksum && a.PodSpecChecksum == b.PodSpecChecksum
+	return a.Checksum == b.Checksum
 }
 
 func (a *ArangoMemberPodTemplate) RotationNeeded(b *ArangoMemberPodTemplate) bool {
@@ -70,7 +83,7 @@ func (a *ArangoMemberPodTemplate) RotationNeeded(b *ArangoMemberPodTemplate) boo
 		return true
 	}
 
-	return a.PodSpecChecksum != b.PodSpecChecksum
+	return a.Checksum != b.Checksum
 }
 
 func (a *ArangoMemberPodTemplate) EqualPodSpecChecksum(checksum string) bool {

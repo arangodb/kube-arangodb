@@ -26,7 +26,6 @@ package resources
 import (
 	"context"
 	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -632,6 +631,9 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
 	m.Conditions.Remove(api.ConditionTypePendingRestart)
 	m.Conditions.Remove(api.ConditionTypeRestart)
+	m.Conditions.Remove(api.ConditionTypePendingUpdate)
+	m.Conditions.Remove(api.ConditionTypeUpdating)
+	m.Conditions.Remove(api.ConditionTypeUpdateFailed)
 	m.Conditions.Remove(api.ConditionTypeCleanedOut)
 
 	m.Upgrade = false
@@ -737,7 +739,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 		return "", err
 	}
 
-	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+	return util.SHA256(data), nil
 }
 
 // EnsurePods creates all Pods listed in member status

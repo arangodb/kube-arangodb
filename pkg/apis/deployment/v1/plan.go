@@ -165,6 +165,10 @@ const (
 	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
 	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
 	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
+
+	// Runtime Updates
+	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
+	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
 )
 
 const (
@@ -243,6 +247,29 @@ func NewAction(actionType ActionType, group ServerGroup, memberID string, reason
 		a.Reason = reason[0]
 	}
 	return a
+}
+
+// ActionBuilder allows to generate actions based on predefined group and member id
+type ActionBuilder interface {
+	// NewAction instantiates a new Action.
+	NewAction(actionType ActionType, reason ...string) Action
+}
+
+type actionBuilder struct {
+	group    ServerGroup
+	memberID string
+}
+
+func (a actionBuilder) NewAction(actionType ActionType, reason ...string) Action {
+	return NewAction(actionType, a.group, a.memberID, reason...)
+}
+
+// NewActionBuilder create new action builder with provided group and id
+func NewActionBuilder(group ServerGroup, memberID string) ActionBuilder {
+	return actionBuilder{
+		group:    group,
+		memberID: memberID,
+	}
 }
 
 // SetImage sets the Image field to the given value and returns the modified

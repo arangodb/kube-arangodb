@@ -33,9 +33,14 @@ const (
 )
 
 type Timeouts struct {
+	// AddMember action timeout
 	AddMember *Timeout `json:"addMember,omitempty"`
 
+	// MaintenanceGracePeriod action timeout
 	MaintenanceGracePeriod *Timeout `json:"maintenanceGracePeriod,omitempty"`
+
+	// RuntimeContainerImageUpdate action timeout
+	RuntimeContainerImageUpdate *Timeout `json:"runtimeContainerImageUpdate,omitempty"`
 }
 
 func (t *Timeouts) GetMaintenanceGracePeriod() time.Duration {

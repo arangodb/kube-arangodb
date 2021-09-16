@@ -26,6 +26,10 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -53,6 +57,7 @@ type ActionContext interface {
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer
+	resources.DeploymentCLIGetter
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -161,6 +166,18 @@ type actionContext struct {
 	context      Context
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
+}
+
+func (ac *actionContext) GetKubeCli() kubernetes.Interface {
+	return ac.context.GetKubeCli()
+}
+
+func (ac *actionContext) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
+	return ac.context.GetMonitoringV1Cli()
+}
+
+func (ac *actionContext) GetArangoCli() versioned.Interface {
+	return ac.context.GetArangoCli()
 }
 
 func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {

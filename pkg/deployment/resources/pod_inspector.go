@@ -185,7 +185,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
-		if k8sutil.IsPodReady(pod) {
+		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to true")

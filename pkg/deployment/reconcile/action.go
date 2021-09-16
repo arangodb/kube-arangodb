@@ -53,6 +53,22 @@ type Action interface {
 	MemberID() string
 }
 
+// ActionPost keep interface which is executed after action is completed.
+type ActionPost interface {
+	Action
+
+	// Post execute after action is completed
+	Post(ctx context.Context) error
+}
+
+func getActionPost(a Action, ctx context.Context) error {
+	if c, ok := a.(ActionPost); !ok {
+		return nil
+	} else {
+		return c.Post(ctx)
+	}
+}
+
 // ActionReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
 type ActionReloadCachedStatus interface {
 	Action

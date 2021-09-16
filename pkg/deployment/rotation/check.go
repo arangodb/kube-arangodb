@@ -34,15 +34,15 @@ import (
 type Mode int
 
 const (
-	EnforcedRotation Mode = iota
-	GracefulRotation
-	InPlaceRotation
+	SkippedRotation Mode = iota
 	SilentRotation
-	SkippedRotation
+	InPlaceRotation
+	GracefulRotation
+	EnforcedRotation
 )
 
 func (m Mode) And(b Mode) Mode {
-	if m < b {
+	if m > b {
 		return m
 	}
 
@@ -64,7 +64,7 @@ func CheckPossible(member api.MemberStatus) bool {
 	return true
 }
 
-func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member api.MemberStatus, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
+func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
 	// Determine if rotation is required based on plan and actions
 
 	// Set default mode for return value
@@ -123,12 +123,9 @@ func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Insp
 		}
 	}
 
-	if statusTemplate.RotationNeeded(specTemplate) {
-		reason = "Pod needs rotation - templates does not match"
-		mode = GracefulRotation
-		log.Info().Str("id", member.ID).Str("Before", member.PodSpecVersion).Msgf(reason)
-		return
+	if mode, plan, err := compare(log, spec, member, group, specTemplate, statusTemplate); err != nil {
+		return SkippedRotation, nil, "", err
+	} else {
+		return mode, plan, "Pod needs rotation", nil
 	}
-
-	return
 }

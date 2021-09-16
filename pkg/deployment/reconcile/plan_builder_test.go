@@ -29,6 +29,10 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -73,6 +77,18 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetKubeCli() kubernetes.Interface {
+	panic("implement me")
+}
+
+func (c *testContext) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
+	panic("implement me")
+}
+
+func (c *testContext) GetArangoCli() versioned.Interface {
+	panic("implement me")
 }
 
 func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {

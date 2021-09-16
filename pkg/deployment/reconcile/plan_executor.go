@@ -185,6 +185,11 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				log.Info().Msgf("Appending new plan items")
 				return newPlan, true, nil
 			}
+
+			if err := getActionPost(action, ctx); err != nil {
+				log.Err(err).Msgf("Post action failed")
+				return nil, true, errors.WithStack(err)
+			}
 		} else {
 			if plan[0].StartTime.IsZero() {
 				now := metav1.Now()

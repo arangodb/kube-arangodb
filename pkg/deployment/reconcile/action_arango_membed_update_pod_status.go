@@ -36,6 +36,10 @@ func init() {
 	registerAction(api.ActionTypeArangoMemberUpdatePodStatus, newArangoMemberUpdatePodStatusAction)
 }
 
+const (
+	ActionTypeArangoMemberUpdatePodStatusChecksum = "checksum"
+)
+
 // newArangoMemberUpdatePodStatusAction creates a new Action that implements the given
 // planned ArangoMemberUpdatePodStatus action.
 func newArangoMemberUpdatePodStatusAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
@@ -72,6 +76,17 @@ func (a *actionArangoMemberUpdatePodStatus) Start(ctx context.Context) (bool, er
 		err := errors.Newf("ArangoMember not found")
 		log.Error().Err(err).Msg("ArangoMember not found")
 		return false, err
+	}
+
+	if c, ok := a.action.GetParam(ActionTypeArangoMemberUpdatePodStatusChecksum); ok {
+		if member.Spec.Template == nil {
+			return true, nil
+		}
+
+		if member.Spec.Template.Checksum != c {
+			// Checksum is invalid
+			return true, nil
+		}
 	}
 
 	if member.Status.Template == nil || !member.Status.Template.Equals(member.Spec.Template) {
