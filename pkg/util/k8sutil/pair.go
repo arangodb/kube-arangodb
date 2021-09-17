@@ -163,16 +163,16 @@ func NewOptionPair(pairs ...OptionPair) OptionPairs {
 	return pairs
 }
 
-// TODO test desc + UT
+// ExtractStringToOptionPair extracts command line argument into the OptionPair.
 func ExtractStringToOptionPair(arg string) OptionPair {
-	trimmed := strings.Trim(arg, " ")
+	trimmed := strings.TrimLeft(arg, " ")
 	index := strings.Index(trimmed, "=")
 	if index < 0 {
-		return OptionPair{Key: trimmed}
+		return OptionPair{Key: strings.TrimRight(trimmed, " ")}
 	}
 
 	return OptionPair{
-		Key:   trimmed[0:index],
+		Key:   strings.Trim(trimmed[0:index], " "),
 		Value: trimmed[index+1:],
 	}
 }
