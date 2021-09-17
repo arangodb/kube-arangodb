@@ -99,8 +99,7 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 					return false
 				}
 
-				// TODO what if additional log level was added in the meantime
-				s.Template.PodSpec.Spec.Containers[id].Args = obj.Spec.Template.PodSpec.Spec.Containers[id].Args
+				s.Template.PodSpec.Spec.Containers[id].Command = obj.Spec.Template.PodSpec.Spec.Containers[id].Command
 				return true
 			}
 		}
@@ -155,10 +154,9 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	}
 
 	var op cmpContainer = func(containerSpec core.Container, containerStatus core.Container) error {
-		//diff := util.GetDifference(containerSpec.Args, containerStatus.Args)
 		topicsLogLevel := map[string]string{}
 
-		for _, arg := range containerSpec.Args {
+		for _, arg := range containerSpec.Command {
 			if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
 				continue
 			}
@@ -176,14 +174,11 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 			}
 		}
 
-		// TODO
-		// TODO how to disable old log topics?
-		// TODO how to set the general log level
-
 		if err := a.setLogLevel(ctx, topicsLogLevel); err != nil {
 			return errors.WithMessage(err, "can not set log level")
 		}
 
+		a.log.Info().Interface("topics", topicsLogLevel).Msg("send log level to the ArangoDB")
 		return nil
 	}
 

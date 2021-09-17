@@ -23,11 +23,10 @@ package rotation
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func Test_ArangoDContainers_SidecarImages(t *testing.T) {
@@ -51,6 +50,35 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 			expectedPlan: api.Plan{
 				api.NewAction(api.ActionTypeRuntimeContainerImageUpdate, 0, ""),
 			},
+		},
+		{
+			name: "Only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName,
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: InPlaceRotation,
+			expectedPlan: api.Plan{
+				api.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, 0, ""),
+			},
+		},
+		{
+			name: "Only log level arguments of the Sidecar have been changed",
+			spec: buildPodSpec(addContainerWithArgs("sidecar",
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithArgs("sidecar", []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+		{
+			name:   "ArangoDB server arguments have not been changed",
+			spec:   buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			status: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+		},
+		{
+			name: "Not only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO",
+				"--server.endpoint=localhost"})),
+			status:       buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
 		},
 	}
 
@@ -144,5 +172,3 @@ func Test_InitContainers(t *testing.T) {
 		runTestCases(t)(testCases...)
 	})
 }
-
-// TODO unit tests for changed args

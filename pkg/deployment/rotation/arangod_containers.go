@@ -47,21 +47,24 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 
 		for id := range a {
 			if ac, bc := &a[id], &b[id]; ac.Name == k8sutil.ServerContainerName && ac.Name == bc.Name {
-				foundLogLevelDifference := false
-				for _, arg := range util.GetDifference(ac.Args, bc.Args) {
+				onlyLogLevelArgsChanged := false
+				for _, arg := range util.GetDifference(ac.Command, bc.Command) {
 					if strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-						foundLogLevelDifference = true
+						onlyLogLevelArgsChanged = true
+					} else {
+						onlyLogLevelArgsChanged = false
+						break
 					}
 				}
 
-				if !foundLogLevelDifference {
+				if !onlyLogLevelArgsChanged {
 					continue
 				}
 
 				plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
 					AddParam(ContainerName, ac.Name))
 
-				bc.Args = ac.Args
+				bc.Command = ac.Command
 				mode = mode.And(InPlaceRotation)
 			} else if ac.Name == bc.Name {
 				if ac.Image != bc.Image {

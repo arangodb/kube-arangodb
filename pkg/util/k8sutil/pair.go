@@ -163,7 +163,7 @@ func NewOptionPair(pairs ...OptionPair) OptionPairs {
 	return pairs
 }
 
-// TODO test desc
+// TODO test desc + UT
 func ExtractStringToOptionPair(arg string) OptionPair {
 	trimmed := strings.Trim(arg, " ")
 	index := strings.Index(trimmed, "=")
@@ -173,6 +173,6 @@ func ExtractStringToOptionPair(arg string) OptionPair {
 
 	return OptionPair{
 		Key:   trimmed[0:index],
-		Value: trimmed[index:],
+		Value: trimmed[index+1:],
 	}
 }
