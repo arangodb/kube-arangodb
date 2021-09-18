@@ -33,6 +33,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -156,21 +157,18 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	var op cmpContainer = func(containerSpec core.Container, containerStatus core.Container) error {
 		topicsLogLevel := map[string]string{}
 
-		for _, arg := range containerSpec.Command {
-			if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-				continue
+		// Set log levels to INFO for topics which were removed from the spec.
+		statusDiff := util.GetDifference(containerStatus.Command, containerSpec.Command)
+		for _, arg := range statusDiff {
+			if ok, topic, _ := getTopicAndLevel(arg); ok {
+				topicsLogLevel[topic] = "INFO"
 			}
+		}
 
-			logLevelOption := k8sutil.ExtractStringToOptionPair(arg)
-			if len(logLevelOption.Value) > 0 {
-				logValueOption := k8sutil.ExtractStringToOptionPair(logLevelOption.Value)
-				if len(logValueOption.Value) > 0 {
-					// It is the topic log, e.g.: --log.level=request=INFO.
-					topicsLogLevel[logValueOption.Key] = logValueOption.Value
-				} else {
-					// It is the general log, e.g.: --log.level=INFO.
-					topicsLogLevel["general"] = logLevelOption.Value
-				}
+		// Set log levels from the provided spec.
+		for _, arg := range containerSpec.Command {
+			if ok, topic, value := getTopicAndLevel(arg); ok {
+				topicsLogLevel[topic] = value
 			}
 		}
 
@@ -278,4 +276,25 @@ func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLe
 	}
 
 	return resp.CheckStatus(200)
+}
+
+// getTopicAndLevel returns topics and log level from the argument.
+func getTopicAndLevel(arg string) (bool, string, string) {
+	if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
+		return false, "", ""
+	}
+
+	logLevelOption := k8sutil.ExtractStringToOptionPair(arg)
+	if len(logLevelOption.Value) > 0 {
+		logValueOption := k8sutil.ExtractStringToOptionPair(logLevelOption.Value)
+		if len(logValueOption.Value) > 0 {
+			// It is the topic log, e.g.: --log.level=request=INFO.
+			return true, logValueOption.Key, logValueOption.Value
+		} else {
+			// It is the general log, e.g.: --log.level=INFO.
+			return true, "general", logLevelOption.Value
+		}
+	}
+
+	return false, "", ""
 }
