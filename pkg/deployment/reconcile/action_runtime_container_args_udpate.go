@@ -32,6 +32,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -61,8 +62,6 @@ type actionRuntimeContainerArgsUpdate struct {
 // Post updates arguments for the specific Arango member.
 func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 
-	a.log.Info().Msgf("Updating container args")
-
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		a.log.Info().Msg("member is gone already")
@@ -81,31 +80,47 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 		return nil
 	}
 
+	log := a.log.With().Str("containerName", containerName).Logger()
 	updateMemberStatusArgs := func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool {
 		if obj.Spec.Template == nil || s.Template == nil ||
 			obj.Spec.Template.PodSpec == nil || s.Template.PodSpec == nil {
-			a.log.Info().Msgf("Nil Member definition")
+			log.Info().Msgf("Nil Member definition")
 			return false
 		}
 
 		if len(obj.Spec.Template.PodSpec.Spec.Containers) != len(s.Template.PodSpec.Spec.Containers) {
-			a.log.Info().Msgf("Invalid size of containers")
+			log.Info().Msgf("Invalid size of containers")
 			return false
 		}
 
 		for id := range obj.Spec.Template.PodSpec.Spec.Containers {
 			if obj.Spec.Template.PodSpec.Spec.Containers[id].Name == containerName {
 				if s.Template.PodSpec.Spec.Containers[id].Name != containerName {
-					a.log.Info().Msgf("Invalid order of containers")
+					log.Info().Msgf("Invalid order of containers")
 					return false
 				}
 
 				s.Template.PodSpec.Spec.Containers[id].Command = obj.Spec.Template.PodSpec.Spec.Containers[id].Command
+				groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(a.action.Group)
+				checksum, err := resources.ChecksumArangoPod(groupSpec,
+					resources.CreatePodFromTemplate(obj.Spec.Template.PodSpec))
+				if err != nil {
+					log.Error().Err(err).Msg("Error while getting pod checksum")
+					return false
+				}
+
+				newStatus, err := api.GetArangoMemberPodTemplate(s.Template.PodSpec, checksum)
+				if err != nil {
+					log.Error().Err(err).Msg("Error while getting template")
+					return false
+				}
+				s.Template = newStatus
+				log.Info().Msgf("Updating container args")
 				return true
 			}
 		}
 
-		a.log.Info().Msgf("can not find the container")
+		log.Info().Msgf("can not find the container")
 
 		return false
 	}
