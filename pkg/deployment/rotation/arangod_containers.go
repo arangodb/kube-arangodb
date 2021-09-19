@@ -47,17 +47,7 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 
 		for id := range a {
 			if ac, bc := &a[id], &b[id]; ac.Name == k8sutil.ServerContainerName && ac.Name == bc.Name {
-				onlyLogLevelArgsChanged := false
-				for _, arg := range util.GetDifference(ac.Command, bc.Command) {
-					if strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-						onlyLogLevelArgsChanged = true
-					} else {
-						onlyLogLevelArgsChanged = false
-						break
-					}
-				}
-
-				if !onlyLogLevelArgsChanged {
+				if !IsOnlyLogLevelChanged(ac.Command, bc.Command) {
 					continue
 				}
 
@@ -122,4 +112,28 @@ func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGr
 
 		return
 	}
+}
+
+// IsOnlyLogLevelChanged returns true when status and spec log level arguments are different.
+// If any other argument than --log.level is different false is returned.
+func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
+	diffSpec := util.GetDifference(specArgs, statusArgs)
+	for _, arg := range diffSpec {
+		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
+			return false
+		}
+	}
+
+	diffStatus := util.GetDifference(statusArgs, specArgs)
+	for _, arg := range diffStatus {
+		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
+			return false
+		}
+	}
+
+	if len(diffSpec) == 0 && len(diffStatus) == 0 {
+		return false
+	}
+
+	return true
 }
