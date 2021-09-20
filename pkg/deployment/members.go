@@ -24,11 +24,11 @@ package deployment
 
 import (
 	"context"
-	"strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -71,19 +71,78 @@ func (d *Deployment) createInitialMembers(ctx context.Context, apiObject *api.Ar
 	return nil
 }
 
+func (d *Deployment) createAgencyMapping(ctx context.Context) error {
+	spec := d.GetSpec()
+	status, _ := d.GetStatus()
+
+	if !spec.Mode.HasAgents() {
+		return nil
+	}
+
+	if status.Agency != nil {
+		return nil
+	}
+
+	var i api.DeploymentStatusAgencyInfo
+
+	if spec.Agents.Count == nil {
+		return nil
+	}
+
+	agents := status.Members.Agents
+
+	if len(agents) > *spec.Agents.Count {
+		return errors.Newf("Agency size is bigger than requested size")
+	}
+
+	c := api.DeploymentStatusAgencySize(*spec.Agents.Count)
+
+	i.Size = &c
+
+	for id := range agents {
+		i.IDs = append(i.IDs, agents[id].ID)
+	}
+
+	for len(i.IDs) < *spec.Agents.Count {
+		i.IDs = append(i.IDs, names.GetArangodID(api.ServerGroupAgents))
+	}
+
+	return d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		s.Agency = &i
+		return true
+	})
+}
+
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
 func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (string, error) {
-	if id == "" {
-		idPrefix := getArangodIDPrefix(group)
-		for {
-			id = idPrefix + strings.ToLower(uniuri.NewLen(8)) // K8s accepts only lowercase, so we use it here as well
-			if !status.Members.ContainsID(id) {
-				break
-			}
-			// Duplicate, try again
+	if group == api.ServerGroupAgents {
+		if status.Agency == nil {
+			return "", errors.New("Agency is not yet defined")
 		}
+		// In case of agents we need to use hardcoded ids
+		if id == "" {
+			for _, nid := range status.Agency.IDs {
+				if !status.Members.ContainsID(nid) {
+					id = nid
+					break
+				}
+			}
+		}
+	} else {
+		if id == "" {
+			for {
+				id = names.GetArangodID(group)
+				if !status.Members.ContainsID(id) {
+					break
+				}
+				// Duplicate, try again
+			}
+		}
+	}
+	if id == "" {
+		return "nil", errors.New("Unable to get ID")
 	}
 	deploymentName := apiObject.GetName()
 	role := group.AsRole()
@@ -166,21 +225,4 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	}
 
 	return id, nil
-}
-
-// getArangodIDPrefix returns the prefix required ID's of arangod servers
-// in the given group.
-func getArangodIDPrefix(group api.ServerGroup) string {
-	switch group {
-	case api.ServerGroupSingle:
-		return "SNGL-"
-	case api.ServerGroupCoordinators:
-		return "CRDN-"
-	case api.ServerGroupDBServers:
-		return "PRMR-"
-	case api.ServerGroupAgents:
-		return "AGNT-"
-	default:
-		return ""
-	}
 }
