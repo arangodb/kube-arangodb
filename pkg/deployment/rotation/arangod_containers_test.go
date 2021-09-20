@@ -51,35 +51,6 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 				api.NewAction(api.ActionTypeRuntimeContainerImageUpdate, 0, ""),
 			},
 		},
-		{
-			name: "Only log level arguments of the ArangoDB server have been changed",
-			spec: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName,
-				[]string{"--log.level=INFO", "--log.level=requests=error"})),
-			status:       buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
-			expectedMode: InPlaceRotation,
-			expectedPlan: api.Plan{
-				api.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, 0, ""),
-			},
-		},
-		{
-			name: "Only log level arguments of the Sidecar have been changed",
-			spec: buildPodSpec(addContainerWithArgs("sidecar",
-				[]string{"--log.level=INFO", "--log.level=requests=error"})),
-			status:       buildPodSpec(addContainerWithArgs("sidecar", []string{"--log.level=INFO"})),
-			expectedMode: GracefulRotation,
-		},
-		{
-			name:   "ArangoDB server arguments have not been changed",
-			spec:   buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
-			status: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
-		},
-		{
-			name: "Not only log level arguments of the ArangoDB server have been changed",
-			spec: buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO",
-				"--server.endpoint=localhost"})),
-			status:       buildPodSpec(addContainerWithArgs(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
-			expectedMode: GracefulRotation,
-		},
 	}
 
 	runTestCases(t)(testCases...)
@@ -171,4 +142,40 @@ func Test_InitContainers(t *testing.T) {
 
 		runTestCases(t)(testCases...)
 	})
+}
+
+func Test_Container_Args(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName,
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: InPlaceRotation,
+			expectedPlan: api.Plan{
+				api.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, 0, ""),
+			},
+		},
+		{
+			name: "Only log level arguments of the Sidecar have been changed",
+			spec: buildPodSpec(addContainerWithCommand("sidecar",
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+		{
+			name:   "ArangoDB server arguments have not been changed",
+			spec:   buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			status: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+		},
+		{
+			name: "Not only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO",
+				"--server.endpoint=localhost"})),
+			status:       buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
 }

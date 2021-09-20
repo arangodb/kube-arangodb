@@ -127,9 +127,9 @@ func addSidecarWithImage(name, image string) podSpecBuilder {
 	})
 }
 
-func addContainerWithArgs(name string, args []string) podSpecBuilder {
+func addContainerWithCommand(name string, command []string) podSpecBuilder {
 	return addContainer(name, func(c *core.Container) {
-		c.Args = args
+		c.Command = command
 	})
 }
 
