@@ -32,9 +32,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -101,20 +99,6 @@ func (a actionRuntimeContainerArgsUpdate) Post(ctx context.Context) error {
 				}
 
 				s.Template.PodSpec.Spec.Containers[id].Command = obj.Spec.Template.PodSpec.Spec.Containers[id].Command
-				groupSpec := a.actionCtx.GetSpec().GetServerGroupSpec(a.action.Group)
-				checksum, err := resources.ChecksumArangoPod(groupSpec,
-					resources.CreatePodFromTemplate(obj.Spec.Template.PodSpec))
-				if err != nil {
-					log.Error().Err(err).Msg("Error while getting pod checksum")
-					return false
-				}
-
-				newStatus, err := api.GetArangoMemberPodTemplate(s.Template.PodSpec, checksum)
-				if err != nil {
-					log.Error().Err(err).Msg("Error while getting template")
-					return false
-				}
-				s.Template = newStatus
 				log.Info().Msgf("Updating container args")
 				return true
 			}
@@ -172,13 +156,14 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	var op cmpContainer = func(containerSpec core.Container, containerStatus core.Container) error {
 		topicsLogLevel := map[string]string{}
 
-		// Set log levels to INFO for topics which were removed from the spec.
-		statusDiff := util.GetDifference(containerStatus.Command, containerSpec.Command)
-		for _, arg := range statusDiff {
-			if ok, topic, _ := getTopicAndLevel(arg); ok {
-				topicsLogLevel[topic] = "INFO"
-			}
-		}
+		// The below code can be used to set default log level when it is removed from the spec.
+		// The list of default log levels exists, but it is hardcoded in ArangoDB, and it is not possible to fetch it.
+		//statusDiff := util.Diff(containerStatus.Command, containerSpec.Command)
+		//for _, arg := range statusDiff {
+		//	if ok, topic, _ := getTopicAndLevel(arg); ok {
+		//		topicsLogLevel[topic] = "INFO" // Each topic has its own default log level. It is INFO for most of them.
+		//	}
+		//}
 
 		// Set log levels from the provided spec.
 		for _, arg := range containerSpec.Command {

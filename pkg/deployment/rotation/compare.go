@@ -56,7 +56,9 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 		return SkippedRotation, nil, nil
 	}
 
-	mode = SkippedRotation
+	// If checksums are different and rotation is not needed and there are no changes between containers
+	// then silent rotation must be applied to adjust status checksum.
+	mode = SilentRotation
 
 	podStatus := status.PodSpec.DeepCopy()
 
