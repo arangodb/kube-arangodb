@@ -156,15 +156,6 @@ func (a actionRuntimeContainerArgsUpdate) Start(ctx context.Context) (bool, erro
 	var op cmpContainer = func(containerSpec core.Container, containerStatus core.Container) error {
 		topicsLogLevel := map[string]string{}
 
-		// The below code can be used to set default log level when it is removed from the spec.
-		// The list of default log levels exists, but it is hardcoded in ArangoDB, and it is not possible to fetch it.
-		//statusDiff := util.Diff(containerStatus.Command, containerSpec.Command)
-		//for _, arg := range statusDiff {
-		//	if ok, topic, _ := getTopicAndLevel(arg); ok {
-		//		topicsLogLevel[topic] = "INFO" // Each topic has its own default log level. It is INFO for most of them.
-		//	}
-		//}
-
 		// Set log levels from the provided spec.
 		for _, arg := range containerSpec.Command {
 			if ok, topic, value := getTopicAndLevel(arg); ok {

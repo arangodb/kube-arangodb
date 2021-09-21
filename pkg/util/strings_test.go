@@ -81,8 +81,68 @@ func TestDiff(t *testing.T) {
 
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
-			diff := Diff(testCase.args.compareWhat, testCase.args.compareTo)
+			diff := DiffStringsOneWay(testCase.args.compareWhat, testCase.args.compareTo)
 			assert.Equal(t, testCase.want, diff)
+		})
+	}
+}
+
+func TestDiffStrings(t *testing.T) {
+	type args struct {
+		compareWhat []string
+		compareTo   []string
+	}
+	tests := map[string]struct {
+		args args
+		want []string
+	}{
+		"two nil slices": {},
+		"source slice is nil": {
+			args: args{
+				compareTo: []string{"1"},
+			},
+			want: []string{"1"},
+		},
+		"destination slice is nil": {
+			args: args{
+				compareWhat: []string{"1"},
+			},
+			want: []string{"1"},
+		},
+		"source slice has more elements": {
+			args: args{
+				compareWhat: []string{"1", "2"},
+				compareTo:   []string{"2"},
+			},
+			want: []string{"1"},
+		},
+		"destination slice has more elements": {
+			args: args{
+				compareWhat: []string{"1", "2"},
+				compareTo:   []string{"1", "2", "3"},
+			},
+			want: []string{"3"},
+		},
+		"destination and source slices have all different elements": {
+			args: args{
+				compareWhat: []string{"1", "2", "3"},
+				compareTo:   []string{"4", "5", "6"},
+			},
+			want: []string{"1", "2", "3", "4", "5", "6"},
+		},
+		"destination and source slices have some overlapping elements": {
+			args: args{
+				compareWhat: []string{"1", "2", "3", "4"},
+				compareTo:   []string{"3", "4", "5", "6"},
+			},
+			want: []string{"1", "2", "5", "6"},
+		},
+	}
+	for testName, testCase := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got := DiffStrings(testCase.args.compareWhat, testCase.args.compareTo)
+
+			assert.Equal(t, testCase.want, got)
 		})
 	}
 }

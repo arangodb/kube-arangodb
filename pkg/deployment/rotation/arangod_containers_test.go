@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,16 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+// Author Tomasz Mielech
+//
 
 package rotation
 
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -178,4 +182,43 @@ func Test_Container_Args(t *testing.T) {
 	}
 
 	runTestCases(t)(testCases...)
+}
+
+func TestIsOnlyLogLevelChanged(t *testing.T) {
+	type args struct {
+		specArgs   []string
+		statusArgs []string
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"log level not changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+		},
+		"log level changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO", "--log.level=requests=DEBUG"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+			want: true,
+		},
+		"log level and server endpoint changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO", "--log.level=requests=DEBUG", "--server.endpoint=localhost"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+		},
+	}
+
+	for testName, testCase := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got := IsOnlyLogLevelChanged(testCase.args.specArgs, testCase.args.statusArgs)
+
+			assert.Equal(t, testCase.want, got)
+		})
+	}
 }

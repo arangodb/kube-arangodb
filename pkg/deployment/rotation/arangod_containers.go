@@ -117,22 +117,15 @@ func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGr
 // IsOnlyLogLevelChanged returns true when status and spec log level arguments are different.
 // If any other argument than --log.level is different false is returned.
 func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
-	diffSpec := util.Diff(specArgs, statusArgs)
-	for _, arg := range diffSpec {
-		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-			return false
-		}
-	}
-
-	diffStatus := util.Diff(statusArgs, specArgs)
-	for _, arg := range diffStatus {
-		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
-			return false
-		}
-	}
-
-	if len(diffSpec) == 0 && len(diffStatus) == 0 {
+	diff := util.DiffStrings(specArgs, statusArgs)
+	if len(diff) == 0 {
 		return false
+	}
+
+	for _, arg := range diff {
+		if !strings.HasPrefix(strings.TrimLeft(arg, " "), "--log.level") {
+			return false
+		}
 	}
 
 	return true
