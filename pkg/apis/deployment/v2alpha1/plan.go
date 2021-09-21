@@ -171,6 +171,8 @@ const (
 	// Runtime Updates
 	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
 	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
+	// ActionTypeRuntimeContainerArgsLogLevelUpdate updates the container's executor arguments.
+	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
 )
 
 const (
