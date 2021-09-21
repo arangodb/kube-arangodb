@@ -18,9 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package features
+
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 func init() {
 	registerFeature(metricsExporter)
@@ -32,6 +37,8 @@ var metricsExporter = &feature{
 	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
+	deprecated:         "It is always set to True",
+	constValue:         util.NewBool(true),
 }
 
 func MetricsExporter() Feature {
