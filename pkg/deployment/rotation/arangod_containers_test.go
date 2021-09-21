@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,20 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+// Author Tomasz Mielech
+//
 
 package rotation
 
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
+	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func Test_ArangoDContainers_SidecarImages(t *testing.T) {
@@ -143,4 +146,79 @@ func Test_InitContainers(t *testing.T) {
 
 		runTestCases(t)(testCases...)
 	})
+}
+
+func Test_Container_Args(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName,
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: InPlaceRotation,
+			expectedPlan: api.Plan{
+				api.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, 0, ""),
+			},
+		},
+		{
+			name: "Only log level arguments of the Sidecar have been changed",
+			spec: buildPodSpec(addContainerWithCommand("sidecar",
+				[]string{"--log.level=INFO", "--log.level=requests=error"})),
+			status:       buildPodSpec(addContainerWithCommand("sidecar", []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+		{
+			name:   "ArangoDB server arguments have not been changed",
+			spec:   buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			status: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+		},
+		{
+			name: "Not only log level arguments of the ArangoDB server have been changed",
+			spec: buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO",
+				"--server.endpoint=localhost"})),
+			status:       buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
+			expectedMode: GracefulRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
+
+func TestIsOnlyLogLevelChanged(t *testing.T) {
+	type args struct {
+		specArgs   []string
+		statusArgs []string
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"log level not changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+		},
+		"log level changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO", "--log.level=requests=DEBUG"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+			want: true,
+		},
+		"log level and server endpoint changed": {
+			args: args{
+				specArgs:   []string{"--log.level=INFO", "--log.level=requests=DEBUG", "--server.endpoint=localhost"},
+				statusArgs: []string{"--log.level=INFO"},
+			},
+		},
+	}
+
+	for testName, testCase := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got := IsOnlyLogLevelChanged(testCase.args.specArgs, testCase.args.statusArgs)
+
+			assert.Equal(t, testCase.want, got)
+		})
+	}
 }

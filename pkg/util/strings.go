@@ -63,3 +63,28 @@ func PrefixStringArray(a []string, prefix string) []string {
 
 	return b
 }
+
+// DiffStringsOneWay returns the elements in `compareWhat` that are not in `compareTo`.
+func DiffStringsOneWay(compareWhat, compareTo []string) []string {
+	compareToMap := make(map[string]struct{}, len(compareTo))
+	for _, x := range compareTo {
+		compareToMap[x] = struct{}{}
+	}
+
+	var diff []string
+	for _, x := range compareWhat {
+		if _, found := compareToMap[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+
+	return diff
+}
+
+// DiffStrings returns the elements in `compareWhat` that are not in `compareTo` and
+// elements in `compareTo` that are not in `compareFrom`.
+func DiffStrings(compareWhat, compareTo []string) []string {
+	diff := DiffStringsOneWay(compareWhat, compareTo)
+
+	return append(diff, DiffStringsOneWay(compareTo, compareWhat)...)
+}

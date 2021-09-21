@@ -188,7 +188,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 			if err := getActionPost(action, ctx); err != nil {
 				log.Err(err).Msgf("Post action failed")
-				return nil, true, errors.WithStack(err)
+				return nil, false, errors.WithStack(err)
 			}
 		} else {
 			if plan[0].StartTime.IsZero() {
@@ -206,8 +206,7 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {
-			log.Debug().Err(err).
-				Msg("Failed to start action")
+			log.Error().Err(err).Msg("Failed to start action")
 			return false, false, false, errors.WithStack(err)
 		}
 
