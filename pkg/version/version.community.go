@@ -18,4 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package tools
+// +build community
+
+package version
+
+var (
+	edition = CommunityEdition
+)
