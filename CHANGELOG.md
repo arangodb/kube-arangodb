@@ -9,7 +9,8 @@
 - Changing the topics' log level without restarting the container.
   When the topic is removed from the argument list then it will not 
   be turned off in the ArangoDB automatically.
-  
+- Allow to customize SchedulerName inside Member Pod
+
 ## [1.2.2](https://github.com/arangodb/kube-arangodb/tree/1.2.2) (2021-09-09)
 - Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
 - Add HighPriorityPlan to ArangoDeployment Status
