@@ -1505,6 +1505,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.SchedulerName != nil {
+		in, out := &in.SchedulerName, &out.SchedulerName
+		*out = new(string)
+		**out = **in
+	}
 	if in.StorageClassName != nil {
 		in, out := &in.StorageClassName, &out.StorageClassName
 		*out = new(string)

@@ -571,6 +571,10 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarExternalExporter() *core.
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 	p.SecurityContext = m.groupSpec.SecurityContext.NewPodSecurityContext()
 
+	if s := m.groupSpec.SchedulerName; s != nil {
+		p.SchedulerName = *s
+	}
+
 	return nil
 }
 

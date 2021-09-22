@@ -67,7 +67,7 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 
 	g := generator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := compareFuncs(b, g(containersCompare), g(initContainersCompare)); err != nil {
+	if m, p, err := compareFuncs(b, g(podCompare), g(containersCompare), g(initContainersCompare)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {

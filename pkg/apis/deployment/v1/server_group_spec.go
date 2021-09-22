@@ -81,6 +81,8 @@ type ServerGroupSpec struct {
 	Args []string `json:"args,omitempty"`
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
+	// SchedulerName define scheduler name used for group
+	SchedulerName *string `json:"schedulerName,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
