@@ -41,7 +41,8 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		a, b := spec.Containers, status.Containers
 
-		if len(a) == 0 || len(b) == 0 {
+		if len(a) == 0 || len(a) != len(b) {
+			// If the number of the containers is different or is zero then skip rotation.
 			return SkippedRotation, nil, nil
 		}
 
