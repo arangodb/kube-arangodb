@@ -171,7 +171,7 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	$(GOPATH)/bin/golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
+	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
 	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
 	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) ./...
 
