@@ -10,11 +10,13 @@ VERSION_MAJOR_MINOR := $(shell echo $(VERSION_MAJOR_MINOR_PATCH) | cut -f 1,2 -d
 VERSION_MAJOR := $(shell echo $(VERSION_MAJOR_MINOR) | cut -f 1 -d '.')
 COMMIT := $(shell git rev-parse --short HEAD)
 DOCKERCLI := $(shell which docker)
+RELEASE_MODE ?= community
 
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
+VBINDIR := $(BINDIR)/$(RELEASE_MODE)
 VENDORDIR := $(ROOTDIR)/deps
 DASHBOARDDIR := $(ROOTDIR)/dashboard
 
@@ -48,7 +50,7 @@ endif
 
 HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
                            -d "$(ROOTDIR)/bin/charts" \
-                           --save=false
+                           --save=false --version "$(VERSION)"
 
 HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --name "$(NAME)" \
@@ -95,11 +97,13 @@ endif
 
 BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.4
 
+OPERATORIMAGENAME ?= $(REPONAME)
+
 ifndef OPERATORIMAGE
-	OPERATORIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)
+	OPERATORIMAGE := $(DOCKERNAMESPACE)/$(OPERATORIMAGENAME)$(IMAGESUFFIX)
 endif
 ifndef OPERATORUBIIMAGE
-	OPERATORUBIIMAGE := $(DOCKERNAMESPACE)/kube-arangodb$(IMAGESUFFIX)-ubi
+	OPERATORUBIIMAGE := $(DOCKERNAMESPACE)/$(OPERATORIMAGENAME)$(IMAGESUFFIX)-ubi
 endif
 ifndef ENTERPRISEIMAGE
 	ENTERPRISEIMAGE := $(DEFAULTENTERPRISEIMAGE)
@@ -115,8 +119,7 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-RELEASE := $(GOBUILDDIR)/bin/release
-GHRELEASE := $(GOBUILDDIR)/bin/github-release
+VBIN := $(BINDIR)/$(RELEASE_MODE)/$(BINNAME)
 
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
@@ -168,7 +171,7 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	$(GOPATH)/bin/golangci-lint run --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
+	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
 	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
 	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) ./...
 
@@ -222,7 +225,7 @@ update-generated:
 verify-generated:
 	@${MAKE} -B -s VERIFYARGS=--verify-only update-generated
 
-dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
+dashboard/assets.go:
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
 	@mkdir -p $(DASHBOARDDIR)/build
 	docker run --rm \
@@ -236,9 +239,12 @@ dashboard/assets.go: $(DASHBOARDSOURCES) $(DASHBOARDDIR)/Dockerfile.build
 .PHONY: bin
 bin: $(BIN)
 
-$(BIN): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(BINDIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(BIN) $(REPOPATH)
+$(VBIN): $(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(VBINDIR)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN) $(REPOPATH)
+
+$(BIN): $(VBIN)
+	@cp "$(VBIN)" "$(BIN)"
 
 .PHONY: docker
 docker: check-vars $(BIN)
@@ -333,7 +339,7 @@ manifests: chart-operator
 
 .PHONY: run-unit-tests
 run-unit-tests: $(SOURCES)
-	go test --count=1 $(TESTVERBOSEOPTIONS) \
+	go test --count=1 --tags "$(RELEASE_MODE)" $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/apis/backup/... \
 		$(REPOPATH)/pkg/apis/deployment/... \
 		$(REPOPATH)/pkg/apis/replication/... \
@@ -363,45 +369,6 @@ patch-release: patch-readme patch-examples
 patch-chart:
 	$(ROOTDIR)/scripts/patch_chart.sh "$(VERSION_MAJOR_MINOR_PATCH)" "$(OPERATORIMAGE)"
 
-.PHONY: docker-push
-docker-push: docker
-ifneq ($(DOCKERNAMESPACE), arangodb)
-	docker tag $(OPERATORIMAGE) $(DOCKERNAMESPACE)/arangodb-operator
-endif
-	docker push $(DOCKERNAMESPACE)/arangodb-operator
-
-.PHONY: docker-push-version
-docker-push-version: docker
-	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:$(VERSION)
-	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:$(VERSION_MAJOR_MINOR)
-	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:$(VERSION_MAJOR)
-	docker tag arangodb/arangodb-operator arangodb/arangodb-operator:latest
-	docker push arangodb/arangodb-operator:$(VERSION)
-	docker push arangodb/arangodb-operator:$(VERSION_MAJOR_MINOR)
-	docker push arangodb/arangodb-operator:$(VERSION_MAJOR)
-	docker push arangodb/arangodb-operator:latest
-
-$(RELEASE): $(GOBUILDDIR) $(SOURCES) $(GHRELEASE)
-	GOPATH=$(GOBUILDDIR) go build -o $(RELEASE) $(REPOPATH)/tools/release
-
-.PHONY: build-ghrelease
-build-ghrelease: $(GHRELEASE)
-
-$(GHRELEASE): $(GOBUILDDIR)
-	GOPATH=$(GOBUILDDIR) go build -o $(GHRELEASE) github.com/aktau/github-release
-
-.PHONY: release-patch
-release-patch: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=patch
-
-.PHONY: release-minor
-release-minor: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=minor
-
-.PHONY: release-major
-release-major: $(RELEASE)
-	GOPATH=$(GOBUILDDIR) $(RELEASE) -type=major
-
 .PHONY: tidy
 tidy:
 	@go mod tidy
@@ -410,7 +377,7 @@ tidy:
 deps-reload: tidy init
 
 .PHONY: init
-init: tools update-generated $(GHRELEASE) $(RELEASE) $(BIN) vendor
+init: tools update-generated $(BIN) vendor
 
 .PHONY: tools
 tools: update-vendor
