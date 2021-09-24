@@ -102,40 +102,37 @@ func createReplaceMemberPlan(ctx context.Context,
 
 	var plan api.Plan
 
-	// Replace is only allowed for DBServers
-	switch spec.GetMode() {
-	case api.DeploymentModeCluster:
-		status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
-			for _, member := range list {
-				if !plan.IsEmpty() {
+	// Replace is only allowed for DBServers & Agents
+	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			if !plan.IsEmpty() {
+				return nil
+			}
+			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+				switch group {
+				case api.ServerGroupDBServers:
+					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
+						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
+						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
 					return nil
-				}
-				if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-					switch group {
-					case api.ServerGroupDBServers:
-						plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
+				case api.ServerGroupAgents:
+					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID),
+						api.NewAction(api.ActionTypeAddMember, group, "").
 							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
 							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
-						log.Debug().
-							Str("role", group.AsRole()).
-							Msg("Creating replacement plan")
-						return nil
-					case api.ServerGroupAgents:
-						plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID),
-							api.NewAction(api.ActionTypeAddMember, group, "").
-								AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
-								AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
-						log.Debug().
-							Str("role", group.AsRole()).
-							Msg("Creating replacement plan")
-						return nil
-					}
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
+					return nil
 				}
 			}
+		}
 
-			return nil
-		}, api.ServerGroupAgents, api.ServerGroupDBServers)
-	}
+		return nil
+	}, api.ServerGroupAgents, api.ServerGroupDBServers)
 
 	return plan
 }
