@@ -53,14 +53,7 @@ func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 
 	if spec.GetMode().HasCoordinators() {
 		// Check if there are coordinators
-		if len(status.Members.Coordinators) == 0 {
-			// No more coordinators! Take immediate action
-			r.log.Error().Msg("No Coordinator members! Create one member immediately")
-			_, err := r.context.CreateMember(ctx, api.ServerGroupCoordinators, "")
-			if err != nil {
-				return err
-			}
-		} else if status.Members.Coordinators.AllFailed() {
+		if status.Members.Coordinators.AllFailed() {
 			r.log.Error().Msg("All coordinators failed - reset")
 			for _, m := range status.Members.Coordinators {
 				if err := r.context.DeletePod(ctx, m.PodName); err != nil {

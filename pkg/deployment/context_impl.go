@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
@@ -361,19 +363,22 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
+func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...reconcile.CreateMemberMod) (string, error) {
 	log := d.deps.Log
-	status, lastVersion := d.GetStatus()
-	id, err := createMember(log, &status, group, id, d.apiObject)
-	if err != nil {
-		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
-		return "", errors.WithStack(err)
+	if err := d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
+		nid, err := createMember(log, s, group, id, d.apiObject, mods...)
+		if err != nil {
+			log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
+			return false, errors.WithStack(err)
+		}
+
+		id = nid
+
+		return true, nil
+	}); err != nil {
+		return "", err
 	}
-	// Save added member
-	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-		log.Debug().Err(err).Msg("Updating CR status failed")
-		return "", errors.WithStack(err)
-	}
+
 	// Create event about it
 	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
 
@@ -609,19 +614,29 @@ func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
 	status, version := d.getStatus()
 
-	changed := action(&status)
+	changed, err := action(&status)
+
+	if err != nil {
+		return err
+	}
 
 	if !changed {
 		return nil
 	}
 
 	return d.updateStatus(ctx, status, version, force...)
+}
+
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
+		return action(s), nil
+	}, force...)
 }
 
 func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {

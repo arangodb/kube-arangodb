@@ -20,8 +20,13 @@
 
 // +build !enterprise
 
-package version
+package topology
 
-var (
-	edition = CommunityEdition
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	core "k8s.io/api/core/v1"
 )
+
+func GetTopologyAffinityRules(name string, group api.ServerGroup, status *api.TopologyStatus, member *api.TopologyMemberStatus) core.Affinity {
+	return core.Affinity{}
+}

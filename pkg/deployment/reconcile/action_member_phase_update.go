@@ -35,7 +35,7 @@ func init() {
 }
 
 const (
-	ActionTypeMemberPhaseUpdatePhaseKey string = "phase"
+	actionTypeMemberPhaseUpdatePhaseKey string = "phase"
 )
 
 func newMemberPhaseUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
@@ -60,7 +60,7 @@ func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	phaseString, ok := a.action.Params[ActionTypeMemberPhaseUpdatePhaseKey]
+	phaseString, ok := a.action.Params[actionTypeMemberPhaseUpdatePhaseKey]
 	if !ok {
 		log.Error().Msg("Phase not defined")
 		return true, nil

@@ -18,10 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-// +build !enterprise
+package reconcile
 
-package version
-
-var (
-	edition = CommunityEdition
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/rs/zerolog"
 )
+
+func init() {
+	registerAction(api.ActionTypeTopologyMemberAssignment, newTopologyMemberAssignment)
+}
+
+func newTopologyMemberAssignment(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &topologyMemberAssignment{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+
+	return a
+}

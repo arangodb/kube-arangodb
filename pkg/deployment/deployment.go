@@ -275,14 +275,9 @@ func (d *Deployment) run() {
 			}
 		}
 
-		// Create members
-		if err := d.createInitialMembers(context.TODO(), d.apiObject); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
-		}
-
-		// Create Pod Disruption Budgets
-		if err := d.resources.EnsurePDBs(context.TODO()); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pdbs", err, d.GetAPIObject()))
+		// Create initial topology
+		if err := d.createInitialTopology(context.TODO()); err != nil {
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial topology", err, d.GetAPIObject()))
 		}
 
 		status, lastVersion := d.GetStatus()

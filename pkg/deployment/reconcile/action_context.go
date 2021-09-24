@@ -89,7 +89,7 @@ type ActionContext interface {
 	GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
+	CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error)
 	// UpdateMember updates the deployment status wrt the given member.
 	UpdateMember(ctx context.Context, member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
@@ -236,6 +236,10 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
+func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+	return ac.context.WithStatusUpdateErr(ctx, action, force...)
+}
+
 func (ac *actionContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
@@ -351,8 +355,8 @@ func (ac *actionContext) GetMemberStatusAndGroupByID(id string) (api.MemberStatu
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
-	result, err := ac.context.CreateMember(ctx, group, id)
+func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
+	result, err := ac.context.CreateMember(ctx, group, id, mods...)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}

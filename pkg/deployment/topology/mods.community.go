@@ -20,8 +20,10 @@
 
 // +build !enterprise
 
-package version
+package topology
 
-var (
-	edition = CommunityEdition
-)
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
+func WithTopologyMod(s *api.DeploymentStatus, g api.ServerGroup, m *api.MemberStatus) error {
+	return nil
+}

@@ -27,6 +27,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
@@ -267,6 +269,8 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, &a)
 
+	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAntiAffinity)
+
 	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
 
 	return pod.ReturnPodAntiAffinityOrNil(a)
@@ -277,6 +281,8 @@ func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 
 	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
 
+	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAffinity)
+
 	return pod.ReturnPodAffinityOrNil(a)
 }
 
@@ -286,6 +292,8 @@ func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 	pod.AppendNodeSelector(&a)
 
 	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
+
+	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }
@@ -583,5 +591,16 @@ func (m *MemberArangoDPod) Annotations() map[string]string {
 }
 
 func (m *MemberArangoDPod) Labels() map[string]string {
-	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+
+	if m.group.IsArangod() && m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
+		if l == nil {
+			l = map[string]string{}
+		}
+
+		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.status.Topology.Zone)
+		l[k8sutil.LabelKeyArangoTopology] = string(m.status.Topology.ID)
+	}
+
+	return l
 }

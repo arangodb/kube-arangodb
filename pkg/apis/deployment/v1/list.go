@@ -18,10 +18,38 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-// +build !enterprise
+package v1
 
-package version
+import "sort"
 
-var (
-	edition = CommunityEdition
-)
+type List []string
+
+func (l List) Contains(v string) bool {
+	for _, z := range l {
+		if z == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (l List) Sort() {
+	sort.Strings(l)
+}
+
+func (l List) Remove(values ...string) List {
+	var m List
+
+	toRemove := List(values)
+
+	for _, v := range l {
+		if toRemove.Contains(v) {
+			continue
+		}
+
+		m = append(m, v)
+	}
+
+	return m
+}

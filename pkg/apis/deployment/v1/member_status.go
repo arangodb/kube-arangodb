@@ -80,6 +80,8 @@ type MemberStatus struct {
 	Upgrade bool `json:"upgrade,omitempty"`
 	// Endpoint definition how member should be reachable
 	Endpoint *string `json:"endpoint,omitempty"`
+	// Topology define topology member status assignment
+	Topology *TopologyMemberStatus `json:"topology,omitempty"`
 }
 
 // Equal checks for equality

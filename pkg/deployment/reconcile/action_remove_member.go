@@ -127,6 +127,11 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	if err := a.actionCtx.RemoveMemberByID(ctx, a.action.MemberID); err != nil {
 		return false, errors.WithStack(err)
 	}
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		return s.Topology.RemoveMember(a.action.Group, a.action.MemberID)
+	}); err != nil {
+		return false, errors.WithStack(err)
+	}
 	// Check that member has been removed
 	if _, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID); found {
 		return false, errors.WithStack(errors.Newf("Member %s still exists", a.action.MemberID))

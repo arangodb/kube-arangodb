@@ -39,6 +39,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+type CreateMemberMod func(s *api.DeploymentStatus, g api.ServerGroup, m *api.MemberStatus) error
+
 // Context provides methods to the reconcile package.
 type Context interface {
 	resources.DeploymentStatusUpdate
@@ -77,7 +79,7 @@ type Context interface {
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	// Returns ID, error
-	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
+	CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error)
 	// GetPod returns pod.
 	GetPod(ctx context.Context, podName string) (*v1.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
