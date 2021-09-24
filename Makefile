@@ -50,7 +50,7 @@ endif
 
 HELM_PACKAGE_CMD = $(HELM) package "$(ROOTDIR)/chart/$(CHART_NAME)" \
                            -d "$(ROOTDIR)/bin/charts" \
-                           --save=false --version "$(VERSION)"
+                           --save=false --version "$(VERSION_MAJOR_MINOR_PATCH)"
 
 HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --name "$(NAME)" \
