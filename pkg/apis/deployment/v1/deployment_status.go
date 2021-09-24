@@ -63,6 +63,9 @@ type DeploymentStatus struct {
 	// Plan to update this deployment
 	Plan Plan `json:"plan,omitempty"`
 
+	// HighPriorityPlan to update this deployment. Executed before plan
+	HighPriorityPlan Plan `json:"highPriorityPlan,omitempty"`
+
 	// AcceptedSpec contains the last specification that was accepted by the operator.
 	AcceptedSpec *DeploymentSpec `json:"accepted-spec,omitempty"`
 
@@ -75,6 +78,9 @@ type DeploymentStatus struct {
 
 	// ForceStatusReload if set to true forces a reload of the status from the custom resource.
 	ForceStatusReload *bool `json:"force-status-reload,omitempty"`
+
+	// Agency keeps information about agency
+	Agency *DeploymentStatusAgencyInfo `json:"agency,omitempty"`
 }
 
 // Equal checks for equality
@@ -92,10 +98,15 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Conditions.Equal(other.Conditions) &&
 		ds.Plan.Equal(other.Plan) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
-		ds.SecretHashes.Equal(other.SecretHashes)
+		ds.SecretHashes.Equal(other.SecretHashes) &&
+		ds.Agency.Equal(other.Agency)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true
 func (ds *DeploymentStatus) IsForceReload() bool {
 	return util.BoolOrDefault(ds.ForceStatusReload, false)
+}
+
+func (ds *DeploymentStatus) IsPlanEmpty() bool {
+	return ds.Plan.IsEmpty() && ds.HighPriorityPlan.IsEmpty()
 }

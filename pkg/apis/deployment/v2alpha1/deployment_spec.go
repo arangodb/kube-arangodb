@@ -149,6 +149,8 @@ type DeploymentSpec struct {
 	SyncMasters  ServerGroupSpec `json:"syncmasters"`
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
+	MemberPropagationMode *DeploymentMemberPropagationMode `json:"memberPropagationMode,omitempty"`
+
 	Chaos ChaosSpec `json:"chaos"`
 
 	Recovery *ArangoDeploymentRecoverySpec `json:"recovery,omitempty"`

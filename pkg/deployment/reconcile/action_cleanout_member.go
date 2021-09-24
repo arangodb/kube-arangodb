@@ -59,6 +59,11 @@ type actionCleanoutMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
+	if a.action.Group != api.ServerGroupDBServers {
+		// Proceed only on DBServers
+		return true, nil
+	}
+
 	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !ok {
 		// We wanted to remove and it is already gone. All ok
@@ -87,6 +92,10 @@ func (a *actionCleanoutMember) Start(ctx context.Context) (bool, error) {
 	var jobID string
 	ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 	if err := cluster.CleanOutServer(ctxJobID, a.action.MemberID); err != nil {
+		if driver.IsNotFound(err) {
+			// Member not found, it could be that it never connected to the cluster
+			return true, nil
+		}
 		log.Debug().Err(err).Msg("Failed to cleanout member")
 		return false, errors.WithStack(err)
 	}
@@ -119,7 +128,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create database client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -127,7 +136,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to access cluster")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -135,7 +144,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	cleanedOut, err := cluster.IsCleanedOut(ctxChild, a.action.MemberID)
 	if err != nil {
 		log.Debug().Err(err).Msg("IsCleanedOut failed")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 	if !cleanedOut {
 		// We're not done yet, check job status
@@ -146,7 +155,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create database client")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -154,7 +163,7 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		agency, err := a.actionCtx.GetAgency(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 
 		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -162,14 +171,14 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to fetch cleanout job status")
-			return false, false, errors.WithStack(err)
+			return false, false, nil
 		}
 		if jobStatus.IsFailed() {
 			log.Warn().Str("reason", jobStatus.Reason()).Msg("Cleanout Job failed. Aborting plan")
 			// Revert cleanout state
 			m.Phase = api.MemberPhaseCreated
 			m.CleanoutJobID = ""
-			if a.actionCtx.UpdateMember(ctx, m); err != nil {
+			if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 				return false, false, errors.WithStack(err)
 			}
 			return false, true, nil
@@ -178,10 +187,11 @@ func (a *actionCleanoutMember) CheckProgress(ctx context.Context) (bool, bool, e
 	}
 	// Cleanout completed
 	if m.Conditions.Update(api.ConditionTypeCleanedOut, true, "CleanedOut", "") {
-		if a.actionCtx.UpdateMember(ctx, m); err != nil {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, false, errors.WithStack(err)
 		}
 	}
+
 	// Cleanout completed
 	return true, false, nil
 }

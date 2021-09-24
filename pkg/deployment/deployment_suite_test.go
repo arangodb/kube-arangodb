@@ -68,7 +68,6 @@ const (
 	testServiceAccountName        = "testServiceAccountName"
 	testPriorityClassName         = "testPriority"
 	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
-	testExporterImage             = "arangodb/arangodb-exporter:0.1.6"
 	testImageOperatorUUIDInit     = "image/test-1234:3.7"
 
 	testYes = "yes"
@@ -455,6 +454,17 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		Namespace: testNamespace,
 	}
 
+	arangoDeployment.Status.Images = api.ImageInfoList{
+		{
+			Image:           "arangodb/arangodb:latest",
+			ImageID:         "arangodb/arangodb:latest",
+			ArangoDBVersion: "1.0.0",
+			Enterprise:      false,
+		},
+	}
+
+	arangoDeployment.Status.CurrentImage = &arangoDeployment.Status.Images[0]
+
 	deps := Dependencies{
 		Log:               zerolog.New(ioutil.Discard),
 		KubeCli:           kubernetesClientSet,
@@ -503,40 +513,6 @@ func createTestImagesWithVersion(enterprise bool, version driver.Version) api.Im
 
 func createTestImages(enterprise bool) api.ImageInfoList {
 	return createTestImagesWithVersion(enterprise, testVersion)
-}
-
-func createTestExporterPorts(port uint16) []core.ContainerPort {
-	return []core.ContainerPort{
-		{
-			Name:          "exporter",
-			ContainerPort: int32(port),
-			Protocol:      "TCP",
-		},
-	}
-}
-
-func createTestExporterCommand(secure, exporterSecure bool, port uint16) []string {
-	command := []string{
-		"/app/arangodb-exporter",
-	}
-
-	if secure {
-		command = append(command, "--arangodb.endpoint=https://localhost:8529")
-	} else {
-		command = append(command, "--arangodb.endpoint=http://localhost:8529")
-	}
-
-	command = append(command, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
-
-	if port != k8sutil.ArangoExporterPort {
-		command = append(command, fmt.Sprintf("--server.address=:%d", port))
-	}
-
-	if exporterSecure {
-		command = append(command, "--ssl.keyfile=/secrets/tls/tls.keyfile")
-	}
-
-	return command
 }
 
 func createTestExporterLivenessProbe(secure bool) *core.Probe {
@@ -595,30 +571,4 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 
 		deployment.apiObject.Status.Members.Update(member, group)
 	}
-}
-
-func testCreateExporterContainerWithPortAndSecureEndpoint(secure, exporterSecure bool, resources core.ResourceRequirements, port uint16) core.Container {
-	var securityContext api.ServerGroupSpecSecurityContext
-
-	return core.Container{
-		Name:    k8sutil.ExporterContainerName,
-		Image:   testExporterImage,
-		Command: createTestExporterCommand(secure, exporterSecure, port),
-		Ports:   createTestExporterPorts(port),
-		VolumeMounts: []core.VolumeMount{
-			k8sutil.ExporterJWTVolumeMount(),
-		},
-		Resources:       k8sutil.ExtractPodResourceRequirement(resources),
-		LivenessProbe:   createTestExporterLivenessProbe(exporterSecure),
-		ImagePullPolicy: core.PullIfNotPresent,
-		SecurityContext: securityContext.NewSecurityContext(),
-	}
-}
-
-func testCreateExporterContainerWithPort(secure bool, resources core.ResourceRequirements, port uint16) core.Container {
-	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, port)
-}
-
-func testCreateExporterContainer(secure bool, resources core.ResourceRequirements) core.Container {
-	return testCreateExporterContainerWithPortAndSecureEndpoint(secure, secure, resources, k8sutil.ArangoExporterPort)
 }

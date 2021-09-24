@@ -308,12 +308,9 @@ func createKeyfileRenewalPlanDefault(ctx context.Context,
 			lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
 			defer c()
 
-			if renew, recreate := keyfileRenewalRequired(lCtx, log, apiObject, spec, cachedStatus, planCtx, group, member, api.TLSRotateModeRecreate); renew {
+			if renew, _ := keyfileRenewalRequired(lCtx, log, apiObject, spec, cachedStatus, planCtx, group, member, api.TLSRotateModeRecreate); renew {
 				log.Info().Msg("Renewal of keyfile required - Recreate")
-				if recreate {
-					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
-				}
-				plan = append(plan, createRotateMemberPlan(log, member, group, "Restart server after keyfile removal")...)
+				plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart server after keyfile removal"))
 			}
 		}
 

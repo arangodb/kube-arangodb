@@ -66,6 +66,10 @@ func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContex
 	return newBaseActionImpl(log, action, actionCtx, NewTimeoutFetcher(timeout), memberIDRef)
 }
 
+func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher) actionImpl {
+	return newBaseActionImpl(log, action, actionCtx, timeout, &action.MemberID)
+}
+
 func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher, memberIDRef *string) actionImpl {
 	if memberIDRef == nil {
 		panic("Action cannot have nil reference to member!")
@@ -98,7 +102,7 @@ func (a actionImpl) Timeout(deploymentSpec api.DeploymentSpec) time.Duration {
 	return a.timeout(deploymentSpec)
 }
 
-// Return the MemberID used / created in this action
+// MemberID returns the member ID used / created in the current action.
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
 }

@@ -25,10 +25,10 @@ replace (
 require (
 	github.com/aktau/github-release v0.10.0 // indirect
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
-	github.com/arangodb/arangosync-client v0.6.3
+	github.com/arangodb/arangosync-client v0.7.0
 	github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
-	github.com/cenkalti/backoff v2.1.1+incompatible
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/evanphx/json-patch v4.9.0+incompatible
@@ -61,6 +61,7 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
+	github.com/zenazn/goji v0.9.0 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	golang.org/x/tools v0.1.1-0.20210504181558-0bb7e5c47b1a // indirect

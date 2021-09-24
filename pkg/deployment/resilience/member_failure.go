@@ -55,7 +55,7 @@ func (r *Resilience) CheckMemberFailure(ctx context.Context) error {
 
 			// Check if there are Members with Phase Upgrading or Rotation but no plan
 			switch m.Phase {
-			case api.MemberPhaseNone:
+			case api.MemberPhaseNone, api.MemberPhasePending:
 				continue
 			case api.MemberPhaseUpgrading, api.MemberPhaseRotating, api.MemberPhaseCleanOut, api.MemberPhaseRotateStart:
 				if len(status.Plan) == 0 {

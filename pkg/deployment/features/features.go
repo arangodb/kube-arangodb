@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package features
@@ -34,6 +35,7 @@ type Feature interface {
 	EnabledByDefault() bool
 	Enabled() bool
 	EnabledPointer() *bool
+	Deprecated() (bool, string)
 	Supported(v driver.Version, enterprise bool) bool
 }
 
@@ -41,6 +43,8 @@ type feature struct {
 	name, description                             string
 	version                                       driver.Version
 	enterpriseRequired, enabledByDefault, enabled bool
+	deprecated                                    string
+	constValue                                    *bool
 }
 
 func (f feature) Supported(v driver.Version, enterprise bool) bool {
@@ -48,6 +52,10 @@ func (f feature) Supported(v driver.Version, enterprise bool) bool {
 }
 
 func (f feature) Enabled() bool {
+	if f.constValue != nil {
+		return *f.constValue
+	}
+
 	return f.enabled
 }
 
@@ -73,4 +81,9 @@ func (f feature) Name() string {
 
 func (f feature) Description() string {
 	return f.description
+}
+
+// Deprecated returns true if the feature is deprecated and the reason why it is deprecated.
+func (f feature) Deprecated() (bool, string) {
+	return len(f.deprecated) > 0, f.deprecated
 }

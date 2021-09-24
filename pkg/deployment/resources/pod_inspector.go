@@ -185,7 +185,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
-		if k8sutil.IsPodReady(pod) {
+		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to true")
@@ -247,7 +247,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				if _, exists := cachedStatus.Pod(podName); !exists {
 					log.Debug().Str("pod-name", podName).Msg("Does not exist")
 					switch m.Phase {
-					case api.MemberPhaseNone:
+					case api.MemberPhaseNone, api.MemberPhasePending:
 						// Do nothing
 						log.Debug().Str("pod-name", podName).Msg("PodPhase is None, waiting for the pod to be recreated")
 					case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:

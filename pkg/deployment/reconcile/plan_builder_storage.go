@@ -45,9 +45,10 @@ func createRotateServerStoragePlan(ctx context.Context,
 		return nil
 	}
 	var plan api.Plan
+	var canContinue = true
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
-			if !plan.IsEmpty() {
+			if !plan.IsEmpty() && !canContinue {
 				// Only 1 change at a time
 				continue
 			}
@@ -61,6 +62,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 			}
 			groupSpec := spec.GetServerGroupSpec(group)
 			storageClassName := groupSpec.GetStorageClassName()
+
 			// Load PVC
 			pvc, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
 			if !exists {
@@ -72,6 +74,9 @@ func createRotateServerStoragePlan(ctx context.Context,
 			}
 
 			if util.StringOrDefault(pvc.Spec.StorageClassName) != storageClassName && storageClassName != "" {
+				// Do not append more than 1 operation if we replace storageClass
+				canContinue = false
+
 				// Storageclass has changed
 				log.Info().Str("pod-name", m.PodName).
 					Str("pvc-storage-class", util.StringOrDefault(pvc.Spec.StorageClassName)).
@@ -79,14 +84,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 
 				if group == api.ServerGroupDBServers {
 					plan = append(plan,
-						api.NewAction(api.ActionTypeDisableClusterScaling, group, ""),
-						api.NewAction(api.ActionTypeAddMember, group, ""),
-						api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
-						api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
-						api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
-						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-						api.NewAction(api.ActionTypeEnableClusterScaling, group, ""),
-					)
+						api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
 				} else if group == api.ServerGroupAgents {
 					plan = append(plan,
 						api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
@@ -98,29 +96,31 @@ func createRotateServerStoragePlan(ctx context.Context,
 					// Only agents & dbservers are allowed to change their storage class.
 					context.CreateEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
-			} else if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
-				// rotation needed
-				plan = createRotateMemberPlan(log, m, group, "Filesystem resize pending")
 			} else {
+				var res core.ResourceList
 				if groupSpec.HasVolumeClaimTemplate() {
-					res := groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
-					// For pvc only resources.requests is mutable
-					if comparePVCResourceList(pvc.Spec.Resources.Requests, res) {
-						plan = append(plan, pvcResizePlan(log, group, groupSpec, m.ID)...)
-					}
+					res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
 				} else {
-					if requestedSize, ok := groupSpec.Resources.Requests[core.ResourceStorage]; ok {
-						if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-							cmp := volumeSize.Cmp(requestedSize)
-							if cmp < 0 {
-								plan = append(plan, pvcResizePlan(log, group, groupSpec, m.ID)...)
-							} else if cmp > 0 {
-								if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers {
-									plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
-								} else {
-									log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-										Msg("Volume size should not shrink")
-								}
+					res = groupSpec.Resources.Requests
+				}
+				if requestedSize, ok := res[core.ResourceStorage]; ok {
+					if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
+						cmp := volumeSize.Cmp(requestedSize)
+						if cmp < 0 {
+							if groupSpec.VolumeResizeMode.Get() == api.PVCResizeModeRotate {
+								// Do not append more than 1 operation if we hard restart member
+								canContinue = false
+							}
+							plan = append(plan, pvcResizePlan(log, group, groupSpec, m.ID)...)
+						} else if cmp > 0 {
+							// Do not append more than 1 operation if we schrink volume
+							canContinue = false
+
+							if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers && !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+								plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
+							} else {
+								log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
+									Msg("Volume size should not shrink")
 							}
 						}
 					}
@@ -154,22 +154,4 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 			Msg("Requested mode is not supported")
 		return nil
 	}
-}
-
-func comparePVCResourceList(wanted, given core.ResourceList) bool {
-	for k, v := range wanted {
-		if gv, ok := given[k]; !ok {
-			return true
-		} else if v.Cmp(gv) != 0 {
-			return true
-		}
-	}
-
-	for k := range given {
-		if _, ok := wanted[k]; !ok {
-			return true
-		}
-	}
-
-	return false
 }

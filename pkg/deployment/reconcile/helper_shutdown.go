@@ -61,6 +61,10 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		log.Error().Msg("No such member")
 		return true, nil
 	}
+	if m.PodName == "" {
+		log.Warn().Msgf("Pod is empty")
+		return true, nil
+	}
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
 	if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
 		return false, errors.WithStack(err)
@@ -130,6 +134,11 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
+	if m.PodName == "" {
+		log.Warn().Msgf("Pod is empty")
+		return true, nil
+	}
+
 	// Terminate pod
 	if err := s.actionCtx.DeletePod(ctx, m.PodName); err != nil {
 		if !k8sutil.IsNotFound(err) {
@@ -161,7 +170,8 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 			log.Warn().Msgf("Pod still exists")
 			return false, false, nil
 		} else if !k8sutil.IsNotFound(err) {
-			return false, false, errors.WithStack(err)
+			log.Error().Err(err).Msg("Unable to get pod")
+			return false, false, nil
 		}
 	}
 

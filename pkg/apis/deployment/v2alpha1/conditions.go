@@ -31,6 +31,10 @@ import (
 // ConditionType is a strongly typed condition name
 type ConditionType string
 
+func (c ConditionType) String() string {
+	return string(c)
+}
+
 const (
 	// ConditionTypeReady indicates that the member or entire deployment is ready and running normally.
 	ConditionTypeReady ConditionType = "Ready"
@@ -67,6 +71,18 @@ const (
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
 	// ConditionTypeMaintenanceMode indicates that Maintenance is enabled
 	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
+	// ConditionTypePendingRestart indicates that restart is required
+	ConditionTypePendingRestart ConditionType = "PendingRestart"
+	// ConditionTypeRestart indicates that restart will be started
+	ConditionTypeRestart ConditionType = "Restart"
+	// ConditionTypePendingTLSRotation indicates that TLS rotation is pending
+	ConditionTypePendingTLSRotation ConditionType = "PendingTLSRotation"
+	// ConditionTypePendingUpdate indicates that runtime update is pending
+	ConditionTypePendingUpdate ConditionType = "PendingUpdate"
+	// ConditionTypeUpdating indicates that runtime update is in progress
+	ConditionTypeUpdating ConditionType = "Updating"
+	// ConditionTypeUpdateFailed indicates that runtime update failed
+	ConditionTypeUpdateFailed ConditionType = "UpdateFailed"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

@@ -375,7 +375,7 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 	}
 	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
-		Secure:        spec.IsSecure(),
+		Secure:        spec.Sync.TLS.IsSecure(),
 		Authorization: authorization,
 		Port:          port,
 	}, nil

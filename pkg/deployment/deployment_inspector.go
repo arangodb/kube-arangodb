@@ -104,7 +104,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -293,7 +293,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, nil
 	}
 
-	if d.apiObject.Status.Plan.IsEmpty() && status.AppliedVersion != checksum {
+	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.AppliedVersion = checksum
 			return true
@@ -303,15 +303,17 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else if status.AppliedVersion == checksum {
-		if !status.Plan.IsEmpty() && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, "Plan is not empty", "There are pending operations in plan"); err != nil {
+		isUpToDate, reason := d.isUpToDateStatus()
+
+		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
 			return minInspectionInterval, nil
 		}
 
-		if status.Plan.IsEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
@@ -345,6 +347,26 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
+
+	return
+}
+
+func (d *Deployment) isUpToDateStatus() (upToDate bool, reason string) {
+	if !d.apiObject.Status.IsPlanEmpty() {
+		return false, "Plan is not empty"
+	}
+
+	upToDate = true
+
+	d.apiObject.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+				upToDate = false
+				reason = "Pending restarts on members"
+			}
+		}
+		return nil
+	})
 
 	return
 }

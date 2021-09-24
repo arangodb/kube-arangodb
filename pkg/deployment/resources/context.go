@@ -27,10 +27,10 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -39,8 +39,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
+	core "k8s.io/api/core/v1"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -67,11 +66,51 @@ type DeploymentAgencyMaintenance interface {
 	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
 }
 
+type DeploymentPodRenderer interface {
+	// RenderPodForMember Renders Pod definition for member
+	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member
+	RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member from current state
+	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
+	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
+	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+}
+
+type DeploymentImageManager interface {
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// SelectImage select currently used image by pod in member
+	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
+}
+
+type DeploymentCLIGetter interface {
+	// GetKubeCli returns the kubernetes client
+	GetKubeCli() kubernetes.Interface
+	// GetMonitoringV1Cli returns monitoring client
+	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
+	// GetArangoCli returns the Arango CRD client
+	GetArangoCli() versioned.Interface
+}
+
+type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
+type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
+
+type ArangoMemberContext interface {
+	// WithArangoMemberUpdate run action with update of ArangoMember
+	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action ArangoMemberUpdateFunc) error
+	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
+	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
 	DeploymentStatusUpdate
 	DeploymentAgencyMaintenance
+	ArangoMemberContext
+	DeploymentImageManager
+	DeploymentCLIGetter
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -84,12 +123,6 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetKubeCli returns the kubernetes client
-	GetKubeCli() kubernetes.Interface
-	// GetMonitoringV1Cli returns monitoring client
-	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
-	// GetArangoCli returns the Arango CRD client
-	GetArangoCli() versioned.Interface
 	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
 	GetLifecycleImage() string
 	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
@@ -106,10 +139,10 @@ type Context interface {
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
-	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
+	GetOwnedPVCs() ([]core.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(ctx context.Context, p *v1.Pod) error
+	CleanupPod(ctx context.Context, p *core.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(ctx context.Context, podName string) error

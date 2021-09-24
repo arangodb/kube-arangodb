@@ -51,3 +51,19 @@ func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason
 
 	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
 }
+
+func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
+	var plan api.Plan
+
+	if group == api.ServerGroupDBServers {
+		plan = append(plan,
+			api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
+		)
+	}
+	plan = append(plan,
+		api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
+		api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+	)
+
+	return plan
+}
