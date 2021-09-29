@@ -22,6 +22,7 @@ package rotation
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	core "k8s.io/api/core/v1"
 )
 
@@ -33,5 +34,25 @@ func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodS
 		}
 
 		return
+	}
+}
+
+func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodSpec) compareFunc {
+	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, e error) {
+		if specC, err := util.SHA256FromJSON(spec.Affinity); err != nil {
+			e = err
+			return
+		} else {
+			if statusC, err := util.SHA256FromJSON(status.Affinity); err != nil {
+				e = err
+				return
+			} else if specC != statusC {
+				status.Affinity = spec.Affinity.DeepCopy()
+				mode = mode.And(SilentRotation)
+				return
+			} else {
+				return
+			}
+		}
 	}
 }

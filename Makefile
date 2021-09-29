@@ -129,6 +129,13 @@ EXCLUDE_DIRS := tests vendor .gobuild deps tools
 SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "./$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
+LINT_EXCLUDES:=
+ifeq ($(RELEASE_MODE),enterprise)
+LINT_EXCLUDES+=.*\.community\.go$$
+else
+LINT_EXCLUDES+=.*\.enterprise\.go$$
+endif
+
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -173,7 +180,9 @@ fmt-verify: license-verify
 linter:
 	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
 	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
-	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) ./...
+	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) \
+	$(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') \
+	./...
 
 .PHONY: build
 build: docker manifests

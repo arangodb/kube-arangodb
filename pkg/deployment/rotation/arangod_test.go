@@ -67,3 +67,113 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 
 	runTestCases(t)(testCases...)
 }
+
+func Test_ArangoD_Affinity(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Remove affinity",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "beta.kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+			}),
+
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Add affinity",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "beta.kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Change affinity",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "beta.kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+
+			expectedMode: SilentRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
