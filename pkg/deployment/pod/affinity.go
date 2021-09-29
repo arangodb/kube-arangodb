@@ -59,7 +59,7 @@ func AppendNodeSelector(a *core.NodeAffinity) {
 	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, core.NodeSelectorTerm{
 		MatchExpressions: []core.NodeSelectorRequirement{
 			{
-				Key:      "beta.kubernetes.io/arch",
+				Key:      k8sutil.NodeArchAffinityLabel,
 				Operator: "In",
 				Values:   []string{"amd64"},
 			},

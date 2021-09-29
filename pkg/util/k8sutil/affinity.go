@@ -27,6 +27,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const NodeArchAffinityLabel = "kubernetes.io/arch"
+
 // CreateAffinity creates pod anti-affinity for the given role.
 // role contains the name of the role to configure any-affinity with.
 // affinityWithRole contains the role to configure affinity with.
@@ -38,7 +40,7 @@ func CreateAffinity(deploymentName, role string, required bool, affinityWithRole
 					{
 						MatchExpressions: []v1.NodeSelectorRequirement{
 							{
-								Key:      "beta.kubernetes.io/arch",
+								Key:      NodeArchAffinityLabel,
 								Operator: "In",
 								Values:   []string{"amd64"},
 							},
