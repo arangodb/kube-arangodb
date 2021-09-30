@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation
+- Add "Short Names" feature
 
 ## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
 - Update UBI Image to 8.4

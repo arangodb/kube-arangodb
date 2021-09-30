@@ -125,9 +125,7 @@ func updateMemberPhasePlan(ctx context.Context,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
 			if m.Phase == api.MemberPhaseNone {
-				p := api.Plan{
-					api.NewAction(api.ActionTypeMemberRIDUpdate, group, m.ID, "Regenerate member RID"),
-				}
+				var p api.Plan
 
 				p = append(p,
 					api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, "Propagating spec of pod"),
