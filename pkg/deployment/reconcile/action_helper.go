@@ -38,6 +38,12 @@ func NewTimeoutFetcher(t time.Duration) TimeoutFetcher {
 	}
 }
 
+type actionEmpty struct {
+	actionImpl
+	actionEmptyStart
+	actionEmptyCheckProgress
+}
+
 type actionEmptyCheckProgress struct {
 }
 

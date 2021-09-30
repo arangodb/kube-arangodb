@@ -622,19 +622,6 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 	// Record new member phase
 	m.Phase = newPhase
-	m.Conditions.Remove(api.ConditionTypeReady)
-	m.Conditions.Remove(api.ConditionTypeTerminated)
-	m.Conditions.Remove(api.ConditionTypeTerminating)
-	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
-	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
-	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
-	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
-	m.Conditions.Remove(api.ConditionTypePendingRestart)
-	m.Conditions.Remove(api.ConditionTypeRestart)
-	m.Conditions.Remove(api.ConditionTypePendingUpdate)
-	m.Conditions.Remove(api.ConditionTypeUpdating)
-	m.Conditions.Remove(api.ConditionTypeUpdateFailed)
-	m.Conditions.Remove(api.ConditionTypeCleanedOut)
 
 	m.Upgrade = false
 	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
@@ -783,6 +770,10 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 }
 
 func CreatePodSuffix(spec api.DeploymentSpec) string {
+	if features.PodNames().Enabled() {
+		return ""
+	}
+
 	raw, _ := json.Marshal(spec)
 	hash := sha1.Sum(raw)
 	return fmt.Sprintf("%0x", hash)[:6]

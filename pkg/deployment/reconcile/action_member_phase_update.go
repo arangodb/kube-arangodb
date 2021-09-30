@@ -66,19 +66,16 @@ func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	phase, ok := api.GetPhase(phaseString)
+	p, ok := api.GetPhase(phaseString)
 	if !ok {
-		log.Error().Msgf("Phase %s unknown", phase)
+		log.Error().Msgf("Phase %s unknown", p)
 		return true, nil
 	}
 
-	if m.Phase == phase {
-		return true, nil
-	}
-
-	m.Phase = phase
-	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-		return false, errors.WithStack(err)
+	if phase.Execute(&m, a.action, p) {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+			return false, errors.WithStack(err)
+		}
 	}
 
 	return true, nil
