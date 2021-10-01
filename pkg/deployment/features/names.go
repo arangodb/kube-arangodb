@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,5 +17,23 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Adam Janikowski
+//
 
-package tools
+package features
+
+func init() {
+	registerFeature(podNames)
+}
+
+var podNames = &feature{
+	name:               "short-pod-names",
+	description:        "Enable Short Pod Names",
+	version:            "3.5.0",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+}
+
+func PodNames() Feature {
+	return podNames
+}

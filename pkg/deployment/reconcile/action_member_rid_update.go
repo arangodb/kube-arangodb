@@ -23,12 +23,7 @@
 package reconcile
 
 import (
-	"context"
-
-	"k8s.io/apimachinery/pkg/util/uuid"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
 )
 
@@ -45,24 +40,5 @@ func newMemberRIDUpdate(log zerolog.Logger, action api.Action, actionCtx ActionC
 }
 
 type memberRIDUpdateAction struct {
-	actionImpl
-
-	actionEmptyCheckProgress
-}
-
-func (a *memberRIDUpdateAction) Start(ctx context.Context) (bool, error) {
-	log := a.log
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
-	if !ok {
-		log.Error().Msg("No such member")
-		return true, nil
-	}
-
-	m.RID = uuid.NewUUID()
-
-	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-		return false, errors.WithStack(err)
-	}
-
-	return true, nil
+	actionEmpty
 }

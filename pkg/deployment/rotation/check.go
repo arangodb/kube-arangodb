@@ -41,6 +41,7 @@ const (
 	EnforcedRotation
 )
 
+// And returns the higher value of the rotation mode.
 func (m Mode) And(b Mode) Mode {
 	if m > b {
 		return m

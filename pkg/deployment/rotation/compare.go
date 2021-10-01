@@ -21,8 +21,6 @@
 package rotation
 
 import (
-	"encoding/json"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/rs/zerolog"
@@ -51,12 +49,16 @@ func compareFuncs(builder api.ActionBuilder, f ...compareFunc) (mode Mode, plan 
 	return
 }
 
-func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, spec, status *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, err error) {
+func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup,
+	spec, status *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, err error) {
+
 	if spec.Checksum == status.Checksum {
 		return SkippedRotation, nil, nil
 	}
 
-	mode = SkippedRotation
+	// If checksums are different and rotation is not needed and there are no changes between containers
+	// then silent rotation must be applied to adjust status checksum.
+	mode = SilentRotation
 
 	podStatus := status.PodSpec.DeepCopy()
 
@@ -65,7 +67,7 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 
 	g := generator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := compareFuncs(b, g(containersCompare), g(initContainersCompare)); err != nil {
+	if m, p, err := compareFuncs(b, g(podCompare), g(affinityCompare), g(containersCompare), g(initContainersCompare)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {
@@ -79,21 +81,19 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 		return SkippedRotation, nil, err
 	}
 
-	newSpec, err := api.GetArangoMemberPodTemplate(podStatus, checksum)
+	newStatus, err := api.GetArangoMemberPodTemplate(podStatus, checksum)
 	if err != nil {
 		log.Err(err).Msg("Error while getting template")
 		return SkippedRotation, nil, err
 	}
 
-	if spec.RotationNeeded(newSpec) {
-		l := log.Info().Str("id", member.ID).Str("Before", spec.PodSpecChecksum)
-		if d, err := json.Marshal(status); err == nil {
-			l = l.Str("status", string(d))
-		}
-		if d, err := json.Marshal(newSpec); err == nil {
-			l = l.Str("spec", string(d))
-		}
-		l.Msgf("Pod needs rotation - templates does not match")
+	if spec.RotationNeeded(newStatus) {
+		log.Info().Str("before", spec.PodSpecChecksum).
+			Str("id", member.ID).
+			Interface("spec", spec).
+			Interface("status", newStatus).
+			Msg("Pod needs rotation - templates does not match")
+
 		return GracefulRotation, nil, nil
 	}
 

@@ -127,6 +127,12 @@ func addSidecarWithImage(name, image string) podSpecBuilder {
 	})
 }
 
+func addContainerWithCommand(name string, command []string) podSpecBuilder {
+	return addContainer(name, func(c *core.Container) {
+		c.Command = command
+	})
+}
+
 type deploymentBuilder func(depl *api.DeploymentSpec)
 
 func buildDeployment(b ...deploymentBuilder) api.DeploymentSpec {

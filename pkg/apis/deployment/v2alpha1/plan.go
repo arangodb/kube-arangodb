@@ -49,7 +49,7 @@ func (a ActionType) String() string {
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
 	switch a {
-	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition, ActionTypeBootstrapSetAgencyInfo:
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition:
 		return ActionPriorityHigh
 	default:
 		return ActionPriorityNormal
@@ -165,12 +165,12 @@ const (
 	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
 	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
 	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
-	// ActionTypeBootstrapSetAgencyInfo set agency info into state
-	ActionTypeBootstrapSetAgencyInfo ActionType = "BootstrapSetAgencyInfo"
 
 	// Runtime Updates
 	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
 	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
+	// ActionTypeRuntimeContainerArgsLogLevelUpdate updates the container's executor arguments.
+	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
 )
 
 const (
