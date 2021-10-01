@@ -104,6 +104,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan).
 		ApplyIfEmpty(createKeyfileRenewalPlan).
 		ApplyIfEmpty(createRotateServerStoragePlan).
+		ApplyIfEmpty(createRotateServerStorageResizePlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan).
 		ApplyIfEmpty(createRestorePlan).
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan).
