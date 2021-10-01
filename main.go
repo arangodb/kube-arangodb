@@ -28,10 +28,14 @@ import (
 	goflag "flag"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/gin-gonic/gin"
 
 	"github.com/arangodb/kube-arangodb/pkg/version"
 
@@ -110,6 +114,7 @@ var (
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
+		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 
 		alpineImage, metricsExporterImage, arangoImage string
 
@@ -143,6 +148,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
+	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
 	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
 	f.StringVar(&operatorOptions.metricsExporterImage, "operator.metrics-exporter-image", MetricsExporterImageEnv.GetOrDefault(defaultMetricsExporterImage), "Docker image used for metrics containers by default")
@@ -198,7 +204,11 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage && !operatorOptions.enableBackup {
-		cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup or any combination of these")
+		if !operatorOptions.versionOnly {
+			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup or any combination of these")
+		}
+	} else if operatorOptions.versionOnly {
+		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup cannot be enabled together with --operator.version")
 	}
 
 	// Log version
@@ -208,81 +218,111 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 		Msgf("Starting arangodb-operator (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Check environment
-	if len(namespace) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
-	}
-	if len(name) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
-	}
-	if len(ip) == 0 {
-		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodIP)
-	}
+	if !operatorOptions.versionOnly {
+		if len(namespace) == 0 {
+			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
+		}
+		if len(name) == 0 {
+			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
+		}
+		if len(ip) == 0 {
+			cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodIP)
+		}
 
-	// Get host name
-	id, err := os.Hostname()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to get hostname")
-	}
+		// Get host name
+		id, err := os.Hostname()
+		if err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to get hostname")
+		}
 
-	// Create kubernetes client
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
-	}
-	secrets := kubecli.CoreV1().Secrets(namespace)
+		// Create kubernetes client
+		kubecli, err := k8sutil.NewKubeClient()
+		if err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+		}
+		secrets := kubecli.CoreV1().Secrets(namespace)
 
-	// Create operator
-	cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
-	}
-	o, err := operator.NewOperator(cfg, deps)
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create operator")
-	}
+		// Create operator
+		cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
+		if err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to create operator config & deps")
+		}
+		o, err := operator.NewOperator(cfg, deps)
+		if err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to create operator")
+		}
 
-	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
-	if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
-		Namespace:          namespace,
-		Address:            listenAddr,
-		TLSSecretName:      serverOptions.tlsSecretName,
-		TLSSecretNamespace: namespace,
-		PodName:            name,
-		PodIP:              ip,
-		AdminSecretName:    serverOptions.adminSecretName,
-		AllowAnonymous:     serverOptions.allowAnonymous,
-	}, server.Dependencies{
-		Log:           logService.MustGetLogger(logging.LoggerNameServer),
-		LivenessProbe: &livenessProbe,
-		Deployment: server.OperatorDependency{
-			Enabled: cfg.EnableDeployment,
-			Probe:   &deploymentProbe,
-		},
-		DeploymentReplication: server.OperatorDependency{
-			Enabled: cfg.EnableDeploymentReplication,
-			Probe:   &deploymentReplicationProbe,
-		},
-		Storage: server.OperatorDependency{
-			Enabled: cfg.EnableStorage,
-			Probe:   &storageProbe,
-		},
-		Backup: server.OperatorDependency{
-			Enabled: cfg.EnableBackup,
-			Probe:   &backupProbe,
-		},
-		Operators: o,
+		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
+		if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
+			Namespace:          namespace,
+			Address:            listenAddr,
+			TLSSecretName:      serverOptions.tlsSecretName,
+			TLSSecretNamespace: namespace,
+			PodName:            name,
+			PodIP:              ip,
+			AdminSecretName:    serverOptions.adminSecretName,
+			AllowAnonymous:     serverOptions.allowAnonymous,
+		}, server.Dependencies{
+			Log:           logService.MustGetLogger(logging.LoggerNameServer),
+			LivenessProbe: &livenessProbe,
+			Deployment: server.OperatorDependency{
+				Enabled: cfg.EnableDeployment,
+				Probe:   &deploymentProbe,
+			},
+			DeploymentReplication: server.OperatorDependency{
+				Enabled: cfg.EnableDeploymentReplication,
+				Probe:   &deploymentReplicationProbe,
+			},
+			Storage: server.OperatorDependency{
+				Enabled: cfg.EnableStorage,
+				Probe:   &storageProbe,
+			},
+			Backup: server.OperatorDependency{
+				Enabled: cfg.EnableBackup,
+				Probe:   &backupProbe,
+			},
+			Operators: o,
 
-		Secrets: secrets,
-	}); err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+			Secrets: secrets,
+		}); err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+		} else {
+			go utilsError.LogError(cliLog, "error while starting service", svr.Run)
+		}
+
+		//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
+
+		// Start operator
+		o.Run()
 	} else {
-		go utilsError.LogError(cliLog, "error while starting service", svr.Run)
+		if err := startVersionProcess(); err != nil {
+			cliLog.Fatal().Err(err).Msg("Failed to create HTTP server")
+		}
+	}
+}
+
+func startVersionProcess() error {
+	// Just expose version
+	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
+	cliLog.Info().Str("addr", listenAddr).Msgf("Starting version endpoint")
+
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	versionV1Responser, err := operatorHTTP.NewSimpleJSONResponse(version.GetVersionV1())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	r.GET("/_api/version", gin.WrapF(versionV1Responser.ServeHTTP))
+	r.GET("/api/v1/version", gin.WrapF(versionV1Responser.ServeHTTP))
+
+	s := http.Server{
+		Addr:    listenAddr,
+		Handler: r,
 	}
 
-	//	startChaos(context.Background(), cfg.KubeCli, cfg.Namespace, chaosLevel)
-
-	// Start operator
-	o.Run()
+	return s.ListenAndServe()
 }
 
 // newOperatorConfigAndDeps creates operator config & dependencies.

@@ -32,7 +32,8 @@ import (
 type License string
 
 const (
-	CommunityEdition License = "community"
+	CommunityEdition  License = "community"
+	EnterpriseEdition License = "enterprise"
 )
 
 func (s License) Title() string {
@@ -43,7 +44,6 @@ var (
 	version   = "dev"
 	build     = "dev"
 	buildDate = ""
-	edition   = CommunityEdition
 	goVersion = runtime.Version()
 )
 

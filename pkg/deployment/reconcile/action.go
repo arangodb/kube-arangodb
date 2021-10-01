@@ -53,6 +53,54 @@ type Action interface {
 	MemberID() string
 }
 
+// ActionPost keep interface which is executed after action is completed.
+type ActionPost interface {
+	Action
+
+	// Post execute after action is completed
+	Post(ctx context.Context) error
+}
+
+func getActionPost(a Action, ctx context.Context) error {
+	if c, ok := a.(ActionPost); !ok {
+		return nil
+	} else {
+		return c.Post(ctx)
+	}
+}
+
+// ActionReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
+type ActionReloadCachedStatus interface {
+	Action
+
+	// ReloadCachedStatus keeps information about CachedStatus reloading (executed after action has been executed)
+	ReloadCachedStatus() bool
+}
+
+func getActionReloadCachedStatus(a Action) bool {
+	if c, ok := a.(ActionReloadCachedStatus); !ok {
+		return false
+	} else {
+		return c.ReloadCachedStatus()
+	}
+}
+
+// ActionPlanAppender modify plan after action execution
+type ActionPlanAppender interface {
+	Action
+
+	// ActionPlanAppender modify plan after action execution
+	ActionPlanAppender(current api.Plan) (api.Plan, bool)
+}
+
+func getActionPlanAppender(a Action, plan api.Plan) (api.Plan, bool) {
+	if c, ok := a.(ActionPlanAppender); !ok {
+		return plan, false
+	} else {
+		return c.ActionPlanAppender(plan)
+	}
+}
+
 type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action
 
 var (

@@ -315,6 +315,10 @@ func (m *MemberSyncPod) Validate(cachedStatus interfaces.Inspector) error {
 }
 
 func (m *MemberSyncPod) ApplyPodSpec(spec *core.PodSpec) error {
+	if s := m.groupSpec.SchedulerName; s != nil {
+		spec.SchedulerName = *s
+	}
+
 	return nil
 }
 

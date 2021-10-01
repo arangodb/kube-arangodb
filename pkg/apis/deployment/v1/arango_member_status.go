@@ -23,4 +23,7 @@
 package v1
 
 type ArangoMemberStatus struct {
+	Conditions ConditionList `json:"conditions,omitempty"`
+
+	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 }

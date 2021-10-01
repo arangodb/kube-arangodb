@@ -363,6 +363,9 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	// Encryption
 	volumes.Append(pod.Encryption(), m.AsInput())
 
+	// Security
+	volumes.Append(pod.Security(), m.AsInput())
+
 	if m.spec.Metrics.IsEnabled() {
 		if features.MetricsExporter().Enabled() {
 			token := m.spec.Metrics.GetJWTTokenSecretName()
@@ -567,6 +570,10 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarExternalExporter() *core.
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 	p.SecurityContext = m.groupSpec.SecurityContext.NewPodSecurityContext()
+
+	if s := m.groupSpec.SchedulerName; s != nil {
+		p.SchedulerName = *s
+	}
 
 	return nil
 }

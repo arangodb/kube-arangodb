@@ -170,7 +170,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		}
 
 		// Try fetching the ArangoDB version
-		client, err := arangod.CreateArangodImageIDClient(ctx, ib.APIObject, role, id)
+		client, err := arangod.CreateArangodImageIDClient(ctx, ib.APIObject, pod.Status.PodIP)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to create Image ID Pod client")
 			return true, nil

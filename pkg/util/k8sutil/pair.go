@@ -162,3 +162,17 @@ func (o OptionPair) CompareTo(other OptionPair) int {
 func NewOptionPair(pairs ...OptionPair) OptionPairs {
 	return pairs
 }
+
+// ExtractStringToOptionPair extracts command line argument into the OptionPair.
+func ExtractStringToOptionPair(arg string) OptionPair {
+	trimmed := strings.TrimLeft(arg, " ")
+	index := strings.Index(trimmed, "=")
+	if index < 0 {
+		return OptionPair{Key: strings.TrimRight(trimmed, " ")}
+	}
+
+	return OptionPair{
+		Key:   strings.Trim(trimmed[0:index], " "),
+		Value: trimmed[index+1:],
+	}
+}

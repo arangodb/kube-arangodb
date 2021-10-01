@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package deployment
@@ -26,16 +27,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	"github.com/stretchr/testify/require"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
@@ -184,7 +182,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Resources: emptyResources,
 						},
 						func() core.Container {
-							c := testCreateExporterContainer(true, emptyResources)
+							c := testArangodbInternalExporterContainer(true, emptyResources)
 							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 							return c
 						}(),

@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
 package v1
@@ -80,6 +81,8 @@ type ServerGroupSpec struct {
 	Args []string `json:"args,omitempty"`
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
+	// SchedulerName define scheduler name used for group
+	SchedulerName *string `json:"schedulerName,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
@@ -131,6 +134,8 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
+	// EphemeralVolumes keeps information about ephemeral volumes.
+	EphemeralVolumes *EphemeralVolumes `json:"ephemeralVolumes,omitempty"`
 	// ExtendedRotationCheck extend checks for rotation
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 	// InitContainers Init containers specification

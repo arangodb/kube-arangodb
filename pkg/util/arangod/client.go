@@ -168,10 +168,9 @@ func CreateArangodDatabaseClient(ctx context.Context, cli corev1.CoreV1Interface
 
 // CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
 // running in an Image-ID pod.
-func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, role, id string) (driver.Client, error) {
+func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string) (driver.Client, error) {
 	// Create connection
-	dnsName := k8sutil.CreatePodDNSNameWithDomain(deployment, nil, role, id)
-	c, err := createArangodClientForDNSName(ctx, nil, nil, dnsName, false)
+	c, err := createArangodClientForDNSName(ctx, nil, nil, ip, false)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

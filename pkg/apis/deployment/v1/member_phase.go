@@ -28,6 +28,8 @@ type MemberPhase string
 const (
 	// MemberPhaseNone indicates that the state is not set yet
 	MemberPhaseNone MemberPhase = ""
+	// MemberPhasePending indicates that member propagation has been started
+	MemberPhasePending MemberPhase = "Pending"
 	// MemberPhaseCreated indicates that all resources needed for the member have been created
 	MemberPhaseCreated MemberPhase = "Created"
 	// MemberPhaseFailed indicates that the member is gone beyond hope of recovery. It must be replaced with a new member.
@@ -48,9 +50,19 @@ const (
 	MemberPhaseUpgrading MemberPhase = "Upgrading"
 )
 
+// IsPending returns true when given phase == "" OR "Pending"
+func (p MemberPhase) IsPending() bool {
+	return p == MemberPhaseNone || p == MemberPhasePending
+}
+
 // IsFailed returns true when given phase == "Failed"
 func (p MemberPhase) IsFailed() bool {
 	return p == MemberPhaseFailed
+}
+
+// IsReady returns true when given phase == "Created"
+func (p MemberPhase) IsReady() bool {
+	return p == MemberPhaseCreated
 }
 
 // IsCreatedOrDrain returns true when given phase is MemberPhaseCreated or MemberPhaseDrain
@@ -61,4 +73,14 @@ func (p MemberPhase) IsCreatedOrDrain() bool {
 // String returns string from MemberPhase
 func (p MemberPhase) String() string {
 	return string(p)
+}
+
+// GetPhase parses string into phase
+func GetPhase(phase string) (MemberPhase, bool) {
+	switch p := MemberPhase(phase); p {
+	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading:
+		return p, true
+	default:
+		return "", false
+	}
 }
