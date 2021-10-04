@@ -79,6 +79,10 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+	panic("implement me")
+}
+
 func (c *testContext) GetKubeCli() kubernetes.Interface {
 	panic("implement me")
 }
@@ -224,7 +228,7 @@ func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerG
 	panic("implement me")
 }
 
-func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string) (string, error) {
+func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
 	panic("implement me")
 }
 

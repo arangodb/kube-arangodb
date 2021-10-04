@@ -171,6 +171,11 @@ const (
 	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
 	// ActionTypeRuntimeContainerArgsLogLevelUpdate updates the container's executor arguments.
 	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
+
+	// Topology
+	ActionTypeTopologyEnable           ActionType = "TopologyEnable"
+	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
+	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
 )
 
 const (
@@ -345,4 +350,46 @@ func (p Plan) Wrap(before, after Action) Plan {
 	n = append(n, after)
 
 	return n
+}
+
+// AfterFirst adds actions when condition will return false
+func (p Plan) AfterFirst(condition func(a Action) bool, actions ...Action) Plan {
+	var r Plan
+	c := p
+	for {
+		if len(c) == 0 {
+			break
+		}
+
+		if !condition(c[0]) {
+			r = append(r, actions...)
+
+			r = append(r, c...)
+
+			break
+		}
+
+		r = append(r, c[0])
+
+		if len(c) == 1 {
+			break
+		}
+
+		c = c[1:]
+	}
+
+	return r
+}
+
+// Filter filter list of the actions
+func (p Plan) Filter(condition func(a Action) bool) Plan {
+	var r Plan
+
+	for _, a := range p {
+		if condition(a) {
+			r = append(r, a)
+		}
+	}
+
+	return r
 }

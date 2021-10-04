@@ -20,8 +20,8 @@
 
 // +build !enterprise
 
-package version
+package reconcile
 
-var (
-	edition = CommunityEdition
-)
+type topologyMemberAssignment struct {
+	actionEmpty
+}

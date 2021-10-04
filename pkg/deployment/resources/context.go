@@ -52,9 +52,12 @@ type ServerGroupIterator interface {
 	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
+type DeploymentStatusUpdateErrFunc func(s *api.DeploymentStatus) (bool, error)
 type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
 
 type DeploymentStatusUpdate interface {
+	// WithStatusUpdateErr update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc, force ...bool) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc, force ...bool) error
 }

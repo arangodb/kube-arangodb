@@ -81,6 +81,8 @@ type DeploymentStatus struct {
 
 	// Agency keeps information about agency
 	Agency *DeploymentStatusAgencyInfo `json:"agency,omitempty"`
+
+	Topology *TopologyStatus `json:"topology,omitempty"`
 }
 
 // Equal checks for equality

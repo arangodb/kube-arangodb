@@ -163,6 +163,9 @@ type DeploymentSpec struct {
 
 	// CommunicationMethod define communication method used in deployment
 	CommunicationMethod *DeploymentCommunicationMethod `json:"communicationMethod,omitempty"`
+
+	// Topology define topology adjustment details, Enterprise only
+	Topology *TopologySpec `json:"topology,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings

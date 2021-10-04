@@ -89,6 +89,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(createCleanOutPlan).
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
+		ApplyIfEmpty(createTopologyMemberConditionPlan).
 		Plan(), true
 }
 
@@ -132,7 +133,7 @@ func updateMemberPhasePlan(ctx context.Context,
 					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
 
 				p = append(p, api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
-					"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
+					"Move to Pending phase").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
 
 				plan = append(plan, p...)
 			}

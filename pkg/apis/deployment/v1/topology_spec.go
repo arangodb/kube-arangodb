@@ -18,10 +18,36 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-// +build !enterprise
+package v1
 
-package version
+const DefaultTopologySpecLabel = "topology.kubernetes.io/zone"
 
-var (
-	edition = CommunityEdition
-)
+type TopologySpec struct {
+	Enabled bool    `json:"enabled,omitempty"`
+	Zones   int     `json:"zones,omitempty"`
+	Label   *string `json:"label,omitempty"`
+}
+
+func (t *TopologySpec) IsEnabled() bool {
+	if t == nil {
+		return false
+	}
+
+	return t.Enabled && t.Zones > 0
+}
+
+func (t *TopologySpec) GetZones() int {
+	if t == nil {
+		return 0
+	}
+
+	return t.Zones
+}
+
+func (t *TopologySpec) GetLabel() string {
+	if t == nil || t.Label == nil {
+		return DefaultTopologySpecLabel
+	}
+
+	return *t.Label
+}

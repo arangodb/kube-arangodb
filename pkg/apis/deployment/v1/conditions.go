@@ -83,6 +83,8 @@ const (
 	ConditionTypeUpdating ConditionType = "Updating"
 	// ConditionTypeUpdateFailed indicates that runtime update failed
 	ConditionTypeUpdateFailed ConditionType = "UpdateFailed"
+	// ConditionTypeTopologyAware indicates that the member is deployed with TopologyAwareness.
+	ConditionTypeTopologyAware ConditionType = "TopologyAware"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

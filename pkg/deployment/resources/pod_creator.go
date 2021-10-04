@@ -623,6 +623,14 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 	// Record new member phase
 	m.Phase = newPhase
 
+	if status.Topology.Enabled() {
+		if m.Topology != nil && m.Topology.ID == status.Topology.ID {
+			m.Conditions.Update(api.ConditionTypeTopologyAware, true, "Topology Aware", "Topology Aware")
+		} else {
+			m.Conditions.Update(api.ConditionTypeTopologyAware, false, "Topology spec missing", "Topology spec missing")
+		}
+	}
+
 	m.Upgrade = false
 	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
 	if err := status.Members.Update(m, group); err != nil {

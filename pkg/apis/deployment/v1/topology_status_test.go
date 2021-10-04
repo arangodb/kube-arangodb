@@ -18,10 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-// +build !enterprise
+package v1
 
-package version
+import (
+	"testing"
 
-var (
-	edition = CommunityEdition
+	"github.com/stretchr/testify/require"
 )
+
+func Test_GetLeastUsedZone(t *testing.T) {
+	v := NewTopologyStatus(&TopologySpec{Enabled: true, Zones: 3})
+
+	require.Equal(t, 0, v.GetLeastUsedZone(ServerGroupDBServers))
+
+	v.Zones[0].AddMember(ServerGroupDBServers, "M-0")
+
+	require.Equal(t, 1, v.GetLeastUsedZone(ServerGroupDBServers))
+
+	v.Zones[0].RemoveMember(ServerGroupDBServers, "M-0")
+
+	require.Equal(t, 0, v.GetLeastUsedZone(ServerGroupDBServers))
+}

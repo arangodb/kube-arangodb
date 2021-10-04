@@ -81,14 +81,20 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 	}
 
 	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+		// Adjust topology settings
+		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
+		// Define topology
+		ApplyIfEmpty(createTopologyEnablementPlan).
+		// Check for scale up
+		ApplyIfEmpty(createScaleUPMemberPlan).
 		// Check for failed members
 		ApplyIfEmpty(createMemberFailedRestorePlan).
+		// Check for scale up/down
+		ApplyIfEmpty(createScaleMemberPlan).
 		// Update status
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate).
 		ApplyIfEmpty(createTLSStatusUpdate).
 		ApplyIfEmpty(createJWTStatusUpdate).
-		// Check for scale up/down
-		ApplyIfEmpty(createScaleMemberPlan).
 		// Check for cleaned out dbserver in created state
 		ApplyIfEmpty(createRemoveCleanedDBServersPlan).
 		// Check for members to be removed

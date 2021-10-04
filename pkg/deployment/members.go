@@ -25,6 +25,10 @@ package deployment
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/uuid"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -35,41 +39,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
-
-// createInitialMembers creates all members needed for the initial state of the deployment.
-// Note: This does not create any pods of PVCs
-func (d *Deployment) createInitialMembers(ctx context.Context, apiObject *api.ArangoDeployment) error {
-	log := d.deps.Log
-	log.Debug().Msg("creating initial members...")
-
-	// Go over all groups and create members
-	var events []*k8sutil.Event
-	status, lastVersion := d.GetStatus()
-	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, members *api.MemberStatusList) error {
-		for len(*members) < spec.GetCount() {
-			id, err := createMember(log, &status, group, "", apiObject)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			events = append(events, k8sutil.NewMemberAddEvent(id, group.AsRole(), apiObject))
-		}
-		return nil
-	}, &status); err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Save status
-	log.Debug().Msg("saving initial members...")
-	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err)
-	}
-	// Save events
-	for _, evt := range events {
-		d.CreateEvent(evt)
-	}
-
-	return nil
-}
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 	spec := d.GetSpec()
@@ -116,10 +85,29 @@ func (d *Deployment) createAgencyMapping(ctx context.Context) error {
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (string, error) {
+func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
+	m, err := renderMember(log, status, group, id, apiObject)
+	if err != nil {
+		return "", err
+	}
+
+	for _, mod := range mods {
+		if err := mod(status, group, m); err != nil {
+			return "", err
+		}
+	}
+
+	if err := status.Members.Add(*m, group); err != nil {
+		return "", err
+	}
+
+	return m.ID, nil
+}
+
+func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
 	if group == api.ServerGroupAgents {
 		if status.Agency == nil {
-			return "", errors.New("Agency is not yet defined")
+			return nil, errors.New("Agency is not yet defined")
 		}
 		// In case of agents we need to use hardcoded ids
 		if id == "" {
@@ -142,7 +130,7 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		}
 	}
 	if id == "" {
-		return "nil", errors.New("Unable to get ID")
+		return nil, errors.New("Unable to get ID")
 	}
 	deploymentName := apiObject.GetName()
 	role := group.AsRole()
@@ -150,79 +138,71 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	switch group {
 	case api.ServerGroupSingle:
 		log.Debug().Str("id", id).Msg("Adding single server")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	default:
-		return "", errors.WithStack(errors.Newf("Unknown server group %d", group))
+		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))
 	}
-
-	return id, nil
 }
