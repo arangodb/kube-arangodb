@@ -50,7 +50,7 @@ type actionMarkToRemove struct {
 }
 
 func (a *actionMarkToRemove) Start(ctx context.Context) (bool, error) {
-	if a.action.Group != api.ServerGroupDBServers && a.action.Group != api.ServerGroupAgents {
+	if a.action.Group != api.ServerGroupDBServers && a.action.Group != api.ServerGroupAgents && a.action.Group != api.ServerGroupCoordinators {
 		return true, nil
 	}
 

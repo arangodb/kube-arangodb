@@ -117,7 +117,7 @@ func createReplaceMemberPlan(ctx context.Context,
 
 	var plan api.Plan
 
-	// Replace is only allowed for DBServers & Agents
+	// Replace is only allowed for Coordinators, DBServers & Agents
 	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, member := range list {
 			if !plan.IsEmpty() {
@@ -129,6 +129,12 @@ func createReplaceMemberPlan(ctx context.Context,
 					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
 						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
 						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
+					return nil
+				case api.ServerGroupCoordinators:
+					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID))
 					log.Debug().
 						Str("role", group.AsRole()).
 						Msg("Creating replacement plan")
@@ -147,7 +153,7 @@ func createReplaceMemberPlan(ctx context.Context,
 		}
 
 		return nil
-	}, api.ServerGroupAgents, api.ServerGroupDBServers)
+	}, api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators)
 
 	return plan
 }

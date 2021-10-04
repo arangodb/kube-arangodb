@@ -41,6 +41,9 @@ type MemberStatus struct {
 	// ID holds the unique ID of the member.
 	// This id is also used within the ArangoDB cluster to identify this server.
 	ID string `json:"id"`
+	// UID holds the unique UID of the member.
+	// UID is created once member run in AddMember action.
+	UID types.UID `json:"uid,omitempty"`
 	// RID holds the ID of the member run.
 	// Value is updated in Pending Phase.
 	RID types.UID `json:"rid,omitempty"`
@@ -87,6 +90,7 @@ type MemberStatus struct {
 // Equal checks for equality
 func (s MemberStatus) Equal(other MemberStatus) bool {
 	return s.ID == other.ID &&
+		s.UID == other.UID &&
 		s.RID == other.RID &&
 		s.Phase == other.Phase &&
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&

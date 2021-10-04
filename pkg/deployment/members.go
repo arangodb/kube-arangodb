@@ -25,6 +25,8 @@ package deployment
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
@@ -138,6 +140,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding single server")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
@@ -148,6 +151,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding agent")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
@@ -158,6 +162,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding dbserver")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
@@ -168,6 +173,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding coordinator")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
@@ -178,6 +184,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
@@ -188,6 +195,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 		log.Debug().Str("id", id).Msg("Adding syncworker")
 		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",

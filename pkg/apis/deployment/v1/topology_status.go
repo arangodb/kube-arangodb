@@ -49,6 +49,10 @@ func (t *TopologyStatus) GetLeastUsedZone(group ServerGroup) int {
 			if v := len(n); v < m {
 				r, m = i, v
 			}
+		} else {
+			if v := 0; v < m {
+				r, m = i, v
+			}
 		}
 	}
 
