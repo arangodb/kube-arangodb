@@ -191,6 +191,8 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 		}
 	}
 
+	envs.Add(true, pod.Topology().Envs(a.member.AsInput())...)
+
 	return envs.GetEnvList()
 }
 

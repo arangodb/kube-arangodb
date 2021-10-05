@@ -35,9 +35,7 @@ func createScaleUPMemberPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
-	return createScaleMemberPlan(ctx, log, apiObject, spec, status, cachedStatus, context).Filter(func(a api.Action) bool {
-		return a.Type == api.ActionTypeAddMember
-	})
+	return createScaleMemberPlan(ctx, log, apiObject, spec, status, cachedStatus, context).Filter(filterScaleUP)
 }
 
 func createScaleMemberPlan(ctx context.Context,
@@ -50,16 +48,17 @@ func createScaleMemberPlan(ctx context.Context,
 	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
+		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount()).Filter(filterScaleUP)...)
 	case api.DeploymentModeActiveFailover:
 		// Only scale agents & singles
 		if a := status.Agency; a != nil && a.Size != nil {
-			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size))...)
+			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
 		}
 		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 	case api.DeploymentModeCluster:
 		// Scale agents, dbservers, coordinators
 		if a := status.Agency; a != nil && a.Size != nil {
-			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size))...)
+			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
 		}
 		plan = append(plan, createScalePlan(log, status, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
 		plan = append(plan, createScalePlan(log, status, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
@@ -156,4 +155,8 @@ func createReplaceMemberPlan(ctx context.Context,
 	}, api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators)
 
 	return plan
+}
+
+func filterScaleUP(a api.Action) bool {
+	return a.Type == api.ActionTypeAddMember
 }
