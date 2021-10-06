@@ -362,7 +362,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 1)
 
 	// Test with 1 single member
 	status.Members.Single = api.MemberStatusList{
@@ -375,6 +375,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
+	spec.Single.Count = util.NewInt(2)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	assert.True(t, changed)
+	assert.Len(t, newPlan, 0) // Single mode does not scale
+
+	spec.Single.Count = util.NewInt(1)
 	// Test with 2 single members (which should not happen) and try to scale down
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
@@ -388,7 +394,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	}
 	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
 
 // TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
@@ -664,6 +670,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+				ad.Status.Members.Single = append(ad.Status.Members.Single, api.MemberStatus{})
 			},
 			ExpectedPlan: []api.Action{},
 		},

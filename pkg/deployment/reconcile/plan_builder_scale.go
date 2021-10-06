@@ -48,7 +48,7 @@ func createScaleMemberPlan(ctx context.Context,
 	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
-		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount()).Filter(filterScaleUP)...)
+		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, 1).Filter(filterScaleUP)...)
 	case api.DeploymentModeActiveFailover:
 		// Only scale agents & singles
 		if a := status.Agency; a != nil && a.Size != nil {
