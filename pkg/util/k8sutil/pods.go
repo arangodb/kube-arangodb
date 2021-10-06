@@ -465,16 +465,18 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
+func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod, ns string,
+	owner metav1.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
 	if pod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		if IsAlreadyExists(err) {
-			return "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
+			return "", "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
 		}
-		return "", errors.WithStack(err)
+
+		return "", "", errors.WithStack(err)
 	} else {
-		return pod.UID, nil
+		return pod.GetName(), pod.UID, nil
 	}
 }
 

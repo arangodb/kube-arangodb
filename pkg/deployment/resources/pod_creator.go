@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
 //
 
 package resources
@@ -35,27 +33,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/go-driver"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 func versionHasAdvertisedEndpoint(v driver.Version) bool {
@@ -369,7 +362,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 	newMember.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, newMember.ID, CreatePodSuffix(spec))
 
-	// Render pod
+	var podCreator interfaces.PodCreator
+	var args []string
 	if group.IsArangod() {
 		// Prepare arguments
 		autoUpgrade := newMember.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
@@ -390,7 +384,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 		input := memberPod.AsInput()
 
-		args, err := createArangodArgs(cachedStatus, input)
+		var err error
+		args, err = createArangodArgs(cachedStatus, input)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -398,8 +393,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
-
-		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberPod)
+		podCreator = &memberPod
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
@@ -455,7 +449,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
+		args = createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -470,10 +464,23 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			arangoMember:           *member,
 		}
 
-		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberSyncPod)
+		podCreator = &memberSyncPod
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}
+
+	pod, err := RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, podCreator)
+	if err != nil {
+		return nil, err
+	}
+
+	if features.RandomPodNames().Enabled() {
+		// The server will generate the name with some additional suffix after `-`.
+		pod.GenerateName = pod.Name + "-"
+		pod.Name = ""
+	}
+
+	return pod, nil
 }
 
 func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -563,11 +570,12 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 		defer cancel()
-		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		podName, uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
+		m.PodName = podName
 		m.PodUID = uid
 		m.PodSpecVersion = template.PodSpecChecksum
 		m.ArangoVersion = m.Image.ArangoDBVersion
@@ -610,12 +618,13 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 		defer cancel()
-		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		podName, uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
+		m.PodName = podName
 		m.PodUID = uid
 		m.PodSpecVersion = template.PodSpecChecksum
 	}
@@ -704,13 +713,14 @@ func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sut
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(ctx context.Context, kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
-	uid, err := k8sutil.CreatePod(ctx, kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
+func CreateArangoPod(ctx context.Context, kubecli kubernetes.Interface, deployment k8sutil.APIObject,
+	deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (string, types.UID, error) {
+	podName, uid, err := k8sutil.CreatePod(ctx, kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", "", errors.WithStack(err)
 	}
 
-	return uid, nil
+	return podName, uid, nil
 }
 
 func CreatePodFromTemplate(p *core.PodTemplateSpec) *core.Pod {
@@ -777,8 +787,11 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	return nil
 }
 
+// CreatePodSuffix creates additional string to glue it to the POD name.
+// The suffix is calculated according to the given spec, so it is easily to recognize by name if the pods have the same spec.
+// The additional `postSuffix` can be provided. It can be used to distinguish restarts of POD.
 func CreatePodSuffix(spec api.DeploymentSpec) string {
-	if features.PodNames().Enabled() {
+	if features.ShortPodNames().Enabled() || features.RandomPodNames().Enabled() {
 		return ""
 	}
 
