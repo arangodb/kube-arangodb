@@ -469,14 +469,14 @@ func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod,
 	owner metav1.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if pod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
+	if createdPod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		if IsAlreadyExists(err) {
-			return "", "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
+			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
 		}
 
 		return "", "", errors.WithStack(err)
 	} else {
-		return pod.GetName(), pod.UID, nil
+		return createdPod.GetName(), pod.UID, nil
 	}
 }
 
