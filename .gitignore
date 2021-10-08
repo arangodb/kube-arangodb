@@ -1,0 +1,10 @@
+.DS_Store
+.envrc
+.gobuild
+bin
+logs
+vendor/
+.idea/
+deps/
+.vscode/
+**/*.enterprise.go
