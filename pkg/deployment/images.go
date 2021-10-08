@@ -231,11 +231,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	}
 
 	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-<<<<<<< HEAD
-		_, _, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
-=======
-		_, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
->>>>>>> [Feature] TLS Rotation
+		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
 		return err
 	})
 	if err != nil {

@@ -240,7 +240,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		return err
 	}
 
-	if err := reconcileRequired.Reconcile(); err != nil {
+	if err := reconcileRequired.Reconcile(ctx); err != nil {
 		return err
 	}
 
@@ -267,7 +267,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		return err
 	}
 
-	if err := reconcileRequired.Reconcile(); err != nil {
+	if err := reconcileRequired.Reconcile(ctx); err != nil {
 		return err
 	}
 

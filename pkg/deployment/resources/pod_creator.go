@@ -623,7 +623,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 		defer cancel()
-		podName, uid, err := CreateArangoPod(ctxChild,  r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
+		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}

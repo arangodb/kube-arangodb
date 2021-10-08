@@ -35,11 +35,10 @@ func NewReconcile(refresh refresh.Inspector) Reconcile {
 }
 
 type Reconcile interface {
-	Reconcile() error
+	Reconcile(ctx context.Context) error
 	Required()
 	IsRequired() bool
 	WithError(err error) error
-	WithRefresh(ctx context.Context, err error) error
 
 	ParallelAll(items int, executor func(id int) error) error
 	Parallel(items, max int, executor func(id int) error) error
@@ -120,9 +119,18 @@ func (r *reconcile) WithRefresh(ctx context.Context, err error) error {
 	return err
 }
 
-func (r *reconcile) Reconcile() error {
+func (r *reconcile) Reconcile(ctx context.Context) error {
 	if r.required {
-		return errors.Reconcile()
+		if r.refresh.IsStatic() {
+			return errors.Reconcile()
+		}
+
+		if err := r.refresh.Refresh(ctx); err != nil {
+			return err
+		}
+
+		r.required = false
+		return nil
 	}
 
 	return nil

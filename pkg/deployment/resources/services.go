@@ -234,7 +234,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		}
 	}
 
-	return reconcileRequired.Reconcile()
+	return reconcileRequired.Reconcile(ctx)
 }
 
 // EnsureServices creates all services needed to service the deployment

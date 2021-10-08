@@ -149,6 +149,10 @@ type inspector struct {
 	nodes                *nodeLoader
 }
 
+func (i *inspector) IsStatic() bool {
+	return i.namespace == ""
+}
+
 func (i *inspector) Refresh(ctx context.Context) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()

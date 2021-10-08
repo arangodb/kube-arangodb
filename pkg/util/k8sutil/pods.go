@@ -477,7 +477,7 @@ func CreatePod(ctx context.Context, c pod.ModInterface, pod *core.Pod, ns string
 
 		return "", "", errors.WithStack(err)
 	} else {
-		return createdPod.GetName(), pod.UID, nil
+		return createdPod.GetName(), createdPod.GetUID(), nil
 	}
 }
 

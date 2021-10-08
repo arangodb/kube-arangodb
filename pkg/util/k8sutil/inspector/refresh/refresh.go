@@ -27,5 +27,6 @@ import (
 )
 
 type Inspector interface {
+	IsStatic() bool
 	Refresh(ctx context.Context) error
 }

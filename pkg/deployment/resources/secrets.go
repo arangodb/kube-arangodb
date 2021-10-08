@@ -95,10 +95,22 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 
 	if spec.IsAuthenticated() {
 		counterMetric.Inc()
-		if err := reconcileRequired.WithRefresh(ctx, r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
+		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName())); err != nil {
 			return errors.WithStack(err)
 		}
+	}
+	if spec.IsSecure() {
+		counterMetric.Inc()
+		if err := reconcileRequired.WithError(r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.TLS)); err != nil {
+			return errors.WithStack(err)
+		}
+	}
 
+	if err := reconcileRequired.Reconcile(ctx); err != nil {
+		return err
+	}
+
+	if spec.IsAuthenticated() {
 		if imageFound {
 			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
 				if err := r.ensureTokenSecretFolder(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
@@ -120,11 +132,6 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 		}
 	}
 	if spec.IsSecure() {
-		counterMetric.Inc()
-		if err := reconcileRequired.WithRefresh(ctx, r.ensureTLSCACertificateSecret(ctx, cachedStatus, secrets, spec.TLS)); err != nil {
-			return errors.WithStack(err)
-		}
-
 		if err := reconcileRequired.WithError(r.ensureSecretWithEmptyKey(ctx, cachedStatus, secrets, GetCASecretName(r.context.GetAPIObject()), "empty")); err != nil {
 			return errors.WithStack(err)
 		}
@@ -189,7 +196,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, log zerolog.Logger, cache
 			return errors.WithStack(err)
 		}
 	}
-	return reconcileRequired.Reconcile()
+	return reconcileRequired.Reconcile(ctx)
 }
 
 func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, secretName, folderSecretName string) error {
