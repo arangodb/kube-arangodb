@@ -3,21 +3,57 @@ entries:
   kube-arangodb:
   - apiVersion: v1
     appVersion: 3.5.0
-    created: "2021-10-08T15:29:38.672156043+02:00"
+    created: "2021-10-08T15:45:43.688906514+02:00"
     description: ArangoDB Kubernetes Operator
     digest: 1fb34c69dfb81c5a821db5742755feb3b5324c0547828418adf40367828907db
     name: kube-arangodb
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-1.2.3.tgz
     version: 1.2.3
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2021-10-08T15:45:43.456298259+02:00"
+    description: ArangoDB Kubernetes Operator
+    digest: e2ffd1e9c746467f20f5c6acda55b37d7c647bb25837d20b174e1d807a3d2dc5
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-1.2.2.tgz
+    version: 1.2.2
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2021-10-08T15:45:43.176468686+02:00"
+    description: ArangoDB Kubernetes Operator
+    digest: 7a96226b6a640a6ca3affcac5f560f0ccbed6377d9cfdc1b27cfb79d6865800a
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz
+    version: 1.2.1
   kube-arangodb-crd:
   - apiVersion: v1
     appVersion: 3.5.0
-    created: "2021-10-08T15:29:38.713417543+02:00"
+    created: "2021-10-08T15:45:43.772387232+02:00"
     description: ArangoDB Kubernetes Custom Resource Definitions
     digest: bc876a65a55dfed9cde7b14fa3c9f062a6c0c740b530f61e6254a0449926ba0e
     name: kube-arangodb-crd
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-crd-1.2.3.tgz
     version: 1.2.3
-generated: "2021-10-08T15:29:38.713423293+02:00"
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2021-10-08T15:45:43.745757293+02:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions
+    digest: 8511c8235b629927a2f8e8624dbbb36ef70dc2b849c08f7bd069764d87b7f56c
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.2/kube-arangodb-crd-1.2.2.tgz
+    version: 1.2.2
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2021-10-08T15:45:43.716228545+02:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions
+    digest: 35d69d449968560031aee9ed8dd89741faca9800d53309e3f377b168a058f0c6
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-crd-1.2.1.tgz
+    version: 1.2.1
+generated: "2021-10-08T15:45:43.772409812+02:00"
