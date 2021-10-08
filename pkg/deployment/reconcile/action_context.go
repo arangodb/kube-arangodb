@@ -26,9 +26,14 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
@@ -57,7 +62,8 @@ type ActionContext interface {
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer
-	resources.DeploymentCLIGetter
+	resources.DeploymentModInterfaces
+	resources.DeploymentCachedStatus
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -141,13 +147,10 @@ type ActionContext interface {
 	EnableScalingCluster(ctx context.Context) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error
-	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
-	// GetCachedStatus current cached state of deployment
-	GetCachedStatus() inspectorInterface.Inspector
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
@@ -166,18 +169,6 @@ type actionContext struct {
 	context      Context
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
-}
-
-func (ac *actionContext) GetKubeCli() kubernetes.Interface {
-	return ac.context.GetKubeCli()
-}
-
-func (ac *actionContext) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
-	return ac.context.GetMonitoringV1Cli()
-}
-
-func (ac *actionContext) GetArangoCli() versioned.Interface {
-	return ac.context.GetArangoCli()
 }
 
 func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
@@ -244,8 +235,36 @@ func (ac *actionContext) WithStatusUpdate(ctx context.Context, action resources.
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 
-func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {
-	return ac.context.SecretsInterface()
+func (ac *actionContext) SecretsModInterface() secret.ModInterface {
+	return ac.context.SecretsModInterface()
+}
+
+func (ac *actionContext) PodsModInterface() pod.ModInterface {
+	return ac.context.PodsModInterface()
+}
+
+func (ac *actionContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	return ac.context.ServiceAccountsModInterface()
+}
+
+func (ac *actionContext) ServicesModInterface() service.ModInterface {
+	return ac.context.ServicesModInterface()
+}
+
+func (ac *actionContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	return ac.context.PersistentVolumeClaimsModInterface()
+}
+
+func (ac *actionContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	return ac.context.PodDisruptionBudgetsModInterface()
+}
+
+func (ac *actionContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	return ac.context.ServiceMonitorsModInterface()
+}
+
+func (ac *actionContext) ArangoMembersModInterface() arangomember.ModInterface {
+	return ac.context.ArangoMembersModInterface()
 }
 
 func (ac *actionContext) GetShardSyncStatus() bool {

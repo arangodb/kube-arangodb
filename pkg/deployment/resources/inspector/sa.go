@@ -26,6 +26,9 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -78,24 +81,47 @@ func (i *inspector) ServiceAccount(name string) (*core.ServiceAccount, bool) {
 	return serviceAccount, true
 }
 
-func serviceAccountsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.ServiceAccount, error) {
-	serviceAccounts, err := getServiceAccounts(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
+func (i *inspector) ServiceAccountReadInterface() serviceaccount.ReadInterface {
+	return &serviceAccountReadInterface{i: i}
+}
+
+type serviceAccountReadInterface struct {
+	i *inspector
+}
+
+func (s serviceAccountReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.ServiceAccount, error) {
+	if s, ok := s.i.ServiceAccount(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    core.GroupName,
+			Resource: "serviceaccounts",
+		}, name)
+	} else {
+		return s, nil
 	}
+}
 
-	serviceAccountMap := map[string]*core.ServiceAccount{}
-
-	for _, serviceAccount := range serviceAccounts {
-		_, exists := serviceAccountMap[serviceAccount.GetName()]
-		if exists {
-			return nil, errors.Newf("ServiceAccount %s already exists in map, error received", serviceAccount.GetName())
+func serviceAccountsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		serviceAccounts, err := getServiceAccounts(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		serviceAccountMap[serviceAccount.GetName()] = serviceAccountPointer(serviceAccount)
-	}
+		serviceAccountMap := map[string]*core.ServiceAccount{}
 
-	return serviceAccountMap, nil
+		for _, serviceAccount := range serviceAccounts {
+			_, exists := serviceAccountMap[serviceAccount.GetName()]
+			if exists {
+				return errors.Newf("ServiceAccount %s already exists in map, error received", serviceAccount.GetName())
+			}
+
+			serviceAccountMap[serviceAccount.GetName()] = serviceAccountPointer(serviceAccount)
+		}
+
+		inspector.serviceAccounts = serviceAccountMap
+
+		return nil
+	}
 }
 
 func serviceAccountPointer(serviceAccount core.ServiceAccount) *core.ServiceAccount {

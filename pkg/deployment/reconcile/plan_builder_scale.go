@@ -33,7 +33,6 @@ import (
 
 func createScaleUPMemberPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
-	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	return createScaleMemberPlan(ctx, log, apiObject, spec, status, cachedStatus, context).Filter(filterScaleUP)

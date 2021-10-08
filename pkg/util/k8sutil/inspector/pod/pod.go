@@ -22,11 +22,18 @@
 
 package pod
 
-import core "k8s.io/api/core/v1"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
+	core "k8s.io/api/core/v1"
+)
 
 type Inspector interface {
+	refresh.Inspector
+
+	Pods() []*core.Pod
 	Pod(name string) (*core.Pod, bool)
 	IteratePods(action Action, filters ...Filter) error
+	PodReadInterface() ReadInterface
 }
 
 type Filter func(pod *core.Pod) bool

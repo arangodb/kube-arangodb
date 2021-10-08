@@ -26,6 +26,9 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -35,7 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IteratePersistentVolumeClaims(action persistentvolumeclaim.PersistentVolumeClaimAction, filters ...persistentvolumeclaim.PersistentVolumeClaimFilter) error {
+func (i *inspector) IteratePersistentVolumeClaims(action persistentvolumeclaim.Action, filters ...persistentvolumeclaim.Filter) error {
 	for _, pvc := range i.PersistentVolumeClaims() {
 		if err := i.iteratePersistentVolumeClaim(pvc, action, filters...); err != nil {
 			return err
@@ -44,7 +47,7 @@ func (i *inspector) IteratePersistentVolumeClaims(action persistentvolumeclaim.P
 	return nil
 }
 
-func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim, action persistentvolumeclaim.PersistentVolumeClaimAction, filters ...persistentvolumeclaim.PersistentVolumeClaimFilter) error {
+func (i *inspector) iteratePersistentVolumeClaim(pvc *core.PersistentVolumeClaim, action persistentvolumeclaim.Action, filters ...persistentvolumeclaim.Filter) error {
 	for _, filter := range filters {
 		if !filter(pvc) {
 			return nil
@@ -78,24 +81,47 @@ func (i *inspector) PersistentVolumeClaim(name string) (*core.PersistentVolumeCl
 	return pvc, true
 }
 
-func pvcsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.PersistentVolumeClaim, error) {
-	pvcs, err := getPersistentVolumeClaims(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
+func (i *inspector) PersistentVolumeClaimReadInterface() persistentvolumeclaim.ReadInterface {
+	return &persistentVolumeClaimReadInterface{i: i}
+}
+
+type persistentVolumeClaimReadInterface struct {
+	i *inspector
+}
+
+func (s persistentVolumeClaimReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.PersistentVolumeClaim, error) {
+	if s, ok := s.i.PersistentVolumeClaim(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    core.GroupName,
+			Resource: "persistentvolumeclaims",
+		}, name)
+	} else {
+		return s, nil
 	}
+}
 
-	pvcMap := map[string]*core.PersistentVolumeClaim{}
-
-	for _, pvc := range pvcs {
-		_, exists := pvcMap[pvc.GetName()]
-		if exists {
-			return nil, errors.Newf("PersistentVolumeClaim %s already exists in map, error received", pvc.GetName())
+func pvcsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		pvcs, err := getPersistentVolumeClaims(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		pvcMap[pvc.GetName()] = pvcPointer(pvc)
-	}
+		pvcMap := map[string]*core.PersistentVolumeClaim{}
 
-	return pvcMap, nil
+		for _, pvc := range pvcs {
+			_, exists := pvcMap[pvc.GetName()]
+			if exists {
+				return errors.Newf("PersistentVolumeClaim %s already exists in map, error received", pvc.GetName())
+			}
+
+			pvcMap[pvc.GetName()] = pvcPointer(pvc)
+		}
+
+		inspector.pvcs = pvcMap
+
+		return nil
+	}
 }
 
 func pvcPointer(pvc core.PersistentVolumeClaim) *core.PersistentVolumeClaim {
@@ -126,7 +152,7 @@ func getPersistentVolumeClaims(ctx context.Context, k kubernetes.Interface, name
 	return pvcs.Items, nil
 }
 
-func FilterPersistentVolumeClaimsByLabels(labels map[string]string) persistentvolumeclaim.PersistentVolumeClaimFilter {
+func FilterPersistentVolumeClaimsByLabels(labels map[string]string) persistentvolumeclaim.Filter {
 	return func(pvc *core.PersistentVolumeClaim) bool {
 		for key, value := range labels {
 			v, ok := pvc.Labels[key]

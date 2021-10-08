@@ -41,7 +41,6 @@ import (
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -73,11 +72,11 @@ type ArangoDImageUpdateContainer struct {
 }
 
 type imagesBuilder struct {
+	Context        resources.Context
 	APIObject      k8sutil.APIObject
 	Spec           api.DeploymentSpec
 	Status         api.DeploymentStatus
 	Log            zerolog.Logger
-	KubeCli        kubernetes.Interface
 	UpdateCRStatus func(status api.DeploymentStatus) error
 }
 
@@ -86,11 +85,11 @@ type imagesBuilder struct {
 func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) (bool, bool, error) {
 	status, lastVersion := d.GetStatus()
 	ib := imagesBuilder{
+		Context:   d,
 		APIObject: apiObject,
 		Spec:      apiObject.Spec,
 		Status:    status,
 		Log:       d.deps.Log,
-		KubeCli:   d.deps.KubeCli,
 		UpdateCRStatus: func(status api.DeploymentStatus) error {
 			if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
 				return errors.WithStack(err)
@@ -129,7 +128,6 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	role := k8sutil.ImageIDAndVersionRole
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
-	ns := ib.APIObject.GetNamespace()
 	log := ib.Log.With().
 		Str("pod", podName).
 		Str("image", image).
@@ -138,14 +136,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	// Check if pod exists
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	pod, err := ib.KubeCli.CoreV1().Pods(ns).Get(ctxChild, podName, metav1.GetOptions{})
+	pod, err := ib.Context.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
 		// Pod found
 		if k8sutil.IsPodFailed(pod) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
 				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
+					return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
@@ -187,7 +185,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 		// We have all the info we need now, kill the pod and store the image info.
 		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return ib.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, metav1.DeleteOptions{})
+			return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Msg("Failed to delete Image ID Pod")
@@ -233,7 +231,11 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	}
 
 	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+<<<<<<< HEAD
 		_, _, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
+=======
+		_, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
+>>>>>>> [Feature] TLS Rotation
 		return err
 	})
 	if err != nil {

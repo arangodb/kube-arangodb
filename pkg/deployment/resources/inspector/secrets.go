@@ -92,31 +92,35 @@ func (s secretReadInterface) Get(ctx context.Context, name string, opts meta.Get
 	if s, ok := s.i.Secret(name); !ok {
 		return nil, apiErrors.NewNotFound(schema.GroupResource{
 			Group:    core.GroupName,
-			Resource: "Secret",
+			Resource: "secrets",
 		}, name)
 	} else {
 		return s, nil
 	}
 }
 
-func secretsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Secret, error) {
-	secrets, err := getSecrets(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
-	}
-
-	secretMap := map[string]*core.Secret{}
-
-	for _, secret := range secrets {
-		_, exists := secretMap[secret.GetName()]
-		if exists {
-			return nil, errors.Newf("Secret %s already exists in map, error received", secret.GetName())
+func secretsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		secrets, err := getSecrets(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		secretMap[secret.GetName()] = secretPointer(secret)
-	}
+		secretMap := map[string]*core.Secret{}
 
-	return secretMap, nil
+		for _, secret := range secrets {
+			_, exists := secretMap[secret.GetName()]
+			if exists {
+				return errors.Newf("Secret %s already exists in map, error received", secret.GetName())
+			}
+
+			secretMap[secret.GetName()] = secretPointer(secret)
+		}
+
+		inspector.secrets = secretMap
+
+		return nil
+	}
 }
 
 func secretPointer(pod core.Secret) *core.Secret {

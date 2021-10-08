@@ -100,7 +100,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Monitoring token secret validation failed: secrets \"" +
@@ -134,7 +134,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.TLS.GetCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Failed to create TLS keyfile secret: secrets \"" +
@@ -162,7 +162,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Cluster JWT secret validation failed: secrets \"" +
@@ -190,7 +190,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Authentication.GetClientCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Client authentication CA certificate secret validation failed: " +
@@ -227,7 +227,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -306,7 +306,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -408,7 +408,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(

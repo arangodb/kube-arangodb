@@ -109,14 +109,13 @@ func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.O
 func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup, wantedMinAvail int) error {
 	deplname := r.context.GetAPIObject().GetName()
 	pdbname := PDBNameForGroup(deplname, group)
-	pdbcli := r.context.GetKubeCli().PolicyV1beta1().PodDisruptionBudgets(r.context.GetNamespace())
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
 	for {
 		var pdb *policyv1beta1.PodDisruptionBudget
 		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
-			pdb, err = pdbcli.Get(ctxChild, pdbname, metav1.GetOptions{})
+			pdb, err = r.context.GetCachedStatus().PodDisruptionBudgetReadInterface().Get(ctxChild, pdbname, metav1.GetOptions{})
 			return err
 		})
 		if k8sutil.IsNotFound(err) {
@@ -125,7 +124,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
 				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := pdbcli.Create(ctxChild, pdb, metav1.CreateOptions{})
+					_, err := r.context.PodDisruptionBudgetsModInterface().Create(ctxChild, pdb, metav1.CreateOptions{})
 					return err
 				})
 				if err != nil {
@@ -150,7 +149,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
 				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return pdbcli.Delete(ctxChild, pdbname, metav1.DeleteOptions{})
+					return r.context.PodDisruptionBudgetsModInterface().Delete(ctxChild, pdbname, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
 					log.Error().Err(err).Msg("PDB deletion failed")

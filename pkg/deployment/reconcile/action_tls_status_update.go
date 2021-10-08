@@ -60,7 +60,7 @@ func (a *tlsKeyStatusUpdateAction) Start(ctx context.Context) (bool, error) {
 
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	f, err := a.actionCtx.SecretsInterface().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
+	f, err := a.actionCtx.GetCachedStatus().SecretReadInterface().Get(ctxChild, resources.GetCASecretName(a.actionCtx.GetAPIObject()), meta.GetOptions{})
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to get folder info")
 		return true, nil

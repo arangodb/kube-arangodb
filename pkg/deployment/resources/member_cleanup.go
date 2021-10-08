@@ -173,7 +173,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 
-	reconcileRequired := k8sutil.NewReconcile()
+	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, member := range list {
@@ -197,7 +197,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				}
 
 				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Create(ctxChild, &a, metav1.CreateOptions{})
+					_, err := r.context.ArangoMembersModInterface().Create(ctxChild, &a, metav1.CreateOptions{})
 					return err
 				})
 				if err != nil {
@@ -222,7 +222,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				if changed {
 
 					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-						_, err := r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Update(ctxChild, m, metav1.UpdateOptions{})
+						_, err := r.context.ArangoMembersModInterface().Update(ctxChild, m, metav1.UpdateOptions{})
 						return err
 					})
 					if err != nil {
@@ -251,7 +251,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 			// Remove member
 
 			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return r.context.GetArangoCli().DatabaseV1().ArangoMembers(obj.GetNamespace()).Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
+				return r.context.ArangoMembersModInterface().Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
 			})
 			if err != nil {
 				if !k8sutil.IsNotFound(err) {

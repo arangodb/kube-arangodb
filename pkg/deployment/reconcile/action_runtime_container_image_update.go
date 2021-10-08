@@ -197,7 +197,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			// Update pod image
 			pod.Spec.Containers[id].Image = image
 
-			if _, err := a.actionCtx.GetKubeCli().CoreV1().Pods(pod.GetNamespace()).Update(ctx, pod, v1.UpdateOptions{}); err != nil {
+			if _, err := a.actionCtx.PodsModInterface().Update(ctx, pod, v1.UpdateOptions{}); err != nil {
 				return true, err
 			}
 
