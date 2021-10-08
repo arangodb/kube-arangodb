@@ -7,6 +7,7 @@
 - Fix PVC Resize for Single servers
 - Add Topology support
 - Add ARANGODB_ZONE env to Topology Managed pods
+- Add "Random pod names" feature
 
 ## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
 - Update UBI Image to 8.4

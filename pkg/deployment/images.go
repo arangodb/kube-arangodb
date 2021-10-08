@@ -233,7 +233,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	}
 
 	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
+		_, _, err := resources.CreateArangoPod(ctxChild, ib.KubeCli, ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
 		return err
 	})
 	if err != nil {

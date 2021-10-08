@@ -17,16 +17,16 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
 //
 
 package features
 
 func init() {
-	registerFeature(podNames)
+	registerFeature(shortPodNames)
+	registerFeature(randomPodNames)
 }
 
-var podNames = &feature{
+var shortPodNames = &feature{
 	name:               "short-pod-names",
 	description:        "Enable Short Pod Names",
 	version:            "3.5.0",
@@ -34,6 +34,15 @@ var podNames = &feature{
 	enabledByDefault:   false,
 }
 
-func PodNames() Feature {
-	return podNames
+func ShortPodNames() Feature {
+	return shortPodNames
+}
+
+var randomPodNames = &feature{
+	name:        "random-pod-names",
+	description: "Enables generating random pod names",
+}
+
+func RandomPodNames() Feature {
+	return randomPodNames
 }
