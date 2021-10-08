@@ -26,8 +26,9 @@ import monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/m
 
 type Inspector interface {
 	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)
-	IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error
+	IterateServiceMonitors(action Action, filters ...Filter) error
+	ServiceMonitorReadInterface() ReadInterface
 }
 
-type ServiceMonitorFilter func(serviceMonitor *monitoring.ServiceMonitor) bool
-type ServiceMonitorAction func(serviceMonitor *monitoring.ServiceMonitor) error
+type Filter func(serviceMonitor *monitoring.ServiceMonitor) bool
+type Action func(serviceMonitor *monitoring.ServiceMonitor) error

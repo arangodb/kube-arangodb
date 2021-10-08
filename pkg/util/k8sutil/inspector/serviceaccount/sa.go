@@ -27,6 +27,7 @@ import core "k8s.io/api/core/v1"
 type Inspector interface {
 	ServiceAccount(name string) (*core.ServiceAccount, bool)
 	IterateServiceAccounts(action Action, filters ...Filter) error
+	ServiceAccountReadInterface() ReadInterface
 }
 
 type Filter func(pod *core.ServiceAccount) bool

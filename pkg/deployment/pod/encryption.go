@@ -29,6 +29,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,7 +70,7 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 	}
 }
 
-func GetEncryptionKey(ctx context.Context, secrets k8sutil.SecretInterface, name string) (string, []byte, bool, error) {
+func GetEncryptionKey(ctx context.Context, secrets secret.ReadInterface, name string) (string, []byte, bool, error) {
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 

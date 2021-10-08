@@ -22,10 +22,7 @@
 package secret
 
 import (
-	"context"
-
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Inspector for secrets
@@ -33,11 +30,6 @@ type Inspector interface {
 	Secret(name string) (*core.Secret, bool)
 	IterateSecrets(action Action, filters ...Filter) error
 	SecretReadInterface() ReadInterface
-}
-
-// ReadInterface has methods to work with Secret resources with ReadOnly mode.
-type ReadInterface interface {
-	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
 }
 
 type Filter func(pod *core.Secret) bool

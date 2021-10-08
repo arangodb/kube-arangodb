@@ -31,6 +31,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/stretchr/testify/require"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
@@ -103,7 +106,7 @@ func createTestLifecycle() *core.Lifecycle {
 func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []string) (string, error) {
 
 	name := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 	if err != nil {
 		return "", err
 	}
@@ -443,7 +446,7 @@ func createTestCommandForSyncWorker(name string, tls, monitoring bool) []string 
 	return command
 }
 
-func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment) (*Deployment, *recordfake.FakeRecorder) {
+func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.ArangoDeployment) (*Deployment, *recordfake.FakeRecorder) {
 
 	eventRecorder := recordfake.NewFakeRecorder(10)
 	kubernetesClientSet := fake.NewSimpleClientset()
@@ -483,6 +486,10 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		stopCh:    make(chan struct{}),
 	}
 	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
+	require.NoError(t, err)
+	d.SetCachedStatus(cachedStatus)
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)

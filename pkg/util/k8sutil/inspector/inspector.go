@@ -24,7 +24,8 @@
 package inspector
 
 import (
-	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
@@ -37,8 +38,7 @@ import (
 )
 
 type Inspector interface {
-	Refresh(ctx context.Context) error
-
+	refresh.Inspector
 	pod.Inspector
 	secret.Inspector
 	persistentvolumeclaim.Inspector
@@ -47,4 +47,6 @@ type Inspector interface {
 	servicemonitor.Inspector
 	serviceaccount.Inspector
 	arangomember.Inspector
+
+	node.Loader
 }

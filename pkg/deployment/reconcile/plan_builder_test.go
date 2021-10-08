@@ -29,6 +29,16 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,6 +87,42 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) SecretsModInterface() secret.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodsModInterface() pod.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServicesModInterface() service.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ArangoMembersModInterface() arangomember.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
+	panic("implement me")
 }
 
 func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
@@ -163,7 +209,7 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 	panic("implement me")
 }
 
-func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
+func (c *testContext) SecretsInterface() secret.Interface {
 	panic("implement me")
 }
 
@@ -602,12 +648,13 @@ type testCase struct {
 	PDBS            map[string]*policy.PodDisruptionBudget
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
+	Nodes           map[string]*core.Node
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers)
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
 }
 
 func TestCreatePlan(t *testing.T) {

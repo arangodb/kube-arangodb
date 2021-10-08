@@ -62,13 +62,12 @@ func runTestCases(t *testing.T, testCases ...testCaseStruct) {
 func runTestCase(t *testing.T, testCase testCaseStruct) {
 	t.Run(testCase.Name, func(t *testing.T) {
 		// Arrange
-		d, eventRecorder := createTestDeployment(testCase.config, testCase.ArangoDeployment)
+		d, eventRecorder := createTestDeployment(t, testCase.config, testCase.ArangoDeployment)
 
 		errs := 0
 		for {
-			cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
-			require.NoError(t, err)
-			err = d.resources.EnsureSecrets(context.Background(), log.Logger, cache)
+			require.NoError(t, d.currentState.Refresh(context.Background()))
+			err := d.resources.EnsureSecrets(context.Background(), log.Logger, d.GetCachedStatus())
 			if err == nil {
 				break
 			}
@@ -123,8 +122,6 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		// Set members
 		if err := d.status.last.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 			for _, m := range list {
-				c := d.GetArangoCli()
-				k := d.GetKubeCli()
 
 				member := api.ArangoMember{
 					ObjectMeta: metav1.ObjectMeta{
@@ -137,7 +134,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					},
 				}
 
-				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Create(context.Background(), &member, metav1.CreateOptions{}); err != nil {
+				if _, err := d.ArangoMembersModInterface().Create(context.Background(), &member, metav1.CreateOptions{}); err != nil {
 					return err
 				}
 
@@ -148,11 +145,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 					},
 				}
 
-				if _, err := k.CoreV1().Services(member.GetNamespace()).Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
+				if _, err := d.ServicesModInterface().Create(context.Background(), &s, metav1.CreateOptions{}); err != nil {
 					return err
 				}
 
-				cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+				cache, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 				require.NoError(t, err)
 
 				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
@@ -174,11 +171,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 				member.Status.Template = podTemplate
 				member.Spec.Template = podTemplate
 
-				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).Update(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
+				if _, err := d.ArangoMembersModInterface().Update(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
 					return err
 				}
 
-				if _, err := c.DatabaseV1().ArangoMembers(member.GetNamespace()).UpdateStatus(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
+				if _, err := d.ArangoMembersModInterface().UpdateStatus(context.Background(), &member, metav1.UpdateOptions{}); err != nil {
 					return err
 				}
 			}
@@ -192,9 +189,8 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 		}
 
 		// Act
-		cache, err := inspector.NewInspector(context.Background(), d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
-		require.NoError(t, err)
-		err = d.resources.EnsurePods(context.Background(), cache)
+		require.NoError(t, d.currentState.Refresh(context.Background()))
+		err = d.resources.EnsurePods(context.Background(), d.GetCachedStatus())
 
 		// Assert
 		if testCase.ExpectedError != nil {

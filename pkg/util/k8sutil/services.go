@@ -38,14 +38,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ServiceInterface has methods to work with Service resources.
-type ServiceInterface interface {
-	Create(ctx context.Context, service *core.Service, opts metav1.CreateOptions) (*core.Service, error)
-	Update(ctx context.Context, service *core.Service, opts metav1.UpdateOptions) (*core.Service, error)
-	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*core.Service, error)
-}
-
 // CreateHeadlessServiceName returns the name of the headless service for the given
 // deployment name.
 func CreateHeadlessServiceName(deploymentName string) string {
@@ -77,7 +69,7 @@ func CreateExporterClientServiceName(deploymentName string) string {
 }
 
 // CreateExporterService
-func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs ServiceInterface,
+func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, svcs service.ModInterface,
 	deployment metav1.Object, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateExporterClientServiceName(deploymentName)
@@ -119,7 +111,7 @@ func CreateExporterService(ctx context.Context, cachedStatus service.Inspector, 
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateHeadlessService(ctx context.Context, svcs ServiceInterface, deployment metav1.Object,
+func CreateHeadlessService(ctx context.Context, svcs service.ModInterface, deployment metav1.Object,
 	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateHeadlessServiceName(deploymentName)
@@ -143,7 +135,7 @@ func CreateHeadlessService(ctx context.Context, svcs ServiceInterface, deploymen
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateDatabaseClientService(ctx context.Context, svcs ServiceInterface, deployment metav1.Object, single bool,
+func CreateDatabaseClientService(ctx context.Context, svcs service.ModInterface, deployment metav1.Object, single bool,
 	owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
 	svcName := CreateDatabaseClientServiceName(deploymentName)
@@ -173,7 +165,7 @@ func CreateDatabaseClientService(ctx context.Context, svcs ServiceInterface, dep
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func CreateExternalAccessService(ctx context.Context, svcs ServiceInterface, svcName, role string,
+func CreateExternalAccessService(ctx context.Context, svcs service.ModInterface, svcName, role string,
 	deployment metav1.Object, serviceType core.ServiceType, port, nodePort int, loadBalancerIP string,
 	loadBalancerSourceRanges []string, owner metav1.OwnerReference) (string, bool, error) {
 	deploymentName := deployment.GetName()
@@ -197,7 +189,7 @@ func CreateExternalAccessService(ctx context.Context, svcs ServiceInterface, svc
 // If the service already exists, nil is returned.
 // If another error occurs, that error is returned.
 // The returned bool is true if the service is created, or false when the service already existed.
-func createService(ctx context.Context, svcs ServiceInterface, svcName, deploymentName, clusterIP, role string,
+func createService(ctx context.Context, svcs service.ModInterface, svcName, deploymentName, clusterIP, role string,
 	serviceType core.ServiceType, ports []core.ServicePort, loadBalancerIP string, loadBalancerSourceRanges []string,
 	publishNotReadyAddresses bool, owner metav1.OwnerReference) (bool, error) {
 	labels := LabelsForDeployment(deploymentName, role)
