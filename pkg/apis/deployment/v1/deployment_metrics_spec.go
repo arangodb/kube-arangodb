@@ -74,6 +74,8 @@ type MetricsSpec struct {
 	Mode           *MetricsMode              `json:"mode,omitempty"`
 	TLS            *bool                     `json:"tls,omitempty"`
 
+	ServiceMonitor *MetricsServiceMonitorSpec `json:"serviceMonitor,omitempty"`
+
 	Port *uint16 `json:"port,omitempty"`
 }
 
