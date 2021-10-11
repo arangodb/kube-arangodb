@@ -9,7 +9,7 @@
 - Add ARANGODB_ZONE env to Topology Managed pods
 - Add "Random pod names" feature
 - Rotate TLS Secrets on ALT Names change
-
+- Add new admin commands to fetch agency dump and agency state
 ## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
 - Update UBI Image to 8.4
 - Fix ArangoSync Liveness Probe
