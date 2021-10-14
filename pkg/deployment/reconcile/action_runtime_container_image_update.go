@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -197,7 +197,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			// Update pod image
 			pod.Spec.Containers[id].Image = image
 
-			if _, err := a.actionCtx.GetKubeCli().CoreV1().Pods(pod.GetNamespace()).Update(ctx, pod, v1.UpdateOptions{}); err != nil {
+			if _, err := a.actionCtx.PodsModInterface().Update(ctx, pod, v1.UpdateOptions{}); err != nil {
 				return true, err
 			}
 

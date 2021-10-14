@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 		secret := *spec.RestoreEncryptionSecret
 
 		// Additional logic to do restore with encryption key
-		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.SecretsInterface(), secret)
+		name, _, exists, err := pod.GetEncryptionKey(ctx, builderCtx.GetCachedStatus().SecretReadInterface(), secret)
 		if err != nil {
 			log.Err(err).Msgf("Unable to fetch encryption key")
 			return false, nil

@@ -71,6 +71,7 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 		return
 	}
 }
+
 func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
 	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)

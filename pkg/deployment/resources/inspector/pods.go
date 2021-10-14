@@ -26,6 +26,9 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -77,24 +80,47 @@ func (i *inspector) Pod(name string) (*core.Pod, bool) {
 	return pod, true
 }
 
-func podsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Pod, error) {
-	pods, err := getPods(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
+func (i *inspector) PodReadInterface() pod.ReadInterface {
+	return &podReadInterface{i: i}
+}
+
+type podReadInterface struct {
+	i *inspector
+}
+
+func (s podReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Pod, error) {
+	if s, ok := s.i.Pod(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    core.GroupName,
+			Resource: "pods",
+		}, name)
+	} else {
+		return s, nil
 	}
+}
 
-	podMap := map[string]*core.Pod{}
-
-	for _, pod := range pods {
-		_, exists := podMap[pod.GetName()]
-		if exists {
-			return nil, errors.Newf("Pod %s already exists in map, error received", pod.GetName())
+func podsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		pods, err := getPods(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		podMap[pod.GetName()] = podPointer(pod)
-	}
+		podMap := map[string]*core.Pod{}
 
-	return podMap, nil
+		for _, pod := range pods {
+			_, exists := podMap[pod.GetName()]
+			if exists {
+				return errors.Newf("Pod %s already exists in map, error received", pod.GetName())
+			}
+
+			podMap[pod.GetName()] = podPointer(pod)
+		}
+
+		inspector.pods = podMap
+
+		return nil
+	}
 }
 
 func podPointer(pod core.Pod) *core.Pod {

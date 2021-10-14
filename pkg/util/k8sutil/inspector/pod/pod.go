@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,18 @@
 
 package pod
 
-import core "k8s.io/api/core/v1"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
+	core "k8s.io/api/core/v1"
+)
 
 type Inspector interface {
+	refresh.Inspector
+
+	Pods() []*core.Pod
 	Pod(name string) (*core.Pod, bool)
 	IteratePods(action Action, filters ...Filter) error
+	PodReadInterface() ReadInterface
 }
 
 type Filter func(pod *core.Pod) bool

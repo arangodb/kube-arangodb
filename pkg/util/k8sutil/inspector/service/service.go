@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,15 @@
 
 package service
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+)
 
 type Inspector interface {
 	Service(name string) (*core.Service, bool)
-	IterateServices(action ServiceAction, filters ...ServiceFilter) error
+	IterateServices(action Action, filters ...Filter) error
+	ServiceReadInterface() ReadInterface
 }
 
-type ServiceFilter func(pod *core.Service) bool
-type ServiceAction func(pod *core.Service) error
+type Filter func(pod *core.Service) bool
+type Action func(pod *core.Service) error

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // Adam Janikowski
 //
 
-package v2alpha1
+package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -73,6 +73,8 @@ type MetricsSpec struct {
 	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
 	Mode           *MetricsMode              `json:"mode,omitempty"`
 	TLS            *bool                     `json:"tls,omitempty"`
+
+	ServiceMonitor *MetricsServiceMonitorSpec `json:"serviceMonitor,omitempty"`
 
 	Port *uint16 `json:"port,omitempty"`
 }

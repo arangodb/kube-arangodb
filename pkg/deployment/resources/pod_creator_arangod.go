@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -190,6 +190,8 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 			})
 		}
 	}
+
+	envs.Add(true, pod.Topology().Envs(a.member.AsInput())...)
 
 	return envs.GetEnvList()
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import (
 	"net/url"
 	"reflect"
 	"time"
+
+	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 
 	"github.com/arangodb/go-driver"
 
@@ -450,6 +452,14 @@ func keyfileRenewalRequired(ctx context.Context,
 		return false, false
 	}
 
+	memberName := member.ArangoMemberName(apiObject.GetName(), group)
+
+	service, ok := cachedStatus.Service(memberName)
+	if !ok {
+		log.Warn().Str("service", memberName).Msg("Service does not exists")
+		return false, false
+	}
+
 	caSecret, exists := cachedStatus.Secret(spec.TLS.GetCASecretName())
 	if !exists {
 		log.Warn().Str("secret", spec.TLS.GetCASecretName()).Msg("CA Secret does not exists")
@@ -491,6 +501,26 @@ func keyfileRenewalRequired(ctx context.Context,
 
 		if time.Now().Add(CertificateRenewalMargin).After(cert.NotAfter) {
 			log.Info().Msg("Renewal margin exceeded")
+			return true, true
+		}
+
+		// Verify AltNames
+		altNames, err := memberTls.GetServerAltNames(apiObject, spec, spec.TLS, service, group, member)
+		if err != nil {
+			log.Warn().Msg("Unable to render alt names")
+			return false, false
+		}
+
+		var dnsNames = cert.DNSNames
+
+		for _, ip := range cert.IPAddresses {
+			dnsNames = append(dnsNames, ip.String())
+		}
+
+		if a := util.DiffStrings(altNames.AltNames, dnsNames); len(a) > 0 {
+			log.Info().Strs("AltNames Current", cert.DNSNames).
+				Strs("AltNames Expected", altNames.AltNames).
+				Msgf("Alt names are different")
 			return true, true
 		}
 	}

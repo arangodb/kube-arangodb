@@ -6,6 +6,9 @@
 - Switch ArangoDB Image Discovery process from Headless Service to Pod IP
 - Fix PVC Resize for Single servers
 - Add Topology support
+- Add ARANGODB_ZONE env to Topology Managed pods
+- Add "Random pod names" feature
+- Rotate TLS Secrets on ALT Names change
 
 ## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
 - Update UBI Image to 8.4

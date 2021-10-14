@@ -26,12 +26,13 @@ package k8sutil
 import (
 	"context"
 
-	"github.com/rs/zerolog"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog"
+	core "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -39,25 +40,28 @@ const (
 )
 
 // RemovePodFinalizers removes the given finalizers from the given pod.
-func RemovePodFinalizers(ctx context.Context, log zerolog.Logger, kubecli kubernetes.Interface, p *v1.Pod,
+func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log zerolog.Logger, c pod.ModInterface, p *core.Pod,
 	finalizers []string, ignoreNotFound bool) error {
-	pods := kubecli.CoreV1().Pods(p.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
 		defer cancel()
 
-		result, err := pods.Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		if err := cachedStatus.Refresh(ctxChild); err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		result, err := cachedStatus.PodReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
 	updateFunc := func(updated metav1.Object) error {
-		updatedPod := updated.(*v1.Pod)
+		updatedPod := updated.(*core.Pod)
 		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
 		defer cancel()
 
-		result, err := pods.Update(ctxChild, updatedPod, metav1.UpdateOptions{})
+		result, err := c.Update(ctxChild, updatedPod, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -71,25 +75,28 @@ func RemovePodFinalizers(ctx context.Context, log zerolog.Logger, kubecli kubern
 }
 
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
-func RemovePVCFinalizers(ctx context.Context, log zerolog.Logger, kubecli kubernetes.Interface,
-	p *v1.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
-	pvcs := kubecli.CoreV1().PersistentVolumeClaims(p.GetNamespace())
+func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, log zerolog.Logger, c persistentvolumeclaim.ModInterface,
+	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
 		defer cancel()
 
-		result, err := pvcs.Get(ctxChild, p.GetName(), metav1.GetOptions{})
+		if err := cachedStatus.Refresh(ctxChild); err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		result, err := cachedStatus.PersistentVolumeClaimReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
 		return result, nil
 	}
 	updateFunc := func(updated metav1.Object) error {
-		updatedPVC := updated.(*v1.PersistentVolumeClaim)
+		updatedPVC := updated.(*core.PersistentVolumeClaim)
 		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
 		defer cancel()
 
-		result, err := pvcs.Update(ctxChild, updatedPVC, metav1.UpdateOptions{})
+		result, err := c.Update(ctxChild, updatedPVC, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.WithStack(err)
 		}

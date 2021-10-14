@@ -56,8 +56,7 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		s := a.actionCtx.SecretsInterface()
-		return s.Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
+		return a.actionCtx.SecretsModInterface().Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
 	})
 	if err != nil {
 		if !k8sutil.IsNotFound(err) {
