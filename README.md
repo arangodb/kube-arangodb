@@ -150,50 +150,23 @@ Only use this procedure for a new install of the operator. See below for
 upgrades.
 
 ```bash
+# The following will add the helm repository to your local cache
+helm repo add arangodb https://arangodb.github.io/kube-arangodb
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-crd-1.2.3.tgz
+helm install kube-arangodb-crd arangodb/kube-arangodb-crd
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-1.2.3.tgz
+helm install kube-arangodb arangodb/kube-arangodb
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-1.2.3.tgz --set "operator.features.storage=true"
+helm install kube-arangodb arangodb/kube-arangodb --set "operator.features.storage=true"
 ```
 
 ## Upgrading the operator using Helm
 
-To upgrade the operator to the latest version with Helm, you have to
-delete the previous deployment and then install the latest. **HOWEVER**:
-You *must not delete* the deployment of the custom resource definitions
-(CRDs), or your ArangoDB deployments will be deleted!
-
-Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and of the storage operator
-(`kube-arangodb-storage`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm
-list` output:
-
-```
-% helm list
-NAME            	REVISION	UPDATED                 	STATUS  	CHART                               	APP VERSION	NAMESPACE
-steely-mule     	1       	Sun Mar 31 21:11:07 2019	DEPLOYED	kube-arangodb-crd-0.3.9             	           	default  
-vetoed-ladybird 	1       	Mon Apr  8 11:36:58 2019	DEPLOYED	kube-arangodb-0.3.10-preview        	           	default  
-```
-
-So here, you would have to do
+To upgrade the operator to the latest version with Helm, just run:
 
 ```bash
-helm delete vetoed-ladybird
-```
-
-but **not delete `steely-mule`**. Then you could install the new version
-with `helm install` as normal:
-
-```bash
-# The following will install the operator for `ArangoDeployment` &
-# `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-1.2.3.tgz
-# To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.3/kube-arangodb-1.2.3.tgz --set "operator.features.storage=true"
+helm upgrade kube-arangodb arangodb/kube-arangodb --atomic --reuse-values
 ```
 
 ## Building
