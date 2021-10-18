@@ -52,6 +52,13 @@ func createTopologyMemberAdjustmentPlan(ctx context.Context,
 	return nil
 }
 
+func createTopologyUpdatePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
+
 func topologyMissingMemberToRemoveSelector(s *api.TopologyStatus) api.MemberToRemoveSelector {
 	return nil
 }

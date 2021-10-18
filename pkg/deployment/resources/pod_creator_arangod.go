@@ -271,7 +271,7 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, &a)
 
-	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAntiAffinity)
+	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
 
 	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
 
@@ -283,7 +283,7 @@ func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 
 	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
 
-	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAffinity)
+	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -295,7 +295,7 @@ func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
-	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).NodeAffinity)
+	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }

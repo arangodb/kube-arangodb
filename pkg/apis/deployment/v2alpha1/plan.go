@@ -175,6 +175,7 @@ const (
 	// Topology
 	ActionTypeTopologyEnable           ActionType = "TopologyEnable"
 	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
+	ActionTypeTopologyZonesUpdate      ActionType = "TopologyZonesUpdate"
 	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
 )
 

@@ -18,12 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package reconcile
 
-import "k8s.io/apimachinery/pkg/types"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/rs/zerolog"
+)
 
-type TopologyMemberStatus struct {
-	ID    types.UID `json:"id"`
-	Zone  int       `json:"rack"`
-	Label string    `json:"label,omitempty"`
+func init() {
+	registerAction(api.ActionTypeTopologyZonesUpdate, newTopologyZonesUpdate)
+}
+
+func newTopologyZonesUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+	a := &topologyZonesUpdate{}
+
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+
+	return a
 }

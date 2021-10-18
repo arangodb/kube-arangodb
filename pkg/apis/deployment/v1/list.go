@@ -34,8 +34,24 @@ func (l List) Contains(v string) bool {
 	return false
 }
 
-func (l List) Sort() {
-	sort.Strings(l)
+func (l List) Sort() List {
+	z := l.DeepCopy()
+	sort.Strings(z)
+	return z
+}
+
+func (l List) Unique() List {
+	var m List
+
+	for _, k := range l {
+		if m.Contains(k) {
+			continue
+		}
+
+		m = m.Add(k)
+	}
+
+	return m
 }
 
 func (l List) Remove(values ...string) List {
@@ -50,6 +66,14 @@ func (l List) Remove(values ...string) List {
 
 		m = append(m, v)
 	}
+
+	return m
+}
+func (l List) Add(values ...string) List {
+	var m List
+
+	m = append(m, l...)
+	m = append(m, values...)
 
 	return m
 }
