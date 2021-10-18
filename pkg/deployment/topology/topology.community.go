@@ -27,6 +27,6 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func GetTopologyAffinityRules(name string, group api.ServerGroup, status *api.TopologyStatus, member *api.TopologyMemberStatus) core.Affinity {
+func GetTopologyAffinityRules(name string, status api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus) core.Affinity {
 	return core.Affinity{}
 }

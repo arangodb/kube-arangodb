@@ -85,6 +85,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
 		ApplyIfEmpty(createTopologyEnablementPlan).
+		ApplyIfEmpty(createTopologyUpdatePlan).
 		// Check for scale up
 		ApplyIfEmpty(createScaleUPMemberPlan).
 		// Check for failed members

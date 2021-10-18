@@ -18,12 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+// +build !enterprise
 
-import "k8s.io/apimachinery/pkg/types"
+package reconcile
 
-type TopologyMemberStatus struct {
-	ID    types.UID `json:"id"`
-	Zone  int       `json:"rack"`
-	Label string    `json:"label,omitempty"`
+type topologyZonesUpdate struct {
+	actionEmpty
 }
