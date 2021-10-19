@@ -33,6 +33,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+
 	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -512,7 +514,7 @@ func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.Dep
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
+func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -525,7 +527,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		return nil
 	}
 
-	template := member.Status.Template
+	template := arangoMember.Status.Template
 
 	if template == nil {
 		// Template not yet propagated
@@ -634,8 +636,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.PodSpecVersion = template.PodSpecChecksum
 	}
 
-	// Record new member phase
-	m.Phase = newPhase
+	member.GetPhaseExecutor().Execute(&m, api.Action{}, newPhase)
 
 	if status.Topology.Enabled() {
 		if m.Topology != nil && m.Topology.ID == status.Topology.ID {
@@ -645,7 +646,6 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		}
 	}
 
-	m.Upgrade = false
 	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
