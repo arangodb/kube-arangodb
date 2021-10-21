@@ -170,6 +170,9 @@ func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelect
 
 		// Run conditional picker
 		for _, selector := range selectors {
+			if selector == nil {
+				continue
+			}
 			if m, err := selector(l); err != nil {
 				return MemberStatus{}, err
 			} else if m != "" {
