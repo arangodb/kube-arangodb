@@ -682,3 +682,15 @@ func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
 
 	return *s.Entrypoint
 }
+
+func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
+	if s.ShutdownDelay == nil {
+		switch group {
+		case ServerGroupCoordinators:
+			return 3
+		default:
+			return 0
+		}
+	}
+	return *s.ShutdownDelay
+}

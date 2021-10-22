@@ -124,6 +124,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
 			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
 			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
+			if g := testCase.Features.Graceful;g != nil {
+				*features.GracefulShutdown().EnabledPointer() = *g
+			} else {
+				*features.GracefulShutdown().EnabledPointer() = features.GracefulShutdown().EnabledByDefault()
+			}
 			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
 		}
 

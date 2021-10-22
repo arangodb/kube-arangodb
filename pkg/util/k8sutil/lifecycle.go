@@ -62,8 +62,18 @@ func InitLifecycleContainer(image string, resources *core.ResourceRequirements, 
 	return c, nil
 }
 
+// NewLifecycleFinalizers creates a lifecycle structure with preStop handler which wait for finalizers to be removed.
+func NewLifecycleFinalizers() (*core.Lifecycle, error) {
+	return NewLifecycle("finalizers")
+}
+
+// NewLifecyclePort creates a lifecycle structure with preStop handler which wait for port to be closed.
+func NewLifecyclePort() (*core.Lifecycle, error) {
+	return NewLifecycle("port")
+}
+
 // NewLifecycle creates a lifecycle structure with preStop handler.
-func NewLifecycle() (*core.Lifecycle, error) {
+func NewLifecycle(t string) (*core.Lifecycle, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -72,7 +82,7 @@ func NewLifecycle() (*core.Lifecycle, error) {
 	lifecycle := &core.Lifecycle{
 		PreStop: &core.Handler{
 			Exec: &core.ExecAction{
-				Command: append([]string{exePath}, "lifecycle", "preStop"),
+				Command: append([]string{exePath}, "lifecycle", "preStop", t),
 			},
 		},
 	}

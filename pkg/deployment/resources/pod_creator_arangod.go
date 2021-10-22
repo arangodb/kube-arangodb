@@ -27,6 +27,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
@@ -193,7 +195,10 @@ func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
-	return k8sutil.NewLifecycle()
+	if features.GracefulShutdown().Enabled() {
+		return k8sutil.NewLifecyclePort()
+	}
+	return k8sutil.NewLifecycleFinalizers()
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
@@ -348,7 +353,7 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 
 	if m.spec.Metrics.IsEnabled() {
 		token := m.spec.Metrics.GetJWTTokenSecretName()
-		if token != "" {
+		if m.spec.Authentication.IsAuthenticated() && token != "" {
 			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
 			volumes.AddVolume(vol)
 		}
@@ -460,15 +465,20 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 
 func (m *MemberArangoDPod) GetFinalizers() []string {
 	var finalizers []string
-	if d := m.spec.GetServerGroupSpec(m.group).ShutdownDelay; d != nil {
+
+	if d := m.spec.GetServerGroupSpec(m.group).GetShutdownDelay(m.group); d != 0 {
 		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
 	}
 
-	switch m.group {
-	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
-	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+	if features.GracefulShutdown().Enabled() {
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
+	} else {
+		switch m.group {
+		case api.ServerGroupAgents:
+			finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+		case api.ServerGroupDBServers:
+			finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+		}
 	}
 
 	return finalizers
@@ -502,7 +512,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 		return nil, err
 	}
 
-	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
+	if m.spec.Authentication.IsAuthenticated() && m.spec.Metrics.GetJWTTokenSecretName() != "" {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 	}
 

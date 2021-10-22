@@ -79,6 +79,7 @@ const (
 
 type testCaseFeatures struct {
 	TLSSNI, TLSRotation, JWTRotation, EncryptionRotation bool
+	Graceful *bool
 }
 
 type testCaseStruct struct {
@@ -100,8 +101,12 @@ func createTestTLSVolume(serverGroupString, ID string) core.Volume {
 		k8sutil.CreateTLSKeyfileSecretName(testDeploymentName, serverGroupString, ID))
 }
 
-func createTestLifecycle() *core.Lifecycle {
-	lifecycle, _ := k8sutil.NewLifecycle()
+func createTestLifecycle(group api.ServerGroup) *core.Lifecycle {
+	if group.IsArangosync() {
+		lifecycle, _ := k8sutil.NewLifecycleFinalizers()
+		return lifecycle
+	}
+	lifecycle, _ := k8sutil.NewLifecyclePort()
 	return lifecycle
 }
 
@@ -586,9 +591,14 @@ func finalizers(group api.ServerGroup) []string {
 	var finalizers []string
 	switch group {
 	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+	case api.ServerGroupCoordinators:
+		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
 	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+	case api.ServerGroupSingle:
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
 	}
 
 	return finalizers
@@ -732,7 +742,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 		}
 
 		if len(p.Spec.Containers) > 0 {
-			p.Spec.Containers[0].Lifecycle = createTestLifecycle()
+			p.Spec.Containers[0].Lifecycle = createTestLifecycle(api.ServerGroupAgents)
 		}
 
 		if len(p.Spec.Containers) > 0 {

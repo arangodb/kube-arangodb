@@ -148,6 +148,8 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 		return time.Minute
 	case ServerGroupDBServers:
 		return time.Hour
+	case ServerGroupCoordinators:
+		return time.Hour
 	default:
 		return time.Second * 30
 	}
