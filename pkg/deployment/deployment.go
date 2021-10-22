@@ -69,13 +69,11 @@ import (
 
 // Config holds configuration settings for a Deployment
 type Config struct {
-	ServiceAccount        string
-	AllowChaos            bool
-	LifecycleImage        string
-	OperatorUUIDInitImage string
-	MetricsExporterImage  string
-	ArangoImage           string
-	Scope                 scope.Scope
+	ServiceAccount string
+	AllowChaos     bool
+	OperatorImage  string
+	ArangoImage    string
+	Scope          scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment

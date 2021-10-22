@@ -87,9 +87,8 @@ type Config struct {
 	Namespace                   string
 	PodName                     string
 	ServiceAccount              string
-	LifecycleImage              string
+	OperatorImage               string
 	ArangoImage                 string
-	MetricsExporterImage        string
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool

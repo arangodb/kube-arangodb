@@ -17,31 +17,19 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-// Author Tomasz Mielech
-//
 
-package features
+package v1
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
+const (
+	ServerGroupReservedContainerNameServer   = "server"
+	ServerGroupReservedContainerNameExporter = "exporter"
 )
 
-func init() {
-	registerFeature(metricsExporter)
-}
-
-var metricsExporter = &feature{
-	name:               "metrics-exporter",
-	description:        "Define if internal metrics-exporter should be used",
-	version:            "3.6.0",
-	enterpriseRequired: false,
-	enabledByDefault:   true,
-	deprecated:         "It is always set to True",
-	constValue:         util.NewBool(true),
-}
-
-// deprecated
-func MetricsExporter() Feature {
-	return metricsExporter
+func IsReservedServerGroupContainerName(name string) bool {
+	switch name {
+	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter:
+		return true
+	default:
+		return false
+	}
 }

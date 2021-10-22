@@ -113,10 +113,7 @@ func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirement
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
-	if a.resources.context.GetLifecycleImage() != "" {
-		return k8sutil.NewLifecycle()
-	}
-	return nil, nil
+	return k8sutil.NewLifecycle()
 }
 
 func (a *ArangoSyncContainer) GetImagePullPolicy() core.PullPolicy {
@@ -144,9 +141,7 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 		envs.Add(true, env)
 	}
 
-	if a.resources.context.GetLifecycleImage() != "" {
-		envs.Add(true, k8sutil.GetLifecycleEnv()...)
-	}
+	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
 	if len(a.groupSpec.Envs) > 0 {
 		for _, env := range a.groupSpec.Envs {
@@ -227,10 +222,8 @@ func (m *MemberSyncPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	var volumes []core.Volume
 	var volumeMounts []core.VolumeMount
 
-	if m.resources.context.GetLifecycleImage() != "" {
-		volumes = append(volumes, k8sutil.LifecycleVolume())
-		volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
-	}
+	volumes = append(volumes, k8sutil.LifecycleVolume())
+	volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
 
 	if m.tlsKeyfileSecretName != "" {
 		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, m.tlsKeyfileSecretName)
@@ -273,9 +266,8 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 		initContainers = append(initContainers, c...)
 	}
 
-	lifecycleImage := m.resources.context.GetLifecycleImage()
-	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
+	{
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		if err != nil {
 			return nil, err

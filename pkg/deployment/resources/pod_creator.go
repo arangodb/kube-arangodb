@@ -250,23 +250,6 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	return args
 }
 
-// CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
-func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
-	var finalizers []string
-	if d := r.context.GetSpec().GetServerGroupSpec(group).ShutdownDelay; d != nil {
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
-	}
-
-	switch group {
-	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
-	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
-	}
-
-	return finalizers
-}
-
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
 func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []core.Toleration {
 	notReadyDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}

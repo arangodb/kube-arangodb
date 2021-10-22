@@ -73,6 +73,28 @@ const (
 	ServerContainerConditionPrefix             = "containers with unready status: "
 )
 
+// GetAnyVolumeByName returns the volume in the given volumes with the given name.
+// Returns false if not found.
+func GetAnyVolumeByName(volumes []core.Volume, name string) (core.Volume, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.Volume{}, false
+}
+
+// GetAnyVolumeMountByName returns the volumemount in the given volumemountss with the given name.
+// Returns false if not found.
+func GetAnyVolumeMountByName(volumes []core.VolumeMount, name string) (core.VolumeMount, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.VolumeMount{}, false
+}
+
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *core.Pod) bool {
