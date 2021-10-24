@@ -29,8 +29,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -157,9 +155,7 @@ func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 		envs.Add(true, env)
 	}
 
-	if a.resources.context.GetLifecycleImage() != "" {
-		envs.Add(true, k8sutil.GetLifecycleEnv()...)
-	}
+	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
 	if a.groupSpec.Resources.Limits != nil {
 		if a.groupSpec.GetOverrideDetectedTotalMemory() {
@@ -201,10 +197,7 @@ func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
-	if a.resources.context.GetLifecycleImage() != "" {
-		return k8sutil.NewLifecycle()
-	}
-	return nil, nil
+	return k8sutil.NewLifecycle()
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
@@ -312,28 +305,11 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	if m.spec.Metrics.IsEnabled() {
 		var c *core.Container
 
-		if features.MetricsExporter().Enabled() {
-			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			if container, err := m.createMetricsExporterSidecarInternalExporter(); err != nil {
-				return err
-			} else {
-				c = container
-			}
+		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+		if container, err := m.createMetricsExporterSidecarInternalExporter(); err != nil {
+			return err
 		} else {
-			switch m.spec.Metrics.Mode.Get() {
-			case api.MetricsModeExporter:
-				if !m.group.IsExportMetrics() {
-					break
-				}
-				fallthrough
-			case api.MetricsModeSidecar:
-				c = m.createMetricsExporterSidecarExternalExporter()
-
-				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			default:
-				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			}
-
+			c = container
 		}
 		if c != nil {
 			pod.Spec.Containers = append(pod.Spec.Containers, *c)
@@ -354,9 +330,7 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 
 	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
 
-	if m.resources.context.GetLifecycleImage() != "" {
-		volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
-	}
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 
 	if m.status.PersistentVolumeClaimName != "" {
 		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
@@ -377,34 +351,16 @@ func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
 	volumes.Append(pod.Security(), m.AsInput())
 
 	if m.spec.Metrics.IsEnabled() {
-		if features.MetricsExporter().Enabled() {
-			token := m.spec.Metrics.GetJWTTokenSecretName()
-			if token != "" {
-				vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-				volumes.AddVolume(vol)
-			}
-		} else {
-			switch m.spec.Metrics.Mode.Get() {
-			case api.MetricsModeExporter:
-				if !m.group.IsExportMetrics() {
-					break
-				}
-				fallthrough
-			case api.MetricsModeSidecar:
-				token := m.spec.Metrics.GetJWTTokenSecretName()
-				if token != "" {
-					vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-					volumes.AddVolume(vol)
-				}
-			}
+		token := m.spec.Metrics.GetJWTTokenSecretName()
+		if token != "" {
+			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			volumes.AddVolume(vol)
 		}
 	}
 
 	volumes.Append(pod.JWT(), m.AsInput())
 
-	if m.resources.context.GetLifecycleImage() != "" {
-		volumes.AddVolume(k8sutil.LifecycleVolume())
-	}
+	volumes.AddVolume(k8sutil.LifecycleVolume())
 
 	// SNI
 	volumes.Append(pod.SNI(), m.AsInput())
@@ -436,9 +392,8 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		return nil, err
 	}
 
-	lifecycleImage := m.resources.context.GetLifecycleImage()
-	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
+	{
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		if err != nil {
 			return nil, err
@@ -446,12 +401,11 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		initContainers = append(initContainers, c)
 	}
 
-	operatorUUIDImage := m.resources.context.GetOperatorUUIDImage()
-	if operatorUUIDImage != "" {
+	{
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
+		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, m.resources.context.GetOperatorImage(), requireUUID,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
 	}
@@ -509,7 +463,19 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {
-	return m.resources.CreatePodFinalizers(m.group)
+	var finalizers []string
+	if d := m.spec.GetServerGroupSpec(m.group).ShutdownDelay; d != nil {
+		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+	}
+
+	switch m.group {
+	case api.ServerGroupAgents:
+		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+	case api.ServerGroupDBServers:
+		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+	}
+
+	return finalizers
 }
 
 func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
@@ -549,33 +515,6 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 	}
 
 	return &c, nil
-}
-
-func (m *MemberArangoDPod) createMetricsExporterSidecarExternalExporter() *core.Container {
-	image := m.context.GetMetricsExporterImage()
-	if m.spec.Metrics.HasImage() {
-		image = m.spec.Metrics.GetImage()
-	}
-
-	args := createExporterArgs(m.spec, m.groupSpec)
-	if m.spec.Metrics.Mode.Get() == api.MetricsModeSidecar {
-		args = append(args, "--mode=passthru")
-	}
-
-	c := ArangodbExporterContainer(image, args,
-		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
-		m.groupSpec.SecurityContext.NewSecurityContext(),
-		m.spec)
-
-	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
-		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
-	}
-
-	if pod.IsTLSEnabled(m.AsInput()) {
-		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
-	}
-
-	return &c
 }
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {

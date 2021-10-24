@@ -115,14 +115,8 @@ func (d *Deployment) GetScope() scope.Scope {
 	return d.config.Scope
 }
 
-// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-func (d *Deployment) GetLifecycleImage() string {
-	return d.config.LifecycleImage
-}
-
-// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-func (d *Deployment) GetOperatorUUIDImage() string {
-	return d.config.OperatorUUIDInitImage
+func (d *Deployment) GetOperatorImage() string {
+	return d.config.OperatorImage
 }
 
 // GetNamespace returns the kubernetes namespace that contains
@@ -589,10 +583,6 @@ func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentS
 
 func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
 	return d.resources.SelectImageForMember(spec, status, member)
-}
-
-func (d *Deployment) GetMetricsExporterImage() string {
-	return d.config.MetricsExporterImage
 }
 
 func (d *Deployment) GetArangoImage() string {
