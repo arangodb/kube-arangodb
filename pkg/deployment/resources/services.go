@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -52,18 +54,18 @@ var (
 func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	log := r.log
 	start := time.Now()
-	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	status, _ := r.context.GetStatus()
 	deploymentName := apiObject.GetName()
-	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
 	defer metrics.SetDuration(inspectServicesDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedServicesCounters.WithLabelValues(deploymentName)
 
 	// Fetch existing services
-	svcs := kubecli.CoreV1().Services(ns)
+	svcs := r.context.ServicesModInterface()
+
+	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
 	// Ensure member services
 	if err := status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
@@ -109,7 +111,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					}
 				}
 
-				return errors.Reconcile()
+				reconcileRequired.Required()
+				continue
 			} else {
 				spec := s.Spec.DeepCopy()
 
@@ -136,7 +139,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 						return err
 					}
 
-					return errors.Reconcile()
+					reconcileRequired.Required()
+					continue
 				}
 			}
 		}
@@ -229,12 +233,13 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			}
 		}
 	}
-	return nil
+
+	return reconcileRequired.Reconcile(ctx)
 }
 
 // EnsureServices creates all services needed to service the deployment
 func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStatus inspectorInterface.Inspector,
-	svcs k8sutil.ServiceInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
+	svcs service.ModInterface, eaServiceName, svcRole, title string, port int, noneIsClusterIP bool,
 	spec api.ExternalAccessSpec, apiObject k8sutil.APIObject, log zerolog.Logger) error {
 	// Database external access service
 	createExternalAccessService := false

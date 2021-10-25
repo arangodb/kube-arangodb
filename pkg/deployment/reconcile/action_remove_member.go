@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -105,18 +107,29 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 			}
 		}
 	}
-	// Remove the pod (if any)
-	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
-		return false, errors.WithStack(err)
+	if m.PodName != "" {
+		// Remove the pod (if any)
+		if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+			if !apiErrors.IsNotFound(err) {
+				return false, errors.WithStack(err)
+			}
+		}
 	}
 	// Remove the pvc (if any)
 	if m.PersistentVolumeClaimName != "" {
 		if err := a.actionCtx.DeletePvc(ctx, m.PersistentVolumeClaimName); err != nil {
-			return false, errors.WithStack(err)
+			if !apiErrors.IsNotFound(err) {
+				return false, errors.WithStack(err)
+			}
 		}
 	}
 	// Remove member
 	if err := a.actionCtx.RemoveMemberByID(ctx, a.action.MemberID); err != nil {
+		return false, errors.WithStack(err)
+	}
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		return s.Topology.RemoveMember(a.action.Group, a.action.MemberID)
+	}); err != nil {
 		return false, errors.WithStack(err)
 	}
 	// Check that member has been removed

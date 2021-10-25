@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,17 @@ func GetContainerStatusByName(p *core.Pod, name string) (core.ContainerStatus, b
 		}
 	}
 	return core.ContainerStatus{}, false
+}
+
+// GetAnyContainerByName returns the container in the given containers with the given name.
+// Returns false if not found.
+func GetAnyContainerByName(containers []core.Container, name string) (core.Container, bool) {
+	for _, c := range containers {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.Container{}, false
 }
 
 // GetAnyContainerStatusByName returns the container status in the given ContainerStatus list with the given name.

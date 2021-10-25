@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,15 @@ package deployment
 
 import (
 	"context"
-	"strings"
+
+	"k8s.io/apimachinery/pkg/util/uuid"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/dchest/uniuri"
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -36,54 +40,97 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-// createInitialMembers creates all members needed for the initial state of the deployment.
-// Note: This does not create any pods of PVCs
-func (d *Deployment) createInitialMembers(ctx context.Context, apiObject *api.ArangoDeployment) error {
-	log := d.deps.Log
-	log.Debug().Msg("creating initial members...")
+func (d *Deployment) createAgencyMapping(ctx context.Context) error {
+	spec := d.GetSpec()
+	status, _ := d.GetStatus()
 
-	// Go over all groups and create members
-	var events []*k8sutil.Event
-	status, lastVersion := d.GetStatus()
-	if err := apiObject.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, members *api.MemberStatusList) error {
-		for len(*members) < spec.GetCount() {
-			id, err := createMember(log, &status, group, "", apiObject)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			events = append(events, k8sutil.NewMemberAddEvent(id, group.AsRole(), apiObject))
-		}
+	if !spec.Mode.HasAgents() {
 		return nil
-	}, &status); err != nil {
-		return errors.WithStack(err)
 	}
 
-	// Save status
-	log.Debug().Msg("saving initial members...")
-	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err)
-	}
-	// Save events
-	for _, evt := range events {
-		d.CreateEvent(evt)
+	if status.Agency != nil {
+		return nil
 	}
 
-	return nil
+	var i api.DeploymentStatusAgencyInfo
+
+	if spec.Agents.Count == nil {
+		return nil
+	}
+
+	agents := status.Members.Agents
+
+	if len(agents) > *spec.Agents.Count {
+		return errors.Newf("Agency size is bigger than requested size")
+	}
+
+	c := api.DeploymentStatusAgencySize(*spec.Agents.Count)
+
+	i.Size = &c
+
+	for id := range agents {
+		i.IDs = append(i.IDs, agents[id].ID)
+	}
+
+	for len(i.IDs) < *spec.Agents.Count {
+		i.IDs = append(i.IDs, names.GetArangodID(api.ServerGroupAgents))
+	}
+
+	return d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		s.Agency = &i
+		return true
+	})
 }
 
 // createMember creates member and adds it to the applicable member list.
 // Note: This does not create any pods of PVCs
 // Note: The updated status is not yet written to the apiserver.
-func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (string, error) {
-	if id == "" {
-		idPrefix := getArangodIDPrefix(group)
-		for {
-			id = idPrefix + strings.ToLower(uniuri.NewLen(8)) // K8s accepts only lowercase, so we use it here as well
-			if !status.Members.ContainsID(id) {
-				break
-			}
-			// Duplicate, try again
+func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment, mods ...reconcile.CreateMemberMod) (string, error) {
+	m, err := renderMember(log, status, group, id, apiObject)
+	if err != nil {
+		return "", err
+	}
+
+	for _, mod := range mods {
+		if err := mod(status, group, m); err != nil {
+			return "", err
 		}
+	}
+
+	if err := status.Members.Add(*m, group); err != nil {
+		return "", err
+	}
+
+	return m.ID, nil
+}
+
+func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.ServerGroup, id string, apiObject *api.ArangoDeployment) (*api.MemberStatus, error) {
+	if group == api.ServerGroupAgents {
+		if status.Agency == nil {
+			return nil, errors.New("Agency is not yet defined")
+		}
+		// In case of agents we need to use hardcoded ids
+		if id == "" {
+			for _, nid := range status.Agency.IDs {
+				if !status.Members.ContainsID(nid) {
+					id = nid
+					break
+				}
+			}
+		}
+	} else {
+		if id == "" {
+			for {
+				id = names.GetArangodID(group)
+				if !status.Members.ContainsID(id) {
+					break
+				}
+				// Duplicate, try again
+			}
+		}
+	}
+	if id == "" {
+		return nil, errors.New("Unable to get ID")
 	}
 	deploymentName := apiObject.GetName()
 	role := group.AsRole()
@@ -91,96 +138,71 @@ func createMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	switch group {
 	case api.ServerGroupSingle:
 		log.Debug().Str("id", id).Msg("Adding single server")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
-		if err := status.Members.Add(api.MemberStatus{
+		return &api.MemberStatus{
 			ID:                        id,
+			UID:                       uuid.NewUUID(),
 			CreatedAt:                 metav1.Now(),
 			Phase:                     api.MemberPhaseNone,
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-		}, group); err != nil {
-			return "", errors.WithStack(err)
-		}
+		}, nil
 	default:
-		return "", errors.WithStack(errors.Newf("Unknown server group %d", group))
-	}
-
-	return id, nil
-}
-
-// getArangodIDPrefix returns the prefix required ID's of arangod servers
-// in the given group.
-func getArangodIDPrefix(group api.ServerGroup) string {
-	switch group {
-	case api.ServerGroupSingle:
-		return "SNGL-"
-	case api.ServerGroupCoordinators:
-		return "CRDN-"
-	case api.ServerGroupDBServers:
-		return "PRMR-"
-	case api.ServerGroupAgents:
-		return "AGNT-"
-	default:
-		return ""
+		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))
 	}
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,12 @@ func NewTimeoutFetcher(t time.Duration) TimeoutFetcher {
 	}
 }
 
+type actionEmpty struct {
+	actionImpl
+	actionEmptyStart
+	actionEmptyCheckProgress
+}
+
 type actionEmptyCheckProgress struct {
 }
 
@@ -64,6 +70,10 @@ func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContex
 	}
 
 	return newBaseActionImpl(log, action, actionCtx, NewTimeoutFetcher(timeout), memberIDRef)
+}
+
+func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher) actionImpl {
+	return newBaseActionImpl(log, action, actionCtx, timeout, &action.MemberID)
 }
 
 func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher, memberIDRef *string) actionImpl {
@@ -98,7 +108,7 @@ func (a actionImpl) Timeout(deploymentSpec api.DeploymentSpec) time.Duration {
 	return a.timeout(deploymentSpec)
 }
 
-// Return the MemberID used / created in this action
+// MemberID returns the member ID used / created in the current action.
 func (a actionImpl) MemberID() string {
 	return *a.memberIDRef
 }

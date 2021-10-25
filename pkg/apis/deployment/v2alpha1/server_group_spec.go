@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Adam Janikowski
 //
 
 package v2alpha1
@@ -80,6 +81,8 @@ type ServerGroupSpec struct {
 	Args []string `json:"args,omitempty"`
 	// Entrypoint overrides container executable
 	Entrypoint *string `json:"entrypoint,omitempty"`
+	// SchedulerName define scheduler name used for group
+	SchedulerName *string `json:"schedulerName,omitempty"`
 	// StorageClassName specifies the classname for storage of the servers.
 	StorageClassName *string `json:"storageClassName,omitempty"`
 	// Resources holds resource requests & limits
@@ -131,6 +134,8 @@ type ServerGroupSpec struct {
 	Volumes ServerGroupSpecVolumes `json:"volumes,omitempty"`
 	// VolumeMounts define list of volume mounts mounted into server container
 	VolumeMounts ServerGroupSpecVolumeMounts `json:"volumeMounts,omitempty"`
+	// EphemeralVolumes keeps information about ephemeral volumes.
+	EphemeralVolumes *EphemeralVolumes `json:"ephemeralVolumes,omitempty"`
 	// ExtendedRotationCheck extend checks for rotation
 	ExtendedRotationCheck *bool `json:"extendedRotationCheck,omitempty"`
 	// InitContainers Init containers specification
@@ -141,6 +146,8 @@ type ServerGroupSpec struct {
 	ShutdownDelay *int `json:"shutdownDelay,omitempty"`
 	// InternalPort define port used in internal communication, can be accessed over localhost via sidecar
 	InternalPort *int `json:"internalPort,omitempty"`
+	// AllowMemberRecreation allows to recreate member. Value is used only for Coordinator and DBServer with default to True, for all other groups set to false.
+	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context

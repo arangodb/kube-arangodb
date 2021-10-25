@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ func (a *actionUpgradeMember) Start(ctx context.Context) (bool, error) {
 	}
 	// Set AutoUpgrade condition
 	m.Conditions.Update(api.ConditionTypeAutoUpgrade, true, "Upgrading", "AutoUpgrade on first restart")
+
 	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 		return false, errors.WithStack(err)
 	}
@@ -134,6 +135,7 @@ func (a *actionUpgradeMember) CheckProgress(ctx context.Context) (bool, bool, er
 	} else if !ok {
 		return false, false, nil
 	}
+
 	// Pod is now upgraded, update the member status
 	m.Phase = api.MemberPhaseCreated
 	m.RecentTerminations = nil // Since we're upgrading, we do not care about old terminations.

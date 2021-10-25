@@ -58,25 +58,21 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
-	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(ctxChild, p.Spec.NodeName, metav1.GetOptions{})
-		if k8sutil.IsNotFound(err) {
-			log.Warn().Msg("Node not found")
-		} else if err != nil {
-			log.Warn().Err(err).Msg("Failed to get node for member")
-			return errors.WithStack(err)
-		} else if node.Spec.Unschedulable {
-			agentDataWillBeGone = true
+	if nodes, ok := r.context.GetCachedStatus().GetNodes(); ok {
+		if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
+			node, ok := nodes.Node(p.Spec.NodeName)
+			if !ok {
+				log.Warn().Msg("Node not found")
+			} else if node.Spec.Unschedulable {
+				agentDataWillBeGone = true
+			}
 		}
 	}
 
 	// Check PVC
-	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	pvc, err := pvcs.Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)
@@ -147,15 +143,10 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 
 	// Check node the pod is scheduled on
 	dbserverDataWillBeGone := false
-	if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-		defer cancel()
-		node, err := r.context.GetKubeCli().CoreV1().Nodes().Get(ctxChild, p.Spec.NodeName, metav1.GetOptions{})
-		if k8sutil.IsNotFound(err) {
+	if nodes, ok := r.context.GetCachedStatus().GetNodes(); ok {
+		node, ok := nodes.Node(p.Spec.NodeName)
+		if !ok {
 			log.Warn().Msg("Node not found")
-		} else if err != nil {
-			log.Warn().Err(err).Msg("Failed to get node for member")
-			return errors.WithStack(err)
 		} else if node.Spec.Unschedulable {
 			if !r.context.GetSpec().IsNetworkAttachedVolumes() {
 				dbserverDataWillBeGone = true
@@ -164,10 +155,9 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Check PVC
-	pvcs := r.context.GetKubeCli().CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	pvc, err := pvcs.Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
+	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get PVC for member")
 		return errors.WithStack(err)

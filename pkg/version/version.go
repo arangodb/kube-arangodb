@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@ import (
 type License string
 
 const (
-	CommunityEdition License = "community"
+	CommunityEdition  License = "community"
+	EnterpriseEdition License = "enterprise"
 )
 
 func (s License) Title() string {
@@ -43,7 +44,6 @@ var (
 	version   = "dev"
 	build     = "dev"
 	buildDate = ""
-	edition   = CommunityEdition
 	goVersion = runtime.Version()
 )
 

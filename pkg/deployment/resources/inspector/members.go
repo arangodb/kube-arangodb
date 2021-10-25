@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,10 @@ package inspector
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -35,7 +39,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (i *inspector) IterateArangoMembers(action arangomember.ArangoMemberAction, filters ...arangomember.ArangoMemberFilter) error {
+func (i *inspector) IterateArangoMembers(action arangomember.Action, filters ...arangomember.Filter) error {
 	for _, arangoMember := range i.ArangoMembers() {
 		if err := i.iterateArangoMembers(arangoMember, action, filters...); err != nil {
 			return err
@@ -44,7 +48,7 @@ func (i *inspector) IterateArangoMembers(action arangomember.ArangoMemberAction,
 	return nil
 }
 
-func (i *inspector) iterateArangoMembers(arangoMember *api.ArangoMember, action arangomember.ArangoMemberAction, filters ...arangomember.ArangoMemberFilter) error {
+func (i *inspector) iterateArangoMembers(arangoMember *api.ArangoMember, action arangomember.Action, filters ...arangomember.Filter) error {
 	for _, filter := range filters {
 		if !filter(arangoMember) {
 			return nil
@@ -78,24 +82,47 @@ func (i *inspector) ArangoMember(name string) (*api.ArangoMember, bool) {
 	return arangoMember, true
 }
 
-func arangoMembersToMap(ctx context.Context, k versioned.Interface, namespace string) (map[string]*api.ArangoMember, error) {
-	arangoMembers, err := getArangoMembers(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
+func (i *inspector) ArangoMemberReadInterface() arangomember.ReadInterface {
+	return &arangoMemberReadInterface{i: i}
+}
+
+type arangoMemberReadInterface struct {
+	i *inspector
+}
+
+func (s arangoMemberReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoMember, error) {
+	if s, ok := s.i.ArangoMember(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    deployment.ArangoDeploymentGroupName,
+			Resource: "arangomembers",
+		}, name)
+	} else {
+		return s, nil
 	}
+}
 
-	arangoMemberMap := map[string]*api.ArangoMember{}
-
-	for _, arangoMember := range arangoMembers {
-		_, exists := arangoMemberMap[arangoMember.GetName()]
-		if exists {
-			return nil, errors.Newf("ArangoMember %s already exists in map, error received", arangoMember.GetName())
+func arangoMembersToMap(ctx context.Context, inspector *inspector, k versioned.Interface, namespace string) func() error {
+	return func() error {
+		arangoMembers, err := getArangoMembers(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		arangoMemberMap[arangoMember.GetName()] = arangoMemberPointer(arangoMember)
-	}
+		arangoMemberMap := map[string]*api.ArangoMember{}
 
-	return arangoMemberMap, nil
+		for _, arangoMember := range arangoMembers {
+			_, exists := arangoMemberMap[arangoMember.GetName()]
+			if exists {
+				return errors.Newf("ArangoMember %s already exists in map, error received", arangoMember.GetName())
+			}
+
+			arangoMemberMap[arangoMember.GetName()] = arangoMemberPointer(arangoMember)
+		}
+
+		inspector.arangoMembers = arangoMemberMap
+
+		return nil
+	}
 }
 
 func arangoMemberPointer(pod api.ArangoMember) *api.ArangoMember {

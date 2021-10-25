@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 
 	if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
 		log.Error().Err(err).Msgf("Unable to get maintenance mode")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	} else if enabled {
 		log.Warn().Msgf("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
@@ -145,7 +145,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 	agency, err := a.actionCtx.GetAgency(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create agency client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
@@ -153,7 +153,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
-		return false, false, errors.WithStack(err)
+		return false, false, nil
 	}
 
 	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())

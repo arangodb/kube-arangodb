@@ -26,6 +26,15 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -36,7 +45,7 @@ import (
 
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/arangosync-client/client"
 	driver "github.com/arangodb/go-driver"
@@ -51,6 +60,10 @@ import (
 type ActionContext interface {
 	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
+	resources.ArangoMemberContext
+	resources.DeploymentPodRenderer
+	resources.DeploymentModInterfaces
+	resources.DeploymentCachedStatus
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -75,15 +88,20 @@ type ActionContext interface {
 	// Returns member status, true when found, or false
 	// when no such member is found.
 	GetMemberStatusByID(id string) (api.MemberStatus, bool)
+	// GetMemberStatusAndGroupByID returns the current member status and group
+	// for the member with given id.
+	// Returns member status, true when found, or false
+	// when no such member is found.
+	GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
-	CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error)
+	CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error)
 	// UpdateMember updates the deployment status wrt the given member.
 	UpdateMember(ctx context.Context, member api.MemberStatus) error
 	// RemoveMemberByID removes a member with given id.
 	RemoveMemberByID(ctx context.Context, id string) error
 	// GetPod returns pod.
-	GetPod(ctx context.Context, podName string) (*v1.Pod, error)
+	GetPod(ctx context.Context, podName string) (*core.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(ctx context.Context, podName string) error
@@ -92,10 +110,10 @@ type ActionContext interface {
 	DeletePvc(ctx context.Context, pvcName string) error
 	// GetPvc returns PVC info about PVC with given name in the namespace
 	// of the deployment.
-	GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error)
+	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
 	// UpdatePvc update PVC with given name in the namespace
 	// of the deployment.
-	UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error
+	UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error
 	// RemovePodFinalizers removes all the finalizers from the Pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	RemovePodFinalizers(ctx context.Context, podName string) error
@@ -129,13 +147,12 @@ type ActionContext interface {
 	EnableScalingCluster(ctx context.Context) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error
-	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives information about a deployment name
 	GetName() string
-	// GetNameget current cached state of deployment
-	GetCachedStatus() inspectorInterface.Inspector
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -149,9 +166,17 @@ func newActionContext(log zerolog.Logger, context Context, cachedStatus inspecto
 
 // actionContext implements ActionContext
 type actionContext struct {
-	log          zerolog.Logger
 	context      Context
+	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
+}
+
+func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	return ac.context.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
+}
+
+func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
 }
 
 func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
@@ -160,6 +185,26 @@ func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, er
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
+}
+
+func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
+}
+
+func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
+}
+
+func (ac *actionContext) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
+	return ac.context.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+}
+
+func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	return ac.context.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
+}
+
+func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
+	return ac.context.SelectImage(spec, status)
 }
 
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
@@ -182,12 +227,44 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
+func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+	return ac.context.WithStatusUpdateErr(ctx, action, force...)
+}
+
 func (ac *actionContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 
-func (ac *actionContext) SecretsInterface() k8sutil.SecretInterface {
-	return ac.context.SecretsInterface()
+func (ac *actionContext) SecretsModInterface() secret.ModInterface {
+	return ac.context.SecretsModInterface()
+}
+
+func (ac *actionContext) PodsModInterface() pod.ModInterface {
+	return ac.context.PodsModInterface()
+}
+
+func (ac *actionContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	return ac.context.ServiceAccountsModInterface()
+}
+
+func (ac *actionContext) ServicesModInterface() service.ModInterface {
+	return ac.context.ServicesModInterface()
+}
+
+func (ac *actionContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	return ac.context.PersistentVolumeClaimsModInterface()
+}
+
+func (ac *actionContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	return ac.context.PodDisruptionBudgetsModInterface()
+}
+
+func (ac *actionContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	return ac.context.ServiceMonitorsModInterface()
+}
+
+func (ac *actionContext) ArangoMembersModInterface() arangomember.ModInterface {
+	return ac.context.ArangoMembersModInterface()
 }
 
 func (ac *actionContext) GetShardSyncStatus() bool {
@@ -204,7 +281,7 @@ func (ac *actionContext) GetAPIObject() k8sutil.APIObject {
 	return ac.context.GetAPIObject()
 }
 
-func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *v1.PersistentVolumeClaim) error {
+func (ac *actionContext) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
 	return ac.context.UpdatePvc(ctx, pvc)
 }
 
@@ -212,7 +289,7 @@ func (ac *actionContext) CreateEvent(evt *k8sutil.Event) {
 	ac.context.CreateEvent(evt)
 }
 
-func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*v1.PersistentVolumeClaim, error) {
+func (ac *actionContext) GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
 	return ac.context.GetPvc(ctx, pvcName)
 }
 
@@ -286,10 +363,19 @@ func (ac *actionContext) GetMemberStatusByID(id string) (api.MemberStatus, bool)
 	return m, ok
 }
 
+// GetMemberStatusAndGroupByID returns the current member status and group
+// for the member with given id.
+// Returns member status, true when found, or false
+// when no such member is found.
+func (ac *actionContext) GetMemberStatusAndGroupByID(id string) (api.MemberStatus, api.ServerGroup, bool) {
+	status, _ := ac.context.GetStatus()
+	return status.Members.ElementByID(id)
+}
+
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
-	result, err := ac.context.CreateMember(ctx, group, id)
+func (ac *actionContext) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
+	result, err := ac.context.CreateMember(ctx, group, id, mods...)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -332,7 +418,7 @@ func (ac *actionContext) RemoveMemberByID(ctx context.Context, id string) error 
 }
 
 // GetPod returns pod.
-func (ac *actionContext) GetPod(ctx context.Context, podName string) (*v1.Pod, error) {
+func (ac *actionContext) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
 	if pod, err := ac.context.GetPod(ctx, podName); err != nil {
 		return nil, errors.WithStack(err)
 	} else {

@@ -1,7 +1,46 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Split & Unify Lifecycle management functionality
 - Drop support for ArangoDB <= 3.5 (versions already EOL)
+
+## [1.2.4](https://github.com/arangodb/kube-arangodb/tree/1.2.4) (2021-10-22)
+- Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation
+- Add "Short Names" feature
+- Switch ArangoDB Image Discovery process from Headless Service to Pod IP
+- Fix PVC Resize for Single servers
+- Add Topology support
+- Add ARANGODB_ZONE env to Topology Managed pods
+- Add "Random pod names" feature
+- Rotate TLS Secrets on ALT Names change
+
+## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
+- Update UBI Image to 8.4
+- Fix ArangoSync Liveness Probe
+- Allow runtime update of Sidecar images
+- Allow Agent recreation with preserved IDs
+- The internal metrics exporter can not be disabled
+- Changing the topics' log level without restarting the container.
+  When the topic is removed from the argument list then it will not 
+  be turned off in the ArangoDB automatically.
+- Allow to customize SchedulerName inside Member Pod
+- Add Enterprise Edition support
+
+## [1.2.2](https://github.com/arangodb/kube-arangodb/tree/1.2.2) (2021-09-09)
+- Update 'github.com/arangodb/arangosync-client' dependency to v0.7.0
+- Add HighPriorityPlan to ArangoDeployment Status
+- Add Pending Member phase
+- Add Ephemeral Volumes for apps feature
+- Check if the DB server is cleaned out.
+- Render Pod Template in ArangoMember Spec and Status
+- Add Pod PropagationModes
+- Fix MemberUp action for ActiveFailover
+
+## [1.2.1](https://github.com/arangodb/kube-arangodb/tree/1.2.1) (2021-07-28)
+- Fix ArangoMember race with multiple ArangoDeployments within single namespace
+- Allow to define Member Recreation Policy within group
+- Replace 'github.com/dgrijalva/jwt-go' with 'github.com/golang-jwt/jwt'
+- Update 'github.com/gin-gonic/gin' dependency to v1.7.2
 
 ## [1.2.0](https://github.com/arangodb/kube-arangodb/tree/1.2.0) (2021-07-16)
 - Enable "Operator Internal Metrics Exporter" by default

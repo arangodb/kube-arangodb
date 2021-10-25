@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -149,6 +149,8 @@ type DeploymentSpec struct {
 	SyncMasters  ServerGroupSpec `json:"syncmasters"`
 	SyncWorkers  ServerGroupSpec `json:"syncworkers"`
 
+	MemberPropagationMode *DeploymentMemberPropagationMode `json:"memberPropagationMode,omitempty"`
+
 	Chaos ChaosSpec `json:"chaos"`
 
 	Recovery *ArangoDeploymentRecoverySpec `json:"recovery,omitempty"`
@@ -161,6 +163,29 @@ type DeploymentSpec struct {
 
 	// CommunicationMethod define communication method used in deployment
 	CommunicationMethod *DeploymentCommunicationMethod `json:"communicationMethod,omitempty"`
+
+	// Topology define topology adjustment details, Enterprise only
+	Topology *TopologySpec `json:"topology,omitempty"`
+}
+
+// GetAllowMemberRecreation returns member recreation policy based on group and settings
+func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
+	if s == nil {
+		return false
+	}
+
+	groupSpec := s.GetServerGroupSpec(group)
+
+	switch group {
+	case ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		if v := groupSpec.AllowMemberRecreation; v == nil {
+			return true
+		} else {
+			return *v
+		}
+	default:
+		return false
+	}
 }
 
 // GetRestoreFrom returns the restore from string or empty string if not set

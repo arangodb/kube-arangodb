@@ -26,11 +26,16 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -39,8 +44,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
+	core "k8s.io/api/core/v1"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -53,9 +57,12 @@ type ServerGroupIterator interface {
 	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
+type DeploymentStatusUpdateErrFunc func(s *api.DeploymentStatus) (bool, error)
 type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
 
 type DeploymentStatusUpdate interface {
+	// WithStatusUpdateErr update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc, force ...bool) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc, force ...bool) error
 }
@@ -67,11 +74,69 @@ type DeploymentAgencyMaintenance interface {
 	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
 }
 
+type DeploymentPodRenderer interface {
+	// RenderPodForMember Renders Pod definition for member
+	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member
+	RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error)
+	// RenderPodTemplateForMember Renders PodTemplate definition for member from current state
+	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
+	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
+	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+}
+
+type DeploymentImageManager interface {
+	// SelectImage select currently used image by pod
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// SelectImage select currently used image by pod in member
+	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
+}
+
+type DeploymentModInterfaces interface {
+	// SecretsModInterface define secret modification interface
+	SecretsModInterface() secret.ModInterface
+	// PodModInterface define pod modification interface
+	PodsModInterface() pod.ModInterface
+	// ServiceAccountModInterface define serviceaccounts modification interface
+	ServiceAccountsModInterface() serviceaccount.ModInterface
+	// ServicesModInterface define services modification interface
+	ServicesModInterface() service.ModInterface
+	// PersistentVolumeClaimsModInterface define persistentvolumeclaims modification interface
+	PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface
+	// PodDisruptionBudgetsModInterface define poddisruptionbudgets modification interface
+	PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface
+
+	// ServiceMonitorModInterface define servicemonitor modification interface
+	ServiceMonitorsModInterface() servicemonitor.ModInterface
+
+	// ArangoMembersModInterface define arangomembers modification interface
+	ArangoMembersModInterface() arangomember.ModInterface
+}
+
+type DeploymentCachedStatus interface {
+	// GetCachedStatus current cached state of deployment
+	GetCachedStatus() inspectorInterface.Inspector
+}
+
+type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
+type ArangoMemberStatusUpdateFunc func(obj *api.ArangoMember, s *api.ArangoMemberStatus) bool
+
+type ArangoMemberContext interface {
+	// WithArangoMemberUpdate run action with update of ArangoMember
+	WithArangoMemberUpdate(ctx context.Context, namespace, name string, action ArangoMemberUpdateFunc) error
+	// WithArangoMemberStatusUpdate run action with update of ArangoMember Status
+	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
 	DeploymentStatusUpdate
 	DeploymentAgencyMaintenance
+	ArangoMemberContext
+	DeploymentImageManager
+	DeploymentModInterfaces
+	DeploymentCachedStatus
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -84,18 +149,8 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetKubeCli returns the kubernetes client
-	GetKubeCli() kubernetes.Interface
-	// GetMonitoringV1Cli returns monitoring client
-	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
-	// GetArangoCli returns the Arango CRD client
-	GetArangoCli() versioned.Interface
-	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-	GetLifecycleImage() string
-	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-	GetOperatorUUIDImage() string
-	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
-	GetMetricsExporterImage() string
+	// GetOperatorImage returns the image name of operator image
+	GetOperatorImage() string
 	// GetArangoImage returns the image name containing the default arango image
 	GetArangoImage() string
 	// GetName returns the name of the deployment
@@ -106,10 +161,10 @@ type Context interface {
 	// On error, the error is logged.
 	CreateEvent(evt *k8sutil.Event)
 	// GetOwnedPVCs returns a list of all PVCs owned by the deployment.
-	GetOwnedPVCs() ([]v1.PersistentVolumeClaim, error)
+	GetOwnedPVCs() ([]core.PersistentVolumeClaim, error)
 	// CleanupPod deletes a given pod with force and explicit UID.
 	// If the pod does not exist, the error is ignored.
-	CleanupPod(ctx context.Context, p *v1.Pod) error
+	CleanupPod(ctx context.Context, p *core.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
 	DeletePod(ctx context.Context, podName string) error
@@ -127,6 +182,5 @@ type Context interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope
 
-	GetCachedStatus() inspectorInterface.Inspector
 	SetCachedStatus(i inspectorInterface.Inspector)
 }

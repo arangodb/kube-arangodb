@@ -69,13 +69,11 @@ import (
 
 // Config holds configuration settings for a Deployment
 type Config struct {
-	ServiceAccount        string
-	AllowChaos            bool
-	LifecycleImage        string
-	OperatorUUIDInitImage string
-	MetricsExporterImage  string
-	ArangoImage           string
-	Scope                 scope.Scope
+	ServiceAccount string
+	AllowChaos     bool
+	OperatorImage  string
+	ArangoImage    string
+	Scope          scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -262,6 +260,11 @@ func (d *Deployment) send(ev *deploymentEvent) {
 func (d *Deployment) run() {
 	log := d.deps.Log
 
+	// Create agency mapping
+	if err := d.createAgencyMapping(context.TODO()); err != nil {
+		d.CreateEvent(k8sutil.NewErrorEvent("Failed to create agency mapping members", err, d.GetAPIObject()))
+	}
+
 	if d.GetPhase() == api.DeploymentPhaseNone {
 		// Create service monitor
 		if d.haveServiceMonitorCRD {
@@ -270,14 +273,9 @@ func (d *Deployment) run() {
 			}
 		}
 
-		// Create members
-		if err := d.createInitialMembers(context.TODO(), d.apiObject); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial members", err, d.GetAPIObject()))
-		}
-
-		// Create Pod Disruption Budgets
-		if err := d.resources.EnsurePDBs(context.TODO()); err != nil {
-			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create pdbs", err, d.GetAPIObject()))
+		// Create initial topology
+		if err := d.createInitialTopology(context.TODO()); err != nil {
+			d.CreateEvent(k8sutil.NewErrorEvent("Failed to create initial topology", err, d.GetAPIObject()))
 		}
 
 		status, lastVersion := d.GetStatus()
@@ -298,7 +296,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+			cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}

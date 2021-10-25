@@ -41,18 +41,22 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func LabelsForExporterServiceMonitor(deploymentName string) map[string]string {
-	return map[string]string{
-		k8sutil.LabelKeyArangoDeployment: deploymentName,
-		k8sutil.LabelKeyApp:              k8sutil.AppName,
-		"context":                        "metrics",
-		"metrics":                        "prometheus",
+func LabelsForExporterServiceMonitor(name string, obj deploymentApi.DeploymentSpec) map[string]string {
+	base := LabelsForExporterServiceMonitorSelector(name)
+
+	for k, v := range obj.Metrics.ServiceMonitor.GetLabels(map[string]string{
+		"context": "metrics",
+		"metrics": "prometheus",
+	}) {
+		base[k] = v
 	}
+
+	return base
 }
 
-func LabelsForExporterServiceMonitorSelector(deploymentName string) map[string]string {
+func LabelsForExporterServiceMonitorSelector(name string) map[string]string {
 	return map[string]string{
-		k8sutil.LabelKeyArangoDeployment: deploymentName,
+		k8sutil.LabelKeyArangoDeployment: name,
 		k8sutil.LabelKeyApp:              k8sutil.AppName,
 	}
 }
@@ -122,7 +126,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 				endpoint,
 			},
 			Selector: metav1.LabelSelector{
-				MatchLabels: LabelsForExporterServiceMonitorSelector(deploymentName),
+				MatchLabels: LabelsForExporterServiceMonitorSelector(r.context.GetName()),
 			},
 		}, nil
 	default:
@@ -147,6 +151,11 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	spec := r.context.GetSpec()
+
+	if !spec.Metrics.ServiceMonitor.IsEnabled() || !spec.Metrics.IsEnabled() {
+		return nil
+	}
+
 	wantMetrics := spec.Metrics.IsEnabled()
 	serviceMonitorName := k8sutil.CreateExporterClientServiceName(deploymentName)
 
@@ -176,7 +185,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 			smon := &coreosv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            serviceMonitorName,
-					Labels:          LabelsForExporterServiceMonitor(deploymentName),
+					Labels:          LabelsForExporterServiceMonitor(r.context.GetName(), r.context.GetSpec()),
 					OwnerReferences: []metav1.OwnerReference{owner},
 				},
 				Spec: spec,

@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
 //
 
 package resources
@@ -26,7 +24,6 @@ package resources
 import (
 	"context"
 	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -35,6 +32,14 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+
+	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
@@ -45,17 +50,13 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
+	"github.com/arangodb/go-driver"
 	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
+  
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
@@ -80,6 +81,9 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 
 	// Authentication
 	options.Merge(pod.JWT().Args(input))
+
+	// Security
+	options.Merge(pod.Security().Args(input))
 
 	// Storage engine
 	options.Add("--server.storage-engine", input.Deployment.GetStorageEngine().AsArangoArgument())
@@ -177,7 +181,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -240,23 +244,6 @@ func createArangoSyncArgs(apiObject metav1.Object, spec api.DeploymentSpec, grou
 	return args
 }
 
-// CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
-func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
-	var finalizers []string
-	if d := r.context.GetSpec().GetServerGroupSpec(group).ShutdownDelay; d != nil {
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
-	}
-
-	switch group {
-	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
-	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
-	}
-
-	return finalizers
-}
-
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
 func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.ServerGroupSpec) []core.Toleration {
 	notReadyDur := k8sutil.TolerationDuration{Forever: false, TimeSpan: time.Minute}
@@ -293,6 +280,45 @@ func (r *Resources) CreatePodTolerations(group api.ServerGroup, groupSpec api.Se
 	return tolerations
 }
 
+func (r *Resources) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	if p, err := r.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo); err != nil {
+		return nil, err
+	} else {
+		return &core.PodTemplateSpec{
+			ObjectMeta: p.ObjectMeta,
+			Spec:       p.Spec,
+		}, nil
+	}
+}
+
+func (r *Resources) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	if p, err := r.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID); err != nil {
+		return nil, err
+	} else {
+		return &core.PodTemplateSpec{
+			ObjectMeta: p.ObjectMeta,
+			Spec:       p.Spec,
+		}, nil
+	}
+}
+
+func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	spec := r.context.GetSpec()
+	status, _ := r.context.GetStatus()
+
+	member, _, ok := status.Members.ElementByID(memberID)
+	if !ok {
+		return nil, errors.Newf("Member not found")
+	}
+
+	imageInfo, imageFound := r.SelectImageForMember(spec, status, member)
+	if !imageFound {
+		return nil, errors.Newf("ImageInfo not found")
+	}
+
+	return r.RenderPodForMember(ctx, cachedStatus, spec, status, member.ID, imageInfo)
+}
+
 func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
 	log := r.log
 	apiObject := r.context.GetAPIObject()
@@ -301,10 +327,6 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		return nil, errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
-
-	kubecli := r.context.GetKubeCli()
-	ns := r.context.GetNamespace()
-	secrets := kubecli.CoreV1().Secrets(ns)
 
 	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
@@ -321,7 +343,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 	newMember.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, newMember.ID, CreatePodSuffix(spec))
 
-	// Render pod
+	var podCreator interfaces.PodCreator
+	var args []string
 	if group.IsArangod() {
 		// Prepare arguments
 		autoUpgrade := newMember.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
@@ -342,7 +365,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 		input := memberPod.AsInput()
 
-		args, err := createArangodArgs(cachedStatus, input)
+		var err error
+		args, err = createArangodArgs(cachedStatus, input)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -350,8 +374,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
-
-		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberPod)
+		podCreator = &memberPod
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
@@ -369,7 +392,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 		masterJWTSecretName = spec.Sync.Authentication.GetJWTSecretName()
 		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return k8sutil.ValidateTokenSecret(ctxChild, secrets, masterJWTSecretName)
+			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
 		})
 		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
@@ -377,7 +400,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 
 		monitoringTokenSecretName := spec.Sync.Monitoring.GetTokenSecretName()
 		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return k8sutil.ValidateTokenSecret(ctxChild, secrets, monitoringTokenSecretName)
+			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), monitoringTokenSecretName)
 		})
 		if err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Monitoring token secret validation failed"))
@@ -390,7 +413,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			if spec.IsAuthenticated() {
 				clusterJWTSecretName = spec.Authentication.GetJWTSecretName()
 				err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-					return k8sutil.ValidateTokenSecret(ctxChild, secrets, clusterJWTSecretName)
+					return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), clusterJWTSecretName)
 				})
 				if err != nil {
 					return nil, errors.WithStack(errors.Wrapf(err, "Cluster JWT secret validation failed"))
@@ -399,7 +422,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			// Check client-auth CA certificate secret
 			clientAuthCASecretName = spec.Sync.Authentication.GetClientCASecretName()
 			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return k8sutil.ValidateCACertificateSecret(ctxChild, secrets, clientAuthCASecretName)
+				return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.SecretReadInterface(), clientAuthCASecretName)
 			})
 			if err != nil {
 				return nil, errors.WithStack(errors.Wrapf(err, "Client authentication CA certificate secret validation failed"))
@@ -407,7 +430,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		}
 
 		// Prepare arguments
-		args := createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
+		args = createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
 
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
@@ -422,10 +445,23 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			arangoMember:           *member,
 		}
 
-		return RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, &memberSyncPod)
+		podCreator = &memberSyncPod
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}
+
+	pod, err := RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, podCreator)
+	if err != nil {
+		return nil, err
+	}
+
+	if features.RandomPodNames().Enabled() {
+		// The server will generate the name with some additional suffix after `-`.
+		pod.GenerateName = pod.Name + "-"
+		pod.Name = ""
+	}
+
+	return pod, nil
 }
 
 func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
@@ -446,8 +482,16 @@ func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentSt
 	return imageInfo, true
 }
 
+func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+	if member.Image != nil {
+		return *member.Image, true
+	}
+
+	return r.SelectImage(spec, status)
+}
+
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentSpec, memberID string, imageNotFoundOnce *sync.Once, cachedStatus inspectorInterface.Inspector) error {
+func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -458,6 +502,13 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
 		})
 		return nil
+	}
+
+	template := arangoMember.Status.Template
+
+	if template == nil {
+		// Template not yet propagated
+		return errors.Newf("Template not yet propagated")
 	}
 
 	if status.CurrentImage == nil {
@@ -475,29 +526,8 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 	imageInfo = *m.Image
 
-	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 
-	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, apiObject, spec, group, m)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if m.Endpoint == nil || *m.Endpoint != endpoint {
-		// Update endpoint
-		m.Endpoint = &endpoint
-		if err := status.Members.Update(m, group); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	pod, err := r.RenderPodForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	ns := r.context.GetNamespace()
-	secrets := kubecli.CoreV1().Secrets(ns)
 	if !found {
 		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
@@ -505,9 +535,8 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 
 	// Update pod name
 	role := group.AsRole()
-	roleAbbr := group.AsRoleAbbreviated()
 
-	m.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
+	m.PodName = template.PodSpec.GetName()
 	newPhase := api.MemberPhaseCreated
 	// Create pod
 	if group.IsArangod() {
@@ -517,20 +546,16 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 			newPhase = api.MemberPhaseUpgrading
 		}
 
-		sha, err := ChecksumArangoPod(groupSpec, pod)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 		defer cancel()
-		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
+		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
+		m.PodName = podName
 		m.PodUID = uid
-		m.PodSpecVersion = sha
+		m.PodSpecVersion = template.PodSpecChecksum
 		m.ArangoVersion = m.Image.ArangoDBVersion
 		m.ImageID = m.Image.ImageID
 
@@ -551,50 +576,54 @@ func (r *Resources) createPodForMember(ctx context.Context, spec api.DeploymentS
 		if group == api.ServerGroupSyncMasters {
 			// Create TLS secret
 			tlsKeyfileSecretName := k8sutil.CreateTLSKeyfileSecretName(apiObject.GetName(), role, m.ID)
-			serverNames := []string{
+
+			names, err := tls.GetAltNames(spec.Sync.TLS)
+			if err != nil {
+				return errors.WithStack(errors.Wrapf(err, "Failed to render alt names"))
+			}
+
+			names.AltNames = append(names.AltNames,
 				k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName()),
 				k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain),
 				k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, m.ID),
-			}
+			)
 			masterEndpoint := spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), k8sutil.ArangoSyncMasterPort)
 			for _, ep := range masterEndpoint {
 				if u, err := url.Parse(ep); err == nil {
-					serverNames = append(serverNames, u.Hostname())
+					names.AltNames = append(names.AltNames, u.Hostname())
 				}
 			}
 			owner := apiObject.AsOwner()
-			err := createTLSServerCertificate(ctx, log, secrets, serverNames, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
+			_, err = createTLSServerCertificate(ctx, log, cachedStatus, r.context.SecretsModInterface(), names, spec.Sync.TLS, tlsKeyfileSecretName, &owner)
 			if err != nil && !k8sutil.IsAlreadyExists(err) {
 				return errors.WithStack(errors.Wrapf(err, "Failed to create TLS keyfile secret"))
 			}
 		}
 
-		sha, err := ChecksumArangoPod(groupSpec, pod)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
 		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 		defer cancel()
-		uid, err := CreateArangoPod(ctxChild, kubecli, apiObject, spec, group, pod)
+		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 
+		m.PodName = podName
 		m.PodUID = uid
-		m.Endpoint = &endpoint
-		m.PodSpecVersion = sha
+		m.PodSpecVersion = template.PodSpecChecksum
 	}
-	// Record new member phase
-	m.Phase = newPhase
-	m.Conditions.Remove(api.ConditionTypeReady)
-	m.Conditions.Remove(api.ConditionTypeTerminated)
-	m.Conditions.Remove(api.ConditionTypeTerminating)
-	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
-	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
-	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
-	m.Upgrade = false
+
+	member.GetPhaseExecutor().Execute(&m, api.Action{}, newPhase)
+
+	if status.Topology.Enabled() {
+		if m.Topology != nil && m.Topology.ID == status.Topology.ID {
+			m.Conditions.Update(api.ConditionTypeTopologyAware, true, "Topology Aware", "Topology Aware")
+		} else {
+			m.Conditions.Update(api.ConditionTypeTopologyAware, false, "Topology spec missing", "Topology spec missing")
+		}
+	}
+
+	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)
 	}
@@ -666,13 +695,21 @@ func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sut
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(ctx context.Context, kubecli kubernetes.Interface, deployment k8sutil.APIObject, deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (types.UID, error) {
-	uid, err := k8sutil.CreatePod(ctx, kubecli, pod, deployment.GetNamespace(), deployment.AsOwner())
+func CreateArangoPod(ctx context.Context, c podMod.ModInterface, deployment k8sutil.APIObject,
+	deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (string, types.UID, error) {
+	podName, uid, err := k8sutil.CreatePod(ctx, c, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", "", errors.WithStack(err)
 	}
 
-	return uid, nil
+	return podName, uid, nil
+}
+
+func CreatePodFromTemplate(p *core.PodTemplateSpec) *core.Pod {
+	return &core.Pod{
+		ObjectMeta: p.ObjectMeta,
+		Spec:       p.Spec,
+	}
 }
 
 func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, error) {
@@ -689,7 +726,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 		return "", err
 	}
 
-	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+	return util.SHA256(data), nil
 }
 
 // EnsurePods creates all Pods listed in member status
@@ -698,30 +735,48 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
 
-	createPodMember := func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
-			if m.Phase != api.MemberPhaseNone {
+			if m.Phase != api.MemberPhasePending {
 				continue
 			}
-			if m.Conditions.IsTrue(api.ConditionTypeCleanedOut) {
+
+			member, ok := cachedStatus.ArangoMember(m.ArangoMemberName(r.context.GetName(), group))
+			if !ok {
+				// ArangoMember not found, skip
 				continue
 			}
+
+			if member.Status.Template == nil {
+				r.log.Warn().Msgf("Missing Template")
+				// Template is missing, nothing to do
+				continue
+			}
+
+			r.log.Warn().Msgf("Ensuring pod")
+
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(ctx, spec, m.ID, imageNotFoundOnce, cachedStatus); err != nil {
+			if err := r.createPodForMember(ctx, cachedStatus, spec, member, m.ID, imageNotFoundOnce); err != nil {
+				r.log.Warn().Err(err).Msgf("Ensuring pod failed")
 				return errors.WithStack(err)
 			}
 		}
 		return nil
-	}
-
-	if err := iterator.ForeachServerGroup(createPodMember, &deploymentStatus); err != nil {
+	}, &deploymentStatus); err != nil {
 		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
+// CreatePodSuffix creates additional string to glue it to the POD name.
+// The suffix is calculated according to the given spec, so it is easily to recognize by name if the pods have the same spec.
+// The additional `postSuffix` can be provided. It can be used to distinguish restarts of POD.
 func CreatePodSuffix(spec api.DeploymentSpec) string {
+	if features.ShortPodNames().Enabled() || features.RandomPodNames().Enabled() {
+		return ""
+	}
+
 	raw, _ := json.Marshal(spec)
 	hash := sha1.Sum(raw)
 	return fmt.Sprintf("%0x", hash)[:6]

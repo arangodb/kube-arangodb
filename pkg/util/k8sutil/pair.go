@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -161,4 +161,18 @@ func (o OptionPair) CompareTo(other OptionPair) int {
 
 func NewOptionPair(pairs ...OptionPair) OptionPairs {
 	return pairs
+}
+
+// ExtractStringToOptionPair extracts command line argument into the OptionPair.
+func ExtractStringToOptionPair(arg string) OptionPair {
+	trimmed := strings.TrimLeft(arg, " ")
+	index := strings.Index(trimmed, "=")
+	if index < 0 {
+		return OptionPair{Key: strings.TrimRight(trimmed, " ")}
+	}
+
+	return OptionPair{
+		Key:   strings.Trim(trimmed[0:index], " "),
+		Value: trimmed[index+1:],
+	}
 }

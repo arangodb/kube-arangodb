@@ -26,6 +26,9 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -35,7 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IterateServices(action service.ServiceAction, filters ...service.ServiceFilter) error {
+func (i *inspector) IterateServices(action service.Action, filters ...service.Filter) error {
 	for _, service := range i.Services() {
 		if err := i.iterateServices(service, action, filters...); err != nil {
 			return err
@@ -44,7 +47,7 @@ func (i *inspector) IterateServices(action service.ServiceAction, filters ...ser
 	return nil
 }
 
-func (i *inspector) iterateServices(service *core.Service, action service.ServiceAction, filters ...service.ServiceFilter) error {
+func (i *inspector) iterateServices(service *core.Service, action service.Action, filters ...service.Filter) error {
 	for _, filter := range filters {
 		if !filter(service) {
 			return nil
@@ -66,6 +69,25 @@ func (i *inspector) Services() []*core.Service {
 	return r
 }
 
+func (i *inspector) ServiceReadInterface() service.ReadInterface {
+	return &serviceReadInterface{i: i}
+}
+
+type serviceReadInterface struct {
+	i *inspector
+}
+
+func (s serviceReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Service, error) {
+	if s, ok := s.i.Service(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    core.GroupName,
+			Resource: "services",
+		}, name)
+	} else {
+		return s, nil
+	}
+}
+
 func (i *inspector) Service(name string) (*core.Service, bool) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
@@ -78,24 +100,28 @@ func (i *inspector) Service(name string) (*core.Service, bool) {
 	return service, true
 }
 
-func servicesToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*core.Service, error) {
-	services, err := getServices(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
-	}
-
-	serviceMap := map[string]*core.Service{}
-
-	for _, service := range services {
-		_, exists := serviceMap[service.GetName()]
-		if exists {
-			return nil, errors.Newf("Service %s already exists in map, error received", service.GetName())
+func servicesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		services, err := getServices(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		serviceMap[service.GetName()] = servicePointer(service)
-	}
+		serviceMap := map[string]*core.Service{}
 
-	return serviceMap, nil
+		for _, service := range services {
+			_, exists := serviceMap[service.GetName()]
+			if exists {
+				return errors.Newf("Service %s already exists in map, error received", service.GetName())
+			}
+
+			serviceMap[service.GetName()] = servicePointer(service)
+		}
+
+		inspector.services = serviceMap
+
+		return nil
+	}
 }
 
 func servicePointer(pod core.Service) *core.Service {

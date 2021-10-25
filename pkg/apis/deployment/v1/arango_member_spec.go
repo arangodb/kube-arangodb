@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@
 
 package v1
 
-import core "k8s.io/api/core/v1"
+import (
+	"k8s.io/apimachinery/pkg/types"
+)
 
 type ArangoMemberSpec struct {
-	Group ServerGroup `json:"group,omitempty"`
-	ID    string      `json:"id,omitempty"`
+	Group         ServerGroup `json:"group,omitempty"`
+	ID            string      `json:"id,omitempty"`
+	DeploymentUID types.UID   `json:"deploymentUID,omitempty"`
 
-	Template         *core.PodTemplate `json:"template,omitempty"`
-	TemplateChecksum string            `json:"templateChecksum,omitempty"`
+	Template *ArangoMemberPodTemplate `json:"template,omitempty"`
 }

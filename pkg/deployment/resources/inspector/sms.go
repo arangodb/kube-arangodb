@@ -26,16 +26,20 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+	monitoringGroup "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (i *inspector) IterateServiceMonitors(action servicemonitor.ServiceMonitorAction, filters ...servicemonitor.ServiceMonitorFilter) error {
+func (i *inspector) IterateServiceMonitors(action servicemonitor.Action, filters ...servicemonitor.Filter) error {
 	for _, serviceMonitor := range i.ServiceMonitors() {
 		if err := i.iterateServiceMonitor(serviceMonitor, action, filters...); err != nil {
 			return err
@@ -44,7 +48,7 @@ func (i *inspector) IterateServiceMonitors(action servicemonitor.ServiceMonitorA
 	return nil
 }
 
-func (i *inspector) iterateServiceMonitor(serviceMonitor *monitoring.ServiceMonitor, action servicemonitor.ServiceMonitorAction, filters ...servicemonitor.ServiceMonitorFilter) error {
+func (i *inspector) iterateServiceMonitor(serviceMonitor *monitoring.ServiceMonitor, action servicemonitor.Action, filters ...servicemonitor.Filter) error {
 	for _, filter := range filters {
 		if !filter(serviceMonitor) {
 			return nil
@@ -78,21 +82,44 @@ func (i *inspector) ServiceMonitor(name string) (*monitoring.ServiceMonitor, boo
 	return serviceMonitor, true
 }
 
-func serviceMonitorsToMap(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace string) (map[string]*monitoring.ServiceMonitor, error) {
-	serviceMonitors := getServiceMonitors(ctx, m, namespace, "")
+func (i *inspector) ServiceMonitorReadInterface() servicemonitor.ReadInterface {
+	return &serviceMonitorReadInterface{i: i}
+}
 
-	serviceMonitorMap := map[string]*monitoring.ServiceMonitor{}
+type serviceMonitorReadInterface struct {
+	i *inspector
+}
 
-	for _, serviceMonitor := range serviceMonitors {
-		_, exists := serviceMonitorMap[serviceMonitor.GetName()]
-		if exists {
-			return nil, errors.Newf("ServiceMonitor %s already exists in map, error received", serviceMonitor.GetName())
+func (s serviceMonitorReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*monitoring.ServiceMonitor, error) {
+	if s, ok := s.i.ServiceMonitor(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    monitoringGroup.GroupName,
+			Resource: "servicemonitors",
+		}, name)
+	} else {
+		return s, nil
+	}
+}
+
+func serviceMonitorsToMap(ctx context.Context, inspector *inspector, m monitoringClient.MonitoringV1Interface, namespace string) func() error {
+	return func() error {
+		serviceMonitors := getServiceMonitors(ctx, m, namespace, "")
+
+		serviceMonitorMap := map[string]*monitoring.ServiceMonitor{}
+
+		for _, serviceMonitor := range serviceMonitors {
+			_, exists := serviceMonitorMap[serviceMonitor.GetName()]
+			if exists {
+				return errors.Newf("ServiceMonitor %s already exists in map, error received", serviceMonitor.GetName())
+			}
+
+			serviceMonitorMap[serviceMonitor.GetName()] = serviceMonitor
 		}
 
-		serviceMonitorMap[serviceMonitor.GetName()] = serviceMonitor
-	}
+		inspector.serviceMonitors = serviceMonitorMap
 
-	return serviceMonitorMap, nil
+		return nil
+	}
 }
 
 func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) []*monitoring.ServiceMonitor {
@@ -110,7 +137,7 @@ func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Inte
 	return serviceMonitors.Items
 }
 
-func FilterServiceMonitorsByLabels(labels map[string]string) servicemonitor.ServiceMonitorFilter {
+func FilterServiceMonitorsByLabels(labels map[string]string) servicemonitor.Filter {
 	return func(serviceMonitor *monitoring.ServiceMonitor) bool {
 		for key, value := range labels {
 			v, ok := serviceMonitor.Labels[key]

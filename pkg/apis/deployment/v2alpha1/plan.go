@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,11 +29,31 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ActionPriority define action priority
+type ActionPriority int
+
+const (
+	// ActionPriorityNormal define normal priority plan
+	ActionPriorityNormal ActionPriority = iota
+	// ActionPriorityHigh define high priority plan
+	ActionPriorityHigh
+)
+
 // ActionType is a strongly typed name for a plan action item
 type ActionType string
 
 func (a ActionType) String() string {
 	return string(a)
+}
+
+// Priority returns plan priority
+func (a ActionType) Priority() ActionPriority {
+	switch a {
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition:
+		return ActionPriorityHigh
+	default:
+		return ActionPriorityNormal
+	}
 }
 
 const (
@@ -127,7 +147,7 @@ const (
 	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
 	// ActionTypeEnableMaintenance enables maintenance on cluster.
 	ActionTypeEnableMaintenance ActionType = "EnableMaintenance"
-	// ActionTypeEnableMaintenance disables maintenance on cluster.
+	// ActionTypeDisableMaintenance disables maintenance on cluster.
 	ActionTypeDisableMaintenance ActionType = "DisableMaintenance"
 	// ActionTypeSetMaintenanceCondition sets maintenance condition.
 	ActionTypeSetMaintenanceCondition ActionType = "SetMaintenanceCondition"
@@ -135,6 +155,28 @@ const (
 	ActionTypeBootstrapUpdate ActionType = "BootstrapUpdate"
 	// ActionTypeBootstrapSetPassword set password to the bootstrapped user
 	ActionTypeBootstrapSetPassword ActionType = "BootstrapSetPassword"
+	// ActionTypeMemberPhaseUpdate updated member phase. High priority
+	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
+	// ActionTypeSetMemberCondition sets member condition. It is high priority action.
+	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
+	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
+	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
+	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
+	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
+	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
+	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
+
+	// Runtime Updates
+	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
+	ActionTypeRuntimeContainerImageUpdate ActionType = "RuntimeContainerImageUpdate"
+	// ActionTypeRuntimeContainerArgsLogLevelUpdate updates the container's executor arguments.
+	ActionTypeRuntimeContainerArgsLogLevelUpdate ActionType = "RuntimeContainerArgsLogLevelUpdate"
+
+	// Topology
+	ActionTypeTopologyEnable           ActionType = "TopologyEnable"
+	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
+	ActionTypeTopologyZonesUpdate      ActionType = "TopologyZonesUpdate"
+	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
 )
 
 const (
@@ -215,6 +257,29 @@ func NewAction(actionType ActionType, group ServerGroup, memberID string, reason
 	return a
 }
 
+// ActionBuilder allows to generate actions based on predefined group and member id
+type ActionBuilder interface {
+	// NewAction instantiates a new Action.
+	NewAction(actionType ActionType, reason ...string) Action
+}
+
+type actionBuilder struct {
+	group    ServerGroup
+	memberID string
+}
+
+func (a actionBuilder) NewAction(actionType ActionType, reason ...string) Action {
+	return NewAction(actionType, a.group, a.memberID, reason...)
+}
+
+// NewActionBuilder create new action builder with provided group and id
+func NewActionBuilder(group ServerGroup, memberID string) ActionBuilder {
+	return actionBuilder{
+		group:    group,
+		memberID: memberID,
+	}
+}
+
 // SetImage sets the Image field to the given value and returns the modified
 // action.
 func (a Action) SetImage(image string) Action {
@@ -286,4 +351,46 @@ func (p Plan) Wrap(before, after Action) Plan {
 	n = append(n, after)
 
 	return n
+}
+
+// AfterFirst adds actions when condition will return false
+func (p Plan) AfterFirst(condition func(a Action) bool, actions ...Action) Plan {
+	var r Plan
+	c := p
+	for {
+		if len(c) == 0 {
+			break
+		}
+
+		if !condition(c[0]) {
+			r = append(r, actions...)
+
+			r = append(r, c...)
+
+			break
+		}
+
+		r = append(r, c[0])
+
+		if len(c) == 1 {
+			break
+		}
+
+		c = c[1:]
+	}
+
+	return r
+}
+
+// Filter filter list of the actions
+func (p Plan) Filter(condition func(a Action) bool) Plan {
+	var r Plan
+
+	for _, a := range p {
+		if condition(a) {
+			r = append(r, a)
+		}
+	}
+
+	return r
 }

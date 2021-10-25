@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,10 +138,12 @@ func (l *MemberStatusList) removeByID(id string) error {
 	return errors.WithStack(errors.Wrapf(NotFoundError, "Member '%s' is not a member", id))
 }
 
+type MemberToRemoveSelector func(m MemberStatusList) (string, error)
+
 // SelectMemberToRemove selects a member from the given list that should
 // be removed in a scale down action.
 // Returns an error if the list is empty.
-func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
+func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelector) (MemberStatus, error) {
 	if len(l) > 0 {
 		// Try to find member with phase to be removed
 		for _, m := range l {
@@ -151,7 +153,7 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 		}
 		// Try to find a not ready member
 		for _, m := range l {
-			if m.Phase == MemberPhaseNone {
+			if m.Phase.IsPending() {
 				return m, nil
 			}
 		}
@@ -160,6 +162,28 @@ func (l MemberStatusList) SelectMemberToRemove() (MemberStatus, error) {
 				return m, nil
 			}
 		}
+		for _, m := range l {
+			if m.Conditions.IsTrue(ConditionTypeCleanedOut) {
+				return m, nil
+			}
+		}
+
+		// Run conditional picker
+		for _, selector := range selectors {
+			if selector == nil {
+				continue
+			}
+			if m, err := selector(l); err != nil {
+				return MemberStatus{}, err
+			} else if m != "" {
+				if member, ok := l.ElementByID(m); ok {
+					return member, nil
+				} else {
+					return MemberStatus{}, errors.Newf("Unable to find member with id %s", m)
+				}
+			}
+		}
+
 		// Pick a random member that is in created state
 		perm := rand.Perm(len(l))
 		for _, idx := range perm {

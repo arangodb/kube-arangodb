@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@
 package inspector
 
 import (
-	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -35,14 +35,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 type Inspector interface {
-	Refresh(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface,
-		c versioned.Interface, namespace string) error
-
+	refresh.Inspector
 	pod.Inspector
 	secret.Inspector
 	persistentvolumeclaim.Inspector
@@ -51,4 +47,6 @@ type Inspector interface {
 	servicemonitor.Inspector
 	serviceaccount.Inspector
 	arangomember.Inspector
+
+	node.Loader
 }

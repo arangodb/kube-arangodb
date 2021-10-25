@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ type actionMarkToRemove struct {
 }
 
 func (a *actionMarkToRemove) Start(ctx context.Context) (bool, error) {
-	if a.action.Group != api.ServerGroupDBServers {
+	if a.action.Group != api.ServerGroupDBServers && a.action.Group != api.ServerGroupAgents && a.action.Group != api.ServerGroupCoordinators {
 		return true, nil
 	}
 

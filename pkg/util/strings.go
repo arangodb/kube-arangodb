@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,4 +62,29 @@ func PrefixStringArray(a []string, prefix string) []string {
 	}
 
 	return b
+}
+
+// DiffStringsOneWay returns the elements in `compareWhat` that are not in `compareTo`.
+func DiffStringsOneWay(compareWhat, compareTo []string) []string {
+	compareToMap := make(map[string]struct{}, len(compareTo))
+	for _, x := range compareTo {
+		compareToMap[x] = struct{}{}
+	}
+
+	var diff []string
+	for _, x := range compareWhat {
+		if _, found := compareToMap[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+
+	return diff
+}
+
+// DiffStrings returns the elements in `compareWhat` that are not in `compareTo` and
+// elements in `compareTo` that are not in `compareFrom`.
+func DiffStrings(compareWhat, compareTo []string) []string {
+	diff := DiffStringsOneWay(compareWhat, compareTo)
+
+	return append(diff, DiffStringsOneWay(compareTo, compareWhat)...)
 }

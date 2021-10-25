@@ -7,3 +7,4 @@ vendor/
 .idea/
 deps/
 .vscode/
+**/*.enterprise.go

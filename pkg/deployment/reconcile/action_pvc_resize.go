@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,20 +96,6 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 					return false, err
 				}
 
-				return false, nil
-			} else if cmp > 0 {
-				if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers {
-					if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-						s.Plan = append(s.Plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
-						return true
-					}); err != nil {
-						log.Error().Err(err).Msg("Unable to mark instance to be replaced")
-					}
-				} else {
-					log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-						Msg("Volume size should not shrink")
-					a.actionCtx.CreateEvent(k8sutil.NewCannotShrinkVolumeEvent(a.actionCtx.GetAPIObject(), pvc.Name))
-				}
 				return false, nil
 			}
 		}

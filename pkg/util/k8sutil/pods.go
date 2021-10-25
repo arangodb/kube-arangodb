@@ -25,10 +25,14 @@ package k8sutil
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -41,7 +45,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -52,6 +55,9 @@ const (
 	ClientAuthCAVolumeName          = "client-auth-ca"
 	ClusterJWTSecretVolumeName      = "cluster-jwt"
 	MasterJWTSecretVolumeName       = "master-jwt"
+	LifecycleVolumeName             = "lifecycle"
+	FoxxAppEphemeralVolumeName      = "ephemeral-apps"
+	TMPEphemeralVolumeName          = "ephemeral-tmp"
 	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
 	ExporterJWTVolumeName           = "exporter-jwt"
 	ArangodVolumeMountDir           = "/data"
@@ -62,13 +68,67 @@ const (
 	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
 	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
 	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
+
+	ServerContainerConditionContainersNotReady = "ContainersNotReady"
+	ServerContainerConditionPrefix             = "containers with unready status: "
 )
+
+// GetAnyVolumeByName returns the volume in the given volumes with the given name.
+// Returns false if not found.
+func GetAnyVolumeByName(volumes []core.Volume, name string) (core.Volume, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.Volume{}, false
+}
+
+// GetAnyVolumeMountByName returns the volumemount in the given volumemountss with the given name.
+// Returns false if not found.
+func GetAnyVolumeMountByName(volumes []core.VolumeMount, name string) (core.VolumeMount, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.VolumeMount{}, false
+}
 
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *core.Pod) bool {
 	condition := getPodCondition(&pod.Status, core.PodReady)
 	return condition != nil && condition.Status == core.ConditionTrue
+}
+
+// IsContainerReady returns true if the PodReady condition on
+// the given pod is set to true.
+func IsContainerReady(pod *core.Pod, container string) bool {
+	condition := getPodCondition(&pod.Status, core.PodReady)
+	if condition == nil {
+		return false
+	}
+
+	if condition.Status == core.ConditionTrue {
+		return true
+	}
+
+	if !IsContainerRunning(pod, container) {
+		return false
+	}
+
+	switch condition.Reason {
+	case ServerContainerConditionContainersNotReady:
+		if strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
+			n := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
+
+			return !strings.Contains(n, container)
+		}
+		return false
+	default:
+		return false
+	}
 }
 
 // GetPodByName returns pod if it exists among the pods' list
@@ -84,8 +144,13 @@ func GetPodByName(pods []core.Pod, podName string) (core.Pod, bool) {
 
 // IsPodServerContainerRunning returns true if the arangodb container of the pod is still running
 func IsPodServerContainerRunning(pod *core.Pod) bool {
+	return IsContainerRunning(pod, ServerContainerName)
+}
+
+// IsContainerRunning returns true if the container of the pod is still running
+func IsContainerRunning(pod *core.Pod, name string) bool {
 	for _, c := range pod.Status.ContainerStatuses {
-		if c.Name != ServerContainerName {
+		if c.Name != name {
 			continue
 		}
 
@@ -417,19 +482,24 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+	return util.SHA256(data), nil
 }
 
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
+func CreatePod(ctx context.Context, c pod.ModInterface, pod *core.Pod, ns string,
+	owner metav1.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if pod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
-		return "", errors.WithStack(err)
+	if createdPod, err := c.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
+		if IsAlreadyExists(err) {
+			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
+		}
+
+		return "", "", errors.WithStack(err)
 	} else {
-		return pod.UID, nil
+		return createdPod.GetName(), createdPod.GetUID(), nil
 	}
 }
 

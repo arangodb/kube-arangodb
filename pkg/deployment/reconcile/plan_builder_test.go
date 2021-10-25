@@ -29,6 +29,20 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -75,6 +89,82 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 }
 
+func (c *testContext) SecretsModInterface() secret.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodsModInterface() pod.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServicesModInterface() service.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ArangoMembersModInterface() arangomember.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
+	panic("implement me")
+}
+
+func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetKubeCli() kubernetes.Interface {
+	panic("implement me")
+}
+
+func (c *testContext) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
+	panic("implement me")
+}
+
+func (c *testContext) GetArangoCli() versioned.Interface {
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
+	panic("implement me")
+}
+
+func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
+	return &core.PodTemplateSpec{}, nil
+}
+
+func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+	return c.SelectImage(spec, status)
+}
+
+func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+	panic("implement me")
+}
+
+func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+	panic("implement me")
+}
+
 func (c *testContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
 	panic("implement me")
 }
@@ -108,7 +198,7 @@ func (c *testContext) GetAuthentication() conn.Auth {
 }
 
 func (c *testContext) RenderPodForMember(_ context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	panic("implement me")
+	return &core.Pod{}, nil
 }
 
 func (c *testContext) GetName() string {
@@ -119,12 +209,17 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 	panic("implement me")
 }
 
-func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
+func (c *testContext) SecretsInterface() secret.Interface {
 	panic("implement me")
 }
 
 func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
-	panic("implement me")
+	return api.ImageInfo{
+		Image:           "",
+		ImageID:         "",
+		ArangoDBVersion: "",
+		Enterprise:      false,
+	}, true
 }
 
 func (c *testContext) UpdatePvc(_ context.Context, pvc *core.PersistentVolumeClaim) error {
@@ -179,7 +274,7 @@ func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerG
 	panic("implement me")
 }
 
-func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string) (string, error) {
+func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
 	panic("implement me")
 }
 
@@ -271,9 +366,10 @@ func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
 func addAgentsToStatus(t *testing.T, status *api.DeploymentStatus, count int) {
 	for i := 0; i < count; i++ {
 		require.NoError(t, status.Members.Add(api.MemberStatus{
-			ID:      fmt.Sprintf("AGNT-%d", i),
-			PodName: fmt.Sprintf("agnt-depl-xxx-%d", i),
-			Phase:   api.MemberPhaseCreated,
+			ID:             fmt.Sprintf("AGNT-%d", i),
+			PodName:        fmt.Sprintf("agnt-depl-xxx-%d", i),
+			PodSpecVersion: "random",
+			Phase:          api.MemberPhaseCreated,
 			Conditions: []api.Condition{
 				{
 					Type:   api.ConditionTypeReady,
@@ -310,9 +406,9 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	status.Hashes.TLS.Propagated = true
 	status.Hashes.Encryption.Propagated = true
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 1)
 
 	// Test with 1 single member
 	status.Members.Single = api.MemberStatusList{
@@ -321,10 +417,16 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
+	spec.Single.Count = util.NewInt(2)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	assert.True(t, changed)
+	assert.Len(t, newPlan, 0) // Single mode does not scale
+
+	spec.Single.Count = util.NewInt(1)
 	// Test with 2 single members (which should not happen) and try to scale down
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
@@ -336,9 +438,9 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
 
 // TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
@@ -365,7 +467,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -378,7 +480,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -403,7 +505,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeShutdownMember, newPlan[0].Type)
@@ -435,7 +537,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -468,7 +570,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -505,7 +607,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 5) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -528,28 +630,61 @@ func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	l.msg = msg
 }
 
+type testCase struct {
+	Name             string
+	context          *testContext
+	Helper           func(*api.ArangoDeployment)
+	ExpectedError    error
+	ExpectedPlan     api.Plan
+	ExpectedHighPlan api.Plan
+	ExpectedLog      string
+	ExpectedEvent    *k8sutil.Event
+
+	Pods            map[string]*core.Pod
+	Secrets         map[string]*core.Secret
+	Services        map[string]*core.Service
+	PVCS            map[string]*core.PersistentVolumeClaim
+	ServiceAccounts map[string]*core.ServiceAccount
+	PDBS            map[string]*policy.PodDisruptionBudget
+	ServiceMonitors map[string]*monitoring.ServiceMonitor
+	ArangoMembers   map[string]*api.ArangoMember
+	Nodes           map[string]*core.Node
+
+	Extender func(t *testing.T, r *Reconciler, c *testCase)
+}
+
+func (t testCase) Inspector() inspectorInterface.Inspector {
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
+}
+
 func TestCreatePlan(t *testing.T) {
 	// Arrange
 	threeCoordinators := api.MemberStatusList{
 		{
-			ID: "1",
+			ID:      "1",
+			PodName: "coordinator1",
 		},
 		{
-			ID: "2",
+			ID:      "2",
+			PodName: "coordinator2",
 		},
 		{
-			ID: "3",
+			ID:      "3",
+			PodName: "coordinator3",
 		},
 	}
 	threeDBServers := api.MemberStatusList{
 		{
-			ID: "1",
+			ID:      "1",
+			PodName: "dbserver1",
 		},
 		{
-			ID: "2",
+			ID:      "2",
+			PodName: "dbserver2",
 		},
 		{
-			ID: "3",
+			ID:      "3",
+			PodName: "dbserver3",
 		},
 	}
 
@@ -574,24 +709,7 @@ func TestCreatePlan(t *testing.T) {
 	addAgentsToStatus(t, &deploymentTemplate.Status, 3)
 	deploymentTemplate.Spec.SetDefaults("createPlanTest")
 
-	testCases := []struct {
-		Name          string
-		context       *testContext
-		Helper        func(*api.ArangoDeployment)
-		ExpectedError error
-		ExpectedPlan  api.Plan
-		ExpectedLog   string
-		ExpectedEvent *k8sutil.Event
-
-		Pods            map[string]*core.Pod
-		Secrets         map[string]*core.Secret
-		Services        map[string]*core.Service
-		PVCS            map[string]*core.PersistentVolumeClaim
-		ServiceAccounts map[string]*core.ServiceAccount
-		PDBS            map[string]*policy.PodDisruptionBudget
-		ServiceMonitors map[string]*monitoring.ServiceMonitor
-		ArangoMembers   map[string]*api.ArangoMember
-	}{
+	testCases := []testCase{
 		{
 			Name: "Can not create plan for single deployment",
 			context: &testContext{
@@ -599,6 +717,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+				ad.Status.Members.Single = append(ad.Status.Members.Single, api.MemberStatus{})
 			},
 			ExpectedPlan: []api.Action{},
 		},
@@ -648,13 +767,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeDisableClusterScaling, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeEnableClusterScaling, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeMarkToRemoveMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
@@ -735,6 +848,52 @@ func TestCreatePlan(t *testing.T) {
 					},
 				},
 			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				// Add ArangoMember
+				builderCtx := newPlanBuilderContext(r.context)
+
+				template, err := builderCtx.RenderPodTemplateForMemberFromCurrent(context.Background(), c.Inspector(), c.context.ArangoDeployment.Status.Members.Agents[0].ID)
+				require.NoError(t, err)
+
+				checksum, err := resources.ChecksumArangoPod(c.context.ArangoDeployment.Spec.Agents, resources.CreatePodFromTemplate(template))
+				require.NoError(t, err)
+
+				templateSpec, err := api.GetArangoMemberPodTemplate(template, checksum)
+				require.NoError(t, err)
+
+				name := c.context.ArangoDeployment.Status.Members.Agents[0].ArangoMemberName(c.context.ArangoDeployment.Name, api.ServerGroupAgents)
+
+				c.ArangoMembers = map[string]*api.ArangoMember{
+					name: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: name,
+						},
+						Spec: api.ArangoMemberSpec{
+							Template: templateSpec,
+						},
+						Status: api.ArangoMemberStatus{
+							Template: templateSpec,
+						},
+					},
+				}
+
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.Agents[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.Agents[0].PodName,
+						},
+					},
+				}
+
+				require.NoError(t, c.context.ArangoDeployment.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+					for _, m := range list {
+						m.Phase = api.MemberPhaseCreated
+						require.NoError(t, c.context.ArangoDeployment.Status.Members.Update(m, group))
+					}
+
+					return nil
+				}))
+			},
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
@@ -750,14 +909,10 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, api.ServerGroupAgents, "", "Remove server keyfile and enforce renewal/recreation"),
-				api.NewAction(api.ActionTypeResignLeadership, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeRotateMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberInSync, api.ServerGroupAgents, ""),
+			ExpectedHighPlan: []api.Action{
+				api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0].ID, "PVC Resize pending"),
 			},
-			ExpectedLog: "Creating rotation plan",
+			ExpectedLog: "PVC Resize pending",
 		},
 		{
 			Name: "Agent in failed state",
@@ -815,13 +970,13 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
 		{
-			Name: "Scale down DBservers",
+			Name: "CleanOut DBserver",
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(2),
+					Count: util.NewInt(3),
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].Conditions = api.ConditionList{
@@ -832,10 +987,29 @@ func TestCreatePlan(t *testing.T) {
 				}
 			},
 			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
 				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
+		},
+		{
+			Name: "Scale down DBservers",
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(2),
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+			},
+			ExpectedPlan: []api.Action{
+				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
+				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+			},
+			ExpectedLog: "Creating scale-down plan",
 		},
 	}
 
@@ -850,11 +1024,16 @@ func TestCreatePlan(t *testing.T) {
 			logger := zerolog.New(ioutil.Discard).Hook(h)
 			r := NewReconciler(logger, testCase.context)
 
+			if testCase.Extender != nil {
+				testCase.Extender(t, r, &testCase)
+			}
+
 			// Act
 			if testCase.Helper != nil {
 				testCase.Helper(testCase.context.ArangoDeployment)
 			}
-			err, _ := r.CreatePlan(ctx, inspector.NewInspectorFromData(testCase.Pods, testCase.Secrets, testCase.PVCS, testCase.Services, testCase.ServiceAccounts, testCase.PDBS, testCase.ServiceMonitors, testCase.ArangoMembers))
+
+			err, _ := r.CreatePlan(ctx, testCase.Inspector())
 
 			// Assert
 			if testCase.ExpectedEvent != nil {
@@ -873,10 +1052,25 @@ func TestCreatePlan(t *testing.T) {
 
 			require.NoError(t, err)
 			status, _ := testCase.context.GetStatus()
+
+			if len(testCase.ExpectedHighPlan) > 0 {
+				require.Len(t, status.HighPriorityPlan, len(testCase.ExpectedHighPlan))
+				for i, v := range testCase.ExpectedHighPlan {
+					assert.Equal(t, v.Type, status.HighPriorityPlan[i].Type)
+					assert.Equal(t, v.Group, status.HighPriorityPlan[i].Group)
+					if v.Reason != "*" {
+						assert.Equal(t, v.Reason, status.HighPriorityPlan[i].Reason)
+					}
+				}
+			}
+
 			require.Len(t, status.Plan, len(testCase.ExpectedPlan))
 			for i, v := range testCase.ExpectedPlan {
 				assert.Equal(t, v.Type, status.Plan[i].Type)
 				assert.Equal(t, v.Group, status.Plan[i].Group)
+				if v.Reason != "*" {
+					assert.Equal(t, v.Reason, status.Plan[i].Reason)
+				}
 			}
 		})
 	}

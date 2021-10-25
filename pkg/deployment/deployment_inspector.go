@@ -58,21 +58,15 @@ var (
 
 // getReconciliationTimeout gets timeout for the reconciliation loop.
 // The whole reconciliation loop timeout depends on the number of nodes but not less then one minute.
-func (d *Deployment) getReconciliationTimeout() (time.Duration, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	nodes, err := d.GetKubeCli().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return 0, errors.Wrapf(err, "Unable to get nodes")
-	}
-
-	if timeout := timeoutReconciliationPerNode * time.Duration(len(nodes.Items)); timeout > time.Minute {
-		return timeout, nil
+func (d *Deployment) getReconciliationTimeout() time.Duration {
+	if nodes, ok := d.GetCachedStatus().GetNodes(); ok {
+		if timeout := timeoutReconciliationPerNode * time.Duration(len(nodes.Nodes())); timeout > time.Minute {
+			return timeout
+		}
 	}
 
 	// The minimum timeout for the reconciliation loop.
-	return time.Minute, nil
+	return time.Minute
 }
 
 // inspectDeployment inspects the entire deployment, creates
@@ -86,11 +80,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	log := d.deps.Log
 	start := time.Now()
 
-	timeout, err := d.getReconciliationTimeout()
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to get nodes")
-		return minInspectionInterval // Retry ASAP
-	}
+	timeout := d.getReconciliationTimeout()
 
 	ctxReconciliation, cancelReconciliation := context.WithTimeout(context.Background(), timeout)
 	defer cancelReconciliation()
@@ -104,7 +94,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(d.GetKubeCli(), d.GetMonitoringV1Cli(), d.GetArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -175,7 +165,6 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	t := time.Now()
 
 	d.SetCachedStatus(cachedStatus)
-	defer d.SetCachedStatus(nil)
 
 	defer func() {
 		d.deps.Log.Info().Msgf("Reconciliation loop took %s", time.Since(t))
@@ -293,7 +282,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, nil
 	}
 
-	if d.apiObject.Status.Plan.IsEmpty() && status.AppliedVersion != checksum {
+	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.AppliedVersion = checksum
 			return true
@@ -303,15 +292,17 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else if status.AppliedVersion == checksum {
-		if !status.Plan.IsEmpty() && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, "Plan is not empty", "There are pending operations in plan"); err != nil {
+		isUpToDate, reason := d.isUpToDateStatus()
+
+		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
 			return minInspectionInterval, nil
 		}
 
-		if status.Plan.IsEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date"); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
@@ -345,6 +336,26 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else {
 		nextInterval = nextInterval.ReduceTo(x)
 	}
+
+	return
+}
+
+func (d *Deployment) isUpToDateStatus() (upToDate bool, reason string) {
+	if !d.apiObject.Status.IsPlanEmpty() {
+		return false, "Plan is not empty"
+	}
+
+	upToDate = true
+
+	d.apiObject.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
+				upToDate = false
+				reason = "Pending restarts on members"
+			}
+		}
+		return nil
+	})
 
 	return
 }

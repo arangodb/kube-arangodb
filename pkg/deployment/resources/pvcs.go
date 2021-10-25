@@ -40,7 +40,6 @@ func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
 
 // EnsurePVCs creates all PVC's listed in member status
 func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-	kubecli := r.context.GetKubeCli()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	ns := apiObject.GetNamespace()
@@ -48,7 +47,6 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 	iterator := r.context.GetServerGroupIterator()
 	status, _ := r.context.GetStatus()
 	enforceAntiAffinity := r.context.GetSpec().GetEnvironment().IsProduction()
-	pvcs := kubecli.CoreV1().PersistentVolumeClaims(apiObject.GetNamespace())
 
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, spec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -66,7 +64,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
 			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return k8sutil.CreatePersistentVolumeClaim(ctxChild, pvcs, m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
+				return k8sutil.CreatePersistentVolumeClaim(ctxChild, r.context.PersistentVolumeClaimsModInterface(), m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
 			})
 			if err != nil {
 				return errors.WithStack(err)

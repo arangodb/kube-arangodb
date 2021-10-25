@@ -29,15 +29,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	certificates "github.com/arangodb-helper/go-certificates"
-	"github.com/rs/zerolog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/rs/zerolog"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -47,7 +50,7 @@ const (
 
 // createTLSCACertificate creates a CA certificate and stores it in a secret with name
 // specified in the given spec.
-func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets k8sutil.SecretInterface, spec api.TLSSpec,
+func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets secret.ModInterface, spec api.TLSSpec,
 	deploymentName string, ownerRef *metav1.OwnerReference) error {
 	log = log.With().Str("secret", spec.GetCASecretName()).Logger()
 
@@ -77,35 +80,28 @@ func createTLSCACertificate(ctx context.Context, log zerolog.Logger, secrets k8s
 
 // createTLSServerCertificate creates a TLS certificate for a specific server and stores
 // it in a secret with the given name.
-func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets v1.SecretInterface, serverNames []string, spec api.TLSSpec,
-	secretName string, ownerRef *metav1.OwnerReference) error {
+func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedStatus inspectorInterface.Inspector, secrets secret.ModInterface, names tls.KeyfileInput, spec api.TLSSpec,
+	secretName string, ownerRef *metav1.OwnerReference) (bool, error) {
 
 	log = log.With().Str("secret", secretName).Logger()
-	// Load alt names
-	dnsNames, ipAddresses, emailAddress, err := spec.GetParsedAltNames()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to get alternate names")
-		return errors.WithStack(err)
-	}
-
 	// Load CA certificate
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, spec.GetCASecretName(), nil)
+	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, cachedStatus.SecretReadInterface(), spec.GetCASecretName(), nil)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to load CA certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	ca, err := certificates.LoadCAFromPEM(caCert, caKey)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to decode CA certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	options := certificates.CreateCertificateOptions{
-		CommonName:     serverNames[0],
-		Hosts:          append(append(serverNames, dnsNames...), ipAddresses...),
-		EmailAddresses: emailAddress,
+		CommonName:     names.AltNames[0],
+		Hosts:          names.AltNames,
+		EmailAddresses: names.Email,
 		ValidFrom:      time.Now(),
 		ValidFor:       spec.GetTTL().AsDuration(),
 		IsCA:           false,
@@ -114,7 +110,7 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 	cert, priv, err := certificates.CreateCertificate(options, &ca)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create server certificate")
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
@@ -128,8 +124,8 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, secrets
 		} else {
 			log.Debug().Err(err).Msg("Failed to create server Secret")
 		}
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	log.Debug().Msg("Created server Secret")
-	return nil
+	return true, nil
 }

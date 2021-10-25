@@ -27,6 +27,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	v1 "k8s.io/api/core/v1"
@@ -34,12 +36,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
-
-// PersistentVolumeClaimInterface has methods to work with PersistentVolumeClaim resources.
-type PersistentVolumeClaimInterface interface {
-	Create(ctx context.Context, persistentVolumeClaim *v1.PersistentVolumeClaim, opts metav1.CreateOptions) (*v1.PersistentVolumeClaim, error)
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.PersistentVolumeClaim, error)
-}
 
 // IsPersistentVolumeClaimMarkedForDeletion returns true if the pvc has been marked for deletion.
 func IsPersistentVolumeClaimMarkedForDeletion(pvc *v1.PersistentVolumeClaim) bool {
@@ -85,7 +81,7 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(ctx context.Context, pvcs PersistentVolumeClaimInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim.ModInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{

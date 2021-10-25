@@ -47,7 +47,11 @@ var (
 
 	cmdLifecyclePreStop = &cobra.Command{
 		Use:    "preStop",
-		Run:    cmdLifecyclePreStopRun,
+		Hidden: true,
+	}
+	cmdLifecyclePreStopFinalizers = &cobra.Command{
+		Use:    "finalizers",
+		Run:    cmdLifecyclePreStopRunFinalizer,
 		Hidden: true,
 	}
 	cmdLifecycleCopy = &cobra.Command{
@@ -63,6 +67,9 @@ var (
 
 func init() {
 	cmdMain.AddCommand(cmdLifecycle)
+
+	cmdLifecyclePreStop.AddCommand(cmdLifecyclePreStopFinalizers)
+
 	cmdLifecycle.AddCommand(cmdLifecyclePreStop)
 	cmdLifecycle.AddCommand(cmdLifecycleCopy)
 	cmdLifecycle.AddCommand(cmdLifecycleProbe)
@@ -71,7 +78,7 @@ func init() {
 }
 
 // Wait until all finalizers of the current pod have been removed.
-func cmdLifecyclePreStopRun(cmd *cobra.Command, args []string) {
+func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 
 	cliLog.Info().Msgf("Starting arangodb-operator (%s), lifecycle preStop, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 

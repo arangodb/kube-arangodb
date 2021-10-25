@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,8 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/arangodb/go-driver/agency"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
@@ -45,6 +43,11 @@ import (
 type PlanBuilderContext interface {
 	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
+	resources.ArangoMemberContext
+	resources.DeploymentPodRenderer
+	resources.DeploymentImageManager
+	resources.DeploymentModInterfaces
+	resources.DeploymentCachedStatus
 
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
@@ -64,10 +67,6 @@ type PlanBuilderContext interface {
 	GetSpec() api.DeploymentSpec
 	// GetAgencyData object for key path
 	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
-	// Renders Pod definition for member
-	RenderPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error)
-	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)
@@ -75,8 +74,6 @@ type PlanBuilderContext interface {
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
-	// SecretsInterface return secret interface
-	SecretsInterface() k8sutil.SecretInterface
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name

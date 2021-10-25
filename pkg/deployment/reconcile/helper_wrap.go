@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,4 +50,20 @@ func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason
 	}
 
 	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
+}
+
+func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
+	var plan api.Plan
+
+	if group == api.ServerGroupDBServers {
+		plan = append(plan,
+			api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
+		)
+	}
+	plan = append(plan,
+		api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
+		api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+	)
+
+	return plan
 }

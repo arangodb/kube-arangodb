@@ -67,33 +67,36 @@ covers individual newer features separately.
 
 Feature-wise production readiness table:
 
-| Feature                                 | Operator Version | ArangoDB Version | ArangoDB Edition      | State      | Enabled | Flag                                       | Remarks                                                                  |
-|-----------------------------------------|------------------|------------------|-----------------------|------------|---------|--------------------------------------------|--------------------------------------------------------------------------|
-| Pod Disruption Budgets                  | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | N/A                                                                      |
-| Pod Disruption Budgets                  | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                        | N/A                                                                      |
-| Volume Resizing                         | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | N/A                                                                      |
-| Volume Resizing                         | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                        | N/A                                                                      |
-| Disabling of liveness probes            | 0.3.10           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | N/A                                                                      |
-| Disabling of liveness probes            | 0.3.11           | Any              | Community, Enterprise | Production | True    | N/A                                        | N/A                                                                      |
-| Volume Claim Templates                  | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | N/A                                                                      |
-| Volume Claim Templates                  | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                        | N/A                                                                      |
-| Prometheus Metrics Exporter             | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | Prometheus required                                                      |
-| Prometheus Metrics Exporter             | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                        | Prometheus required                                                      |
-| Sidecar Containers                      | 0.3.11           | Any              | Community, Enterprise | Alpha      | True    | N/A                                        | N/A                                                                      |
-| Sidecar Containers                      | 1.0.0            | Any              | Community, Enterprise | Production | True    | N/A                                        | N/A                                                                      |
-| Operator Single Mode                    | 1.0.4            | Any              | Community, Enterprise | Production | False   | --mode.single                              | Only 1 instance of Operator allowed in namespace when feature is enabled |
-| TLS SNI Support                         | 1.0.3            | >= 3.7.0         | Enterprise            | Production | True    | --deployment.feature.tls-sni               | N/A                                                                      |
-| TLS Runtime Rotation Support            | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.tls-rotation          | N/A                                                                      |
-| TLS Runtime Rotation Support            | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.tls-rotation          | N/A                                                                      |
-| JWT Rotation Support                    | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.jwt-rotation          | N/A                                                                      |
-| JWT Rotation Support                    | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.jwt-rotation          | N/A                                                                      |
-| Encryption Key Rotation Support         | 1.0.4            | > 3.7.0          | Enterprise            | Alpha      | False   | --deployment.feature.encryption-rotation   | N/A                                                                      |
-| Encryption Key Rotation Support         | 1.1.0            | > 3.7.0          | Enterprise            | Production | True    | --deployment.feature.encryption-rotation   | N/A                                                                      |
-| Version Check                           | 1.1.4            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.upgrade-version-check | N/A                                                                      |
-| Operator Maintenance Management Support | 1.0.7            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.maintenance           | N/A                                                                      |
-| Operator Maintenance Management Support | 1.2.0            | >= 3.6.0         | Community, Enterprise | Production | True    | --deployment.feature.maintenance           | N/A                                                                      |
-| Operator Internal Metrics Exporter      | 1.1.9            | >= 3.6.0         | Community, Enterprise | Alpha      | False   | --deployment.feature.metrics-exporter      | N/A                                                                      |
-| Operator Internal Metrics Exporter      | 1.2.0            | >= 3.6.0         | Community, Enterprise | Production | True    | --deployment.feature.metrics-exporter      | N/A                                                                      |
+| Feature                                 | Operator Version | ArangoDB Version | ArangoDB Edition      | State        | Enabled | Flag                                       | Remarks                                                                  |
+|-----------------------------------------|------------------|------------------|-----------------------|--------------|---------|--------------------------------------------|--------------------------------------------------------------------------|
+| Pod Disruption Budgets                  | 0.3.10           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | N/A                                                                      |
+| Pod Disruption Budgets                  | 0.3.11           | Any              | Community, Enterprise | Production   | True    | N/A                                        | N/A                                                                      |
+| Volume Resizing                         | 0.3.10           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | N/A                                                                      |
+| Volume Resizing                         | 0.3.11           | Any              | Community, Enterprise | Production   | True    | N/A                                        | N/A                                                                      |
+| Disabling of liveness probes            | 0.3.10           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | N/A                                                                      |
+| Disabling of liveness probes            | 0.3.11           | Any              | Community, Enterprise | Production   | True    | N/A                                        | N/A                                                                      |
+| Volume Claim Templates                  | 0.3.11           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | N/A                                                                      |
+| Volume Claim Templates                  | 1.0.0            | Any              | Community, Enterprise | Production   | True    | N/A                                        | N/A                                                                      |
+| Prometheus Metrics Exporter             | 0.3.11           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | Prometheus required                                                      |
+| Prometheus Metrics Exporter             | 1.0.0            | Any              | Community, Enterprise | Production   | True    | N/A                                        | Prometheus required                                                      |
+| Sidecar Containers                      | 0.3.11           | Any              | Community, Enterprise | Alpha        | True    | N/A                                        | N/A                                                                      |
+| Sidecar Containers                      | 1.0.0            | Any              | Community, Enterprise | Production   | True    | N/A                                        | N/A                                                                      |
+| Operator Single Mode                    | 1.0.4            | Any              | Community, Enterprise | Production   | False   | --mode.single                              | Only 1 instance of Operator allowed in namespace when feature is enabled |
+| TLS SNI Support                         | 1.0.3            | >= 3.7.0         | Enterprise            | Production   | True    | --deployment.feature.tls-sni               | N/A                                                                      |
+| TLS Runtime Rotation Support            | 1.0.4            | > 3.7.0          | Enterprise            | Alpha        | False   | --deployment.feature.tls-rotation          | N/A                                                                      |
+| TLS Runtime Rotation Support            | 1.1.0            | > 3.7.0          | Enterprise            | Production   | True    | --deployment.feature.tls-rotation          | N/A                                                                      |
+| JWT Rotation Support                    | 1.0.4            | > 3.7.0          | Enterprise            | Alpha        | False   | --deployment.feature.jwt-rotation          | N/A                                                                      |
+| JWT Rotation Support                    | 1.1.0            | > 3.7.0          | Enterprise            | Production   | True    | --deployment.feature.jwt-rotation          | N/A                                                                      |
+| Encryption Key Rotation Support         | 1.0.4            | > 3.7.0          | Enterprise            | Alpha        | False   | --deployment.feature.encryption-rotation   | N/A                                                                      |
+| Encryption Key Rotation Support         | 1.1.0            | > 3.7.0          | Enterprise            | Production   | True    | --deployment.feature.encryption-rotation   | N/A                                                                      |
+| Encryption Key Rotation Support         | 1.2.0            | > 3.7.0          | Enterprise            | NotSupported | False   | --deployment.feature.encryption-rotation   | N/A                                                                      |
+| Version Check                           | 1.1.4            | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.upgrade-version-check | N/A                                                                      |
+| Operator Maintenance Management Support | 1.0.7            | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.maintenance           | N/A                                                                      |
+| Operator Maintenance Management Support | 1.2.0            | >= 3.7.0         | Community, Enterprise | Production   | True    | --deployment.feature.maintenance           | N/A                                                                      |
+| Operator Internal Metrics Exporter      | 1.1.9            | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.metrics-exporter      | N/A                                                                      |
+| Operator Internal Metrics Exporter      | 1.2.0            | >= 3.7.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter      | N/A                                                                      |
+| Operator Internal Metrics Exporter      | 1.2.3            | >= 3.7.0         | Community, Enterprise | Production   | True    | --deployment.feature.metrics-exporter      | It is always enabled                                                     |
+| Operator Ephemeral Volumes              | 1.2.2            | >= 3.7.0         | Community, Enterprise | Alpha        | False   | --deployment.feature.ephemeral-volumes     | N/A                                                                      |
 
 ## Release notes for 0.3.16
 
@@ -111,12 +114,12 @@ for details.
 ## Installation of latest release using Kubectl
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.0/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.0/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.4/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.4/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.0/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.4/manifests/arango-storage.yaml
 # To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.0/manifests/arango-deployment-replication.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.2.4/manifests/arango-deployment-replication.yaml
 ```
 
 This procedure can also be used for upgrades and will not harm any
@@ -148,12 +151,12 @@ upgrades.
 
 ```bash
 # The following will install the custom resources required by the operators.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.0/kube-arangodb-crd-1.2.0.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.4/kube-arangodb-crd-1.2.4.tgz
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.0/kube-arangodb-1.2.0.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.4/kube-arangodb-1.2.4.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.0/kube-arangodb-1.2.0.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.4/kube-arangodb-1.2.4.tgz --set "operator.features.storage=true"
 ```
 
 ## Upgrading the operator using Helm
@@ -188,9 +191,9 @@ with `helm install` as normal:
 ```bash
 # The following will install the operator for `ArangoDeployment` &
 # `ArangoDeploymentReplication` resources.
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.0/kube-arangodb-1.2.0.tgz
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.4/kube-arangodb-1.2.4.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.0/kube-arangodb-1.2.0.tgz --set "operator.features.storage=true"
+helm install https://github.com/arangodb/kube-arangodb/releases/download/1.2.4/kube-arangodb-1.2.4.tgz --set "operator.features.storage=true"
 ```
 
 ## Building

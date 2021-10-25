@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,18 +23,17 @@
 package deployment
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
 	"github.com/stretchr/testify/require"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func TestEnsurePod_ArangoDB_Core(t *testing.T) {
@@ -276,7 +275,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				OperatorUUIDInitImage: testImageOperatorUUIDInit,
+				OperatorImage: testImageOperator,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -505,7 +504,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				OperatorUUIDInitImage: testImageOperatorUUIDInit,
+				OperatorImage: testImageOperator,
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.status.last = api.DeploymentStatus{
@@ -856,9 +855,8 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
 
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+				k8sutil.CreateEncryptionKeySecret(deployment.SecretsModInterface(), testRocksDBEncryptionKey, key)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -913,12 +911,14 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				}
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
+				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
 					},
 					Containers: []core.Container{
 						{
@@ -934,6 +934,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
+						testArangodbInternalExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
@@ -945,7 +946,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 			},
 		},
 		{
-			Name: "DBserver Pod with metrics exporter",
+			Name: "DBserver Pod with internal metrics exporter",
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
 					Image:          util.NewString(testImage),
@@ -988,7 +989,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testCreateExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1008,7 +1009,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					TLS:            noTLS,
 					Metrics: api.MetricsSpec{
 						Enabled: util.NewBool(true),
-						Image:   util.NewString(testExporterImage),
+						Image:   util.NewString(testImage),
 						Authentication: api.MetricsAuthenticationSpec{
 							JWTTokenSecretName: util.NewString(testExporterToken),
 						},
@@ -1050,7 +1051,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testCreateExporterContainer(false, k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
+						testArangodbInternalExporterContainer(false, k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered)),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1088,7 +1089,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
-				LifecycleImage: testImageLifecycle,
+				OperatorImage: testImageOperator,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -1106,13 +1107,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Env: []core.EnvVar{
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
-							},
-							Ports: createTestPorts(),
+							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.LifecycleVolumeMount(),
@@ -1123,7 +1118,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testCreateExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1158,8 +1153,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 			},
 			config: Config{
-				LifecycleImage:        testImageLifecycle,
-				OperatorUUIDInitImage: testImageOperatorUUIDInit,
+				OperatorImage: testImageOperator,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -1167,7 +1161,6 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
 						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.LifecycleVolume(),
 					},
 					InitContainers: []core.Container{
 						createTestLifecycleContainer(emptyResources),
@@ -1178,13 +1171,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							Name:    k8sutil.ServerContainerName,
 							Image:   testImage,
 							Command: createTestCommandForDBServer(firstDBServerStatus.ID, false, false, false),
-							Env: []core.EnvVar{
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
-							},
-							Ports: createTestPorts(),
+							Ports:   createTestPorts(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.ArangodVolumeMount(),
 								k8sutil.LifecycleVolumeMount(),
@@ -1195,7 +1182,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testCreateExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -1203,103 +1190,6 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 					Subdomain:                     testDeploymentName + "-int",
 					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
 						false, ""),
-				},
-			},
-		},
-		{
-			Name: "DBserver Pod with metrics exporter, lifecycle, tls, authentication, license, rocksDB encryption, secured liveness",
-			ArangoDeployment: &api.ArangoDeployment{
-				Spec: api.DeploymentSpec{
-					Image:          util.NewString(testImage),
-					Authentication: authenticationSpec,
-					TLS:            tlsSpec,
-					Metrics:        metricsSpec,
-					RocksDB:        rocksDBSpec,
-					Environment:    api.NewEnvironment(api.EnvironmentProduction),
-					License: api.LicenseSpec{
-						SecretName: util.NewString(testLicense),
-					},
-				},
-			},
-			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
-				deployment.status.last = api.DeploymentStatus{
-					Members: api.DeploymentStatusMembers{
-						DBServers: api.MemberStatusList{
-							firstDBServerStatus,
-						},
-					},
-					Images: createTestImages(false),
-				}
-
-				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
-				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
-
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
-				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
-
-				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
-				require.NoError(t, err)
-
-				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, true,
-					authorization, k8sutil.ArangoPort)
-			},
-			config: Config{
-				LifecycleImage: testImageLifecycle,
-			},
-			ExpectedEvent: "member dbserver is created",
-			ExpectedPod: core.Pod{
-				Spec: core.PodSpec{
-					Volumes: []core.Volume{
-						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						createTestTLSVolume(api.ServerGroupDBServersString, firstDBServerStatus.ID),
-						k8sutil.CreateVolumeWithSecret(k8sutil.RocksdbEncryptionVolumeName, testRocksDBEncryptionKey),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
-						k8sutil.LifecycleVolume(),
-					},
-					InitContainers: []core.Container{
-						createTestLifecycleContainer(emptyResources),
-					},
-					Containers: []core.Container{
-						{
-							Name:    k8sutil.ServerContainerName,
-							Image:   testImage,
-							Command: createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
-							Env: []core.EnvVar{
-								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-									testLicense, constants.SecretKeyToken),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
-							},
-							Ports:           createTestPorts(),
-							Lifecycle:       createTestLifecycle(),
-							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
-							ImagePullPolicy: core.PullIfNotPresent,
-							SecurityContext: securityContext.NewSecurityContext(),
-							VolumeMounts: []core.VolumeMount{
-								k8sutil.ArangodVolumeMount(),
-								k8sutil.LifecycleVolumeMount(),
-								k8sutil.TlsKeyfileVolumeMount(),
-								k8sutil.RocksdbEncryptionVolumeMount(),
-								k8sutil.ClusterJWTVolumeMount(),
-							},
-							Resources: emptyResources,
-						},
-						func() core.Container {
-							c := testCreateExporterContainer(true, emptyResources)
-							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
-							return c
-						}(),
-					},
-					RestartPolicy:                 core.RestartPolicyNever,
-					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
-					Hostname:                      testDeploymentName + "-" + api.ServerGroupDBServersString + "-" + firstDBServerStatus.ID,
-					Subdomain:                     testDeploymentName + "-int",
-					Affinity: k8sutil.CreateAffinity(testDeploymentName, api.ServerGroupDBServersString,
-						true, ""),
 				},
 			},
 		},
@@ -1434,4 +1324,66 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 	}
 
 	runTestCases(t, testCases...)
+}
+
+func testArangodbInternalExporterContainer(secure bool, resources core.ResourceRequirements, ports ...int32) core.Container {
+
+	var port int32 = k8sutil.ArangoExporterPort
+	if len(ports) > 0 {
+		port = ports[0]
+	}
+
+	return core.Container{
+		Name:    k8sutil.ExporterContainerName,
+		Image:   testImage,
+		Command: createTestInternalExporterCommand(secure, port),
+		Ports: []core.ContainerPort{
+			{
+				Name:          string(api.MetricsModeExporter),
+				ContainerPort: port,
+				Protocol:      core.ProtocolTCP,
+			},
+		},
+		LivenessProbe:   createTestExporterLivenessProbe(secure),
+		Resources:       resources,
+		ImagePullPolicy: core.PullIfNotPresent,
+		SecurityContext: &core.SecurityContext{
+			Capabilities: &core.Capabilities{
+				Drop: []core.Capability{
+					"ALL",
+				},
+			},
+		},
+		VolumeMounts: []core.VolumeMount{
+			k8sutil.LifecycleVolumeMount(),
+			k8sutil.ExporterJWTVolumeMount(),
+		},
+	}
+}
+
+func createTestInternalExporterCommand(secure bool, port int32) []string {
+	binaryPath, err := os.Executable()
+	if err != nil {
+		return []string{}
+	}
+	exePath := filepath.Join(k8sutil.LifecycleVolumeMountDir, filepath.Base(binaryPath))
+
+	args := []string{exePath, "exporter"}
+	if secure {
+		args = append(args, "--arangodb.endpoint=https://localhost:8529/_admin/metrics")
+	} else {
+		args = append(args, "--arangodb.endpoint=http://localhost:8529/_admin/metrics")
+	}
+
+	args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
+
+	if port != k8sutil.ArangoExporterPort {
+		args = append(args, fmt.Sprintf("--server.address=:%d", port))
+	}
+
+	if secure {
+		args = append(args, "--ssl.keyfile=/secrets/tls/tls.keyfile")
+	}
+
+	return args
 }

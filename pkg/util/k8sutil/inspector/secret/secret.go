@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,10 +22,7 @@
 package secret
 
 import (
-	"context"
-
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Inspector for secrets
@@ -33,11 +30,6 @@ type Inspector interface {
 	Secret(name string) (*core.Secret, bool)
 	IterateSecrets(action Action, filters ...Filter) error
 	SecretReadInterface() ReadInterface
-}
-
-// ReadInterface has methods to work with Secret resources with ReadOnly mode.
-type ReadInterface interface {
-	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
 }
 
 type Filter func(pod *core.Secret) bool

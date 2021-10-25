@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func createScaleUPMemberPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return createScaleMemberPlan(ctx, log, apiObject, spec, status, cachedStatus, context).Filter(filterScaleUP)
+}
+
 func createScaleMemberPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
@@ -41,25 +48,32 @@ func createScaleMemberPlan(ctx context.Context,
 	switch spec.GetMode() {
 	case api.DeploymentModeSingle:
 		// Never scale down
+		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, 1).Filter(filterScaleUP)...)
 	case api.DeploymentModeActiveFailover:
-		// Only scale singles
-		plan = append(plan, createScalePlan(log, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
+		// Only scale agents & singles
+		if a := status.Agency; a != nil && a.Size != nil {
+			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
+		}
+		plan = append(plan, createScalePlan(log, status, status.Members.Single, api.ServerGroupSingle, spec.Single.GetCount())...)
 	case api.DeploymentModeCluster:
-		// Scale dbservers, coordinators
-		plan = append(plan, createScalePlan(log, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
-		plan = append(plan, createScalePlan(log, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
+		// Scale agents, dbservers, coordinators
+		if a := status.Agency; a != nil && a.Size != nil {
+			plan = append(plan, createScalePlan(log, status, status.Members.Agents, api.ServerGroupAgents, int(*a.Size)).Filter(filterScaleUP)...)
+		}
+		plan = append(plan, createScalePlan(log, status, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount())...)
+		plan = append(plan, createScalePlan(log, status, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount())...)
 	}
 	if spec.GetMode().SupportsSync() {
 		// Scale syncmasters & syncworkers
-		plan = append(plan, createScalePlan(log, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
-		plan = append(plan, createScalePlan(log, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
+		plan = append(plan, createScalePlan(log, status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
+		plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
 	}
 
 	return plan
 }
 
 // createScalePlan creates a scaling plan for a single server group
-func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api.ServerGroup, count int) api.Plan {
+func createScalePlan(log zerolog.Logger, status api.DeploymentStatus, members api.MemberStatusList, group api.ServerGroup, count int) api.Plan {
 	var plan api.Plan
 	if len(members) < count {
 		// Scale up
@@ -75,7 +89,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 			Msg("Creating scale-up plan")
 	} else if len(members) > count {
 		// Note, we scale down 1 member at a time
-		if m, err := members.SelectMemberToRemove(); err != nil {
+		if m, err := members.SelectMemberToRemove(topologyMissingMemberToRemoveSelector(status.Topology), topologyAwarenessMemberToRemoveSelector(group, status.Topology)); err != nil {
 			log.Warn().Err(err).Str("role", group.AsRole()).Msg("Failed to select member to remove")
 		} else {
 
@@ -83,15 +97,7 @@ func createScalePlan(log zerolog.Logger, members api.MemberStatusList, group api
 				Str("member-id", m.ID).
 				Str("phase", string(m.Phase)).
 				Msg("Found member to remove")
-			if group == api.ServerGroupDBServers {
-				plan = append(plan,
-					api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
-				)
-			}
-			plan = append(plan,
-				api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
-				api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-			)
+			plan = append(plan, cleanOutMember(group, m)...)
 			log.Debug().
 				Int("count", count).
 				Int("actual-count", len(members)).
@@ -110,15 +116,15 @@ func createReplaceMemberPlan(ctx context.Context,
 
 	var plan api.Plan
 
-	// Replace is only allowed for DBServers
-	switch spec.GetMode() {
-	case api.DeploymentModeCluster:
-		status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
-			for _, member := range list {
-				if !plan.IsEmpty() {
-					return nil
-				}
-				if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+	// Replace is only allowed for Coordinators, DBServers & Agents
+	status.Members.ForeachServerInGroups(func(group api.ServerGroup, list api.MemberStatusList) error {
+		for _, member := range list {
+			if !plan.IsEmpty() {
+				return nil
+			}
+			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+				switch group {
+				case api.ServerGroupDBServers:
 					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
 						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
 						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
@@ -126,12 +132,31 @@ func createReplaceMemberPlan(ctx context.Context,
 						Str("role", group.AsRole()).
 						Msg("Creating replacement plan")
 					return nil
+				case api.ServerGroupCoordinators:
+					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID))
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
+					return nil
+				case api.ServerGroupAgents:
+					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID),
+						api.NewAction(api.ActionTypeAddMember, group, "").
+							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
+							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
+					log.Debug().
+						Str("role", group.AsRole()).
+						Msg("Creating replacement plan")
+					return nil
 				}
 			}
+		}
 
-			return nil
-		}, api.ServerGroupDBServers)
-	}
+		return nil
+	}, api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupCoordinators)
 
 	return plan
+}
+
+func filterScaleUP(a api.Action) bool {
+	return a.Type == api.ActionTypeAddMember
 }
