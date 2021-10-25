@@ -36,6 +36,10 @@ func AutoUpgrade() Builder {
 
 type autoUpgrade struct{}
 
+func (u autoUpgrade) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
 func (u autoUpgrade) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	return nil
 }

@@ -56,6 +56,10 @@ func TLS() Builder {
 
 type tls struct{}
 
+func (s tls) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
 func (s tls) Verify(i Input, cachedStatus interfaces.Inspector) error {
 	if !IsTLSEnabled(i) {
 		return nil

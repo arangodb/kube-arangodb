@@ -50,7 +50,6 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
-	"github.com/arangodb/go-driver"
 	"k8s.io/apimachinery/pkg/types"
   
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"

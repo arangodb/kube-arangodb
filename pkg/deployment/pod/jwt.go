@@ -60,6 +60,10 @@ func JWT() Builder {
 
 type jwt struct{}
 
+func (e jwt) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
 func (e jwt) Args(i Input) k8sutil.OptionPairs {
 	if !IsAuthenticated(i) {
 		// Without authentication
