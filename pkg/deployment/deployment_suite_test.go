@@ -62,7 +62,7 @@ import (
 const (
 	testNamespace                 = "default"
 	testDeploymentName            = "test"
-	testVersion                   = "3.5.2"
+	testVersion                   = "3.7.0"
 	testImage                     = "arangodb/arangodb:" + testVersion
 	testCASecretName              = "testCA"
 	testJWTSecretName             = "testJWT"

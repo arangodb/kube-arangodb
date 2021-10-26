@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package features
@@ -29,7 +30,7 @@ func init() {
 var upgradeVersionCheck Feature = &feature{
 	name:               "upgrade-version-check",
 	description:        "Enable initContainer with pre version check",
-	version:            "3.5.0",
+	version:            "3.6.0",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }
