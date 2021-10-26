@@ -51,7 +51,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
 	"k8s.io/apimachinery/pkg/types"
-  
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
