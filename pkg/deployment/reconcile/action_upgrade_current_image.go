@@ -67,11 +67,11 @@ func (a *setCurrentImageAction) Start(ctx context.Context) (bool, error) {
 func (a *setCurrentImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	log := a.log
 
-	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
+	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image, a.action.Group)
 	if !found {
 		return false, false, nil
 	}
-	if err := a.actionCtx.SetCurrentImage(ctx, imageInfo); err != nil {
+	if err := a.actionCtx.SetCurrentImage(ctx, imageInfo, a.action.Group); err != nil {
 		log.Error().Err(err).Msg("Unable to set current image")
 		return false, false, nil
 	}

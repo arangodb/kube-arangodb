@@ -258,12 +258,21 @@ func NewUpgradeNotAllowedEvent(apiObject APIObject,
 	return event
 }
 
-// NewErrorEvent creates an even of type error.
+// NewErrorEvent creates an event of type error.
 func NewErrorEvent(reason string, err error, apiObject APIObject) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeWarning
 	event.Reason = strings.Title(reason)
 	event.Message = err.Error()
+	return event
+}
+
+// NewArangoSyncNoStandaloneEvent creates an event with custom reason and message.
+func NewArangoSyncNoStandaloneEvent(apiObject APIObject) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeNormal
+	event.Reason = "arangosync standalone mode not available"
+	event.Message = "the version should be at least 2.7.0"
 	return event
 }
 

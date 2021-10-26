@@ -149,8 +149,9 @@ func (c *testContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context,
 	return &core.PodTemplateSpec{}, nil
 }
 
-func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
-	return c.SelectImage(spec, status)
+func (c *testContext) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, _ api.MemberStatus,
+	group api.ServerGroup) (api.ImageInfo, bool) {
+	return c.SelectImage(spec, status, group)
 }
 
 func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.PodTemplateSpec, error) {
@@ -213,7 +214,7 @@ func (c *testContext) SecretsInterface() secret.Interface {
 	panic("implement me")
 }
 
-func (c *testContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
+func (c *testContext) SelectImage(_ api.DeploymentSpec, _ api.DeploymentStatus, _ api.ServerGroup) (api.ImageInfo, bool) {
 	return api.ImageInfo{
 		Image:           "",
 		ImageID:         "",

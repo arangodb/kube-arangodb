@@ -41,29 +41,29 @@ func ConvertImageID2Image(imageID string) string {
 	return imageID
 }
 
-// GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod
+// GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod.
 func GetArangoDBImageIDFromPod(pod *corev1.Pod) string {
-	rawImageID := pod.Status.ContainerStatuses[0].ImageID
-	if len(pod.Status.ContainerStatuses) > 1 {
-		for _, containerStatus := range pod.Status.ContainerStatuses {
-			if strings.Contains(containerStatus.ImageID, "arango") {
-				rawImageID = containerStatus.ImageID
-			}
-		}
-	}
-	return ConvertImageID2Image(rawImageID)
+	return getImageIDFromPod(pod, "arango")
 }
 
-// GetArangoDBContainerFromPod returns the ArangoDB container from a pod
-func GetArangoDBContainerFromPod(pod *corev1.Pod) corev1.Container {
-	arangoc := pod.Spec.Containers[0]
-	if len(pod.Status.ContainerStatuses) > 1 {
-		for _, container := range pod.Spec.Containers {
-			if strings.Contains(container.Name, "server") {
-				arangoc = container
-			}
+// GetArangoSyncImageIDFromPod returns the ArangoSync specific image from a pod.
+func GetArangoSyncImageIDFromPod(pod *corev1.Pod, defaultImageID ...string) string {
+	return getImageIDFromPod(pod, "arangosync", defaultImageID...)
+}
+
+// GetImageIDFromPod returns the container's image ID for the given filter.
+func getImageIDFromPod(pod *corev1.Pod, filter string, defaultImageID ...string) string {
+	var imageID string
+
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		if strings.Contains(containerStatus.ImageID, filter) {
+			imageID = ConvertImageID2Image(containerStatus.ImageID)
 		}
 	}
 
-	return arangoc
+	if len(imageID) == 0 && len(defaultImageID) > 0 {
+		return defaultImageID[0]
+	}
+
+	return imageID
 }

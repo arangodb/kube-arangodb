@@ -175,7 +175,7 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 
 				groupSpec := d.apiObject.Spec.GetServerGroupSpec(group)
 
-				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last)
+				image, ok := d.resources.SelectImage(d.apiObject.Spec, d.status.last, group)
 				require.True(t, ok)
 
 				template, err := d.resources.RenderPodTemplateForMember(context.Background(), cache, d.apiObject.Spec, d.status.last, m.ID, image)

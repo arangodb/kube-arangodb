@@ -54,6 +54,12 @@ type DeploymentStatus struct {
 	// Image that is currently being used when new pods are created
 	CurrentImage *ImageInfo `json:"current-image,omitempty"`
 
+	// SyncImages holds a list of ArangoSync images with their ID and ArangoSync version.
+	SyncImages ImageInfoList `json:"arangosync-images,omitempty"`
+
+	// CurrentSyncImage is used when new arangosync pods are created.
+	CurrentSyncImage *ImageInfo `json:"current-sync-image,omitempty"`
+
 	// Members holds the status for all members in all server groups
 	Members DeploymentStatusMembers `json:"members"`
 
@@ -94,8 +100,10 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.ExporterServiceName == other.ExporterServiceName &&
 		ds.ExporterServiceMonitorName == other.ExporterServiceMonitorName &&
 		ds.Images.Equal(other.Images) &&
+		ds.SyncImages.Equal(other.SyncImages) &&
 		ds.Restore.Equal(other.Restore) &&
 		ds.CurrentImage.Equal(other.CurrentImage) &&
+		ds.CurrentSyncImage.Equal(other.CurrentSyncImage) &&
 		ds.Members.Equal(other.Members) &&
 		ds.Conditions.Equal(other.Conditions) &&
 		ds.Plan.Equal(other.Plan) &&

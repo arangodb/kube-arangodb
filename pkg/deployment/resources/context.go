@@ -87,9 +87,9 @@ type DeploymentPodRenderer interface {
 
 type DeploymentImageManager interface {
 	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
-	// SelectImage select currently used image by pod in member
-	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup) (api.ImageInfo, bool)
+	// SelectImageForMember selects currently used image by pod in member.
+	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) (api.ImageInfo, bool)
 }
 
 type DeploymentModInterfaces interface {

@@ -388,6 +388,10 @@ func createKeyfileRenewalPlanMode(
 			return nil
 		}
 
+		if !group.IsArangod() {
+			return nil
+		}
+
 		for _, member := range list {
 			if mode != api.TLSRotateModeInPlace {
 				return nil

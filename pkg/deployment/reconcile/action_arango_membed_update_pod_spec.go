@@ -99,7 +99,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 	groupSpec := spec.GetServerGroupSpec(a.action.Group)
 
-	imageInfo, imageFound := a.actionCtx.SelectImage(spec, status)
+	imageInfo, imageFound := a.actionCtx.SelectImage(spec, status, a.action.Group)
 	if !imageFound {
 		// Image is not found, so rotation is not needed
 		return true, nil

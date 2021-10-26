@@ -577,12 +577,13 @@ func (d *Deployment) RenderPodTemplateForMemberFromCurrent(ctx context.Context, 
 	return d.resources.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
 }
 
-func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
-	return d.resources.SelectImage(spec, status)
+func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup) (api.ImageInfo, bool) {
+	return d.resources.SelectImage(spec, status, group)
 }
 
-func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
-	return d.resources.SelectImageForMember(spec, status, member)
+func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus,
+	group api.ServerGroup) (api.ImageInfo, bool) {
+	return d.resources.SelectImageForMember(spec, status, member, group)
 }
 
 func (d *Deployment) GetArangoImage() string {

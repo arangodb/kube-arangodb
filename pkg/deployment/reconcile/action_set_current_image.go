@@ -67,7 +67,7 @@ func (a *setCurrentMemberImageAction) Start(ctx context.Context) (bool, error) {
 func (a *setCurrentMemberImageAction) CheckProgress(ctx context.Context) (bool, bool, error) {
 	log := a.log
 
-	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image)
+	imageInfo, found := a.actionCtx.GetImageInfo(a.action.Image, a.action.Group)
 	if !found {
 		log.Info().Msgf("Image not found")
 		return true, false, nil

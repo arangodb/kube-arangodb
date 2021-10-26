@@ -104,7 +104,7 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 
 	for n, c := range testCases {
 		t.Run(n, func(t *testing.T) {
-			c.verify(t, podNeedsUpgrading(log.Logger, c.status, c.spec, c.images))
+			c.verify(t, podNeedsUpgrading(log.Logger, c.status, c.spec.GetImage(), c.images))
 		})
 	}
 }
