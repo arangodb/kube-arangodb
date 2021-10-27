@@ -149,12 +149,8 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-	GetLifecycleImage() string
-	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-	GetOperatorUUIDImage() string
-	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
-	GetMetricsExporterImage() string
+	// GetOperatorImage returns the image name of operator image
+	GetOperatorImage() string
 	// GetArangoImage returns the image name containing the default arango image
 	GetArangoImage() string
 	// GetName returns the name of the deployment

@@ -20,10 +20,16 @@
 
 package v1
 
-import "k8s.io/apimachinery/pkg/types"
+const (
+	ServerGroupReservedContainerNameServer   = "server"
+	ServerGroupReservedContainerNameExporter = "exporter"
+)
 
-type TopologyMemberStatus struct {
-	ID    types.UID `json:"id"`
-	Zone  int       `json:"rack"`
-	Label string    `json:"label,omitempty"`
+func IsReservedServerGroupContainerName(name string) bool {
+	switch name {
+	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter:
+		return true
+	default:
+		return false
+	}
 }

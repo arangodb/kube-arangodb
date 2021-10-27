@@ -33,6 +33,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+
 	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +50,6 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 
-	"github.com/arangodb/go-driver"
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -56,10 +57,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
-
-func versionHasAdvertisedEndpoint(v driver.Version) bool {
-	return v.CompareTo("3.4.0") >= 0
-}
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
 func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input) ([]string, error) {
@@ -106,8 +103,6 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 
 	options.Merge(pod.SNI().Args(input))
 
-	versionHasAdvertisedEndpoint := versionHasAdvertisedEndpoint(input.Version)
-
 	endpoint, err := pod.GenerateMemberEndpoint(cachedStatus, input.ApiObject, input.Deployment, input.Group, input.Member)
 	if err != nil {
 		return nil, err
@@ -146,7 +141,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 		options.Add("--cluster.my-role", "COORDINATOR")
 		options.Add("--foxx.queues", input.Deployment.Features.GetFoxxQueues())
 		options.Add("--server.statistics", "true")
-		if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+		if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() {
 			options.Add("--cluster.my-advertised-endpoint", input.Deployment.ExternalAccess.GetAdvertisedEndpoint())
 		}
 	case api.ServerGroupSingle:
@@ -157,7 +152,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 			options.Add("--replication.automatic-failover", "true")
 			options.Add("--cluster.my-address", myTCPURL)
 			options.Add("--cluster.my-role", "SINGLE")
-			if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() && versionHasAdvertisedEndpoint {
+			if input.Deployment.ExternalAccess.HasAdvertisedEndpoint() {
 				options.Add("--cluster.my-advertised-endpoint", input.Deployment.ExternalAccess.GetAdvertisedEndpoint())
 			}
 		}
@@ -246,23 +241,6 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	}
 
 	return args
-}
-
-// CreatePodFinalizers creates a list of finalizers for a pod created for the given group.
-func (r *Resources) CreatePodFinalizers(group api.ServerGroup) []string {
-	var finalizers []string
-	if d := r.context.GetSpec().GetServerGroupSpec(group).ShutdownDelay; d != nil {
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
-	}
-
-	switch group {
-	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
-	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
-	}
-
-	return finalizers
 }
 
 // CreatePodTolerations creates a list of tolerations for a pod created for the given group.
@@ -512,7 +490,7 @@ func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.Dep
 }
 
 // createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
+func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
@@ -525,7 +503,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		return nil
 	}
 
-	template := member.Status.Template
+	template := arangoMember.Status.Template
 
 	if template == nil {
 		// Template not yet propagated
@@ -634,8 +612,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.PodSpecVersion = template.PodSpecChecksum
 	}
 
-	// Record new member phase
-	m.Phase = newPhase
+	member.GetPhaseExecutor().Execute(&m, api.Action{}, newPhase)
 
 	if status.Topology.Enabled() {
 		if m.Topology != nil && m.Topology.ID == status.Topology.ID {
@@ -645,7 +622,6 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		}
 	}
 
-	m.Upgrade = false
 	r.log.Info().Str("pod", m.PodName).Msgf("Updating member")
 	if err := status.Members.Update(m, group); err != nil {
 		return errors.WithStack(err)

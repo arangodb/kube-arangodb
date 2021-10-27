@@ -20,7 +20,7 @@
 // Author Adam Janikowski
 //
 
-package reconcile
+package member
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -31,24 +31,17 @@ type phaseMapFunc func(action api.Action, m *api.MemberStatus)
 type phaseMapTo map[api.MemberPhase]phaseMapFunc
 type phaseMap map[api.MemberPhase]phaseMapTo
 
+type PhaseExecutor interface {
+	Execute(m *api.MemberStatus, action api.Action, to api.MemberPhase) bool
+}
+
+func GetPhaseExecutor() PhaseExecutor {
+	return phase
+}
+
 var phase = phaseMap{
 	api.MemberPhaseNone: {
 		api.MemberPhasePending: func(action api.Action, m *api.MemberStatus) {
-			// Clean conditions
-			m.Conditions.Remove(api.ConditionTypeReady)
-			m.Conditions.Remove(api.ConditionTypeTerminated)
-			m.Conditions.Remove(api.ConditionTypeTerminating)
-			m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
-			m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
-			m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
-			m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
-			m.Conditions.Remove(api.ConditionTypePendingRestart)
-			m.Conditions.Remove(api.ConditionTypeRestart)
-			m.Conditions.Remove(api.ConditionTypePendingUpdate)
-			m.Conditions.Remove(api.ConditionTypeUpdating)
-			m.Conditions.Remove(api.ConditionTypeUpdateFailed)
-			m.Conditions.Remove(api.ConditionTypeCleanedOut)
-
 			// Change member RID
 			m.RID = uuid.NewUUID()
 
@@ -56,6 +49,35 @@ var phase = phaseMap{
 			m.PodUID = ""
 		},
 	},
+	api.MemberPhasePending: {
+		api.MemberPhaseCreated: func(action api.Action, m *api.MemberStatus) {
+			// Clean conditions
+			removeMemberConditionsMapFunc(m)
+		},
+		api.MemberPhaseUpgrading: func(action api.Action, m *api.MemberStatus) {
+			removeMemberConditionsMapFunc(m)
+		},
+	},
+}
+
+func removeMemberConditionsMapFunc(m *api.MemberStatus) {
+	// Clean conditions
+	m.Conditions.Remove(api.ConditionTypeReady)
+	m.Conditions.Remove(api.ConditionTypeTerminated)
+	m.Conditions.Remove(api.ConditionTypeTerminating)
+	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)
+	m.Conditions.Remove(api.ConditionTypeAutoUpgrade)
+	m.Conditions.Remove(api.ConditionTypeUpgradeFailed)
+	m.Conditions.Remove(api.ConditionTypePendingTLSRotation)
+	m.Conditions.Remove(api.ConditionTypePendingRestart)
+	m.Conditions.Remove(api.ConditionTypeRestart)
+	m.Conditions.Remove(api.ConditionTypePendingUpdate)
+	m.Conditions.Remove(api.ConditionTypeUpdating)
+	m.Conditions.Remove(api.ConditionTypeUpdateFailed)
+	m.Conditions.Remove(api.ConditionTypeCleanedOut)
+	m.Conditions.Remove(api.ConditionTypeTopologyAware)
+
+	m.Upgrade = false
 }
 
 func (p phaseMap) empty(action api.Action, m *api.MemberStatus) {

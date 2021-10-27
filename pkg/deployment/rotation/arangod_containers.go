@@ -26,9 +26,10 @@ package rotation
 import (
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 )
 
@@ -47,23 +48,29 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 		}
 
 		for id := range a {
-			if ac, bc := &a[id], &b[id]; ac.Name == k8sutil.ServerContainerName && ac.Name == bc.Name {
-				if !IsOnlyLogLevelChanged(ac.Command, bc.Command) {
-					continue
+			if ac, bc := &a[id], &b[id]; ac.Name == bc.Name {
+				if ac.Name == api.ServerGroupReservedContainerNameServer {
+					if !isOnlyLogLevelChanged(ac.Command, bc.Command) {
+						continue
+					}
+
+					plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
+						AddParam(ContainerName, ac.Name))
+
+					bc.Command = ac.Command
+					mode = mode.And(InPlaceRotation)
+				} else {
+					if ac.Image != bc.Image {
+						// Image changed
+						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).AddParam(ContainerName, ac.Name).AddParam(ContainerImage, ac.Image))
+
+						bc.Image = ac.Image
+						mode = mode.And(InPlaceRotation)
+					}
 				}
 
-				plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
-					AddParam(ContainerName, ac.Name))
-
-				bc.Command = ac.Command
-				mode = mode.And(InPlaceRotation)
-			} else if ac.Name == bc.Name {
-				if ac.Image != bc.Image {
-					// Image changed
-					plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).AddParam(ContainerName, ac.Name).AddParam(ContainerImage, ac.Image))
-
-					bc.Image = ac.Image
-					mode = mode.And(InPlaceRotation)
+				if api.IsReservedServerGroupContainerName(ac.Name) {
+					mode = mode.And(internalContainerLifecycleCompare(ac, bc))
 				}
 			}
 		}
@@ -116,9 +123,9 @@ func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGr
 	}
 }
 
-// IsOnlyLogLevelChanged returns true when status and spec log level arguments are different.
+// isOnlyLogLevelChanged returns true when status and spec log level arguments are different.
 // If any other argument than --log.level is different false is returned.
-func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
+func isOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
 	diff := util.DiffStrings(specArgs, statusArgs)
 	if len(diff) == 0 {
 		return false
@@ -131,4 +138,27 @@ func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
 	}
 
 	return true
+}
+
+func internalContainerLifecycleCompare(spec, status *core.Container) Mode {
+	if spec.Lifecycle == nil && status.Lifecycle == nil {
+		return SkippedRotation
+	}
+
+	if spec.Lifecycle == nil {
+		status.Lifecycle = nil
+		return SilentRotation
+	}
+
+	if status.Lifecycle == nil {
+		status.Lifecycle = spec.Lifecycle
+		return SilentRotation
+	}
+
+	if !equality.Semantic.DeepEqual(spec.Lifecycle, status.Lifecycle) {
+		status.Lifecycle = spec.Lifecycle.DeepCopy()
+		return SilentRotation
+	}
+
+	return SkippedRotation
 }

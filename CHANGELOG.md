@@ -1,6 +1,10 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Split & Unify Lifecycle management functionality
+- Drop support for ArangoDB <= 3.5 (versions already EOL)
+
+## [1.2.4](https://github.com/arangodb/kube-arangodb/tree/1.2.4) (2021-10-22)
 - Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation
 - Add "Short Names" feature
 - Switch ArangoDB Image Discovery process from Headless Service to Pod IP

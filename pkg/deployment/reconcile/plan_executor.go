@@ -145,6 +145,12 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 			Str("group", planAction.Group.AsRole()).
 			Str("member-id", planAction.MemberID)
 
+		if status, _ := d.context.GetStatus(); status.Members.ContainsID(planAction.MemberID) {
+			if member, _, ok := status.Members.ElementByID(planAction.MemberID); ok {
+				logContext = logContext.Str("phase", string(member.Phase))
+			}
+		}
+
 		for k, v := range planAction.Params {
 			logContext = logContext.Str(k, v)
 		}

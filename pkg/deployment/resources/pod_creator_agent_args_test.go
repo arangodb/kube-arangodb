@@ -18,11 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -37,6 +39,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type inspectorMock interface {
@@ -89,6 +93,7 @@ func (i inspectorMockStruct) Get(t *testing.T) inspectorInterface.Inspector {
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
 func TestCreateArangodArgsAgent(t *testing.T) {
+	jwtSecretFile := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{
@@ -138,7 +143,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
@@ -199,7 +204,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",
@@ -262,7 +267,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=tcp://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 			},
@@ -380,7 +385,7 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 				"--log.output=+",
 				"--server.authentication=true",
 				"--server.endpoint=ssl://[::]:8529",
-				"--server.jwt-secret=$(ARANGOD_JWT_SECRET)",
+				"--server.jwt-secret-keyfile=" + jwtSecretFile,
 				"--server.statistics=false",
 				"--server.storage-engine=rocksdb",
 				"--ssl.ecdh-curve=",

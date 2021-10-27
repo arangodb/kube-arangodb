@@ -216,7 +216,7 @@ func TestIsOnlyLogLevelChanged(t *testing.T) {
 
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
-			got := IsOnlyLogLevelChanged(testCase.args.specArgs, testCase.args.statusArgs)
+			got := isOnlyLogLevelChanged(testCase.args.specArgs, testCase.args.statusArgs)
 
 			assert.Equal(t, testCase.want, got)
 		})

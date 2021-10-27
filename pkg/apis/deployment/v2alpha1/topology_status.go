@@ -72,8 +72,7 @@ func (t *TopologyStatus) RegisterTopologyLabel(zone int, label string) bool {
 		return false
 	}
 
-	t.Zones[zone].Labels = append(t.Zones[zone].Labels, label)
-	t.Zones[zone].Labels.Sort()
+	t.Zones[zone].Labels = t.Zones[zone].Labels.Add(label).Sort()
 
 	return true
 }
@@ -125,9 +124,7 @@ func (t *TopologyStatusZone) AddMember(group ServerGroup, id string) {
 		t.Members = TopologyStatusZoneMembers{}
 	}
 
-	t.Members[group.AsRoleAbbreviated()] = append(t.Members[group.AsRoleAbbreviated()], id)
-
-	t.Members[group.AsRoleAbbreviated()].Sort()
+	t.Members[group.AsRoleAbbreviated()] = t.Members[group.AsRoleAbbreviated()].Add(id).Sort()
 }
 
 func (t *TopologyStatusZone) RemoveMember(group ServerGroup, id string) bool {
