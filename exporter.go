@@ -100,6 +100,20 @@ func cmdExporterCheckE() error {
 		return err
 	}
 
+	mon := exporter.NewMonitor(exporterInput.endpoint, func() (string, error) {
+		if exporterInput.jwtFile == "" {
+			return "", nil
+		}
+
+		data, err := ioutil.ReadFile(exporterInput.jwtFile)
+		if err != nil {
+			return "", err
+		}
+
+		return string(data), nil
+	}, false, 15*time.Second)
+	go mon.UpdateMonitorStatus()
+
 	exporter := exporter.NewExporter(exporterInput.listenAddress, "/metrics", p)
 	if exporterInput.keyfile != "" {
 		if e, err := exporter.WithKeyfile(exporterInput.keyfile); err != nil {
