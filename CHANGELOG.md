@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Split & Unify Lifecycle management functionality
 - Drop support for ArangoDB <= 3.5 (versions already EOL)
+- Add new admin commands to fetch agency dump and agency state
 
 ## [1.2.4](https://github.com/arangodb/kube-arangodb/tree/1.2.4) (2021-10-22)
 - Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation
