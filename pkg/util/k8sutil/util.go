@@ -46,6 +46,10 @@ const (
 	LabelKeyArangoExporter = "arango_exporter"
 	// LabelKeyArangoMember is the key of the label used to store the ArangoDeployment member ID in
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
+	// LabelKeyArangoZone is the key of the label used to store the ArangoDeployment zone ID in
+	LabelKeyArangoZone = "deployment.arangodb.com/zone"
+	// LabelKeyArangoTopology is the key of the label used to store the ArangoDeployment topology ID in
+	LabelKeyArangoTopology = "deployment.arangodb.com/topology"
 
 	// AppName is the fixed value for the "app" label
 	AppName = "arangodb"

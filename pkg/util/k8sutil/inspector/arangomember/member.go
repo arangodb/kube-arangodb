@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,13 +29,14 @@ import (
 
 type Inspector interface {
 	ArangoMember(name string) (*api.ArangoMember, bool)
-	IterateArangoMembers(action ArangoMemberAction, filters ...ArangoMemberFilter) error
+	IterateArangoMembers(action Action, filters ...Filter) error
+	ArangoMemberReadInterface() ReadInterface
 }
 
-type ArangoMemberFilter func(pod *api.ArangoMember) bool
-type ArangoMemberAction func(pod *api.ArangoMember) error
+type Filter func(pod *api.ArangoMember) bool
+type Action func(pod *api.ArangoMember) error
 
-func FilterByDeploymentUID(uid types.UID) ArangoMemberFilter {
+func FilterByDeploymentUID(uid types.UID) Filter {
 	return func(pod *api.ArangoMember) bool {
 		return pod.Spec.DeploymentUID == "" || pod.Spec.DeploymentUID == uid
 	}

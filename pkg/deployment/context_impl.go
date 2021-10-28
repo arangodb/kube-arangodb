@@ -31,6 +31,18 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
@@ -87,16 +99,15 @@ func (d *Deployment) GetServerGroupIterator() resources.ServerGroupIterator {
 	return d.apiObject
 }
 
-// GetKubeCli returns the kubernetes client
-func (d *Deployment) GetKubeCli() kubernetes.Interface {
+func (d *Deployment) getKubeCli() kubernetes.Interface {
 	return d.deps.KubeCli
 }
 
-func (d *Deployment) GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
+func (d *Deployment) getMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
 	return d.deps.KubeMonitoringCli
 }
 
-func (d *Deployment) GetArangoCli() versioned.Interface {
+func (d *Deployment) getArangoCli() versioned.Interface {
 	return d.deps.DatabaseCRCli
 }
 
@@ -104,14 +115,8 @@ func (d *Deployment) GetScope() scope.Scope {
 	return d.config.Scope
 }
 
-// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-func (d *Deployment) GetLifecycleImage() string {
-	return d.config.LifecycleImage
-}
-
-// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-func (d *Deployment) GetOperatorUUIDImage() string {
-	return d.config.OperatorUUIDInitImage
+func (d *Deployment) GetOperatorImage() string {
+	return d.config.OperatorImage
 }
 
 // GetNamespace returns the kubernetes namespace that contains
@@ -275,14 +280,9 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, nil
 	}
 
-	var secrets secret.ReadInterface = d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
-	if currentState := d.currentState; currentState != nil {
-		secrets = currentState.SecretReadInterface()
-	}
-
 	var secret string
 	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := secrets.Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
 		if err != nil {
 			return nil, errors.Newf("JWT Secret is missing")
 		}
@@ -294,7 +294,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 
 		secret = string(jwt)
 	} else {
-		s, err := secrets.Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
+		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
 		if err != nil {
 			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
 			return nil, errors.Newf("JWT Folder Secret is missing")
@@ -326,11 +326,8 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	// Fetch monitoring token
 	log := d.deps.Log
-	kubecli := d.deps.KubeCli
-	ns := d.GetNamespace()
-	secrets := kubecli.CoreV1().Secrets(ns)
 	secretName := d.apiObject.Spec.Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecret(ctx, secrets, secretName)
+	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().SecretReadInterface(), secretName)
 	if err != nil {
 		log.Debug().Err(err).Str("secret-name", secretName).Msg("Failed to get sync monitoring secret")
 		return nil, errors.WithStack(err)
@@ -361,19 +358,22 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 
 // CreateMember adds a new member to the given group.
 // If ID is non-empty, it will be used, otherwise a new ID is created.
-func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string) (string, error) {
+func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id string, mods ...reconcile.CreateMemberMod) (string, error) {
 	log := d.deps.Log
-	status, lastVersion := d.GetStatus()
-	id, err := createMember(log, &status, group, id, d.apiObject)
-	if err != nil {
-		log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
-		return "", errors.WithStack(err)
+	if err := d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
+		nid, err := createMember(log, s, group, id, d.apiObject, mods...)
+		if err != nil {
+			log.Debug().Err(err).Str("group", group.AsRole()).Msg("Failed to create member")
+			return false, errors.WithStack(err)
+		}
+
+		id = nid
+
+		return true, nil
+	}); err != nil {
+		return "", err
 	}
-	// Save added member
-	if err := d.UpdateStatus(ctx, status, lastVersion); err != nil {
-		log.Debug().Err(err).Msg("Updating CR status failed")
-		return "", errors.WithStack(err)
-	}
+
 	// Create event about it
 	d.CreateEvent(k8sutil.NewMemberAddEvent(id, group.AsRole(), d.apiObject))
 
@@ -382,19 +382,15 @@ func (d *Deployment) CreateMember(ctx context.Context, group api.ServerGroup, id
 
 // GetPod returns pod.
 func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
-
-	return d.deps.KubeCli.CoreV1().Pods(d.GetNamespace()).Get(ctxChild, podName, meta.GetOptions{})
+	return d.GetCachedStatus().PodReadInterface().Get(ctx, podName, meta.GetOptions{})
 }
 
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 	log := d.deps.Log
-	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, meta.DeleteOptions{})
+		return d.PodsModInterface().Delete(ctxChild, podName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")
@@ -408,11 +404,10 @@ func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 	log := d.deps.Log
 	podName := p.GetName()
-	ns := p.GetNamespace()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.deps.KubeCli.CoreV1().Pods(ns).Delete(ctxChild, podName, *options)
+		return d.PodsModInterface().Delete(ctxChild, podName, *options)
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to cleanup pod")
@@ -425,12 +420,10 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) error {
 	log := d.deps.Log
-	ns := d.GetNamespace()
-	kubecli := d.deps.KubeCli
 
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
-	p, err := kubecli.CoreV1().Pods(ns).Get(ctxChild, podName, meta.GetOptions{})
+	p, err := d.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, meta.GetOptions{})
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
 			return nil
@@ -438,7 +431,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 		return errors.WithStack(err)
 	}
 
-	err = k8sutil.RemovePodFinalizers(ctx, log, d.deps.KubeCli, p, p.GetFinalizers(), true)
+	err = k8sutil.RemovePodFinalizers(ctx, d.GetCachedStatus(), log, d.PodsModInterface(), p, p.GetFinalizers(), true)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -449,9 +442,8 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	log := d.deps.Log
-	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).Delete(ctxChild, pvcName, meta.DeleteOptions{})
+		return d.PersistentVolumeClaimsModInterface().Delete(ctxChild, pvcName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pvc", pvcName).Msg("Failed to remove pvc")
@@ -464,7 +456,7 @@ func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := d.GetKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace()).Update(ctxChild, pvc, meta.UpdateOptions{})
+		_, err := d.PersistentVolumeClaimsModInterface().Update(ctxChild, pvc, meta.UpdateOptions{})
 		return err
 	})
 	if err == nil {
@@ -481,16 +473,11 @@ func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeCl
 // GetOwnedPVCs returns a list of all PVCs owned by the deployment.
 func (d *Deployment) GetOwnedPVCs() ([]core.PersistentVolumeClaim, error) {
 	// Get all current PVCs
-	log := d.deps.Log
-	pvcs, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.GetNamespace()).List(context.Background(), k8sutil.DeploymentListOpt(d.GetName()))
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to list PVCs")
-		return nil, errors.WithStack(err)
-	}
-	myPVCs := make([]core.PersistentVolumeClaim, 0, len(pvcs.Items))
-	for _, p := range pvcs.Items {
-		if d.isOwnerOf(&p) {
-			myPVCs = append(myPVCs, p)
+	pvcs := d.GetCachedStatus().PersistentVolumeClaims()
+	myPVCs := make([]core.PersistentVolumeClaim, 0, len(pvcs))
+	for _, p := range pvcs {
+		if d.isOwnerOf(p) {
+			myPVCs = append(myPVCs, *p)
 		}
 	}
 	return myPVCs, nil
@@ -501,7 +488,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.Persiste
 	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
 	defer cancel()
 
-	pvc, err := d.deps.KubeCli.CoreV1().PersistentVolumeClaims(d.GetNamespace()).Get(ctxChild, pvcName, meta.GetOptions{})
+	pvc, err := d.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, pvcName, meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pvc-name", pvcName).Msg("Failed to get PVC")
 		return nil, errors.WithStack(err)
@@ -513,8 +500,7 @@ func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.Persiste
 // the given member.
 func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error) {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
-	secrets := d.deps.KubeCli.CoreV1().Secrets(d.GetNamespace())
-	result, err := k8sutil.GetTLSKeyfileSecret(secrets, secretName)
+	result, err := k8sutil.GetTLSKeyfileSecret(d.GetCachedStatus().SecretReadInterface(), secretName)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -525,9 +511,8 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
-	ns := d.GetNamespace()
 	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.deps.KubeCli.CoreV1().Secrets(ns).Delete(ctxChild, secretName, meta.DeleteOptions{})
+		return d.SecretsModInterface().Delete(ctxChild, secretName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
@@ -538,8 +523,7 @@ func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup
 // DeleteSecret removes the Secret with given name.
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteSecret(secretName string) error {
-	ns := d.GetNamespace()
-	if err := d.deps.KubeCli.CoreV1().Secrets(ns).Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
+	if err := d.SecretsModInterface().Delete(context.Background(), secretName, meta.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 		return errors.WithStack(err)
 	}
 	return nil
@@ -601,21 +585,21 @@ func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.De
 	return d.resources.SelectImageForMember(spec, status, member)
 }
 
-func (d *Deployment) GetMetricsExporterImage() string {
-	return d.config.MetricsExporterImage
-}
-
 func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
 	status, version := d.getStatus()
 
-	changed := action(&status)
+	changed, err := action(&status)
+
+	if err != nil {
+		return err
+	}
 
 	if !changed {
 		return nil
@@ -624,8 +608,42 @@ func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.Depl
 	return d.updateStatus(ctx, status, version, force...)
 }
 
-func (d *Deployment) SecretsInterface() k8sutil.SecretInterface {
-	return d.GetKubeCli().CoreV1().Secrets(d.GetNamespace())
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
+		return action(s), nil
+	}, force...)
+}
+
+func (d *Deployment) SecretsModInterface() secret.ModInterface {
+	return d.getKubeCli().CoreV1().Secrets(d.GetNamespace())
+}
+
+func (d *Deployment) PodsModInterface() podMod.ModInterface {
+	return d.getKubeCli().CoreV1().Pods(d.GetNamespace())
+}
+
+func (d *Deployment) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	return d.getKubeCli().CoreV1().ServiceAccounts(d.GetNamespace())
+}
+
+func (d *Deployment) ServicesModInterface() service.ModInterface {
+	return d.getKubeCli().CoreV1().Services(d.GetNamespace())
+}
+
+func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	return d.getKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace())
+}
+
+func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	return d.getKubeCli().PolicyV1beta1().PodDisruptionBudgets(d.GetNamespace())
+}
+
+func (d *Deployment) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	return d.getMonitoringV1Cli().ServiceMonitors(d.GetNamespace())
+}
+
+func (d *Deployment) ArangoMembersModInterface() arangomember.ModInterface {
+	return d.getArangoCli().DatabaseV1().ArangoMembers(d.GetNamespace())
 }
 
 func (d *Deployment) GetName() string {
@@ -633,18 +651,12 @@ func (d *Deployment) GetName() string {
 }
 
 func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
-	defer cancel()
+	pods := d.GetCachedStatus().Pods()
 
-	pods, err := d.GetKubeCli().CoreV1().Pods(d.GetNamespace()).List(ctxChild, meta.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
+	podList := make([]core.Pod, 0, len(pods))
 
-	podList := make([]core.Pod, 0, len(pods.Items))
-
-	for _, p := range pods.Items {
-		if !d.isOwnerOf(&p) {
+	for _, p := range pods {
+		if !d.isOwnerOf(p) {
 			continue
 		}
 		c := p.DeepCopy()
@@ -655,7 +667,11 @@ func (d *Deployment) GetOwnedPods(ctx context.Context) ([]core.Pod, error) {
 }
 
 func (d *Deployment) GetCachedStatus() inspectorInterface.Inspector {
-	return d.currentState
+	if c := d.currentState; c != nil {
+		return c
+	}
+
+	return inspector.NewEmptyInspector()
 }
 
 func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {

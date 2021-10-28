@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,11 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
-package reconcile
+package pod
+
+func Topology() Builder {
+	return topology{}
+}
+
+type topology struct{}

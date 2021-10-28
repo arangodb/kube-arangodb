@@ -85,8 +85,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
-				kubecli := r.context.GetKubeCli()
-				err := k8sutil.RemovePodFinalizers(ctx, log, kubecli, pod, pod.GetFinalizers(), false)
+				err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), pod, pod.GetFinalizers(), false)
 				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
 					return errors.WithStack(err)
@@ -188,7 +187,21 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
-				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready to true")
+				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready & Initialised to true")
+
+				if status.Topology.IsTopologyOwned(memberStatus.Topology) {
+					nodes, ok := cachedStatus.GetNodes()
+					if ok {
+						node, ok := nodes.Node(pod.Spec.NodeName)
+						if ok {
+							label, ok := node.Labels[status.Topology.Label]
+							if ok {
+								memberStatus.Topology.Label = label
+							}
+						}
+					}
+				}
+
 				memberStatus.IsInitialized = true // Require future pods for this member to have an existing UUID (in case of dbserver).
 				updateMemberStatusNeeded = true
 				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)

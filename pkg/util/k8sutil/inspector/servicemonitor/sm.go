@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,9 @@ import monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/m
 
 type Inspector interface {
 	ServiceMonitor(name string) (*monitoring.ServiceMonitor, bool)
-	IterateServiceMonitors(action ServiceMonitorAction, filters ...ServiceMonitorFilter) error
+	IterateServiceMonitors(action Action, filters ...Filter) error
+	ServiceMonitorReadInterface() ReadInterface
 }
 
-type ServiceMonitorFilter func(serviceMonitor *monitoring.ServiceMonitor) bool
-type ServiceMonitorAction func(serviceMonitor *monitoring.ServiceMonitor) error
+type Filter func(serviceMonitor *monitoring.ServiceMonitor) bool
+type Action func(serviceMonitor *monitoring.ServiceMonitor) error

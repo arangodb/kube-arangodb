@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+
 	// ConditionTypeCleanedOut indicates that the member (dbserver) has been cleaned out.
 	// Always check in combination with ConditionTypeTerminated.
 	ConditionTypeCleanedOut ConditionType = "CleanedOut"
@@ -51,16 +52,9 @@ const (
 	ConditionTypeAgentRecoveryNeeded ConditionType = "AgentRecoveryNeeded"
 	// ConditionTypePodSchedulingFailure indicates that one or more pods belonging to the deployment cannot be schedule.
 	ConditionTypePodSchedulingFailure ConditionType = "PodSchedulingFailure"
-	// ConditionTypeSecretsChanged indicates that the value of one of more secrets used by
-	// the deployment have changed. Once that is the case, the operator will no longer
-	// touch the deployment, until the original secrets have been restored.
-	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 	// ConditionTypeMemberOfCluster indicates that the member is a known member of the ArangoDB cluster.
 	ConditionTypeMemberOfCluster ConditionType = "MemberOfCluster"
-	// ConditionTypeBootstrapCompleted indicates that the initial cluster bootstrap has been completed.
-	ConditionTypeBootstrapCompleted ConditionType = "BootstrapCompleted"
-	// ConditionTypeBootstrapSucceded indicates that the initial cluster bootstrap completed successfully.
-	ConditionTypeBootstrapSucceded ConditionType = "BootstrapSucceded"
+
 	// ConditionTypeTerminating indicates that the member is terminating but not yet terminated.
 	ConditionTypeTerminating ConditionType = "Terminating"
 	// ConditionTypeTerminating indicates that the deployment is up to date.
@@ -69,20 +63,27 @@ const (
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
+
 	// ConditionTypeMaintenanceMode indicates that Maintenance is enabled
 	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
+
 	// ConditionTypePendingRestart indicates that restart is required
 	ConditionTypePendingRestart ConditionType = "PendingRestart"
 	// ConditionTypeRestart indicates that restart will be started
 	ConditionTypeRestart ConditionType = "Restart"
+
 	// ConditionTypePendingTLSRotation indicates that TLS rotation is pending
 	ConditionTypePendingTLSRotation ConditionType = "PendingTLSRotation"
+
 	// ConditionTypePendingUpdate indicates that runtime update is pending
 	ConditionTypePendingUpdate ConditionType = "PendingUpdate"
 	// ConditionTypeUpdating indicates that runtime update is in progress
 	ConditionTypeUpdating ConditionType = "Updating"
 	// ConditionTypeUpdateFailed indicates that runtime update failed
 	ConditionTypeUpdateFailed ConditionType = "UpdateFailed"
+
+	// ConditionTypeTopologyAware indicates that the member is deployed with TopologyAwareness.
+	ConditionTypeTopologyAware ConditionType = "TopologyAware"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

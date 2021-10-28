@@ -29,9 +29,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
@@ -183,13 +183,12 @@ func TestEnsureImages(t *testing.T) {
 					},
 				}
 
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
-				require.NoError(t, err)
-				require.Len(t, pods.Items, 1)
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 1)
 			},
 		},
 		{
@@ -208,13 +207,12 @@ func TestEnsureImages(t *testing.T) {
 						Phase: v1.PodFailed,
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
-				require.NoError(t, err)
-				require.Len(t, pods.Items, 0)
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 0)
 			},
 		},
 		{
@@ -238,13 +236,12 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
-				require.NoError(t, err)
-				require.Len(t, pods.Items, 1)
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 1)
 			},
 		},
 		{
@@ -269,13 +266,12 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
-				require.NoError(t, err)
-				require.Len(t, pods.Items, 1)
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 1)
 			},
 		},
 		{
@@ -303,13 +299,12 @@ func TestEnsureImages(t *testing.T) {
 						},
 					},
 				}
-				_, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).Create(context.Background(), &pod, metav1.CreateOptions{})
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
 				require.NoError(t, err)
 			},
 			After: func(t *testing.T, deployment *Deployment) {
-				pods, err := deployment.GetKubeCli().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
-				require.NoError(t, err)
-				require.Len(t, pods.Items, 1)
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 1)
 			},
 		},
 	}
@@ -318,7 +313,7 @@ func TestEnsureImages(t *testing.T) {
 		//nolint:scopelint
 		t.Run(testCase.Name, func(t *testing.T) {
 			// Arrange
-			d, _ := createTestDeployment(Config{}, testCase.ArangoDeployment)
+			d, _ := createTestDeployment(t, Config{}, testCase.ArangoDeployment)
 
 			d.status.last = api.DeploymentStatus{
 				Images: createTestImages(false),
@@ -326,6 +321,7 @@ func TestEnsureImages(t *testing.T) {
 
 			if testCase.Before != nil {
 				testCase.Before(t, d)
+				require.NoError(t, d.GetCachedStatus().Refresh(context.Background()))
 			}
 
 			// Create custom resource in the fake kubernetes API
@@ -354,6 +350,8 @@ func TestEnsureImages(t *testing.T) {
 				require.Len(t, ownerRef, 1)
 				require.Equal(t, ownerRef[0], testCase.ArangoDeployment.AsOwner())
 			}
+
+			require.NoError(t, d.GetCachedStatus().Refresh(context.Background()))
 
 			if testCase.After != nil {
 				testCase.After(t, d)

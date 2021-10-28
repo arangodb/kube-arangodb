@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 
 	g := generator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 
-	if m, p, err := compareFuncs(b, g(podCompare), g(containersCompare), g(initContainersCompare)); err != nil {
+	if m, p, err := compareFuncs(b, g(podCompare), g(affinityCompare), g(containersCompare), g(initContainersCompare)); err != nil {
 		log.Err(err).Msg("Error while getting pod diff")
 		return SkippedRotation, nil, err
 	} else {

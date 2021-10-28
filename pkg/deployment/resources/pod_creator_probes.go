@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package resources
@@ -289,18 +290,8 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 }
 
 func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	localPath := "/_api/version"
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		localPath = "/_admin/echo"
-	}
-
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		localPath = "/_admin/server/availability"
-	}
-
-	args, err := r.probeCommand(spec, localPath)
+	args, err := r.probeCommand(spec, "/_admin/server/availability")
 	if err != nil {
 		return nil, err
 	}
@@ -313,16 +304,8 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 }
 
 func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	localPath := "/_api/version"
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		localPath = "/_admin/echo"
-	}
-
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		localPath = "/_admin/server/availability"
-	}
+	localPath := "/_admin/server/availability"
 
 	authorization := ""
 	if spec.IsAuthenticated() {

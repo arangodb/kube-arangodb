@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,14 +81,21 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 	}
 
 	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+		// Adjust topology settings
+		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
+		// Define topology
+		ApplyIfEmpty(createTopologyEnablementPlan).
+		ApplyIfEmpty(createTopologyUpdatePlan).
+		// Check for scale up
+		ApplyIfEmpty(createScaleUPMemberPlan).
 		// Check for failed members
 		ApplyIfEmpty(createMemberFailedRestorePlan).
+		// Check for scale up/down
+		ApplyIfEmpty(createScaleMemberPlan).
 		// Update status
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyStatusUpdate).
 		ApplyIfEmpty(createTLSStatusUpdate).
 		ApplyIfEmpty(createJWTStatusUpdate).
-		// Check for scale up/down
-		ApplyIfEmpty(createScaleMemberPlan).
 		// Check for cleaned out dbserver in created state
 		ApplyIfEmpty(createRemoveCleanedDBServersPlan).
 		// Check for members to be removed
@@ -104,6 +111,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan).
 		ApplyIfEmpty(createKeyfileRenewalPlan).
 		ApplyIfEmpty(createRotateServerStoragePlan).
+		ApplyIfEmpty(createRotateServerStorageResizePlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan).
 		ApplyIfEmpty(createRestorePlan).
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan).

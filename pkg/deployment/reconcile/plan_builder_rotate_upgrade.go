@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -188,7 +188,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			}
 
 			if pod.Annotations != nil {
-				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && (group == api.ServerGroupDBServers || group == api.ServerGroupAgents) {
+				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && (group == api.ServerGroupDBServers || group == api.ServerGroupAgents || group == api.ServerGroupCoordinators) {
 					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 						newPlan = api.Plan{api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID, "Replace flag present")}
 						continue

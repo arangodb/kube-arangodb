@@ -88,7 +88,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 		secret = s
 	}
 
-	sha, d, exists, err := pod.GetEncryptionKey(ctx, a.actionCtx.SecretsInterface(), secret)
+	sha, d, exists, err := pod.GetEncryptionKey(ctx, a.actionCtx.GetCachedStatus().SecretReadInterface(), secret)
 	if err != nil {
 		a.log.Error().Err(err).Msgf("Unable to fetch current encryption key")
 		return true, nil
@@ -108,7 +108,7 @@ func (a *encryptionKeyAddAction) Start(ctx context.Context) (bool, error) {
 	}
 
 	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		_, err := a.actionCtx.SecretsInterface().Patch(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
+		_, err := a.actionCtx.SecretsModInterface().Patch(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetAPIObject().GetName()), types.JSONPatchType, patch, meta.PatchOptions{})
 		return err
 	})
 	if err != nil {

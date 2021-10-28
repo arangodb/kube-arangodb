@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
@@ -35,7 +37,7 @@ func init() {
 }
 
 const (
-	ActionTypeMemberPhaseUpdatePhaseKey string = "phase"
+	actionTypeMemberPhaseUpdatePhaseKey string = "phase"
 )
 
 func newMemberPhaseUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
@@ -60,25 +62,22 @@ func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	phaseString, ok := a.action.Params[ActionTypeMemberPhaseUpdatePhaseKey]
+	phaseString, ok := a.action.Params[actionTypeMemberPhaseUpdatePhaseKey]
 	if !ok {
 		log.Error().Msg("Phase not defined")
 		return true, nil
 	}
 
-	phase, ok := api.GetPhase(phaseString)
+	p, ok := api.GetPhase(phaseString)
 	if !ok {
-		log.Error().Msgf("Phase %s unknown", phase)
+		log.Error().Msgf("Phase %s unknown", p)
 		return true, nil
 	}
 
-	if m.Phase == phase {
-		return true, nil
-	}
-
-	m.Phase = phase
-	if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
-		return false, errors.WithStack(err)
+	if member.GetPhaseExecutor().Execute(&m, a.action, p) {
+		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
+			return false, errors.WithStack(err)
+		}
 	}
 
 	return true, nil

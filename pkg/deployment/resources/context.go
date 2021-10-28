@@ -26,9 +26,14 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
@@ -52,9 +57,12 @@ type ServerGroupIterator interface {
 	ForeachServerGroup(cb api.ServerGroupFunc, status *api.DeploymentStatus) error
 }
 
+type DeploymentStatusUpdateErrFunc func(s *api.DeploymentStatus) (bool, error)
 type DeploymentStatusUpdateFunc func(s *api.DeploymentStatus) bool
 
 type DeploymentStatusUpdate interface {
+	// WithStatusUpdateErr update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	WithStatusUpdateErr(ctx context.Context, action DeploymentStatusUpdateErrFunc, force ...bool) error
 	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	WithStatusUpdate(ctx context.Context, action DeploymentStatusUpdateFunc, force ...bool) error
 }
@@ -84,13 +92,30 @@ type DeploymentImageManager interface {
 	SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool)
 }
 
-type DeploymentCLIGetter interface {
-	// GetKubeCli returns the kubernetes client
-	GetKubeCli() kubernetes.Interface
-	// GetMonitoringV1Cli returns monitoring client
-	GetMonitoringV1Cli() monitoringClient.MonitoringV1Interface
-	// GetArangoCli returns the Arango CRD client
-	GetArangoCli() versioned.Interface
+type DeploymentModInterfaces interface {
+	// SecretsModInterface define secret modification interface
+	SecretsModInterface() secret.ModInterface
+	// PodModInterface define pod modification interface
+	PodsModInterface() pod.ModInterface
+	// ServiceAccountModInterface define serviceaccounts modification interface
+	ServiceAccountsModInterface() serviceaccount.ModInterface
+	// ServicesModInterface define services modification interface
+	ServicesModInterface() service.ModInterface
+	// PersistentVolumeClaimsModInterface define persistentvolumeclaims modification interface
+	PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface
+	// PodDisruptionBudgetsModInterface define poddisruptionbudgets modification interface
+	PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface
+
+	// ServiceMonitorModInterface define servicemonitor modification interface
+	ServiceMonitorsModInterface() servicemonitor.ModInterface
+
+	// ArangoMembersModInterface define arangomembers modification interface
+	ArangoMembersModInterface() arangomember.ModInterface
+}
+
+type DeploymentCachedStatus interface {
+	// GetCachedStatus current cached state of deployment
+	GetCachedStatus() inspectorInterface.Inspector
 }
 
 type ArangoMemberUpdateFunc func(obj *api.ArangoMember) bool
@@ -110,7 +135,8 @@ type Context interface {
 	DeploymentAgencyMaintenance
 	ArangoMemberContext
 	DeploymentImageManager
-	DeploymentCLIGetter
+	DeploymentModInterfaces
+	DeploymentCachedStatus
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -123,12 +149,8 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-	GetLifecycleImage() string
-	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-	GetOperatorUUIDImage() string
-	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
-	GetMetricsExporterImage() string
+	// GetOperatorImage returns the image name of operator image
+	GetOperatorImage() string
 	// GetArangoImage returns the image name containing the default arango image
 	GetArangoImage() string
 	// GetName returns the name of the deployment
@@ -160,6 +182,5 @@ type Context interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	GetScope() scope.Scope
 
-	GetCachedStatus() inspectorInterface.Inspector
 	SetCachedStatus(i inspectorInterface.Inspector)
 }

@@ -100,7 +100,7 @@ func TestEnsurePod_Sync_Error(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Monitoring token secret validation failed: secrets \"" +
@@ -134,7 +134,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.TLS.GetCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Failed to create TLS keyfile secret: secrets \"" +
@@ -162,7 +162,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Cluster JWT secret validation failed: secrets \"" +
@@ -190,13 +190,14 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				}
 
 				secretName := testCase.ArangoDeployment.Spec.Sync.Authentication.GetClientCASecretName()
-				err := deployment.GetKubeCli().CoreV1().Secrets(testNamespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
+				err := deployment.SecretsModInterface().Delete(context.Background(), secretName, metav1.DeleteOptions{})
 				require.NoError(t, err)
 			},
 			ExpectedError: errors.New("Client authentication CA certificate secret validation failed: " +
 				"secrets \"" + testDeploymentName + "-sync-client-auth-ca\" not found"),
 		},
 		{
+			DropInit: true,
 			Name: "Sync Master Pod with authentication, monitoring, tls, service account, node selector, " +
 				"liveness probe, priority class name, resource requirements",
 			ArangoDeployment: &api.ArangoDeployment{
@@ -227,7 +228,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -237,10 +238,14 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			ExpectedPod: core.Pod{
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
+						k8sutil.LifecycleVolume(),
 						createTestTLSVolume(api.ServerGroupSyncMastersString, firstSyncMaster.ID),
 						k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName, "test-sync-client-auth-ca"),
 						k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, "test-sync-jwt"),
 						k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, testJWTSecretName),
+					},
+					InitContainers: []core.Container{
+						createTestLifecycleContainer(emptyResources),
 					},
 					Containers: []core.Container{
 						{
@@ -251,11 +256,17 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							Env: []core.EnvVar{
 								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
 									testDeploymentName+"-sync-mt", constants.SecretKeyToken),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
+								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(),
 							Resources:       resourcesUnfiltered,
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
+								k8sutil.LifecycleVolumeMount(),
 								k8sutil.TlsKeyfileVolumeMount(),
 								k8sutil.ClientAuthCACertificateVolumeMount(),
 								k8sutil.MasterJWTVolumeMount(),
@@ -277,9 +288,10 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			},
 		},
 		{
-			Name: "Sync Master Pod with lifecycle, license, monitoring without authentication and alpine",
+			DropInit: true,
+			Name:     "Sync Master Pod with lifecycle, license, monitoring without authentication and alpine",
 			config: Config{
-				LifecycleImage: testImageLifecycle,
+				OperatorImage: testImageOperator,
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -306,7 +318,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -372,10 +384,11 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 func TestEnsurePod_Sync_Worker(t *testing.T) {
 	testCases := []testCaseStruct{
 		{
+			DropInit: true,
 			Name: "Sync Worker Pod with monitoring, service account, node selector, lifecycle, license " +
 				"liveness probe, priority class name, resource requirements without alpine",
 			config: Config{
-				LifecycleImage: testImageLifecycle,
+				OperatorImage: testImageOperator,
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -408,7 +421,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(
@@ -440,8 +453,8 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
 							},
-							Lifecycle:       createTestLifecycle(),
 							ImagePullPolicy: core.PullIfNotPresent,
+							Lifecycle:       createTestLifecycle(),
 							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{

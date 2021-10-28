@@ -32,7 +32,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -60,9 +59,8 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
 
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+				k8sutil.CreateEncryptionKeySecret(deployment.SecretsModInterface(), testRocksDBEncryptionKey, key)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -127,9 +125,8 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupDBServers, firstDBServerStatus)
 				testCase.ExpectedPod.ObjectMeta.Labels[k8sutil.LabelKeyArangoExporter] = testYes
 
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+				k8sutil.CreateEncryptionKeySecret(deployment.SecretsModInterface(), testRocksDBEncryptionKey, key)
 
 				authorization, err := createTestToken(deployment, testCase, []string{"/_api/version"})
 				require.NoError(t, err)
@@ -138,7 +135,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					authorization, k8sutil.ArangoPort)
 			},
 			config: Config{
-				LifecycleImage: testImageLifecycle,
+				OperatorImage: testImageOperator,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -156,17 +153,9 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
-							Image:   testImage,
-							Command: createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
-							Env: []core.EnvVar{
-								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-									testLicense, constants.SecretKeyToken),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
-							},
+							Name:            k8sutil.ServerContainerName,
+							Image:           testImage,
+							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
 							Ports:           createTestPorts(),
 							Lifecycle:       createTestLifecycle(),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
@@ -218,9 +207,8 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
 
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+				k8sutil.CreateEncryptionKeySecret(deployment.SecretsModInterface(), testRocksDBEncryptionKey, key)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{
@@ -282,9 +270,8 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupAgents, firstAgentStatus)
 
-				secrets := deployment.GetKubeCli().CoreV1().Secrets(testNamespace)
 				key := make([]byte, 32)
-				k8sutil.CreateEncryptionKeySecret(secrets, testRocksDBEncryptionKey, key)
+				k8sutil.CreateEncryptionKeySecret(deployment.SecretsModInterface(), testRocksDBEncryptionKey, key)
 			},
 			ExpectedEvent: "member agent is created",
 			ExpectedPod: core.Pod{

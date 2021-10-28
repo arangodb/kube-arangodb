@@ -29,7 +29,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 
@@ -57,7 +62,7 @@ import (
 const (
 	testNamespace                 = "default"
 	testDeploymentName            = "test"
-	testVersion                   = "3.5.2"
+	testVersion                   = "3.7.0"
 	testImage                     = "arangodb/arangodb:" + testVersion
 	testCASecretName              = "testCA"
 	testJWTSecretName             = "testJWT"
@@ -67,8 +72,7 @@ const (
 	testLicense                   = "testLicense"
 	testServiceAccountName        = "testServiceAccountName"
 	testPriorityClassName         = "testPriority"
-	testImageLifecycle            = "arangodb/kube-arangodb:0.3.16"
-	testImageOperatorUUIDInit     = "image/test-1234:3.7"
+	testImageOperator             = "arangodb/kube-arangodb:0.3.16"
 
 	testYes = "yes"
 )
@@ -88,6 +92,7 @@ type testCaseStruct struct {
 	ExpectedEvent    string
 	ExpectedPod      core.Pod
 	Features         testCaseFeatures
+	DropInit         bool
 }
 
 func createTestTLSVolume(serverGroupString, ID string) core.Volume {
@@ -103,7 +108,7 @@ func createTestLifecycle() *core.Lifecycle {
 func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []string) (string, error) {
 
 	name := testCase.ArangoDeployment.Spec.Authentication.GetJWTSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetKubeCli().CoreV1().Secrets(testNamespace), name)
+	s, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().SecretReadInterface(), name)
 	if err != nil {
 		return "", err
 	}
@@ -443,7 +448,7 @@ func createTestCommandForSyncWorker(name string, tls, monitoring bool) []string 
 	return command
 }
 
-func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment) (*Deployment, *recordfake.FakeRecorder) {
+func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.ArangoDeployment) (*Deployment, *recordfake.FakeRecorder) {
 
 	eventRecorder := recordfake.NewFakeRecorder(10)
 	kubernetesClientSet := fake.NewSimpleClientset()
@@ -483,6 +488,10 @@ func createTestDeployment(config Config, arangoDeployment *api.ArangoDeployment)
 		stopCh:    make(chan struct{}),
 	}
 	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
+	require.NoError(t, err)
+	d.SetCachedStatus(cachedStatus)
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())
 	d.resources = resources.NewResources(deps.Log, d)
@@ -529,7 +538,7 @@ func createTestLifecycleContainer(resources core.ResourceRequirements) core.Cont
 
 	return core.Container{
 		Name:    "init-lifecycle",
-		Image:   testImageLifecycle,
+		Image:   testImageOperator,
 		Command: []string{binaryPath, "lifecycle", "copy", "--target", "/lifecycle/tools"},
 		VolumeMounts: []core.VolumeMount{
 			k8sutil.LifecycleVolumeMount(),
@@ -543,7 +552,7 @@ func createTestLifecycleContainer(resources core.ResourceRequirements) core.Cont
 func createTestAlpineContainer(name string, requireUUID bool) core.Container {
 	binaryPath, _ := os.Executable()
 	var securityContext api.ServerGroupSpecSecurityContext
-	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperatorUUIDInit, requireUUID, securityContext.NewSecurityContext())
+	return k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, requireUUID, securityContext.NewSecurityContext())
 }
 
 func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group api.ServerGroup,
@@ -559,7 +568,7 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		OwnerReferences: []metav1.OwnerReference{
 			testCase.ArangoDeployment.AsOwner(),
 		},
-		Finalizers: deployment.resources.CreatePodFinalizers(group),
+		Finalizers: finalizers(group),
 	}
 
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
@@ -570,5 +579,177 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		member.Image = deployment.apiObject.Status.CurrentImage
 
 		deployment.apiObject.Status.Members.Update(member, group)
+	}
+}
+
+func finalizers(group api.ServerGroup) []string {
+	var finalizers []string
+	switch group {
+	case api.ServerGroupAgents:
+		finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+	case api.ServerGroupDBServers:
+		finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+	}
+
+	return finalizers
+}
+
+func defaultPodAppender(t *testing.T, pod *core.Pod, f ...func(t *testing.T, p *core.Pod)) *core.Pod {
+	n := pod.DeepCopy()
+
+	for _, a := range f {
+		a(t, n)
+	}
+
+	return n
+}
+
+func podDataSort() func(t *testing.T, p *core.Pod) {
+	sortVolumes := map[string]int{
+		"rocksdb-encryption": -1,
+		"cluster-jwt":        1,
+		"tls-keyfile":        -2,
+		"arangod-data":       -3,
+		"exporter-jwt":       0,
+		"lifecycle":          2,
+		"uuid":               3,
+		"volume":             40,
+		"volume2":            40,
+	}
+	sortVolumeMounts := map[string]int{
+		"tls-keyfile":        1,
+		"arangod-data":       -1,
+		"lifecycle":          0,
+		"cluster-jwt":        5,
+		"rocksdb-encryption": 4,
+		"volume":             40,
+		"volume2":            40,
+	}
+	sortInitContainers := map[string]int{
+		"init-lifecycle": 0,
+		"uuid":           1,
+	}
+
+	return func(t *testing.T, p *core.Pod) {
+		sort.Slice(p.Spec.Volumes, func(i, j int) bool {
+			av, ak := sortVolumes[p.Spec.Volumes[i].Name]
+			if strings.HasPrefix(p.Spec.Volumes[i].Name, "sni-") {
+				av = 100
+				ak = true
+			}
+			bv, bk := sortVolumes[p.Spec.Volumes[j].Name]
+			if strings.HasPrefix(p.Spec.Volumes[j].Name, "sni-") {
+				bv = 100
+				bk = true
+			}
+
+			if !ak && !bk {
+				return false
+			}
+
+			if !ak {
+				return true
+			}
+
+			if !bk {
+				return false
+			}
+
+			return av < bv
+		})
+
+		if len(p.Spec.Containers) > 0 {
+			sort.Slice(p.Spec.Containers[0].VolumeMounts, func(i, j int) bool {
+				av, ak := sortVolumeMounts[p.Spec.Containers[0].VolumeMounts[i].Name]
+				if strings.HasPrefix(p.Spec.Containers[0].VolumeMounts[i].Name, "sni-") {
+					av = 100
+					ak = true
+				}
+				bv, bk := sortVolumeMounts[p.Spec.Containers[0].VolumeMounts[j].Name]
+				if strings.HasPrefix(p.Spec.Containers[0].VolumeMounts[j].Name, "sni-") {
+					bv = 100
+					bk = true
+				}
+
+				if !ak && !bk {
+					return false
+				}
+
+				if !ak {
+					return true
+				}
+
+				if !bk {
+					return false
+				}
+
+				return av < bv
+			})
+		}
+
+		sort.Slice(p.Spec.InitContainers, func(i, j int) bool {
+			av, ak := sortInitContainers[p.Spec.InitContainers[i].Name]
+			bv, bk := sortInitContainers[p.Spec.InitContainers[j].Name]
+
+			if !ak && !bk {
+				return false
+			}
+
+			if !ak {
+				return true
+			}
+
+			if !bk {
+				return false
+			}
+
+			return av < bv
+		})
+	}
+}
+
+func addLifecycle(name string, uuidRequired bool, license string, group api.ServerGroup) func(t *testing.T, p *core.Pod) {
+	return func(t *testing.T, p *core.Pod) {
+		if group.IsArangosync() {
+
+			return
+		}
+
+		if len(p.Spec.Containers) > 0 {
+			p.Spec.Containers[0].Env = append(k8sutil.GetLifecycleEnv(), p.Spec.Containers[0].Env...)
+			if license != "" {
+				p.Spec.Containers[0].Env = append([]core.EnvVar{
+					k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+						license, constants.SecretKeyToken)}, p.Spec.Containers[0].Env...)
+			}
+		}
+
+		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, k8sutil.LifecycleVolumeName); !ok {
+			p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
+		}
+		if _, ok := k8sutil.GetAnyVolumeByName(p.Spec.Volumes, "arangod-data"); !ok {
+			p.Spec.Volumes = append([]core.Volume{k8sutil.LifecycleVolume()}, p.Spec.Volumes...)
+		}
+
+		if len(p.Spec.Containers) > 0 {
+			p.Spec.Containers[0].Lifecycle = createTestLifecycle()
+		}
+
+		if len(p.Spec.Containers) > 0 {
+			if _, ok := k8sutil.GetAnyVolumeMountByName(p.Spec.Containers[0].VolumeMounts, "lifecycle"); !ok {
+				p.Spec.Containers[0].VolumeMounts = append(p.Spec.Containers[0].VolumeMounts, k8sutil.LifecycleVolumeMount())
+			}
+
+			if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "init-lifecycle"); !ok {
+				p.Spec.InitContainers = append([]core.Container{createTestLifecycleContainer(emptyResources)}, p.Spec.InitContainers...)
+
+			}
+		}
+
+		if _, ok := k8sutil.GetAnyContainerByName(p.Spec.InitContainers, "uuid"); !ok {
+			binaryPath, _ := os.Executable()
+			p.Spec.InitContainers = append([]core.Container{k8sutil.ArangodInitContainer("uuid", name, "rocksdb", binaryPath, testImageOperator, uuidRequired, securityContext.NewSecurityContext())}, p.Spec.InitContainers...)
+
+		}
 	}
 }

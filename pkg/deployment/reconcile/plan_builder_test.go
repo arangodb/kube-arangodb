@@ -29,6 +29,16 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"k8s.io/client-go/kubernetes"
@@ -77,6 +87,46 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) SecretsModInterface() secret.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodsModInterface() pod.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceAccountsModInterface() serviceaccount.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServicesModInterface() service.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ServiceMonitorsModInterface() servicemonitor.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) ArangoMembersModInterface() arangomember.ModInterface {
+	panic("implement me")
+}
+
+func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
+	panic("implement me")
+}
+
+func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+	panic("implement me")
 }
 
 func (c *testContext) GetKubeCli() kubernetes.Interface {
@@ -159,7 +209,7 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 	panic("implement me")
 }
 
-func (c *testContext) SecretsInterface() k8sutil.SecretInterface {
+func (c *testContext) SecretsInterface() secret.Interface {
 	panic("implement me")
 }
 
@@ -224,7 +274,7 @@ func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerG
 	panic("implement me")
 }
 
-func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string) (string, error) {
+func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
 	panic("implement me")
 }
 
@@ -358,7 +408,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 
 	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 1)
 
 	// Test with 1 single member
 	status.Members.Single = api.MemberStatusList{
@@ -371,6 +421,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
+	spec.Single.Count = util.NewInt(2)
+	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	assert.True(t, changed)
+	assert.Len(t, newPlan, 0) // Single mode does not scale
+
+	spec.Single.Count = util.NewInt(1)
 	// Test with 2 single members (which should not happen) and try to scale down
 	status.Members.Single = api.MemberStatusList{
 		api.MemberStatus{
@@ -384,7 +440,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	}
 	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
-	assert.Len(t, newPlan, 0) // Single mode does not scale
+	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
 
 // TestCreatePlanActiveFailoverScale creates a `ActiveFailover` deployment to test the creating of scaling plan.
@@ -592,12 +648,13 @@ type testCase struct {
 	PDBS            map[string]*policy.PodDisruptionBudget
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
+	Nodes           map[string]*core.Node
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers)
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
 }
 
 func TestCreatePlan(t *testing.T) {
@@ -660,6 +717,7 @@ func TestCreatePlan(t *testing.T) {
 			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.Mode = api.NewMode(api.DeploymentModeSingle)
+				ad.Status.Members.Single = append(ad.Status.Members.Single, api.MemberStatus{})
 			},
 			ExpectedPlan: []api.Action{},
 		},

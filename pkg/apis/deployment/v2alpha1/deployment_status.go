@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +81,8 @@ type DeploymentStatus struct {
 
 	// Agency keeps information about agency
 	Agency *DeploymentStatusAgencyInfo `json:"agency,omitempty"`
+
+	Topology *TopologyStatus `json:"topology,omitempty"`
 }
 
 // Equal checks for equality

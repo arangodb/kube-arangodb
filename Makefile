@@ -129,6 +129,13 @@ EXCLUDE_DIRS := tests vendor .gobuild deps tools
 SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "./$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
+LINT_EXCLUDES:=
+ifeq ($(RELEASE_MODE),enterprise)
+LINT_EXCLUDES+=.*\.community\.go$$
+else
+LINT_EXCLUDES+=.*\.enterprise\.go$$
+endif
+
 
 .DEFAULT_GOAL := all
 .PHONY: all
@@ -173,7 +180,9 @@ fmt-verify: license-verify
 linter:
 	$(GOPATH)/bin/golangci-lint run --build-tags "$(RELEASE_MODE)" --no-config --issues-exit-code=1 --deadline=30m --exclude-use-default=false \
 	--disable-all $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS),--skip-dirs $(EXCLUDE_DIR)) \
-	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) ./...
+	$(foreach MODE,$(GOLANGCI_ENABLED),--enable $(MODE)) \
+	$(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') \
+	./...
 
 .PHONY: build
 build: docker manifests
@@ -382,13 +391,13 @@ init: tools update-generated $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.40.0
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.40.0
 	@echo ">> Fetching goimports"
-	@go get golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
+	@GOBIN=$(GOPATH)/bin go get golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
-	@go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+	@GOBIN=$(GOPATH)/bin go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching GO Assets Builder"
-	@go get github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
+	@GOBIN=$(GOPATH)/bin go get github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 
 .PHONY: vendor
 vendor:

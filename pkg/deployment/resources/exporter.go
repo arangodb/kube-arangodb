@@ -1,5 +1,5 @@
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,34 +80,6 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, k8sutil.ArangoPort, path)
 	} else {
 		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
-	}
-
-	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if spec.IsSecure() && spec.Metrics.IsTLS() {
-		options.Add("--ssl.keyfile", keyPath)
-	}
-
-	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
-		options.Addf("--server.address", ":%d", port)
-	}
-
-	return options.Sort().AsArgs()
-}
-
-func createExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
-	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := k8sutil.CreateOptionPairs(64)
-
-	options.Add("--arangodb.jwt-file", tokenpath)
-
-	if port := groupSpec.InternalPort; port == nil {
-		scheme := "http"
-		if spec.IsSecure() {
-			scheme = "https"
-		}
-		options.Addf("--arangodb.endpoint", "%s://localhost:%d", scheme, k8sutil.ArangoPort)
-	} else {
-		options.Addf("--arangodb.endpoint", "http://localhost:%d", *port)
 	}
 
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)

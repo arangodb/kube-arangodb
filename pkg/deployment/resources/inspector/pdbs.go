@@ -26,6 +26,9 @@ package inspector
 import (
 	"context"
 
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -35,7 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (i *inspector) IteratePodDisruptionBudgets(action poddisruptionbudget.PodDisruptionBudgetAction, filters ...poddisruptionbudget.PodDisruptionBudgetFilter) error {
+func (i *inspector) IteratePodDisruptionBudgets(action poddisruptionbudget.Action, filters ...poddisruptionbudget.Filter) error {
 	for _, podDisruptionBudget := range i.PodDisruptionBudgets() {
 		if err := i.iteratePodDisruptionBudget(podDisruptionBudget, action, filters...); err != nil {
 			return err
@@ -44,7 +47,7 @@ func (i *inspector) IteratePodDisruptionBudgets(action poddisruptionbudget.PodDi
 	return nil
 }
 
-func (i *inspector) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDisruptionBudget, action poddisruptionbudget.PodDisruptionBudgetAction, filters ...poddisruptionbudget.PodDisruptionBudgetFilter) error {
+func (i *inspector) iteratePodDisruptionBudget(podDisruptionBudget *policy.PodDisruptionBudget, action poddisruptionbudget.Action, filters ...poddisruptionbudget.Filter) error {
 	for _, filter := range filters {
 		if !filter(podDisruptionBudget) {
 			return nil
@@ -78,24 +81,47 @@ func (i *inspector) PodDisruptionBudget(name string) (*policy.PodDisruptionBudge
 	return podDisruptionBudget, true
 }
 
-func podDisruptionBudgetsToMap(ctx context.Context, k kubernetes.Interface, namespace string) (map[string]*policy.PodDisruptionBudget, error) {
-	podDisruptionBudgets, err := getPodDisruptionBudgets(ctx, k, namespace, "")
-	if err != nil {
-		return nil, err
+func (i *inspector) PodDisruptionBudgetReadInterface() poddisruptionbudget.ReadInterface {
+	return &podDisruptionBudgetReadInterface{i: i}
+}
+
+type podDisruptionBudgetReadInterface struct {
+	i *inspector
+}
+
+func (s podDisruptionBudgetReadInterface) Get(ctx context.Context, name string, opts meta.GetOptions) (*policy.PodDisruptionBudget, error) {
+	if s, ok := s.i.PodDisruptionBudget(name); !ok {
+		return nil, apiErrors.NewNotFound(schema.GroupResource{
+			Group:    policy.GroupName,
+			Resource: "poddisruptionbudgets",
+		}, name)
+	} else {
+		return s, nil
 	}
+}
 
-	podDisruptionBudgetMap := map[string]*policy.PodDisruptionBudget{}
-
-	for _, podDisruptionBudget := range podDisruptionBudgets {
-		_, exists := podDisruptionBudgetMap[podDisruptionBudget.GetName()]
-		if exists {
-			return nil, errors.Newf("PodDisruptionBudget %s already exists in map, error received", podDisruptionBudget.GetName())
+func podDisruptionBudgetsToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface, namespace string) func() error {
+	return func() error {
+		podDisruptionBudgets, err := getPodDisruptionBudgets(ctx, k, namespace, "")
+		if err != nil {
+			return err
 		}
 
-		podDisruptionBudgetMap[podDisruptionBudget.GetName()] = podDisruptionBudgetPointer(podDisruptionBudget)
-	}
+		podDisruptionBudgetMap := map[string]*policy.PodDisruptionBudget{}
 
-	return podDisruptionBudgetMap, nil
+		for _, podDisruptionBudget := range podDisruptionBudgets {
+			_, exists := podDisruptionBudgetMap[podDisruptionBudget.GetName()]
+			if exists {
+				return errors.Newf("PodDisruptionBudget %s already exists in map, error received", podDisruptionBudget.GetName())
+			}
+
+			podDisruptionBudgetMap[podDisruptionBudget.GetName()] = podDisruptionBudgetPointer(podDisruptionBudget)
+		}
+
+		inspector.podDisruptionBudgets = podDisruptionBudgetMap
+
+		return nil
+	}
 }
 
 func podDisruptionBudgetPointer(podDisruptionBudget policy.PodDisruptionBudget) *policy.PodDisruptionBudget {
@@ -126,7 +152,7 @@ func getPodDisruptionBudgets(ctx context.Context, k kubernetes.Interface, namesp
 	return podDisruptionBudgets.Items, nil
 }
 
-func FilterPodDisruptionBudgetsByLabels(labels map[string]string) poddisruptionbudget.PodDisruptionBudgetFilter {
+func FilterPodDisruptionBudgetsByLabels(labels map[string]string) poddisruptionbudget.Filter {
 	return func(podDisruptionBudget *policy.PodDisruptionBudget) bool {
 		for key, value := range labels {
 			v, ok := podDisruptionBudget.Labels[key]

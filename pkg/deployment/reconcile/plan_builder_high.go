@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(createCleanOutPlan).
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
+		ApplyIfEmpty(createTopologyMemberConditionPlan).
 		Plan(), true
 }
 
@@ -125,16 +126,14 @@ func updateMemberPhasePlan(ctx context.Context,
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
 		for _, m := range list {
 			if m.Phase == api.MemberPhaseNone {
-				p := api.Plan{
-					api.NewAction(api.ActionTypeMemberRIDUpdate, group, m.ID, "Regenerate member RID"),
-				}
+				var p api.Plan
 
 				p = append(p,
 					api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, "Propagating spec of pod"),
 					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
 
 				p = append(p, api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
-					"Move to Pending phase").AddParam(ActionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
+					"Move to Pending phase").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
 
 				plan = append(plan, p...)
 			}

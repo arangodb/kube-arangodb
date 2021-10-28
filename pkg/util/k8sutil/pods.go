@@ -30,6 +30,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -43,7 +45,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -71,6 +72,28 @@ const (
 	ServerContainerConditionContainersNotReady = "ContainersNotReady"
 	ServerContainerConditionPrefix             = "containers with unready status: "
 )
+
+// GetAnyVolumeByName returns the volume in the given volumes with the given name.
+// Returns false if not found.
+func GetAnyVolumeByName(volumes []core.Volume, name string) (core.Volume, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.Volume{}, false
+}
+
+// GetAnyVolumeMountByName returns the volumemount in the given volumemountss with the given name.
+// Returns false if not found.
+func GetAnyVolumeMountByName(volumes []core.VolumeMount, name string) (core.VolumeMount, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.VolumeMount{}, false
+}
 
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
@@ -465,13 +488,18 @@ func GetPodSpecChecksum(podSpec core.PodSpec) (string, error) {
 // CreatePod adds an owner to the given pod and calls the k8s api-server to created it.
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePod(ctx context.Context, kubecli kubernetes.Interface, pod *core.Pod, ns string, owner metav1.OwnerReference) (types.UID, error) {
+func CreatePod(ctx context.Context, c pod.ModInterface, pod *core.Pod, ns string,
+	owner metav1.OwnerReference) (string, types.UID, error) {
 	AddOwnerRefToObject(pod.GetObjectMeta(), &owner)
 
-	if pod, err := kubecli.CoreV1().Pods(ns).Create(ctx, pod, metav1.CreateOptions{}); err != nil && !IsAlreadyExists(err) {
-		return "", errors.WithStack(err)
+	if createdPod, err := c.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
+		if IsAlreadyExists(err) {
+			return pod.GetName(), "", nil // If pod exists do not return any error but do not record UID (enforced rotation)
+		}
+
+		return "", "", errors.WithStack(err)
 	} else {
-		return pod.UID, nil
+		return createdPod.GetName(), createdPod.GetUID(), nil
 	}
 }
 
