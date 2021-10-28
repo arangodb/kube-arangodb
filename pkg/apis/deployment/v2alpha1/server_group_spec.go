@@ -683,6 +683,7 @@ func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
 	return *s.Entrypoint
 }
 
+// GetShutdownDelay returns defined or default Group ShutdownDelay in seconds
 func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
 	if s.ShutdownDelay == nil {
 		switch group {

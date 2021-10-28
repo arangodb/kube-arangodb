@@ -26,7 +26,7 @@ require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb/arangosync-client v0.7.0
 	github.com/arangodb/go-driver v1.2.1
-	github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83 // indirect
+	github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
