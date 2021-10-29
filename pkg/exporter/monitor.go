@@ -43,8 +43,8 @@ import (
 
 const (
 	monitorMetricTemplate  = "arangodb_member_health{role=\"%s\",id=\"%s\"} %d \n"
-	successRefreshInterval = time.Duration(time.Second * 120)
-	failRefreshInterval    = time.Duration(time.Second * 15)
+	successRefreshInterval = time.Second * 120
+	failRefreshInterval    = time.Second * 15
 )
 
 var currentMembersStatus atomic.Value
@@ -134,6 +134,9 @@ func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth)
 	}
 
 	req.URL, err = setPath(member.Endpoint, k8sutil.ArangoExporterStatusEndpoint)
+	if err != nil {
+		return result, err
+	}
 
 	resp, err := c.Do(req)
 	if err != nil {

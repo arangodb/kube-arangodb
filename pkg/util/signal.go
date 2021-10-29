@@ -36,7 +36,7 @@ func CreateSignalContext(ctx context.Context, signals ...os.Signal) context.Cont
 		ctx = context.Background()
 	}
 	ctxSignal, cancelSignal := context.WithCancel(ctx)
-	sigChannel := make(chan os.Signal)
+	sigChannel := make(chan os.Signal, 2)
 
 	if len(signals) > 0 {
 		signal.Notify(sigChannel, signals...)
@@ -47,6 +47,7 @@ func CreateSignalContext(ctx context.Context, signals ...os.Signal) context.Cont
 	go func() {
 		// Wait until signal occurs.
 		<-sigChannel
+		close(sigChannel)
 		// Close the context which is used by the caller.
 		cancelSignal()
 	}()
