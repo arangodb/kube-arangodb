@@ -1333,7 +1333,7 @@ func testArangodbInternalExporterContainer(secure, auth bool, resources core.Res
 	}
 
 	if auth {
-		c.VolumeMounts = append(c.VolumeMounts,			k8sutil.ExporterJWTVolumeMount())
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 	}
 
 	return c
