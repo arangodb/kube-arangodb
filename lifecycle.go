@@ -25,9 +25,15 @@ package main
 import (
 	"context"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 
 	"github.com/arangodb/kube-arangodb/pkg/version"
 
@@ -54,6 +60,10 @@ var (
 		Run:    cmdLifecyclePreStopRunFinalizer,
 		Hidden: true,
 	}
+	cmdLifecyclePreStopPort = &cobra.Command{
+		Use:    "port",
+		Hidden: true,
+	}
 	cmdLifecycleCopy = &cobra.Command{
 		Use:    "copy",
 		Run:    cmdLifecycleCopyRun,
@@ -68,7 +78,15 @@ var (
 func init() {
 	cmdMain.AddCommand(cmdLifecycle)
 
-	cmdLifecyclePreStop.AddCommand(cmdLifecyclePreStopFinalizers)
+	var preStopPort cmdLifecyclePreStopRunPort
+
+	cmdLifecyclePreStopPort.RunE = preStopPort.run
+
+	f := cmdLifecyclePreStopPort.Flags()
+
+	f.DurationVar(&preStopPort.timeout, "timeout", 6*60*time.Minute, "PreStopTimeout")
+
+	cmdLifecyclePreStop.AddCommand(cmdLifecyclePreStopFinalizers, cmdLifecyclePreStopPort)
 
 	cmdLifecycle.AddCommand(cmdLifecyclePreStop)
 	cmdLifecycle.AddCommand(cmdLifecycleCopy)
@@ -161,4 +179,64 @@ func cmdLifecycleCopyRun(cmd *cobra.Command, args []string) {
 	}
 
 	cliLog.Info().Msgf("Executable copied to %s", targetPath)
+}
+
+type cmdLifecyclePreStopRunPort struct {
+	timeout time.Duration
+}
+
+// Wait until port 8529 is closed.
+func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) error {
+	address := net.JoinHostPort("127.0.0.1", strconv.Itoa(k8sutil.ArangoPort))
+
+	// Get environment
+	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	if len(namespace) == 0 {
+		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodNamespace)
+	}
+	name := os.Getenv(constants.EnvOperatorPodName)
+	if len(name) == 0 {
+		cliLog.Fatal().Msgf("%s environment variable missing", constants.EnvOperatorPodName)
+	}
+
+	// Create kubernetes client
+	kubecli, err := k8sutil.NewKubeClient()
+	if err != nil {
+		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+	}
+
+	pods := kubecli.CoreV1().Pods(namespace)
+
+	recentErrors := 0
+
+	return retry.NewTimeout(func() error {
+		conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond)
+
+		if err != nil {
+			return retry.Interrput()
+		}
+
+		conn.Close()
+
+		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
+		if k8sutil.IsNotFound(err) {
+			cliLog.Warn().Msg("Pod not found")
+			return nil
+		} else if err != nil {
+			recentErrors++
+			cliLog.Error().Err(err).Msg("Failed to get pod")
+			if recentErrors > 20 {
+				cliLog.Fatal().Err(err).Msg("Too many recent errors")
+				return nil
+			}
+		} else {
+			// We got our pod
+			finalizers := utils.StringList(p.GetFinalizers())
+			if !finalizers.Has(constants.FinalizerPodGracefulShutdown) {
+				return retry.Interrput()
+			}
+		}
+
+		return nil
+	}).Timeout(125*time.Millisecond, c.timeout)
 }

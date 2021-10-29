@@ -157,7 +157,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Image:           testImage,
 							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
 							Ports:           createTestPorts(),
-							Lifecycle:       createTestLifecycle(),
+							Lifecycle:       createTestLifecycle(api.ServerGroupAgents),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -171,7 +171,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Resources: emptyResources,
 						},
 						func() core.Container {
-							c := testArangodbInternalExporterContainer(true, emptyResources)
+							c := testArangodbInternalExporterContainer(true, true, emptyResources)
 							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 							return c
 						}(),

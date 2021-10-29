@@ -113,7 +113,7 @@ func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirement
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
-	return k8sutil.NewLifecycle()
+	return k8sutil.NewLifecycleFinalizers()
 }
 
 func (a *ArangoSyncContainer) GetImagePullPolicy() core.PullPolicy {

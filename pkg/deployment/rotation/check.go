@@ -25,6 +25,8 @@ package rotation
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -52,17 +54,7 @@ func (m Mode) And(b Mode) Mode {
 
 // CheckPossible returns true if rotation is possible
 func CheckPossible(member api.MemberStatus) bool {
-	if !member.Phase.IsReady() {
-		// Skip rotation when we are not ready
-		return false
-	}
-
-	if member.Conditions.IsTrue(api.ConditionTypeTerminated) || member.Conditions.IsTrue(api.ConditionTypeTerminating) {
-		// Termination in progress, nothing to do
-		return false
-	}
-
-	return true
+	return !member.Conditions.IsTrue(api.ConditionTypeTerminated)
 }
 
 func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, member api.MemberStatus, group api.ServerGroup, pod *core.Pod, specTemplate, statusTemplate *api.ArangoMemberPodTemplate) (mode Mode, plan api.Plan, reason string, err error) {
@@ -70,6 +62,16 @@ func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Insp
 
 	// Set default mode for return value
 	mode = SkippedRotation
+
+	// We are under termination
+	if member.Conditions.IsTrue(api.ConditionTypeTerminating) || (pod != nil && pod.DeletionTimestamp != nil) {
+		if l := utils.StringList(pod.Finalizers); l.Has(constants.FinalizerPodGracefulShutdown) && !l.Has(constants.FinalizerDelayPodTermination) {
+			reason = "Recreation enforced by deleted state"
+			mode = EnforcedRotation
+		}
+
+		return
+	}
 
 	if !CheckPossible(member) {
 		// Check is not possible due to improper state of member

@@ -69,7 +69,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
 					},
 					Containers: []core.Container{
 						{
@@ -85,7 +84,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, emptyResources, 9999),
+						testArangodbInternalExporterContainer(false, false, emptyResources, 9999),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -130,7 +129,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
 					},
 					Containers: []core.Container{
 						{
@@ -146,7 +144,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -191,7 +189,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
 					},
 					Containers: []core.Container{
 						{
@@ -217,7 +214,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultDBServerTerminationTimeout,
@@ -262,7 +259,6 @@ func TestEnsurePod_Metrics(t *testing.T) {
 				Spec: core.PodSpec{
 					Volumes: []core.Volume{
 						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
-						k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, testExporterToken),
 					},
 					Containers: []core.Container{
 						{
@@ -288,7 +284,7 @@ func TestEnsurePod_Metrics(t *testing.T) {
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
-						testArangodbInternalExporterContainer(false, emptyResources),
+						testArangodbInternalExporterContainer(false, false, emptyResources),
 					},
 					RestartPolicy:                 core.RestartPolicyNever,
 					TerminationGracePeriodSeconds: &defaultAgentTerminationTimeout,
