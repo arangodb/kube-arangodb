@@ -23,6 +23,7 @@
 package main
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -30,6 +31,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/exporter"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -112,7 +114,8 @@ func cmdExporterCheckE() error {
 
 		return string(data), nil
 	}, false, 15*time.Second)
-	go mon.UpdateMonitorStatus()
+
+	go mon.UpdateMonitorStatus(util.CreateSignalContext(context.Background()))
 
 	exporter := exporter.NewExporter(exporterInput.listenAddress, "/metrics", p)
 	if exporterInput.keyfile != "" {

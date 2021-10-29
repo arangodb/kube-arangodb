@@ -23,18 +23,20 @@
 package exporter
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/arangodb/go-driver"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/rs/zerolog/log"
 )
@@ -45,7 +47,7 @@ const (
 	failRefreshInterval    = time.Duration(time.Second * 15)
 )
 
-var currentMembersStatus = ""
+var currentMembersStatus atomic.Value
 
 func NewMonitor(arangodbEndpoint string, auth Authentication, sslVerify bool, timeout time.Duration) *monitor {
 	uri, err := setPath(arangodbEndpoint, k8sutil.ArangoExporterClusterHealthEndpoint)
@@ -65,7 +67,8 @@ type monitor struct {
 	healthURI *url.URL
 }
 
-func (m monitor) UpdateMonitorStatus() {
+// UpdateMonitorStatus load monitor metrics for current cluster into currentMembersStatus
+func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 	for {
 		sleep := successRefreshInterval
 
@@ -83,12 +86,19 @@ func (m monitor) UpdateMonitorStatus() {
 				}
 				output.WriteString(entry)
 			}
-			currentMembersStatus = output.String()
+			currentMembersStatus.Store(output.String())
 		}
-		time.Sleep(sleep)
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(sleep):
+			continue
+		}
 	}
 }
 
+// GetClusterHealth returns current ArangoDeployment cluster health status
 func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
 	c, req, err := m.factory()
 	if err != nil {
@@ -114,6 +124,7 @@ func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
 	return &result, err
 }
 
+// GetMemberStatus returns Prometheus monitor metric for specific member
 func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth) (string, error) {
 	result := fmt.Sprintf(monitorMetricTemplate, member.Role, id, 0)
 
