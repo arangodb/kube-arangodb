@@ -73,6 +73,8 @@ const (
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 	// ActionTypeResignLeadership causes a member to resign leadership.
 	ActionTypeResignLeadership ActionType = "ResignLeadership"
+	// ActionTypeKillMemberPod causes a pod to get delete request. It also waits until Delay finalizer will be removed.
+	ActionTypeKillMemberPod ActionType = "KillMemberPod"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
 	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.

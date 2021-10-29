@@ -83,6 +83,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 						api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
 				} else if group == api.ServerGroupAgents {
 					plan = append(plan,
+						api.NewAction(api.ActionTypeKillMemberPod, group, m.ID),
 						api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
 						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 						api.NewAction(api.ActionTypeAddMember, group, m.ID),
@@ -187,6 +188,7 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 	case api.PVCResizeModeRotate:
 		return api.Plan{
 			api.NewAction(api.ActionTypeResignLeadership, group, memberID),
+			api.NewAction(api.ActionTypeKillMemberPod, group, memberID),
 			api.NewAction(api.ActionTypeRotateStartMember, group, memberID),
 			api.NewAction(api.ActionTypePVCResize, group, memberID),
 			api.NewAction(api.ActionTypePVCResized, group, memberID),

@@ -262,7 +262,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
-							Lifecycle:       createTestLifecycle(),
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
 							Resources:       resourcesUnfiltered,
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
@@ -356,7 +356,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 							},
 							Resources:       emptyResources,
 							ImagePullPolicy: core.PullIfNotPresent,
-							Lifecycle:       createTestLifecycle(),
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{
 								k8sutil.LifecycleVolumeMount(),
@@ -454,7 +454,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
 							},
 							ImagePullPolicy: core.PullIfNotPresent,
-							Lifecycle:       createTestLifecycle(),
+							Lifecycle:       createTestLifecycle(api.ServerGroupSyncMasters),
 							Resources:       k8sutil.ExtractPodResourceRequirement(resourcesUnfiltered),
 							SecurityContext: securityContext.NewSecurityContext(),
 							VolumeMounts: []core.VolumeMount{

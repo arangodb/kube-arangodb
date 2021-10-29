@@ -154,11 +154,11 @@ func IsContainerRunning(pod *core.Pod, name string) bool {
 			continue
 		}
 
-		if c.State.Terminated != nil {
+		if c.State.Running == nil {
 			return false
-		} else {
-			return true
 		}
+
+		return true
 	}
 	return false
 }

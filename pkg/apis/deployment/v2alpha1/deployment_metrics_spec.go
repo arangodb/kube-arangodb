@@ -41,6 +41,7 @@ func (m MetricsMode) New() *MetricsMode {
 	return &m
 }
 
+// deprecated
 func (m MetricsMode) GetMetricsEndpoint() string {
 	switch m {
 	case MetricsModeInternal:
@@ -51,9 +52,12 @@ func (m MetricsMode) GetMetricsEndpoint() string {
 }
 
 const (
+	// deprecated
 	// MetricsModeExporter exporter mode for old exporter type
 	MetricsModeExporter MetricsMode = "exporter"
-	MetricsModeSidecar  MetricsMode = "sidecar"
+	// deprecated
+	MetricsModeSidecar MetricsMode = "sidecar"
+	// deprecated
 	MetricsModeInternal MetricsMode = "internal"
 )
 
@@ -67,12 +71,14 @@ func (m *MetricsMode) Get() MetricsMode {
 
 // MetricsSpec contains spec for arangodb exporter
 type MetricsSpec struct {
-	Enabled        *bool                     `json:"enabled,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
+	// deprecated
 	Image          *string                   `json:"image,omitempty"`
 	Authentication MetricsAuthenticationSpec `json:"authentication,omitempty"`
 	Resources      v1.ResourceRequirements   `json:"resources,omitempty"`
-	Mode           *MetricsMode              `json:"mode,omitempty"`
-	TLS            *bool                     `json:"tls,omitempty"`
+	// deprecated
+	Mode *MetricsMode `json:"mode,omitempty"`
+	TLS  *bool        `json:"tls,omitempty"`
 
 	ServiceMonitor *MetricsServiceMonitorSpec `json:"serviceMonitor,omitempty"`
 
@@ -100,11 +106,13 @@ func (s *MetricsSpec) IsEnabled() bool {
 	return util.BoolOrDefault(s.Enabled, false)
 }
 
+// deprecated
 // HasImage returns whether a image was specified or not
 func (s *MetricsSpec) HasImage() bool {
 	return s.Image != nil
 }
 
+// deprecated
 // GetImage returns the Image or empty string
 func (s *MetricsSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)

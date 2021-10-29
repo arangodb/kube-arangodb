@@ -44,8 +44,10 @@ github.com/arangodb/arangosync-client v0.7.0 h1:3vLOVnMyr5vGlPA0OHxJL9Wyy49JJwN0
 github.com/arangodb/arangosync-client v0.7.0/go.mod h1:g+JcxH3C63wKaJPnPr9nggYoGbt/bYCWpfcRG0NSodY=
 github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18 h1:3J0tqp5eQ8ptGOeeu7vo92RKf24bOA7MFy0z3uPiTWg=
 github.com/arangodb/go-driver v0.0.0-20210621075908-e7a6fa0cbd18/go.mod h1:3NUekcRLpgheFIGEwcOvxilEW73MV1queNKW58k7sdc=
-github.com/arangodb/go-driver/v2 v2.0.0-20211001173946-eafa9b638e13 h1:5egTRo3Met3xXUVj/Pbn1gXeY2C4bQZycJoHSnndfig=
-github.com/arangodb/go-driver/v2 v2.0.0-20211001173946-eafa9b638e13/go.mod h1:X3uG4XbfQS35AjsFJLwNLyA6UZofNV5ufe2KoNxcMO0=
+github.com/arangodb/go-driver v1.2.1 h1:HREDHhDmzdIWxHmfkfTESbYUnRjESjPh4WUuXq7FZa8=
+github.com/arangodb/go-driver v1.2.1/go.mod h1:zdDkJJnCj8DAkfbtIjIXnsTrWIiy6VhP3Vy14p+uQeY=
+github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83 h1:PCbi3alUFastUw6InBKGEXqniveJJcQuMYspubJMRS8=
+github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83/go.mod h1:B8byYwvt1mDOQzpjiMuDTP5jOif/Y5dcEJtkdvPB7HY=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21 h1:+W7D5ttxi/Ygh/39vialtypE23p9KI7P0J2qtoqUV4w=
 github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21/go.mod h1:RkPIG6JJ2pcJUoymc18NxAJGraZd+iAEVnOTDjZey/w=
 github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e h1:Xg+hGrY2LcQBbxd0ZFdbGSyRKTYMZCfBbw/pMJFOk1g=
@@ -184,6 +186,7 @@ github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXP
 github.com/golang-jwt/jwt v3.2.1+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
+github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b h1:VKtxabqXZkF25pY9ekfRL6a582T4P37/31XEstQ5p58=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=

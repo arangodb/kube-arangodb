@@ -61,6 +61,7 @@ func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
 		)
 	}
 	plan = append(plan,
+		api.NewAction(api.ActionTypeKillMemberPod, group, m.ID),
 		api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
 		api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
 	)
