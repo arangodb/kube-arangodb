@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package deployment
 
@@ -30,45 +27,49 @@ import (
 	"strings"
 	"time"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
+	client "github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 var _ interfaces.PodCreator = &ImageUpdatePod{}
-var _ interfaces.ContainerCreator = &ArangoDImageUpdateContainer{}
+var _ interfaces.ContainerCreator = &ContainerIdentity{}
 
+// ImageUpdatePod describes how to launch the ID ArangoD POD.
 type ImageUpdatePod struct {
-	spec      api.DeploymentSpec
-	apiObject k8sutil.APIObject
-	image     string
+	spec             api.DeploymentSpec
+	apiObject        k8sutil.APIObject
+	containerCreator interfaces.ContainerCreator
 }
 
-func (i *ImageUpdatePod) Annotations() map[string]string {
-	return nil
+// ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
+type ContainerIdentity struct {
+	ID              *api.ServerIDGroupSpec
+	image           string
+	imagePullPolicy core.PullPolicy
 }
 
-func (i *ImageUpdatePod) Labels() map[string]string {
-	return nil
+// ArangoDIdentity helps to resolve the ArangoD identity, e.g.: image ID, version of the entrypoint.
+type ArangoDIdentity struct {
+	interfaces.ContainerCreator
+	License api.LicenseSpec
 }
 
-type ArangoDImageUpdateContainer struct {
-	spec  api.DeploymentSpec
-	image string
+// ArangoSyncIdentity helps to resolve the ArangoSync identity, e.g.: image ID, version of the entrypoint.
+type ArangoSyncIdentity struct {
+	interfaces.ContainerCreator
 }
 
 type imagesBuilder struct {
@@ -118,7 +119,167 @@ func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterfac
 		return retrySoon, false, nil
 	}
 
+	if ib.Spec.Sync.IsEnabled() && ib.Spec.Sync.HasSyncImage() {
+		syncImage := ib.Spec.Sync.GetSyncImage()
+		if _, found := ib.Status.SyncImages.GetByImage(syncImage); !found {
+			retrySoon, err := ib.fetchArangoSyncImageIDAndVersion(ctx, cachedStatus, syncImage)
+			if err != nil {
+				return retrySoon, false, errors.WithStack(err)
+			}
+			return retrySoon, false, nil
+		}
+	}
+
 	return false, true, nil
+}
+
+func (ib *imagesBuilder) fetchArangoSyncImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector,
+	image string) (bool, error) {
+	role := k8sutil.ImageIDAndVersionRole
+	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
+	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
+	log := ib.Log.With().
+		Str("pod", podName).
+		Str("image", image).
+		Logger()
+
+	// Check if pod exists
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	pod, err := ib.Context.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, metav1.GetOptions{})
+	if err == nil {
+		// Pod found.
+		removePod := false
+		if k8sutil.IsPodFailed(pod) {
+			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
+				// The timeout occurred so the pod must be terminated.
+				removePod = true
+			}
+		} else if k8sutil.IsPodSucceeded(pod) {
+			// The pod succeeded immediately, so it must be the old version of the arangosync.
+			// The version must be set to the minimum version 2.6.0 where there are not features yet.
+			minimumVersion := driver.Version("2.6.0")
+			imageID := k8sutil.GetArangoSyncImageIDFromPod(pod, image)
+			if err := ib.createArangoSyncImageInfo(image, imageID, minimumVersion); err != nil {
+				log.Warn().Err(err).Msg("Failed to save ArangoSync image info in CR status")
+				// Retry soon and try to save CR status once again.
+				return true, errors.WithStack(err)
+			}
+			removePod = true
+
+			ib.Context.CreateEvent(k8sutil.NewArangoSyncNoStandaloneEvent(ib.APIObject))
+			log.Info().
+				Str("image-id", imageID).
+				Str("version", string(minimumVersion)).
+				Msg("Set ArangoSync image ID and minimum version")
+		}
+
+		if removePod {
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
+			})
+			if err != nil && !k8sutil.IsNotFound(err) {
+				log.Warn().Err(err).Msg("Failed to delete ArangoSync image ID pod")
+				// Don't return here.
+			}
+
+			return false, nil
+		}
+
+		if !k8sutil.IsPodReady(pod) {
+			log.Debug().Msg("ArangoSync image ID pod is not ready yet")
+			return true, nil
+		}
+
+		if len(pod.Status.ContainerStatuses) == 0 {
+			log.Warn().Msg("Empty list of ContainerStatuses")
+			return true, nil
+		}
+
+		imageID := k8sutil.GetArangoSyncImageIDFromPod(pod, image)
+		endpoint := fmt.Sprintf("http://%s:%d", pod.Status.PodIP, k8sutil.ArangoPort)
+		cl, err := client.NewArangoSyncClient([]string{endpoint}, client.AuthenticationConfig{}, nil)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to create ArangoSync image ID pod client")
+			return true, nil
+		}
+		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		defer cancel()
+		v, err := cl.Version(ctxChild)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to fetch version from ArangoSync image ID pod")
+			return true, nil
+		}
+
+		// We have all the info we need now, kill the pod and store the image info.
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
+		})
+		if err != nil && !k8sutil.IsNotFound(err) {
+			log.Warn().Err(err).Msg("Failed to delete ArangoSync image ID pod")
+			return true, nil
+		}
+
+		if err := ib.createArangoSyncImageInfo(image, imageID, driver.Version(v.Version)); err != nil {
+			log.Warn().Err(err).Msg("Failed to save ArangoSync image info in CR status")
+			return true, errors.WithStack(err)
+		}
+		log.Info().Str("image-id", imageID).Str("version", v.Version).Msg("Found ArangoSync image ID and version")
+
+		return false, nil
+	}
+
+	// Pod cannot be fetched, ensure it is created.
+	args := []string{"run", "standalone",
+		fmt.Sprintf("--server.endpoint=%s", ib.Spec.GetListenAddr()),
+		fmt.Sprintf("--server.port=%d", k8sutil.ArangoPort),
+	}
+
+	imagePod := ImageUpdatePod{
+		spec:      ib.Spec,
+		apiObject: ib.APIObject,
+		containerCreator: &ArangoSyncIdentity{
+			ContainerCreator: &ContainerIdentity{
+				ID:              ib.Spec.ID,
+				image:           image,
+				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
+			},
+		},
+	}
+
+	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, args, &imagePod)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to render image ID pod")
+		return true, errors.WithStack(err)
+	}
+
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec,
+			api.ServerGroupImageDiscovery, pod)
+		return err
+	})
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to create image ID pod")
+		return true, errors.WithStack(err)
+	}
+
+	// Come back soon to inspect the pod after creation.
+	return true, nil
+}
+
+// createArangoSyncImageInfo creates ArangoSync image info and stores it in the CR status
+// and in the known list of images.
+func (ib *imagesBuilder) createArangoSyncImageInfo(image, imageID string, version driver.Version) error {
+	info := api.ImageInfo{
+		Image:           image,
+		ImageID:         imageID,
+		ArangoDBVersion: version,
+		Enterprise:      true,
+	}
+
+	ib.Status.SyncImages.AddOrUpdate(info)
+
+	return ib.UpdateCRStatus(ib.Status)
 }
 
 // fetchArangoDBImageIDAndVersion checks a running pod for fetching the ID of the given image.
@@ -220,8 +381,15 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 	imagePod := ImageUpdatePod{
 		spec:      ib.Spec,
-		image:     image,
 		apiObject: ib.APIObject,
+		containerCreator: &ArangoDIdentity{
+			ContainerCreator: &ContainerIdentity{
+				ID:              ib.Spec.ID,
+				image:           image,
+				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
+			},
+			License: ib.Spec.License,
+		},
 	}
 
 	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, args, &imagePod)
@@ -242,43 +410,12 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	return true, nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetExecutor() string {
-	return a.spec.ID.GetEntrypoint(resources.ArangoDExecutor)
-}
-
-func (a *ArangoDImageUpdateContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	return nil, nil, nil
-}
-
-func (a *ArangoDImageUpdateContainer) GetResourceRequirements() core.ResourceRequirements {
-	return a.spec.ID.GetResources()
-}
-
-func (a *ArangoDImageUpdateContainer) GetImage() string {
-	return a.image
-}
-
-func (a *ArangoDImageUpdateContainer) GetEnvs() []core.EnvVar {
-	env := make([]core.EnvVar, 0)
-
-	if a.spec.License.HasSecretName() {
-		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-			a.spec.License.GetSecretName(), constants.SecretKeyToken))
-	}
-
-	if len(env) > 0 {
-		return env
-	}
-
+func (i *ImageUpdatePod) Annotations() map[string]string {
 	return nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetLifecycle() (*core.Lifecycle, error) {
-	return nil, nil
-}
-
-func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() core.PullPolicy {
-	return a.spec.GetImagePullPolicy()
+func (i *ImageUpdatePod) Labels() map[string]string {
+	return nil
 }
 
 func (i *ImageUpdatePod) GetName() string {
@@ -300,10 +437,7 @@ func (i *ImageUpdatePod) GetImagePullSecrets() []string {
 }
 
 func (i *ImageUpdatePod) GetContainerCreator() interfaces.ContainerCreator {
-	return &ArangoDImageUpdateContainer{
-		spec:  i.spec,
-		image: i.image,
-	}
+	return i.containerCreator
 }
 
 func (i *ImageUpdatePod) GetAffinityRole() string {
@@ -368,20 +502,6 @@ func (i *ImageUpdatePod) GetServiceAccountName() string {
 	return i.spec.ID.GetServiceAccountName()
 }
 
-func (a *ArangoDImageUpdateContainer) GetPorts() []core.ContainerPort {
-	return []core.ContainerPort{
-		{
-			Name:          "server",
-			ContainerPort: int32(k8sutil.ArangoPort),
-			Protocol:      core.ProtocolTCP,
-		},
-	}
-}
-
-func (a *ArangoDImageUpdateContainer) GetSecurityContext() *core.SecurityContext {
-	return a.spec.ID.Get().SecurityContext.NewSecurityContext()
-}
-
 func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 	a := core.PodAntiAffinity{}
 
@@ -410,10 +530,72 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	return pod.ReturnNodeAffinityOrNil(a)
 }
 
-func (i *ImageUpdatePod) Validate(cachedStatus interfaces.Inspector) error {
+func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {
 	return nil
 }
 
-func (i *ImageUpdatePod) ApplyPodSpec(spec *core.PodSpec) error {
+func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
 	return nil
+}
+
+func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
+	return nil
+}
+
+func (a *ContainerIdentity) GetExecutor() string {
+	return a.ID.GetEntrypoint(resources.ArangoDExecutor)
+}
+
+func (a *ContainerIdentity) GetImage() string {
+	return a.image
+}
+
+func (a *ContainerIdentity) GetImagePullPolicy() core.PullPolicy {
+	return a.imagePullPolicy
+}
+
+func (a *ContainerIdentity) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+func (a *ContainerIdentity) GetPorts() []core.ContainerPort {
+	return []core.ContainerPort{
+		{
+			Name:          "server",
+			ContainerPort: int32(k8sutil.ArangoPort),
+			Protocol:      core.ProtocolTCP,
+		},
+	}
+}
+
+func (a *ContainerIdentity) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
+}
+
+func (a *ContainerIdentity) GetResourceRequirements() core.ResourceRequirements {
+	return a.ID.GetResources()
+}
+
+func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {
+	return a.ID.Get().SecurityContext.NewSecurityContext()
+}
+
+func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
+	env := make([]core.EnvVar, 0)
+
+	if a.License.HasSecretName() {
+		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+			a.License.GetSecretName(), constants.SecretKeyToken))
+	}
+
+	if len(env) > 0 {
+		return env
+	}
+
+	return nil
+}
+
+// GetExecutor returns the fixed path to the ArangoSync binary in the container.
+func (a *ArangoSyncIdentity) GetExecutor() string {
+	return resources.ArangoSyncExecutor
 }

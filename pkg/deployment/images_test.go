@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
-//
 
 package deployment
 
@@ -29,21 +27,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/stretchr/testify/assert"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 const (
@@ -65,6 +59,10 @@ func TestEnsureImages(t *testing.T) {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
 	hostname := testDeploymentName + "-" + k8sutil.ImageIDAndVersionRole + "-" + id
+
+	arangosyncImage := "arangosync"
+	arangosyncID := fmt.Sprintf("%0x", sha1.Sum([]byte(arangosyncImage)))[:6]
+	arangosyncHostname := testDeploymentName + "-" + k8sutil.ImageIDAndVersionRole + "-" + arangosyncID
 
 	var securityContext api.ServerGroupSpecSecurityContext
 
@@ -307,6 +305,113 @@ func TestEnsureImages(t *testing.T) {
 				require.Len(t, pods, 1)
 			},
 		},
+		{
+			Name: "Arangosync image has not been changed",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewString(testImage),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						Image:   util.NewString(arangosyncImage),
+					},
+				},
+			},
+			Before: func(t *testing.T, deployment *Deployment) {
+				deployment.apiObject.Status.SyncImages = api.ImageInfoList{
+					{
+						Image: arangosyncImage,
+					},
+				}
+			},
+			RetrySoon: true,
+		},
+		{
+			Name: "Arangosync image has been changed",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewString(testImage),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						Image:   util.NewString(arangosyncImage),
+					},
+				},
+			},
+			RetrySoon: true,
+			ExpectedPod: v1.Pod{
+				Spec: v1.PodSpec{
+					Volumes: []v1.Volume{
+						k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName),
+					},
+					Containers: []v1.Container{
+						{
+							Name:    k8sutil.ServerContainerName,
+							Image:   arangosyncImage,
+							Command: createTestCommandForArangoAyncImageUpdatePod(),
+							Ports:   createTestPorts(),
+							Resources: v1.ResourceRequirements{
+								Limits:   make(v1.ResourceList),
+								Requests: make(v1.ResourceList),
+							},
+							VolumeMounts: []v1.VolumeMount{
+								k8sutil.ArangodVolumeMount(),
+							},
+							ImagePullPolicy: v1.PullIfNotPresent,
+							SecurityContext: securityContext.NewSecurityContext(),
+						},
+					},
+					RestartPolicy:                 v1.RestartPolicyNever,
+					Tolerations:                   getTestTolerations(),
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Hostname:                      arangosyncHostname,
+					Subdomain:                     testDeploymentName + "-int",
+					Affinity: k8sutil.CreateAffinity(testDeploymentName,
+						k8sutil.ImageIDAndVersionRole, false, ""),
+				},
+			},
+		},
+		{
+			Name: "Arangosync image from succeeded pod",
+			ArangoDeployment: &api.ArangoDeployment{
+				Spec: api.DeploymentSpec{
+					Image: util.NewString(testImage),
+					Sync: api.SyncSpec{
+						Enabled: util.NewBool(true),
+						Image:   util.NewString(arangosyncImage),
+					},
+				},
+			},
+			Before: func(t *testing.T, deployment *Deployment) {
+				pod := v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: k8sutil.CreatePodName(testDeploymentName, k8sutil.ImageIDAndVersionRole, arangosyncID, ""),
+					},
+					Status: v1.PodStatus{
+						Conditions: []v1.PodCondition{
+							{
+								Type:   v1.PodReady,
+								Status: v1.ConditionTrue,
+							},
+						},
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: k8sutil.ServerContainerName,
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				}
+				_, err := deployment.PodsModInterface().Create(context.Background(), &pod, metav1.CreateOptions{})
+				require.NoError(t, err)
+			},
+			After: func(t *testing.T, deployment *Deployment) {
+				pods := deployment.GetCachedStatus().Pods()
+				require.Len(t, pods, 0)
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -356,6 +461,13 @@ func TestEnsureImages(t *testing.T) {
 			if testCase.After != nil {
 				testCase.After(t, d)
 			}
+
+			pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
+			require.NoError(t, err)
+			for _, item := range pods.Items {
+				err = d.deps.KubeCli.CoreV1().Pods(testNamespace).Delete(context.Background(), item.Name, metav1.DeleteOptions{})
+				require.NoError(t, err)
+			}
 		})
 	}
 }
@@ -366,6 +478,13 @@ func createTestCommandForImageUpdatePod() []string {
 		fmt.Sprintf("--server.endpoint=tcp://[::]:%d", k8sutil.ArangoPort),
 		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
 		"--log.output=+",
+	}
+}
+
+func createTestCommandForArangoAyncImageUpdatePod() []string {
+	return []string{resources.ArangoSyncExecutor, "run", "standalone",
+		"--server.endpoint=[::]",
+		fmt.Sprintf("--server.port=%d", k8sutil.ArangoPort),
 	}
 }
 

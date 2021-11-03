@@ -99,7 +99,12 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			}
 
 			// Got pod, compare it with what it should be
-			decision := podNeedsUpgrading(log, m, spec, status.Images)
+			var decision upgradeDecision
+			if spec.IsArangoSyncImageSet(group) {
+				decision = podNeedsUpgrading(log, m, spec.Sync.GetSyncImage(), status.SyncImages)
+			} else {
+				decision = podNeedsUpgrading(log, m, spec.GetImage(), status.Images)
+			}
 			if decision.Hold {
 				return nil
 			}
@@ -223,14 +228,14 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
-func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
-	currentImage, found := currentImageInfo(spec, images)
+func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, image string, images api.ImageInfoList) upgradeDecision {
+	currentImage, found := getImageInfo(image, images)
 	if !found {
 		// Hold rotation tasks - we do not know image
 		return upgradeDecision{Hold: true}
 	}
 
-	memberImage, found := memberImageInfo(spec, status, images)
+	memberImage, found := getMemberImageInfo(status, image, images)
 	if !found {
 		// Member info not found
 		return upgradeDecision{UpgradeNeeded: false}
@@ -290,37 +295,33 @@ func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.Dep
 	}
 }
 
-func currentImageInfo(spec api.DeploymentSpec, images api.ImageInfoList) (api.ImageInfo, bool) {
-	if i, ok := images.GetByImage(spec.GetImage()); ok {
+// getImageInfo returns the image info from the list of known images.
+func getImageInfo(image string, images api.ImageInfoList) (api.ImageInfo, bool) {
+	if i, ok := images.GetByImage(image); ok {
 		return i, true
 	}
-	if i, ok := images.GetByImageID(spec.GetImage()); ok {
+
+	if i, ok := images.GetByImageID(image); ok {
 		return i, true
 	}
 
 	return api.ImageInfo{}, false
 }
 
-func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images api.ImageInfoList) (api.ImageInfo, bool) {
+// getMemberImageInfo returns the image info for the member.
+func getMemberImageInfo(status api.MemberStatus, image string, images api.ImageInfoList) (api.ImageInfo, bool) {
 	if status.Image != nil {
 		return *status.Image, true
 	}
 
-	if i, ok := images.GetByImage(spec.GetImage()); ok {
-		return i, true
-	}
-
-	if i, ok := images.GetByImageID(spec.GetImage()); ok {
-		return i, true
-	}
-
-	return api.ImageInfo{}, false
+	// The image for the member is not set, so it tries to find general image.
+	return getImageInfo(image, images)
 }
 
 func getPodDetails(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	group api.ServerGroup, status api.DeploymentStatus, m api.MemberStatus,
 	cachedStatus inspectorInterface.Inspector, planCtx PlanBuilderContext) (string, *core.Pod, *api.ArangoMember, bool) {
-	imageInfo, imageFound := planCtx.SelectImageForMember(spec, status, m)
+	imageInfo, imageFound := planCtx.SelectImageForMember(spec, status, m, group)
 	if !imageFound {
 		// Image is not found, so rotation is not needed
 		return "", nil, nil, false
@@ -389,11 +390,24 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	var plan = api.Plan{
 		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
 	}
-	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
-		plan = plan.After(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
+
+	var currentImage *api.ImageInfo
+	var specImage string
+	if spec.IsArangoSyncImageSet(group) {
+		specImage = spec.Sync.GetSyncImage()
+		currentImage = status.CurrentSyncImage
+	} else {
+		specImage = spec.GetImage()
+		currentImage = status.CurrentImage
 	}
-	if member.Image == nil || member.Image.Image != spec.GetImage() {
-		plan = plan.After(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
+
+	if currentImage == nil || currentImage.Image != specImage {
+		a := api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(specImage)
+		plan = plan.After(a)
+	}
+	if member.Image == nil || member.Image.Image != specImage {
+		a := api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(specImage)
+		plan = plan.After(a)
 	}
 
 	plan = plan.After(api.NewAction(upgradeAction, group, member.ID, reason),

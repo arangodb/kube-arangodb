@@ -25,12 +25,12 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/json"
+	goerrors "errors"
 	"fmt"
 	"net"
 	"net/url"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
@@ -57,6 +57,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
+
+var ErrImageNotFound = goerrors.New("the list with discovered images does not contain the given image")
 
 // createArangodArgsWithUpgrade creates command line arguments for an arangod server upgrade in the given group.
 func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.Input) ([]string, error) {
@@ -305,12 +307,12 @@ func (r *Resources) RenderPodForMemberFromCurrent(ctx context.Context, cachedSta
 	spec := r.context.GetSpec()
 	status, _ := r.context.GetStatus()
 
-	member, _, ok := status.Members.ElementByID(memberID)
+	member, group, ok := status.Members.ElementByID(memberID)
 	if !ok {
 		return nil, errors.Newf("Member not found")
 	}
 
-	imageInfo, imageFound := r.SelectImageForMember(spec, status, member)
+	imageInfo, imageFound := r.SelectImageForMember(spec, status, member, group)
 	if !imageFound {
 		return nil, errors.Newf("ImageInfo not found")
 	}
@@ -463,60 +465,90 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 	return pod, nil
 }
 
-func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
-	var imageInfo api.ImageInfo
-	if current := status.CurrentImage; current != nil {
-		// Use current image
-		imageInfo = *current
+// SelectImage selects the current image info for the given group of instances.
+// If the current image info is not set, it tries to find it from the list of known images.
+func (r *Resources) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup) (api.ImageInfo, bool) {
+	useSyncImage := spec.IsArangoSyncImageSet(group)
+
+	var currentImage *api.ImageInfo
+	if useSyncImage {
+		currentImage = status.CurrentSyncImage
 	} else {
-		// Find image ID
-		info, imageFound := status.Images.GetByImage(spec.GetImage())
-		if !imageFound {
-			return api.ImageInfo{}, false
-		}
-		imageInfo = info
-		// Save image as current image
+		currentImage = status.CurrentImage
+	}
+
+	if currentImage != nil {
+		return *currentImage, true
+	}
+
+	// The current image is not set. Try to set it from the known list of images.
+	var info api.ImageInfo
+	var found bool
+
+	if useSyncImage {
+		info, found = status.SyncImages.GetByImage(spec.Sync.GetSyncImage())
+	} else {
+		info, found = status.Images.GetByImage(spec.GetImage())
+	}
+
+	if !found {
+		return api.ImageInfo{}, false
+	}
+
+	// Save image as current image
+	if useSyncImage {
+		status.CurrentSyncImage = &info
+	} else {
 		status.CurrentImage = &info
 	}
-	return imageInfo, true
+
+	return info, true
 }
 
-func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
+func (r *Resources) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus,
+	group api.ServerGroup) (api.ImageInfo, bool) {
 	if member.Image != nil {
 		return *member.Image, true
 	}
 
-	return r.SelectImage(spec, status)
+	return r.SelectImage(spec, status, group)
 }
 
-// createPodForMember creates all Pods listed in member status
-func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector, spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string, imageNotFoundOnce *sync.Once) error {
+// createPodForMember creates the Pod for the existing ArangoMember.
+func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspectorInterface.Inspector,
+	spec api.DeploymentSpec, arangoMember *api.ArangoMember, memberID string) error {
 	log := r.log
 	status, lastVersion := r.context.GetStatus()
 
-	// Select image
-	imageInfo, imageFound := r.SelectImage(spec, status)
-	if !imageFound {
-		imageNotFoundOnce.Do(func() {
-			log.Debug().Str("image", spec.GetImage()).Msg("Image ID is not known yet for image")
-		})
-		return nil
-	}
-
 	template := arangoMember.Status.Template
-
 	if template == nil {
 		// Template not yet propagated
-		return errors.Newf("Template not yet propagated")
-	}
-
-	if status.CurrentImage == nil {
-		status.CurrentImage = &imageInfo
+		return errors.New("Template not yet propagated")
 	}
 
 	m, group, found := status.Members.ElementByID(memberID)
+	if !found {
+		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
+	}
+
+	// Select the image.
+	imageInfo, imageFound := r.SelectImage(spec, status, group)
+	if !imageFound {
+		return fmt.Errorf("image \"%s\" not found: %w", spec.GetImageByGroup(group), ErrImageNotFound)
+	}
+
+	if spec.IsArangoSyncImageSet(group) {
+		if status.CurrentSyncImage == nil {
+			status.CurrentSyncImage = &imageInfo
+		}
+	} else {
+		if status.CurrentImage == nil {
+			status.CurrentImage = &imageInfo
+		}
+	}
+
 	if m.Image == nil {
-		m.Image = status.CurrentImage
+		m.Image = &imageInfo
 
 		if err := status.Members.Update(m, group); err != nil {
 			return errors.WithStack(err)
@@ -524,12 +556,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	}
 
 	imageInfo = *m.Image
-
 	apiObject := r.context.GetAPIObject()
-
-	if !found {
-		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
-	}
 	groupSpec := spec.GetServerGroupSpec(group)
 
 	// Update pod name
@@ -732,7 +759,7 @@ func ChecksumArangoPod(groupSpec api.ServerGroupSpec, pod *core.Pod) (string, er
 func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus, _ := r.context.GetStatus()
-	imageNotFoundOnce := &sync.Once{}
+	var imageNotFoundOnce bool
 
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -755,9 +782,16 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 			r.log.Warn().Msgf("Ensuring pod")
 
 			spec := r.context.GetSpec()
-			if err := r.createPodForMember(ctx, cachedStatus, spec, member, m.ID, imageNotFoundOnce); err != nil {
-				r.log.Warn().Err(err).Msgf("Ensuring pod failed")
-				return errors.WithStack(err)
+			if err := r.createPodForMember(ctx, cachedStatus, spec, member, m.ID); err != nil {
+				if !goerrors.Is(err, ErrImageNotFound) {
+					r.log.Warn().Err(err).Msgf("Ensuring pod failed")
+					return errors.WithStack(err)
+				}
+
+				if !imageNotFoundOnce {
+					imageNotFoundOnce = true
+					r.log.Debug().Err(err).Msg("Image ID is not known yet")
+				}
 			}
 		}
 		return nil

@@ -124,13 +124,13 @@ type ActionContext interface {
 	DeleteTLSCASecret(ctx context.Context) error
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
-	GetImageInfo(imageName string) (api.ImageInfo, bool)
-	// GetImageInfo returns the image info for an current image.
+	GetImageInfo(imageName string, group api.ServerGroup) (api.ImageInfo, bool)
+	// GetCurrentImageInfo returns the image info for a current image.
 	// Returns: (info, infoFound)
 	GetCurrentImageInfo() (api.ImageInfo, bool)
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
-	SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error
+	SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo, group api.ServerGroup) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
 	// GetShardSyncStatus returns true if all shards are in sync
@@ -152,7 +152,7 @@ type ActionContext interface {
 	// GetName receives information about a deployment name
 	GetName() string
 	// SelectImage select currently used image by pod
-	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup) (api.ImageInfo, bool)
 }
 
 // newActionContext creates a new ActionContext implementation.
@@ -203,8 +203,8 @@ func (ac *actionContext) RenderPodTemplateForMember(ctx context.Context, cachedS
 	return ac.context.RenderPodTemplateForMember(ctx, cachedStatus, spec, status, memberID, imageInfo)
 }
 
-func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool) {
-	return ac.context.SelectImage(spec, status)
+func (ac *actionContext) SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus, group api.ServerGroup) (api.ImageInfo, bool) {
+	return ac.context.SelectImage(spec, status, group)
 }
 
 func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
@@ -489,16 +489,24 @@ func (ac *actionContext) DeleteTLSCASecret(ctx context.Context) error {
 
 // GetImageInfo returns the image info for an image with given name.
 // Returns: (info, infoFound)
-func (ac *actionContext) GetImageInfo(imageName string) (api.ImageInfo, bool) {
+func (ac *actionContext) GetImageInfo(imageName string, group api.ServerGroup) (api.ImageInfo, bool) {
 	status, _ := ac.context.GetStatus()
+	spec := ac.context.GetSpec()
+
+	if spec.IsArangoSyncImageSet(group) {
+		return status.SyncImages.GetByImage(imageName)
+	}
+
 	return status.Images.GetByImage(imageName)
 }
 
-// GetImageInfo returns the image info for an current image.
+// GetCurrentImageInfo returns the image info for a current image.
 // Returns: (info, infoFound)
 func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
 	status, _ := ac.context.GetStatus()
 
+	// Currently, there is no need to apply logic with `CurrentSyncImage` here because that function is used
+	// on behalf of ArangoD images.
 	if status.CurrentImage == nil {
 		return api.ImageInfo{}, false
 	}
@@ -508,12 +516,21 @@ func (ac *actionContext) GetCurrentImageInfo() (api.ImageInfo, bool) {
 
 // SetCurrentImage changes the CurrentImage field in the deployment
 // status to the given image.
-func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error {
+func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo, group api.ServerGroup) error {
 	return ac.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-		if s.CurrentImage == nil || s.CurrentImage.Image != imageInfo.Image {
-			s.CurrentImage = &imageInfo
-			return true
+
+		if ac.context.GetSpec().IsArangoSyncImageSet(group) {
+			if s.CurrentSyncImage == nil || s.CurrentSyncImage.Image != imageInfo.Image {
+				s.CurrentSyncImage = &imageInfo
+				return true
+			}
+		} else {
+			if s.CurrentImage == nil || s.CurrentImage.Image != imageInfo.Image {
+				s.CurrentImage = &imageInfo
+				return true
+			}
 		}
+
 		return false
 	}, true)
 }

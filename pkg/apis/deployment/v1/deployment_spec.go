@@ -228,17 +228,27 @@ func (s DeploymentSpec) GetImage() string {
 	return util.StringOrDefault(s.Image)
 }
 
-// GetSyncImage returns, if set, Sync.Image or the default image.
-func (s DeploymentSpec) GetSyncImage() string {
-	if s.Sync.HasSyncImage() {
+// GetImageByGroup returns the image which depends on the given group and spec settings.
+func (s DeploymentSpec) GetImageByGroup(group ServerGroup) string {
+	if s.IsArangoSyncImageSet(group) {
 		return s.Sync.GetSyncImage()
 	}
+
 	return s.GetImage()
 }
 
 // GetImagePullPolicy returns the value of imagePullPolicy.
 func (s DeploymentSpec) GetImagePullPolicy() core.PullPolicy {
 	return util.PullPolicyOrDefault(s.ImagePullPolicy)
+}
+
+// IsArangoSyncImageSet returns true if the additional ArangoSync image is provided for the specific group of servers.
+func (s DeploymentSpec) IsArangoSyncImageSet(group ServerGroup) bool {
+	if group.IsArangosync() && s.Sync.HasSyncImage() {
+		return true
+	}
+
+	return false
 }
 
 // IsDowntimeAllowed returns the value of downtimeAllowed.

@@ -17,27 +17,21 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package deployment
 
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/util/uuid"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/names"
 )
 
 func (d *Deployment) createAgencyMapping(ctx context.Context) error {
@@ -132,77 +126,30 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 	if id == "" {
 		return nil, errors.New("Unable to get ID")
 	}
-	deploymentName := apiObject.GetName()
-	role := group.AsRole()
 
-	switch group {
-	case api.ServerGroupSingle:
-		log.Debug().Str("id", id).Msg("Adding single server")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	case api.ServerGroupAgents:
-		log.Debug().Str("id", id).Msg("Adding agent")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	case api.ServerGroupDBServers:
-		log.Debug().Str("id", id).Msg("Adding dbserver")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	case api.ServerGroupCoordinators:
-		log.Debug().Str("id", id).Msg("Adding coordinator")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	case api.ServerGroupSyncMasters:
-		log.Debug().Str("id", id).Msg("Adding syncmaster")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	case api.ServerGroupSyncWorkers:
-		log.Debug().Str("id", id).Msg("Adding syncworker")
-		return &api.MemberStatus{
-			ID:                        id,
-			UID:                       uuid.NewUUID(),
-			CreatedAt:                 metav1.Now(),
-			Phase:                     api.MemberPhaseNone,
-			PersistentVolumeClaimName: "",
-			PodName:                   "",
-			Image:                     apiObject.Status.CurrentImage,
-		}, nil
-	default:
+	if !group.IsKnown() {
 		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))
 	}
+
+	ms := api.MemberStatus{
+		ID:        id,
+		UID:       uuid.NewUUID(),
+		CreatedAt: metav1.Now(),
+		Phase:     api.MemberPhaseNone,
+	}
+
+	if apiObject.Spec.IsArangoSyncImageSet(group) {
+		ms.Image = apiObject.Status.CurrentSyncImage
+	} else {
+		ms.Image = apiObject.Status.CurrentImage
+	}
+
+	if !group.IsStateless() {
+		deploymentName := apiObject.GetName()
+		ms.PersistentVolumeClaimName = k8sutil.CreatePersistentVolumeClaimName(deploymentName, group.AsRole(), id)
+	}
+
+	log.Debug().Str("id", id).Str("role", group.AsRole()).Msg("Adding server")
+
+	return &ms, nil
 }

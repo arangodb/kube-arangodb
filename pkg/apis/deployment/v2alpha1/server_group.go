@@ -155,6 +155,18 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 	}
 }
 
+// IsKnown returns true when the group is known during the lifecycle of the deployment.
+// The group `ServerGroupImageDiscovery` is not considered as the normal operation group.
+func (g ServerGroup) IsKnown() bool {
+	switch g {
+	case ServerGroupSingle, ServerGroupAgents, ServerGroupDBServers, ServerGroupCoordinators,
+		ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+	default:
+		return false
+	}
+}
+
 // IsStateless returns true when the groups runs servers without a persistent volume.
 func (g ServerGroup) IsStateless() bool {
 	switch g {
