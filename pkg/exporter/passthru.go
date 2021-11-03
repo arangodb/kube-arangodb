@@ -123,6 +123,12 @@ func (p passthru) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// Fix Header response
 	responseStr = strings.ReplaceAll(responseStr, "guage", "gauge")
 
+	// Attach monitor data
+	monitorData := currentMembersStatus.Load()
+	if monitorData != nil {
+		responseStr = responseStr + monitorData.(string)
+	}
+
 	resp.WriteHeader(data.StatusCode)
 	_, err = resp.Write([]byte(responseStr))
 	if err != nil {

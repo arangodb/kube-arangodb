@@ -431,9 +431,11 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 
 var (
 	exporterTokenClaims = jg.MapClaims{
-		"iss":           "arangodb",
-		"server_id":     "exporter",
-		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description", k8sutil.ArangoExporterInternalEndpoint, k8sutil.ArangoExporterInternalEndpointV2},
+		"iss":       "arangodb",
+		"server_id": "exporter",
+		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
+			k8sutil.ArangoExporterInternalEndpoint, k8sutil.ArangoExporterInternalEndpointV2,
+			k8sutil.ArangoExporterStatusEndpoint, k8sutil.ArangoExporterClusterHealthEndpoint},
 	}
 )
 

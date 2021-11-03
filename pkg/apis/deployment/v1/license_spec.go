@@ -52,7 +52,7 @@ func (s LicenseSpec) Validate() error {
 }
 
 // SetDefaultsFrom fills all values not set in s with values from other
-func (s LicenseSpec) SetDefaultsFrom(other LicenseSpec) {
+func (s *LicenseSpec) SetDefaultsFrom(other LicenseSpec) {
 	if !s.HasSecretName() {
 		s.SecretName = util.NewStringOrNil(other.SecretName)
 	}
