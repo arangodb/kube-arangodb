@@ -26,7 +26,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
@@ -53,7 +53,7 @@ func init() {
 	var watchTimeout time.Duration
 
 	cmdLifecycleWait.Flags().StringVarP(&deploymentName, ArgDeploymentName, "d", "",
-		"Name of ArangoDeployment to watch - necessary when more than one deployment exist within on namespace")
+		"Name of ArangoDeployment to watch - necessary when more than one deployment exist within one namespace")
 	cmdLifecycleWait.Flags().DurationVarP(&watchTimeout, ArgDeploymentWatchTimeout, "t", WatchDefaultTimeout,
 		"Watch timeout")
 }
