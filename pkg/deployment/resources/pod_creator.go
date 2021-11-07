@@ -357,7 +357,6 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			context:          r.context,
 			autoUpgrade:      autoUpgrade,
 			deploymentStatus: status,
-			id:               memberID,
 			arangoMember:     *member,
 		}
 
@@ -368,6 +367,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+		memberPod.volumes = CreateArangoDVolumes(*newMember, input, spec, groupSpec)
 
 		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
@@ -669,7 +669,7 @@ func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sut
 		return nil, errors.WithStack(err)
 	}
 
-	p.Spec.Volumes, c.VolumeMounts = podCreator.GetVolumes()
+	p.Spec.Volumes = podCreator.GetVolumes()
 	p.Spec.Containers = append(p.Spec.Containers, c)
 	if err := podCreator.GetSidecars(&p); err != nil {
 		return nil, err

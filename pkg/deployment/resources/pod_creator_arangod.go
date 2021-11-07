@@ -66,8 +66,8 @@ type MemberArangoDPod struct {
 	resources        *Resources
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
-	id               string
 	args             []string
+	volumes          pod.Volumes
 }
 
 type ArangoDContainer struct {
@@ -78,12 +78,13 @@ type ArangoDContainer struct {
 	group     api.ServerGroup
 	imageInfo api.ImageInfo
 	args      []string
+	volumes   pod.Volumes
 }
 
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
-			Name:          "server",
+			Name:          k8sutil.ServerContainerName,
 			ContainerPort: int32(k8sutil.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
@@ -215,6 +216,10 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (a *ArangoDContainer) GetVolumeMounts() []core.VolumeMount {
+	return a.volumes.VolumeMounts()
+}
+
 func (m *MemberArangoDPod) AsInput() pod.Input {
 	return pod.Input{
 		ApiObject:    m.context.GetAPIObject(),
@@ -336,55 +341,8 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	return nil
 }
 
-func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	volumes := pod.NewVolumes()
-
-	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
-
-	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
-
-	if m.status.PersistentVolumeClaimName != "" {
-		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
-			m.status.PersistentVolumeClaimName)
-
-		volumes.AddVolume(vol)
-	} else {
-		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
-	}
-
-	// TLS
-	volumes.Append(pod.TLS(), m.AsInput())
-
-	// Encryption
-	volumes.Append(pod.Encryption(), m.AsInput())
-
-	// Security
-	volumes.Append(pod.Security(), m.AsInput())
-
-	if m.spec.Metrics.IsEnabled() {
-		token := m.spec.Metrics.GetJWTTokenSecretName()
-		if m.spec.Authentication.IsAuthenticated() && token != "" {
-			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-			volumes.AddVolume(vol)
-		}
-	}
-
-	volumes.Append(pod.JWT(), m.AsInput())
-
-	volumes.AddVolume(k8sutil.LifecycleVolume())
-
-	// SNI
-	volumes.Append(pod.SNI(), m.AsInput())
-
-	if len(m.groupSpec.Volumes) > 0 {
-		volumes.AddVolume(m.groupSpec.Volumes.Volumes()...)
-	}
-
-	if len(m.groupSpec.VolumeMounts) > 0 {
-		volumes.AddVolumeMount(m.groupSpec.VolumeMounts.VolumeMounts()...)
-	}
-
-	return volumes.Volumes(), volumes.VolumeMounts()
+func (m *MemberArangoDPod) GetVolumes() []core.Volume {
+	return m.volumes.Volumes()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
@@ -434,8 +392,6 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 				return nil, err
 			}
 
-			_, c.VolumeMounts = m.GetVolumes()
-
 			c.Name = api.ServerGroupReservedInitContainerNameUpgrade
 			c.Lifecycle = nil
 			c.LivenessProbe = nil
@@ -457,8 +413,6 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 				if err != nil {
 					return nil, err
 				}
-
-				_, c.VolumeMounts = m.GetVolumes()
 
 				c.Name = api.ServerGroupReservedInitContainerNameVersionCheck
 				c.Lifecycle = nil
@@ -507,6 +461,7 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 		imageInfo: m.imageInfo,
 		groupSpec: m.groupSpec,
 		args:      m.args,
+		volumes:   m.volumes,
 	}
 }
 
@@ -561,4 +516,57 @@ func (m *MemberArangoDPod) Labels() map[string]string {
 	}
 
 	return l
+}
+
+// CreateArangoDVolumes returns wrapper with volumes for a pod and volume mounts for a container.
+func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.DeploymentSpec,
+	groupSpec api.ServerGroupSpec) pod.Volumes {
+	volumes := pod.NewVolumes()
+
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+
+	if status.PersistentVolumeClaimName != "" {
+		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+			status.PersistentVolumeClaimName)
+
+		volumes.AddVolume(vol)
+	} else {
+		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	}
+
+	// TLS
+	volumes.Append(pod.TLS(), input)
+
+	// Encryption
+	volumes.Append(pod.Encryption(), input)
+
+	// Security
+	volumes.Append(pod.Security(), input)
+
+	if spec.Metrics.IsEnabled() {
+		token := spec.Metrics.GetJWTTokenSecretName()
+		if spec.Authentication.IsAuthenticated() && token != "" {
+			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			volumes.AddVolume(vol)
+		}
+	}
+
+	volumes.Append(pod.JWT(), input)
+
+	volumes.AddVolume(k8sutil.LifecycleVolume())
+
+	// SNI
+	volumes.Append(pod.SNI(), input)
+
+	if len(groupSpec.Volumes) > 0 {
+		volumes.AddVolume(groupSpec.Volumes.Volumes()...)
+	}
+
+	if len(groupSpec.VolumeMounts) > 0 {
+		volumes.AddVolumeMount(groupSpec.VolumeMounts.VolumeMounts()...)
+	}
+
+	return volumes
 }

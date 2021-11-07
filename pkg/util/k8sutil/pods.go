@@ -437,6 +437,7 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 		Lifecycle:       lifecycle,
 		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
 		SecurityContext: containerCreator.GetSecurityContext(),
+		VolumeMounts:    containerCreator.GetVolumeMounts(),
 	}, nil
 }
 

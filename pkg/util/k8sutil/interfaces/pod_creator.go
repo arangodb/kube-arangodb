@@ -41,7 +41,7 @@ type PodCreator interface {
 	Init(*core.Pod)
 	GetName() string
 	GetRole() string
-	GetVolumes() ([]core.Volume, []core.VolumeMount)
+	GetVolumes() []core.Volume
 	GetSidecars(*core.Pod) error
 	GetInitContainers(cachedStatus Inspector) ([]core.Container, error)
 	GetFinalizers() []string
@@ -74,4 +74,5 @@ type ContainerCreator interface {
 	GetEnvs() []core.EnvVar
 	GetSecurityContext() *core.SecurityContext
 	GetPorts() []core.ContainerPort
+	GetVolumeMounts() []core.VolumeMount
 }

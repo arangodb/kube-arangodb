@@ -284,14 +284,8 @@ func (i *ImageUpdatePod) GetAffinityRole() string {
 	return ""
 }
 
-func (i *ImageUpdatePod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	var volumes []core.Volume
-	var volumeMounts []core.VolumeMount
-
-	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
-	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
-
-	return volumes, volumeMounts
+func (i *ImageUpdatePod) GetVolumes() []core.Volume {
+	return []core.Volume{k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName)}
 }
 
 func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
@@ -409,7 +403,7 @@ func (a *ContainerIdentity) GetName() string {
 func (a *ContainerIdentity) GetPorts() []core.ContainerPort {
 	return []core.ContainerPort{
 		{
-			Name:          "server",
+			Name:          k8sutil.ServerContainerName,
 			ContainerPort: int32(k8sutil.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
@@ -428,6 +422,11 @@ func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {
 	return a.ID.Get().SecurityContext.NewSecurityContext()
 }
 
+// GetVolumeMounts returns nil for the basic container identity.
+func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
+	return nil
+}
+
 func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 	env := make([]core.EnvVar, 0)
 
@@ -441,6 +440,11 @@ func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 	}
 
 	return nil
+}
+
+// GetVolumeMounts returns volume mount for the ArangoD data.
+func (a *ArangoDIdentity) GetVolumeMounts() []core.VolumeMount {
+	return []core.VolumeMount{k8sutil.ArangodVolumeMount()}
 }
 
 // GetExecutor returns the fixed path to the ArangoSync binary in the container.
