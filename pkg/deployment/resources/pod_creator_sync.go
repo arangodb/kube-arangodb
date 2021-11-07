@@ -48,6 +48,7 @@ type ArangoSyncContainer struct {
 	group     api.ServerGroup
 	resources *Resources
 	imageInfo api.ImageInfo
+	args      []string
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
@@ -64,6 +65,15 @@ type MemberSyncPod struct {
 	arangoMember           api.ArangoMember
 	resources              *Resources
 	imageInfo              api.ImageInfo
+	args                   []string
+}
+
+func (a *ArangoSyncContainer) GetArgs() []string {
+	return a.args
+}
+
+func (a *ArangoSyncContainer) GetName() string {
+	return k8sutil.ServerContainerName
 }
 
 func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
@@ -293,6 +303,7 @@ func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 		group:     m.group,
 		resources: m.resources,
 		imageInfo: m.imageInfo,
+		args:      m.args,
 	}
 }
 

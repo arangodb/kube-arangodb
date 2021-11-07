@@ -413,7 +413,7 @@ func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.Res
 }
 
 // NewContainer creates a container for specified creator
-func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (core.Container, error) {
+func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container, error) {
 
 	liveness, readiness, err := containerCreator.GetProbes()
 	if err != nil {
@@ -426,9 +426,9 @@ func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (
 	}
 
 	return core.Container{
-		Name:            ServerContainerName,
+		Name:            containerCreator.GetName(),
 		Image:           containerCreator.GetImage(),
-		Command:         append([]string{containerCreator.GetExecutor()}, args...),
+		Command:         append([]string{containerCreator.GetExecutor()}, containerCreator.GetArgs()...),
 		Ports:           containerCreator.GetPorts(),
 		Env:             containerCreator.GetEnvs(),
 		Resources:       containerCreator.GetResourceRequirements(),

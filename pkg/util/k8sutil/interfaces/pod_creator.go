@@ -63,6 +63,8 @@ type PodCreator interface {
 }
 
 type ContainerCreator interface {
+	GetArgs() []string
+	GetName() string
 	GetExecutor() string
 	GetProbes() (*core.Probe, *core.Probe, error)
 	GetResourceRequirements() core.ResourceRequirements

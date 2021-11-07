@@ -343,7 +343,6 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 	newMember.PodName = k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, newMember.ID, CreatePodSuffix(spec))
 
 	var podCreator interfaces.PodCreator
-	var args []string
 	if group.IsArangod() {
 		// Prepare arguments
 		autoUpgrade := newMember.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
@@ -365,7 +364,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		input := memberPod.AsInput()
 
 		var err error
-		args, err = createArangodArgs(cachedStatus, input)
+		memberPod.args, err = createArangodArgs(cachedStatus, input)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -428,9 +427,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			}
 		}
 
-		// Prepare arguments
-		args = createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember)
-
+		// Prepare arguments.
 		memberSyncPod := MemberSyncPod{
 			tlsKeyfileSecretName:   tlsKeyfileSecretName,
 			clientAuthCASecretName: clientAuthCASecretName,
@@ -442,6 +439,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			resources:              r,
 			imageInfo:              imageInfo,
 			arangoMember:           *member,
+			args:                   createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember),
 		}
 
 		podCreator = &memberSyncPod
@@ -449,7 +447,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		return nil, errors.Newf("unable to render Pod")
 	}
 
-	pod, err := RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, args, podCreator)
+	pod, err := RenderArangoPod(cachedStatus, apiObject, role, newMember.ID, newMember.PodName, podCreator)
 	if err != nil {
 		return nil, err
 	}
@@ -637,7 +635,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 
 // RenderArangoPod renders new ArangoD Pod
 func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sutil.APIObject, role, id, podName string,
-	args []string, podCreator interfaces.PodCreator) (*core.Pod, error) {
+	podCreator interfaces.PodCreator) (*core.Pod, error) {
 
 	// Prepare basic pod
 	p := k8sutil.NewPod(deployment.GetName(), role, id, podName, podCreator)
@@ -666,7 +664,7 @@ func RenderArangoPod(cachedStatus inspectorInterface.Inspector, deployment k8sut
 		p.Spec.InitContainers = append(p.Spec.InitContainers, initContainers...)
 	}
 
-	c, err := k8sutil.NewContainer(args, podCreator.GetContainerCreator())
+	c, err := k8sutil.NewContainer(podCreator.GetContainerCreator())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -54,6 +54,7 @@ type ImageUpdatePod struct {
 
 // ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
 type ContainerIdentity struct {
+	args            []string
 	ID              *api.ServerIDGroupSpec
 	image           string
 	imagePullPolicy core.PullPolicy
@@ -222,6 +223,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		apiObject: ib.APIObject,
 		containerCreator: &ArangoDIdentity{
 			ContainerCreator: &ContainerIdentity{
+				args:            args,
 				ID:              ib.Spec.ID,
 				image:           image,
 				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
@@ -230,7 +232,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		},
 	}
 
-	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, args, &imagePod)
+	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
 		return true, errors.WithStack(err)
@@ -376,6 +378,10 @@ func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
 	return nil
 }
 
+func (a *ContainerIdentity) GetArgs() []string {
+	return a.args
+}
+
 func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
 	return nil
 }
@@ -394,6 +400,10 @@ func (a *ContainerIdentity) GetImagePullPolicy() core.PullPolicy {
 
 func (a *ContainerIdentity) GetLifecycle() (*core.Lifecycle, error) {
 	return nil, nil
+}
+
+func (a *ContainerIdentity) GetName() string {
+	return k8sutil.ServerContainerName
 }
 
 func (a *ContainerIdentity) GetPorts() []core.ContainerPort {

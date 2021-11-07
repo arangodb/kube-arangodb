@@ -67,6 +67,7 @@ type MemberArangoDPod struct {
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
 	id               string
+	args             []string
 }
 
 type ArangoDContainer struct {
@@ -76,6 +77,7 @@ type ArangoDContainer struct {
 	spec      api.DeploymentSpec
 	group     api.ServerGroup
 	imageInfo api.ImageInfo
+	args      []string
 }
 
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
@@ -99,6 +101,14 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	}
 
 	return ports
+}
+
+func (a *ArangoDContainer) GetArgs() []string {
+	return a.args
+}
+
+func (a *ArangoDContainer) GetName() string {
+	return k8sutil.ServerContainerName
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
@@ -414,12 +424,12 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade || m.status.Upgrade {
-			args, err := createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
+			m.args, err = createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
 			if err != nil {
 				return nil, err
 			}
 
-			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
+			c, err := k8sutil.NewContainer(m.GetContainerCreator())
 			if err != nil {
 				return nil, err
 			}
@@ -438,12 +448,12 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		{
 			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
 			if len(versionArgs) > 0 {
-				args, err := createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
+				m.args, err = createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
 				if err != nil {
 					return nil, err
 				}
 
-				c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
+				c, err := k8sutil.NewContainer(m.GetContainerCreator())
 				if err != nil {
 					return nil, err
 				}
@@ -496,6 +506,7 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 		resources: m.resources,
 		imageInfo: m.imageInfo,
 		groupSpec: m.groupSpec,
+		args:      m.args,
 	}
 }
 
