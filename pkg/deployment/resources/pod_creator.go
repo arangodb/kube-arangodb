@@ -428,18 +428,17 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 		}
 
 		// Prepare arguments.
+		volumes := CreateArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
+			clusterJWTSecretName)
 		memberSyncPod := MemberSyncPod{
-			tlsKeyfileSecretName:   tlsKeyfileSecretName,
-			clientAuthCASecretName: clientAuthCASecretName,
-			masterJWTSecretName:    masterJWTSecretName,
-			clusterJWTSecretName:   clusterJWTSecretName,
-			groupSpec:              groupSpec,
-			spec:                   spec,
-			group:                  group,
-			resources:              r,
-			imageInfo:              imageInfo,
-			arangoMember:           *member,
-			args:                   createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember),
+			groupSpec:    groupSpec,
+			spec:         spec,
+			group:        group,
+			resources:    r,
+			imageInfo:    imageInfo,
+			arangoMember: *member,
+			args:         createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember),
+			volumes:      volumes,
 		}
 
 		podCreator = &memberSyncPod

@@ -43,33 +43,27 @@ const (
 )
 
 type ArangoSyncContainer struct {
-	groupSpec              api.ServerGroupSpec
-	spec                   api.DeploymentSpec
-	group                  api.ServerGroup
-	resources              *Resources
-	imageInfo              api.ImageInfo
-	args                   []string
-	tlsKeyfileSecretName   string
-	clientAuthCASecretName string
-	masterJWTSecretName    string
-	clusterJWTSecretName   string
+	groupSpec api.ServerGroupSpec
+	spec      api.DeploymentSpec
+	group     api.ServerGroup
+	resources *Resources
+	imageInfo api.ImageInfo
+	args      []string
+	volumes   pod.Volumes
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
 var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
-	tlsKeyfileSecretName   string
-	clientAuthCASecretName string
-	masterJWTSecretName    string
-	clusterJWTSecretName   string
-	groupSpec              api.ServerGroupSpec
-	spec                   api.DeploymentSpec
-	group                  api.ServerGroup
-	arangoMember           api.ArangoMember
-	resources              *Resources
-	imageInfo              api.ImageInfo
-	args                   []string
+	groupSpec    api.ServerGroupSpec
+	spec         api.DeploymentSpec
+	group        api.ServerGroup
+	arangoMember api.ArangoMember
+	resources    *Resources
+	imageInfo    api.ImageInfo
+	args         []string
+	volumes      pod.Volumes
 }
 
 func (a *ArangoSyncContainer) GetArgs() []string {
@@ -171,27 +165,7 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 }
 
 func (a *ArangoSyncContainer) GetVolumeMounts() []core.VolumeMount {
-	var volumeMounts []core.VolumeMount
-
-	volumeMounts = append(volumeMounts, k8sutil.LifecycleVolumeMount())
-
-	if a.tlsKeyfileSecretName != "" {
-		volumeMounts = append(volumeMounts, k8sutil.TlsKeyfileVolumeMount())
-	}
-
-	if a.clientAuthCASecretName != "" {
-		volumeMounts = append(volumeMounts, k8sutil.ClientAuthCACertificateVolumeMount())
-	}
-
-	if a.masterJWTSecretName != "" {
-		volumeMounts = append(volumeMounts, k8sutil.MasterJWTVolumeMount())
-	}
-
-	if a.clusterJWTSecretName != "" {
-		volumeMounts = append(volumeMounts, k8sutil.ClusterJWTVolumeMount())
-	}
-
-	return volumeMounts
+	return a.volumes.VolumeMounts()
 }
 
 func (m *MemberSyncPod) GetName() string {
@@ -257,34 +231,7 @@ func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
 }
 
 func (m *MemberSyncPod) GetVolumes() []core.Volume {
-	var volumes []core.Volume
-
-	volumes = append(volumes, k8sutil.LifecycleVolume())
-
-	if m.tlsKeyfileSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, m.tlsKeyfileSecretName)
-		volumes = append(volumes, vol)
-	}
-
-	// Client Authentication certificate secret mount (if any)
-	if m.clientAuthCASecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName, m.clientAuthCASecretName)
-		volumes = append(volumes, vol)
-	}
-
-	// Master JWT secret mount (if any)
-	if m.masterJWTSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, m.masterJWTSecretName)
-		volumes = append(volumes, vol)
-	}
-
-	// Cluster JWT secret mount (if any)
-	if m.clusterJWTSecretName != "" {
-		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, m.clusterJWTSecretName)
-		volumes = append(volumes, vol)
-	}
-
-	return volumes
+	return m.volumes.Volumes()
 }
 
 func (m *MemberSyncPod) IsDeploymentMode() bool {
@@ -320,16 +267,13 @@ func (m *MemberSyncPod) GetTolerations() []core.Toleration {
 
 func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoSyncContainer{
-		groupSpec:              m.groupSpec,
-		spec:                   m.spec,
-		group:                  m.group,
-		resources:              m.resources,
-		imageInfo:              m.imageInfo,
-		args:                   m.args,
-		tlsKeyfileSecretName:   m.tlsKeyfileSecretName,
-		clientAuthCASecretName: m.clientAuthCASecretName,
-		masterJWTSecretName:    m.masterJWTSecretName,
-		clusterJWTSecretName:   m.clusterJWTSecretName,
+		groupSpec: m.groupSpec,
+		spec:      m.spec,
+		group:     m.group,
+		resources: m.resources,
+		imageInfo: m.imageInfo,
+		args:      m.args,
+		volumes:   m.volumes,
 	}
 }
 
@@ -357,4 +301,39 @@ func (m *MemberSyncPod) Annotations() map[string]string {
 
 func (m *MemberSyncPod) Labels() map[string]string {
 	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+}
+
+// CreateArangoSyncVolumes returns wrapper with volumes for a pod and volume mounts for a container.
+func CreateArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
+	clusterJWTSecretName string) pod.Volumes {
+	volumes := pod.NewVolumes()
+
+	volumes.AddVolume(k8sutil.LifecycleVolume())
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+
+	if tlsKeyfileSecretName != "" {
+		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, tlsKeyfileSecretName)
+		volumes.AddVolume(vol)
+		volumes.AddVolumeMount(k8sutil.TlsKeyfileVolumeMount())
+	}
+
+	if clientAuthCASecretName != "" {
+		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClientAuthCAVolumeName, clientAuthCASecretName)
+		volumes.AddVolume(vol)
+		volumes.AddVolumeMount(k8sutil.ClientAuthCACertificateVolumeMount())
+	}
+
+	if masterJWTSecretName != "" {
+		vol := k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, masterJWTSecretName)
+		volumes.AddVolume(vol)
+		volumes.AddVolumeMount(k8sutil.MasterJWTVolumeMount())
+	}
+
+	if clusterJWTSecretName != "" {
+		vol := k8sutil.CreateVolumeWithSecret(k8sutil.ClusterJWTSecretVolumeName, clusterJWTSecretName)
+		volumes.AddVolume(vol)
+		volumes.AddVolumeMount(k8sutil.ClusterJWTVolumeMount())
+	}
+
+	return volumes
 }
