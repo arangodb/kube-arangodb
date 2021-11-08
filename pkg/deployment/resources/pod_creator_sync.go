@@ -23,8 +23,9 @@
 package resources
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
