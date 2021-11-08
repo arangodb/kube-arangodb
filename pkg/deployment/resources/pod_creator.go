@@ -180,7 +180,8 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup,
+	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
 	var port int
@@ -358,15 +359,10 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			autoUpgrade:      autoUpgrade,
 			deploymentStatus: status,
 			arangoMember:     *member,
+			cachedStatus:     cachedStatus,
 		}
 
 		input := memberPod.AsInput()
-
-		var err error
-		memberPod.args, err = createArangodArgs(cachedStatus, input)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
 		memberPod.volumes = CreateArangoDVolumes(*newMember, input, spec, groupSpec)
 
 		if err := memberPod.Validate(cachedStatus); err != nil {
@@ -437,7 +433,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			resources:    r,
 			imageInfo:    imageInfo,
 			arangoMember: *member,
-			args:         createArangoSyncArgs(apiObject, spec, group, groupSpec, *newMember),
+			apiObject:    apiObject,
+			memberStatus: *newMember,
 			volumes:      volumes,
 		}
 

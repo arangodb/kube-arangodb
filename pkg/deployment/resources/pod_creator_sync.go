@@ -23,6 +23,7 @@
 package resources
 
 import (
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
@@ -43,13 +44,15 @@ const (
 )
 
 type ArangoSyncContainer struct {
-	groupSpec api.ServerGroupSpec
-	spec      api.DeploymentSpec
-	group     api.ServerGroup
-	resources *Resources
-	imageInfo api.ImageInfo
-	args      []string
-	volumes   pod.Volumes
+	groupSpec    api.ServerGroupSpec
+	spec         api.DeploymentSpec
+	group        api.ServerGroup
+	resources    *Resources
+	imageInfo    api.ImageInfo
+	apiObject    meta.Object
+	memberStatus api.MemberStatus
+	args         []string
+	volumes      pod.Volumes
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
@@ -62,12 +65,13 @@ type MemberSyncPod struct {
 	arangoMember api.ArangoMember
 	resources    *Resources
 	imageInfo    api.ImageInfo
-	args         []string
+	apiObject    meta.Object
+	memberStatus api.MemberStatus
 	volumes      pod.Volumes
 }
 
-func (a *ArangoSyncContainer) GetArgs() []string {
-	return a.args
+func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
+	return createArangoSyncArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus), nil
 }
 
 func (a *ArangoSyncContainer) GetName() string {
@@ -267,13 +271,14 @@ func (m *MemberSyncPod) GetTolerations() []core.Toleration {
 
 func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoSyncContainer{
-		groupSpec: m.groupSpec,
-		spec:      m.spec,
-		group:     m.group,
-		resources: m.resources,
-		imageInfo: m.imageInfo,
-		args:      m.args,
-		volumes:   m.volumes,
+		groupSpec:    m.groupSpec,
+		spec:         m.spec,
+		group:        m.group,
+		resources:    m.resources,
+		imageInfo:    m.imageInfo,
+		apiObject:    m.apiObject,
+		memberStatus: m.memberStatus,
+		volumes:      m.volumes,
 	}
 }
 

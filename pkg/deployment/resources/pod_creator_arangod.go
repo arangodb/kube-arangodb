@@ -66,19 +66,35 @@ type MemberArangoDPod struct {
 	resources        *Resources
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
-	args             []string
+	cachedStatus     interfaces.Inspector
 	volumes          pod.Volumes
 }
 
 type ArangoDContainer struct {
-	member    *MemberArangoDPod
-	resources *Resources
-	groupSpec api.ServerGroupSpec
-	spec      api.DeploymentSpec
-	group     api.ServerGroup
-	imageInfo api.ImageInfo
-	args      []string
-	volumes   pod.Volumes
+	member       *MemberArangoDPod
+	resources    *Resources
+	groupSpec    api.ServerGroupSpec
+	spec         api.DeploymentSpec
+	group        api.ServerGroup
+	imageInfo    api.ImageInfo
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	volumes      pod.Volumes
+}
+
+// ArangoUpgradeContainer can construct ArangoD upgrade container.
+type ArangoUpgradeContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+}
+
+// ArangoVersionCheckContainer can construct ArangoD version check container.
+type ArangoVersionCheckContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	versionArgs  k8sutil.OptionPairs
 }
 
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
@@ -104,8 +120,8 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	return ports
 }
 
-func (a *ArangoDContainer) GetArgs() []string {
-	return a.args
+func (a *ArangoDContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input)
 }
 
 func (a *ArangoDContainer) GetName() string {
@@ -382,20 +398,15 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade || m.status.Upgrade {
-			m.args, err = createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
+			upgradeContainer := &ArangoUpgradeContainer{
+				m.GetContainerCreator(),
+				cachedStatus,
+				m.AsInput(),
+			}
+			c, err := k8sutil.NewContainer(upgradeContainer)
 			if err != nil {
 				return nil, err
 			}
-
-			c, err := k8sutil.NewContainer(m.GetContainerCreator())
-			if err != nil {
-				return nil, err
-			}
-
-			c.Name = api.ServerGroupReservedInitContainerNameUpgrade
-			c.Lifecycle = nil
-			c.LivenessProbe = nil
-			c.ReadinessProbe = nil
 
 			initContainers = append(initContainers, c)
 		}
@@ -404,20 +415,17 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		{
 			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
 			if len(versionArgs) > 0 {
-				m.args, err = createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
+				upgradeContainer := &ArangoVersionCheckContainer{
+					m.GetContainerCreator(),
+					cachedStatus,
+					m.AsInput(),
+					versionArgs,
+				}
+
+				c, err := k8sutil.NewContainer(upgradeContainer)
 				if err != nil {
 					return nil, err
 				}
-
-				c, err := k8sutil.NewContainer(m.GetContainerCreator())
-				if err != nil {
-					return nil, err
-				}
-
-				c.Name = api.ServerGroupReservedInitContainerNameVersionCheck
-				c.Lifecycle = nil
-				c.LivenessProbe = nil
-				c.ReadinessProbe = nil
 
 				initContainers = append(initContainers, c)
 			}
@@ -454,14 +462,15 @@ func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 
 func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
-		member:    m,
-		spec:      m.spec,
-		group:     m.group,
-		resources: m.resources,
-		imageInfo: m.imageInfo,
-		groupSpec: m.groupSpec,
-		args:      m.args,
-		volumes:   m.volumes,
+		member:       m,
+		spec:         m.spec,
+		group:        m.group,
+		resources:    m.resources,
+		imageInfo:    m.imageInfo,
+		groupSpec:    m.groupSpec,
+		volumes:      m.volumes,
+		cachedStatus: m.cachedStatus,
+		input:        m.AsInput(),
 	}
 }
 
@@ -569,4 +578,44 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 	}
 
 	return volumes
+}
+
+// GetArgs returns list of arguments for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetArgs() ([]string, error) {
+	return createArangodArgsWithUpgrade(a.cachedStatus, a.input)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameUpgrade
+}
+
+// GetProbes returns no probes for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
+}
+
+// GetArgs returns list of arguments for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input, a.versionArgs...)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameVersionCheck
+}
+
+// GetProbes returns no probes for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
 }

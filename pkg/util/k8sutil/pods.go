@@ -425,10 +425,15 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 		return core.Container{}, err
 	}
 
+	args, err := containerCreator.GetArgs()
+	if err != nil {
+		return core.Container{}, err
+	}
+
 	return core.Container{
 		Name:            containerCreator.GetName(),
 		Image:           containerCreator.GetImage(),
-		Command:         append([]string{containerCreator.GetExecutor()}, containerCreator.GetArgs()...),
+		Command:         append([]string{containerCreator.GetExecutor()}, args...),
 		Ports:           containerCreator.GetPorts(),
 		Env:             containerCreator.GetEnvs(),
 		Resources:       containerCreator.GetResourceRequirements(),

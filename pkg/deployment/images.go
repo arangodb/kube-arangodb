@@ -54,7 +54,7 @@ type ImageUpdatePod struct {
 
 // ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
 type ContainerIdentity struct {
-	args            []string
+	ipAddress       string
 	ID              *api.ServerIDGroupSpec
 	image           string
 	imagePullPolicy core.PullPolicy
@@ -210,21 +210,14 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			Msg("Found image ID and ArangoDB version")
 		return false, nil
 	}
-	// Pod cannot be fetched, ensure it is created
-	args := []string{
-		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://%s:%d", ib.Spec.GetListenAddr(), k8sutil.ArangoPort),
-		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
-		"--log.output=+",
-	}
 
 	imagePod := ImageUpdatePod{
 		spec:      ib.Spec,
 		apiObject: ib.APIObject,
 		containerCreator: &ArangoDIdentity{
 			ContainerCreator: &ContainerIdentity{
-				args:            args,
 				ID:              ib.Spec.ID,
+				ipAddress:       ib.Spec.GetListenAddr(),
 				image:           image,
 				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
 			},
@@ -372,8 +365,13 @@ func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
 	return nil
 }
 
-func (a *ContainerIdentity) GetArgs() []string {
-	return a.args
+func (a *ContainerIdentity) GetArgs() ([]string, error) {
+	return []string{
+		"--server.authentication=false",
+		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, k8sutil.ArangoPort),
+		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		"--log.output=+",
+	}, nil
 }
 
 func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
