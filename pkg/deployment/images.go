@@ -54,7 +54,6 @@ type ImageUpdatePod struct {
 
 // ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
 type ContainerIdentity struct {
-	ipAddress       string
 	ID              *api.ServerIDGroupSpec
 	image           string
 	imagePullPolicy core.PullPolicy
@@ -63,7 +62,8 @@ type ContainerIdentity struct {
 // ArangoDIdentity helps to resolve the ArangoD identity, e.g.: image ID, version of the entrypoint.
 type ArangoDIdentity struct {
 	interfaces.ContainerCreator
-	License api.LicenseSpec
+	License   api.LicenseSpec
+	ipAddress string
 }
 
 // ArangoSyncIdentity helps to resolve the ArangoSync identity, e.g.: image ID, version of the entrypoint.
@@ -217,11 +217,11 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		containerCreator: &ArangoDIdentity{
 			ContainerCreator: &ContainerIdentity{
 				ID:              ib.Spec.ID,
-				ipAddress:       ib.Spec.GetListenAddr(),
 				image:           image,
 				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
 			},
-			License: ib.Spec.License,
+			License:   ib.Spec.License,
+			ipAddress: ib.Spec.GetListenAddr(),
 		},
 	}
 
@@ -366,12 +366,7 @@ func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
 }
 
 func (a *ContainerIdentity) GetArgs() ([]string, error) {
-	return []string{
-		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, k8sutil.ArangoPort),
-		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
-		"--log.output=+",
-	}, nil
+	return nil, nil
 }
 
 func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
@@ -423,6 +418,16 @@ func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {
 // GetVolumeMounts returns nil for the basic container identity.
 func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
 	return nil
+}
+
+// GetArgs returns the list of arguments for the ArangoD container identification.
+func (a *ArangoDIdentity) GetArgs() ([]string, error) {
+	return []string{
+		"--server.authentication=false",
+		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, k8sutil.ArangoPort),
+		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		"--log.output=+",
+	}, nil
 }
 
 func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
