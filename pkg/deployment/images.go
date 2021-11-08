@@ -278,7 +278,7 @@ func (i *ImageUpdatePod) GetAffinityRole() string {
 }
 
 func (i *ImageUpdatePod) GetVolumes() []core.Volume {
-	return []core.Volume{k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName)}
+	return getVolumes().Volumes()
 }
 
 func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
@@ -442,10 +442,18 @@ func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
 
 // GetVolumeMounts returns volume mount for the ArangoD data.
 func (a *ArangoDIdentity) GetVolumeMounts() []core.VolumeMount {
-	return []core.VolumeMount{k8sutil.ArangodVolumeMount()}
+	return getVolumes().VolumeMounts()
 }
 
 // GetExecutor returns the fixed path to the ArangoSync binary in the container.
 func (a *ArangoSyncIdentity) GetExecutor() string {
 	return resources.ArangoSyncExecutor
+}
+
+func getVolumes() pod.Volumes {
+	volumes := pod.NewVolumes()
+	volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	return volumes
 }
