@@ -362,9 +362,6 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			cachedStatus:     cachedStatus,
 		}
 
-		input := memberPod.AsInput()
-		memberPod.volumes = CreateArangoDVolumes(*newMember, input, spec, groupSpec)
-
 		if err := memberPod.Validate(cachedStatus); err != nil {
 			return nil, errors.WithStack(errors.Wrapf(err, "Validation of pods resources failed"))
 		}
@@ -423,22 +420,20 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			}
 		}
 
-		// Prepare arguments.
-		volumes := CreateArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
-			clusterJWTSecretName)
-		memberSyncPod := MemberSyncPod{
-			groupSpec:    groupSpec,
-			spec:         spec,
-			group:        group,
-			resources:    r,
-			imageInfo:    imageInfo,
-			arangoMember: *member,
-			apiObject:    apiObject,
-			memberStatus: *newMember,
-			volumes:      volumes,
+		podCreator = &MemberSyncPod{
+			tlsKeyfileSecretName:   tlsKeyfileSecretName,
+			clientAuthCASecretName: clientAuthCASecretName,
+			masterJWTSecretName:    masterJWTSecretName,
+			clusterJWTSecretName:   clusterJWTSecretName,
+			groupSpec:              groupSpec,
+			spec:                   spec,
+			group:                  group,
+			resources:              r,
+			imageInfo:              imageInfo,
+			arangoMember:           *member,
+			apiObject:              apiObject,
+			memberStatus:           *newMember,
 		}
-
-		podCreator = &memberSyncPod
 	} else {
 		return nil, errors.Newf("unable to render Pod")
 	}

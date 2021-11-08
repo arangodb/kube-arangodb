@@ -44,30 +44,35 @@ const (
 )
 
 type ArangoSyncContainer struct {
-	groupSpec    api.ServerGroupSpec
-	spec         api.DeploymentSpec
-	group        api.ServerGroup
-	resources    *Resources
-	imageInfo    api.ImageInfo
-	apiObject    meta.Object
-	memberStatus api.MemberStatus
-	args         []string
-	volumes      pod.Volumes
+	groupSpec              api.ServerGroupSpec
+	spec                   api.DeploymentSpec
+	group                  api.ServerGroup
+	resources              *Resources
+	imageInfo              api.ImageInfo
+	apiObject              meta.Object
+	memberStatus           api.MemberStatus
+	tlsKeyfileSecretName   string
+	clientAuthCASecretName string
+	masterJWTSecretName    string
+	clusterJWTSecretName   string
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
 var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
-	groupSpec    api.ServerGroupSpec
-	spec         api.DeploymentSpec
-	group        api.ServerGroup
-	arangoMember api.ArangoMember
-	resources    *Resources
-	imageInfo    api.ImageInfo
-	apiObject    meta.Object
-	memberStatus api.MemberStatus
-	volumes      pod.Volumes
+	tlsKeyfileSecretName   string
+	clientAuthCASecretName string
+	masterJWTSecretName    string
+	clusterJWTSecretName   string
+	groupSpec              api.ServerGroupSpec
+	spec                   api.DeploymentSpec
+	group                  api.ServerGroup
+	arangoMember           api.ArangoMember
+	resources              *Resources
+	imageInfo              api.ImageInfo
+	apiObject              meta.Object
+	memberStatus           api.MemberStatus
 }
 
 func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
@@ -169,7 +174,10 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 }
 
 func (a *ArangoSyncContainer) GetVolumeMounts() []core.VolumeMount {
-	return a.volumes.VolumeMounts()
+	volumes := createArangoSyncVolumes(a.tlsKeyfileSecretName, a.clientAuthCASecretName, a.masterJWTSecretName,
+		a.clusterJWTSecretName)
+
+	return volumes.VolumeMounts()
 }
 
 func (m *MemberSyncPod) GetName() string {
@@ -234,8 +242,12 @@ func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
 	return nil
 }
 
+// GetVolumes returns volumes for the ArangoSync container.
 func (m *MemberSyncPod) GetVolumes() []core.Volume {
-	return m.volumes.Volumes()
+	volumes := createArangoSyncVolumes(m.tlsKeyfileSecretName, m.clientAuthCASecretName, m.masterJWTSecretName,
+		m.clusterJWTSecretName)
+
+	return volumes.Volumes()
 }
 
 func (m *MemberSyncPod) IsDeploymentMode() bool {
@@ -271,14 +283,17 @@ func (m *MemberSyncPod) GetTolerations() []core.Toleration {
 
 func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoSyncContainer{
-		groupSpec:    m.groupSpec,
-		spec:         m.spec,
-		group:        m.group,
-		resources:    m.resources,
-		imageInfo:    m.imageInfo,
-		apiObject:    m.apiObject,
-		memberStatus: m.memberStatus,
-		volumes:      m.volumes,
+		groupSpec:              m.groupSpec,
+		spec:                   m.spec,
+		group:                  m.group,
+		resources:              m.resources,
+		imageInfo:              m.imageInfo,
+		apiObject:              m.apiObject,
+		memberStatus:           m.memberStatus,
+		tlsKeyfileSecretName:   m.tlsKeyfileSecretName,
+		clientAuthCASecretName: m.clientAuthCASecretName,
+		masterJWTSecretName:    m.masterJWTSecretName,
+		clusterJWTSecretName:   m.clusterJWTSecretName,
 	}
 }
 
@@ -308,8 +323,7 @@ func (m *MemberSyncPod) Labels() map[string]string {
 	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
 }
 
-// CreateArangoSyncVolumes returns wrapper with volumes for a pod and volume mounts for a container.
-func CreateArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
+func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
 	clusterJWTSecretName string) pod.Volumes {
 	volumes := pod.NewVolumes()
 

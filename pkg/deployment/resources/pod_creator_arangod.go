@@ -67,7 +67,6 @@ type MemberArangoDPod struct {
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
 	cachedStatus     interfaces.Inspector
-	volumes          pod.Volumes
 }
 
 type ArangoDContainer struct {
@@ -79,7 +78,7 @@ type ArangoDContainer struct {
 	imageInfo    api.ImageInfo
 	cachedStatus interfaces.Inspector
 	input        pod.Input
-	volumes      pod.Volumes
+	status       api.MemberStatus
 }
 
 // ArangoUpgradeContainer can construct ArangoD upgrade container.
@@ -233,7 +232,9 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 }
 
 func (a *ArangoDContainer) GetVolumeMounts() []core.VolumeMount {
-	return a.volumes.VolumeMounts()
+	volumes := CreateArangoDVolumes(a.status, a.input, a.spec, a.groupSpec)
+
+	return volumes.VolumeMounts()
 }
 
 func (m *MemberArangoDPod) AsInput() pod.Input {
@@ -358,7 +359,9 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 }
 
 func (m *MemberArangoDPod) GetVolumes() []core.Volume {
-	return m.volumes.Volumes()
+	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
+
+	return volumes.Volumes()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
@@ -468,9 +471,9 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 		resources:    m.resources,
 		imageInfo:    m.imageInfo,
 		groupSpec:    m.groupSpec,
-		volumes:      m.volumes,
 		cachedStatus: m.cachedStatus,
 		input:        m.AsInput(),
+		status:       m.status,
 	}
 }
 
