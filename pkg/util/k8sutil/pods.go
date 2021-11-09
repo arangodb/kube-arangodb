@@ -49,6 +49,7 @@ import (
 
 const (
 	ServerContainerName             = "server"
+	ArangoSyncWorkerSidecarName     = "worker"
 	ExporterContainerName           = "exporter"
 	ArangodVolumeName               = "arangod-data"
 	TlsKeyfileVolumeName            = "tls-keyfile"

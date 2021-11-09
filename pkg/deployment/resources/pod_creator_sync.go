@@ -61,6 +61,7 @@ type ArangoSyncContainer struct {
 	clientAuthCASecretName string
 	masterJWTSecretName    string
 	clusterJWTSecretName   string
+	sidecar                bool
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
@@ -86,14 +87,27 @@ func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
 }
 
 func (a *ArangoSyncContainer) GetName() string {
+	if a.sidecar {
+		return k8sutil.ArangoSyncWorkerSidecarName
+	}
 	return k8sutil.ServerContainerName
 }
 
 func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
+	if a.sidecar {
+		return []core.ContainerPort{
+			{
+				Name:          k8sutil.ArangoSyncWorkerSidecarName,
+				ContainerPort: int32(k8sutil.ArangoSyncWorkerPort),
+				Protocol:      core.ProtocolTCP,
+			},
+		}
+	}
+
 	return []core.ContainerPort{
 		{
 			Name:          k8sutil.ServerContainerName,
-			ContainerPort: int32(k8sutil.ArangoPort),
+			ContainerPort: int32(k8sutil.ArangoPort), // TODO test, why 8529, it should be 8729
 			Protocol:      core.ProtocolTCP,
 		},
 	}
@@ -145,6 +159,12 @@ func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirement
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
+	if a.sidecar {
+		// When arangosync worker works as a sidecar for the DB server then finalizers will ba launched
+		// on behalf of the DB server container.
+		return nil, nil
+	}
+
 	return k8sutil.NewLifecycleFinalizers()
 }
 
@@ -189,7 +209,7 @@ func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
 }
 
 func (a *ArangoSyncContainer) GetVolumeMounts() []core.VolumeMount {
-	volumes := createArangoSyncVolumes(a.tlsKeyfileSecretName, a.clientAuthCASecretName, a.masterJWTSecretName,
+	volumes := createArangoSyncVolumes(a.sidecar, a.tlsKeyfileSecretName, a.clientAuthCASecretName, a.masterJWTSecretName,
 		a.clusterJWTSecretName)
 
 	return volumes.VolumeMounts()
@@ -259,8 +279,9 @@ func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
 
 // GetVolumes returns volumes for the ArangoSync container.
 func (m *MemberSyncPod) GetVolumes() []core.Volume {
-	volumes := createArangoSyncVolumes(m.tlsKeyfileSecretName, m.clientAuthCASecretName, m.masterJWTSecretName,
-		m.clusterJWTSecretName)
+	// When the pod is created for the ArangoSync then it means that it will not work as a sidecar.
+	volumes := createArangoSyncVolumes(false, m.tlsKeyfileSecretName, m.clientAuthCASecretName,
+		m.masterJWTSecretName, m.clusterJWTSecretName)
 
 	return volumes.Volumes()
 }
@@ -380,12 +401,17 @@ func (m *MemberSyncPod) Labels() map[string]string {
 	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
 }
 
-func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
+// createArangoSyncVolumes returns the object with volumes and volume mounts for secrets' names.
+// Some volumes and mounts should not be included when container works as a sidecar.
+func createArangoSyncVolumes(sidecar bool, tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
 	clusterJWTSecretName string) pod.Volumes {
 	volumes := pod.NewVolumes()
 
-	volumes.AddVolume(k8sutil.LifecycleVolume())
-	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+	if !sidecar {
+		// It is done by the DB server container.
+		volumes.AddVolume(k8sutil.LifecycleVolume())
+		volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+	}
 
 	if tlsKeyfileSecretName != "" {
 		vol := k8sutil.CreateVolumeWithSecret(k8sutil.TlsKeyfileVolumeName, tlsKeyfileSecretName)

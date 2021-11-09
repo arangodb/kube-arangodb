@@ -365,6 +365,18 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			arangoMember:     *member,
 			cachedStatus:     cachedStatus,
 		}
+		// TODO test. It will be in the podCreator.Init function when master is merged to arangosync-v2.
+		if group == api.ServerGroupDBServers && spec.Sync.IsEnabled() && features.ArangoSyncV2().Enabled() {
+			masterJWTSecretName := spec.Sync.Authentication.GetJWTSecretName()
+			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
+			})
+			if err != nil {
+				return nil, errors.WithStack(errors.Wrapf(err, "Master JWT secret validation failed"))
+			}
+			memberPod.masterJWTSecretName = masterJWTSecretName
+		}
+
 	} else if group.IsArangosync() {
 		// Check image
 		if !imageInfo.Enterprise {
@@ -712,7 +724,7 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	deploymentStatus, _ := r.context.GetStatus()
 	var imageNotFoundOnce bool
 
-	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
+	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, _ api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
 			if m.Phase != api.MemberPhasePending {
 				continue
@@ -729,6 +741,13 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 				// Template is missing, nothing to do
 				continue
 			}
+
+			// TODO test it is not necessary because arango member will not be created beforehand.
+			//if group == api.ServerGroupSyncWorkers && features.ArangoSyncV2().Enabled() {
+			//	// In this case ArangoSync workers should be launched as a sidecar to the DB server.
+			//	r.log.Info().Msgf("The Pod for ArangoSync worker is not created because it will work as a sidecar")
+			//	continue
+			//}
 
 			r.log.Warn().Msgf("Ensuring pod")
 

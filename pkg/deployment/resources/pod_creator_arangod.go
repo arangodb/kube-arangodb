@@ -24,6 +24,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -57,17 +58,18 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
-	status           api.MemberStatus
-	groupSpec        api.ServerGroupSpec
-	spec             api.DeploymentSpec
-	deploymentStatus api.DeploymentStatus
-	group            api.ServerGroup
-	arangoMember     api.ArangoMember
-	context          Context
-	resources        *Resources
-	imageInfo        api.ImageInfo
-	autoUpgrade      bool
-	cachedStatus     interfaces.Inspector
+	status              api.MemberStatus
+	groupSpec           api.ServerGroupSpec
+	spec                api.DeploymentSpec
+	deploymentStatus    api.DeploymentStatus
+	group               api.ServerGroup
+	arangoMember        api.ArangoMember
+	context             Context
+	resources           *Resources
+	imageInfo           api.ImageInfo
+	autoUpgrade         bool
+	cachedStatus        interfaces.Inspector
+	masterJWTSecretName string
 }
 
 type ArangoDContainer struct {
@@ -367,11 +369,47 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
+	if len(m.masterJWTSecretName) > 0 {
+		// Create arangosync worker sidecar.
+		// The above value should be set only when DB server works with worker as a sidecar.
+		// TODO what about image? it should work when the image is provided from spec.sync.image.
+
+		sidecarGroup := api.ServerGroupSyncWorkers
+		sidecarImage := m.deploymentStatus.CurrentSyncImage
+		if sidecarImage == nil {
+			return errors.New("the 'spec.status.current-sync-image' is nil, so the arangosync image is unknown")
+		}
+
+		arangoSyncWorker := &ArangoSyncContainer{
+			groupSpec:           m.spec.GetServerGroupSpec(sidecarGroup),
+			spec:                m.spec,
+			group:               sidecarGroup,
+			resources:           m.resources,
+			imageInfo:           *sidecarImage,
+			apiObject:           m.context.GetAPIObject(),
+			memberStatus:        m.status, // TODO test. It is the DB server status (not arangosync worker)
+			masterJWTSecretName: m.masterJWTSecretName,
+			sidecar:             true,
+		}
+
+		c, err := k8sutil.NewContainer(arangoSyncWorker)
+		if err != nil {
+			return err
+		}
+		pod.Spec.Containers = append(pod.Spec.Containers, c)
+	}
+
 	return nil
 }
 
 func (m *MemberArangoDPod) GetVolumes() []core.Volume {
 	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
+
+	if len(m.masterJWTSecretName) > 0 {
+		// One more volume for the arangosync worker sidecar.
+		// The volume mount is attached when the container is created.
+		volumes.AddVolume(k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, m.masterJWTSecretName))
+	}
 
 	return volumes.Volumes()
 }
