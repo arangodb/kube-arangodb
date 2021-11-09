@@ -602,7 +602,7 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 	}
 
 	if err := podCreator.Init(ctx, cachedStatus, &p); err != nil {
-		return nil, errors.Wrapf(err, "failed to init the pod")
+		return nil, err
 	}
 
 	if initContainers, err := podCreator.GetInitContainers(cachedStatus); err != nil {

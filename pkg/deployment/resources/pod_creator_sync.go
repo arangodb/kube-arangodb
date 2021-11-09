@@ -312,7 +312,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.masterJWTSecretName)
 	})
 	if err != nil {
-		return errors.Wrapf(err, "ArangoSync master JWT secret validation failed")
+		return errors.Wrapf(err, "Master JWT secret validation failed")
 	}
 
 	monitoringTokenSecretName := m.spec.Sync.Monitoring.GetTokenSecretName()
@@ -320,7 +320,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), monitoringTokenSecretName)
 	})
 	if err != nil {
-		return errors.Wrapf(err, "ArangoSync monitoring token secret validation failed")
+		return errors.Wrapf(err, "Monitoring token secret validation failed")
 	}
 
 	if m.group == api.ServerGroupSyncMasters {
@@ -333,7 +333,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clusterJWTSecretName)
 			})
 			if err != nil {
-				return errors.Wrapf(err, "ArangoSync cluster JWT secret validation failed")
+				return errors.Wrapf(err, "Cluster JWT secret validation failed")
 			}
 		}
 		// Check client-auth CA certificate secret
@@ -342,7 +342,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 			return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clientAuthCASecretName)
 		})
 		if err != nil {
-			return errors.Wrapf(err, "ArangoSync client authentication CA certificate secret validation failed")
+			return errors.Wrapf(err, "Client authentication CA certificate secret validation failed")
 		}
 	}
 
