@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -252,10 +253,12 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(pod *core.Pod) {
+func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	return nil
 }
 
 func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {

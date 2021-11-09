@@ -23,7 +23,10 @@
 package resources
 
 import (
+	"context"
 	"math"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -298,13 +301,55 @@ func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	}
 }
 
-func (m *MemberSyncPod) Init(pod *core.Pod) {
+// Init initializes the arangosync pod.
+func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	m.masterJWTSecretName = m.spec.Sync.Authentication.GetJWTSecretName()
+	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.masterJWTSecretName)
+	})
+	if err != nil {
+		return errors.Wrapf(err, "ArangoSync master JWT secret validation failed")
+	}
+
+	monitoringTokenSecretName := m.spec.Sync.Monitoring.GetTokenSecretName()
+	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), monitoringTokenSecretName)
+	})
+	if err != nil {
+		return errors.Wrapf(err, "ArangoSync monitoring token secret validation failed")
+	}
+
+	if m.group == api.ServerGroupSyncMasters {
+		// Create TLS secret
+		m.tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(m.apiObject.GetName(), m.group.AsRole(), m.memberStatus.ID)
+		// Check cluster JWT secret
+		if m.spec.IsAuthenticated() {
+			m.clusterJWTSecretName = m.spec.Authentication.GetJWTSecretName()
+			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clusterJWTSecretName)
+			})
+			if err != nil {
+				return errors.Wrapf(err, "ArangoSync cluster JWT secret validation failed")
+			}
+		}
+		// Check client-auth CA certificate secret
+		m.clientAuthCASecretName = m.spec.Sync.Authentication.GetClientCASecretName()
+		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.SecretReadInterface(), m.clientAuthCASecretName)
+		})
+		if err != nil {
+			return errors.Wrapf(err, "ArangoSync client authentication CA certificate secret validation failed")
+		}
+	}
+
+	return nil
 }
 
-func (m *MemberSyncPod) Validate(cachedStatus interfaces.Inspector) error {
+func (m *MemberSyncPod) Validate(_ interfaces.Inspector) error {
 	return nil
 }
 

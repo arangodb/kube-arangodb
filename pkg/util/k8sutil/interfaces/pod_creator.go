@@ -23,6 +23,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	core "k8s.io/api/core/v1"
@@ -38,7 +40,7 @@ type PodModifier interface {
 }
 
 type PodCreator interface {
-	Init(*core.Pod)
+	Init(context.Context, Inspector, *core.Pod) error
 	GetName() string
 	GetRole() string
 	GetVolumes() []core.Volume
