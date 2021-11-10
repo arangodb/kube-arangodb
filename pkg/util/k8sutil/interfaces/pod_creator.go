@@ -23,6 +23,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	core "k8s.io/api/core/v1"
@@ -38,10 +40,10 @@ type PodModifier interface {
 }
 
 type PodCreator interface {
-	Init(*core.Pod)
+	Init(context.Context, Inspector, *core.Pod) error
 	GetName() string
 	GetRole() string
-	GetVolumes() ([]core.Volume, []core.VolumeMount)
+	GetVolumes() []core.Volume
 	GetSidecars(*core.Pod) error
 	GetInitContainers(cachedStatus Inspector) ([]core.Container, error)
 	GetFinalizers() []string
@@ -63,6 +65,8 @@ type PodCreator interface {
 }
 
 type ContainerCreator interface {
+	GetArgs() ([]string, error)
+	GetName() string
 	GetExecutor() string
 	GetProbes() (*core.Probe, *core.Probe, error)
 	GetResourceRequirements() core.ResourceRequirements
@@ -72,4 +76,5 @@ type ContainerCreator interface {
 	GetEnvs() []core.EnvVar
 	GetSecurityContext() *core.SecurityContext
 	GetPorts() []core.ContainerPort
+	GetVolumeMounts() []core.VolumeMount
 }

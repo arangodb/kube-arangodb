@@ -23,6 +23,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -66,22 +67,40 @@ type MemberArangoDPod struct {
 	resources        *Resources
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
-	id               string
+	cachedStatus     interfaces.Inspector
 }
 
 type ArangoDContainer struct {
-	member    *MemberArangoDPod
-	resources *Resources
-	groupSpec api.ServerGroupSpec
-	spec      api.DeploymentSpec
-	group     api.ServerGroup
-	imageInfo api.ImageInfo
+	member       *MemberArangoDPod
+	resources    *Resources
+	groupSpec    api.ServerGroupSpec
+	spec         api.DeploymentSpec
+	group        api.ServerGroup
+	imageInfo    api.ImageInfo
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	status       api.MemberStatus
+}
+
+// ArangoUpgradeContainer can construct ArangoD upgrade container.
+type ArangoUpgradeContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+}
+
+// ArangoVersionCheckContainer can construct ArangoD version check container.
+type ArangoVersionCheckContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	versionArgs  k8sutil.OptionPairs
 }
 
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
-			Name:          "server",
+			Name:          k8sutil.ServerContainerName,
 			ContainerPort: int32(k8sutil.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
@@ -99,6 +118,14 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	}
 
 	return ports
+}
+
+func (a *ArangoDContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input)
+}
+
+func (a *ArangoDContainer) GetName() string {
+	return k8sutil.ServerContainerName
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
@@ -205,6 +232,12 @@ func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
 }
 
+func (a *ArangoDContainer) GetVolumeMounts() []core.VolumeMount {
+	volumes := CreateArangoDVolumes(a.status, a.input, a.spec, a.groupSpec)
+
+	return volumes.VolumeMounts()
+}
+
 func (m *MemberArangoDPod) AsInput() pod.Input {
 	return pod.Input{
 		ApiObject:    m.context.GetAPIObject(),
@@ -220,10 +253,12 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(pod *core.Pod) {
+func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	return nil
 }
 
 func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
@@ -326,55 +361,10 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	return nil
 }
 
-func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	volumes := pod.NewVolumes()
+func (m *MemberArangoDPod) GetVolumes() []core.Volume {
+	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
 
-	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
-
-	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
-
-	if m.status.PersistentVolumeClaimName != "" {
-		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
-			m.status.PersistentVolumeClaimName)
-
-		volumes.AddVolume(vol)
-	} else {
-		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
-	}
-
-	// TLS
-	volumes.Append(pod.TLS(), m.AsInput())
-
-	// Encryption
-	volumes.Append(pod.Encryption(), m.AsInput())
-
-	// Security
-	volumes.Append(pod.Security(), m.AsInput())
-
-	if m.spec.Metrics.IsEnabled() {
-		token := m.spec.Metrics.GetJWTTokenSecretName()
-		if m.spec.Authentication.IsAuthenticated() && token != "" {
-			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-			volumes.AddVolume(vol)
-		}
-	}
-
-	volumes.Append(pod.JWT(), m.AsInput())
-
-	volumes.AddVolume(k8sutil.LifecycleVolume())
-
-	// SNI
-	volumes.Append(pod.SNI(), m.AsInput())
-
-	if len(m.groupSpec.Volumes) > 0 {
-		volumes.AddVolume(m.groupSpec.Volumes.Volumes()...)
-	}
-
-	if len(m.groupSpec.VolumeMounts) > 0 {
-		volumes.AddVolumeMount(m.groupSpec.VolumeMounts.VolumeMounts()...)
-	}
-
-	return volumes.Volumes(), volumes.VolumeMounts()
+	return volumes.Volumes()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
@@ -414,22 +404,15 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade || m.status.Upgrade {
-			args, err := createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
+			upgradeContainer := &ArangoUpgradeContainer{
+				m.GetContainerCreator(),
+				cachedStatus,
+				m.AsInput(),
+			}
+			c, err := k8sutil.NewContainer(upgradeContainer)
 			if err != nil {
 				return nil, err
 			}
-
-			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
-			if err != nil {
-				return nil, err
-			}
-
-			_, c.VolumeMounts = m.GetVolumes()
-
-			c.Name = api.ServerGroupReservedInitContainerNameUpgrade
-			c.Lifecycle = nil
-			c.LivenessProbe = nil
-			c.ReadinessProbe = nil
 
 			initContainers = append(initContainers, c)
 		}
@@ -438,22 +421,17 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		{
 			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
 			if len(versionArgs) > 0 {
-				args, err := createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
+				upgradeContainer := &ArangoVersionCheckContainer{
+					m.GetContainerCreator(),
+					cachedStatus,
+					m.AsInput(),
+					versionArgs,
+				}
+
+				c, err := k8sutil.NewContainer(upgradeContainer)
 				if err != nil {
 					return nil, err
 				}
-
-				c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
-				if err != nil {
-					return nil, err
-				}
-
-				_, c.VolumeMounts = m.GetVolumes()
-
-				c.Name = api.ServerGroupReservedInitContainerNameVersionCheck
-				c.Lifecycle = nil
-				c.LivenessProbe = nil
-				c.ReadinessProbe = nil
 
 				initContainers = append(initContainers, c)
 			}
@@ -490,12 +468,15 @@ func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 
 func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
-		member:    m,
-		spec:      m.spec,
-		group:     m.group,
-		resources: m.resources,
-		imageInfo: m.imageInfo,
-		groupSpec: m.groupSpec,
+		member:       m,
+		spec:         m.spec,
+		group:        m.group,
+		resources:    m.resources,
+		imageInfo:    m.imageInfo,
+		groupSpec:    m.groupSpec,
+		cachedStatus: m.cachedStatus,
+		input:        m.AsInput(),
+		status:       m.status,
 	}
 }
 
@@ -550,4 +531,97 @@ func (m *MemberArangoDPod) Labels() map[string]string {
 	}
 
 	return l
+}
+
+// CreateArangoDVolumes returns wrapper with volumes for a pod and volume mounts for a container.
+func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.DeploymentSpec,
+	groupSpec api.ServerGroupSpec) pod.Volumes {
+	volumes := pod.NewVolumes()
+
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+
+	if status.PersistentVolumeClaimName != "" {
+		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+			status.PersistentVolumeClaimName)
+
+		volumes.AddVolume(vol)
+	} else {
+		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	}
+
+	// TLS
+	volumes.Append(pod.TLS(), input)
+
+	// Encryption
+	volumes.Append(pod.Encryption(), input)
+
+	// Security
+	volumes.Append(pod.Security(), input)
+
+	if spec.Metrics.IsEnabled() {
+		token := spec.Metrics.GetJWTTokenSecretName()
+		if spec.Authentication.IsAuthenticated() && token != "" {
+			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			volumes.AddVolume(vol)
+		}
+	}
+
+	volumes.Append(pod.JWT(), input)
+
+	volumes.AddVolume(k8sutil.LifecycleVolume())
+
+	// SNI
+	volumes.Append(pod.SNI(), input)
+
+	if len(groupSpec.Volumes) > 0 {
+		volumes.AddVolume(groupSpec.Volumes.Volumes()...)
+	}
+
+	if len(groupSpec.VolumeMounts) > 0 {
+		volumes.AddVolumeMount(groupSpec.VolumeMounts.VolumeMounts()...)
+	}
+
+	return volumes
+}
+
+// GetArgs returns list of arguments for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetArgs() ([]string, error) {
+	return createArangodArgsWithUpgrade(a.cachedStatus, a.input)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameUpgrade
+}
+
+// GetProbes returns no probes for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
+}
+
+// GetArgs returns list of arguments for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input, a.versionArgs...)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameVersionCheck
+}
+
+// GetProbes returns no probes for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
 }

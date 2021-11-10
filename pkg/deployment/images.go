@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package deployment
 
@@ -30,45 +27,48 @@ import (
 	"strings"
 	"time"
 
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 var _ interfaces.PodCreator = &ImageUpdatePod{}
-var _ interfaces.ContainerCreator = &ArangoDImageUpdateContainer{}
+var _ interfaces.ContainerCreator = &ContainerIdentity{}
 
+// ImageUpdatePod describes how to launch the ID ArangoD POD.
 type ImageUpdatePod struct {
-	spec      api.DeploymentSpec
-	apiObject k8sutil.APIObject
-	image     string
+	spec             api.DeploymentSpec
+	apiObject        k8sutil.APIObject
+	containerCreator interfaces.ContainerCreator
 }
 
-func (i *ImageUpdatePod) Annotations() map[string]string {
-	return nil
+// ContainerIdentity helps to resolve the container identity, e.g.: image ID, version of the entrypoint.
+type ContainerIdentity struct {
+	ID              *api.ServerIDGroupSpec
+	image           string
+	imagePullPolicy core.PullPolicy
 }
 
-func (i *ImageUpdatePod) Labels() map[string]string {
-	return nil
+// ArangoDIdentity helps to resolve the ArangoD identity, e.g.: image ID, version of the entrypoint.
+type ArangoDIdentity struct {
+	interfaces.ContainerCreator
+	License   api.LicenseSpec
+	ipAddress string
 }
 
-type ArangoDImageUpdateContainer struct {
-	spec  api.DeploymentSpec
-	image string
+// ArangoSyncIdentity helps to resolve the ArangoSync identity, e.g.: image ID, version of the entrypoint.
+type ArangoSyncIdentity struct {
+	interfaces.ContainerCreator
 }
 
 type imagesBuilder struct {
@@ -210,21 +210,22 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			Msg("Found image ID and ArangoDB version")
 		return false, nil
 	}
-	// Pod cannot be fetched, ensure it is created
-	args := []string{
-		"--server.authentication=false",
-		fmt.Sprintf("--server.endpoint=tcp://%s:%d", ib.Spec.GetListenAddr(), k8sutil.ArangoPort),
-		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
-		"--log.output=+",
-	}
 
 	imagePod := ImageUpdatePod{
 		spec:      ib.Spec,
-		image:     image,
 		apiObject: ib.APIObject,
+		containerCreator: &ArangoDIdentity{
+			ContainerCreator: &ContainerIdentity{
+				ID:              ib.Spec.ID,
+				image:           image,
+				imagePullPolicy: ib.Spec.GetImagePullPolicy(),
+			},
+			License:   ib.Spec.License,
+			ipAddress: ib.Spec.GetListenAddr(),
+		},
 	}
 
-	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, args, &imagePod)
+	pod, err = resources.RenderArangoPod(ctx, cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
 		return true, errors.WithStack(err)
@@ -242,43 +243,12 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	return true, nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetExecutor() string {
-	return a.spec.ID.GetEntrypoint(resources.ArangoDExecutor)
-}
-
-func (a *ArangoDImageUpdateContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	return nil, nil, nil
-}
-
-func (a *ArangoDImageUpdateContainer) GetResourceRequirements() core.ResourceRequirements {
-	return a.spec.ID.GetResources()
-}
-
-func (a *ArangoDImageUpdateContainer) GetImage() string {
-	return a.image
-}
-
-func (a *ArangoDImageUpdateContainer) GetEnvs() []core.EnvVar {
-	env := make([]core.EnvVar, 0)
-
-	if a.spec.License.HasSecretName() {
-		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-			a.spec.License.GetSecretName(), constants.SecretKeyToken))
-	}
-
-	if len(env) > 0 {
-		return env
-	}
-
+func (i *ImageUpdatePod) Annotations() map[string]string {
 	return nil
 }
 
-func (a *ArangoDImageUpdateContainer) GetLifecycle() (*core.Lifecycle, error) {
-	return nil, nil
-}
-
-func (a *ArangoDImageUpdateContainer) GetImagePullPolicy() core.PullPolicy {
-	return a.spec.GetImagePullPolicy()
+func (i *ImageUpdatePod) Labels() map[string]string {
+	return nil
 }
 
 func (i *ImageUpdatePod) GetName() string {
@@ -289,10 +259,12 @@ func (i *ImageUpdatePod) GetRole() string {
 	return "id"
 }
 
-func (i *ImageUpdatePod) Init(pod *core.Pod) {
+func (i *ImageUpdatePod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = i.spec.ID.Get().PriorityClassName
+
+	return nil
 }
 
 func (i *ImageUpdatePod) GetImagePullSecrets() []string {
@@ -300,24 +272,15 @@ func (i *ImageUpdatePod) GetImagePullSecrets() []string {
 }
 
 func (i *ImageUpdatePod) GetContainerCreator() interfaces.ContainerCreator {
-	return &ArangoDImageUpdateContainer{
-		spec:  i.spec,
-		image: i.image,
-	}
+	return i.containerCreator
 }
 
 func (i *ImageUpdatePod) GetAffinityRole() string {
 	return ""
 }
 
-func (i *ImageUpdatePod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	var volumes []core.Volume
-	var volumeMounts []core.VolumeMount
-
-	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
-	volumeMounts = append(volumeMounts, k8sutil.ArangodVolumeMount())
-
-	return volumes, volumeMounts
+func (i *ImageUpdatePod) GetVolumes() []core.Volume {
+	return getVolumes().Volumes()
 }
 
 func (i *ImageUpdatePod) GetSidecars(*core.Pod) error {
@@ -368,20 +331,6 @@ func (i *ImageUpdatePod) GetServiceAccountName() string {
 	return i.spec.ID.GetServiceAccountName()
 }
 
-func (a *ArangoDImageUpdateContainer) GetPorts() []core.ContainerPort {
-	return []core.ContainerPort{
-		{
-			Name:          "server",
-			ContainerPort: int32(k8sutil.ArangoPort),
-			Protocol:      core.ProtocolTCP,
-		},
-	}
-}
-
-func (a *ArangoDImageUpdateContainer) GetSecurityContext() *core.SecurityContext {
-	return a.spec.ID.Get().SecurityContext.NewSecurityContext()
-}
-
 func (i *ImageUpdatePod) GetPodAntiAffinity() *core.PodAntiAffinity {
 	a := core.PodAntiAffinity{}
 
@@ -410,10 +359,108 @@ func (i *ImageUpdatePod) GetNodeAffinity() *core.NodeAffinity {
 	return pod.ReturnNodeAffinityOrNil(a)
 }
 
-func (i *ImageUpdatePod) Validate(cachedStatus interfaces.Inspector) error {
+func (i *ImageUpdatePod) Validate(_ interfaces.Inspector) error {
 	return nil
 }
 
-func (i *ImageUpdatePod) ApplyPodSpec(spec *core.PodSpec) error {
+func (i *ImageUpdatePod) ApplyPodSpec(_ *core.PodSpec) error {
 	return nil
+}
+
+func (a *ContainerIdentity) GetArgs() ([]string, error) {
+	return nil, nil
+}
+
+func (a *ContainerIdentity) GetEnvs() []core.EnvVar {
+	return nil
+}
+
+func (a *ContainerIdentity) GetExecutor() string {
+	return a.ID.GetEntrypoint(resources.ArangoDExecutor)
+}
+
+func (a *ContainerIdentity) GetImage() string {
+	return a.image
+}
+
+func (a *ContainerIdentity) GetImagePullPolicy() core.PullPolicy {
+	return a.imagePullPolicy
+}
+
+func (a *ContainerIdentity) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+func (a *ContainerIdentity) GetName() string {
+	return k8sutil.ServerContainerName
+}
+
+func (a *ContainerIdentity) GetPorts() []core.ContainerPort {
+	return []core.ContainerPort{
+		{
+			Name:          k8sutil.ServerContainerName,
+			ContainerPort: int32(k8sutil.ArangoPort),
+			Protocol:      core.ProtocolTCP,
+		},
+	}
+}
+
+func (a *ContainerIdentity) GetProbes() (*core.Probe, *core.Probe, error) {
+	return nil, nil, nil
+}
+
+func (a *ContainerIdentity) GetResourceRequirements() core.ResourceRequirements {
+	return a.ID.GetResources()
+}
+
+func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {
+	return a.ID.Get().SecurityContext.NewSecurityContext()
+}
+
+// GetVolumeMounts returns nil for the basic container identity.
+func (a *ContainerIdentity) GetVolumeMounts() []core.VolumeMount {
+	return nil
+}
+
+// GetArgs returns the list of arguments for the ArangoD container identification.
+func (a *ArangoDIdentity) GetArgs() ([]string, error) {
+	return []string{
+		"--server.authentication=false",
+		fmt.Sprintf("--server.endpoint=tcp://%s:%d", a.ipAddress, k8sutil.ArangoPort),
+		"--database.directory=" + k8sutil.ArangodVolumeMountDir,
+		"--log.output=+",
+	}, nil
+}
+
+func (a *ArangoDIdentity) GetEnvs() []core.EnvVar {
+	env := make([]core.EnvVar, 0)
+
+	if a.License.HasSecretName() {
+		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
+			a.License.GetSecretName(), constants.SecretKeyToken))
+	}
+
+	if len(env) > 0 {
+		return env
+	}
+
+	return nil
+}
+
+// GetVolumeMounts returns volume mount for the ArangoD data.
+func (a *ArangoDIdentity) GetVolumeMounts() []core.VolumeMount {
+	return getVolumes().VolumeMounts()
+}
+
+// GetExecutor returns the fixed path to the ArangoSync binary in the container.
+func (a *ArangoSyncIdentity) GetExecutor() string {
+	return resources.ArangoSyncExecutor
+}
+
+func getVolumes() pod.Volumes {
+	volumes := pod.NewVolumes()
+	volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	return volumes
 }
