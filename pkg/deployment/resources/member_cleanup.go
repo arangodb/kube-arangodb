@@ -29,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -169,11 +168,11 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
-
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
+	isArangoSyncV2 := isArangoSyncV2(r.context.GetSpec())
 
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if group == api.ServerGroupSyncWorkers && features.ArangoSyncV2().Enabled() {
+		if group == api.ServerGroupSyncWorkers && isArangoSyncV2 {
 			// In this case ArangoSync workers should be launched as a sidecar for the DB server.
 			r.log.Info().Msgf("The ArangoMember for ArangoSync worker is not created because it will work as a sidecar")
 			return nil

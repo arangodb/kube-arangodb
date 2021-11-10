@@ -17,35 +17,27 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech
-//
 
 package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -264,10 +256,24 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
+func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	// For the DB server it is possible to launch ArangoSync worker as a sidecar.
+	if m.group == api.ServerGroupDBServers && isArangoSyncV2(m.spec) {
+		masterJWTSecretName := m.spec.Sync.Authentication.GetJWTSecretName()
+		op := func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
+		}
+
+		if err := k8sutil.RunWithTimeout(ctx, op); err != nil {
+			return errors.Wrapf(err, "Master JWT secret validation failed")
+		}
+
+		m.masterJWTSecretName = masterJWTSecretName
+	}
 
 	return nil
 }
@@ -406,8 +412,8 @@ func (m *MemberArangoDPod) GetVolumes() []core.Volume {
 	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
 
 	if len(m.masterJWTSecretName) > 0 {
-		// One more volume for the arangosync worker sidecar.
-		// The volume mount is attached when the container is created.
+		// One more volume for the ArangoSync worker sidecar.
+		// The volume mount will be attached when the container is created.
 		volumes.AddVolume(k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, m.masterJWTSecretName))
 	}
 
@@ -671,4 +677,9 @@ func (a *ArangoVersionCheckContainer) GetName() string {
 // GetProbes returns no probes for the ArangoD version check container.
 func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	return nil, nil, nil, nil
+}
+
+// isArangoSyncV2 returns true when ArangoSync V2 is enabled with its own image.
+func isArangoSyncV2(spec api.DeploymentSpec) bool {
+	return spec.Sync.IsSyncWithOwnImage() && features.ArangoSyncV2().Enabled()
 }

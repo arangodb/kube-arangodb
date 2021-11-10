@@ -54,6 +54,11 @@ func (s SyncSpec) HasSyncImage() bool {
 	return s.GetSyncImage() != ""
 }
 
+// IsSyncWithOwnImage returns true when synchronization is enabled and the ArangoSync image is provided.
+func (s SyncSpec) IsSyncWithOwnImage() bool {
+	return s.IsEnabled() && s.HasSyncImage()
+}
+
 // Validate the given spec
 func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.IsEnabled() && !mode.SupportsSync() {
