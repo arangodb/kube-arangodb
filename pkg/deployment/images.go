@@ -245,7 +245,7 @@ func (ib *imagesBuilder) fetchArangoSyncImageIDAndVersion(ctx context.Context, c
 		},
 	}
 
-	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, &imagePod)
+	pod, err = resources.RenderArangoPod(ctx, cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
 		return true, errors.WithStack(err)
