@@ -384,7 +384,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		},
 	}
 
-	pod, err = resources.RenderArangoPod(cachedStatus, ib.APIObject, role, id, podName, &imagePod)
+	pod, err = resources.RenderArangoPod(ctx, cachedStatus, ib.APIObject, role, id, podName, &imagePod)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to render image ID pod")
 		return true, errors.WithStack(err)
@@ -418,10 +418,12 @@ func (i *ImageUpdatePod) GetRole() string {
 	return "id"
 }
 
-func (i *ImageUpdatePod) Init(pod *core.Pod) {
+func (i *ImageUpdatePod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = i.spec.ID.Get().PriorityClassName
+
+	return nil
 }
 
 func (i *ImageUpdatePod) GetImagePullSecrets() []string {
