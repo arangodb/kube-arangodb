@@ -128,6 +128,10 @@ spec:
                         value: "{{ .Values.operator.images.metricsExporter }}"
                       - name: RELATED_IMAGE_DATABASE
                         value: "{{ .Values.operator.images.arango }}"
+{{- if .Values.operator.features.backup }}
+                      - name: ARANGOJOB_SA_NAME
+                        value: "{{ template "kube-arangodb.operatorName" . }}-job"
+{{- end }}
                   ports:
                       - name: metrics
                         containerPort: 8528
