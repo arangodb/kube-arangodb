@@ -29,6 +29,7 @@ const (
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
 	EnvOperatorPodIP          = "MY_POD_IP"
+	EnvArangoJobSAName        = "ARANGOJOB_SA_NAME"
 
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers

@@ -26,9 +26,12 @@ package k8sutil
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 
@@ -351,7 +354,7 @@ func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
 	}
 }
 
-// ArangodInitContainer creates a container configured to initalize a UUID file.
+// ArangodInitContainer creates a container configured to initialize a UUID file.
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
@@ -370,6 +373,32 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 	if requireUUID {
 		command = append(command, "--require")
 	}
+
+	volumes := []core.VolumeMount{
+		ArangodVolumeMount(),
+	}
+	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+}
+
+// ArangodWaiterInitContainer creates a container configured to wait for specific ArangoDeployment to be ready
+func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, isSecured bool, securityContext *core.SecurityContext) core.Container {
+	var command = []string{
+		executable,
+		"lifecycle",
+		"wait",
+		"--deployment-name",
+		deploymentName,
+	}
+
+	var volumes []core.VolumeMount
+	if isSecured {
+		volumes = append(volumes, TlsKeyfileVolumeMount())
+	}
+	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+}
+
+// createInitContainer creates operator-specific init container
+func operatorInitContainer(name, operatorImage string, command []string, securityContext *core.SecurityContext, volumes []core.VolumeMount) core.Container {
 	c := core.Container{
 		Name:    name,
 		Image:   operatorImage,
@@ -384,9 +413,13 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 				core.ResourceMemory: resource.MustParse("50Mi"),
 			},
 		},
-		VolumeMounts: []core.VolumeMount{
-			ArangodVolumeMount(),
+		Env: []core.EnvVar{
+			{
+				Name:  "MY_POD_NAMESPACE",
+				Value: os.Getenv(constants.EnvOperatorPodNamespace),
+			},
 		},
+		VolumeMounts:    volumes,
 		SecurityContext: securityContext,
 	}
 	return c

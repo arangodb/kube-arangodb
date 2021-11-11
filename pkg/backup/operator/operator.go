@@ -51,6 +51,7 @@ type Operator interface {
 
 	Name() string
 	Namespace() string
+	Image() string
 
 	Start(threadiness int, stopCh <-chan struct{}) error
 
@@ -60,13 +61,16 @@ type Operator interface {
 
 	EnqueueItem(item operation.Item)
 	ProcessItem(item operation.Item) error
+
+	GetLogger() *zerolog.Logger
 }
 
 // NewOperator creates new operator
-func NewOperator(logger zerolog.Logger, name, namespace string) Operator {
+func NewOperator(logger zerolog.Logger, name, namespace, image string) Operator {
 	o := &operator{
 		name:      name,
 		namespace: namespace,
+		image:     image,
 		logger:    logger,
 		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
 	}
@@ -86,6 +90,7 @@ type operator struct {
 
 	name      string
 	namespace string
+	image     string
 
 	informers []cache.SharedInformer
 	starters  []Starter
@@ -103,6 +108,10 @@ func (o *operator) Namespace() string {
 
 func (o *operator) Name() string {
 	return o.name
+}
+
+func (o *operator) Image() string {
+	return o.image
 }
 
 func (o *operator) ProcessItem(item operation.Item) error {
@@ -179,6 +188,10 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 	informer.AddEventHandler(newResourceEventHandler(o, group, version, kind))
 
 	return nil
+}
+
+func (o *operator) GetLogger() *zerolog.Logger {
+	return &o.logger
 }
 
 func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
