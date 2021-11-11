@@ -25,6 +25,7 @@ package versioned
 import (
 	"fmt"
 
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
@@ -38,6 +39,7 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	AppsV1() appsv1.AppsV1Interface
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
 	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
@@ -50,12 +52,18 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	appsV1              *appsv1.AppsV1Client
 	backupV1            *backupv1.BackupV1Client
 	databaseV1          *databasev1.DatabaseV1Client
 	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
 	replicationV1       *replicationv1.ReplicationV1Client
 	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
 	storageV1alpha      *storagev1alpha.StorageV1alphaClient
+}
+
+// AppsV1 retrieves the AppsV1Client
+func (c *Clientset) AppsV1() appsv1.AppsV1Interface {
+	return c.appsV1
 }
 
 // BackupV1 retrieves the BackupV1Client
@@ -109,6 +117,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.appsV1, err = appsv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.backupV1, err = backupv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -145,6 +157,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.appsV1 = appsv1.NewForConfigOrDie(c)
 	cs.backupV1 = backupv1.NewForConfigOrDie(c)
 	cs.databaseV1 = databasev1.NewForConfigOrDie(c)
 	cs.databaseV2alpha1 = databasev2alpha1.NewForConfigOrDie(c)
@@ -159,6 +172,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.appsV1 = appsv1.New(c)
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)
 	cs.databaseV2alpha1 = databasev2alpha1.New(c)

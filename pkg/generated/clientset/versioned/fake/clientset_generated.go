@@ -24,6 +24,8 @@ package fake
 
 import (
 	clientset "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1"
+	fakeappsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1/fake"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	fakebackupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1/fake"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
@@ -89,6 +91,11 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// AppsV1 retrieves the AppsV1Client
+func (c *Clientset) AppsV1() appsv1.AppsV1Interface {
+	return &fakeappsv1.FakeAppsV1{Fake: &c.Fake}
+}
 
 // BackupV1 retrieves the BackupV1Client
 func (c *Clientset) BackupV1() backupv1.BackupV1Interface {
