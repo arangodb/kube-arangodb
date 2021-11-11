@@ -17,7 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
 //
 
 package resources
@@ -28,21 +27,15 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -54,7 +47,7 @@ type ArangoSyncContainer struct {
 	spec                   api.DeploymentSpec
 	group                  api.ServerGroup
 	resources              *Resources
-	imageInfo              api.ImageInfo
+	image                  string
 	apiObject              meta.Object
 	memberStatus           api.MemberStatus
 	tlsKeyfileSecretName   string
@@ -77,13 +70,13 @@ type MemberSyncPod struct {
 	group                  api.ServerGroup
 	arangoMember           api.ArangoMember
 	resources              *Resources
-	imageInfo              api.ImageInfo
+	image                  string
 	apiObject              meta.Object
 	memberStatus           api.MemberStatus
 }
 
 func (a *ArangoSyncContainer) GetArgs() ([]string, error) {
-	return createArangoSyncArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus), nil
+	return createArangoSyncArgs(a.sidecar, a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus), nil
 }
 
 func (a *ArangoSyncContainer) GetName() string {
@@ -124,12 +117,13 @@ func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
 func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
-	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	var emptyVersion driver.Version
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, emptyVersion)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, emptyVersion)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -173,7 +167,7 @@ func (a *ArangoSyncContainer) GetImagePullPolicy() core.PullPolicy {
 }
 
 func (a *ArangoSyncContainer) GetImage() string {
-	return a.imageInfo.Image
+	return a.image
 }
 
 func (a *ArangoSyncContainer) GetEnvs() []core.EnvVar {
@@ -323,7 +317,7 @@ func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 		spec:                   m.spec,
 		group:                  m.group,
 		resources:              m.resources,
-		imageInfo:              m.imageInfo,
+		image:                  m.image,
 		apiObject:              m.apiObject,
 		memberStatus:           m.memberStatus,
 		tlsKeyfileSecretName:   m.tlsKeyfileSecretName,

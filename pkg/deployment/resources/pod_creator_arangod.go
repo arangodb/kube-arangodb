@@ -262,7 +262,7 @@ func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Ins
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 
 	// For the DB server it is possible to launch ArangoSync worker as a sidecar.
-	if m.group == api.ServerGroupDBServers && isArangoSyncV2(m.spec) {
+	if m.group == api.ServerGroupDBServers && m.spec.Sync.IsSyncWithOwnImage() && features.ArangoSyncV2().Enabled() {
 		masterJWTSecretName := m.spec.Sync.Authentication.GetJWTSecretName()
 		op := func(ctxChild context.Context) error {
 			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
@@ -377,21 +377,15 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 
 	if len(m.masterJWTSecretName) > 0 {
 		// Create arangosync worker sidecar.
-		// The above value should be set only when DB server works with worker as a sidecar.
-		// TODO what about image? it should work when the image is provided from spec.sync.image.
+		// The above value is set only when DB server works with worker as a sidecar.
 
 		sidecarGroup := api.ServerGroupSyncWorkers
-		sidecarImage := m.deploymentStatus.CurrentSyncImage
-		if sidecarImage == nil {
-			return errors.New("the 'spec.status.current-sync-image' is nil, so the arangosync image is unknown")
-		}
-
 		arangoSyncWorker := &ArangoSyncContainer{
 			groupSpec:           m.spec.GetServerGroupSpec(sidecarGroup),
 			spec:                m.spec,
 			group:               sidecarGroup,
 			resources:           m.resources,
-			imageInfo:           *sidecarImage,
+			image:               m.spec.Sync.GetSyncImage(),
 			apiObject:           m.context.GetAPIObject(),
 			memberStatus:        m.status, // TODO test. It is the DB server status (not arangosync worker)
 			masterJWTSecretName: m.masterJWTSecretName,
@@ -677,9 +671,4 @@ func (a *ArangoVersionCheckContainer) GetName() string {
 // GetProbes returns no probes for the ArangoD version check container.
 func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	return nil, nil, nil, nil
-}
-
-// isArangoSyncV2 returns true when ArangoSync V2 is enabled with its own image.
-func isArangoSyncV2(spec api.DeploymentSpec) bool {
-	return spec.Sync.IsSyncWithOwnImage() && features.ArangoSyncV2().Enabled()
 }

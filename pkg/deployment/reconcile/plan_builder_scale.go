@@ -17,18 +17,18 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
-//
 
 package reconcile
 
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	"github.com/rs/zerolog"
 )
 
 func createScaleUPMemberPlan(ctx context.Context,
@@ -66,7 +66,11 @@ func createScaleMemberPlan(ctx context.Context,
 	if spec.GetMode().SupportsSync() {
 		// Scale syncmasters & syncworkers
 		plan = append(plan, createScalePlan(log, status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
-		plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
+		if features.ArangoSyncV2().Enabled() && spec.Sync.IsSyncWithOwnImage() {
+			// ArangoSync worker will work as a sidecar.
+		} else {
+			plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
+		}
 	}
 
 	return plan

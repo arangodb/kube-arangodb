@@ -278,6 +278,10 @@ func (ib *imagesBuilder) createArangoSyncImageInfo(image, imageID string, versio
 		Enterprise:      true,
 	}
 
+	if len(ib.Status.SyncImages) == 0 {
+		// If it is the first image info which is added then definitely it is the current image info.
+		ib.Status.CurrentSyncImage = &info
+	}
 	ib.Status.SyncImages.AddOrUpdate(info)
 
 	return ib.UpdateCRStatus(ib.Status)

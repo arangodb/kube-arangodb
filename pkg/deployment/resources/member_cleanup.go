@@ -169,15 +169,8 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 	s, _ := r.context.GetStatus()
 	obj := r.context.GetAPIObject()
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
-	isArangoSyncV2 := isArangoSyncV2(r.context.GetSpec())
 
 	if err := s.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
-		if group == api.ServerGroupSyncWorkers && isArangoSyncV2 {
-			// In this case ArangoSync workers should be launched as a sidecar for the DB server.
-			r.log.Info().Msgf("The ArangoMember for ArangoSync worker is not created because it will work as a sidecar")
-			return nil
-		}
-
 		for _, member := range list {
 			name := member.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 

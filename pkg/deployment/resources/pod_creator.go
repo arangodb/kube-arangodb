@@ -184,7 +184,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup,
+func createArangoSyncArgs(sidecar bool, apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup,
 	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
@@ -230,7 +230,15 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
 	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(port))
+
+	role := group.AsRole()
+	if sidecar {
+		// In this case ArangoSync worker is a sidecar to the DB server.
+		role = api.ServerGroupDBServers.AsRole()
+	}
+
+	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, role, member.ID)
+	serverEndpoint := "https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))
 	options.Add("--server.endpoint", serverEndpoint)
 	options.Add("--server.port", strconv.Itoa(port))
 
@@ -372,9 +380,9 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			return nil, errors.WithStack(errors.Newf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
-		imageInfo := imageInfo
+		image := imageInfo.Image
 		if spec.Sync.HasSyncImage() {
-			imageInfo.Image = spec.Sync.GetSyncImage()
+			image = spec.Sync.GetSyncImage()
 		}
 
 		podCreator = &MemberSyncPod{
@@ -382,7 +390,7 @@ func (r *Resources) RenderPodForMember(ctx context.Context, cachedStatus inspect
 			spec:         spec,
 			group:        group,
 			resources:    r,
-			imageInfo:    imageInfo,
+			image:        image,
 			arangoMember: *member,
 			apiObject:    apiObject,
 			memberStatus: *newMember,
