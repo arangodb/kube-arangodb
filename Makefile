@@ -219,7 +219,7 @@ update-generated:
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1" \
+			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1 apps:v1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
