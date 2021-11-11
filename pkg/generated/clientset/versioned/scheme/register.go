@@ -23,6 +23,7 @@
 package scheme
 
 import (
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
@@ -40,6 +41,7 @@ var Scheme = runtime.NewScheme()
 var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
+	appsv1.AddToScheme,
 	backupv1.AddToScheme,
 	databasev1.AddToScheme,
 	databasev2alpha1.AddToScheme,
