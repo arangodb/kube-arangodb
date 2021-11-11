@@ -27,20 +27,14 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
 	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -49,16 +43,18 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
 	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"
 	backupOper "github.com/arangodb/kube-arangodb/pkg/backup/operator"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/replication"
-	"github.com/arangodb/kube-arangodb/pkg/storage"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	"k8s.io/client-go/rest"
-
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	"github.com/arangodb/kube-arangodb/pkg/replication"
+	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 const (
@@ -214,7 +210,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		}
 	}
 	operatorName := "arangodb-backup-operator"
-	operator := backupOper.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace)
+	operator := backupOper.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
 
 	rand.Seed(time.Now().Unix())
 
@@ -244,6 +240,10 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 	}
 
 	if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+		panic(err)
+	}
+
+	if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 		panic(err)
 	}
 
