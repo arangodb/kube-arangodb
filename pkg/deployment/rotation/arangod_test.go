@@ -25,6 +25,8 @@ package rotation
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -172,6 +174,153 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			expectedMode: SilentRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
+
+func Test_ArangoD_Labels(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Add label",
+
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{}
+			}),
+
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{
+					"A": "B",
+				}
+			}),
+
+			expectedMode: SkippedRotation,
+		},
+		{
+			name: "Remove label",
+
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{
+					"A": "B",
+				}
+			}),
+
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{}
+			}),
+
+			expectedMode: SkippedRotation,
+		},
+		{
+			name: "Change label",
+
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{
+					"A": "A",
+				}
+			}),
+
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Labels = map[string]string{
+					"A": "B",
+				}
+			}),
+
+			expectedMode: SkippedRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
+
+func Test_ArangoD_Envs_Zone(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Add Zone env",
+
+			spec: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{}
+			})),
+
+			status: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "A",
+					},
+				}
+			})),
+
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Remove Zone env",
+
+			spec: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "A",
+					},
+				}
+			})),
+
+			status: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{}
+			})),
+
+			expectedMode: GracefulRotation,
+		},
+		{
+			name: "Update Zone env",
+
+			spec: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "A",
+					},
+				}
+			})),
+
+			status: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "B",
+					},
+				}
+			})),
+
+			expectedMode: GracefulRotation,
+		},
+		{
+			name: "Update other env",
+
+			spec: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  "Q",
+						Value: "A",
+					},
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "A",
+					},
+				}
+			})),
+
+			status: buildPodSpec(addContainer("server", func(c *core.Container) {
+				c.Env = []core.EnvVar{
+					{
+						Name:  topology.ArangoDBZone,
+						Value: "A",
+					},
+				}
+			})),
+
+			expectedMode: GracefulRotation,
 		},
 	}
 

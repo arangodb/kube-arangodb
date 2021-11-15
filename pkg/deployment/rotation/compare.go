@@ -21,6 +21,8 @@
 package rotation
 
 import (
+	"encoding/json"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/rs/zerolog"
@@ -88,10 +90,13 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 	}
 
 	if spec.RotationNeeded(newStatus) {
+		specData, _ := json.Marshal(spec)
+		statusData, _ := json.Marshal(newStatus)
+
 		log.Info().Str("before", spec.PodSpecChecksum).
 			Str("id", member.ID).
-			Interface("spec", spec).
-			Interface("status", newStatus).
+			Str("spec", string(specData)).
+			Str("status", string(statusData)).
 			Msg("Pod needs rotation - templates does not match")
 
 		return GracefulRotation, nil, nil

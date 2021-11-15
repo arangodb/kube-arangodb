@@ -37,6 +37,12 @@ func createTopologyEnablementPlan(ctx context.Context,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	return nil
 }
+func createTopologyMemberUpdatePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
 
 func createTopologyMemberConditionPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
