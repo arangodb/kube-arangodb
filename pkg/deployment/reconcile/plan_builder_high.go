@@ -89,6 +89,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(createCleanOutPlan).
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
+		ApplyIfEmpty(createTopologyMemberUpdatePlan).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
 		Plan(), true
 }
