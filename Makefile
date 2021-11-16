@@ -96,6 +96,7 @@ MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
+MANIFESTPATHJOB := manifests/arango-job$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
@@ -325,6 +326,7 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
 	   --set "operator.features.deploymentReplications=false" \
 	   --set "operator.features.storage=false" \
+	   --set "operator.features.apps.job=false" \
 	   --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
