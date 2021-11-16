@@ -72,6 +72,7 @@ type Dependencies struct {
 	DeploymentReplication OperatorDependency
 	Storage               OperatorDependency
 	Backup                OperatorDependency
+	Apps                  OperatorDependency
 	Operators             Operators
 	Secrets               corev1.SecretInterface
 }
