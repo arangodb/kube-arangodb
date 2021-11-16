@@ -405,8 +405,8 @@ func (a *ContainerIdentity) GetPorts() []core.ContainerPort {
 	}
 }
 
-func (a *ContainerIdentity) GetProbes() (*core.Probe, *core.Probe, error) {
-	return nil, nil, nil
+func (a *ContainerIdentity) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	return nil, nil, nil, nil
 }
 
 func (a *ContainerIdentity) GetResourceRequirements() core.ResourceRequirements {

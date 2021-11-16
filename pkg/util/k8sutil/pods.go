@@ -415,7 +415,7 @@ func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.Res
 // NewContainer creates a container for specified creator
 func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container, error) {
 
-	liveness, readiness, err := containerCreator.GetProbes()
+	liveness, readiness, startup, err := containerCreator.GetProbes()
 	if err != nil {
 		return core.Container{}, err
 	}
@@ -439,6 +439,7 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 		Resources:       containerCreator.GetResourceRequirements(),
 		LivenessProbe:   liveness,
 		ReadinessProbe:  readiness,
+		StartupProbe:    startup,
 		Lifecycle:       lifecycle,
 		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
 		SecurityContext: containerCreator.GetSecurityContext(),

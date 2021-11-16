@@ -39,37 +39,47 @@ func LivenessSpec(group api.ServerGroup) Probe {
 	return probeMap[group].liveness
 }
 
+func StartupSpec(group api.ServerGroup) Probe {
+	return probeMap[group].startup
+}
+
 type Probe struct {
 	CanBeEnabled, EnabledByDefault bool
 }
 
 type probes struct {
-	liveness, readiness Probe
+	liveness, readiness, startup Probe
 }
 
 // probeMap defines default values and if Probe can be enabled
 var probeMap = map[api.ServerGroup]probes{
 	api.ServerGroupSingle: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(true, true),
 	},
 	api.ServerGroupAgents: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(true, false),
 	},
 	api.ServerGroupDBServers: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(true, false),
 	},
 	api.ServerGroupCoordinators: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, false),
 		readiness: newProbe(true, true),
 	},
 	api.ServerGroupSyncMasters: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
 	api.ServerGroupSyncWorkers: {
+		startup:   newProbe(true, false),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},

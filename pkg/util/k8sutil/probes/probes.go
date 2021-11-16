@@ -87,11 +87,11 @@ func (config HTTPProbeConfig) Create() *core.Probe {
 				HTTPHeaders: headers,
 			},
 		},
-		InitialDelaySeconds: defaultInt32(config.InitialDelaySeconds, 15*60), // Wait 15min before first probe
-		TimeoutSeconds:      defaultInt32(config.TimeoutSeconds, 2),          // Timeout of each probe is 2s
-		PeriodSeconds:       defaultInt32(config.PeriodSeconds, 60),          // Interval between probes is 10s
-		SuccessThreshold:    defaultInt32(config.SuccessThreshold, 1),        // Single probe is enough to indicate success
-		FailureThreshold:    defaultInt32(config.FailureThreshold, 10),       // Need 10 failed probes to consider a failed state
+		InitialDelaySeconds: defaultInt32(config.InitialDelaySeconds, 900), // Wait 15min before first probe
+		TimeoutSeconds:      defaultInt32(config.TimeoutSeconds, 2),        // Timeout of each probe is 2s
+		PeriodSeconds:       defaultInt32(config.PeriodSeconds, 60),        // Interval between probes is 10s
+		SuccessThreshold:    defaultInt32(config.SuccessThreshold, 1),      // Single probe is enough to indicate success
+		FailureThreshold:    defaultInt32(config.FailureThreshold, 10),     // Need 10 failed probes to consider a failed state
 	}
 }
 
@@ -126,11 +126,11 @@ func (config CMDProbeConfig) Create() *core.Probe {
 				Command: config.Command,
 			},
 		},
-		InitialDelaySeconds: defaultInt32(config.InitialDelaySeconds, 15*60), // Wait 15min before first probe
-		TimeoutSeconds:      defaultInt32(config.TimeoutSeconds, 2),          // Timeout of each probe is 2s
-		PeriodSeconds:       defaultInt32(config.PeriodSeconds, 60),          // Interval between probes is 10s
-		SuccessThreshold:    defaultInt32(config.SuccessThreshold, 1),        // Single probe is enough to indicate success
-		FailureThreshold:    defaultInt32(config.FailureThreshold, 10),       // Need 10 failed probes to consider a failed state
+		InitialDelaySeconds: defaultInt32(config.InitialDelaySeconds, 900), // Wait 15min before first probe
+		TimeoutSeconds:      defaultInt32(config.TimeoutSeconds, 2),        // Timeout of each probe is 2s
+		PeriodSeconds:       defaultInt32(config.PeriodSeconds, 60),        // Interval between probes is 10s
+		SuccessThreshold:    defaultInt32(config.SuccessThreshold, 1),      // Single probe is enough to indicate success
+		FailureThreshold:    defaultInt32(config.FailureThreshold, 10),     // Need 10 failed probes to consider a failed state
 	}
 }
 
