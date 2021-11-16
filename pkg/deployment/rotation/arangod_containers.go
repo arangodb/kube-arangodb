@@ -62,9 +62,8 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 
 					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
 						if areEnvsEqual(ac.Env, bc.Env, func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
-							if _, ok := a[topology.ArangoDBZone]; !ok {
-								delete(b, topology.ArangoDBZone)
-							}
+							delete(a, topology.ArangoDBZone)
+							delete(b, topology.ArangoDBZone)
 
 							return a, b
 						}) {

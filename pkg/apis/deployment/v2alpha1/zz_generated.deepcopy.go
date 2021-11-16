@@ -1571,6 +1571,16 @@ func (in *ServerGroupProbesSpec) DeepCopyInto(out *ServerGroupProbesSpec) {
 		*out = new(ServerGroupProbeSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.StartupProbeDisabled != nil {
+		in, out := &in.StartupProbeDisabled, &out.StartupProbeDisabled
+		*out = new(bool)
+		**out = **in
+	}
+	if in.StartupProbeSpec != nil {
+		in, out := &in.StartupProbeSpec, &out.StartupProbeSpec
+		*out = new(ServerGroupProbeSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

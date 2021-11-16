@@ -251,9 +251,9 @@ func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.BoolOrDefault(s.DisableIPv6)
 }
 
-// IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default false
+// IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default true
 func (s DeploymentSpec) IsNetworkAttachedVolumes() bool {
-	return util.BoolOrDefault(s.NetworkAttachedVolumes, false)
+	return util.BoolOrDefault(s.NetworkAttachedVolumes, true)
 }
 
 // GetListenAddr returns "[::]" or "0.0.0.0" depending on IsDisableIPv6

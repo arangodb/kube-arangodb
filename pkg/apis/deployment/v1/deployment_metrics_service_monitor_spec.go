@@ -34,6 +34,10 @@ func (m *MetricsServiceMonitorSpec) IsEnabled() bool {
 }
 
 func (m *MetricsServiceMonitorSpec) GetLabels(def map[string]string) map[string]string {
+	if m == nil {
+		return def
+	}
+
 	if len(m.Labels) == 0 {
 		return def
 	}

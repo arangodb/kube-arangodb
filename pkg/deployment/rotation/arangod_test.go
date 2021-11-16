@@ -270,7 +270,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				c.Env = []core.EnvVar{}
 			})),
 
-			expectedMode: GracefulRotation,
+			expectedMode: SilentRotation,
 		},
 		{
 			name: "Update Zone env",
@@ -293,7 +293,7 @@ func Test_ArangoD_Envs_Zone(t *testing.T) {
 				}
 			})),
 
-			expectedMode: GracefulRotation,
+			expectedMode: SilentRotation,
 		},
 		{
 			name: "Update other env",
