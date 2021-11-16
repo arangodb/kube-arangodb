@@ -261,6 +261,11 @@ type ServerGroupProbesSpec struct {
 	ReadinessProbeDisabled *bool `json:"readinessProbeDisabled,omitempty"`
 	// ReadinessProbeSpec override readiness probe configuration
 	ReadinessProbeSpec *ServerGroupProbeSpec `json:"readinessProbeSpec,omitempty"`
+
+	// StartupProbeDisabled if true startupProbes are disabled
+	StartupProbeDisabled *bool `json:"startupProbeDisabled,omitempty"`
+	// StartupProbeSpec override startup probe configuration
+	StartupProbeSpec *ServerGroupProbeSpec `json:"startupProbeSpec,omitempty"`
 }
 
 // GetReadinessProbeDisabled returns in proper manner readiness probe flag with backward compatibility.

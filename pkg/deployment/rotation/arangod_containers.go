@@ -72,6 +72,11 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 							mode = mode.And(SilentRotation)
 						}
 					}
+
+					if !areProbesEqual(ac.StartupProbe, bc.StartupProbe) {
+						bc.StartupProbe = ac.StartupProbe
+						mode = mode.And(SilentRotation)
+					}
 				} else {
 					if ac.Image != bc.Image {
 						// Image changed
@@ -195,4 +200,14 @@ func getEnvs(e []core.EnvVar) map[string]core.EnvVar {
 	}
 
 	return m
+}
+
+func areProbesEqual(a, b *core.Probe) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return equality.Semantic.DeepEqual(a, b)
 }
