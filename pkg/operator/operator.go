@@ -40,17 +40,17 @@ import (
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
-	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"
-	backupOper "github.com/arangodb/kube-arangodb/pkg/backup/operator"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -198,6 +198,7 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	o.runLocalStorages(stop)
 }
 
+//func (o *Operator) onStartOperatorV2(stop <-chan struct{})
 // onStartBackup starts the backup operator and run till given channel is closed.
 func (o *Operator) onStartBackup(stop <-chan struct{}) {
 	for {
@@ -210,7 +211,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 		}
 	}
 	operatorName := "arangodb-backup-operator"
-	operator := backupOper.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
+	operator := operatorV2.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
 
 	rand.Seed(time.Now().Unix())
 

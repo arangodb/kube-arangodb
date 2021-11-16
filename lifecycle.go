@@ -31,7 +31,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 

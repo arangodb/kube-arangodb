@@ -17,46 +17,53 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
+// Author Adam Janikowski
 //
 
-package job
+package backup
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-
 	"k8s.io/client-go/kubernetes"
 )
 
-func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {
-	return eventRecorder.NewInstance(appsApi.SchemeGroupVersion.Group,
-		appsApi.SchemeGroupVersion.Version,
-		apps.ArangoJobResourceKind)
+func newEventInstance(recorder event.Recorder) event.RecorderInstance {
+	return recorder.NewInstance(backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupResourceKind)
 }
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Apps().V1().ArangoJobs().Informer(),
-		appsApi.SchemeGroupVersion.Group,
-		appsApi.SchemeGroupVersion.Version,
-		apps.ArangoJobResourceKind); err != nil {
+	if err := operator.RegisterInformer(informer.Backup().V1().ArangoBackups().Informer(),
+		backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupResourceKind); err != nil {
 		return err
 	}
 
 	h := &handler{
-		client:        client,
-		kubeClient:    kubeClient,
+		client:     client,
+		kubeClient: kubeClient,
+
 		eventRecorder: newEventInstance(recorder),
 
 		operator: operator,
+
+		arangoClientTimeout: defaultArangoClientTimeout,
 	}
+	h.arangoClientFactory = newArangoClientBackupFactory(h)
 
 	if err := operator.RegisterHandler(h); err != nil {
+		return err
+	}
+
+	if err := operator.RegisterStarter(h); err != nil {
 		return err
 	}
 

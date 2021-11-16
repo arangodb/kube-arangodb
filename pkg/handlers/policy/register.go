@@ -17,34 +17,33 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
+// Author Adam Janikowski
 //
 
-package job
+package policy
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-
 	"k8s.io/client-go/kubernetes"
 )
 
 func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {
-	return eventRecorder.NewInstance(appsApi.SchemeGroupVersion.Group,
-		appsApi.SchemeGroupVersion.Version,
-		apps.ArangoJobResourceKind)
+	return eventRecorder.NewInstance(backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupPolicyResourceKind)
 }
 
-// RegisterInformer into operator
+// RegisterInformer in operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Apps().V1().ArangoJobs().Informer(),
-		appsApi.SchemeGroupVersion.Group,
-		appsApi.SchemeGroupVersion.Version,
-		apps.ArangoJobResourceKind); err != nil {
+	if err := operator.RegisterInformer(informer.Backup().V1().ArangoBackupPolicies().Informer(),
+		backupApi.SchemeGroupVersion.Group,
+		backupApi.SchemeGroupVersion.Version,
+		backup.ArangoBackupPolicyResourceKind); err != nil {
 		return err
 	}
 

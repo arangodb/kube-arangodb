@@ -25,7 +25,7 @@ import (
 
 	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

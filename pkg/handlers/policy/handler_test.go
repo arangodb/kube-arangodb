@@ -17,10 +17,10 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
+// Author Adam Janikowski
 //
 
-package job
+package policy
 
 import (
 	"testing"
@@ -38,9 +38,9 @@ func Test_ObjectNotFound(t *testing.T) {
 	i := newItem(operation.Add, "test", "test")
 
 	actions := map[operation.Operation]bool{
-		operation.Add:    false,
-		operation.Update: false,
-		operation.Delete: false,
+		operation.Add:    true,
+		operation.Update: true,
+		operation.Delete: true,
 	}
 
 	// Act

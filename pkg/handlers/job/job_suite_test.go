@@ -31,9 +31,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/operation"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 
 	"github.com/rs/zerolog/log"

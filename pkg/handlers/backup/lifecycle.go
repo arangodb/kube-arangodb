@@ -20,15 +20,15 @@
 // Author Adam Janikowski
 //
 
-package job
+package backup
 
 import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -45,10 +45,10 @@ func (h *handler) LifecyclePreStart() error {
 	}()
 
 	for {
-		_, err := h.client.AppsV1().ArangoJobs(h.operator.Namespace()).List(context.Background(), meta.ListOptions{})
+		_, err := h.client.BackupV1().ArangoBackups(h.operator.Namespace()).List(context.Background(), meta.ListOptions{})
 
 		if err != nil {
-			log.Warn().Err(err).Msgf("CR for %s not found", apps.ArangoJobResourceKind)
+			log.Warn().Err(err).Msgf("CR for %s not found", backup.ArangoBackupResourceKind)
 
 			time.Sleep(250 * time.Millisecond)
 			continue
