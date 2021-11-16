@@ -23,10 +23,11 @@
 package job
 
 import (
+	"testing"
+
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )

@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
@@ -36,8 +37,6 @@ import (
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
