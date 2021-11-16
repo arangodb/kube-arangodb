@@ -28,13 +28,13 @@ import (
 	"os"
 	"reflect"
 
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"

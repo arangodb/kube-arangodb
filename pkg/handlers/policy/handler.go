@@ -29,8 +29,7 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 
