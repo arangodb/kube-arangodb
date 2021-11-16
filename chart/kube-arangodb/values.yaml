@@ -38,6 +38,7 @@ operator:
     deploymentReplications: true
     storage: false
     backup: false
+    apps: false
 
   images:
     base: alpine:3.11
