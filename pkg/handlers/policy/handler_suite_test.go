@@ -32,8 +32,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 
 	"k8s.io/client-go/kubernetes/fake"
 

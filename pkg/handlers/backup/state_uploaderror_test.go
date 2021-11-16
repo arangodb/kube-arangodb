@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 

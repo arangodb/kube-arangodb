@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/stretchr/testify/require"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
