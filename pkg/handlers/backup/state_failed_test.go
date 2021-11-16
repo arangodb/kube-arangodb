@@ -17,44 +17,33 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
+// Author Adam Janikowski
 //
 
-package job
+package backup
 
 import (
 	"testing"
 
 	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/stretchr/testify/require"
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func Test_ObjectNotFound(t *testing.T) {
+func Test_State_Failed(t *testing.T) {
 	// Arrange
-	handler := newFakeHandler()
+	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	i := newItem(operation.Add, "test", "test")
-
-	actions := map[operation.Operation]bool{
-		operation.Add:    false,
-		operation.Update: false,
-		operation.Delete: false,
-	}
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateFailed)
 
 	// Act
-	for operation, shouldFail := range actions {
-		t.Run(string(operation), func(t *testing.T) {
-			err := handler.Handle(i)
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
 
-			// Assert
-			if shouldFail {
-				require.Error(t, err)
-				require.True(t, apiErrors.IsNotFound(err))
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	require.Equal(t, newObj.Status, obj.Status)
 }

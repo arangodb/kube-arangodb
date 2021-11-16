@@ -17,10 +17,10 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
+// Author Adam Janikowski
 //
 
-package job
+package backup
 
 import (
 	"testing"
