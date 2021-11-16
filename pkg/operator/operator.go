@@ -24,6 +24,7 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -61,6 +62,13 @@ const (
 	initRetryWaitTime = 30 * time.Second
 )
 
+type operatorV2type string
+
+const (
+	backupOperator operatorV2type = "backup"
+	appsOperator   operatorV2type = "apps"
+)
+
 type Event struct {
 	Type                  kwatch.EventType
 	Deployment            *deplapi.ArangoDeployment
@@ -89,6 +97,7 @@ type Config struct {
 	EnableDeploymentReplication bool
 	EnableStorage               bool
 	EnableBackup                bool
+	EnableApps                  bool
 	AllowChaos                  bool
 	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
@@ -107,6 +116,7 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
+	AppsProbe                  *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -150,6 +160,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+		}
+	}
+	if o.Config.EnableApps {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		}
 	}
 	// Wait until process terminates
@@ -198,9 +215,18 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	o.runLocalStorages(stop)
 }
 
-//func (o *Operator) onStartOperatorV2(stop <-chan struct{})
-// onStartBackup starts the backup operator and run till given channel is closed.
+// onStartBackup starts the operator and run till given channel is closed.
 func (o *Operator) onStartBackup(stop <-chan struct{}) {
+	o.onStartOperatorV2(backupOperator, stop)
+}
+
+// onStartApps starts the operator and run till given channel is closed.
+func (o *Operator) onStartApps(stop <-chan struct{}) {
+	o.onStartOperatorV2(appsOperator, stop)
+}
+
+// onStartOperatorV2 run the operatorV2 type
+func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
 	for {
 		if err := o.waitForCRD(false, false, false, true); err == nil {
 			break
@@ -210,7 +236,7 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 			time.Sleep(initRetryWaitTime)
 		}
 	}
-	operatorName := "arangodb-backup-operator"
+	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
 	operator := operatorV2.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
 
 	rand.Seed(time.Now().Unix())
@@ -236,16 +262,18 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
-	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-		panic(err)
-	}
-
-	if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-		panic(err)
-	}
-
-	if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-		panic(err)
+	switch operatorType {
+	case appsOperator:
+		if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
+	case backupOperator:
+		if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
+		if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
 	}
 
 	if err = operator.RegisterStarter(arangoInformer); err != nil {
