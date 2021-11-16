@@ -326,31 +326,42 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
 	   --set "operator.features.deploymentReplications=false" \
 	   --set "operator.features.storage=false" \
-	   --set "operator.features.apps.job=false" \
+	   --set "operator.features.apps=false" \
 	   --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=true"))
+
+$(eval $(call manifest-generator, backup, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.apps=true" \
+       --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
        --set "operator.features.deployment=true" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=true" \
        --set "operator.features.backup=true"))
 
 .PHONY: chart-crd
