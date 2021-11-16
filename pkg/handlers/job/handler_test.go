@@ -25,7 +25,7 @@ package job
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 
 	"github.com/stretchr/testify/require"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
