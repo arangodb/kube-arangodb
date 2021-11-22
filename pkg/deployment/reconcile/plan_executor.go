@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
@@ -38,15 +40,27 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
+var (
+	actionsGeneratedMetrics = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_generated", "Number of actions added to the plan", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+	actionsSucceededMetrics = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_succeeded", "Number of succeeded actions", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+	actionsFailedMetrics    = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_failed", "Number of failed actions", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+)
+
 type planner interface {
 	Get(deployment *api.DeploymentStatus) api.Plan
 	Set(deployment *api.DeploymentStatus, p api.Plan) bool
+
+	Type() string
 }
 
 var _ planner = plannerNormal{}
 var _ planner = plannerHigh{}
 
 type plannerNormal struct {
+}
+
+func (p plannerNormal) Type() string {
+	return "normal"
 }
 
 func (p plannerNormal) Get(deployment *api.DeploymentStatus) api.Plan {
@@ -63,6 +77,10 @@ func (p plannerNormal) Set(deployment *api.DeploymentStatus, plan api.Plan) bool
 }
 
 type plannerHigh struct {
+}
+
+func (p plannerHigh) Type() string {
+	return "high"
 }
 
 func (p plannerHigh) Get(deployment *api.DeploymentStatus) api.Plan {
@@ -108,7 +126,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 		return false, nil
 	}
 
-	newPlan, callAgain, err := d.executePlan(ctx, cachedStatus, log, plan)
+	newPlan, callAgain, err := d.executePlan(ctx, cachedStatus, log, plan, pg)
 
 	// Refresh current status
 	loopStatus, lastVersion := d.context.GetStatus()
@@ -128,7 +146,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, statusPlan api.Plan) (newPlan api.Plan, callAgain bool, err error) {
+func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
 	plan := statusPlan.DeepCopy()
 
 	for {
@@ -161,14 +179,17 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 		done, abort, recall, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
+			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			return nil, false, errors.WithStack(err)
 		}
 
 		if abort {
+			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			return nil, true, nil
 		}
 
 		if done {
+			actionsSucceededMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			if len(plan) > 1 {
 				plan = plan[1:]
 				if plan[0].MemberID == api.MemberIDPreviousAction {

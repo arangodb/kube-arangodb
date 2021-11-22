@@ -12,8 +12,6 @@ COMMIT := $(shell git rev-parse --short HEAD)
 DOCKERCLI := $(shell which docker)
 RELEASE_MODE ?= community
 
-include $(ROOT)/$(RELEASE_MODE).mk
-
 MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
 
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
@@ -23,12 +21,15 @@ BINDIR := $(ROOTDIR)/bin
 VBINDIR := $(BINDIR)/$(RELEASE_MODE)
 VENDORDIR := $(ROOTDIR)/deps
 DASHBOARDDIR := $(ROOTDIR)/dashboard
+LOCALDIR := $(ROOT)/local
 
 ORGPATH := github.com/arangodb
 ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
 REPONAME := kube-arangodb
 REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
+
+include $(ROOT)/$(RELEASE_MODE).mk
 
 GOPATH := $(GOBUILDDIR)
 GOVERSION := 1.10.0-alpine
@@ -256,11 +257,11 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
@@ -413,7 +414,7 @@ tools: update-vendor
 .PHONY: vendor
 vendor:
 	@echo ">> Updating vendor"
-	@ go mod vendor
+	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
 set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication

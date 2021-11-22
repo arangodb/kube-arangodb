@@ -17,39 +17,30 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
+
+// +build !enterprise
 
 package reconcile
 
 import (
 	"context"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/rs/zerolog"
 )
 
-const (
-	// Component name for reconciliation of this package
-	reconciliationComponent = "deployment_reconciliation"
-)
+func createRebalancerGeneratePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
 
-// CreatePlan considers the current specification & status of the deployment creates a plan to
-// get the status in line with the specification.
-// If a plan already exists, nothing is done.
-func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	var updated bool
-
-	if err, u := d.CreateHighPlan(ctx, cachedStatus); err != nil {
-		return err, false
-	} else if u {
-		updated = true
-	}
-
-	if err, u := d.CreateNormalPlan(ctx, cachedStatus); err != nil {
-		return err, false
-	} else if u {
-		updated = true
-	}
-
-	return nil, updated
+func createRebalancerCheckPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
 }

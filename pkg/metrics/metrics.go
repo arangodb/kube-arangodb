@@ -33,6 +33,10 @@ const (
 
 	// DeploymentName is a label key used for the name of a deployment
 	DeploymentName = "deployment"
+	// ActionName is a label key used for the name of an action
+	ActionName = "action"
+	// ActionPriority is a label key used for the priority of an action
+	ActionPriority = "priority"
 	// Result is a label key used for the result of an action (Success|Failed)
 	Result = "result"
 	// Success is a label value used for successful actions
