@@ -405,11 +405,11 @@ tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
 	@echo ">> Fetching goimports"
-	@GOBIN=$(GOPATH)/bin go get golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
-	@GOBIN=$(GOPATH)/bin go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching GO Assets Builder"
-	@GOBIN=$(GOPATH)/bin go get github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
+	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 
 .PHONY: vendor
 vendor:
