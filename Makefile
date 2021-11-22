@@ -12,6 +12,10 @@ COMMIT := $(shell git rev-parse --short HEAD)
 DOCKERCLI := $(shell which docker)
 RELEASE_MODE ?= community
 
+include $(ROOT)/$(RELEASE_MODE).mk
+
+MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
+
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
@@ -119,14 +123,15 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-VBIN := $(BINDIR)/$(RELEASE_MODE)/$(BINNAME)
+VBIN_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BINNAME)
+VBIN_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BINNAME)
 
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
 EXCLUDE_DIRS := tests vendor .gobuild deps tools
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "./$(EXCLUDE_DIR)/*")
+SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -193,7 +198,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 .PHONY: check-vars
 check-vars:
@@ -245,27 +250,33 @@ dashboard/assets.go:
 		$(DASHBOARDBUILDIMAGE)
 	$(GOPATH)/bin/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-.PHONY: bin
+.PHONY: bin bin-all
 bin: $(BIN)
+bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
-$(VBIN): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(VBINDIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN) $(REPOPATH)
+$(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./main.go
 
-$(BIN): $(VBIN)
-	@cp "$(VBIN)" "$(BIN)"
+$(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./main.go
+
+$(BIN): $(VBIN_LINUX_AMD64)
+	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
 
 .PHONY: docker
-docker: check-vars $(BIN)
-	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
+docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
+else
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
 endif
 
 .PHONY: docker-ubi
-docker-ubi: check-vars $(BIN)
-	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
-	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
+docker-ubi: check-vars $(VBIN_LINUX_AMD64)
+	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
+	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORUBIIMAGE)
 endif
@@ -402,7 +413,7 @@ tools: update-vendor
 .PHONY: vendor
 vendor:
 	@echo ">> Updating vendor"
-	@go mod vendor
+	@ go mod vendor
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
 set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
