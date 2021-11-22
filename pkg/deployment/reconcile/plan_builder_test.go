@@ -202,7 +202,7 @@ func (c *testContext) RenderPodForMember(_ context.Context, cachedStatus inspect
 }
 
 func (c *testContext) GetName() string {
-	panic("implement me")
+	return "name"
 }
 
 func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.ArangoBackup, error) {

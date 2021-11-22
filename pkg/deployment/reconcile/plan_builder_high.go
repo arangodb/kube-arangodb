@@ -65,6 +65,10 @@ func (d *Reconciler) CreateHighPlan(ctx context.Context, cachedStatus inspectorI
 
 	status.HighPriorityPlan = newPlan
 
+	for _, p := range newPlan {
+		actionsGeneratedMetrics.WithLabelValues(d.context.GetName(), p.Type.String(), "high").Inc()
+	}
+
 	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err), false
 	}
@@ -91,6 +95,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(createTopologyMemberUpdatePlan).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
+		ApplyIfEmpty(createRebalancerCheckPlan).
 		Plan(), true
 }
 

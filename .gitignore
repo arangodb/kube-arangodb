@@ -10,3 +10,4 @@ deps/
 **/*.enterprise.go
 **/enterprise/**
 enterprise.mk
+local/

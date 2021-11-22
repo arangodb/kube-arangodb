@@ -41,6 +41,8 @@ import (
 type Cache interface {
 	GetAuth() conn.Auth
 
+	Connection(ctx context.Context, host string) (driver.Connection, error)
+
 	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	GetDatabase(ctx context.Context) (driver.Client, error)
 	GetAgency(ctx context.Context) (agency.Agency, error)
@@ -58,6 +60,10 @@ type cache struct {
 	apiObjectGetter func() *api.ArangoDeployment
 
 	factory conn.Factory
+}
+
+func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection, error) {
+	return cc.factory.Connection(host)
 }
 
 func (cc *cache) extendHost(host string) string {
