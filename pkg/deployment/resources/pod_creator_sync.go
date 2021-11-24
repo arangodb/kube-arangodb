@@ -100,7 +100,7 @@ func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
 	return []core.ContainerPort{
 		{
 			Name:          k8sutil.ServerContainerName,
-			ContainerPort: int32(k8sutil.ArangoPort), // TODO test, why 8529, it should be 8729
+			ContainerPort: int32(k8sutil.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
 	}

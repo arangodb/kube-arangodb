@@ -38,7 +38,7 @@ import (
 )
 
 func (r *Resources) EnsureLabels(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
-	r.log.Info().Msgf("Ensuring labels")
+	r.log.Debug().Msgf("Ensuring labels")
 
 	if err := r.EnsureSecretLabels(ctx, cachedStatus); err != nil {
 		return err

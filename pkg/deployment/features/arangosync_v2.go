@@ -29,7 +29,7 @@ var arangoSyncV2 = &feature{
 	description:        "Run arangosync worker as a DB server's sidecar",
 	version:            "3.7.0",
 	enterpriseRequired: true,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 }
 
 // ArangoSyncV2 return the arangosync V2 feature object.

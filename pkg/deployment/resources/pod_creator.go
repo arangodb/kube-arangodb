@@ -78,8 +78,13 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	}
 
 	options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
-	if port := input.GroupSpec.InternalPort; port != nil {
-		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", *port)
+
+	if found, port := input.GroupSpec.GetInternalPort(); found {
+		// Create additional endpoint. It will be used by the arangosync worker too.
+		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", port)
+	} else if features.ArangoSyncV2().Enabled() && input.Deployment.Sync.IsSyncWithOwnImage() {
+		// Create additional endpoint for the arangosync worker implicitly.
+		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", k8sutil.ArangoPortForSyncWorker)
 	}
 
 	// Authentication
@@ -210,7 +215,6 @@ func createArangoSyncArgs(sidecar bool, apiObject meta.Object, spec api.Deployme
 		clientCAPath := filepath.Join(k8sutil.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
 		options.Add("--server.client-cafile", clientCAPath)
-		options.Add("--mq.type", "direct")
 		if spec.IsAuthenticated() {
 			clusterSecretPath := filepath.Join(k8sutil.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options.Add("--cluster.jwt-secret", clusterSecretPath)
@@ -241,6 +245,12 @@ func createArangoSyncArgs(sidecar bool, apiObject meta.Object, spec api.Deployme
 	serverEndpoint := "https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))
 	options.Add("--server.endpoint", serverEndpoint)
 	options.Add("--server.port", strconv.Itoa(port))
+	if sidecar {
+		// When worker works as a sidecar then it should be informed what is the endpoint
+		// of the DB server where it can connect to.
+		_, internalPort := spec.GetServerGroupSpec(api.ServerGroupDBServers).GetInternalPort(k8sutil.ArangoPortForSyncWorker)
+		options.Add("--dbserver.endpoint", "http://localhost:"+strconv.Itoa(internalPort))
+	}
 
 	args := []string{
 		"run",
@@ -737,13 +747,6 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 				// Template is missing, nothing to do
 				continue
 			}
-
-			// TODO test it is not necessary because arango member will not be created beforehand.
-			//if group == api.ServerGroupSyncWorkers && features.ArangoSyncV2().Enabled() {
-			//	// In this case ArangoSync workers should be launched as a sidecar to the DB server.
-			//	r.log.Info().Msgf("The Pod for ArangoSync worker is not created because it will work as a sidecar")
-			//	continue
-			//}
 
 			r.log.Warn().Msgf("Ensuring pod")
 

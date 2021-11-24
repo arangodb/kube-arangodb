@@ -114,8 +114,5 @@ func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []s
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
 	}
-	if s.GetSyncImage() != target.GetSyncImage() {
-		resetFields = append(resetFields, fieldPrefix+".image")
-	}
 	return resetFields
 }

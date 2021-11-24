@@ -513,10 +513,10 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 	} else if s.GetCount() != 0 {
 		return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
-	if port := s.InternalPort; port != nil {
-		switch p := *port; p {
-		case 8529:
-			return errors.WithStack(errors.Wrapf(ValidationError, "Port %d already in use", p))
+	if found, port := s.GetInternalPort(); found {
+		switch port {
+		case k8sutil.ArangoPort:
+			return errors.WithStack(errors.Wrapf(ValidationError, "Port %d already in use", port))
 		}
 	}
 	return nil
@@ -699,4 +699,17 @@ func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
 		}
 	}
 	return *s.ShutdownDelay
+}
+
+// GetInternalPort returns additional local internal port where ArangoDB server will listen to.
+func (s ServerGroupSpec) GetInternalPort(defaultPort ...int) (bool, int) {
+	if s.InternalPort != nil {
+		return true, *s.InternalPort
+	}
+
+	if len(defaultPort) > 0 {
+		return true, defaultPort[0]
+	}
+
+	return false, 0
 }

@@ -387,7 +387,7 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 			resources:           m.resources,
 			image:               m.spec.Sync.GetSyncImage(),
 			apiObject:           m.context.GetAPIObject(),
-			memberStatus:        m.status, // TODO test. It is the DB server status (not arangosync worker)
+			memberStatus:        m.status, // It is the DB server status (not arangosync worker)
 			masterJWTSecretName: m.masterJWTSecretName,
 			sidecar:             true,
 		}

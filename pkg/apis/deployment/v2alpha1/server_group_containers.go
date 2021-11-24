@@ -23,6 +23,7 @@ package v2alpha1
 const (
 	ServerGroupReservedContainerNameServer   = "server"
 	ServerGroupReservedContainerNameExporter = "exporter"
+	ServerGroupReservedContainerNameWorker   = "worker"
 )
 
 func IsReservedServerGroupContainerName(name string) bool {
