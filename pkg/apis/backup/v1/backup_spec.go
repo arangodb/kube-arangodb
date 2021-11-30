@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
 package v1
 
@@ -35,6 +33,8 @@ type ArangoBackupSpec struct {
 	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
 
 	PolicyName *string `json:"policyName,omitempty"`
+
+	Backoff *ArangoBackupSpecBackOff `json:"backoff,omitempty"`
 }
 
 type ArangoBackupSpecDeployment struct {

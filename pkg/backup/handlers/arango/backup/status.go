@@ -67,6 +67,18 @@ func updateStatusAvailable(available bool) updateStatusFunc {
 	}
 }
 
+func cleanBackOff() updateStatusFunc {
+	return func(status *backupApi.ArangoBackupStatus) {
+		status.Backoff = nil
+	}
+}
+
+func addBackOff(spec backupApi.ArangoBackupSpec) updateStatusFunc {
+	return func(status *backupApi.ArangoBackupStatus) {
+		status.Backoff = status.Backoff.Backoff(spec.Backoff)
+	}
+}
+
 func updateStatusJob(id, progress string) updateStatusFunc {
 	return func(status *backupApi.ArangoBackupStatus) {
 		status.Progress = &backupApi.ArangoBackupProgress{

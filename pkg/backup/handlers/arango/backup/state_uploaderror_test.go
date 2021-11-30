@@ -92,8 +92,10 @@ func Test_State_UploadError_Wait(t *testing.T) {
 		CreationTimestamp: meta.Now(),
 		Uploaded:          util.NewBool(true),
 	}
+	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
+		Next: meta.Time{Time: time.Now().Add(5*time.Second)},
+	}
 
-	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
 	obj.Status.Message = "message"
 
 	// Act

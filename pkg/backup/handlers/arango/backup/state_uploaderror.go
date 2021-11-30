@@ -23,17 +23,12 @@
 package backup
 
 import (
-	"time"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-)
-
-const (
-	uploadDelay = time.Minute
+	"time"
 )
 
 func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {
-	if backup.Spec.Upload == nil || backup.Status.Time.Time.Add(uploadDelay).Before(time.Now()) {
+	if backup.Spec.Upload == nil || !backup.Status.Backoff.GetNext().After(time.Now()) {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateReady, ""),
 			cleanStatusJob(),
