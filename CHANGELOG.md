@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Add ArangoBackup backoff functionality
+- Allow to abort ArangoBackup uploads by removing spec.upload
 
 ## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
 - Split & Unify Lifecycle management functionality
