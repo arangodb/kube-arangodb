@@ -180,7 +180,7 @@ func Test_State_Upload_TemporaryUploadFailed(t *testing.T) {
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 
 	require.NotNil(t, newObj.Status.Backoff)
-	require.Equal(t, 1,newObj.Status.Backoff.Iterations)
+	require.Equal(t, 1, newObj.Status.Backoff.Iterations)
 }
 
 func Test_State_Upload_FatalUploadFailed(t *testing.T) {
@@ -210,7 +210,7 @@ func Test_State_Upload_FatalUploadFailed(t *testing.T) {
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 
 	require.NotNil(t, newObj.Status.Backoff)
-	require.Equal(t, 1,newObj.Status.Backoff.Iterations)
+	require.Equal(t, 1, newObj.Status.Backoff.Iterations)
 }
 
 func Test_State_Upload_TemporaryUploadFailed_Backoff(t *testing.T) {
@@ -243,7 +243,7 @@ func Test_State_Upload_TemporaryUploadFailed_Backoff(t *testing.T) {
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 
 	require.NotNil(t, newObj.Status.Backoff)
-	require.Equal(t, 4,newObj.Status.Backoff.Iterations)
+	require.Equal(t, 4, newObj.Status.Backoff.Iterations)
 }
 
 func Test_State_Upload_FatalUploadFailed_Backoff(t *testing.T) {
@@ -276,5 +276,5 @@ func Test_State_Upload_FatalUploadFailed_Backoff(t *testing.T) {
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
 
 	require.NotNil(t, newObj.Status.Backoff)
-	require.Equal(t, 4,newObj.Status.Backoff.Iterations)
+	require.Equal(t, 4, newObj.Status.Backoff.Iterations)
 }

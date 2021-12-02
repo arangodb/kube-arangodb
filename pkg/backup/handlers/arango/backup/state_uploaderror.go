@@ -23,8 +23,9 @@
 package backup
 
 import (
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"time"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
 func stateUploadErrorHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.ArangoBackupStatus, error) {

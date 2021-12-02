@@ -23,9 +23,9 @@ package v1
 import "time"
 
 type ArangoBackupSpecBackOff struct {
-	// MinDelay defines minimum delay in seconds. Default to 10
+	// MinDelay defines minimum delay in seconds. Default to 30
 	MinDelay *int `json:"min_delay,omitempty"`
-	// MaxDelay defines maximum delay in seconds. Default to 60
+	// MaxDelay defines maximum delay in seconds. Default to 600
 	MaxDelay *int `json:"max_delay,omitempty"`
 	// Iterations defines number of iterations before reaching MaxDelay. Default to 5
 	Iterations *int `json:"iterations,omitempty"`
@@ -33,7 +33,7 @@ type ArangoBackupSpecBackOff struct {
 
 func (a *ArangoBackupSpecBackOff) GetMaxDelay() int {
 	if a == nil || a.MaxDelay == nil {
-		return 60
+		return 600
 	}
 
 	v := *a.MaxDelay
@@ -47,7 +47,7 @@ func (a *ArangoBackupSpecBackOff) GetMaxDelay() int {
 
 func (a *ArangoBackupSpecBackOff) GetMinDelay() int {
 	if a == nil || a.MinDelay == nil {
-		return 10
+		return 30
 	}
 
 	v := *a.MinDelay
