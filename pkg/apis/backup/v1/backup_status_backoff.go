@@ -21,19 +21,39 @@
 package v1
 
 import (
+	"time"
+
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ArangoBackupPolicySpec struct {
-	Schedule string `json:"schedule"`
-
-	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`
-
-	BackupTemplate ArangoBackupTemplate `json:"template"`
+type ArangoBackupStatusBackOff struct {
+	Iterations int       `json:"iterations,omitempty"`
+	Next       meta.Time `json:"next,omitempty"`
 }
 
-type ArangoBackupTemplate struct {
-	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
+func (a *ArangoBackupStatusBackOff) GetIterations() int {
+	if a == nil {
+		return 0
+	}
 
-	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
+	if a.Iterations < 0 {
+		return 0
+	}
+
+	return a.Iterations
+}
+
+func (a *ArangoBackupStatusBackOff) GetNext() meta.Time {
+	if a == nil {
+		return meta.Time{}
+	}
+
+	return a.Next
+}
+
+func (a *ArangoBackupStatusBackOff) Backoff(spec *ArangoBackupSpecBackOff) *ArangoBackupStatusBackOff {
+	return &ArangoBackupStatusBackOff{
+		Iterations: a.GetIterations() + 1,
+		Next:       meta.Time{Time: time.Now().Add(spec.Backoff(a.GetIterations()))},
+	}
 }

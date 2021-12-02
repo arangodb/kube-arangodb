@@ -69,6 +69,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 				"Upload failed with error: %s", details.FailMessage),
 			cleanStatusJob(),
 			updateStatusAvailable(true),
+			addBackOff(backup.Spec),
 		)
 	}
 
@@ -78,6 +79,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 			cleanStatusJob(),
 			updateStatusBackupUpload(util.NewBool(true)),
 			updateStatusAvailable(true),
+			cleanBackOff(),
 		)
 	}
 

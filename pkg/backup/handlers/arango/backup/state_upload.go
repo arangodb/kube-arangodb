@@ -62,6 +62,7 @@ func stateUploadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.
 			cleanStatusJob(),
 			updateStatusBackupUpload(nil),
 			updateStatusAvailable(true),
+			addBackOff(backup.Spec),
 		)
 	}
 

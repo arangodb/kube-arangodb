@@ -21,19 +21,20 @@
 package v1
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
-type ArangoBackupPolicySpec struct {
-	Schedule string `json:"schedule"`
+func TestArangoBackupStatusBackOff_Backoff(t *testing.T) {
+	t.Run("Default", func(t *testing.T) {
+		var spec *ArangoBackupSpecBackOff
+		var status *ArangoBackupStatusBackOff
 
-	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`
+		n := status.Backoff(spec)
 
-	BackupTemplate ArangoBackupTemplate `json:"template"`
-}
-
-type ArangoBackupTemplate struct {
-	Options *ArangoBackupSpecOptions `json:"options,omitempty"`
-
-	Upload *ArangoBackupSpecOperation `json:"upload,omitempty"`
+		require.Equal(t, 1, n.GetIterations())
+		require.True(t, n.GetNext().After(time.Now().Add(time.Duration(9.9*float64(time.Second)))))
+	})
 }

@@ -178,6 +178,9 @@ func Test_State_Upload_TemporaryUploadFailed(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
+
+	require.NotNil(t, newObj.Status.Backoff)
+	require.Equal(t, 1, newObj.Status.Backoff.Iterations)
 }
 
 func Test_State_Upload_FatalUploadFailed(t *testing.T) {
@@ -205,4 +208,73 @@ func Test_State_Upload_FatalUploadFailed(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
+
+	require.NotNil(t, newObj.Status.Backoff)
+	require.Equal(t, 1, newObj.Status.Backoff.Iterations)
+}
+
+func Test_State_Upload_TemporaryUploadFailed_Backoff(t *testing.T) {
+	// Arrange
+	error := newTemporaryErrorf("error")
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		uploadError: error,
+	})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUpload)
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
+		ID: createResponse.ID,
+	}, nil)
+	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
+		Iterations: 3,
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
+
+	require.NotNil(t, newObj.Status.Backoff)
+	require.Equal(t, 4, newObj.Status.Backoff.Iterations)
+}
+
+func Test_State_Upload_FatalUploadFailed_Backoff(t *testing.T) {
+	// Arrange
+	error := newFatalErrorf("error")
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
+		uploadError: error,
+	})
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateUpload)
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
+		ID: createResponse.ID,
+	}, nil)
+	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
+		Iterations: 3,
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUploadError, true)
+
+	require.NotNil(t, newObj.Status.Backoff)
+	require.Equal(t, 4, newObj.Status.Backoff.Iterations)
 }
