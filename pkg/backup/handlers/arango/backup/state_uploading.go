@@ -83,6 +83,20 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 		)
 	}
 
+	if backup.Spec.Upload == nil {
+		// Upload is canceled
+
+		if err = client.Abort(driver.BackupTransferJobID(backup.Status.Progress.JobID)); err == nil {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateReady, ""),
+				cleanStatusJob(),
+				updateStatusBackupUpload(util.NewBool(false)),
+				updateStatusAvailable(true),
+				cleanBackOff(),
+			)
+		}
+	}
+
 	return wrapUpdateStatus(backup,
 		updateStatusState(backupApi.ArangoBackupStateUploading, ""),
 		updateStatusAvailable(true),

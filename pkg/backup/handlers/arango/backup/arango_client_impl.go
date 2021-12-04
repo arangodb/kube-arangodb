@@ -188,6 +188,13 @@ func (ac *arangoClientBackupImpl) Progress(jobID driver.BackupTransferJobID) (Ar
 		return ArangoBackupProgress{}, err
 	}
 
+	if report.Cancelled {
+		return ArangoBackupProgress{
+			Failed:      true,
+			FailMessage: "Upload cancelled",
+		}, nil
+	}
+
 	var ret ArangoBackupProgress
 	var completedCount int
 	var total int
