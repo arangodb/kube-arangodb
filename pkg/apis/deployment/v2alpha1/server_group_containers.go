@@ -28,7 +28,7 @@ const (
 
 func IsReservedServerGroupContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter:
+	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter, ServerGroupReservedContainerNameWorker:
 		return true
 	default:
 		return false

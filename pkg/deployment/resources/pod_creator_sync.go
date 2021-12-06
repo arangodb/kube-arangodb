@@ -128,7 +128,7 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, emptyVersion)
 	if err != nil {
 		return nil, nil, nil, err
 	}
