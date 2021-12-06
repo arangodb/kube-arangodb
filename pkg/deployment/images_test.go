@@ -352,9 +352,6 @@ func TestEnsureImages(t *testing.T) {
 								Limits:   make(v1.ResourceList),
 								Requests: make(v1.ResourceList),
 							},
-							VolumeMounts: []v1.VolumeMount{
-								k8sutil.ArangodVolumeMount(),
-							},
 							ImagePullPolicy: v1.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
 						},
