@@ -84,7 +84,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		return currentPlan, false
 	}
 
-	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+	return recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), currentPlan).
 		// Adjust topology settings
 		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
@@ -124,7 +124,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplyIfEmpty(createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(createTLSStatusPropagated).
-		ApplyIfEmpty(createBootstrapPlan).
+		ApplyIfEmpty(createBootstrapPlan)).
 		Plan(), true
 }
 

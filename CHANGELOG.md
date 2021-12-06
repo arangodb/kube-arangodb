@@ -4,6 +4,7 @@
 - Add ArangoBackup backoff functionality
 - Allow to abort ArangoBackup uploads by removing spec.upload
 - Add Agency Cache internally
+- Add Recovery during PlanBuild operation
 
 ## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
 - Split & Unify Lifecycle management functionality
