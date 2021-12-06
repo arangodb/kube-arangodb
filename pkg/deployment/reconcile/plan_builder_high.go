@@ -87,7 +87,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		return currentPlan, false
 	}
 
-	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+	return recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), currentPlan).
 		ApplyIfEmpty(updateMemberPodTemplateSpec).
 		ApplyIfEmpty(updateMemberPhasePlan).
 		ApplyIfEmpty(createCleanOutPlan).
@@ -95,7 +95,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(createTopologyMemberUpdatePlan).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
-		ApplyIfEmpty(createRebalancerCheckPlan).
+		ApplyIfEmpty(createRebalancerCheckPlan)).
 		Plan(), true
 }
 

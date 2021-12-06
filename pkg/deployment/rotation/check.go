@@ -64,13 +64,15 @@ func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Insp
 	mode = SkippedRotation
 
 	// We are under termination
-	if member.Conditions.IsTrue(api.ConditionTypeTerminating) || (pod != nil && pod.DeletionTimestamp != nil) {
-		if l := utils.StringList(pod.Finalizers); l.Has(constants.FinalizerPodGracefulShutdown) && !l.Has(constants.FinalizerDelayPodTermination) {
-			reason = "Recreation enforced by deleted state"
-			mode = EnforcedRotation
-		}
+	if pod != nil {
+		if member.Conditions.IsTrue(api.ConditionTypeTerminating) || pod.DeletionTimestamp != nil {
+			if l := utils.StringList(pod.Finalizers); l.Has(constants.FinalizerPodGracefulShutdown) && !l.Has(constants.FinalizerDelayPodTermination) {
+				reason = "Recreation enforced by deleted state"
+				mode = EnforcedRotation
+			}
 
-		return
+			return
+		}
 	}
 
 	if !CheckPossible(member) {
