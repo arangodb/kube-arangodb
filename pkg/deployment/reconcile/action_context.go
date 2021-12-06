@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -64,6 +66,7 @@ type ActionContext interface {
 	resources.DeploymentPodRenderer
 	resources.DeploymentModInterfaces
 	resources.DeploymentCachedStatus
+	resources.ArangoAgencyGet
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
@@ -171,16 +174,16 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
+	return ac.context.GetAgencyCache()
+}
+
 func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
 	return ac.context.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
 }
 
 func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
 	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
-}
-
-func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
-	return ac.context.GetAgencyMaintenanceMode(ctx)
 }
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {

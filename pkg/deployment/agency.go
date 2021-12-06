@@ -17,31 +17,13 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
-package agency
+package deployment
 
-import (
-	"context"
+import "github.com/arangodb/kube-arangodb/pkg/metrics"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/go-driver/agency"
+var (
+	inspectDeploymentAgencyIndex   = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_deployment_agency_index", "Index of the agency cache", metrics.DeploymentName)
+	inspectDeploymentAgencyFetches = metrics.MustRegisterCounterVec(metricsComponent, "inspect_deployment_agency_fetches", "Number of agency fetches", metrics.DeploymentName)
+	inspectDeploymentAgencyErrors  = metrics.MustRegisterCounterVec(metricsComponent, "inspect_deployment_agency_errors", "Number of agency errors", metrics.DeploymentName)
 )
-
-type Fetcher func(ctx context.Context, i interface{}, keyParts ...string) error
-
-func NewFetcher(a agency.Agency) Fetcher {
-	return func(ctx context.Context, i interface{}, keyParts ...string) error {
-		if err := a.ReadKey(ctx, []string{
-			ArangoKey,
-			PlanKey,
-			PlanCollectionsKey,
-		}, i); err != nil {
-			return errors.WithStack(err)
-		}
-
-		return nil
-	}
-}

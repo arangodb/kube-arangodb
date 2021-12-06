@@ -17,36 +17,15 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
 package agency
 
-import (
-	"fmt"
-	"strings"
-)
+type StateCurrentCollections map[string]StateCurrentDBCollections
 
-const (
-	ArangoKey = "arango"
+type StateCurrentDBCollections map[string]StateCurrentDBCollection
 
-	PlanKey    = "Plan"
-	CurrentKey = "Current"
+type StateCurrentDBCollection map[string]StateCurrentDBShard
 
-	PlanCollectionsKey = "Collections"
-
-	SupervisionKey            = "Supervision"
-	SupervisionMaintenanceKey = "Maintenance"
-)
-
-func GetAgencyKey(parts ...string) string {
-	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
-}
-
-func GetAgencyReadKey(elements ...string) []string {
-	return elements
-}
-
-func GetAgencyReadRequest(elements ...[]string) [][]string {
-	return elements
+type StateCurrentDBShard struct {
+	Servers []string `json:"servers,omitempty"`
 }

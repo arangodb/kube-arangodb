@@ -26,6 +26,8 @@ package resources
 import (
 	"context"
 
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -68,8 +70,6 @@ type DeploymentStatusUpdate interface {
 }
 
 type DeploymentAgencyMaintenance interface {
-	// GetAgencyMaintenanceMode returns info if maintenance mode is enabled
-	GetAgencyMaintenanceMode(ctx context.Context) (bool, error)
 	// SetAgencyMaintenanceMode set maintenance mode info
 	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
 }
@@ -128,6 +128,16 @@ type ArangoMemberContext interface {
 	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
 }
 
+type ArangoAgencyGet interface {
+	GetAgencyCache() (agencyCache.State, bool)
+}
+
+type ArangoAgency interface {
+	ArangoAgencyGet
+
+	RefreshAgencyCache(ctx context.Context) (uint64, error)
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
@@ -137,6 +147,7 @@ type Context interface {
 	DeploymentImageManager
 	DeploymentModInterfaces
 	DeploymentCachedStatus
+	ArangoAgency
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject
