@@ -78,10 +78,10 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 	switch group {
 	case api.ServerGroupDBServers:
-		if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
+		if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
 			log.Warn().Err(err).Msgf("Maintenance is enabled, skipping action")
 			return true, errors.WithStack(err)
-		} else if enabled {
+		} else if agencyState.Supervision.Maintenance {
 			// We are done, action cannot be handled on maintenance mode
 			log.Warn().Msgf("Maintenance is enabled, skipping action")
 			return true, nil
@@ -127,10 +127,10 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
-		log.Error().Err(err).Msgf("Unable to get maintenance mode")
+	if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
+		log.Error().Msgf("Unable to get maintenance mode")
 		return false, false, nil
-	} else if enabled {
+	} else if agencyState.Supervision.Maintenance {
 		log.Warn().Msgf("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
 		m.CleanoutJobID = ""

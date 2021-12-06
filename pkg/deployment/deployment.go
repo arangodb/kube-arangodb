@@ -25,6 +25,7 @@ package deployment
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -128,6 +129,7 @@ type Deployment struct {
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
 	currentState              inspectorInterface.Inspector
+	agencyCache               agency.Cache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
@@ -138,24 +140,23 @@ type Deployment struct {
 	haveServiceMonitorCRD     bool
 }
 
-func (d *Deployment) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
-	if !d.Mode().HasAgents() {
-		return false, nil
+func (d *Deployment) GetAgencyCache() (agency.State, bool) {
+	return d.agencyCache.Data()
+}
+
+func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
+	lCtx, c := context.WithTimeout(ctx, time.Second)
+	defer c()
+
+	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+		return 0, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-
-	client, err := d.GetAgency(ctxChild)
+	a, err := d.GetAgency(lCtx)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
-
-	if enabled, err := agency.GetMaintenanceMode(ctxChild, client); err != nil {
-		return false, err
-	} else {
-		return enabled, nil
-	}
+	return d.agencyCache.Reload(lCtx, a)
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
@@ -170,7 +171,31 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		return err
 	}
 
-	return agency.SetMaintenanceMode(ctxChild, client, enabled)
+	data := "on"
+	if !enabled {
+		data = "off"
+	}
+
+	conn := client.Connection()
+	r, err := conn.NewRequest(http.MethodPut, "/_admin/cluster/maintenance")
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.SetBody(data); err != nil {
+		return err
+	}
+
+	resp, err := conn.Do(ctx, r)
+	if err != nil {
+		return err
+	}
+
+	if err := resp.CheckStatus(http.StatusOK); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // New creates a new Deployment from the given API object.
@@ -180,13 +205,14 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	d := &Deployment{
-		apiObject: apiObject,
-		name:      apiObject.GetName(),
-		namespace: apiObject.GetNamespace(),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
+		apiObject:   apiObject,
+		name:        apiObject.GetName(),
+		namespace:   apiObject.GetNamespace(),
+		config:      config,
+		deps:        deps,
+		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:      make(chan struct{}),
+		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
 
 	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))

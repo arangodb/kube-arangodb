@@ -17,30 +17,12 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
 package agency
 
-import (
-	"context"
+type StatePlanCollections map[string]StatePlanDBCollections
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-)
-
-func GetAgencyCollections(ctx context.Context, f Fetcher) (*ArangoPlanDatabases, error) {
-	ret := &ArangoPlanDatabases{}
-
-	if err := f(ctx, ret, ArangoKey, PlanKey, PlanCollectionsKey); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return ret, nil
-}
-
-type ArangoPlanDatabases map[string]ArangoPlanCollections
-
-func (a ArangoPlanDatabases) IsDBServerInDatabases(name string) bool {
+func (a StatePlanCollections) IsDBServerInDatabases(name string) bool {
 	for _, collections := range a {
 		if collections.IsDBServerInCollections(name) {
 			return true
@@ -49,9 +31,9 @@ func (a ArangoPlanDatabases) IsDBServerInDatabases(name string) bool {
 	return false
 }
 
-type ArangoPlanCollections map[string]ArangoPlanCollection
+type StatePlanDBCollections map[string]StatePlanCollection
 
-func (a ArangoPlanCollections) IsDBServerInCollections(name string) bool {
+func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
 	for _, collection := range a {
 		if collection.IsDBServerInShards(name) {
 			return true
@@ -60,11 +42,11 @@ func (a ArangoPlanCollections) IsDBServerInCollections(name string) bool {
 	return false
 }
 
-type ArangoPlanCollection struct {
-	Shards ArangoPlanShard `json:"shards"`
+type StatePlanCollection struct {
+	Shards StatePlanShard `json:"shards"`
 }
 
-func (a ArangoPlanCollection) IsDBServerInShards(name string) bool {
+func (a StatePlanCollection) IsDBServerInShards(name string) bool {
 	for _, dbservers := range a.Shards {
 		for _, dbserver := range dbservers {
 			if dbserver == name {
@@ -75,4 +57,4 @@ func (a ArangoPlanCollection) IsDBServerInShards(name string) bool {
 	return false
 }
 
-type ArangoPlanShard map[string][]string
+type StatePlanShard map[string][]string
