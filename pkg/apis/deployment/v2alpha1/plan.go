@@ -179,6 +179,10 @@ const (
 	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
 	ActionTypeTopologyZonesUpdate      ActionType = "TopologyZonesUpdate"
 	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
+
+	// Rebalancer
+	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
+	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
 )
 
 const (

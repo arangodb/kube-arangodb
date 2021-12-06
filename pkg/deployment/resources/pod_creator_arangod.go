@@ -136,17 +136,22 @@ func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {
 	return a.groupSpec.SecurityContext.NewSecurityContext()
 }
 
-func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	var liveness, readiness *core.Probe
+func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	var liveness, readiness, startup *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+
+	probeStartupConfig, err := a.resources.getStartupProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	if probeLivenessConfig != nil {
@@ -157,7 +162,11 @@ func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
 		readiness = probeReadinessConfig.Create()
 	}
 
-	return liveness, readiness, nil
+	if probeStartupConfig != nil {
+		startup = probeStartupConfig.Create()
+	}
+
+	return liveness, readiness, startup, nil
 }
 
 func (a *ArangoDContainer) GetImage() string {
@@ -602,8 +611,8 @@ func (a *ArangoUpgradeContainer) GetName() string {
 }
 
 // GetProbes returns no probes for the ArangoD upgrade container.
-func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	return nil, nil, nil
+func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	return nil, nil, nil, nil
 }
 
 // GetArgs returns list of arguments for the ArangoD version check container.
@@ -622,6 +631,6 @@ func (a *ArangoVersionCheckContainer) GetName() string {
 }
 
 // GetProbes returns no probes for the ArangoD version check container.
-func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	return nil, nil, nil
+func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	return nil, nil, nil, nil
 }

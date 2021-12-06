@@ -28,6 +28,11 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
+const (
+	// Component name for reconciliation of this package
+	reconciliationComponent = "deployment_reconciliation"
+)
+
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.

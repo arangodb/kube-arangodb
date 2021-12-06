@@ -105,17 +105,22 @@ func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
 	return a.groupSpec.SecurityContext.NewSecurityContext()
 }
 
-func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	var liveness, readiness *core.Probe
+func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	var liveness, readiness, startup *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+
+	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	if probeLivenessConfig != nil {
@@ -126,7 +131,11 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, error) {
 		readiness = probeReadinessConfig.Create()
 	}
 
-	return liveness, readiness, nil
+	if probeStartupConfig != nil {
+		startup = probeStartupConfig.Create()
+	}
+
+	return liveness, readiness, startup, nil
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {

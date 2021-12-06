@@ -62,6 +62,10 @@ func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspecto
 
 	status.Plan = newPlan
 
+	for _, p := range newPlan {
+		actionsGeneratedMetrics.WithLabelValues(d.context.GetName(), p.Type.String(), "normal").Inc()
+	}
+
 	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
 		return errors.WithStack(err), false
 	}
@@ -117,6 +121,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCACleanPlan).
 		ApplyIfEmpty(createClusterOperationPlan).
+		ApplyIfEmpty(createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(createTLSStatusPropagated).
 		ApplyIfEmpty(createBootstrapPlan).

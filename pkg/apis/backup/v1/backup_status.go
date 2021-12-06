@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
 package v1
 
@@ -31,8 +29,9 @@ import (
 // an ArangoBackup.
 type ArangoBackupStatus struct {
 	ArangoBackupState `json:",inline"`
-	Backup            *ArangoBackupDetails `json:"backup,omitempty"`
-	Available         bool                 `json:"available"`
+	Backup            *ArangoBackupDetails       `json:"backup,omitempty"`
+	Available         bool                       `json:"available"`
+	Backoff           *ArangoBackupStatusBackOff `json:"backoff,omitempty"`
 }
 
 func (a *ArangoBackupStatus) Equal(b *ArangoBackupStatus) bool {

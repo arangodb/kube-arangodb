@@ -28,6 +28,7 @@ import (
 	time "time"
 
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	apps "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/apps"
 	backup "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/backup"
 	deployment "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
@@ -179,10 +180,15 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Apps() apps.Interface
 	Backup() backup.Interface
 	Database() deployment.Interface
 	Replication() replication.Interface
 	Storage() storage.Interface
+}
+
+func (f *sharedInformerFactory) Apps() apps.Interface {
+	return apps.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Backup() backup.Interface {

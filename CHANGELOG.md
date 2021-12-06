@@ -1,10 +1,19 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add ArangoBackup backoff functionality
+- Allow to abort ArangoBackup uploads by removing spec.upload
+
+## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
 - Split & Unify Lifecycle management functionality
 - Drop support for ArangoDB <= 3.5 (versions already EOL)
 - Add new admin commands to fetch agency dump and agency state
 - Add Graceful shutdown as finalizer (supports kubectl delete)
+- Add Watch to Lifecycle command
+- Add Topology Discovery
+- Add Support for StartupProbe
+- Add ARM64 support for Operator Docker image
+- Add ALPHA Rebalancer support
 
 ## [1.2.4](https://github.com/arangodb/kube-arangodb/tree/1.2.4) (2021-10-22)
 - Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation

@@ -68,7 +68,7 @@ type ContainerCreator interface {
 	GetArgs() ([]string, error)
 	GetName() string
 	GetExecutor() string
-	GetProbes() (*core.Probe, *core.Probe, error)
+	GetProbes() (*core.Probe, *core.Probe, *core.Probe, error)
 	GetResourceRequirements() core.ResourceRequirements
 	GetLifecycle() (*core.Lifecycle, error)
 	GetImagePullPolicy() core.PullPolicy

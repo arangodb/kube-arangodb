@@ -89,6 +89,8 @@ type DeploymentStatus struct {
 	Agency *DeploymentStatusAgencyInfo `json:"agency,omitempty"`
 
 	Topology *TopologyStatus `json:"topology,omitempty"`
+
+	Rebalancer *ArangoDeploymentRebalancerStatus `json:"rebalancer,omitempty"`
 }
 
 // Equal checks for equality

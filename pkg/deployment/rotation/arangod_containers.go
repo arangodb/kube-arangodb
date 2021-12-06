@@ -26,6 +26,8 @@ package rotation
 import (
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -50,15 +52,30 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 		for id := range a {
 			if ac, bc := &a[id], &b[id]; ac.Name == bc.Name {
 				if ac.Name == api.ServerGroupReservedContainerNameServer {
-					if !isOnlyLogLevelChanged(ac.Command, bc.Command) {
-						continue
+					if isOnlyLogLevelChanged(ac.Command, bc.Command) {
+						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
+							AddParam(ContainerName, ac.Name))
+
+						bc.Command = ac.Command
+						mode = mode.And(InPlaceRotation)
 					}
 
-					plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
-						AddParam(ContainerName, ac.Name))
+					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
+						if areEnvsEqual(ac.Env, bc.Env, func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
+							delete(a, topology.ArangoDBZone)
+							delete(b, topology.ArangoDBZone)
 
-					bc.Command = ac.Command
-					mode = mode.And(InPlaceRotation)
+							return a, b
+						}) {
+							bc.Env = ac.Env
+							mode = mode.And(SilentRotation)
+						}
+					}
+
+					if !areProbesEqual(ac.StartupProbe, bc.StartupProbe) {
+						bc.StartupProbe = ac.StartupProbe
+						mode = mode.And(SilentRotation)
+					}
 				} else {
 					if ac.Image != bc.Image {
 						// Image changed
@@ -161,4 +178,35 @@ func internalContainerLifecycleCompare(spec, status *core.Container) Mode {
 	}
 
 	return SkippedRotation
+}
+
+func areEnvsEqual(a, b []core.EnvVar, rules ...func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar)) bool {
+	am := getEnvs(a)
+	bm := getEnvs(b)
+
+	for _, r := range rules {
+		am, bm = r(am, bm)
+	}
+
+	return equality.Semantic.DeepEqual(am, bm)
+}
+
+func getEnvs(e []core.EnvVar) map[string]core.EnvVar {
+	m := map[string]core.EnvVar{}
+
+	for _, q := range e {
+		m[q.Name] = q
+	}
+
+	return m
+}
+
+func areProbesEqual(a, b *core.Probe) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return equality.Semantic.DeepEqual(a, b)
 }

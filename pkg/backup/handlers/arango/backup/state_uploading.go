@@ -69,6 +69,7 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 				"Upload failed with error: %s", details.FailMessage),
 			cleanStatusJob(),
 			updateStatusAvailable(true),
+			addBackOff(backup.Spec),
 		)
 	}
 
@@ -78,7 +79,22 @@ func stateUploadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backupA
 			cleanStatusJob(),
 			updateStatusBackupUpload(util.NewBool(true)),
 			updateStatusAvailable(true),
+			cleanBackOff(),
 		)
+	}
+
+	if backup.Spec.Upload == nil {
+		// Upload is canceled
+
+		if err = client.Abort(driver.BackupTransferJobID(backup.Status.Progress.JobID)); err == nil {
+			return wrapUpdateStatus(backup,
+				updateStatusState(backupApi.ArangoBackupStateReady, ""),
+				cleanStatusJob(),
+				updateStatusBackupUpload(util.NewBool(false)),
+				updateStatusAvailable(true),
+				cleanBackOff(),
+			)
+		}
 	}
 
 	return wrapUpdateStatus(backup,

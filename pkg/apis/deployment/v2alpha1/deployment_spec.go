@@ -166,6 +166,9 @@ type DeploymentSpec struct {
 
 	// Topology define topology adjustment details, Enterprise only
 	Topology *TopologySpec `json:"topology,omitempty"`
+
+	// Rebalancer define the rebalancer specification
+	Rebalancer *ArangoDeploymentRebalancerSpec `json:"rebalancer,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
