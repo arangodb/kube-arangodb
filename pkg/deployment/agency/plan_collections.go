@@ -43,7 +43,16 @@ func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
 }
 
 type StatePlanCollection struct {
+	Name   *string        `json:"name"`
 	Shards StatePlanShard `json:"shards"`
+}
+
+func (a StatePlanCollection) GetName(d string) string {
+	if a.Name == nil {
+		return d
+	}
+
+	return *a.Name
 }
 
 func (a StatePlanCollection) IsDBServerInShards(name string) bool {

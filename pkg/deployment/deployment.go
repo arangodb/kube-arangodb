@@ -226,6 +226,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
 	}
 
+	localInventory.Add(d)
+
 	go d.run()
 	go d.listenForPodEvents(d.stopCh)
 	go d.listenForPVCEvents(d.stopCh)
