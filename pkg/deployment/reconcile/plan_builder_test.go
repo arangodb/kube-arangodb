@@ -29,6 +29,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -87,6 +89,10 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+}
+
+func (c *testContext) GetAgencyCache() (agencyCache.State, bool) {
+	return agencyCache.State{}, true
 }
 
 func (c *testContext) SecretsModInterface() secret.ModInterface {

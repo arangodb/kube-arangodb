@@ -46,11 +46,13 @@ func createMaintenanceManagementPlan(ctx context.Context,
 		return nil
 	}
 
-	enabled, err := planCtx.GetAgencyMaintenanceMode(ctx)
-	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get agency mode")
+	agencyState, agencyOK := planCtx.GetAgencyCache()
+	if !agencyOK {
+		log.Error().Msgf("Unable to get agency mode")
 		return nil
 	}
+
+	enabled := agencyState.Supervision.Maintenance.Exists()
 
 	if !enabled && spec.Database.GetMaintenance() {
 		log.Info().Msgf("Enabling maintenance mode")

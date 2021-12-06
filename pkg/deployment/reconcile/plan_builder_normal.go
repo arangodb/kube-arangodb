@@ -84,7 +84,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		return currentPlan, false
 	}
 
-	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+	return recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), currentPlan).
 		// Adjust topology settings
 		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
@@ -124,7 +124,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplyIfEmpty(createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(createTLSStatusPropagated).
-		ApplyIfEmpty(createBootstrapPlan).
+		ApplyIfEmpty(createBootstrapPlan)).
 		Plan(), true
 }
 
@@ -135,7 +135,7 @@ func createMemberFailedRestorePlan(ctx context.Context,
 	var plan api.Plan
 
 	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(ctx, spec, status, context)
+	agencyState, agencyOK := context.GetAgencyCache()
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
@@ -148,17 +148,12 @@ func createMemberFailedRestorePlan(ctx context.Context,
 
 			if group == api.ServerGroupDBServers && spec.GetMode() == api.DeploymentModeCluster {
 				// Do pre check for DBServers. If agency is down DBServers should not be touch
-				if agencyErr != nil {
-					memberLog.Msg("Error in agency")
+				if !agencyOK {
+					memberLog.Msg("Agency state is not present")
 					continue
 				}
 
-				if agencyPlan == nil {
-					memberLog.Msg("AgencyPlan is nil")
-					continue
-				}
-
-				if agencyPlan.IsDBServerInDatabases(m.ID) {
+				if agencyState.Plan.Collections.IsDBServerInDatabases(m.ID) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
 					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,
@@ -199,8 +194,8 @@ func createMemberFailedRestorePlan(ctx context.Context,
 	})
 
 	// Ensure that we were able to get agency info
-	if len(plan) == 0 && agencyErr != nil {
-		log.Err(agencyErr).Msg("unable to build further plan without access to agency")
+	if len(plan) == 0 && !agencyOK {
+		log.Warn().Msgf("unable to build further plan without access to agency")
 		plan = append(plan,
 			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
 	}

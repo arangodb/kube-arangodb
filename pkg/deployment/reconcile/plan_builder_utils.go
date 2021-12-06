@@ -23,12 +23,7 @@
 package reconcile
 
 import (
-	"context"
-	"time"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
 )
 
@@ -50,18 +45,4 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
 	}
 	return plan
-}
-
-func fetchAgency(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus,
-	pctx PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
-	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
-		return nil, nil
-	} else if status.Members.Agents.MembersReady() > 0 {
-		agencyCtx, agencyCancel := context.WithTimeout(ctx, time.Minute)
-		defer agencyCancel()
-
-		return agency.GetAgencyCollections(agencyCtx, pctx.GetAgencyData)
-	} else {
-		return nil, errors.Newf("not able to read from agency when agency is down")
-	}
 }
