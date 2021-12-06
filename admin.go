@@ -57,6 +57,7 @@ func init() {
 
 	cmdMain.AddCommand(cmdAdmin)
 	cmdAdmin.AddCommand(cmdAgency)
+	cmdAdmin.AddCommand(cmdProxy)
 
 	cmdAgency.AddCommand(cmdAgencyDump)
 	cmdAgencyDump.Flags().StringVarP(&deploymentName, ArgDeploymentName, "d", "",

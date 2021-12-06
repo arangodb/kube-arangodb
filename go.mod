@@ -20,6 +20,8 @@ replace (
 	k8s.io/component-base => k8s.io/component-base v0.19.8
 	k8s.io/kubernetes => k8s.io/kubernetes v0.19.8
 	k8s.io/metrics => k8s.io/metrics v0.19.8
+	k8s.io/kubectl => k8s.io/kubectl v0.19.8
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.19.8
 )
 
 require (
@@ -31,22 +33,17 @@ require (
 	//github.com/arangodb/rebalancer v0.1.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/evanphx/json-patch v4.9.0+incompatible
+	github.com/evanphx/json-patch v4.11.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/validator/v10 v10.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/addlicense v0.0.0-20210428195630-6d92264d7170 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
-	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f // indirect
-	github.com/jessevdk/go-flags v1.5.0 // indirect
-	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.13 // indirect
-	github.com/onsi/gomega v1.7.1 // indirect
+	github.com/onsi/gomega v1.10.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.44.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.0.0-00010101000000-000000000000
@@ -58,14 +55,14 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go/codec v1.2.6 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.19.8
+	k8s.io/api v0.22.4
 	k8s.io/apiextensions-apiserver v0.18.3
-	k8s.io/apimachinery v0.19.8
+	k8s.io/apimachinery v0.22.4
+	k8s.io/cli-runtime v0.22.4
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
+	k8s.io/kubectl v0.22.4
 )
