@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -73,7 +73,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				return errors.Newf("Member %s not found", memberName)
 			}
 
-			ports := getPorts(group, spec)
+			ports := getPorts(group, spec, status)
 			if s, ok := cachedStatus.Service(member.GetName()); !ok {
 				s = &core.Service{
 					ObjectMeta: metav1.ObjectMeta{
@@ -324,7 +324,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 	return nil
 }
 
-func getPorts(group api.ServerGroup, spec api.DeploymentSpec) []core.ServicePort {
+func getPorts(group api.ServerGroup, spec api.DeploymentSpec, status api.DeploymentStatus) []core.ServicePort {
 	ports := []core.ServicePort{
 		{
 			Name:       k8sutil.ServerContainerName,
@@ -334,7 +334,7 @@ func getPorts(group api.ServerGroup, spec api.DeploymentSpec) []core.ServicePort
 		},
 	}
 
-	if group == api.ServerGroupDBServers && spec.Sync.IsSyncWithOwnImage() && features.ArangoSyncV2().Enabled() {
+	if group == api.ServerGroupDBServers && pod.IsArangoSyncWorkerSidecar(spec, status) {
 		// Add port for the ArangoSync worker sidecar.
 		ports = append(ports, core.ServicePort{
 			Name:       k8sutil.ArangoSyncWorkerSidecarName,

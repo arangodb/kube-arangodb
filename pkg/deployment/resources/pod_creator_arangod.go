@@ -256,13 +256,13 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.Pod) error {
+func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, p *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
-	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
+	p.Spec.PriorityClassName = m.groupSpec.PriorityClassName
 
 	// For the DB server it is possible to launch ArangoSync worker as a sidecar.
-	if m.group == api.ServerGroupDBServers && m.spec.Sync.IsSyncWithOwnImage() && features.ArangoSyncV2().Enabled() {
+	if m.group == api.ServerGroupDBServers && pod.IsArangoSyncWorkerSidecar(m.spec, m.deploymentStatus) {
 		masterJWTSecretName := m.spec.Sync.Authentication.GetJWTSecretName()
 		op := func(ctxChild context.Context) error {
 			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)

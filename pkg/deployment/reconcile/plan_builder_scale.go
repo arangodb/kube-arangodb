@@ -26,7 +26,7 @@ import (
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -66,7 +66,7 @@ func createScaleMemberPlan(ctx context.Context,
 	if spec.GetMode().SupportsSync() {
 		// Scale syncmasters & syncworkers
 		plan = append(plan, createScalePlan(log, status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
-		if features.ArangoSyncV2().Enabled() && spec.Sync.IsSyncWithOwnImage() {
+		if pod.IsArangoSyncWorkerSidecar(spec, status) {
 			// ArangoSync worker will work as a sidecar.
 		} else {
 			plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)

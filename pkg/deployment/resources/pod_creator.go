@@ -82,7 +82,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	if found, port := input.GroupSpec.GetInternalPort(); found {
 		// Create additional endpoint. It will be used by the arangosync worker too.
 		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", port)
-	} else if features.ArangoSyncV2().Enabled() && input.Deployment.Sync.IsSyncWithOwnImage() {
+	} else if pod.IsArangoSyncWorkerSidecar(input.Deployment, input.Status) {
 		// Create additional endpoint for the arangosync worker implicitly.
 		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", k8sutil.ArangoPortForSyncWorker)
 	}
