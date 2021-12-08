@@ -3,9 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	arangoUtil "github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,11 +12,16 @@ import (
 	"sync"
 	"syscall"
 
+	arangoUtil "github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
+	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -47,63 +49,70 @@ var (
 		Run:   cmdForwardPorts,
 	}
 
-	proxyService   string
-	proxyNamespace string
-	proxyPorts     string
+	podForwardInput struct {
+		proxyService   string
+		proxyNamespace string
+		proxyPorts     string
+
+		restConfig *rest.Config
+		// Pod is the selected pod for this port forwarding
+		pod *v1.Pod
+		// ports is a list of {localPort}:{podPort} that will be selected to expose the podPort on localPort
+		ports []string
+		// Steams configures where to write or read input from
+		streams genericclioptions.IOStreams
+		// stopCh is the channel used to manage the port forward lifecycle
+		stopCh <-chan struct{}
+		// readyCh communicates when the tunnel is ready to receive traffic
+		readyCh chan struct{}
+	}
 )
 
 func init() {
-	cmdProxy.Flags().StringVarP(&proxyService, "proxy.service", "s", ProxyServiceEnv.GetOrDefault(defaultProxyService),
+	cmdProxy.Flags().StringVarP(&podForwardInput.proxyService, "proxy.service", "s", ProxyServiceEnv.GetOrDefault(defaultProxyService),
 		"Name of the Service on remote k8s cluster to connect to")
-	cmdProxy.Flags().StringVarP(&proxyNamespace, "proxy.namespace", "n", ProxyNamespaceEnv.GetOrDefault(defaultNamespace),
+	cmdProxy.Flags().StringVarP(&podForwardInput.proxyNamespace, "proxy.namespace", "n", ProxyNamespaceEnv.GetOrDefault(defaultNamespace),
 		"Name of the Namespace on remote k8s cluster to use")
-	cmdProxy.Flags().StringVarP(&proxyPorts, "proxy.ports", "p", ProxyPortsEnv.GetOrDefault(defaultPorts),
+	cmdProxy.Flags().StringVarP(&podForwardInput.proxyPorts, "proxy.ports", "p", ProxyPortsEnv.GetOrDefault(defaultPorts),
 		"lList of ports forwarding in form of: {from}:{to},{from}:{to}")
 }
 
-type PortForwardToPodRequest struct {
-	// RestConfig is the kubernetes config
-	RestConfig *rest.Config
-	// Pod is the selected pod for this port forwarding
-	Pod *v1.Pod
-	// Ports is a list of {localPort}:{podPort} that will be selected to expose the podPort on localPort
-	Ports []string
-	// Steams configures where to write or read input from
-	Streams genericclioptions.IOStreams
-	// StopCh is the channel used to manage the port forward lifecycle
-	StopCh <-chan struct{}
-	// ReadyCh communicates when the tunnel is ready to receive traffic
-	ReadyCh chan struct{}
+func handleForwarderErrors() {
+	runtime.ErrorHandlers = append(runtime.ErrorHandlers, func(err error) {
+
+		// trigger container restart on failure to reattach to the new pod
+		if strings.Contains(err.Error(), "container not running") {
+			cliLog.Error().Msg("target container not exist - quiting")
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		}
+	})
 }
 
 func cmdForwardPorts(_ *cobra.Command, _ []string) {
+	handleForwarderErrors()
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	cliLog.Info().Msg(fmt.Sprintf("Starting proxy server on ports %s for %s service in %s namespace", proxyPorts, proxyService, proxyNamespace))
+	cliLog.Info().Msg(fmt.Sprintf("Starting proxy server on ports %s for %s service in %s namespace",
+		podForwardInput.proxyPorts, podForwardInput.proxyService, podForwardInput.proxyNamespace))
 
 	config, err := k8sutil.NewKubeConfig()
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("cannot load kubeconfig file")
 	}
+	podForwardInput.restConfig = config
 
-	// stopCh control the port forwarding lifecycle. When it gets closed the
-	// port forward will terminate
 	stopCh := make(chan struct{}, 1)
-	// readyCh communicate when the port forward is ready to get traffic
-	readyCh := make(chan struct{})
-	// stream is used to tell the port forwarder where to place its output or
-	// where to expect input if needed. For the port forwarding we just need
-	// the output eventually
-	stream := genericclioptions.IOStreams{
+	podForwardInput.stopCh = stopCh
+	podForwardInput.readyCh = make(chan struct{})
+	podForwardInput.streams = genericclioptions.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}
 
-	// managing termination signal from the terminal. As you can see the stopCh
-	// gets closed to gracefully handle its termination.
-	sigs := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 2)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigs
@@ -112,31 +121,27 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 		wg.Done()
 	}()
 
-	pod, svc, err := getFirstPodForSvc(proxyService, proxyNamespace, config)
+	pod, svc, err := getFirstPodForSvc(podForwardInput.proxyService, podForwardInput.proxyNamespace, config)
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("error on looking service pod")
 	}
+	podForwardInput.pod = pod
 
-	podPorts, err := translateServicePortToTargetPort(strings.Split(proxyPorts, ","), svc, pod)
+	podForwardInput.ports, err = translateServicePortToTargetPort(strings.Split(podForwardInput.proxyPorts, ","), svc, pod)
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("cannot translate Service Port to Pod Port")
 	}
 
 	go func() {
-		err := PortForwardToPod(PortForwardToPodRequest{
-			RestConfig: config,
-			Pod:        pod,
-			Ports:      podPorts,
-			Streams:    stream,
-			StopCh:     stopCh,
-			ReadyCh:    readyCh,
-		})
+		err := PortForwardToPod()
 		if err != nil {
 			cliLog.Panic().Err(err).Msg("pod forward request failed")
 		}
 	}()
+
+	// wait till portForward connection will be ready
 	select {
-	case <-readyCh:
+	case <-podForwardInput.readyCh:
 		break
 	}
 	cliLog.Info().Msg("Port forwarding is ready to get traffic")
@@ -144,17 +149,17 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 	wg.Wait()
 }
 
-func PortForwardToPod(req PortForwardToPodRequest) error {
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Pod.Namespace, req.Pod.Name)
-	hostIP := strings.TrimLeft(req.RestConfig.Host, "https://")
+func PortForwardToPod() error {
+	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", podForwardInput.pod.Namespace, podForwardInput.pod.Name)
+	hostIP := strings.TrimLeft(podForwardInput.restConfig.Host, "https://")
 
-	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(podForwardInput.restConfig)
 	if err != nil {
 		return err
 	}
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, &url.URL{Scheme: "https", Path: path, Host: hostIP})
-	fw, err := portforward.New(dialer, req.Ports, req.StopCh, req.ReadyCh, req.Streams.Out, req.Streams.ErrOut)
+	fw, err := portforward.New(dialer, podForwardInput.ports, podForwardInput.stopCh, podForwardInput.readyCh, podForwardInput.streams.Out, podForwardInput.streams.ErrOut)
 	if err != nil {
 		return err
 	}
