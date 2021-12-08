@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package main
+package cmd
 
 import (
 	"context"
