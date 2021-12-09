@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	arangoUtil "github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -20,12 +21,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	kubectlUtil "k8s.io/kubectl/pkg/util"
@@ -121,11 +122,18 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 		wg.Done()
 	}()
 
-	pod, svc, err := getFirstPodForSvc(podForwardInput.proxyService, podForwardInput.proxyNamespace, config)
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	pod, svc, err := getFirstPodForSvc(podForwardInput.proxyService, podForwardInput.proxyNamespace, *k8sClient)
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("error on looking service pod")
 	}
 	podForwardInput.pod = pod
+
+	go watchPodForRestart(pod, podForwardInput.proxyNamespace, *k8sClient)
 
 	podForwardInput.ports, err = translateServicePortToTargetPort(strings.Split(podForwardInput.proxyPorts, ","), svc, pod)
 	if err != nil {
@@ -166,12 +174,7 @@ func PortForwardToPod() error {
 	return fw.ForwardPorts()
 }
 
-func getFirstPodForSvc(proxyService, proxyNamespace string, config *restclient.Config) (*corev1.Pod, *corev1.Service, error) {
-	k8sClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
+func getFirstPodForSvc(proxyService, proxyNamespace string, k8sClient kubernetes.Clientset) (*corev1.Pod, *corev1.Service, error) {
 	ctx := arangoUtil.CreateSignalContext(context.Background())
 
 	svc, err := k8sClient.CoreV1().Services(proxyNamespace).Get(ctx, proxyService, metav1.GetOptions{})
@@ -190,6 +193,40 @@ func getFirstPodForSvc(proxyService, proxyNamespace string, config *restclient.C
 		return &pod, svc, nil
 	}
 	return nil, nil, errors.New("no pod found")
+}
+
+func watchPodForRestart(pod *corev1.Pod, proxyNamespace string, k8sClient kubernetes.Clientset) {
+	ctx := arangoUtil.CreateSignalContext(context.Background())
+
+	podWatch, err := k8sClient.CoreV1().Pods(proxyNamespace).Watch(ctx, metav1.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", pod.Name).String()})
+	if err != nil {
+		cliLog.Panic().Err(err).Msg("cannot watch pod")
+	}
+	defer podWatch.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case obj, ok := <-podWatch.ResultChan():
+			if !ok {
+				cliLog.Error().Err(err).Msg("result channel bad - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+
+			pod, ok := obj.Object.(*corev1.Pod)
+			if !ok {
+				cliLog.Error().Err(err).Msg("failed to get pod - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+
+			if pod.DeletionTimestamp != nil {
+				cliLog.Error().Msg("pod has been restarted - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+		}
+		time.Sleep(time.Second * 5)
+	}
 }
 
 // Translates service port to target port
