@@ -90,24 +90,24 @@ func (c *cache) Reload(ctx context.Context, client agency.Agency) (uint64, error
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.valid = false
-
 	cfg, err := getAgencyConfig(ctx, client)
 	if err != nil {
-		return cfg.CommitIndex, err
+		c.valid = false
+		return 0, err
 	}
 
-	if cfg.CommitIndex == c.commitIndex {
+	if cfg.CommitIndex == c.commitIndex && c.valid {
 		// We are on same index, nothing to do
 		return cfg.CommitIndex, err
 	}
 
 	if data, err := loadState(ctx, client); err != nil {
+		c.valid = false
 		return cfg.CommitIndex, err
 	} else {
 		c.data = data
 		c.valid = true
 		c.commitIndex = cfg.CommitIndex
-		return cfg.CommitIndex, err
+		return cfg.CommitIndex, nil
 	}
 }
