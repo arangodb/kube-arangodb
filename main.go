@@ -126,6 +126,9 @@ var (
 	operatorKubernetesOptions struct {
 		maxBatchSize int64
 	}
+	operatorBackup struct {
+		concurrentUploads int
+	}
 	operatorTimeouts struct {
 		k8s            time.Duration
 		arangoD        time.Duration
@@ -167,6 +170,7 @@ func init() {
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
+	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	features.Init(&cmdMain)
 }
 
@@ -196,6 +200,7 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().ArangoD().Set(operatorTimeouts.arangoD)
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
+	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)
 
 	// Prepare log service
 	var err error
