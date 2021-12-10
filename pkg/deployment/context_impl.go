@@ -31,6 +31,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
@@ -706,6 +709,26 @@ func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace
 		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
+	parser := patch.Patch(p)
+
+	data, err := parser.Marshal()
+	if err != nil {
+		return err
+	}
+
+	c := d.deps.KubeCli.CoreV1().Pods(pod.GetNamespace())
+
+	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	defer cancel()
+	_, err = c.Patch(ctxChild, pod.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -26,6 +26,8 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
@@ -138,6 +140,10 @@ type ArangoAgency interface {
 	RefreshAgencyCache(ctx context.Context) (uint64, error)
 }
 
+type ArangoApplier interface {
+	ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
@@ -148,6 +154,7 @@ type Context interface {
 	DeploymentModInterfaces
 	DeploymentCachedStatus
 	ArangoAgency
+	ArangoApplier
 
 	// GetAPIObject returns the deployment as k8s object.
 	GetAPIObject() k8sutil.APIObject

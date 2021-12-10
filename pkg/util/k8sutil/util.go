@@ -48,6 +48,8 @@ const (
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
 	// LabelKeyArangoZone is the key of the label used to store the ArangoDeployment zone ID in
 	LabelKeyArangoZone = "deployment.arangodb.com/zone"
+	// LabelKeyArangoScheduled is the key of the label used to define that member is already scheduled
+	LabelKeyArangoScheduled = "deployment.arangodb.com/scheduled"
 	// LabelKeyArangoTopology is the key of the label used to store the ArangoDeployment topology ID in
 	LabelKeyArangoTopology = "deployment.arangodb.com/topology"
 

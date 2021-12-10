@@ -116,6 +116,8 @@ var (
 		enableBackup                bool // Run backup operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 
+		scalingIntegrationEnabled bool
+
 		alpineImage, metricsExporterImage, arangoImage string
 
 		singleMode bool
@@ -158,6 +160,7 @@ func init() {
 	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
 	f.DurationVar(&timeouts.k8s, "timeout.k8s", time.Second*3, "The request timeout to the kubernetes")
 	f.DurationVar(&timeouts.arangoD, "timeout.arangod", time.Second*10, "The request timeout to the ArangoDB")
+	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "scaling-integration", false, "Enable Scaling Integration")
 	features.Init(&cmdMain)
 }
 
@@ -368,6 +371,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		AllowChaos:                  chaosOptions.allowed,
+		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
 		Scope:                       scope,

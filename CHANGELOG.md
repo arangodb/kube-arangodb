@@ -6,6 +6,7 @@
 - Add Agency Cache internally
 - Add Recovery during PlanBuild operation
 - Fix Exporter in Deployments without authentication
+- Allow to disable ClusterScalingIntegration and add proper Scheduled label to pods
 
 ## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
 - Split & Unify Lifecycle management functionality
