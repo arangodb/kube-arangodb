@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -70,7 +72,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	}
 
 	// Check PVC
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
@@ -155,7 +157,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Check PVC
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	pvc, err := r.context.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.GetOptions{})
 	if err != nil {
@@ -172,14 +174,14 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	}
 
 	// Inspect cleaned out state
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := r.context.GetDatabaseClient(ctxChild)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return errors.WithStack(err)
 	}
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
@@ -194,7 +196,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 		return errors.WithStack(err)
 	}
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cleanedOut, err := cluster.IsCleanedOut(ctxChild, memberStatus.ID)
 	if err != nil {
@@ -234,7 +236,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 	if memberStatus.Phase == api.MemberPhaseCreated {
 		// No cleanout job triggered
 		var jobID string
-		ctxChild, cancelChild := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancelChild := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancelChild()
 
 		ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
@@ -262,14 +264,14 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 	} else if memberStatus.Phase == api.MemberPhaseDrain {
 		// Check the job progress
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to create agency client")
 			return errors.WithStack(err)
 		}
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {
@@ -293,7 +295,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 		}
 	} else if memberStatus.Phase == api.MemberPhaseResign {
 		// Check the job progress
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		agency, err := r.context.GetAgency(ctxChild)
 		if err != nil {
@@ -301,7 +303,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, log zerol
 			return errors.WithStack(err)
 		}
 
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, memberStatus.CleanoutJobID, c, agency)
 		if err != nil {

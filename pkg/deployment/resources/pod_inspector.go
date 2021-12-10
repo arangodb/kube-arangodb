@@ -187,7 +187,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		if k8sutil.IsPodScheduled(pod) {
-			if _, ok := pod.Labels[k8sutil.LabelKeyArangoScheduled]; k8sutil.IsPodScheduled(pod) && !ok {
+			if _, ok := pod.Labels[k8sutil.LabelKeyArangoScheduled]; !ok {
 				// Adding scheduled label to the pod
 				l := pod.Labels
 				if l == nil {

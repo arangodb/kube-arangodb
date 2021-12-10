@@ -26,14 +26,14 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func init() {
@@ -58,7 +58,7 @@ func (a *encryptionKeyRefreshAction) Start(ctx context.Context) (bool, error) {
 }
 
 func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	keyfolder, err := a.actionCtx.GetCachedStatus().SecretReadInterface().Get(ctxChild, pod.GetEncryptionFolderSecretName(a.actionCtx.GetName()), meta.GetOptions{})
 	if err != nil {
@@ -66,7 +66,7 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 		return true, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
@@ -75,7 +75,7 @@ func (a *encryptionKeyRefreshAction) CheckProgress(ctx context.Context) (bool, b
 	}
 
 	client := client.NewClient(c.Connection())
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshEncryption(ctxChild)
 	if err != nil {

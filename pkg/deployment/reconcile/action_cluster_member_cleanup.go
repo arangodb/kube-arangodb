@@ -26,7 +26,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/go-driver"
 
@@ -71,21 +71,21 @@ func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 	id := driver.ServerID(a.MemberID())
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		return err
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {
 		return err
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	health, err := cluster.Health(ctxChild)
 	if err != nil {
@@ -96,7 +96,7 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 		return nil
 	}
 
-	return arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	return globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return cluster.RemoveServer(ctxChild, id)
 	})
 }

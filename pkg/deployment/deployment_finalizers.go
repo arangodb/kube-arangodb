@@ -26,6 +26,8 @@ package deployment
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -57,7 +59,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	var removalList []string
 
 	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
@@ -102,7 +104,7 @@ func removeDeploymentFinalizers(ctx context.Context, log zerolog.Logger, cli ver
 	depl *api.ArangoDeployment, finalizers []string) error {
 	depls := cli.DatabaseV1().ArangoDeployments(depl.GetNamespace())
 	getFunc := func() (metav1.Object, error) {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		result, err := depls.Get(ctxChild, depl.GetName(), metav1.GetOptions{})
@@ -113,7 +115,7 @@ func removeDeploymentFinalizers(ctx context.Context, log zerolog.Logger, cli ver
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedDepl := updated.(*api.ArangoDeployment)
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		result, err := depls.Update(ctxChild, updatedDepl, metav1.UpdateOptions{})

@@ -26,6 +26,8 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -47,7 +49,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	log.Info().Msgf("Ensuring annotations")
 
 	patchSecret := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.SecretsModInterface().Patch(ctxChild, name, types.JSONPatchType, d,
 				meta.PatchOptions{})
 			return err
@@ -64,7 +66,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchServiceAccount := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.ServiceAccountsModInterface().Patch(ctxChild, name,
 				types.JSONPatchType, d, meta.PatchOptions{})
 			return err
@@ -81,7 +83,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchService := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.ServicesModInterface().Patch(ctxChild, name, types.JSONPatchType, d,
 				meta.PatchOptions{})
 			return err
@@ -98,7 +100,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPDB := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.PodDisruptionBudgetsModInterface().Patch(ctxChild, name,
 				types.JSONPatchType, d, meta.PatchOptions{})
 			return err
@@ -115,7 +117,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPVC := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.PersistentVolumeClaimsModInterface().Patch(ctxChild, name,
 				types.JSONPatchType, d, meta.PatchOptions{})
 			return err
@@ -132,7 +134,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchPod := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.PodsModInterface().Patch(ctxChild, name, types.JSONPatchType, d,
 				meta.PatchOptions{})
 			return err
@@ -149,7 +151,7 @@ func (r *Resources) EnsureAnnotations(ctx context.Context, cachedStatus inspecto
 	}
 
 	patchServiceMonitor := func(name string, d []byte) error {
-		return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := r.context.ServiceMonitorsModInterface().Patch(ctxChild, name, types.JSONPatchType, d,
 				meta.PatchOptions{})
 			return err

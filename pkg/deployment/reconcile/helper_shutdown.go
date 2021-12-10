@@ -26,10 +26,11 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
@@ -80,7 +81,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
-		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
 		if err != nil {

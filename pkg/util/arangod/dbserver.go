@@ -26,6 +26,8 @@ package arangod
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	driver "github.com/arangodb/go-driver"
@@ -37,14 +39,14 @@ import (
 // The functions returns an error when the check could not be completed or the dbserver
 // is not empty, or nil when the dbserver is found to be empty.
 func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error {
-	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := client.Cluster(ctxChild)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Cannot obtain Cluster"))
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	dbs, err := client.Databases(ctxChild)
 	if err != nil {
@@ -53,7 +55,7 @@ func IsDBServerEmpty(ctx context.Context, id string, client driver.Client) error
 
 	var inventory driver.DatabaseInventory
 	for _, db := range dbs {
-		err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			inventory, err = c.DatabaseInventory(ctxChild, db)
 

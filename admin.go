@@ -33,6 +33,8 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
@@ -288,7 +290,7 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 
 // getJWTTokenFromSecrets returns token from the secret.
 func getJWTTokenFromSecrets(ctx context.Context, secrets secret.ReadInterface, name string) (connection.Authentication, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	token, err := k8sutil.GetTokenSecret(ctxChild, secrets, name)
@@ -306,7 +308,7 @@ func getJWTTokenFromSecrets(ctx context.Context, secrets secret.ReadInterface, n
 
 // getCACertificate returns CA certificate from the secret.
 func getCACertificate(ctx context.Context, secrets secret.ReadInterface, name string) (*x509.CertPool, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	s, err := secrets.Get(ctxChild, name, metav1.GetOptions{})
@@ -331,7 +333,7 @@ func getDeployment(ctx context.Context, namespace, deplName string) (v12.ArangoD
 		return v12.ArangoDeployment{}, errors.WithMessage(err, "failed to create Arango extension client")
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, metav1.ListOptions{})

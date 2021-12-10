@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -143,7 +145,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 	// Remaining agents are healthy, if we need to perform complete recovery
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
@@ -172,7 +174,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
