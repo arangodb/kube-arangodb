@@ -94,6 +94,7 @@ type Config struct {
 	EnableStorage               bool
 	EnableBackup                bool
 	AllowChaos                  bool
+	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
 	Scope                       scope.Scope
 }

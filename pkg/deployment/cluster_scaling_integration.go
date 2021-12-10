@@ -85,9 +85,14 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
 
+	if !ci.depl.config.ScalingIntegrationEnabled {
+		return false
+	}
+
+	status, _ := ci.depl.GetStatus()
+
 	if !ci.scaleEnabled.enabled {
 		// Check if it is possible to turn on scaling without any issue
-		status, _ := ci.depl.GetStatus()
 		if status.Plan.IsEmpty() && ci.setNumberOfServers(ctx) == nil {
 			// Scaling should be enabled because there is no Plan.
 			// It can happen when the enabling action fails

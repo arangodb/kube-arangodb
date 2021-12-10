@@ -103,6 +103,28 @@ func (t *TopologyStatus) IsTopologyOwned(m *TopologyMemberStatus) bool {
 	return t.ID == m.ID
 }
 
+func (t *TopologyStatus) IsTopologyEvenlyDistributed(group ServerGroup) bool {
+	if t == nil {
+		return true
+	}
+
+	max, min := 0, math.MaxInt64
+
+	for _, z := range t.Zones {
+		l := len(z.Members[group.AsRoleAbbreviated()])
+
+		if min > l {
+			min = l
+		}
+
+		if max < l {
+			max = l
+		}
+	}
+
+	return min+1 >= max
+}
+
 func (t *TopologyStatus) Enabled() bool {
 	return t != nil
 }
