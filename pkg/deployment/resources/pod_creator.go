@@ -33,6 +33,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 
 	podMod "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -483,7 +485,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			newPhase = api.MemberPhaseUpgrading
 		}
 
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {
@@ -537,7 +539,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			}
 		}
 
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		podName, uid, err := CreateArangoPod(ctxChild, r.context.PodsModInterface(), apiObject, spec, group, CreatePodFromTemplate(template.PodSpec))
 		if err != nil {

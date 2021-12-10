@@ -26,10 +26,10 @@ package inspector
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
@@ -123,10 +123,10 @@ func serviceMonitorsToMap(ctx context.Context, inspector *inspector, m monitorin
 }
 
 func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) []*monitoring.ServiceMonitor {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	serviceMonitors, err := m.ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    128,
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})
 

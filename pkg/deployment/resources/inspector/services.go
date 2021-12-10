@@ -26,10 +26,10 @@ package inspector
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
@@ -129,10 +129,10 @@ func servicePointer(pod core.Service) *core.Service {
 }
 
 func getServices(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Service, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	services, err := k.CoreV1().Services(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    128,
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})
 

@@ -27,6 +27,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -134,7 +136,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		Logger()
 
 	// Check if pod exists
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	pod, err := ib.Context.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
@@ -142,7 +144,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		if k8sutil.IsPodFailed(pod) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
-				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {
@@ -173,7 +175,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			log.Warn().Err(err).Msg("Failed to create Image ID Pod client")
 			return true, nil
 		}
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		v, err := client.Version(ctxChild)
 		if err != nil {
@@ -184,7 +186,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		enterprise := strings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
-		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return ib.Context.PodsModInterface().Delete(ctxChild, podName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
@@ -231,7 +233,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 		return true, errors.WithStack(err)
 	}
 
-	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, _, err := resources.CreateArangoPod(ctxChild, ib.Context.PodsModInterface(), ib.APIObject, ib.Spec, api.ServerGroupImageDiscovery, pod)
 		return err
 	})

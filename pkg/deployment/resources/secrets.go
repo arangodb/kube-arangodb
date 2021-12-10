@@ -31,6 +31,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
@@ -216,7 +218,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			f.Data[pod.ActiveJWTKey] = token
 			f.Data[constants.SecretKeyToken] = token
 
-			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := secrets.Update(ctxChild, f, meta.UpdateOptions{})
 				return err
 			})
@@ -241,7 +243,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
 				return err
 			})
@@ -264,7 +266,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return err
 			}
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := secrets.Patch(ctxChild, folderSecretName, types.JSONPatchType, pdata, meta.PatchOptions{})
 				return err
 			})
@@ -327,7 +329,7 @@ func (r *Resources) createSecretWithMod(ctx context.Context, secrets secret.ModI
 
 	f(secret)
 
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
 		return err
 	})
@@ -352,7 +354,7 @@ func (r *Resources) createTokenSecret(ctx context.Context, secrets secret.ModInt
 
 	// Create secret
 	owner := r.context.GetAPIObject().AsOwner()
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, token, &owner)
 	})
 	if k8sutil.IsAlreadyExists(err) {
@@ -393,7 +395,7 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 	}
 
 	owner := r.context.GetAPIObject().AsOwner()
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return AppendKeyfileToKeyfolder(ctxChild, cachedStatus, secrets, &owner, secretName, d)
 	})
 	if err != nil {
@@ -509,7 +511,7 @@ func (r *Resources) ensureTLSCACertificateSecret(ctx context.Context, cachedStat
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return createTLSCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {
@@ -533,7 +535,7 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 		apiObject := r.context.GetAPIObject()
 		owner := apiObject.AsOwner()
 		deploymentName := apiObject.GetName()
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return createClientAuthCACertificate(ctxChild, r.log, secrets, spec, deploymentName, &owner)
 		})
 		if k8sutil.IsAlreadyExists(err) {

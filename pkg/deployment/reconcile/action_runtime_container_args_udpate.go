@@ -27,13 +27,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -242,7 +243,7 @@ func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLe
 		return nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cli, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
@@ -259,7 +260,7 @@ func (a actionRuntimeContainerArgsUpdate) setLogLevel(ctx context.Context, logLe
 		return err
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	resp, err := conn.Do(ctxChild, req)
 	if err != nil {

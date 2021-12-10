@@ -367,10 +367,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/apis/storage/... \
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
-		$(REPOPATH)/pkg/util/k8sutil \
-		$(REPOPATH)/pkg/util/k8sutil/test \
-		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation \
+		$(REPOPATH)/pkg/util/... \
 		$(REPOPATH)/pkg/backup/...
 
 # Release building

@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -85,7 +87,7 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedS
 
 	log = log.With().Str("secret", secretName).Logger()
 	// Load CA certificate
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	caCert, caKey, _, err := k8sutil.GetCASecret(ctxChild, cachedStatus.SecretReadInterface(), spec.GetCASecretName(), nil)
 	if err != nil {
@@ -115,7 +117,7 @@ func createTLSServerCertificate(ctx context.Context, log zerolog.Logger, cachedS
 	keyfile := strings.TrimSpace(cert) + "\n" +
 		strings.TrimSpace(priv)
 
-	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.CreateTLSKeyfileSecret(ctxChild, secrets, secretName, keyfile, ownerRef)
 	})
 	if err != nil {

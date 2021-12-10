@@ -1309,7 +1309,7 @@ func testArangodbInternalExporterContainer(secure, auth bool, resources core.Res
 	c := core.Container{
 		Name:    k8sutil.ExporterContainerName,
 		Image:   testImage,
-		Command: createTestInternalExporterCommand(secure, port),
+		Command: createTestInternalExporterCommand(secure, auth, port),
 		Ports: []core.ContainerPort{
 			{
 				Name:          string(api.MetricsModeExporter),
@@ -1339,7 +1339,7 @@ func testArangodbInternalExporterContainer(secure, auth bool, resources core.Res
 	return c
 }
 
-func createTestInternalExporterCommand(secure bool, port int32) []string {
+func createTestInternalExporterCommand(secure, auth bool, port int32) []string {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		return []string{}
@@ -1353,7 +1353,9 @@ func createTestInternalExporterCommand(secure bool, port int32) []string {
 		args = append(args, "--arangodb.endpoint=http://localhost:8529/_admin/metrics")
 	}
 
-	args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
+	if auth {
+		args = append(args, "--arangodb.jwt-file=/secrets/exporter/jwt/token")
+	}
 
 	if port != k8sutil.ArangoExporterPort {
 		args = append(args, fmt.Sprintf("--server.address=:%d", port))

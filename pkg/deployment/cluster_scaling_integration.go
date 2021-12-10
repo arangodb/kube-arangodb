@@ -28,6 +28,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -152,14 +154,14 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectSuccess bool) error {
 	log := ci.log
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
@@ -204,7 +206,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	}
 	// Let's update the spec
 	apiObject := ci.depl.apiObject
-	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
 	if err != nil {

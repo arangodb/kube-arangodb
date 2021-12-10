@@ -27,11 +27,12 @@ import (
 	"context"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/go-driver"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -53,14 +54,14 @@ func secretKeysToList(s *core.Secret) []string {
 
 // getCluster returns the cluster connection.
 func getCluster(ctx context.Context, planCtx PlanBuilderContext) (driver.Cluster, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := planCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
 		return nil, errors.WithStack(errors.Wrapf(err, "Unable to get database client"))
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	cluster, err := c.Cluster(ctxChild)
 	if err != nil {

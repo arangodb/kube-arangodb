@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -71,14 +73,14 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	// For safety, remove from cluster
 	if a.action.Group == api.ServerGroupCoordinators || a.action.Group == api.ServerGroupDBServers {
-		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 		if err != nil {
 			return false, errors.WithStack(err)
 		}
 
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), driver.ServerID(m.ID)); err != nil {
 			if !driver.IsNotFound(err) && !driver.IsPreconditionFailed(err) {

@@ -26,10 +26,11 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/rs/zerolog"
 )
 
@@ -60,7 +61,7 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
@@ -68,7 +69,7 @@ func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error
 		return true, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection()), folder.Data, true); err != nil {
 		a.log.Warn().Err(err).Msg("Error while getting JWT Status")

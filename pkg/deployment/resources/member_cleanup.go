@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -196,7 +198,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 					},
 				}
 
-				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := r.context.ArangoMembersModInterface().Create(ctxChild, &a, metav1.CreateOptions{})
 					return err
 				})
@@ -221,7 +223,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 				}
 				if changed {
 
-					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 						_, err := r.context.ArangoMembersModInterface().Update(ctxChild, m, metav1.UpdateOptions{})
 						return err
 					})
@@ -250,7 +252,7 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		if !ok || g != member.Spec.Group {
 			// Remove member
 
-			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return r.context.ArangoMembersModInterface().Delete(ctxChild, member.GetName(), metav1.DeleteOptions{})
 			})
 			if err != nil {

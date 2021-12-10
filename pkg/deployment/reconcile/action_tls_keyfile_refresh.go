@@ -26,9 +26,10 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -54,7 +55,7 @@ type refreshTLSKeyfileCertificateAction struct {
 }
 
 func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetServerClient(ctxChild, a.action.Group, a.action.MemberID)
 	if err != nil {
@@ -78,7 +79,7 @@ func (a *refreshTLSKeyfileCertificateAction) CheckProgress(ctx context.Context) 
 
 	client := client.NewClient(c.Connection())
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.RefreshTLS(ctxChild)
 	if err != nil {

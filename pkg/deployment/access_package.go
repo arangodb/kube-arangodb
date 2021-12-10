@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	certificates "github.com/arangodb-helper/go-certificates"
@@ -67,7 +69,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	}
 
 	// Remove all access packages that we did build, but are no longer needed
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	secretList, err := secrets.List(ctxChild, metav1.ListOptions{})
 	if err != nil {
@@ -80,7 +82,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 				// Secret is an access package
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
-					err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 						return secrets.Delete(ctxChild, secret.GetName(), metav1.DeleteOptions{
 							Preconditions: &metav1.Preconditions{UID: &secret.UID},
 						})
@@ -110,7 +112,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
 	spec := d.apiObject.Spec
 
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Get(ctxChild, apSecretName, metav1.GetOptions{})
 		return err
 	})
@@ -124,7 +126,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 
 	// Fetch client authentication CA
 	clientAuthSecretName := spec.Sync.Authentication.GetClientCASecretName()
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	clientAuthCert, clientAuthKey, _, err := k8sutil.GetCASecret(ctxChild, secrets, clientAuthSecretName, nil)
 	if err != nil {
@@ -220,7 +222,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 	}
 	// Attach secret to owner
 	secret.SetOwnerReferences(append(secret.GetOwnerReferences(), d.apiObject.AsOwner()))
-	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Create(ctxChild, secret, metav1.CreateOptions{})
 		return err
 	})
