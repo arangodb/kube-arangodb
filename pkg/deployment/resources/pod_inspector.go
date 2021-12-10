@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
@@ -184,6 +186,20 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
+		if k8sutil.IsPodScheduled(pod) {
+			if _, ok := pod.Labels[k8sutil.LabelKeyArangoScheduled]; !ok {
+				// Adding scheduled label to the pod
+				l := pod.Labels
+				if l == nil {
+					l = map[string]string{}
+				}
+				l[k8sutil.LabelKeyArangoScheduled] = "1"
+				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
+					log.Error().Err(err).Msgf("Unable to update scheduled labels")
+				}
+			}
+		}
+
 		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
@@ -198,6 +214,10 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							if ok {
 								memberStatus.Topology.Label = label
 							}
+						}
+
+						if memberStatus.Topology.InitPhase == api.TopologyMemberStatusInitPhasePending {
+							memberStatus.Topology.InitPhase = api.TopologyMemberStatusInitPhaseOK
 						}
 					}
 				}

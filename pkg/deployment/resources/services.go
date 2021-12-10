@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -101,7 +103,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 					},
 				}
 
-				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := svcs.Create(ctxChild, s, metav1.CreateOptions{})
 					return err
 				})
@@ -131,7 +133,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				if !equality.Semantic.DeepDerivative(*spec, s.Spec) {
 					s.Spec = *spec
 
-					err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+					err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 						_, err := svcs.Update(ctxChild, s, metav1.UpdateOptions{})
 						return err
 					})
@@ -153,7 +155,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	// Headless service
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateHeadlessServiceName(deploymentName)); !exists {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateHeadlessService(ctxChild, svcs, apiObject, owner)
 		if err != nil {
@@ -169,7 +171,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	single := spec.GetMode().HasSingleServers()
 	counterMetric.Inc()
 	if _, exists := cachedStatus.Service(k8sutil.CreateDatabaseClientServiceName(deploymentName)); !exists {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		svcName, newlyCreated, err := k8sutil.CreateDatabaseClientService(ctxChild, svcs, apiObject, single, owner)
 		if err != nil {
@@ -218,7 +220,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 	}
 
 	if spec.Metrics.IsEnabled() {
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, svcs, apiObject, apiObject.AsOwner())
 		if err != nil {
@@ -296,7 +298,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 			}
 		}
 		if updateExternalAccessService && !createExternalAccessService && !deleteExternalAccessService {
-			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := svcs.Update(ctxChild, existing, metav1.UpdateOptions{})
 				return err
 			})
@@ -314,7 +316,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 
 	if deleteExternalAccessService {
 		log.Info().Str("service", eaServiceName).Msgf("Removing obsolete %s external access service", title)
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return svcs.Delete(ctxChild, eaServiceName, metav1.DeleteOptions{})
 		})
 		if err != nil {
@@ -327,7 +329,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		nodePort := spec.GetNodePort()
 		loadBalancerIP := spec.GetLoadBalancerIP()
 		loadBalancerSourceRanges := spec.LoadBalancerSourceRanges
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 		_, newlyCreated, err := k8sutil.CreateExternalAccessService(ctxChild, svcs, eaServiceName, svcRole, apiObject, eaServiceType, port, nodePort, loadBalancerIP, loadBalancerSourceRanges, apiObject.AsOwner())
 		if err != nil {

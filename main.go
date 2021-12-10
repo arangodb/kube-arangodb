@@ -34,12 +34,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/gin-gonic/gin"
 
 	"github.com/arangodb/kube-arangodb/pkg/version"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
@@ -116,14 +116,20 @@ var (
 		enableBackup                bool // Run backup operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 
+		scalingIntegrationEnabled bool
+
 		alpineImage, metricsExporterImage, arangoImage string
 
 		singleMode bool
 		scope      string
 	}
-	timeouts struct {
-		k8s     time.Duration
-		arangoD time.Duration
+	operatorKubernetesOptions struct {
+		maxBatchSize int64
+	}
+	operatorTimeouts struct {
+		k8s            time.Duration
+		arangoD        time.Duration
+		reconciliation time.Duration
 	}
 	chaosOptions struct {
 		allowed bool
@@ -156,8 +162,11 @@ func init() {
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
-	f.DurationVar(&timeouts.k8s, "timeout.k8s", time.Second*3, "The request timeout to the kubernetes")
-	f.DurationVar(&timeouts.arangoD, "timeout.arangod", time.Second*10, "The request timeout to the ArangoDB")
+	f.DurationVar(&operatorTimeouts.k8s, "timeout.k8s", globals.DefaultKubernetesTimeout, "The request timeout to the kubernetes")
+	f.DurationVar(&operatorTimeouts.arangoD, "timeout.arangod", globals.DefaultArangoDTimeout, "The request timeout to the ArangoDB")
+	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
+	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
+	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
 	features.Init(&cmdMain)
 }
 
@@ -182,8 +191,11 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	ip := os.Getenv(constants.EnvOperatorPodIP)
 
 	deploymentApi.DefaultImage = operatorOptions.arangoImage
-	k8sutil.SetRequestTimeout(timeouts.k8s)
-	arangod.SetRequestTimeout(timeouts.arangoD)
+
+	globals.GetGlobalTimeouts().Kubernetes().Set(operatorTimeouts.k8s)
+	globals.GetGlobalTimeouts().ArangoD().Set(operatorTimeouts.arangoD)
+	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
+	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 
 	// Prepare log service
 	var err error
@@ -368,6 +380,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		AllowChaos:                  chaosOptions.allowed,
+		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
 		ArangoImage:                 operatorOptions.arangoImage,
 		SingleMode:                  operatorOptions.singleMode,
 		Scope:                       scope,

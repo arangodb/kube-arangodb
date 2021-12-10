@@ -23,8 +23,9 @@ package inspector
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
@@ -145,10 +146,10 @@ func nodesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interfac
 }
 
 func getNodes(ctx context.Context, k kubernetes.Interface, cont string) ([]core.Node, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	nodes, err := k.CoreV1().Nodes().List(ctxChild, meta.ListOptions{
-		Limit:    128,
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})
 

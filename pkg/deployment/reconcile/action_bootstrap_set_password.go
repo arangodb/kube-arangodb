@@ -28,7 +28,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -103,7 +103,7 @@ func (a actionBootstrapSetPassword) Start(ctx context.Context) (bool, error) {
 func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, secret string) (string, error) {
 	a.log.Debug().Msgf("Bootstrapping user %s, secret %s", user, secret)
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -116,21 +116,21 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	}
 
 	// Obtain the user
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if u, err := client.User(ctxChild, user); err != nil {
 		if !driver.IsNotFound(err) {
 			return "", err
 		}
 
-		err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := client.CreateUser(ctxChild, user, &driver.UserOptions{Password: password})
 			return err
 		})
 
 		return password, errors.WithStack(err)
 	} else {
-		err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return u.Update(ctxChild, driver.UserOptions{
 				Password: password,
 			})

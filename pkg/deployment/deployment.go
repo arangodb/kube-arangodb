@@ -30,6 +30,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -70,11 +72,12 @@ import (
 
 // Config holds configuration settings for a Deployment
 type Config struct {
-	ServiceAccount string
-	AllowChaos     bool
-	OperatorImage  string
-	ArangoImage    string
-	Scope          scope.Scope
+	ServiceAccount            string
+	AllowChaos                bool
+	ScalingIntegrationEnabled bool
+	OperatorImage             string
+	ArangoImage               string
+	Scope                     scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -164,7 +167,7 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		return nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	client, err := d.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -375,7 +378,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
@@ -473,7 +476,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 		}
 
 		var newAPIObject *api.ArangoDeployment
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			newAPIObject, err = depls.Update(ctxChild, update, metav1.UpdateOptions{})
 
@@ -489,7 +492,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
 				current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
 
@@ -529,7 +532,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
 		var newAPIObject *api.ArangoDeployment
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
 
@@ -545,7 +548,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
 				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
 
@@ -604,14 +607,14 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := d.clientCache.GetDatabase(ctxChild)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return arangod.SetNumberOfServers(ctxChild, c.Connection(), noCoordinators, noDBServers)
 	})
 
@@ -635,7 +638,7 @@ func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 
 	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {

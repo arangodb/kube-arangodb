@@ -26,6 +26,8 @@ package k8sutil
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -99,7 +101,7 @@ func ValidateCACertificateSecret(ctx context.Context, secrets secret.ReadInterfa
 // an error is returned.
 // Returns: certificate, error
 func GetCACertficateSecret(ctx context.Context, secrets secret.Interface, secretName string) (string, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	s, err := secrets.Get(ctxChild, secretName, meta.GetOptions{})
@@ -306,7 +308,7 @@ func CreateJWTFromSecret(ctx context.Context, cachedSecrets secret.ReadInterface
 		return errors.WithStack(err)
 	}
 
-	return RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return CreateTokenSecret(ctxChild, secrets, tokenSecretName, signedToken, ownerRef)
 	})
 }
@@ -327,7 +329,7 @@ func CreateBasicAuthSecret(ctx context.Context, secrets secret.ModInterface, sec
 	}
 	// Attach secret to owner
 	AddOwnerRefToObject(secret, ownerRef)
-	err := RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := secrets.Create(ctxChild, secret, meta.CreateOptions{})
 		return err
 	})

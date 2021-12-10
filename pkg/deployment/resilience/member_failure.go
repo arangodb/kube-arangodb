@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver/agency"
@@ -132,7 +134,7 @@ func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.Se
 	switch group {
 	case api.ServerGroupAgents:
 		// All good when remaining agents are health
-		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		clients, err := r.context.GetAgencyClients(ctxChild, func(id string) bool { return id != m.ID })
 		if err != nil {
@@ -143,7 +145,7 @@ func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.Se
 		}
 		return true, "", nil
 	case api.ServerGroupDBServers:
-		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		client, err := r.context.GetDatabaseClient(ctxChild)
 		if err != nil {

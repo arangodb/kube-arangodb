@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,7 +70,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -87,7 +89,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		cluster, err := client.Cluster(ctxChild)
 		if err != nil {
@@ -96,7 +98,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		}
 
 		var jobID string
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
 		log.Debug().Msg("Temporary shutdown, resign leadership")
@@ -140,7 +142,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	agency, err := a.actionCtx.GetAgency(ctxChild)
 	if err != nil {
@@ -148,7 +150,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return false, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -156,7 +158,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return false, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
 	if err != nil {

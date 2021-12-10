@@ -26,6 +26,8 @@ package k8sutil
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 
@@ -43,7 +45,7 @@ const (
 func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log zerolog.Logger, c pod.ModInterface, p *core.Pod,
 	finalizers []string, ignoreNotFound bool) error {
 	getFunc := func() (metav1.Object, error) {
-		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		if err := cachedStatus.Refresh(ctxChild); err != nil {
@@ -58,7 +60,7 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log ze
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedPod := updated.(*core.Pod)
-		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		result, err := c.Update(ctxChild, updatedPod, metav1.UpdateOptions{})
@@ -78,7 +80,7 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log ze
 func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, log zerolog.Logger, c persistentvolumeclaim.ModInterface,
 	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
 	getFunc := func() (metav1.Object, error) {
-		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		if err := cachedStatus.Refresh(ctxChild); err != nil {
@@ -93,7 +95,7 @@ func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim
 	}
 	updateFunc := func(updated metav1.Object) error {
 		updatedPVC := updated.(*core.PersistentVolumeClaim)
-		ctxChild, cancel := context.WithTimeout(ctx, GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		result, err := c.Update(ctxChild, updatedPVC, metav1.UpdateOptions{})

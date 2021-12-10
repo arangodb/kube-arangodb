@@ -26,6 +26,8 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -167,7 +169,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 
 	// Check if ServiceMonitor already exists
 	serviceMonitors := mClient.ServiceMonitors(ns)
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, metav1.GetOptions{})
 	if err != nil {
@@ -191,7 +193,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 				Spec: spec,
 			}
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := serviceMonitors.Create(ctxChild, smon, metav1.CreateOptions{})
 				return err
 			})
@@ -236,7 +238,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 
 		servMon.Spec = spec
 
-		err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			_, err := serviceMonitors.Update(ctxChild, servMon, metav1.UpdateOptions{})
 			return err
 		})
@@ -247,7 +249,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 		return nil
 	}
 	// Need to get rid of the ServiceMonitor:
-	err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return serviceMonitors.Delete(ctxChild, serviceMonitorName, metav1.DeleteOptions{})
 	})
 	if err == nil {

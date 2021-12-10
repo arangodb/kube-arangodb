@@ -24,14 +24,9 @@
 package k8sutil
 
 import (
-	"context"
-	"time"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
-
-type TimeoutRunFunc func(ctxChild context.Context) error
 
 const (
 	// LabelKeyArangoDeployment is the key of the label used to store the ArangoDeployment name in
@@ -48,42 +43,14 @@ const (
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
 	// LabelKeyArangoZone is the key of the label used to store the ArangoDeployment zone ID in
 	LabelKeyArangoZone = "deployment.arangodb.com/zone"
+	// LabelKeyArangoScheduled is the key of the label used to define that member is already scheduled
+	LabelKeyArangoScheduled = "deployment.arangodb.com/scheduled"
 	// LabelKeyArangoTopology is the key of the label used to store the ArangoDeployment topology ID in
 	LabelKeyArangoTopology = "deployment.arangodb.com/topology"
 
 	// AppName is the fixed value for the "app" label
 	AppName = "arangodb"
-
-	// minDefaultRequestTimeout is minimum default request timeout to k8s.
-	minDefaultRequestTimeout = time.Second * 3
 )
-
-var requestTimeout = minDefaultRequestTimeout
-
-// GetRequestTimeout gets request timeout for one call to kubernetes.
-func GetRequestTimeout() time.Duration {
-	return requestTimeout
-}
-
-// RunWithTimeout runs the function with the provided timeout or with default timeout.
-func RunWithTimeout(ctx context.Context, run TimeoutRunFunc, timeout ...time.Duration) error {
-	t := GetRequestTimeout()
-	if len(timeout) > 0 {
-		t = timeout[0]
-	}
-
-	ctxChild, cancel := context.WithTimeout(ctx, t)
-	defer cancel()
-
-	return run(ctxChild)
-}
-
-// SetRequestTimeout sets request timeout for one call to kubernetes.
-func SetRequestTimeout(timeout time.Duration) {
-	if timeout > minDefaultRequestTimeout {
-		requestTimeout = timeout
-	}
-}
 
 // AddOwnerRefToObject adds given owner reference to given object
 func AddOwnerRefToObject(obj metav1.Object, ownerRef *metav1.OwnerReference) {

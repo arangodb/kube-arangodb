@@ -18,21 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package globals
 
-import "k8s.io/apimachinery/pkg/types"
+type Int64 interface {
+	Set(in int64)
+	Get() int64
+}
 
-type TopologyMemberStatusInitPhase string
+func NewInt(def int64) Int64 {
+	return &intObj{i: def}
+}
 
-const (
-	TopologyMemberStatusInitPhaseNone    TopologyMemberStatusInitPhase = ""
-	TopologyMemberStatusInitPhasePending TopologyMemberStatusInitPhase = "pending"
-	TopologyMemberStatusInitPhaseOK      TopologyMemberStatusInitPhase = "ok"
-)
+type intObj struct {
+	i int64
+}
 
-type TopologyMemberStatus struct {
-	ID        types.UID                     `json:"id"`
-	Zone      int                           `json:"rack"`
-	Label     string                        `json:"label,omitempty"`
-	InitPhase TopologyMemberStatusInitPhase `json:"init_phase,omitempty"`
+func (i *intObj) Set(in int64) {
+	i.i = in
+}
+
+func (i *intObj) Get() int64 {
+	return i.i
 }
