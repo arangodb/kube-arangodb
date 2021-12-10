@@ -25,8 +25,8 @@ import (
 	"context"
 	"math"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
+	"github.com/arangodb/go-driver"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )

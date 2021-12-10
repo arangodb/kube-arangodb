@@ -23,6 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"math"
 	"os"
 
