@@ -68,6 +68,8 @@ func createScaleMemberPlan(ctx context.Context,
 		plan = append(plan, createScalePlan(log, status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount())...)
 		if pod.IsArangoSyncWorkerSidecar(spec, status) {
 			// ArangoSync worker will work as a sidecar.
+			// Scale down all workers to 0.
+			plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, 0)...)
 		} else {
 			plan = append(plan, createScalePlan(log, status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount())...)
 		}
