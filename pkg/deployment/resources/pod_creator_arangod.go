@@ -269,7 +269,7 @@ func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Ins
 			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
 		}
 
-		if err := k8sutil.RunWithTimeout(ctx, op); err != nil {
+		if err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, op); err != nil {
 			return errors.Wrapf(err, "Master JWT secret validation failed")
 		}
 
