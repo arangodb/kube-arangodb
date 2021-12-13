@@ -189,16 +189,38 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		if k8sutil.IsPodScheduled(pod) {
 			if _, ok := pod.Labels[k8sutil.LabelKeyArangoScheduled]; !ok {
 				// Adding scheduled label to the pod
-				l := pod.Labels
-				if l == nil {
-					l = map[string]string{}
-				}
-				l[k8sutil.LabelKeyArangoScheduled] = "1"
+				l := addLabel(pod.Labels, k8sutil.LabelKeyArangoScheduled, "1")
+
 				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
 					log.Error().Err(err).Msgf("Unable to update scheduled labels")
 				}
 			}
 		}
+
+		// Topology labels
+		tv, tok := pod.Labels[k8sutil.LabelKeyArangoTopology]
+		zv, zok := pod.Labels[k8sutil.LabelKeyArangoZone]
+
+		if t, ts := status.Topology, memberStatus.Topology; t.Enabled() && t.IsTopologyOwned(ts) {
+			if tid, tz := string(t.ID), fmt.Sprintf("%d", ts.Zone); !tok || !zok || tv != tid || zv != tz {
+				l := addLabel(pod.Labels, k8sutil.LabelKeyArangoTopology, tid)
+				l = addLabel(l, k8sutil.LabelKeyArangoZone, tz)
+
+				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
+					log.Error().Err(err).Msgf("Unable to update topology labels")
+				}
+			}
+		} else {
+			if tok || zok {
+				l := removeLabel(pod.Labels, k8sutil.LabelKeyArangoTopology)
+				l = removeLabel(l, k8sutil.LabelKeyArangoZone)
+
+				if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), l)); err != nil {
+					log.Error().Err(err).Msgf("Unable to remove topology labels")
+				}
+			}
+		}
+		// End of Topology labels
 
 		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
 			// Pod is now ready
@@ -214,10 +236,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							if ok {
 								memberStatus.Topology.Label = label
 							}
-						}
-
-						if memberStatus.Topology.InitPhase == api.TopologyMemberStatusInitPhasePending {
-							memberStatus.Topology.InitPhase = api.TopologyMemberStatusInitPhaseOK
 						}
 					}
 				}
@@ -365,4 +383,25 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		r.context.CreateEvent(evt)
 	}
 	return nextInterval, nil
+}
+
+func addLabel(labels map[string]string, key, value string) map[string]string {
+	if labels != nil {
+		labels[key] = value
+		return labels
+	}
+
+	return map[string]string{
+		key: value,
+	}
+}
+
+func removeLabel(labels map[string]string, key string) map[string]string {
+	if labels == nil {
+		return map[string]string{}
+	}
+
+	delete(labels, key)
+
+	return labels
 }
