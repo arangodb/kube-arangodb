@@ -9,6 +9,7 @@
 - Allow to disable ClusterScalingIntegration and add proper Scheduled label to pods
 - Add additional timeout parameters and kubernetes batch size
 - Limit parallel Backup uploads
+- Bugfix - Adjust Cluster Scaling Integration logic
 
 ## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
 - Split & Unify Lifecycle management functionality
