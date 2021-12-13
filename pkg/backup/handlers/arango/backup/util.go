@@ -26,6 +26,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	clientBackup "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,6 +64,8 @@ func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoB
 		return false, newTemporaryError(err)
 	}
 
+	currentUploads := 0
+
 	for _, existingBackup := range backups.Items {
 		if existingBackup.Name == backup.Name {
 			continue
@@ -70,6 +74,7 @@ func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoB
 		// We can upload multiple uploads from same deployment in same time
 		if backup.Status.State == backupApi.ArangoBackupStateReady &&
 			(existingBackup.Status.State == backupApi.ArangoBackupStateUpload || existingBackup.Status.State == backupApi.ArangoBackupStateUploading) {
+			currentUploads++
 			if backupUpload := backup.Status.Backup; backupUpload != nil {
 				if existingBackupUpload := existingBackup.Status.Backup; existingBackupUpload != nil {
 					if strings.EqualFold(backupUpload.ID, existingBackupUpload.ID) {
@@ -86,6 +91,10 @@ func isBackupRunning(backup *backupApi.ArangoBackup, client clientBackup.ArangoB
 				return true, nil
 			}
 		}
+	}
+
+	if backup.Status.State == backupApi.ArangoBackupStateReady {
+		return currentUploads >= globals.GetGlobals().Backup().ConcurrentUploads().Get(), nil
 	}
 
 	return false, nil

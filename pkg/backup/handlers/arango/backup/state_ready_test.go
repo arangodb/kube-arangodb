@@ -26,6 +26,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -464,8 +466,8 @@ func Test_State_Ready_KeepPendingWithForcedRunning(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, size, upload)
-	require.Equal(t, 0, ready)
+	require.Equal(t, globals.DefaultBackupConcurrentUploads, upload)
+	require.Equal(t, size-globals.DefaultBackupConcurrentUploads, ready)
 }
 
 func Test_State_Ready_KeepPendingWithForcedRunningSameId(t *testing.T) {
@@ -530,4 +532,104 @@ func Test_State_Ready_KeepPendingWithForcedRunningSameId(t *testing.T) {
 
 	require.Equal(t, 1, upload)
 	require.Equal(t, size-1, ready)
+}
+
+func Test_State_Ready_Concurrent_Queued(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+		RepositoryURL: "Any",
+	}
+
+	size := globals.DefaultBackupConcurrentUploads
+	objects := make([]*backupApi.ArangoBackup, size)
+	for id := range objects {
+		createResponse, err := mock.Create()
+		require.NoError(t, err)
+
+		backupMeta, err := mock.Get(createResponse.ID)
+		require.NoError(t, err)
+
+		obj := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateUploading)
+
+		obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+		obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "s3://test",
+		}
+		obj.Status.Available = true
+
+		objects[id] = obj
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, objects...)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+	compareBackupMeta(t, backupMeta, newObj)
+}
+
+func Test_State_Ready_Concurrent_Started(t *testing.T) {
+	// Arrange
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	createResponse, err := mock.Create()
+	require.NoError(t, err)
+
+	obj, deployment := newObjectSet(backupApi.ArangoBackupStateReady)
+
+	backupMeta, err := mock.Get(createResponse.ID)
+	require.NoError(t, err)
+
+	obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+	obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+		RepositoryURL: "Any",
+	}
+
+	size := globals.DefaultBackupConcurrentUploads - 1
+	objects := make([]*backupApi.ArangoBackup, size)
+	for id := range objects {
+		createResponse, err := mock.Create()
+		require.NoError(t, err)
+
+		backupMeta, err := mock.Get(createResponse.ID)
+		require.NoError(t, err)
+
+		obj := newArangoBackup(deployment.GetName(), deployment.GetNamespace(), string(uuid.NewUUID()), backupApi.ArangoBackupStateUploading)
+
+		obj.Status.Backup = createBackupFromMeta(backupMeta, nil)
+		obj.Spec.Upload = &backupApi.ArangoBackupSpecOperation{
+			RepositoryURL: "s3://test",
+		}
+		obj.Status.Available = true
+
+		objects[id] = obj
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, objects...)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(newItemFromBackup(operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateUpload, true)
+	compareBackupMeta(t, backupMeta, newObj)
 }
