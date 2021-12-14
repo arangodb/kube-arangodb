@@ -22,9 +22,10 @@ package resources
 
 import (
 	"context"
-	"github.com/rs/zerolog"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 

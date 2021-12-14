@@ -22,8 +22,9 @@ package resources
 
 import (
 	"context"
-	"github.com/arangodb/go-driver"
 	"time"
+
+	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 

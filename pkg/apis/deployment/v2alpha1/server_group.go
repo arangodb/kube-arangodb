@@ -91,10 +91,12 @@ var (
 	// AllServerGroups contains a constant list of all known server groups
 	AllServerGroups = []ServerGroup{
 		ServerGroupAgents,
+		// ServerGroupSyncMasters should start before arangosync workers, which can be sidecar to the DB server, so in
+		// consequence it should start before DB servers.
+		ServerGroupSyncMasters,
 		ServerGroupSingle,
 		ServerGroupDBServers,
 		ServerGroupCoordinators,
-		ServerGroupSyncMasters,
 		ServerGroupSyncWorkers,
 	}
 )

@@ -23,9 +23,10 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"math"
 	"os"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	core "k8s.io/api/core/v1"
 
