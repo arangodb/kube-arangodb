@@ -22,17 +22,8 @@ package v1
 
 import "k8s.io/apimachinery/pkg/types"
 
-type TopologyMemberStatusInitPhase string
-
-const (
-	TopologyMemberStatusInitPhaseNone    TopologyMemberStatusInitPhase = ""
-	TopologyMemberStatusInitPhasePending TopologyMemberStatusInitPhase = "pending"
-	TopologyMemberStatusInitPhaseOK      TopologyMemberStatusInitPhase = "ok"
-)
-
 type TopologyMemberStatus struct {
-	ID        types.UID                     `json:"id"`
-	Zone      int                           `json:"rack"`
-	Label     string                        `json:"label,omitempty"`
-	InitPhase TopologyMemberStatusInitPhase `json:"init_phase,omitempty"`
+	ID    types.UID `json:"id"`
+	Zone  int       `json:"rack"`
+	Label string    `json:"label,omitempty"`
 }

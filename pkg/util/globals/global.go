@@ -28,6 +28,8 @@ const (
 	DefaultReconciliationTimeout = time.Minute
 
 	DefaultKubernetesRequestBatchSize = 256
+
+	DefaultBackupConcurrentUploads = 4
 )
 
 var globalObj = &globals{
@@ -37,7 +39,10 @@ var globalObj = &globals{
 		reconciliation: NewTimeout(DefaultReconciliationTimeout),
 	},
 	kubernetes: &globalKubernetes{
-		requestBatchSize: NewInt(DefaultKubernetesRequestBatchSize),
+		requestBatchSize: NewInt64(DefaultKubernetesRequestBatchSize),
+	},
+	backup: &globalBackup{
+		concurrentUploads: NewInt(DefaultBackupConcurrentUploads),
 	},
 }
 
@@ -52,11 +57,17 @@ func GetGlobalTimeouts() GlobalTimeouts {
 type Globals interface {
 	Timeouts() GlobalTimeouts
 	Kubernetes() GlobalKubernetes
+	Backup() GlobalBackup
 }
 
 type globals struct {
 	timeouts   *globalTimeouts
 	kubernetes *globalKubernetes
+	backup     *globalBackup
+}
+
+func (g globals) Backup() GlobalBackup {
+	return g.backup
 }
 
 func (g globals) Kubernetes() GlobalKubernetes {
@@ -77,6 +88,18 @@ type globalKubernetes struct {
 
 func (g *globalKubernetes) RequestBatchSize() Int64 {
 	return g.requestBatchSize
+}
+
+type GlobalBackup interface {
+	ConcurrentUploads() Int
+}
+
+type globalBackup struct {
+	concurrentUploads Int
+}
+
+func (g *globalBackup) ConcurrentUploads() Int {
+	return g.concurrentUploads
 }
 
 type GlobalTimeouts interface {

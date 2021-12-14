@@ -588,9 +588,6 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 			} else {
 				m.Conditions.Update(api.ConditionTypeTopologyAware, false, "Topology Aware", "Topology invalid")
 			}
-			if m.Topology.InitPhase == api.TopologyMemberStatusInitPhaseNone {
-				m.Topology.InitPhase = api.TopologyMemberStatusInitPhasePending
-			}
 		} else {
 			m.Conditions.Update(api.ConditionTypeTopologyAware, false, "Topology spec missing", "Topology spec missing")
 		}

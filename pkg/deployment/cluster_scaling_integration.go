@@ -252,8 +252,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	var coordinatorCountPtr *int
 	var dbserverCountPtr *int
 
-	coordinatorCount := spec.Coordinators.GetCount()
-	dbserverCount := spec.DBServers.GetCount()
+	coordinatorCount, dbserverCount := ci.getNumbersOfServers()
 
 	if spec.Coordinators.GetMaxCount() == spec.Coordinators.GetMinCount() {
 		coordinatorCountPtr = nil
@@ -335,8 +334,11 @@ func (ci *clusterScalingIntegration) EnableScalingCluster(ctx context.Context) e
 }
 
 func (ci *clusterScalingIntegration) setNumberOfServers(ctx context.Context) error {
-	spec := ci.depl.GetSpec()
-	numOfCoordinators := spec.Coordinators.GetCount()
-	numOfDBServers := spec.DBServers.GetCount()
+	numOfCoordinators, numOfDBServers := ci.getNumbersOfServers()
 	return ci.depl.SetNumberOfServers(ctx, &numOfCoordinators, &numOfDBServers)
+}
+
+func (ci *clusterScalingIntegration) getNumbersOfServers() (int, int) {
+	status, _ := ci.depl.getStatus()
+	return len(status.Members.Coordinators), len(status.Members.DBServers)
 }

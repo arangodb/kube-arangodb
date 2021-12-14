@@ -32,6 +32,7 @@ func Test_Globals(t *testing.T) {
 		require.EqualValues(t, DefaultKubernetesTimeout, GetGlobals().Timeouts().Kubernetes().Get())
 		require.EqualValues(t, DefaultArangoDTimeout, GetGlobals().Timeouts().ArangoD().Get())
 		require.EqualValues(t, DefaultReconciliationTimeout, GetGlobals().Timeouts().Reconciliation().Get())
+		require.EqualValues(t, DefaultBackupConcurrentUploads, GetGlobals().Backup().ConcurrentUploads().Get())
 	})
 
 	t.Run("Override", func(t *testing.T) {
@@ -39,6 +40,7 @@ func Test_Globals(t *testing.T) {
 		GetGlobals().Timeouts().Kubernetes().Set(0)
 		GetGlobals().Timeouts().ArangoD().Set(0)
 		GetGlobals().Timeouts().Reconciliation().Set(0)
+		GetGlobals().Backup().ConcurrentUploads().Set(0)
 	})
 
 	t.Run("Check", func(t *testing.T) {
@@ -46,5 +48,6 @@ func Test_Globals(t *testing.T) {
 		require.EqualValues(t, 0, GetGlobals().Timeouts().Kubernetes().Get())
 		require.EqualValues(t, 0, GetGlobals().Timeouts().ArangoD().Get())
 		require.EqualValues(t, 0, GetGlobals().Timeouts().Reconciliation().Get())
+		require.EqualValues(t, 0, GetGlobals().Backup().ConcurrentUploads().Get())
 	})
 }
