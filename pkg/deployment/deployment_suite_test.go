@@ -421,7 +421,7 @@ func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool) []s
 		command = append(command, "--monitoring.token="+"$("+constants.EnvArangoSyncMonitoringToken+")")
 	}
 
-	command = append(command, "--mq.type=direct", "--server.client-cafile=/secrets/client-auth/ca/ca.crt")
+	command = append(command, "--server.client-cafile=/secrets/client-auth/ca/ca.crt")
 
 	command = append(command, "--server.endpoint=https://"+testDeploymentName+
 		"-syncmaster-"+name+".test-int."+testNamespace+".svc:8629",

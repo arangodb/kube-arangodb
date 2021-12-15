@@ -24,6 +24,7 @@ package pod
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
@@ -60,4 +61,29 @@ func GenerateMemberEndpointFromService(svc *core.Service, apiObject meta.Object,
 	} else {
 		return k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), nil
 	}
+}
+
+// IsArangoSyncWorkerSidecar returns true when:
+// - --deployment.feature.arangosync-v2 is enabled
+// - and `spec.Sync.Enabled` is true
+// - and custom `spec.Sync.Image` is provided
+// - and the custom ArangoSync version is greater than 2.6.0.
+func IsArangoSyncWorkerSidecar(spec api.DeploymentSpec, status api.DeploymentStatus) bool {
+	if !features.ArangoSyncV2().Enabled() {
+		return false
+	}
+
+	if !spec.Sync.IsSyncWithOwnImage() {
+		return false
+	}
+
+	if status.CurrentSyncImage == nil {
+		return false
+	}
+
+	if status.CurrentSyncImage.ArangoDBVersion.CompareTo("2.6.0") <= 0 {
+		return false
+	}
+
+	return true
 }

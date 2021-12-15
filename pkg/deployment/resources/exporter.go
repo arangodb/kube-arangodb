@@ -74,14 +74,14 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		path = k8sutil.ArangoExporterInternalEndpointV2
 	}
 
-	if port := groupSpec.InternalPort; port == nil {
+	if found, port := groupSpec.GetInternalPort(); !found {
 		scheme := "http"
 		if spec.IsSecure() {
 			scheme = "https"
 		}
 		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, k8sutil.ArangoPort, path)
 	} else {
-		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
+		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", port, path)
 	}
 
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)

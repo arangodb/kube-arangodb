@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech
-//
 
 package resources
 
@@ -28,23 +26,20 @@ import (
 	"math"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -57,17 +52,18 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
-	status           api.MemberStatus
-	groupSpec        api.ServerGroupSpec
-	spec             api.DeploymentSpec
-	deploymentStatus api.DeploymentStatus
-	group            api.ServerGroup
-	arangoMember     api.ArangoMember
-	context          Context
-	resources        *Resources
-	imageInfo        api.ImageInfo
-	autoUpgrade      bool
-	cachedStatus     interfaces.Inspector
+	status              api.MemberStatus
+	groupSpec           api.ServerGroupSpec
+	spec                api.DeploymentSpec
+	deploymentStatus    api.DeploymentStatus
+	group               api.ServerGroup
+	arangoMember        api.ArangoMember
+	context             Context
+	resources           *Resources
+	imageInfo           api.ImageInfo
+	autoUpgrade         bool
+	cachedStatus        interfaces.Inspector
+	masterJWTSecretName string
 }
 
 type ArangoDContainer struct {
@@ -262,10 +258,24 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
+func (m *MemberArangoDPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, p *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
-	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+	p.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
+	p.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	// For the DB server it is possible to launch ArangoSync worker as a sidecar.
+	if m.group == api.ServerGroupDBServers && pod.IsArangoSyncWorkerSidecar(m.spec, m.deploymentStatus) {
+		masterJWTSecretName := m.spec.Sync.Authentication.GetJWTSecretName()
+		op := func(ctxChild context.Context) error {
+			return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.SecretReadInterface(), masterJWTSecretName)
+		}
+
+		if err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, op); err != nil {
+			return errors.Wrapf(err, "Master JWT secret validation failed")
+		}
+
+		m.masterJWTSecretName = masterJWTSecretName
+	}
 
 	return nil
 }
@@ -367,11 +377,41 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
+	if len(m.masterJWTSecretName) > 0 {
+		// Create arangosync worker sidecar.
+		// The above value is set only when DB server works with worker as a sidecar.
+
+		sidecarGroup := api.ServerGroupSyncWorkers
+		arangoSyncWorker := &ArangoSyncContainer{
+			groupSpec:           m.spec.GetServerGroupSpec(sidecarGroup),
+			spec:                m.spec,
+			group:               sidecarGroup,
+			resources:           m.resources,
+			image:               m.spec.Sync.GetSyncImage(),
+			apiObject:           m.context.GetAPIObject(),
+			memberStatus:        m.status, // It is the DB server status (not arangosync worker)
+			masterJWTSecretName: m.masterJWTSecretName,
+			sidecar:             true,
+		}
+
+		c, err := k8sutil.NewContainer(arangoSyncWorker)
+		if err != nil {
+			return err
+		}
+		pod.Spec.Containers = append(pod.Spec.Containers, c)
+	}
+
 	return nil
 }
 
 func (m *MemberArangoDPod) GetVolumes() []core.Volume {
 	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
+
+	if len(m.masterJWTSecretName) > 0 {
+		// One more volume for the ArangoSync worker sidecar.
+		// The volume mount will be attached when the container is created.
+		volumes.AddVolume(k8sutil.CreateVolumeWithSecret(k8sutil.MasterJWTSecretVolumeName, m.masterJWTSecretName))
+	}
 
 	return volumes.Volumes()
 }

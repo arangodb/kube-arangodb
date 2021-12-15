@@ -24,10 +24,11 @@ package k8sutil
 
 const (
 	// Arango constants
-	ArangoPort           = 8529
-	ArangoSyncMasterPort = 8629
-	ArangoSyncWorkerPort = 8729
-	ArangoExporterPort   = 9101
+	ArangoPort              = 8529
+	ArangoSyncMasterPort    = 8629
+	ArangoSyncWorkerPort    = 8729
+	ArangoPortForSyncWorker = 8929
+	ArangoExporterPort      = 9101
 
 	ArangoExporterStatusEndpoint        = "/_api/version"
 	ArangoExporterClusterHealthEndpoint = "/_admin/cluster/health"

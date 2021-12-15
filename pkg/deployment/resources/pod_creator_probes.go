@@ -442,7 +442,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api
 	return probeCfg, nil
 }
 
-func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, _ driver.Version) (Probe, error) {
 	authorization := ""
 	port := k8sutil.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {

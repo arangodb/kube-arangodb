@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package resources
 
@@ -28,23 +25,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
-
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 )
 
 var (
@@ -79,6 +75,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				return errors.Newf("Member %s not found", memberName)
 			}
 
+			ports := getPorts(group, spec, status)
 			if s, ok := cachedStatus.Service(member.GetName()); !ok {
 				s = &core.Service{
 					ObjectMeta: metav1.ObjectMeta{
@@ -89,15 +86,8 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 						},
 					},
 					Spec: core.ServiceSpec{
-						Type: core.ServiceTypeClusterIP,
-						Ports: []core.ServicePort{
-							{
-								Name:       "server",
-								Protocol:   "TCP",
-								Port:       k8sutil.ArangoPort,
-								TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
-							},
-						},
+						Type:                     core.ServiceTypeClusterIP,
+						Ports:                    ports,
 						PublishNotReadyAddresses: true,
 						Selector:                 k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID),
 					},
@@ -119,14 +109,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				spec := s.Spec.DeepCopy()
 
 				spec.Type = core.ServiceTypeClusterIP
-				spec.Ports = []core.ServicePort{
-					{
-						Name:       "server",
-						Protocol:   "TCP",
-						Port:       k8sutil.ArangoPort,
-						TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
-					},
-				}
+				spec.Ports = ports
 				spec.PublishNotReadyAddresses = true
 				spec.Selector = k8sutil.LabelsForMember(deploymentName, group.AsRole(), m.ID)
 
@@ -341,4 +324,27 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 		}
 	}
 	return nil
+}
+
+func getPorts(group api.ServerGroup, spec api.DeploymentSpec, status api.DeploymentStatus) []core.ServicePort {
+	ports := []core.ServicePort{
+		{
+			Name:       k8sutil.ServerContainerName,
+			Protocol:   core.ProtocolTCP,
+			Port:       k8sutil.ArangoPort,
+			TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoPort},
+		},
+	}
+
+	if group == api.ServerGroupDBServers && pod.IsArangoSyncWorkerSidecar(spec, status) {
+		// Add port for the ArangoSync worker sidecar.
+		ports = append(ports, core.ServicePort{
+			Name:       k8sutil.ArangoSyncWorkerSidecarName,
+			Protocol:   core.ProtocolTCP,
+			Port:       k8sutil.ArangoSyncWorkerPort,
+			TargetPort: intstr.IntOrString{IntVal: k8sutil.ArangoSyncWorkerPort},
+		})
+	}
+
+	return ports
 }

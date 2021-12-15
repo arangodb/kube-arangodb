@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2021 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,19 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package features
 
-const (
-	ServerGroupReservedContainerNameServer   = "server"
-	ServerGroupReservedContainerNameExporter = "exporter"
-	ServerGroupReservedContainerNameWorker   = "worker"
-)
+func init() {
+	registerFeature(arangoSyncV2)
+}
 
-func IsReservedServerGroupContainerName(name string) bool {
-	switch name {
-	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter, ServerGroupReservedContainerNameWorker:
-		return true
-	default:
-		return false
-	}
+var arangoSyncV2 = &feature{
+	name:               "arangosync-v2",
+	description:        "Run arangosync worker as a DB server's sidecar",
+	version:            "3.7.0",
+	enterpriseRequired: true,
+	enabledByDefault:   false,
+}
+
+// ArangoSyncV2 return the arangosync V2 feature object.
+func ArangoSyncV2() Feature {
+	return arangoSyncV2
 }

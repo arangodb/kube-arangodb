@@ -23,11 +23,12 @@ package v2alpha1
 const (
 	ServerGroupReservedContainerNameServer   = "server"
 	ServerGroupReservedContainerNameExporter = "exporter"
+	ServerGroupReservedContainerNameWorker   = "worker"
 )
 
 func IsReservedServerGroupContainerName(name string) bool {
 	switch name {
-	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter:
+	case ServerGroupReservedContainerNameServer, ServerGroupReservedContainerNameExporter, ServerGroupReservedContainerNameWorker:
 		return true
 	default:
 		return false

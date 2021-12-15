@@ -54,6 +54,11 @@ func (s SyncSpec) HasSyncImage() bool {
 	return s.GetSyncImage() != ""
 }
 
+// IsSyncWithOwnImage returns true when synchronization is enabled and the ArangoSync image is provided.
+func (s SyncSpec) IsSyncWithOwnImage() bool {
+	return s.IsEnabled() && s.HasSyncImage()
+}
+
 // Validate the given spec
 func (s SyncSpec) Validate(mode DeploymentMode) error {
 	if s.IsEnabled() && !mode.SupportsSync() {
@@ -108,9 +113,6 @@ func (s SyncSpec) ResetImmutableFields(fieldPrefix string, target *SyncSpec) []s
 	}
 	if list := s.Authentication.ResetImmutableFields(fieldPrefix+".auth", &target.Authentication); len(list) > 0 {
 		resetFields = append(resetFields, list...)
-	}
-	if s.GetSyncImage() != target.GetSyncImage() {
-		resetFields = append(resetFields, fieldPrefix+".image")
 	}
 	return resetFields
 }
