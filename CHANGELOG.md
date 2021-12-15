@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality
 - Allow to abort ArangoBackup uploads by removing spec.upload
 - Add Agency Cache internally
