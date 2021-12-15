@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- ArangoSync image discovery
+- ArangoSync worker as a sidecar
 
 ## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality
@@ -33,7 +35,6 @@
 - Add ARANGODB_ZONE env to Topology Managed pods
 - Add "Random pod names" feature
 - Rotate TLS Secrets on ALT Names change
-- ArangoSync image discovery
 
 ## [1.2.3](https://github.com/arangodb/kube-arangodb/tree/1.2.3) (2021-09-24)
 - Update UBI Image to 8.4
