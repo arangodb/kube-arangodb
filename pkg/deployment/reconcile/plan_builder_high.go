@@ -54,6 +54,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(createTopologyMemberUpdatePlan).
+		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, updateClusterLicense).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
 		ApplyIfEmpty(createRebalancerCheckPlan).
 		ApplyWithBackOff(BackOffCheck, time.Minute, emptyPlanBuilder))

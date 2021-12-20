@@ -33,8 +33,10 @@ const (
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyToken      = "token" // Key inside a Secret used to hold a JWT or monitoring token
+	SecretEncryptionKey = "key"        // Key in a Secret.Data used to store an 32-byte encryption key
+	SecretKeyToken      = "token"      // Key inside a Secret used to hold a JWT or monitoring token
+	SecretKeyV2Token    = "token-v2"   // Key inside a Secret used to hold a License in V2 Format
+	SecretKeyV2License  = "license-v2" // Key inside a Secret used to hold a License in V2 Format
 
 	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key

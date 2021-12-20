@@ -36,6 +36,8 @@ func NewClient(c driver.Connection) Client {
 }
 
 type Client interface {
+	LicenseClient
+
 	GetTLS(ctx context.Context) (TLSDetails, error)
 	RefreshTLS(ctx context.Context) (TLSDetails, error)
 
