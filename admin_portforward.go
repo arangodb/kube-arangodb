@@ -180,7 +180,7 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 
 func PortForwardToPod() error {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", podForwardInput.pod.Namespace, podForwardInput.pod.Name)
-	hostIP := strings.TrimLeft(podForwardInput.restConfig.Host, "htps://")
+	hostIP := strings.TrimLeft(podForwardInput.restConfig.Host, "htps:/")
 
 	transport, upgrader, err := spdy.RoundTripperFor(podForwardInput.restConfig)
 	if err != nil {
@@ -229,22 +229,26 @@ func watchPodForRestart(ctx context.Context, pod *corev1.Pod, proxyNamespace str
 			if !ok {
 				cliLog.Error().Err(err).Msg("result channel bad - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 
 			podRefreshed, ok := obj.Object.(*corev1.Pod)
 			if !ok {
 				cliLog.Error().Err(err).Msg("failed to get pod - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 
 			if podRefreshed.DeletionTimestamp != nil {
 				cliLog.Error().Msg("pod has been restarted - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 
 			if podRefreshed.UID != pod.UID {
 				cliLog.Error().Msg("pod UID has been changed - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 		case <-time.After(5 * time.Second):
 			// manual refresh
@@ -252,15 +256,18 @@ func watchPodForRestart(ctx context.Context, pod *corev1.Pod, proxyNamespace str
 			if err != nil {
 				cliLog.Error().Err(err).Msg("failed to get pod - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 			if podRefreshed.DeletionTimestamp != nil {
 				cliLog.Error().Msg("pod has been restarted - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 
 			if podRefreshed.UID != pod.UID {
 				cliLog.Error().Msg("pod UID has been changed - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+				return
 			}
 		}
 	}
