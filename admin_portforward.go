@@ -95,7 +95,7 @@ func init() {
 	cmdProxy.Flags().StringVarP(&podForwardInput.proxyNamespace, "proxy.namespace", "n", ProxyNamespaceEnv.GetOrDefault(defaultNamespace),
 		"Name of the Namespace on remote k8s cluster to use")
 	cmdProxy.Flags().StringVarP(&podForwardInput.proxyPorts, "proxy.ports", "p", ProxyPortsEnv.GetOrDefault(defaultPorts),
-		"lList of ports forwarding in form of: {from}:{to},{from}:{to}")
+		"List of ports forwarding in form of: {from}:{to},{from}:{to}")
 }
 
 func handleForwarderErrors() {
@@ -111,6 +111,7 @@ func handleForwarderErrors() {
 
 func cmdForwardPorts(_ *cobra.Command, _ []string) {
 	handleForwarderErrors()
+	ctx := arangoUtil.CreateSignalContext(context.Background())
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -147,13 +148,13 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 		panic(err.Error())
 	}
 
-	pod, svc, err := getFirstPodForSvc(podForwardInput.proxyService, podForwardInput.proxyNamespace, *k8sClient)
+	pod, svc, err := getFirstPodForSvc(ctx, podForwardInput.proxyService, podForwardInput.proxyNamespace, *k8sClient)
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("error on looking service pod")
 	}
 	podForwardInput.pod = pod
 
-	go watchPodForRestart(pod, podForwardInput.proxyNamespace, *k8sClient)
+	go watchPodForRestart(ctx, pod, podForwardInput.proxyNamespace, *k8sClient)
 
 	podForwardInput.ports, err = translateServicePortToTargetPort(strings.Split(podForwardInput.proxyPorts, ","), svc, pod)
 	if err != nil {
@@ -179,7 +180,7 @@ func cmdForwardPorts(_ *cobra.Command, _ []string) {
 
 func PortForwardToPod() error {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", podForwardInput.pod.Namespace, podForwardInput.pod.Name)
-	hostIP := strings.TrimLeft(podForwardInput.restConfig.Host, "https://")
+	hostIP := strings.TrimLeft(podForwardInput.restConfig.Host, "htps://")
 
 	transport, upgrader, err := spdy.RoundTripperFor(podForwardInput.restConfig)
 	if err != nil {
@@ -194,9 +195,7 @@ func PortForwardToPod() error {
 	return fw.ForwardPorts()
 }
 
-func getFirstPodForSvc(proxyService, proxyNamespace string, k8sClient kubernetes.Clientset) (*corev1.Pod, *corev1.Service, error) {
-	ctx := arangoUtil.CreateSignalContext(context.Background())
-
+func getFirstPodForSvc(ctx context.Context, proxyService, proxyNamespace string, k8sClient kubernetes.Clientset) (*corev1.Pod, *corev1.Service, error) {
 	svc, err := k8sClient.CoreV1().Services(proxyNamespace).Get(ctx, proxyService, metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, err
@@ -215,9 +214,7 @@ func getFirstPodForSvc(proxyService, proxyNamespace string, k8sClient kubernetes
 	return nil, nil, errors.New("no pod found")
 }
 
-func watchPodForRestart(pod *corev1.Pod, proxyNamespace string, k8sClient kubernetes.Clientset) {
-	ctx := arangoUtil.CreateSignalContext(context.Background())
-
+func watchPodForRestart(ctx context.Context, pod *corev1.Pod, proxyNamespace string, k8sClient kubernetes.Clientset) {
 	podWatch, err := k8sClient.CoreV1().Pods(proxyNamespace).Watch(ctx, metav1.ListOptions{FieldSelector: fields.OneTermEqualSelector("metadata.name", pod.Name).String()})
 	if err != nil {
 		cliLog.Panic().Err(err).Msg("cannot watch pod")
@@ -249,8 +246,23 @@ func watchPodForRestart(pod *corev1.Pod, proxyNamespace string, k8sClient kubern
 				cliLog.Error().Msg("pod UID has been changed - quiting")
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			}
+		case <-time.After(5 * time.Second):
+			// manual refresh
+			podRefreshed, err := k8sClient.CoreV1().Pods(proxyNamespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err != nil {
+				cliLog.Error().Err(err).Msg("failed to get pod - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+			if podRefreshed.DeletionTimestamp != nil {
+				cliLog.Error().Msg("pod has been restarted - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
+
+			if podRefreshed.UID != pod.UID {
+				cliLog.Error().Msg("pod UID has been changed - quiting")
+				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			}
 		}
-		time.Sleep(time.Second * 5)
 	}
 }
 
