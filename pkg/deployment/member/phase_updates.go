@@ -23,8 +23,14 @@
 package member
 
 import (
+	"time"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
+)
+
+const (
+	recentTerminationsKeepPeriod = time.Minute * 30
 )
 
 type phaseMapFunc func(action api.Action, m *api.MemberStatus)
@@ -76,6 +82,8 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypeUpdateFailed)
 	m.Conditions.Remove(api.ConditionTypeCleanedOut)
 	m.Conditions.Remove(api.ConditionTypeTopologyAware)
+
+	m.RemoveTerminationsBefore(time.Now().Add(-1 * recentTerminationsKeepPeriod))
 
 	m.Upgrade = false
 }
