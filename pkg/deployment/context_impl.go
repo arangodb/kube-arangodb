@@ -738,9 +738,6 @@ func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...pa
 
 func (d *Deployment) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
 	cache := d.GetCachedStatus()
-	if cache == nil {
-		return "", errors.Newf("Cache is nil")
-	}
 
 	return pod.GenerateMemberEndpoint(cache, d.GetAPIObject(), d.GetSpec(), group, member)
 }
