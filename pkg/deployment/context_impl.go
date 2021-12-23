@@ -148,15 +148,12 @@ func (d *Deployment) GetDeploymentHealth() (driver.ClusterHealth, error) {
 // GetStatus returns the current status of the deployment
 // together with the current version of that status.
 func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
-	d.status.mutex.Lock()
-	defer d.status.mutex.Unlock()
-
 	return d.getStatus()
 }
 
 func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
-	version := d.status.version
-	return *d.status.last.DeepCopy(), version
+	obj := d.status.deploymentStatusObject
+	return *obj.last.DeepCopy(), obj.version
 }
 
 // UpdateStatus replaces the status of the deployment with the given status and
@@ -179,8 +176,11 @@ func (d *Deployment) updateStatus(ctx context.Context, status api.DeploymentStat
 			Msg("UpdateStatus version conflict error.")
 		return errors.WithStack(errors.Newf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
-	d.status.version++
-	d.status.last = *status.DeepCopy()
+
+	d.status.deploymentStatusObject = deploymentStatusObject{
+		version: d.status.deploymentStatusObject.version + 1,
+		last:    *status.DeepCopy(),
+	}
 	if err := d.updateCRStatus(ctx, force...); err != nil {
 		return errors.WithStack(err)
 	}
@@ -734,4 +734,21 @@ func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...pa
 	}
 
 	return nil
+}
+
+func (d *Deployment) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	cache := d.GetCachedStatus()
+	if cache == nil {
+		return "", errors.Newf("Cache is nil")
+	}
+
+	return pod.GenerateMemberEndpoint(cache, d.GetAPIObject(), d.GetSpec(), group, member)
+}
+
+func (d *Deployment) GetStatusSnapshot() api.DeploymentStatus {
+	s, _ := d.GetStatus()
+
+	z := s.DeepCopy()
+
+	return *z
 }

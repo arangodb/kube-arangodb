@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
@@ -33,23 +35,13 @@ const (
 	reconciliationComponent = "deployment_reconciliation"
 )
 
+const (
+	BackOffCheck api.BackOffKey = "check"
+)
+
 // CreatePlan considers the current specification & status of the deployment creates a plan to
 // get the status in line with the specification.
 // If a plan already exists, nothing is done.
 func (d *Reconciler) CreatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	var updated bool
-
-	if err, u := d.CreateHighPlan(ctx, cachedStatus); err != nil {
-		return err, false
-	} else if u {
-		updated = true
-	}
-
-	if err, u := d.CreateNormalPlan(ctx, cachedStatus); err != nil {
-		return err, false
-	} else if u {
-		updated = true
-	}
-
-	return nil, updated
+	return d.generatePlan(ctx, cachedStatus, d.generatePlanFunc(createHighPlan, plannerHigh{}), d.generatePlanFunc(createNormalPlan, plannerNormal{}))
 }

@@ -34,7 +34,7 @@ import (
 
 func Test_PlanBuilderAppender_Recovery(t *testing.T) {
 	t.Run("Recover", func(t *testing.T) {
-		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil)).
+		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil, nil)).
 			Apply(func(_ context.Context, _ zerolog.Logger, _ k8sutil.APIObject, _ api.DeploymentSpec, _ api.DeploymentStatus, _ inspectorInterface.Inspector, _ PlanBuilderContext) api.Plan {
 				panic("")
 			}).
@@ -43,7 +43,7 @@ func Test_PlanBuilderAppender_Recovery(t *testing.T) {
 			}).Plan(), 0)
 	})
 	t.Run("Recover with output", func(t *testing.T) {
-		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil)).
+		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil, nil)).
 			Apply(func(_ context.Context, _ zerolog.Logger, _ k8sutil.APIObject, _ api.DeploymentSpec, _ api.DeploymentStatus, _ inspectorInterface.Inspector, _ PlanBuilderContext) api.Plan {
 				return api.Plan{api.Action{}}
 			}).
@@ -55,7 +55,7 @@ func Test_PlanBuilderAppender_Recovery(t *testing.T) {
 			}).Plan(), 1)
 	})
 	t.Run("Recover with multi", func(t *testing.T) {
-		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil)).
+		require.Len(t, recoverPlanAppender(log.Logger, newPlanAppender(NewWithPlanBuilder(context.Background(), zerolog.Logger{}, nil, api.DeploymentSpec{}, api.DeploymentStatus{}, nil, nil), nil, nil)).
 			Apply(func(_ context.Context, _ zerolog.Logger, _ k8sutil.APIObject, _ api.DeploymentSpec, _ api.DeploymentStatus, _ inspectorInterface.Inspector, _ PlanBuilderContext) api.Plan {
 				return api.Plan{api.Action{}}
 			}).
