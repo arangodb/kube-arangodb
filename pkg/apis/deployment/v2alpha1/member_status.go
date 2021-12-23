@@ -23,7 +23,6 @@
 package v2alpha1
 
 import (
-	"reflect"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -69,8 +68,6 @@ type MemberStatus struct {
 	IsInitialized bool `json:"initialized"`
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
-	// SideCarSpecs contains list of specifications specified for side cars
-	SideCarSpecs map[string]v1.Container `json:"sidecars-specs,omitempty"`
 	// ArangoVersion holds the ArangoDB version in member
 	ArangoVersion driver.Version `json:"arango-version,omitempty"`
 	// ImageId holds the members ArangoDB image ID
@@ -85,6 +82,10 @@ type MemberStatus struct {
 	Endpoint *string `json:"endpoint,omitempty"`
 	// Topology define topology member status assignment
 	Topology *TopologyMemberStatus `json:"topology,omitempty"`
+
+	// deprecated
+	// SideCarSpecs contains list of specifications specified for side cars
+	SideCarSpecs map[string]v1.Container `json:"sidecars-specs,omitempty"`
 }
 
 // Equal checks for equality
@@ -99,7 +100,6 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.Conditions.Equal(other.Conditions) &&
 		s.IsInitialized == other.IsInitialized &&
 		s.CleanoutJobID == other.CleanoutJobID &&
-		reflect.DeepEqual(s.SideCarSpecs, other.SideCarSpecs) &&
 		s.ArangoVersion == other.ArangoVersion &&
 		s.ImageID == other.ImageID &&
 		s.Image.Equal(other.Image) &&

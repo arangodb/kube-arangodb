@@ -1295,13 +1295,6 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.SideCarSpecs != nil {
-		in, out := &in.SideCarSpecs, &out.SideCarSpecs
-		*out = make(map[string]corev1.Container, len(*in))
-		for key, val := range *in {
-			(*out)[key] = *val.DeepCopy()
-		}
-	}
 	if in.Image != nil {
 		in, out := &in.Image, &out.Image
 		*out = new(ImageInfo)
@@ -1321,6 +1314,13 @@ func (in *MemberStatus) DeepCopyInto(out *MemberStatus) {
 		in, out := &in.Topology, &out.Topology
 		*out = new(TopologyMemberStatus)
 		**out = **in
+	}
+	if in.SideCarSpecs != nil {
+		in, out := &in.SideCarSpecs, &out.SideCarSpecs
+		*out = make(map[string]corev1.Container, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
 	}
 	return
 }
