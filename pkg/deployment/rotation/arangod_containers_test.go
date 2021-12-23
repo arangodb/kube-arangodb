@@ -142,6 +142,71 @@ func Test_InitContainers(t *testing.T) {
 					}
 				}),
 			},
+			{
+				name: "Only core container change",
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				})),
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:2.0"
+				})),
+
+				expectedMode: SilentRotation,
+
+				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
+					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+						Mode: api.ServerGroupInitContainerUpdateMode.New(),
+					}
+				}),
+			},
+			{
+				name: "Only core container change with sidecar",
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				}), addInitContainer("sidecar", func(c *v1.Container) {
+					c.Image = "local:1.0"
+				})),
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:2.0"
+				}), addInitContainer("sidecar", func(c *v1.Container) {
+					c.Image = "local:1.0"
+				})),
+
+				expectedMode: SilentRotation,
+
+				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
+					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+						Mode: api.ServerGroupInitContainerUpdateMode.New(),
+					}
+				}),
+			},
+			{
+				name: "Only core container change with sidecar change",
+				spec: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				}), addInitContainer(api.ServerGroupReservedInitContainerNameUpgrade, func(c *v1.Container) {
+					c.Image = "local:1.0"
+				}), addInitContainer("sidecar", func(c *v1.Container) {
+					c.Image = "local:1.0"
+				})),
+				status: buildPodSpec(addInitContainer(api.ServerGroupReservedInitContainerNameUUID, func(c *v1.Container) {
+					c.Image = "local:2.0"
+				}), addInitContainer("sidecar", func(c *v1.Container) {
+					c.Image = "local:2.0"
+				})),
+
+				expectedMode: GracefulRotation,
+
+				deploymentSpec: buildDeployment(func(depl *api.DeploymentSpec) {
+					depl.Agents.InitContainers = &api.ServerGroupInitContainers{
+						Mode: api.ServerGroupInitContainerUpdateMode.New(),
+					}
+				}),
+			},
 		}
 
 		runTestCases(t)(testCases...)
