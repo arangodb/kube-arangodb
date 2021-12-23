@@ -97,47 +97,55 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 }
 
 func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+	return func(builder api.ActionBuilder) (Mode, api.Plan, error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)
+
+		equal, err := util.CompareJSON(spec.InitContainers, status.InitContainers)
+		if err != nil {
+			return SkippedRotation, nil, err
+		}
+
+		// if equal nothing to do
+		if equal {
+			return SkippedRotation, nil, nil
+		}
 
 		switch gs.InitContainers.GetMode().Get() {
 		case api.ServerGroupInitContainerIgnoreMode:
 			// Just copy spec to status if different
-			if equal, err := util.CompareJSON(spec.InitContainers, status.InitContainers); err != nil {
-				return 0, nil, err
-			} else if !equal {
+			if !equal {
 				status.InitContainers = spec.InitContainers
-				mode = mode.And(SilentRotation)
+				return SilentRotation, nil, err
 			} else {
-				return 0, nil, err
+				return SkippedRotation, nil, err
 			}
 		default:
-			if len(status.InitContainers) != len(spec.InitContainers) {
-				// Nothing to do, count is different
-				return
-			}
-
-			for id := range status.InitContainers {
-				if status.InitContainers[id].Name != spec.InitContainers[id].Name {
-					// Nothing to do, order is different
-					return
-				}
-			}
-
-			for id := range status.InitContainers {
-				if api.IsReservedServerGroupInitContainerName(status.InitContainers[id].Name) {
-					if equal, err := util.CompareJSON(spec.InitContainers[id], status.InitContainers[id]); err != nil {
-						return 0, nil, err
-					} else if !equal {
-						status.InitContainers[id] = spec.InitContainers[id]
-						mode = mode.And(SilentRotation)
-					}
-				}
+			statusInitContainers, specInitContainers := filterReservedInitContainers(status.InitContainers), filterReservedInitContainers(spec.InitContainers)
+			if equal, err := util.CompareJSON(specInitContainers, statusInitContainers); err != nil {
+				return SkippedRotation, nil, err
+			} else if equal {
+				status.InitContainers = spec.InitContainers
+				return SilentRotation, nil, nil
 			}
 		}
 
-		return
+		return SkippedRotation, nil, nil
 	}
+}
+
+// filterReservedInitContainers filters out reserved container names (which does not enforce restarts)
+func filterReservedInitContainers(c []core.Container) []core.Container {
+	r := make([]core.Container, 0, len(c))
+
+	for id := range c {
+		if api.IsReservedServerGroupInitContainerName(c[id].Name) {
+			continue
+		}
+
+		r = append(r, c[id])
+	}
+
+	return r
 }
 
 // isOnlyLogLevelChanged returns true when status and spec log level arguments are different.
