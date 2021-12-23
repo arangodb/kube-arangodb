@@ -56,7 +56,7 @@ type actionBackupRestore struct {
 
 func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatus()
+	status := a.actionCtx.GetStatusSnapshot()
 
 	if spec.RestoreFrom == nil {
 		return true, nil

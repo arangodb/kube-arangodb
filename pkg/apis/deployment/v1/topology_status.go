@@ -37,6 +37,21 @@ type TopologyStatus struct {
 	Label string `json:"label,omitempty"`
 }
 
+func (t *TopologyStatus) Equal(b *TopologyStatus) bool {
+	if t == nil && b == nil {
+		return true
+	}
+
+	if t == nil || b == nil {
+		return false
+	}
+
+	return t.ID == b.ID &&
+		t.Size == b.Size &&
+		t.Label == b.Label &&
+		t.Zones.Equal(b.Zones)
+}
+
 func (t *TopologyStatus) GetLeastUsedZone(group ServerGroup) int {
 	if t == nil {
 		return -1
@@ -131,7 +146,45 @@ func (t *TopologyStatus) Enabled() bool {
 
 type TopologyStatusZones []TopologyStatusZone
 
+func (in TopologyStatusZones) Equal(zones TopologyStatusZones) bool {
+	if len(in) == 0 && len(zones) == 0 {
+		return true
+	}
+
+	if len(in) != len(zones) {
+		return false
+	}
+
+	for id := range in {
+		if !in[id].Equal(&zones[id]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 type TopologyStatusZoneMembers map[string]List
+
+func (in TopologyStatusZoneMembers) Equal(members TopologyStatusZoneMembers) bool {
+	if len(in) == 0 && len(members) == 0 {
+		return true
+	}
+	if len(in) != len(members) {
+		return false
+	}
+	for k, v := range in {
+		mv, ok := members[k]
+		if !ok {
+			return false
+		}
+		if !v.Equal(mv) {
+			return false
+		}
+	}
+
+	return true
+}
 
 type TopologyStatusZone struct {
 	ID int `json:"id"`
@@ -173,6 +226,18 @@ func (t *TopologyStatusZone) Get(group ServerGroup) List {
 	} else {
 		return nil
 	}
+}
+
+func (t *TopologyStatusZone) Equal(b *TopologyStatusZone) bool {
+	if t == nil && b == nil {
+		return true
+	}
+	if t == nil || b == nil {
+		return false
+	}
+	return t.ID == b.ID &&
+		t.Labels.Equal(b.Labels) &&
+		t.Members.Equal(b.Members)
 }
 
 func NewTopologyStatus(spec *TopologySpec) *TopologyStatus {

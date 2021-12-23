@@ -109,6 +109,11 @@ const (
 	maxInspectionInterval    = 10 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
+type deploymentStatusObject struct {
+	version int32
+	last    api.DeploymentStatus // Internal status copy of the CR
+}
+
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
 	name      string
@@ -116,9 +121,8 @@ type Deployment struct {
 
 	apiObject *api.ArangoDeployment // API object
 	status    struct {
-		mutex   sync.Mutex
-		version int32
-		last    api.DeploymentStatus // Internal status copy of the CR
+		mutex sync.Mutex
+		deploymentStatusObject
 	}
 	config Config
 	deps   Dependencies
