@@ -1878,6 +1878,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(corev1.NodeAffinity)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.SidecarCoreNames != nil {
+		in, out := &in.SidecarCoreNames, &out.SidecarCoreNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
 		*out = make([]corev1.Container, len(*in))

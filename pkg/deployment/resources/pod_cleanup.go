@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package resources
 
@@ -26,14 +24,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	v1 "k8s.io/api/core/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 const (
@@ -49,13 +47,15 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
+	r.context.GetSpec()
 	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
 			return nil
 		}
 
-		if !(k8sutil.IsPodSucceeded(pod) || k8sutil.IsPodFailed(pod) || k8sutil.IsPodTerminating(pod)) {
+		if !(k8sutil.IsPodSucceeded(pod) || k8sutil.IsPodFailed(pod, utils.StringList{k8sutil.ServerContainerName}) ||
+			k8sutil.IsPodTerminating(pod)) {
 			return nil
 		}
 

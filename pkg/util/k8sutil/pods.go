@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package k8sutil
 
@@ -30,21 +27,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
-	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -102,9 +95,10 @@ func IsPodReady(pod *core.Pod) bool {
 	return condition != nil && condition.Status == core.ConditionTrue
 }
 
-// IsContainerReady returns true if the PodReady condition on
-// the given pod is set to true.
-func IsContainerReady(pod *core.Pod, container string) bool {
+// AreContainersReady checks whether Pod is considered as ready.
+// Returns true if the PodReady condition on the given pod is set to true,
+// or all provided containers' names are running and are not in the list of failed containers.
+func AreContainersReady(pod *core.Pod, containers utils.StringList) bool {
 	condition := getPodCondition(&pod.Status, core.PodReady)
 	if condition == nil {
 		return false
@@ -114,21 +108,32 @@ func IsContainerReady(pod *core.Pod, container string) bool {
 		return true
 	}
 
-	if !IsContainerRunning(pod, container) {
-		return false
+	// Check if all required containers are running.
+	for _, c := range containers {
+		if !IsContainerRunning(pod, c) {
+			return false
+		}
 	}
 
+	// From here on all required containers are running, but unready condition must be checked additionally. TODO tomasz Why?
 	switch condition.Reason {
 	case ServerContainerConditionContainersNotReady:
-		if strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
-			n := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
-
-			return !strings.Contains(n, container)
+		if !strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
+			return false
 		}
-		return false
-	default:
-		return false
+
+		unreadyContainers := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
+		for _, c := range containers {
+			if strings.Contains(unreadyContainers, c) {
+				// The container is on the list with unready containers.
+				return false
+			}
+		}
+
+		return true
 	}
+
+	return false
 }
 
 // GetPodByName returns pod if it exists among the pods' list
@@ -185,23 +190,25 @@ func IsPodSucceeded(pod *core.Pod) bool {
 
 // IsPodFailed returns true if the arangodb container of the pod
 // has terminated wih a non-zero exit code.
-func IsPodFailed(pod *core.Pod) bool {
+func IsPodFailed(pod *core.Pod, coreContainers utils.StringList) bool {
 	if pod.Status.Phase == core.PodFailed {
 		return true
-	} else {
-		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != ServerContainerName {
-				continue
-			}
+	}
 
-			t := c.State.Terminated
-			if t != nil {
-				return t.ExitCode != 0
-			}
+	for _, c := range pod.Status.ContainerStatuses {
+		if !coreContainers.Has(c.Name) {
+			// It is not core container, so check next one status.
+			continue
 		}
 
-		return false
+		t := c.State.Terminated
+		if t != nil {
+			return t.ExitCode != 0
+		}
 	}
+
+	return false
+
 }
 
 // IsContainerFailed returns true if the arangodb container

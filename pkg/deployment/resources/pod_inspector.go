@@ -96,9 +96,12 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			return nil
 		}
 
+		spec := r.context.GetSpec()
+		coreContainers := spec.GetCoreContainers(group)
+
 		// Update state
 		updateMemberStatusNeeded := false
-		if k8sutil.IsPodSucceeded(pod) {
+		if k8sutil.IsPodSucceeded(pod) { // TODO tomasz should I check if all core container succeeded
 			// Pod has terminated with exit code 0.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
@@ -112,7 +115,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					r.InvalidateSyncStatus()
 				}
 			}
-		} else if k8sutil.IsPodFailed(pod) {
+		} else if k8sutil.IsPodFailed(pod, coreContainers) {
 			// Pod has terminated with at least 1 container with a non-zero exit code.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
@@ -121,11 +124,9 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 						switch container {
 						case api.ServerGroupReservedInitContainerNameVersionCheck:
 							if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
-								if t := c.State.Terminated; t != nil {
-									if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
-										memberStatus.Upgrade = true
-										updateMemberStatusNeeded = true
-									}
+								if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
+									memberStatus.Upgrade = true
+									updateMemberStatusNeeded = true
 								}
 							}
 						case api.ServerGroupReservedInitContainerNameUpgrade:
@@ -133,20 +134,18 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 						}
 
 						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, container); ok {
-							if t := c.State.Terminated; t != nil {
-								if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-									log.Warn().Str("member", memberStatus.ID).
-										Str("pod", pod.GetName()).
-										Str("container", container).
-										Str("uid", string(pod.GetUID())).
-										Int32("exit-code", t.ExitCode).
-										Str("reason", t.Reason).
-										Str("message", t.Message).
-										Int32("signal", t.Signal).
-										Time("started", t.StartedAt.Time).
-										Time("finished", t.FinishedAt.Time).
-										Msgf("Pod failed in unexpected way: Init Container failed")
-								}
+							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
+								log.Warn().Str("member", memberStatus.ID).
+									Str("pod", pod.GetName()).
+									Str("container", container).
+									Str("uid", string(pod.GetUID())).
+									Int32("exit-code", t.ExitCode).
+									Str("reason", t.Reason).
+									Str("message", t.Message).
+									Int32("signal", t.Signal).
+									Time("started", t.StartedAt.Time).
+									Time("finished", t.FinishedAt.Time).
+									Msgf("Pod failed in unexpected way: Init Container failed")
 							}
 						}
 					}
@@ -155,20 +154,18 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				if containers := k8sutil.GetFailedContainerNames(pod.Status.ContainerStatuses); len(containers) > 0 {
 					for _, container := range containers {
 						if c, ok := k8sutil.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, container); ok {
-							if t := c.State.Terminated; t != nil {
-								if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-									log.Warn().Str("member", memberStatus.ID).
-										Str("pod", pod.GetName()).
-										Str("container", container).
-										Str("uid", string(pod.GetUID())).
-										Int32("exit-code", t.ExitCode).
-										Str("reason", t.Reason).
-										Str("message", t.Message).
-										Int32("signal", t.Signal).
-										Time("started", t.StartedAt.Time).
-										Time("finished", t.FinishedAt.Time).
-										Msgf("Pod failed in unexpected way: Core Container failed")
-								}
+							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
+								log.Warn().Str("member", memberStatus.ID).
+									Str("pod", pod.GetName()).
+									Str("container", container).
+									Str("uid", string(pod.GetUID())).
+									Int32("exit-code", t.ExitCode).
+									Str("reason", t.Reason).
+									Str("message", t.Message).
+									Int32("signal", t.Signal).
+									Time("started", t.StartedAt.Time).
+									Time("finished", t.FinishedAt.Time).
+									Msgf("Pod failed in unexpected way: Core Container failed")
 							}
 						}
 					}
@@ -222,7 +219,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 		// End of Topology labels
 
-		if k8sutil.IsContainerReady(pod, k8sutil.ServerContainerName) {
+		if k8sutil.AreContainersReady(pod, coreContainers) {
 			// Pod is now ready
 			if memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", "") {
 				log.Debug().Str("pod-name", pod.GetName()).Msg("Updating member condition Ready & Initialised to true")

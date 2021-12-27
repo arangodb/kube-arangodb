@@ -251,6 +251,7 @@ func (m *MemberSyncPod) GetSidecars(pod *core.Pod) error {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
+		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
@@ -361,6 +362,10 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 }
 
 func (m *MemberSyncPod) Validate(_ interfaces.Inspector) error {
+	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
+		return err
+	}
+
 	return nil
 }
 

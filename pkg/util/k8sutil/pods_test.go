@@ -23,6 +23,7 @@
 package k8sutil
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,17 +57,104 @@ func TestIsPodReady(t *testing.T) {
 
 // TestIsPodFailed tests IsPodFailed.
 func TestIsPodFailed(t *testing.T) {
-	assert.False(t, IsPodFailed(&v1.Pod{}))
-	assert.False(t, IsPodFailed(&v1.Pod{
-		Status: v1.PodStatus{
-			Phase: v1.PodRunning,
+	type args struct {
+		pod            *v1.Pod
+		coreContainers utils.StringList
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"empty pod": {
+			args: args{
+				pod: &v1.Pod{},
+			},
 		},
-	}))
-	assert.True(t, IsPodFailed(&v1.Pod{
-		Status: v1.PodStatus{
-			Phase: v1.PodFailed,
+		"pod is running": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						Phase: v1.PodRunning,
+					},
+				},
+			},
 		},
-	}))
+		"pod is failed": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						Phase: v1.PodFailed,
+					},
+				},
+			},
+			want: true,
+		},
+		"one core container failed": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"something", "core_container"},
+			},
+			want: true,
+		},
+		"one non-core container failed": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "non_core_container",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"something", "core_container"},
+			},
+		},
+		"one core container succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"something", "core_container"},
+			},
+		},
+	}
+
+	for testName, test := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got := IsPodFailed(test.args.pod, test.args.coreContainers)
+			assert.Equal(t, test.want, got)
+		})
+	}
 }
 
 // TestIsPodSucceeded tests IsPodSucceeded.
