@@ -492,7 +492,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
 		stopCh:    make(chan struct{}),
 	}
-	d.clientCache = client.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 	require.NoError(t, err)
