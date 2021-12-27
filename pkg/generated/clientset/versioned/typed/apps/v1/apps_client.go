@@ -30,12 +30,17 @@ import (
 
 type AppsV1Interface interface {
 	RESTClient() rest.Interface
+	ArangoClusterSynchronizationsGetter
 	ArangoJobsGetter
 }
 
 // AppsV1Client is used to interact with features provided by the apps.arangodb.com group.
 type AppsV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *AppsV1Client) ArangoClusterSynchronizations(namespace string) ArangoClusterSynchronizationInterface {
+	return newArangoClusterSynchronizations(c, namespace)
 }
 
 func (c *AppsV1Client) ArangoJobs(namespace string) ArangoJobInterface {

@@ -17,17 +17,10 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+// Author Jakub Wierzbowski
+//
 
-//go:build !enterprise
-// +build !enterprise
+package v1
 
-package topology
-
-import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	core "k8s.io/api/core/v1"
-)
-
-func GetTopologyAffinityRules(name string, status api.DeploymentStatus, group api.ServerGroup, member api.MemberStatus) core.Affinity {
-	return core.Affinity{}
+type ArangoClusterSynchronizationSpec struct {
 }

@@ -63,6 +63,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=apps.arangodb.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("arangoclustersynchronizations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1().ArangoClusterSynchronizations().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("arangojobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1().ArangoJobs().Informer()}, nil
 

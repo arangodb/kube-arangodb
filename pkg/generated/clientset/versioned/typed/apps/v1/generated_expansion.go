@@ -22,4 +22,6 @@
 
 package v1
 
+type ArangoClusterSynchronizationExpansion interface{}
+
 type ArangoJobExpansion interface{}

@@ -32,6 +32,10 @@ type FakeAppsV1 struct {
 	*testing.Fake
 }
 
+func (c *FakeAppsV1) ArangoClusterSynchronizations(namespace string) v1.ArangoClusterSynchronizationInterface {
+	return &FakeArangoClusterSynchronizations{c, namespace}
+}
+
 func (c *FakeAppsV1) ArangoJobs(namespace string) v1.ArangoJobInterface {
 	return &FakeArangoJobs{c, namespace}
 }

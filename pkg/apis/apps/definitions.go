@@ -27,6 +27,10 @@ const (
 	ArangoJobResourceKind   = "ArangoJob"
 	ArangoJobResourcePlural = "arangojobs"
 
+	ArangoClusterSynchronizationCRDName        = ArangoClusterSynchronizationResourcePlural + "." + ArangoAppsGroupName
+	ArangoClusterSynchronizationResourceKind   = "ArangoClusterSynchronization"
+	ArangoClusterSynchronizationResourcePlural = "arangoclustersynchronizations"
+
 	ArangoAppsGroupName = "apps.arangodb.com"
 )
 
