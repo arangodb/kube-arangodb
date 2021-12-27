@@ -545,7 +545,9 @@ func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
 	}
 
 	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+1)
-	result = append(result, k8sutil.ServerContainerName)
+	if !utils.StringList(groupSpec.SidecarCoreNames).Has(k8sutil.ServerContainerName) {
+		result = append(result, k8sutil.ServerContainerName)
+	}
 	result = append(result, groupSpec.SidecarCoreNames...)
 
 	return result

@@ -17,17 +17,16 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package k8sutil
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 )
 
 // TestIsPodReady tests IsPodReady.

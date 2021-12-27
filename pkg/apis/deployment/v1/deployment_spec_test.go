@@ -17,17 +17,17 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package v1
 
 import (
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestDeploymentSpecValidate(t *testing.T) {
@@ -120,5 +120,82 @@ func TestDeploymentSpecResetImmutableFields(t *testing.T) {
 		}
 		assert.Equal(t, test.Result, result)
 		assert.Equal(t, test.Expected, test.Target)
+	}
+}
+
+func TestDeploymentSpec_GetCoreContainers(t *testing.T) {
+	type fields struct {
+		Single       ServerGroupSpec
+		Agents       ServerGroupSpec
+		DBServers    ServerGroupSpec
+		Coordinators ServerGroupSpec
+		SyncMasters  ServerGroupSpec
+		SyncWorkers  ServerGroupSpec
+	}
+
+	type args struct {
+		group ServerGroup
+	}
+
+	tests := map[string]struct {
+		fields fields
+		args   args
+		want   utils.StringList
+	}{
+		"one sidecar container": {
+			fields: fields{
+				DBServers: ServerGroupSpec{
+					SidecarCoreNames: []string{"other"},
+				},
+			},
+			args: args{
+				group: ServerGroupDBServers,
+			},
+			want: utils.StringList{"server", "other"},
+		},
+		"one predefined container and one sidecar container": {
+			fields: fields{
+				DBServers: ServerGroupSpec{
+					SidecarCoreNames: []string{"server", "other"},
+				},
+			},
+			args: args{
+				group: ServerGroupDBServers,
+			},
+			want: utils.StringList{"server", "other"},
+		},
+		"zero core containers": {
+			fields: fields{
+				DBServers: ServerGroupSpec{
+					SidecarCoreNames: nil,
+				},
+			},
+			args: args{
+				group: ServerGroupDBServers,
+			},
+			want: utils.StringList{"server"},
+		},
+		"two non-core containers": {
+			fields: fields{
+				DBServers: ServerGroupSpec{
+					SidecarCoreNames: []string{"other1", "other2"},
+				},
+			},
+			args: args{
+				group: ServerGroupDBServers,
+			},
+			want: utils.StringList{"server", "other1", "other2"},
+		},
+	}
+	for testName, test := range tests {
+		t.Run(testName, func(t *testing.T) {
+			s := DeploymentSpec{
+				DBServers: test.fields.DBServers,
+			}
+
+			got := s.GetCoreContainers(test.args.group)
+			assert.Equal(t, test.want, got)
+
+		})
 	}
 }
