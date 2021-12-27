@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Jakub Wierzbowski
-//
 
 // +k8s:deepcopy-gen=package
 // +groupName=apps.arangodb.com
