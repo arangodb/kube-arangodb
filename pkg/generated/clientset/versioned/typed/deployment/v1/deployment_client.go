@@ -30,6 +30,7 @@ import (
 
 type DatabaseV1Interface interface {
 	RESTClient() rest.Interface
+	ArangoClusterSynchronizationsGetter
 	ArangoDeploymentsGetter
 	ArangoMembersGetter
 }
@@ -37,6 +38,10 @@ type DatabaseV1Interface interface {
 // DatabaseV1Client is used to interact with features provided by the database.arangodb.com group.
 type DatabaseV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *DatabaseV1Client) ArangoClusterSynchronizations(namespace string) ArangoClusterSynchronizationInterface {
+	return newArangoClusterSynchronizations(c, namespace)
 }
 
 func (c *DatabaseV1Client) ArangoDeployments(namespace string) ArangoDeploymentInterface {
