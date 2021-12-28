@@ -49,7 +49,7 @@ func (a ActionType) String() string {
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
 	switch a {
-	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition:
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition, ActionTypeSetCondition:
 		return ActionPriorityHigh
 	default:
 		return ActionPriorityNormal
@@ -161,12 +161,16 @@ const (
 	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
 	// ActionTypeSetMemberCondition sets member condition. It is high priority action.
 	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
+	// ActionTypeSetCondition sets condition. It is high priority action.
+	ActionTypeSetCondition ActionType = "SetCondition"
 	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
 	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
 	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
 	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
 	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
 	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
+	// ActionTypeLicenseSet sets server license
+	ActionTypeLicenseSet ActionType = "LicenseSet"
 
 	// Runtime Updates
 	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime

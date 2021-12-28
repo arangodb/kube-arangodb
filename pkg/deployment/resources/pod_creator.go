@@ -470,7 +470,6 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	if !found {
 		return errors.WithStack(errors.Newf("Member '%s' not found", memberID))
 	}
-	groupSpec := spec.GetServerGroupSpec(group)
 
 	// Update pod name
 	role := group.AsRole()
@@ -498,11 +497,8 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.ArangoVersion = m.Image.ArangoDBVersion
 		m.ImageID = m.Image.ImageID
 
-		// Check for missing side cars in
-		m.SideCarSpecs = make(map[string]core.Container)
-		for _, specSidecar := range groupSpec.GetSidecars() {
-			m.SideCarSpecs[specSidecar.Name] = *specSidecar.DeepCopy()
-		}
+		// reset old sidecar values to nil
+		m.SideCarSpecs = nil
 
 		log.Debug().Str("pod-name", m.PodName).Msg("Created pod")
 		if m.Image == nil {

@@ -85,6 +85,8 @@ type DeploymentStatus struct {
 	Topology *TopologyStatus `json:"topology,omitempty"`
 
 	Rebalancer *ArangoDeploymentRebalancerStatus `json:"rebalancer,omitempty"`
+
+	BackOff BackOff `json:"backoff,omitempty"`
 }
 
 // Equal checks for equality
@@ -103,7 +105,9 @@ func (ds *DeploymentStatus) Equal(other DeploymentStatus) bool {
 		ds.Plan.Equal(other.Plan) &&
 		ds.AcceptedSpec.Equal(other.AcceptedSpec) &&
 		ds.SecretHashes.Equal(other.SecretHashes) &&
-		ds.Agency.Equal(other.Agency)
+		ds.Agency.Equal(other.Agency) &&
+		ds.Topology.Equal(other.Topology) &&
+		ds.BackOff.Equal(other.BackOff)
 }
 
 // IsForceReload returns true if ForceStatusReload is set to true

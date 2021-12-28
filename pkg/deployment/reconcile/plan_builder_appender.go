@@ -23,14 +23,17 @@
 package reconcile
 
 import (
+	"time"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
-func newPlanAppender(pb WithPlanBuilder, current api.Plan) PlanAppender {
-	return planAppenderType{
+func newPlanAppender(pb WithPlanBuilder, backoff api.BackOff, current api.Plan) PlanAppender {
+	return &planAppenderType{
 		current: current,
 		pb:      pb,
+		backoff: backoff.DeepCopy(),
 	}
 }
 
@@ -50,12 +53,26 @@ type PlanAppender interface {
 	ApplyWithConditionIfEmpty(c planBuilderCondition, pb planBuilder) PlanAppender
 	ApplySubPlanIfEmpty(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender
 
+	ApplyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender
+
+	BackOff() api.BackOff
+
 	Plan() api.Plan
 }
 
 type planAppenderRecovery struct {
 	appender PlanAppender
 	log      zerolog.Logger
+}
+
+func (p planAppenderRecovery) BackOff() api.BackOff {
+	return p.appender.BackOff()
+}
+
+func (p planAppenderRecovery) ApplyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender {
+	return p.create(func(in PlanAppender) PlanAppender {
+		return in.ApplyWithBackOff(key, delay, pb)
+	})
 }
 
 func (p planAppenderRecovery) create(ret func(in PlanAppender) PlanAppender) (r PlanAppender) {
@@ -115,48 +132,65 @@ func (p planAppenderRecovery) Plan() api.Plan {
 type planAppenderType struct {
 	pb      WithPlanBuilder
 	current api.Plan
+
+	backoff api.BackOff
 }
 
-func (p planAppenderType) Plan() api.Plan {
+func (p *planAppenderType) BackOff() api.BackOff {
+	return p.backoff.DeepCopy()
+}
+
+func (p *planAppenderType) ApplyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender {
+	if !p.backoff.Process(key) {
+		return p
+	}
+
+	p.backoff = p.backoff.BackOff(key, delay)
+
+	return p.Apply(pb)
+}
+
+func (p *planAppenderType) Plan() api.Plan {
 	return p.current
 }
 
-func (p planAppenderType) ApplyIfEmpty(pb planBuilder) PlanAppender {
+func (p *planAppenderType) ApplyIfEmpty(pb planBuilder) PlanAppender {
 	if p.current.IsEmpty() {
 		return p.Apply(pb)
 	}
 	return p
 }
 
-func (p planAppenderType) ApplyWithConditionIfEmpty(c planBuilderCondition, pb planBuilder) PlanAppender {
+func (p *planAppenderType) ApplyWithConditionIfEmpty(c planBuilderCondition, pb planBuilder) PlanAppender {
 	if p.current.IsEmpty() {
 		return p.ApplyWithCondition(c, pb)
 	}
 	return p
 }
 
-func (p planAppenderType) ApplySubPlanIfEmpty(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender {
+func (p *planAppenderType) ApplySubPlanIfEmpty(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender {
 	if p.current.IsEmpty() {
 		return p.ApplySubPlan(pb, plans...)
 	}
 	return p
 }
 
-func (p planAppenderType) new(plan api.Plan) planAppenderType {
-	return planAppenderType{
+func (p *planAppenderType) new(plan api.Plan) *planAppenderType {
+	return &planAppenderType{
 		pb:      p.pb,
 		current: append(p.current, plan...),
+		backoff: p.backoff.DeepCopy(),
 	}
 }
 
-func (p planAppenderType) Apply(pb planBuilder) PlanAppender {
+func (p *planAppenderType) Apply(pb planBuilder) PlanAppender {
 	return p.new(p.pb.Apply(pb))
 }
 
-func (p planAppenderType) ApplyWithCondition(c planBuilderCondition, pb planBuilder) PlanAppender {
+func (p *planAppenderType) ApplyWithCondition(c planBuilderCondition, pb planBuilder) PlanAppender {
 	return p.new(p.pb.ApplyWithCondition(c, pb))
 }
 
-func (p planAppenderType) ApplySubPlan(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender {
+func (p *planAppenderType) ApplySubPlan(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender {
 	return p.new(p.pb.ApplySubPlan(pb, plans...))
 }
