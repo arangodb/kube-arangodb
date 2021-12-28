@@ -115,7 +115,7 @@ func AreContainersReady(pod *core.Pod, containers utils.StringList) bool {
 		}
 	}
 
-	// From here on all required containers are running, but unready condition must be checked additionally. TODO tomasz Why?
+	// From here on all required containers are running, but unready condition must be checked additionally.
 	switch condition.Reason {
 	case ServerContainerConditionContainersNotReady:
 		if !strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
