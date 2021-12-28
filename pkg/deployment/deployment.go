@@ -222,7 +222,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
 
-	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
@@ -626,10 +626,6 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
-	return d.apiObject
 }
 
 func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {

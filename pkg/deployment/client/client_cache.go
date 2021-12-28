@@ -28,6 +28,8 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver/agency"
@@ -48,16 +50,21 @@ type Cache interface {
 	GetAgency(ctx context.Context) (agency.Agency, error)
 }
 
-func NewClientCache(apiObjectGetter func() *api.ArangoDeployment, factory conn.Factory) Cache {
+type CacheGen interface {
+	resources.DeploymentEndpoints
+	resources.DeploymentInfoGetter
+}
+
+func NewClientCache(in CacheGen, factory conn.Factory) Cache {
 	return &cache{
-		apiObjectGetter: apiObjectGetter,
-		factory:         factory,
+		in:      in,
+		factory: factory,
 	}
 }
 
 type cache struct {
-	mutex           sync.Mutex
-	apiObjectGetter func() *api.ArangoDeployment
+	mutex sync.Mutex
+	in    CacheGen
 
 	factory conn.Factory
 }
@@ -68,7 +75,7 @@ func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection
 
 func (cc *cache) extendHost(host string) string {
 	scheme := "http"
-	if cc.apiObjectGetter().Spec.TLS.IsSecure() {
+	if cc.in.GetSpec().TLS.IsSecure() {
 		scheme = "https"
 	}
 
@@ -76,9 +83,14 @@ func (cc *cache) extendHost(host string) string {
 }
 
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
-	m, _, _ := cc.apiObjectGetter().Status.Members.ElementByID(id)
+	m, _, _ := cc.in.GetStatusSnapshot().Members.ElementByID(id)
 
-	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), group.AsRole(), id))))
+	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint)))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -114,7 +126,7 @@ func (cc *cache) GetAuth() conn.Auth {
 }
 
 func (cc *cache) getDatabaseClient() (driver.Client, error) {
-	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.apiObjectGetter())))
+	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -148,8 +160,13 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 func (cc *cache) getAgencyClient() (agency.Agency, error) {
 	// Not found, create a new client
 	var dnsNames []string
-	for _, m := range cc.apiObjectGetter().Status.Members.Agents {
-		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(k8sutil.CreatePodDNSName(cc.apiObjectGetter(), api.ServerGroupAgents.AsRole(), m.ID))))
+	for _, m := range cc.in.GetStatusSnapshot().Members.Agents {
+		endpoint, err := cc.in.GenerateMemberEndpoint(api.ServerGroupAgents, m)
+		if err != nil {
+			return nil, err
+		}
+
+		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint)))
 	}
 
 	if len(dnsNames) == 0 {
