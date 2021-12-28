@@ -29,6 +29,9 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
@@ -89,6 +92,25 @@ type testContext struct {
 	PVC              *core.PersistentVolumeClaim
 	PVCErr           error
 	RecordedEvent    *k8sutil.Event
+
+	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
+	panic("implement me")
+}
+
+func (c *testContext) ApplyPatch(ctx context.Context, p ...patch.Item) error {
+	panic("implement me")
+}
+
+func (c *testContext) GetStatusSnapshot() api.DeploymentStatus {
+	s, _ := c.GetStatus()
+	return *s.DeepCopy()
+}
+
+func (c *testContext) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	return pod2.GenerateMemberEndpoint(c.Inspector, c.ArangoDeployment, c.ArangoDeployment.Spec, group, member)
 }
 
 func (c *testContext) GetAgencyCache() (agencyCache.State, bool) {
@@ -132,7 +154,8 @@ func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
 }
 
 func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
-	panic("implement me")
+	_, err := action(&c.ArangoDeployment.Status)
+	return err
 }
 
 func (c *testContext) GetKubeCli() kubernetes.Interface {
@@ -180,7 +203,8 @@ func (c *testContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool
 }
 
 func (c *testContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
-	panic("implement me")
+	action(&c.ArangoDeployment.Status)
+	return nil
 }
 
 func (c *testContext) GetPod(_ context.Context, podName string) (*core.Pod, error) {
@@ -412,7 +436,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 	status.Hashes.TLS.Propagated = true
 	status.Hashes.Encryption.Propagated = true
 
-	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 1)
 
@@ -423,12 +447,12 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
 	spec.Single.Count = util.NewInt(2)
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale
 
@@ -444,7 +468,7 @@ func TestCreatePlanSingleScale(t *testing.T) {
 			PodName: "something1",
 		},
 	}
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	assert.Len(t, newPlan, 0) // Single mode does not scale down
 }
@@ -473,7 +497,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 2)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -486,7 +510,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something",
 		},
 	}
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 1)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -511,7 +535,7 @@ func TestCreatePlanActiveFailoverScale(t *testing.T) {
 			PodName: "something4",
 		},
 	}
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3) // Note: Downscaling is only down 1 at a time
 	assert.Equal(t, api.ActionTypeKillMemberPod, newPlan[0].Type)
@@ -545,7 +569,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	var status api.DeploymentStatus
 	addAgentsToStatus(t, &status, 3)
 
-	newPlan, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed := createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 6) // Adding 3 dbservers & 3 coordinators (note: agents do not scale now)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -578,7 +602,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 			PodName: "coordinator1",
 		},
 	}
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 3)
 	assert.Equal(t, api.ActionTypeAddMember, newPlan[0].Type)
@@ -615,7 +639,7 @@ func TestCreatePlanClusterScale(t *testing.T) {
 	}
 	spec.DBServers.Count = util.NewInt(1)
 	spec.Coordinators.Count = util.NewInt(1)
-	newPlan, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
+	newPlan, _, changed = createNormalPlan(ctx, log, depl, nil, spec, status, inspector.NewEmptyInspector(), c)
 	assert.True(t, changed)
 	require.Len(t, newPlan, 7) // Note: Downscaling is done 1 at a time
 	assert.Equal(t, api.ActionTypeCleanOutMember, newPlan[0].Type)
@@ -635,10 +659,12 @@ func TestCreatePlanClusterScale(t *testing.T) {
 }
 
 type LastLogRecord struct {
+	t   *testing.T
 	msg string
 }
 
 func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+	l.t.Log(msg)
 	l.msg = msg
 }
 
@@ -1035,7 +1061,7 @@ func TestCreatePlan(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			h := &LastLogRecord{}
+			h := &LastLogRecord{t: t}
 			logger := zerolog.New(ioutil.Discard).Hook(h)
 			r := NewReconciler(logger, testCase.context)
 

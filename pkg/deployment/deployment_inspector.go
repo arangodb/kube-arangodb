@@ -268,6 +268,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
 	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
+		d.deps.Log.Info().Msgf("Plan generated, reconciling")
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
 		return minInspectionInterval, nil

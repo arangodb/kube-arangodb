@@ -41,7 +41,6 @@ import (
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
-	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer

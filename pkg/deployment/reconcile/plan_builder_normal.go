@@ -26,51 +26,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
-
-func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	// Create plan
-	apiObject := d.context.GetAPIObject()
-	spec := d.context.GetSpec()
-	status, lastVersion := d.context.GetStatus()
-	builderCtx := newPlanBuilderContext(d.context)
-	newPlan, changed := createNormalPlan(ctx, d.log, apiObject, status.Plan, spec, status, cachedStatus, builderCtx)
-
-	// If not change, we're done
-	if !changed {
-		return nil, false
-	}
-
-	// Save plan
-	if len(newPlan) == 0 {
-		// Nothing to do
-		return nil, false
-	}
-
-	// Send events
-	for id := len(status.Plan); id < len(newPlan); id++ {
-		action := newPlan[id]
-		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
-		if r := action.Reason; r != "" {
-			d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", "Normal").Msgf(r)
-		}
-	}
-
-	status.Plan = newPlan
-
-	for _, p := range newPlan {
-		actionsGeneratedMetrics.WithLabelValues(d.context.GetName(), p.Type.String(), "normal").Inc()
-	}
-
-	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err), false
-	}
-	return nil, true
-}
 
 // createNormalPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
@@ -78,13 +37,13 @@ func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspecto
 func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
-	builderCtx PlanBuilderContext) (api.Plan, bool) {
+	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
-		return currentPlan, false
+		return currentPlan, nil, false
 	}
 
-	return recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), currentPlan).
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
 		// Adjust topology settings
 		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
@@ -124,8 +83,9 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplyIfEmpty(createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(createTLSStatusPropagated).
-		ApplyIfEmpty(createBootstrapPlan)).
-		Plan(), true
+		ApplyIfEmpty(createBootstrapPlan))
+
+	return r.Plan(), r.BackOff(), true
 }
 
 func createMemberFailedRestorePlan(ctx context.Context,
