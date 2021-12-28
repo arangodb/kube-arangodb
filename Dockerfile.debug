@@ -1,0 +1,30 @@
+FROM golang:1.16 as builder
+
+ARG TARGETARCH
+
+RUN apt-get update && apt-get install -y build-essential
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+FROM alpine:3.14 as artifact
+
+ARG RELEASE_MODE
+ARG TARGETARCH
+ARG VERSION
+
+LABEL name="kube-arangodb" \
+      vendor="ArangoDB" \
+      version="${VERSION}" \
+      release="${VERSION}" \
+      summary="ArangoDB Kubernetes Oparator" \
+      description="ArangoDB Kubernetes Operator" \
+      maintainer="redhat@arangodb.com"
+
+RUN apk add --no-cache libc6-compat
+
+ADD ./LICENSE /licenses/LICENSE
+ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
+
+COPY --from=builder /go/bin/dlv /usr/bin/dlv
+
+ENTRYPOINT ["/usr/bin/dlv", "--listen=:2345", "--headless=true", "--continue", "--accept-multiclient", "--api-version=2", "exec", "/usr/bin/arangodb_operator", "--" ]
+
