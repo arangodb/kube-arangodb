@@ -289,6 +289,10 @@ func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
 		return err
 	}
 
+	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -364,6 +368,7 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
+		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
@@ -633,4 +638,61 @@ func (a *ArangoVersionCheckContainer) GetName() string {
 // GetProbes returns no probes for the ArangoD version check container.
 func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	return nil, nil, nil, nil
+}
+
+// validateSidecars checks if all core names are in the sidecar list.
+// It returns error when at least one core name is missing.
+func validateSidecars(coreNames []string, sidecars []core.Container) error {
+	for _, coreName := range coreNames {
+		if api.IsReservedServerGroupContainerName(coreName) {
+			return fmt.Errorf("sidecar core name \"%s\" can not be used because it is reserved", coreName)
+		}
+
+		found := false
+		for _, sidecar := range sidecars {
+			if sidecar.Name == coreName {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("sidecar core name \"%s\" does not exist on the sidecars' list", coreName)
+		}
+	}
+
+	return nil
+
+}
+
+// addLifecycleSidecar adds lifecycle to all core sidecar unless the sidecar contains its own custom lifecycle.
+func addLifecycleSidecar(coreNames []string, sidecars []core.Container) error {
+	for _, coreName := range coreNames {
+		for i, sidecar := range sidecars {
+			if coreName != sidecar.Name {
+				continue
+			}
+
+			if sidecar.Lifecycle != nil && sidecar.Lifecycle.PreStop != nil {
+				// A user provided a custom lifecycle preStop, so break and check next core name container.
+				break
+			}
+
+			lifecycle, err := k8sutil.NewLifecycleFinalizers()
+			if err != nil {
+				return err
+			}
+
+			if sidecar.Lifecycle == nil {
+				sidecars[i].Lifecycle = lifecycle
+			} else {
+				// Set only preStop, because user can provide postStart lifecycle.
+				sidecars[i].Lifecycle.PreStop = lifecycle.PreStop
+			}
+
+			break
+		}
+	}
+
+	return nil
 }
