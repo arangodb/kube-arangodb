@@ -673,14 +673,21 @@ func addLifecycleSidecar(coreNames []string, sidecars []core.Container) error {
 				continue
 			}
 
-			if sidecar.Lifecycle != nil {
-				// A user provided a custom lifecycle, so break and check next core name container.
+			if sidecar.Lifecycle != nil && sidecar.Lifecycle.PreStop != nil {
+				// A user provided a custom lifecycle preStop, so break and check next core name container.
 				break
 			}
 
-			var err error
-			if sidecars[i].Lifecycle, err = k8sutil.NewLifecycleFinalizers(); err != nil {
+			lifecycle, err := k8sutil.NewLifecycleFinalizers()
+			if err != nil {
 				return err
+			}
+
+			if sidecar.Lifecycle == nil {
+				sidecars[i].Lifecycle = lifecycle
+			} else {
+				// Set only preStop, because user can provide postStart lifecycle.
+				sidecars[i].Lifecycle.PreStop = lifecycle.PreStop
 			}
 
 			break
