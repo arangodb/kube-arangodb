@@ -146,6 +146,59 @@ func TestIsPodFailed(t *testing.T) {
 				coreContainers: utils.StringList{"something", "core_container"},
 			},
 		},
+		"first core container succeeded and second is still running": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container1",
+								State: v1.ContainerState{
+									Running: &v1.ContainerStateRunning{},
+								},
+							},
+							{
+								Name: "core_container2",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"core_container1", "core_container2"},
+			},
+			want: true,
+		},
+		"all containers succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container1",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+							{
+								Name: "core_container2",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"core_container1", "core_container2"},
+			},
+		},
 	}
 
 	for testName, test := range tests {
@@ -156,17 +209,112 @@ func TestIsPodFailed(t *testing.T) {
 	}
 }
 
-// TestIsPodSucceeded tests IsPodSucceeded.
 func TestIsPodSucceeded(t *testing.T) {
-	assert.False(t, IsPodSucceeded(&v1.Pod{}))
-	assert.False(t, IsPodSucceeded(&v1.Pod{
-		Status: v1.PodStatus{
-			Phase: v1.PodRunning,
+	type args struct {
+		pod            *v1.Pod
+		coreContainers utils.StringList
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"empty pod": {
+			args: args{
+				pod: &v1.Pod{},
+			},
 		},
-	}))
-	assert.True(t, IsPodSucceeded(&v1.Pod{
-		Status: v1.PodStatus{
-			Phase: v1.PodSucceeded,
+		"pod is succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						Phase: v1.PodSucceeded,
+					},
+				},
+			},
+			want: true,
 		},
-	}))
+		"all core containers succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container1",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+							{
+								Name: "core_container2",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+							{
+								Name: "non-core_container",
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"core_container1", "core_container2"},
+			},
+			want: true,
+		},
+		"non-core container succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container1",
+							},
+							{
+								Name: "non-core_container",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"core_container1"},
+			},
+		},
+		"the only one core container succeeded": {
+			args: args{
+				pod: &v1.Pod{
+					Status: v1.PodStatus{
+						ContainerStatuses: []v1.ContainerStatus{
+							{
+								Name: "core_container1",
+								State: v1.ContainerState{
+									Terminated: &v1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+							{
+								Name: "non-core_container",
+							},
+						},
+					},
+				},
+				coreContainers: utils.StringList{"core_container1"},
+			},
+			want: true,
+		},
+	}
+
+	for testName, test := range tests {
+		t.Run(testName, func(t *testing.T) {
+			got := IsPodSucceeded(test.args.pod, test.args.coreContainers)
+			assert.Equal(t, test.want, got)
+		})
+	}
 }
