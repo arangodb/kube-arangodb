@@ -18,20 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v2alpha1
+package v1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoClusterSynchronizationList is a list of ArangoDB jobs.
 type ArangoClusterSynchronizationList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	meta.TypeMeta `json:",inline"`
+	meta.ListMeta `json:"metadata,omitempty"`
 
 	Items []ArangoClusterSynchronization `json:"items"`
 }
@@ -41,21 +41,16 @@ type ArangoClusterSynchronizationList struct {
 
 // ArangoClusterSynchronization contains definition and status of the ArangoDB type Job.
 type ArangoClusterSynchronization struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ArangoClusterSynchronizationSpec   `json:"spec,omitempty"`
-	Status            ArangoClusterSynchronizationStatus `json:"status,omitempty"`
-}
-
-// ArangoClusterSynchronizationStatus defines the observed state of ClusterSynchronization
-type ArangoClusterSynchronizationStatus struct {
-	State string `json:"state,omitempty"`
+	meta.TypeMeta   `json:",inline"`
+	meta.ObjectMeta `json:"metadata,omitempty"`
+	Spec            ArangoClusterSynchronizationSpec   `json:"spec,omitempty"`
+	Status          ArangoClusterSynchronizationStatus `json:"status,omitempty"`
 }
 
 // AsOwner creates an OwnerReference for the given job
-func (a *ArangoClusterSynchronization) AsOwner() metav1.OwnerReference {
+func (a *ArangoClusterSynchronization) AsOwner() meta.OwnerReference {
 	trueVar := true
-	return metav1.OwnerReference{
+	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
 		Kind:       deployment.ArangoClusterSynchronizationResourceKind,
 		Name:       a.Name,

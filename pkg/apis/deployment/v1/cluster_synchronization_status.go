@@ -20,15 +20,5 @@
 
 package v1
 
-func (a *ArangoClusterSynchronization) Validate() error {
-	if err := a.Spec.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (a *ArangoClusterSynchronizationSpec) Validate() error {
-
-	return nil
+type ArangoClusterSynchronizationStatus struct {
 }
