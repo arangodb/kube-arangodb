@@ -54,6 +54,7 @@ type PlanAppender interface {
 	ApplySubPlanIfEmpty(pb planBuilderSubPlan, plans ...planBuilder) PlanAppender
 
 	ApplyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender
+	ApplyIfEmptyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender
 
 	BackOff() api.BackOff
 
@@ -72,6 +73,12 @@ func (p planAppenderRecovery) BackOff() api.BackOff {
 func (p planAppenderRecovery) ApplyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender {
 	return p.create(func(in PlanAppender) PlanAppender {
 		return in.ApplyWithBackOff(key, delay, pb)
+	})
+}
+
+func (p planAppenderRecovery) ApplyIfEmptyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender {
+	return p.create(func(in PlanAppender) PlanAppender {
+		return in.ApplyIfEmptyWithBackOff(key, delay, pb)
 	})
 }
 
@@ -148,6 +155,13 @@ func (p *planAppenderType) ApplyWithBackOff(key api.BackOffKey, delay time.Durat
 	p.backoff = p.backoff.BackOff(key, delay)
 
 	return p.Apply(pb)
+}
+
+func (p *planAppenderType) ApplyIfEmptyWithBackOff(key api.BackOffKey, delay time.Duration, pb planBuilder) PlanAppender {
+	if p.current.IsEmpty() {
+		return p.ApplyWithBackOff(key, delay, pb)
+	}
+	return p
 }
 
 func (p *planAppenderType) Plan() api.Plan {
