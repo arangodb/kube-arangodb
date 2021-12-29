@@ -52,12 +52,6 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 			return nil
 		}
 
-		//if !(k8sutil.IsPodSucceeded(pod, coreContainers) || k8sutil.IsPodFailed(pod, coreContainers) ||
-		//	k8sutil.IsPodTerminating(pod)) {
-		//	return nil
-		//}
-		// TODO is it possible that member status is unknown and pod can be succeeded or failed or terminating?
-
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPodName(pod.GetName())
 		if !found {
