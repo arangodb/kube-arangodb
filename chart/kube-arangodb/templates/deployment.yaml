@@ -24,7 +24,11 @@ metadata:
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
 spec:
+{{- if .Values.operator.debug }}
+    replicas: 1
+{{- else }}
     replicas: {{ .Values.operator.replicaCount }}
+{{- end }}
     strategy:
 {{ toYaml .Values.operator.updateStrategy | indent 8 }}
     selector:
@@ -134,10 +138,15 @@ spec:
                       capabilities:
                           drop:
                               - 'ALL'
+{{- if .Values.operator.debug }}
+                          add:
+                            - 'SYS_PTRACE'
+{{- end }}
 {{- if .Values.operator.resources }}
                   resources:
 {{ toYaml .Values.operator.resources | indent 22 }}
 {{- end }}
+{{- if not .Values.operator.debug }}
                   livenessProbe:
                       httpGet:
                           path: /health
@@ -152,6 +161,7 @@ spec:
                           scheme: HTTPS
                       initialDelaySeconds: 5
                       periodSeconds: 10
+{{- end }}
             tolerations:
                 - key: "node.kubernetes.io/unreachable"
                   operator: "Exists"

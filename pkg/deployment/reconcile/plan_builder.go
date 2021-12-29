@@ -37,6 +37,7 @@ const (
 
 const (
 	BackOffCheck api.BackOffKey = "check"
+	LicenseCheck api.BackOffKey = "license"
 )
 
 // CreatePlan considers the current specification & status of the deployment creates a plan to

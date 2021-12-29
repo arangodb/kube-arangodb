@@ -182,7 +182,7 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 	envs := NewEnvBuilder()
 
-	if a.spec.License.HasSecretName() {
+	if a.spec.License.HasSecretName() && a.imageInfo.ArangoDBVersion.CompareTo("3.9.0") < 0 {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
 			constants.SecretKeyToken)
 
