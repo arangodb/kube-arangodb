@@ -98,7 +98,7 @@ func IsPodReady(pod *core.Pod) bool {
 // AreContainersReady checks whether Pod is considered as ready.
 // Returns true if the PodReady condition on the given pod is set to true,
 // or all provided containers' names are running and are not in the list of failed containers.
-func AreContainersReady(pod *core.Pod, containers utils.StringList) bool {
+func AreContainersReady(pod *core.Pod, coreContainers utils.StringList) bool {
 	condition := getPodCondition(&pod.Status, core.PodReady)
 	if condition == nil {
 		return false
@@ -109,7 +109,7 @@ func AreContainersReady(pod *core.Pod, containers utils.StringList) bool {
 	}
 
 	// Check if all required containers are running.
-	for _, c := range containers {
+	for _, c := range coreContainers {
 		if !IsContainerRunning(pod, c) {
 			return false
 		}
@@ -123,7 +123,7 @@ func AreContainersReady(pod *core.Pod, containers utils.StringList) bool {
 		}
 
 		unreadyContainers := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
-		for _, c := range containers {
+		for _, c := range coreContainers {
 			if strings.Contains(unreadyContainers, c) {
 				// The container is on the list with unready containers.
 				return false
@@ -168,47 +168,77 @@ func IsContainerRunning(pod *core.Pod, name string) bool {
 	return false
 }
 
-// IsPodSucceeded returns true if the arangodb container of the pod
-// has terminated with exit code 0.
-func IsPodSucceeded(pod *core.Pod) bool {
+// IsPodSucceeded returns true when all core containers are terminated wih a zero exit code,
+// or the whole pod has been succeeded.
+func IsPodSucceeded(pod *core.Pod, coreContainers utils.StringList) bool {
 	if pod.Status.Phase == core.PodSucceeded {
 		return true
-	} else {
-		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != ServerContainerName {
-				continue
-			}
-
-			t := c.State.Terminated
-			if t != nil {
-				return t.ExitCode == 0
-			}
-		}
-		return false
-	}
-}
-
-// IsPodFailed returns true if the arangodb container of the pod
-// has terminated wih a non-zero exit code.
-func IsPodFailed(pod *core.Pod, coreContainers utils.StringList) bool {
-	if pod.Status.Phase == core.PodFailed {
-		return true
 	}
 
+	core, succeeded := 0, 0
 	for _, c := range pod.Status.ContainerStatuses {
 		if !coreContainers.Has(c.Name) {
 			// It is not core container, so check next one status.
 			continue
 		}
 
-		t := c.State.Terminated
-		if t != nil {
-			return t.ExitCode != 0
+		core++
+		if t := c.State.Terminated; t != nil && t.ExitCode == 0 {
+			succeeded++
 		}
 	}
 
-	return false
+	if core > 0 && core == succeeded {
+		// If there are some core containers and all of them succeeded then return that the whole pod succeeded.
+		return true
+	}
 
+	return false
+}
+
+// IsPodFailed returns true when one of the core containers is terminated wih a non-zero exit code,
+// or the whole pod has been failed.
+func IsPodFailed(pod *core.Pod, coreContainers utils.StringList) bool {
+	if pod.Status.Phase == core.PodFailed {
+		return true
+	}
+
+	allCore, succeeded, failed := 0, 0, 0
+	for _, c := range pod.Status.ContainerStatuses {
+		if !coreContainers.Has(c.Name) {
+			// It is not core container, so check next one status.
+			continue
+		}
+
+		allCore++
+		if t := c.State.Terminated; t != nil {
+			// A core container is terminated.
+			if t.ExitCode != 0 {
+				failed++
+			} else {
+				succeeded++
+			}
+		}
+	}
+
+	if failed == 0 && succeeded == 0 {
+		// All core containers are not terminated.
+		return false
+	}
+
+	if failed > 0 {
+		// Some (or all) core containers have been terminated.
+		// Some other core containers can be still running or succeeded,
+		// but the whole pod is considered as failed.
+		return true
+	} else if allCore == succeeded {
+		// All core containers are succeeded, so the pod is not failed.
+		// The function `IsPodSucceeded` should recognize it in next iteration.
+		return false
+	}
+
+	// Some core containers are succeeded, but not all of them.
+	return true
 }
 
 // IsContainerFailed returns true if the arangodb container

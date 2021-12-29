@@ -27,7 +27,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -47,22 +46,32 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
+
 	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
 			return nil
 		}
 
-		if !(k8sutil.IsPodSucceeded(pod) || k8sutil.IsPodFailed(pod, utils.StringList{k8sutil.ServerContainerName}) ||
-			k8sutil.IsPodTerminating(pod)) {
-			return nil
-		}
+		//if !(k8sutil.IsPodSucceeded(pod, coreContainers) || k8sutil.IsPodFailed(pod, coreContainers) ||
+		//	k8sutil.IsPodTerminating(pod)) {
+		//	return nil
+		//}
+		// TODO is it possible that member status is unknown and pod can be succeeded or failed or terminating?
 
 		// Find member status
 		memberStatus, group, found := status.Members.MemberStatusByPodName(pod.GetName())
 		if !found {
 			log.Debug().Str("pod", pod.GetName()).Msg("no memberstatus found for pod. Performing cleanup")
 		} else {
+			spec := r.context.GetSpec()
+			coreContainers := spec.GetCoreContainers(group)
+			if !(k8sutil.IsPodSucceeded(pod, coreContainers) || k8sutil.IsPodFailed(pod, coreContainers) ||
+				k8sutil.IsPodTerminating(pod)) {
+				// The pod is not being terminated or failed or succeeded.
+				return nil
+			}
+
 			// Check member termination condition
 			if !memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
 				if !group.IsStateless() {

@@ -52,6 +52,8 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 
+	// When the main container is terminated, then the whole pod should be terminated,
+	// so sidecar core containers' names should not be checked here.
 	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p)
 
 	for _, f := range p.ObjectMeta.GetFinalizers() {

@@ -644,6 +644,10 @@ func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *co
 // It returns error when at least one core name is missing.
 func validateSidecars(coreNames []string, sidecars []core.Container) error {
 	for _, coreName := range coreNames {
+		if api.IsReservedServerGroupContainerName(coreName) {
+			return fmt.Errorf("sidecar core name \"%s\" can not be used because it is reserved", coreName)
+		}
+
 		found := false
 		for _, sidecar := range sidecars {
 			if sidecar.Name == coreName {

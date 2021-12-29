@@ -101,7 +101,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		// Update state
 		updateMemberStatusNeeded := false
-		if k8sutil.IsPodSucceeded(pod) {
+		if k8sutil.IsPodSucceeded(pod, coreContainers) {
 			// Pod has terminated with exit code 0.
 			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
 			if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {

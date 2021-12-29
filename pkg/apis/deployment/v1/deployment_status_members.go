@@ -128,7 +128,8 @@ func (ds DeploymentStatusMembers) ForServerGroup(cb func(group ServerGroup, list
 }
 
 // MemberStatusByPodName returns a reference to the element in the given set of lists that has the given pod name.
-// If no such element exists, nil is returned.
+// Returns member status and group which the pod belong to.
+// If no such element exists, false is returned.
 func (ds DeploymentStatusMembers) MemberStatusByPodName(podName string) (MemberStatus, ServerGroup, bool) {
 	if result, found := ds.Single.ElementByPodName(podName); found {
 		return result, ServerGroupSingle, true
