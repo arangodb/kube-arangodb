@@ -46,7 +46,6 @@ func (r *Resources) CleanupTerminatedPods(ctx context.Context, cachedStatus insp
 
 	// Update member status from all pods found
 	status, _ := r.context.GetStatus()
-
 	err := cachedStatus.IteratePods(func(pod *v1.Pod) error {
 		if k8sutil.IsArangoDBImageIDAndVersionPod(pod) {
 			// Image ID pods are not relevant to inspect here
