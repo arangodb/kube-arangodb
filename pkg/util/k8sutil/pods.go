@@ -23,6 +23,7 @@ package k8sutil
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
