@@ -96,6 +96,7 @@ MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
+MANIFESTPATHAPPS := manifests/arango-apps$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
@@ -103,6 +104,7 @@ KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHAPPS := manifests/kustomize/apps/arango-apps$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHTEST := manifests/kustomize/test/arango-test$(MANIFESTSUFFIX).yaml
@@ -325,30 +327,42 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
 	   --set "operator.features.deploymentReplications=false" \
 	   --set "operator.features.storage=false" \
+	   --set "operator.features.apps=false" \
 	   --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=true"))
+
+$(eval $(call manifest-generator, apps, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.apps=true" \
+       --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
        --set "operator.features.deployment=true" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=true" \
        --set "operator.features.backup=true"))
 
 .PHONY: chart-crd

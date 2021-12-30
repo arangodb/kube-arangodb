@@ -29,6 +29,7 @@ const (
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
 	EnvOperatorPodIP          = "MY_POD_IP"
+	EnvArangoJobSAName        = "ARANGOJOB_SA_NAME"
 
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
@@ -59,6 +60,7 @@ const (
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
 	BackupLabelRole = "backup/role"
+	AppsLabelRole   = "apps/role"
 	LabelRole       = "role"
 	LabelRoleLeader = "leader"
 )

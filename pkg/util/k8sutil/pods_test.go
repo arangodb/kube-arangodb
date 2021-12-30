@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 )
 
 // TestIsPodReady tests IsPodReady.
