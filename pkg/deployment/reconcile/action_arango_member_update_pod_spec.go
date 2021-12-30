@@ -25,8 +25,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog/log"
@@ -65,7 +63,7 @@ type actionArangoMemberUpdatePodSpec struct {
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatus()
+	status := a.actionCtx.GetStatusSnapshot()
 
 	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
 	if !found {
@@ -82,7 +80,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 		return false, err
 	}
 
-	endpoint, err := pod.GenerateMemberEndpoint(a.actionCtx.GetCachedStatus(), a.actionCtx.GetAPIObject(), spec, a.action.Group, m)
+	endpoint, err := a.actionCtx.GenerateMemberEndpoint(a.action.Group, m)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to render endpoint")
 		return false, err
@@ -90,7 +88,6 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 	if m.Endpoint == nil || *m.Endpoint != endpoint {
 		// Update endpoint
-		m.Endpoint = &endpoint
 		if err := status.Members.Update(m, a.action.Group); err != nil {
 			log.Error().Err(err).Msg("Unable to update endpoint")
 			return false, err
@@ -125,6 +122,11 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 	if err != nil {
 		log.Err(err).Msg("Error while getting pod template")
 		return false, err
+	}
+
+	if z := m.Endpoint; z != nil {
+		q := *z
+		template.Endpoint = &q
 	}
 
 	if err := a.actionCtx.WithArangoMemberUpdate(context.Background(), member.GetNamespace(), member.GetName(), func(member *api.ArangoMember) bool {

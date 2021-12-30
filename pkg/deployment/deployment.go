@@ -109,6 +109,11 @@ const (
 	maxInspectionInterval    = 10 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
+type deploymentStatusObject struct {
+	version int32
+	last    api.DeploymentStatus // Internal status copy of the CR
+}
+
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
 	name      string
@@ -116,9 +121,8 @@ type Deployment struct {
 
 	apiObject *api.ArangoDeployment // API object
 	status    struct {
-		mutex   sync.Mutex
-		version int32
-		last    api.DeploymentStatus // Internal status copy of the CR
+		mutex sync.Mutex
+		deploymentStatusObject
 	}
 	config Config
 	deps   Dependencies
@@ -218,7 +222,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
 
-	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
@@ -622,10 +626,6 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
-	return d.apiObject
 }
 
 func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {

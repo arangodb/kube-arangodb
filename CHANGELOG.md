@@ -3,6 +3,13 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - ArangoSync image discovery
 - ArangoSync worker as a sidecar
+- Remove unused `status.members.<group>.sidecars-specs` variable
+- Keep only recent terminations
+- Add endpoint into member status
+- Add debug mode (Golang DLV)
+- License V2 for ArangoDB 3.9.0+
+- Add ArangoClusterSynchronization v1 API
+- Add core containers names to follow their terminations
 
 ## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality

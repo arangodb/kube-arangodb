@@ -27,8 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,11 +35,13 @@ import (
 	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -305,7 +305,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	pod, err := ib.Context.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, metav1.GetOptions{})
 	if err == nil {
 		// Pod found
-		if k8sutil.IsPodFailed(pod) {
+		if k8sutil.IsPodFailed(pod, utils.StringList{k8sutil.ServerContainerName}) {
 			// Wait some time before deleting the pod
 			if time.Now().After(pod.GetCreationTimestamp().Add(30 * time.Second)) {
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {

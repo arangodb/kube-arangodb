@@ -23,7 +23,13 @@
 package reconcile
 
 import (
+	"context"
+
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -45,4 +51,32 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
 	}
 	return plan
+}
+
+func emptyPlanBuilder(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
+
+func removeConditionActionV2(actionReason string, conditionType api.ConditionType) api.Action {
+	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+		AddParam(setConditionActionV2KeyAction, setConditionActionV2KeyTypeRemove).
+		AddParam(setConditionActionV2KeyType, string(conditionType))
+}
+
+func updateConditionActionV2(actionReason string, conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {
+	statusBool := core.ConditionTrue
+	if !status {
+		statusBool = core.ConditionFalse
+	}
+
+	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+		AddParam(setConditionActionV2KeyAction, string(conditionType)).
+		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
+		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
+		AddParam(setConditionActionV2KeyReason, reason).
+		AddParam(setConditionActionV2KeyMessage, message).
+		AddParam(setConditionActionV2KeyHash, hash)
 }

@@ -31,6 +31,10 @@ const (
 	ArangoMemberResourceKind   = "ArangoMember"
 	ArangoMemberResourcePlural = "arangomembers"
 
+	ArangoClusterSynchronizationCRDName        = ArangoClusterSynchronizationResourcePlural + "." + ArangoDeploymentGroupName
+	ArangoClusterSynchronizationResourceKind   = "ArangoClusterSynchronization"
+	ArangoClusterSynchronizationResourcePlural = "arangoclustersynchronizations"
+
 	ArangoDeploymentGroupName = "database.arangodb.com"
 )
 

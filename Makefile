@@ -39,8 +39,6 @@ GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 BUILDTIME = $(shell go run "$(ROOT)/tools/dategen/")
 
-DOCKERFILE := Dockerfile
-
 HELM ?= $(shell which helm)
 
 UPPER = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
@@ -62,6 +60,7 @@ HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --set "operator.image=$(OPERATORIMAGE)" \
          	       --set "operator.imagePullPolicy=Always" \
          	       --set "operator.resources=null" \
+         	       --set "operator.debug=$(DEBUG)" \
          	       --namespace "$(DEPLOYMENTNAMESPACE)"
 
 ifndef LOCALONLY
@@ -72,6 +71,17 @@ ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
 else
 	IMAGESUFFIX := :dev
+endif
+
+ifdef DEBUG
+	DEBUG := true
+	DOCKERFILE := Dockerfile.debug
+	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
+	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l"
+else
+	DEBUG := false
+	DOCKERFILE := Dockerfile
+	COMPILE_DEBUG_FLAGS :=
 endif
 
 ifeq ($(MANIFESTSUFFIX),-)
@@ -257,11 +267,11 @@ bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 $(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
 
 $(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
 
 $(BIN): $(VBIN_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"

@@ -17,8 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package v1
 
@@ -28,11 +26,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/backup/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 var (
@@ -546,4 +545,20 @@ func (s DeploymentSpec) Checksum() (string, error) {
 	}
 
 	return fmt.Sprintf("%0x", sha256.Sum256(data)), nil
+}
+
+// GetCoreContainers returns all containers' names which must running in the pod for the given group of servers.
+func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
+	groupSpec := s.GetServerGroupSpec(group)
+	if len(groupSpec.SidecarCoreNames) == 0 {
+		return utils.StringList{k8sutil.ServerContainerName}
+	}
+
+	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+1)
+	if !utils.StringList(groupSpec.SidecarCoreNames).Has(k8sutil.ServerContainerName) {
+		result = append(result, k8sutil.ServerContainerName)
+	}
+	result = append(result, groupSpec.SidecarCoreNames...)
+
+	return result
 }

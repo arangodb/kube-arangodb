@@ -22,6 +22,8 @@
 
 package v1
 
+type ArangoClusterSynchronizationExpansion interface{}
+
 type ArangoDeploymentExpansion interface{}
 
 type ArangoMemberExpansion interface{}

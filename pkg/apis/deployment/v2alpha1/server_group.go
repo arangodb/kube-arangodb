@@ -27,6 +27,18 @@ import (
 	"time"
 )
 
+type ServerGroups []ServerGroup
+
+func (s ServerGroups) Contains(group ServerGroup) bool {
+	for _, a := range s {
+		if a == group {
+			return true
+		}
+	}
+
+	return false
+}
+
 type ServerGroup int
 
 func (g *ServerGroup) UnmarshalJSON(bytes []byte) error {

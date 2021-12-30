@@ -126,6 +126,9 @@ type ServerGroupSpec struct {
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
+	// SidecarCoreNames is a list of sidecar containers which must run in the pod.
+	// Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
+	SidecarCoreNames []string `json:"sidecarCoreNames,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []core.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group

@@ -24,6 +24,20 @@ import "sort"
 
 type List []string
 
+func (l List) Equal(b List) bool {
+	if len(l) != len(b) {
+		return false
+	}
+
+	for i := range l {
+		if l[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (l List) Contains(v string) bool {
 	for _, z := range l {
 		if z == v {
@@ -69,6 +83,7 @@ func (l List) Remove(values ...string) List {
 
 	return m
 }
+
 func (l List) Add(values ...string) List {
 	var m List
 

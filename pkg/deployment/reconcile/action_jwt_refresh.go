@@ -51,7 +51,7 @@ type jwtRefreshAction struct {
 }
 
 func (a *jwtRefreshAction) CheckProgress(ctx context.Context) (bool, bool, error) {
-	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatus()); err != nil || !folder {
+	if folder, err := ensureJWTFolderSupport(a.actionCtx.GetSpec(), a.actionCtx.GetStatusSnapshot()); err != nil || !folder {
 		return true, false, nil
 	}
 

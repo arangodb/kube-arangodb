@@ -73,12 +73,16 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1().ArangoBackupPolicies().Informer()}, nil
 
 		// Group=database.arangodb.com, Version=v1
+	case deploymentv1.SchemeGroupVersion.WithResource("arangoclustersynchronizations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoClusterSynchronizations().Informer()}, nil
 	case deploymentv1.SchemeGroupVersion.WithResource("arangodeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoDeployments().Informer()}, nil
 	case deploymentv1.SchemeGroupVersion.WithResource("arangomembers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V1().ArangoMembers().Informer()}, nil
 
 		// Group=database.arangodb.com, Version=v2alpha1
+	case v2alpha1.SchemeGroupVersion.WithResource("arangoclustersynchronizations"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoClusterSynchronizations().Informer()}, nil
 	case v2alpha1.SchemeGroupVersion.WithResource("arangodeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoDeployments().Informer()}, nil
 	case v2alpha1.SchemeGroupVersion.WithResource("arangomembers"):

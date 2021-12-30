@@ -85,6 +85,13 @@ type DeploymentPodRenderer interface {
 	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
 	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
 	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+
+	DeploymentEndpoints
+}
+
+type DeploymentEndpoints interface {
+	// GenerateMemberEndpoint generates endpoint for a member
+	GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error)
 }
 
 type DeploymentImageManager interface {
@@ -140,8 +147,20 @@ type ArangoAgency interface {
 	RefreshAgencyCache(ctx context.Context) (uint64, error)
 }
 
+type DeploymentInfoGetter interface {
+	// GetAPIObject returns the deployment as k8s object.
+	GetAPIObject() k8sutil.APIObject
+	// GetSpec returns the current specification of the deployment
+	GetSpec() api.DeploymentSpec
+	// GetStatus returns the current status of the deployment
+	GetStatus() (api.DeploymentStatus, int32)
+	// GetStatus returns the current status of the deployment without revision
+	GetStatusSnapshot() api.DeploymentStatus
+}
+
 type ArangoApplier interface {
 	ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error
+	ApplyPatch(ctx context.Context, p ...patch.Item) error
 }
 
 // Context provides all functions needed by the Resources service
@@ -155,15 +174,10 @@ type Context interface {
 	DeploymentCachedStatus
 	ArangoAgency
 	ArangoApplier
+	DeploymentInfoGetter
 
-	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() k8sutil.APIObject
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() ServerGroupIterator
-	// GetSpec returns the current specification of the deployment
-	GetSpec() api.DeploymentSpec
-	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error

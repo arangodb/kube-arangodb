@@ -7,6 +7,8 @@ operator:
 
   scope: legacy
 
+  debug: false
+
   args: []
 
   service:
