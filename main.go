@@ -114,6 +114,7 @@ var (
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
+		enableApps                  bool // Run apps operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 
 		scalingIntegrationEnabled bool
@@ -142,6 +143,7 @@ var (
 	deploymentReplicationProbe probe.ReadyProbe
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
+	appsProbe                  probe.ReadyProbe
 )
 
 func init() {
@@ -157,6 +159,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
+	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
 	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
@@ -220,12 +223,12 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 	klog.Flush()
 
 	// Check operating mode
-	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage && !operatorOptions.enableBackup {
+	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage && !operatorOptions.enableBackup && !operatorOptions.enableApps {
 		if !operatorOptions.versionOnly {
-			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup or any combination of these")
+			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps or any combination of these")
 		}
 	} else if operatorOptions.versionOnly {
-		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup cannot be enabled together with --operator.version")
+		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps cannot be enabled together with --operator.version")
 	}
 
 	// Log version
@@ -297,6 +300,10 @@ func cmdMainRun(cmd *cobra.Command, args []string) {
 			Backup: server.OperatorDependency{
 				Enabled: cfg.EnableBackup,
 				Probe:   &backupProbe,
+			},
+			Apps: server.OperatorDependency{
+				Enabled: cfg.EnableApps,
+				Probe:   &appsProbe,
 			},
 			Operators: o,
 
@@ -384,6 +391,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
+		EnableApps:                  operatorOptions.enableApps,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
 		ArangoImage:                 operatorOptions.arangoImage,
@@ -402,6 +410,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
+		AppsProbe:                  &appsProbe,
 	}
 
 	return cfg, deps, nil

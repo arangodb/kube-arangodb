@@ -103,6 +103,9 @@ spec:
 {{ if .Values.operator.features.backup }}
                     - --operator.backup
 {{- end }}
+{{ if .Values.operator.features.apps }}
+                    - --operator.apps
+{{- end }}
                     - --chaos.allowed={{ .Values.operator.allowChaos }}
 {{- if .Values.operator.args }}
 {{- range .Values.operator.args }}
@@ -128,6 +131,10 @@ spec:
                         value: "{{ .Values.operator.images.metricsExporter }}"
                       - name: RELATED_IMAGE_DATABASE
                         value: "{{ .Values.operator.images.arango }}"
+{{- if .Values.operator.features.apps }}
+                      - name: ARANGOJOB_SA_NAME
+                        value: "{{ template "kube-arangodb.operatorName" . }}-job"
+{{- end }}
                   ports:
                       - name: metrics
                         containerPort: 8528
