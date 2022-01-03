@@ -73,6 +73,7 @@ type Dependencies struct {
 	Storage               OperatorDependency
 	Backup                OperatorDependency
 	Apps                  OperatorDependency
+	ClusterSync           OperatorDependency
 	Operators             Operators
 	Secrets               corev1.SecretInterface
 }
