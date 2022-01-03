@@ -57,10 +57,10 @@ const (
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
 
-	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
-
-	BackupLabelRole = "backup/role"
-	AppsLabelRole   = "apps/role"
-	LabelRole       = "role"
-	LabelRoleLeader = "leader"
+	AnnotationEnforceAntiAffinity     = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
+	AnnotationReplaceStorageClassName = "database.arangodb.com/replace-storage-classname"
+	BackupLabelRole                   = "backup/role"
+	AppsLabelRole                     = "apps/role"
+	LabelRole                         = "role"
+	LabelRoleLeader                   = "leader"
 )
