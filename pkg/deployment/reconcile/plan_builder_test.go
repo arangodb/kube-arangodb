@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2020-2022 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package reconcile
 
@@ -29,55 +26,44 @@ import (
 	"io/ioutil"
 	"testing"
 
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1beta1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-
-	policy "k8s.io/api/policy/v1beta1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 const pvcName = "pvc_test"
@@ -781,6 +767,32 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{},
 		},
 		{
+			Name: "Failed to get DB server pod",
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				pvcName: {
+					Spec: core.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(3),
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("newStorage"),
+						},
+					},
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+			},
+			ExpectedLog: "Failed to get pod",
+		},
+		{
 			Name: "Change Storage for DBServers",
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
@@ -804,10 +816,58 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
 			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.DBServers[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.DBServers[0].PodName,
+							Annotations: map[string]string{
+								constants.AnnotationReplaceStorageClassName: "true",
+							},
+						},
+					},
+				}
+			},
 			ExpectedPlan: []api.Action{
 				api.NewAction(api.ActionTypeMarkToRemoveMember, api.ServerGroupDBServers, ""),
 			},
 			ExpectedLog: "Storage class has changed - pod needs replacement",
+		},
+		{
+			Name: "Wait for changing Storage for DBServers",
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				pvcName: {
+					Spec: core.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(3),
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("newStorage"),
+						},
+					},
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.DBServers[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.DBServers[0].PodName,
+						},
+					},
+				}
+			},
+			ExpectedLog: fmt.Sprintf("try changing a storage class name, but waiting for the existence "+
+				"of the annotation 'spec.annotation[%s]' on the pod", constants.AnnotationReplaceStorageClassName),
 		},
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
@@ -836,6 +896,18 @@ func TestCreatePlan(t *testing.T) {
 				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
 			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.Agents[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.Agents[0].PodName,
+							Annotations: map[string]string{
+								constants.AnnotationReplaceStorageClassName: "true",
+							},
+						},
+					},
+				}
+			},
 			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
 		{
@@ -861,6 +933,18 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
+			},
+			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
+				c.Pods = map[string]*core.Pod{
+					c.context.ArangoDeployment.Status.Members.Coordinators[0].PodName: {
+						ObjectMeta: meta.ObjectMeta{
+							Name: c.context.ArangoDeployment.Status.Members.Coordinators[0].PodName,
+							Annotations: map[string]string{
+								constants.AnnotationReplaceStorageClassName: "true",
+							},
+						},
+					},
+				}
 			},
 			ExpectedPlan: []api.Action{},
 			ExpectedLog:  "Storage class has changed - pod needs replacement",
