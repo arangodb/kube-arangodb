@@ -1,11 +1,13 @@
-FROM golang:1.16 as builder
+ARG GOVERSION
+ARG DISTRIBUTION
+FROM golang:${GOVERSION} as builder
 
 ARG TARGETARCH
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apk add g++ make
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
-FROM alpine:3.14 as artifact
+FROM ${DISTRIBUTION} as artifact
 
 ARG RELEASE_MODE
 ARG TARGETARCH
