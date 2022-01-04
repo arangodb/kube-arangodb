@@ -32,7 +32,8 @@ REPOPATH := $(ORGPATH)/$(REPONAME)
 include $(ROOT)/$(RELEASE_MODE).mk
 
 GOPATH := $(GOBUILDDIR)
-GOVERSION := 1.10.0-alpine
+GOVERSION := 1.17-alpine3.15
+DISTRIBUTION := alpine:3.15
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
@@ -281,9 +282,13 @@ $(BIN): $(VBIN_LINUX_AMD64)
 .PHONY: docker
 docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
 else
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
 endif
 
 .PHONY: docker-ubi
@@ -392,7 +397,7 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
 		$(REPOPATH)/pkg/util/... \
-		$(REPOPATH)/pkg/backup/...
+		$(REPOPATH)/pkg/handlers/...
 
 # Release building
 
@@ -450,7 +455,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 	      "$(ROOT)/pkg/util/" \
-	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
@@ -460,7 +465,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
-	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
@@ -470,7 +475,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/operator/" \
 		  "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
-		  "$(ROOT)/pkg/backup/" \
+		  "$(ROOT)/pkg/handlers" \
 		  "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
