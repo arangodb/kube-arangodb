@@ -103,9 +103,9 @@ HOMEBREW_PREFIX=$(brew --prefix)
 for d in ${HOMEBREW_PREFIX}/opt/*/libexec/gnubin; do export PATH=$d:$PATH; done
 ```
 
-## Chenge Go version
-#### Makefile
+## Change Go version
+#### Change file Makefile
 * GOVERSION := e.g. 1.17-alpine3.15
 * DISTRIBUTION := e.g. alpine:3.15
-#### .travis.yml
-#### go.mod
+#### Change file .travis.yml
+#### Change file go.mod
