@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,7 +70,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	client, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -78,16 +80,16 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 	switch group {
 	case api.ServerGroupDBServers:
-		if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
+		if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
 			log.Warn().Err(err).Msgf("Maintenance is enabled, skipping action")
 			return true, errors.WithStack(err)
-		} else if enabled {
+		} else if agencyState.Supervision.Maintenance {
 			// We are done, action cannot be handled on maintenance mode
 			log.Warn().Msgf("Maintenance is enabled, skipping action")
 			return true, nil
 		}
 
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		cluster, err := client.Cluster(ctxChild)
 		if err != nil {
@@ -96,7 +98,7 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 		}
 
 		var jobID string
-		ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
 		log.Debug().Msg("Temporary shutdown, resign leadership")
@@ -127,10 +129,10 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	if enabled, err := a.actionCtx.GetAgencyMaintenanceMode(ctx); err != nil {
-		log.Error().Err(err).Msgf("Unable to get maintenance mode")
+	if agencyState, agencyOK := a.actionCtx.GetAgencyCache(); !agencyOK {
+		log.Error().Msgf("Unable to get maintenance mode")
 		return false, false, nil
-	} else if enabled {
+	} else if agencyState.Supervision.Maintenance {
 		log.Warn().Msgf("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
 		m.CleanoutJobID = ""
@@ -140,7 +142,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return true, false, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	agency, err := a.actionCtx.GetAgency(ctxChild)
 	if err != nil {
@@ -148,7 +150,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return false, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {
@@ -156,7 +158,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 		return false, false, nil
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	jobStatus, err := arangod.CleanoutServerJobStatus(ctxChild, m.CleanoutJobID, c, agency)
 	if err != nil {

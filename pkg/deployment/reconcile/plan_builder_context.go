@@ -41,13 +41,13 @@ import (
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
-	resources.DeploymentStatusUpdate
 	resources.DeploymentAgencyMaintenance
 	resources.ArangoMemberContext
 	resources.DeploymentPodRenderer
 	resources.DeploymentImageManager
 	resources.DeploymentModInterfaces
 	resources.DeploymentCachedStatus
+	resources.ArangoAgencyGet
 
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
@@ -65,8 +65,6 @@ type PlanBuilderContext interface {
 	GetStatus() (api.DeploymentStatus, int32)
 	// GetStatus returns the current spec of the deployment
 	GetSpec() api.DeploymentSpec
-	// GetAgencyData object for key path
-	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed.
 	GetDatabaseClient(ctx context.Context) (driver.Client, error)

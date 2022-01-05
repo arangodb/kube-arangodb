@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -48,26 +50,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	timeoutReconciliationPerNode = time.Second * 20
-)
-
 var (
 	inspectDeploymentDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_deployment_duration", "Amount of time taken by a single inspection of a deployment (in sec)", metrics.DeploymentName)
 )
-
-// getReconciliationTimeout gets timeout for the reconciliation loop.
-// The whole reconciliation loop timeout depends on the number of nodes but not less then one minute.
-func (d *Deployment) getReconciliationTimeout() time.Duration {
-	if nodes, ok := d.GetCachedStatus().GetNodes(); ok {
-		if timeout := timeoutReconciliationPerNode * time.Duration(len(nodes.Nodes())); timeout > time.Minute {
-			return timeout
-		}
-	}
-
-	// The minimum timeout for the reconciliation loop.
-	return time.Minute
-}
 
 // inspectDeployment inspects the entire deployment, creates
 // a plan to update if needed and inspects underlying resources.
@@ -80,9 +65,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	log := d.deps.Log
 	start := time.Now()
 
-	timeout := d.getReconciliationTimeout()
-
-	ctxReconciliation, cancelReconciliation := context.WithTimeout(context.Background(), timeout)
+	ctxReconciliation, cancelReconciliation := globals.GetGlobalTimeouts().Reconciliation().WithTimeout(context.Background())
 	defer cancelReconciliation()
 	defer func() {
 		d.deps.Log.Info().Msgf("Inspect loop took %s", time.Since(start))
@@ -102,7 +85,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 	// Check deployment still exists
 	var updated *api.ArangoDeployment
-	err = k8sutil.RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
 		var err error
 		updated, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
 		return err
@@ -261,6 +244,14 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		nextInterval = interval
 	}
 
+	inspectDeploymentAgencyFetches.WithLabelValues(d.GetName()).Inc()
+	if offset, err := d.RefreshAgencyCache(ctx); err != nil {
+		inspectDeploymentAgencyErrors.WithLabelValues(d.GetName()).Inc()
+		d.deps.Log.Err(err).Msgf("Unable to refresh agency")
+	} else {
+		inspectDeploymentAgencyIndex.WithLabelValues(d.GetName()).Set(float64(offset))
+	}
+
 	// Refresh maintenance lock
 	d.refreshMaintenanceTTL(ctx)
 
@@ -277,6 +268,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
 	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
+		d.deps.Log.Info().Msgf("Plan generated, reconciling")
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
 		return minInspectionInterval, nil

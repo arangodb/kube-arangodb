@@ -31,6 +31,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
@@ -83,7 +88,7 @@ var _ resources.Context = &Deployment{}
 
 // GetBackup receives information about a backup resource
 func (d *Deployment) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(ctxChild, backup, meta.GetOptions{})
@@ -115,14 +120,8 @@ func (d *Deployment) GetScope() scope.Scope {
 	return d.config.Scope
 }
 
-// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-func (d *Deployment) GetLifecycleImage() string {
-	return d.config.LifecycleImage
-}
-
-// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-func (d *Deployment) GetOperatorUUIDImage() string {
-	return d.config.OperatorUUIDInitImage
+func (d *Deployment) GetOperatorImage() string {
+	return d.config.OperatorImage
 }
 
 // GetNamespace returns the kubernetes namespace that contains
@@ -149,15 +148,12 @@ func (d *Deployment) GetDeploymentHealth() (driver.ClusterHealth, error) {
 // GetStatus returns the current status of the deployment
 // together with the current version of that status.
 func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
-	d.status.mutex.Lock()
-	defer d.status.mutex.Unlock()
-
 	return d.getStatus()
 }
 
 func (d *Deployment) getStatus() (api.DeploymentStatus, int32) {
-	version := d.status.version
-	return *d.status.last.DeepCopy(), version
+	obj := d.status.deploymentStatusObject
+	return *obj.last.DeepCopy(), obj.version
 }
 
 // UpdateStatus replaces the status of the deployment with the given status and
@@ -180,8 +176,11 @@ func (d *Deployment) updateStatus(ctx context.Context, status api.DeploymentStat
 			Msg("UpdateStatus version conflict error.")
 		return errors.WithStack(errors.Newf("Status conflict error. Expected version %d, got %d", lastVersion, d.status.version))
 	}
-	d.status.version++
-	d.status.last = *status.DeepCopy()
+
+	d.status.deploymentStatusObject = deploymentStatusObject{
+		version: d.status.deploymentStatusObject.version + 1,
+		last:    *status.DeepCopy(),
+	}
 	if err := d.updateCRStatus(ctx, force...); err != nil {
 		return errors.WithStack(err)
 	}
@@ -395,7 +394,7 @@ func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, err
 // of the deployment. If the pod does not exist, the error is ignored.
 func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
 	log := d.deps.Log
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
@@ -412,7 +411,7 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 	podName := p.GetName()
 	options := meta.NewDeleteOptions(0)
 	options.Preconditions = meta.NewUIDPreconditions(string(p.GetUID()))
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PodsModInterface().Delete(ctxChild, podName, *options)
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
@@ -427,7 +426,7 @@ func (d *Deployment) CleanupPod(ctx context.Context, p *core.Pod) error {
 func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) error {
 	log := d.deps.Log
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	p, err := d.GetCachedStatus().PodReadInterface().Get(ctxChild, podName, meta.GetOptions{})
 	if err != nil {
@@ -448,7 +447,7 @@ func (d *Deployment) RemovePodFinalizers(ctx context.Context, podName string) er
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 	log := d.deps.Log
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.PersistentVolumeClaimsModInterface().Delete(ctxChild, pvcName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
@@ -461,7 +460,7 @@ func (d *Deployment) DeletePvc(ctx context.Context, pvcName string) error {
 // UpdatePvc updated a persistent volume claim in the namespace
 // of the deployment. If the pvc does not exist, the error is ignored.
 func (d *Deployment) UpdatePvc(ctx context.Context, pvc *core.PersistentVolumeClaim) error {
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		_, err := d.PersistentVolumeClaimsModInterface().Update(ctxChild, pvc, meta.UpdateOptions{})
 		return err
 	})
@@ -491,7 +490,7 @@ func (d *Deployment) GetOwnedPVCs() ([]core.PersistentVolumeClaim, error) {
 
 // GetPvc gets a PVC by the given name, in the samespace of the deployment.
 func (d *Deployment) GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	pvc, err := d.GetCachedStatus().PersistentVolumeClaimReadInterface().Get(ctxChild, pvcName, meta.GetOptions{})
@@ -517,7 +516,7 @@ func (d *Deployment) GetTLSKeyfile(group api.ServerGroup, member api.MemberStatu
 // If the secret does not exist, the error is ignored.
 func (d *Deployment) DeleteTLSKeyfile(ctx context.Context, group api.ServerGroup, member api.MemberStatus) error {
 	secretName := k8sutil.CreateTLSKeyfileSecretName(d.GetName(), group.AsRole(), member.ID)
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return d.SecretsModInterface().Delete(ctxChild, secretName, meta.DeleteOptions{})
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
@@ -589,10 +588,6 @@ func (d *Deployment) SelectImage(spec api.DeploymentSpec, status api.DeploymentS
 
 func (d *Deployment) SelectImageForMember(spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus) (api.ImageInfo, bool) {
 	return d.resources.SelectImageForMember(spec, status, member)
-}
-
-func (d *Deployment) GetMetricsExporterImage() string {
-	return d.config.MetricsExporterImage
 }
 
 func (d *Deployment) GetArangoImage() string {
@@ -719,4 +714,38 @@ func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace
 	}
 
 	return nil
+}
+
+func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
+	parser := patch.Patch(p)
+
+	data, err := parser.Marshal()
+	if err != nil {
+		return err
+	}
+
+	c := d.deps.KubeCli.CoreV1().Pods(pod.GetNamespace())
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+	defer cancel()
+	_, err = c.Patch(ctxChild, pod.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Deployment) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	cache := d.GetCachedStatus()
+
+	return pod.GenerateMemberEndpoint(cache, d.GetAPIObject(), d.GetSpec(), group, member)
+}
+
+func (d *Deployment) GetStatusSnapshot() api.DeploymentStatus {
+	s, _ := d.GetStatus()
+
+	z := s.DeepCopy()
+
+	return *z
 }

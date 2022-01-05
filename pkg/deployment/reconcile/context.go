@@ -50,13 +50,10 @@ type Context interface {
 	resources.DeploymentImageManager
 	resources.DeploymentModInterfaces
 	resources.DeploymentCachedStatus
+	resources.ArangoAgencyGet
+	resources.ArangoApplier
+	resources.DeploymentInfoGetter
 
-	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() k8sutil.APIObject
-	// GetSpec returns the current specification of the deployment
-	GetSpec() api.DeploymentSpec
-	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
@@ -116,8 +113,6 @@ type Context interface {
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
 	EnableScalingCluster(ctx context.Context) error
-	// GetAgencyData object for key path
-	GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetName receives deployment name

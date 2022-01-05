@@ -24,45 +24,49 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/backup/operator/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
 	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/backup"
-	"github.com/arangodb/kube-arangodb/pkg/backup/handlers/arango/policy"
-	backupOper "github.com/arangodb/kube-arangodb/pkg/backup/operator"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/replication"
-	"github.com/arangodb/kube-arangodb/pkg/storage"
-	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	"k8s.io/client-go/rest"
-
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/replication"
+	"github.com/arangodb/kube-arangodb/pkg/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
 const (
 	initRetryWaitTime = 30 * time.Second
+)
+
+type operatorV2type string
+
+const (
+	backupOperator operatorV2type = "backup"
+	appsOperator   operatorV2type = "apps"
 )
 
 type Event struct {
@@ -87,14 +91,15 @@ type Config struct {
 	Namespace                   string
 	PodName                     string
 	ServiceAccount              string
-	LifecycleImage              string
+	OperatorImage               string
 	ArangoImage                 string
-	MetricsExporterImage        string
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
 	EnableBackup                bool
+	EnableApps                  bool
 	AllowChaos                  bool
+	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
 	Scope                       scope.Scope
 }
@@ -111,6 +116,7 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
+	AppsProbe                  *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -154,6 +160,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+		}
+	}
+	if o.Config.EnableApps {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		}
 	}
 	// Wait until process terminates
@@ -202,8 +215,18 @@ func (o *Operator) onStartStorage(stop <-chan struct{}) {
 	o.runLocalStorages(stop)
 }
 
-// onStartBackup starts the backup operator and run till given channel is closed.
+// onStartBackup starts the operator and run till given channel is closed.
 func (o *Operator) onStartBackup(stop <-chan struct{}) {
+	o.onStartOperatorV2(backupOperator, stop)
+}
+
+// onStartApps starts the operator and run till given channel is closed.
+func (o *Operator) onStartApps(stop <-chan struct{}) {
+	o.onStartOperatorV2(appsOperator, stop)
+}
+
+// onStartOperatorV2 run the operatorV2 type
+func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
 	for {
 		if err := o.waitForCRD(false, false, false, true); err == nil {
 			break
@@ -213,8 +236,8 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 			time.Sleep(initRetryWaitTime)
 		}
 	}
-	operatorName := "arangodb-backup-operator"
-	operator := backupOper.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace)
+	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
+	operator := operatorV2.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
 
 	rand.Seed(time.Now().Unix())
 
@@ -239,12 +262,18 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 
 	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(arangoClientSet, 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
 
-	if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-		panic(err)
-	}
-
-	if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
-		panic(err)
+	switch operatorType {
+	case appsOperator:
+		if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
+	case backupOperator:
+		if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
+		if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
 	}
 
 	if err = operator.RegisterStarter(arangoInformer); err != nil {

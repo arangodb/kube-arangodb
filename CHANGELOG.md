@@ -1,6 +1,42 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- Add Plan BackOff functionality
+- Fix Core InitContainers check
+- Remove unused `status.members.<group>.sidecars-specs` variable
+- Keep only recent terminations
+- Add endpoint into member status
+- Add debug mode (Golang DLV)
+- License V2 for ArangoDB 3.9.0+
+- Add ArangoClusterSynchronization v1 API
+- Add core containers names to follow their terminations
+- Add ArangoJob and Apps Operator
+- Use Go 1.17
+- Add metrics for the plan actions
+
+## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
+- Add ArangoBackup backoff functionality
+- Allow to abort ArangoBackup uploads by removing spec.upload
+- Add Agency Cache internally
+- Add Recovery during PlanBuild operation
+- Fix Exporter in Deployments without authentication
+- Allow to disable ClusterScalingIntegration and add proper Scheduled label to pods
+- Add additional timeout parameters and kubernetes batch size
+- Limit parallel Backup uploads
+- Bugfix - Adjust Cluster Scaling Integration logic
+
+## [1.2.5](https://github.com/arangodb/kube-arangodb/tree/1.2.5) (2021-10-25)
+- Split & Unify Lifecycle management functionality
+- Drop support for ArangoDB <= 3.5 (versions already EOL)
+- Add new admin commands to fetch agency dump and agency state
+- Add Graceful shutdown as finalizer (supports kubectl delete)
+- Add Watch to Lifecycle command
+- Add Topology Discovery
+- Add Support for StartupProbe
+- Add ARM64 support for Operator Docker image
+- Add ALPHA Rebalancer support
+
+## [1.2.4](https://github.com/arangodb/kube-arangodb/tree/1.2.4) (2021-10-22)
 - Replace `beta.kubernetes.io/arch` Pod label with `kubernetes.io/arch` using Silent Rotation
 - Add "Short Names" feature
 - Switch ArangoDB Image Discovery process from Headless Service to Pod IP

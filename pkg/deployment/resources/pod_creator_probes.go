@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package resources
@@ -48,7 +49,7 @@ type Probe interface {
 }
 
 type probeCheckBuilder struct {
-	liveness, readiness probeBuilder
+	liveness, readiness, startup probeBuilder
 }
 
 type probeBuilder func(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error)
@@ -117,6 +118,36 @@ func (r *Resources) getLivenessProbe(spec api.DeploymentSpec, group api.ServerGr
 	return config, nil
 }
 
+func (r *Resources) getStartupProbe(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	if !r.isStartupProbeEnabled(spec, group) {
+		return nil, nil
+	}
+
+	builders := r.probeBuilders()
+
+	builder, ok := builders[group]
+	if !ok {
+		return nil, nil
+	}
+
+	config, err := builder.startup(spec, group, version)
+	if err != nil {
+		return nil, err
+	}
+
+	groupSpec := spec.GetServerGroupSpec(group)
+
+	if !groupSpec.HasProbesSpec() {
+		return config, nil
+	}
+
+	probeSpec := groupSpec.GetProbesSpec()
+
+	config.SetSpec(probeSpec.StartupProbeSpec)
+
+	return config, nil
+}
+
 func (r *Resources) isReadinessProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup) bool {
 	probe := pod.ReadinessSpec(group)
 
@@ -145,29 +176,49 @@ func (r *Resources) isLivenessProbeEnabled(spec api.DeploymentSpec, group api.Se
 	return probe.CanBeEnabled && probe.EnabledByDefault
 }
 
+func (r *Resources) isStartupProbeEnabled(spec api.DeploymentSpec, group api.ServerGroup) bool {
+	probe := pod.StartupSpec(group)
+
+	groupSpec := spec.GetServerGroupSpec(group)
+
+	if groupSpec.HasProbesSpec() {
+		if p := groupSpec.GetProbesSpec().StartupProbeDisabled; p != nil {
+			return !*p && probe.CanBeEnabled
+		}
+	}
+
+	return probe.CanBeEnabled && probe.EnabledByDefault
+}
+
 func (r *Resources) probeBuilders() map[api.ServerGroup]probeCheckBuilder {
 	return map[api.ServerGroup]probeCheckBuilder{
 		api.ServerGroupSingle: {
+			startup:   r.probeBuilderStartupCoreSelect(),
 			liveness:  r.probeBuilderLivenessCoreSelect(),
 			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupAgents: {
+			startup:   r.probeBuilderStartupCoreSelect(),
 			liveness:  r.probeBuilderLivenessCoreSelect(),
 			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupDBServers: {
+			startup:   r.probeBuilderStartupCoreSelect(),
 			liveness:  r.probeBuilderLivenessCoreSelect(),
 			readiness: r.probeBuilderReadinessSimpleCoreSelect(),
 		},
 		api.ServerGroupCoordinators: {
+			startup:   r.probeBuilderStartupCoreSelect(),
 			liveness:  r.probeBuilderLivenessCoreSelect(),
 			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupSyncMasters: {
+			startup:   r.probeBuilderStartupSync,
 			liveness:  r.probeBuilderLivenessSync,
 			readiness: nilProbeBuilder,
 		},
 		api.ServerGroupSyncWorkers: {
+			startup:   r.probeBuilderStartupSync,
 			liveness:  r.probeBuilderLivenessSync,
 			readiness: nilProbeBuilder,
 		},
@@ -206,6 +257,14 @@ func (r *Resources) probeBuilderLivenessCoreSelect() probeBuilder {
 	return r.probeBuilderLivenessCore
 }
 
+func (r *Resources) probeBuilderStartupCoreSelect() probeBuilder {
+	if features.JWTRotation().Enabled() {
+		return r.probeBuilderStartupCoreOperator
+	}
+
+	return r.probeBuilderStartupCore
+}
+
 func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	args, err := r.probeCommand(spec, "/_api/version")
 	if err != nil {
@@ -214,6 +273,29 @@ func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, gr
 
 	return &probes.CMDProbeConfig{
 		Command: args,
+	}, nil
+}
+
+func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	args, err := r.probeCommand(spec, "/_api/version")
+	if err != nil {
+		return nil, err
+	}
+
+	var retries int32
+
+	switch group {
+	case api.ServerGroupDBServers:
+		retries = 6 * 60 * 60 / 5 // Wait 6 hours for wal replay
+	default:
+		retries = 60
+	}
+
+	return &probes.CMDProbeConfig{
+		Command:             args,
+		FailureThreshold:    retries,
+		PeriodSeconds:       5,
+		InitialDelaySeconds: 1,
 	}, nil
 }
 
@@ -233,6 +315,38 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 		LocalPath:     "/_api/version",
 		Secure:        spec.IsSecure(),
 		Authorization: authorization,
+	}, nil
+}
+
+func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+
+	var retries int32
+
+	switch group {
+	case api.ServerGroupDBServers:
+		retries = 6 * 60 * 60 / 5 // Wait 6 hours for wal replay
+	default:
+		retries = 60
+	}
+
+	authorization := ""
+	if spec.IsAuthenticated() {
+		secretData, err := r.getJWTSecret(spec)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+	return &probes.HTTPProbeConfig{
+		LocalPath:           "/_api/version",
+		Secure:              spec.IsSecure(),
+		Authorization:       authorization,
+		FailureThreshold:    retries,
+		PeriodSeconds:       5,
+		InitialDelaySeconds: 1,
 	}, nil
 }
 
@@ -289,18 +403,8 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 }
 
 func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	localPath := "/_api/version"
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		localPath = "/_admin/echo"
-	}
-
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		localPath = "/_admin/server/availability"
-	}
-
-	args, err := r.probeCommand(spec, localPath)
+	args, err := r.probeCommand(spec, "/_admin/server/availability")
 	if err != nil {
 		return nil, err
 	}
@@ -313,16 +417,8 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 }
 
 func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
-	localPath := "/_api/version"
-	switch spec.GetMode() {
-	case api.DeploymentModeActiveFailover:
-		localPath = "/_admin/echo"
-	}
-
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
-	if version.CompareTo("3.3.9") >= 0 {
-		localPath = "/_admin/server/availability"
-	}
+	localPath := "/_admin/server/availability"
 
 	authorization := ""
 	if spec.IsAuthenticated() {
@@ -347,6 +443,41 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api
 }
 
 func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
+	authorization := ""
+	port := k8sutil.ArangoSyncMasterPort
+	if group == api.ServerGroupSyncWorkers {
+		port = k8sutil.ArangoSyncWorkerPort
+	}
+	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
+		// Use monitoring token
+		token, err := r.getSyncMonitoringToken(spec)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		authorization = "bearer " + token
+	} else if group == api.ServerGroupSyncMasters {
+		// Fall back to JWT secret
+		secretData, err := r.getSyncJWTSecret(spec)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	} else {
+		// Don't have a probe
+		return nil, nil
+	}
+	return &probes.HTTPProbeConfig{
+		LocalPath:     "/_api/version",
+		Secure:        spec.Sync.TLS.IsSecure(),
+		Authorization: authorization,
+		Port:          port,
+	}, nil
+}
+
+func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.ServerGroup, version driver.Version) (Probe, error) {
 	authorization := ""
 	port := k8sutil.ArangoSyncMasterPort
 	if group == api.ServerGroupSyncWorkers {

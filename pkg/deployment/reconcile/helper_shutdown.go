@@ -26,14 +26,21 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
 )
 
 func getShutdownHelper(a *api.Action, ctx ActionContext, log zerolog.Logger) ActionCore {
+	if features.GracefulShutdown().Enabled() {
+		return shutdownHelperAPI{action: a, actionCtx: ctx, log: log}
+	}
+
 	serverGroup := ctx.GetSpec().GetServerGroupSpec(a.Group)
 
 	switch serverGroup.ShutdownMethod.Get() {
@@ -66,12 +73,15 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
-	if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
-		return false, errors.WithStack(err)
+	if !features.GracefulShutdown().Enabled() {
+		if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
+			return false, errors.WithStack(err)
+		}
 	}
+
 	if group.IsArangod() {
 		// Invoke shutdown endpoint
-		ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
 		c, err := s.actionCtx.GetServerClient(ctxChild, group, s.action.MemberID)
 		if err != nil {
@@ -82,7 +92,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		log.Debug().Bool("removeFromCluster", removeFromCluster).Msg("Shutting down member")
 		ctxChild, cancel = context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
-		if err := c.Shutdown(ctxChild, removeFromCluster); err != nil {
+		if err := c.ShutdownV2(ctxChild, removeFromCluster, true); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, _, err := s.CheckProgress(ctxChild); err == nil && ready {
 				// We're done

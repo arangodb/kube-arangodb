@@ -26,6 +26,8 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -63,7 +65,7 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 			resources := spec.Resources
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
-			err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.CreatePersistentVolumeClaim(ctxChild, r.context.PersistentVolumeClaimsModInterface(), m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
 			})
 			if err != nil {

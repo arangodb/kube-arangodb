@@ -65,7 +65,9 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
 	options := k8sutil.CreateOptionPairs(64)
 
-	options.Add("--arangodb.jwt-file", tokenpath)
+	if spec.Authentication.IsAuthenticated() {
+		options.Add("--arangodb.jwt-file", tokenpath)
+	}
 
 	path := k8sutil.ArangoExporterInternalEndpoint
 	if version.CompareTo("3.8.0") >= 0 {
@@ -80,34 +82,6 @@ func createInternalExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGro
 		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, k8sutil.ArangoPort, path)
 	} else {
 		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
-	}
-
-	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-	if spec.IsSecure() && spec.Metrics.IsTLS() {
-		options.Add("--ssl.keyfile", keyPath)
-	}
-
-	if port := spec.Metrics.GetPort(); port != k8sutil.ArangoExporterPort {
-		options.Addf("--server.address", ":%d", port)
-	}
-
-	return options.Sort().AsArgs()
-}
-
-func createExporterArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
-	tokenpath := filepath.Join(k8sutil.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
-	options := k8sutil.CreateOptionPairs(64)
-
-	options.Add("--arangodb.jwt-file", tokenpath)
-
-	if port := groupSpec.InternalPort; port == nil {
-		scheme := "http"
-		if spec.IsSecure() {
-			scheme = "https"
-		}
-		options.Addf("--arangodb.endpoint", "%s://localhost:%d", scheme, k8sutil.ArangoPort)
-	} else {
-		options.Addf("--arangodb.endpoint", "http://localhost:%d", *port)
 	}
 
 	keyPath := filepath.Join(k8sutil.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)

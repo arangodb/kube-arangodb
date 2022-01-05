@@ -23,6 +23,7 @@ package v1
 import "k8s.io/apimachinery/pkg/types"
 
 type TopologyMemberStatus struct {
-	ID   types.UID `json:"id"`
-	Zone int       `json:"rack"`
+	ID    types.UID `json:"id"`
+	Zone  int       `json:"rack"`
+	Label string    `json:"label,omitempty"`
 }

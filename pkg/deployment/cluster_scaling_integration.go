@@ -28,6 +28,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -85,9 +87,14 @@ func (ci *clusterScalingIntegration) checkScalingCluster(ctx context.Context, ex
 	ci.scaleEnabled.mutex.Lock()
 	defer ci.scaleEnabled.mutex.Unlock()
 
+	if !ci.depl.config.ScalingIntegrationEnabled {
+		return false
+	}
+
+	status, _ := ci.depl.GetStatus()
+
 	if !ci.scaleEnabled.enabled {
 		// Check if it is possible to turn on scaling without any issue
-		status, _ := ci.depl.GetStatus()
 		if status.Plan.IsEmpty() && ci.setNumberOfServers(ctx) == nil {
 			// Scaling should be enabled because there is no Plan.
 			// It can happen when the enabling action fails
@@ -147,14 +154,14 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectSuccess bool) error {
 	log := ci.log
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
@@ -199,7 +206,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	}
 	// Let's update the spec
 	apiObject := ci.depl.apiObject
-	ctxChild, cancel = context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
 	if err != nil {
@@ -245,8 +252,7 @@ func (ci *clusterScalingIntegration) updateClusterServerCount(ctx context.Contex
 	var coordinatorCountPtr *int
 	var dbserverCountPtr *int
 
-	coordinatorCount := spec.Coordinators.GetCount()
-	dbserverCount := spec.DBServers.GetCount()
+	coordinatorCount, dbserverCount := ci.getNumbersOfServers()
 
 	if spec.Coordinators.GetMaxCount() == spec.Coordinators.GetMinCount() {
 		coordinatorCountPtr = nil
@@ -328,8 +334,11 @@ func (ci *clusterScalingIntegration) EnableScalingCluster(ctx context.Context) e
 }
 
 func (ci *clusterScalingIntegration) setNumberOfServers(ctx context.Context) error {
-	spec := ci.depl.GetSpec()
-	numOfCoordinators := spec.Coordinators.GetCount()
-	numOfDBServers := spec.DBServers.GetCount()
+	numOfCoordinators, numOfDBServers := ci.getNumbersOfServers()
 	return ci.depl.SetNumberOfServers(ctx, &numOfCoordinators, &numOfDBServers)
+}
+
+func (ci *clusterScalingIntegration) getNumbersOfServers() (int, int) {
+	status, _ := ci.depl.getStatus()
+	return len(status.Members.Coordinators), len(status.Members.DBServers)
 }

@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -113,7 +115,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 
 	for {
 		var pdb *policyv1beta1.PodDisruptionBudget
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			pdb, err = r.context.GetCachedStatus().PodDisruptionBudgetReadInterface().Get(ctxChild, pdbname, metav1.GetOptions{})
 			return err
@@ -123,7 +125,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 				// No PDB found - create new
 				pdb := newPDB(wantedMinAvail, deplname, group, r.context.GetAPIObject().AsOwner())
 				log.Debug().Msg("Creating new PDB")
-				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := r.context.PodDisruptionBudgetsModInterface().Create(ctxChild, pdb, metav1.CreateOptions{})
 					return err
 				})
@@ -148,7 +150,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 			// Trigger deletion only if not already deleted
 			if pdb.GetDeletionTimestamp() == nil {
 				// Update the PDB
-				err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					return r.context.PodDisruptionBudgetsModInterface().Delete(ctxChild, pdbname, metav1.DeleteOptions{})
 				})
 				if err != nil && !k8sutil.IsNotFound(err) {

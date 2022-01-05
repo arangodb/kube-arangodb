@@ -1,0 +1,15 @@
+apiVersion: apps.arangodb.com/v1
+kind: ArangoJob
+metadata:
+  name: arangojob-sample
+spec:
+  arangoDeploymentName: deployment
+  jobTemplate:
+    template:
+      spec:
+        containers:
+          - name: pi
+            image: perl
+            command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+        restartPolicy: Never
+    backoffLimit: 4

@@ -22,6 +22,14 @@
 
 package v1
 
+// ArangoClusterSynchronizationListerExpansion allows custom methods to be added to
+// ArangoClusterSynchronizationLister.
+type ArangoClusterSynchronizationListerExpansion interface{}
+
+// ArangoClusterSynchronizationNamespaceListerExpansion allows custom methods to be added to
+// ArangoClusterSynchronizationNamespaceLister.
+type ArangoClusterSynchronizationNamespaceListerExpansion interface{}
+
 // ArangoDeploymentListerExpansion allows custom methods to be added to
 // ArangoDeploymentLister.
 type ArangoDeploymentListerExpansion interface{}

@@ -20,7 +20,38 @@
 
 package v1
 
+import "sort"
+
+type DeploymentStatusMemberElementsSortFunc func(a, b DeploymentStatusMemberElement) bool
+type DeploymentStatusMemberElementsCondFunc func(a DeploymentStatusMemberElement) bool
+
 type DeploymentStatusMemberElements []DeploymentStatusMemberElement
+
+func (d DeploymentStatusMemberElements) Filter(f DeploymentStatusMemberElementsCondFunc) DeploymentStatusMemberElements {
+	var l DeploymentStatusMemberElements
+
+	for _, a := range d {
+		if !f(a) {
+			continue
+		}
+
+		z := a.DeepCopy()
+
+		l = append(l, *z)
+	}
+
+	return l
+}
+
+func (d DeploymentStatusMemberElements) Sort(less DeploymentStatusMemberElementsSortFunc) DeploymentStatusMemberElements {
+	n := d.DeepCopy()
+
+	sort.Slice(n, func(i, j int) bool {
+		return less(n[i], n[j])
+	})
+
+	return n
+}
 
 // DeploymentStatusMemberElement holds one specific element with group and member status
 type DeploymentStatusMemberElement struct {

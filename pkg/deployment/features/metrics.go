@@ -41,6 +41,7 @@ var metricsExporter = &feature{
 	constValue:         util.NewBool(true),
 }
 
+// deprecated
 func MetricsExporter() Feature {
 	return metricsExporter
 }

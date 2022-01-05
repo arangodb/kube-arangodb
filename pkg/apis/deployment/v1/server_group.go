@@ -27,6 +27,18 @@ import (
 	"time"
 )
 
+type ServerGroups []ServerGroup
+
+func (s ServerGroups) Contains(group ServerGroup) bool {
+	for _, a := range s {
+		if a == group {
+			return true
+		}
+	}
+
+	return false
+}
+
 type ServerGroup int
 
 func (g *ServerGroup) UnmarshalJSON(bytes []byte) error {
@@ -147,6 +159,8 @@ func (g ServerGroup) DefaultTerminationGracePeriod() time.Duration {
 	case ServerGroupAgents:
 		return time.Minute
 	case ServerGroupDBServers:
+		return time.Hour
+	case ServerGroupCoordinators:
 		return time.Hour
 	default:
 		return time.Second * 30

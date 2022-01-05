@@ -17,34 +17,29 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package k8sutil
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
-
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
-	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 const (
@@ -73,6 +68,28 @@ const (
 	ServerContainerConditionPrefix             = "containers with unready status: "
 )
 
+// GetAnyVolumeByName returns the volume in the given volumes with the given name.
+// Returns false if not found.
+func GetAnyVolumeByName(volumes []core.Volume, name string) (core.Volume, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.Volume{}, false
+}
+
+// GetAnyVolumeMountByName returns the volumemount in the given volumemountss with the given name.
+// Returns false if not found.
+func GetAnyVolumeMountByName(volumes []core.VolumeMount, name string) (core.VolumeMount, bool) {
+	for _, c := range volumes {
+		if c.Name == name {
+			return c, true
+		}
+	}
+	return core.VolumeMount{}, false
+}
+
 // IsPodReady returns true if the PodReady condition on
 // the given pod is set to true.
 func IsPodReady(pod *core.Pod) bool {
@@ -80,9 +97,10 @@ func IsPodReady(pod *core.Pod) bool {
 	return condition != nil && condition.Status == core.ConditionTrue
 }
 
-// IsContainerReady returns true if the PodReady condition on
-// the given pod is set to true.
-func IsContainerReady(pod *core.Pod, container string) bool {
+// AreContainersReady checks whether Pod is considered as ready.
+// Returns true if the PodReady condition on the given pod is set to true,
+// or all provided containers' names are running and are not in the list of failed containers.
+func AreContainersReady(pod *core.Pod, coreContainers utils.StringList) bool {
 	condition := getPodCondition(&pod.Status, core.PodReady)
 	if condition == nil {
 		return false
@@ -92,21 +110,32 @@ func IsContainerReady(pod *core.Pod, container string) bool {
 		return true
 	}
 
-	if !IsContainerRunning(pod, container) {
-		return false
+	// Check if all required containers are running.
+	for _, c := range coreContainers {
+		if !IsContainerRunning(pod, c) {
+			return false
+		}
 	}
 
+	// From here on all required containers are running, but unready condition must be checked additionally.
 	switch condition.Reason {
 	case ServerContainerConditionContainersNotReady:
-		if strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
-			n := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
-
-			return !strings.Contains(n, container)
+		if !strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
+			return false
 		}
-		return false
-	default:
-		return false
+
+		unreadyContainers := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
+		for _, c := range coreContainers {
+			if strings.Contains(unreadyContainers, c) {
+				// The container is on the list with unready containers.
+				return false
+			}
+		}
+
+		return true
 	}
+
+	return false
 }
 
 // GetPodByName returns pod if it exists among the pods' list
@@ -132,54 +161,86 @@ func IsContainerRunning(pod *core.Pod, name string) bool {
 			continue
 		}
 
-		if c.State.Terminated != nil {
+		if c.State.Running == nil {
 			return false
-		} else {
-			return true
 		}
+
+		return true
 	}
 	return false
 }
 
-// IsPodSucceeded returns true if the arangodb container of the pod
-// has terminated with exit code 0.
-func IsPodSucceeded(pod *core.Pod) bool {
+// IsPodSucceeded returns true when all core containers are terminated wih a zero exit code,
+// or the whole pod has been succeeded.
+func IsPodSucceeded(pod *core.Pod, coreContainers utils.StringList) bool {
 	if pod.Status.Phase == core.PodSucceeded {
 		return true
-	} else {
-		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != ServerContainerName {
-				continue
-			}
-
-			t := c.State.Terminated
-			if t != nil {
-				return t.ExitCode == 0
-			}
-		}
-		return false
 	}
+
+	core, succeeded := 0, 0
+	for _, c := range pod.Status.ContainerStatuses {
+		if !coreContainers.Has(c.Name) {
+			// It is not core container, so check next one status.
+			continue
+		}
+
+		core++
+		if t := c.State.Terminated; t != nil && t.ExitCode == 0 {
+			succeeded++
+		}
+	}
+
+	if core > 0 && core == succeeded {
+		// If there are some core containers and all of them succeeded then return that the whole pod succeeded.
+		return true
+	}
+
+	return false
 }
 
-// IsPodFailed returns true if the arangodb container of the pod
-// has terminated wih a non-zero exit code.
-func IsPodFailed(pod *core.Pod) bool {
+// IsPodFailed returns true when one of the core containers is terminated wih a non-zero exit code,
+// or the whole pod has been failed.
+func IsPodFailed(pod *core.Pod, coreContainers utils.StringList) bool {
 	if pod.Status.Phase == core.PodFailed {
 		return true
-	} else {
-		for _, c := range pod.Status.ContainerStatuses {
-			if c.Name != ServerContainerName {
-				continue
-			}
+	}
 
-			t := c.State.Terminated
-			if t != nil {
-				return t.ExitCode != 0
-			}
+	allCore, succeeded, failed := 0, 0, 0
+	for _, c := range pod.Status.ContainerStatuses {
+		if !coreContainers.Has(c.Name) {
+			// It is not core container, so check next one status.
+			continue
 		}
 
+		allCore++
+		if t := c.State.Terminated; t != nil {
+			// A core container is terminated.
+			if t.ExitCode != 0 {
+				failed++
+			} else {
+				succeeded++
+			}
+		}
+	}
+
+	if failed == 0 && succeeded == 0 {
+		// All core containers are not terminated.
 		return false
 	}
+
+	if failed > 0 {
+		// Some (or all) core containers have been terminated.
+		// Some other core containers can be still running or succeeded,
+		// but the whole pod is considered as failed.
+		return true
+	} else if allCore == succeeded {
+		// All core containers are succeeded, so the pod is not failed.
+		// The function `IsPodSucceeded` should recognize it in next iteration.
+		return false
+	}
+
+	// Some core containers are succeeded, but not all of them.
+	return true
 }
 
 // IsContainerFailed returns true if the arangodb container
@@ -329,7 +390,7 @@ func RocksdbEncryptionReadOnlyVolumeMount() core.VolumeMount {
 	}
 }
 
-// ArangodInitContainer creates a container configured to initalize a UUID file.
+// ArangodInitContainer creates a container configured to initialize a UUID file.
 func ArangodInitContainer(name, id, engine, executable, operatorImage string, requireUUID bool, securityContext *core.SecurityContext) core.Container {
 	uuidFile := filepath.Join(ArangodVolumeMountDir, "UUID")
 	engineFile := filepath.Join(ArangodVolumeMountDir, "ENGINE")
@@ -348,6 +409,32 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 	if requireUUID {
 		command = append(command, "--require")
 	}
+
+	volumes := []core.VolumeMount{
+		ArangodVolumeMount(),
+	}
+	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+}
+
+// ArangodWaiterInitContainer creates a container configured to wait for specific ArangoDeployment to be ready
+func ArangodWaiterInitContainer(name, deploymentName, executable, operatorImage string, isSecured bool, securityContext *core.SecurityContext) core.Container {
+	var command = []string{
+		executable,
+		"lifecycle",
+		"wait",
+		"--deployment-name",
+		deploymentName,
+	}
+
+	var volumes []core.VolumeMount
+	if isSecured {
+		volumes = append(volumes, TlsKeyfileVolumeMount())
+	}
+	return operatorInitContainer(name, operatorImage, command, securityContext, volumes)
+}
+
+// createInitContainer creates operator-specific init container
+func operatorInitContainer(name, operatorImage string, command []string, securityContext *core.SecurityContext, volumes []core.VolumeMount) core.Container {
 	c := core.Container{
 		Name:    name,
 		Image:   operatorImage,
@@ -362,9 +449,13 @@ func ArangodInitContainer(name, id, engine, executable, operatorImage string, re
 				core.ResourceMemory: resource.MustParse("50Mi"),
 			},
 		},
-		VolumeMounts: []core.VolumeMount{
-			ArangodVolumeMount(),
+		Env: []core.EnvVar{
+			{
+				Name:  "MY_POD_NAMESPACE",
+				Value: os.Getenv(constants.EnvOperatorPodNamespace),
+			},
 		},
+		VolumeMounts:    volumes,
 		SecurityContext: securityContext,
 	}
 	return c
@@ -391,9 +482,9 @@ func ExtractPodResourceRequirement(resources core.ResourceRequirements) core.Res
 }
 
 // NewContainer creates a container for specified creator
-func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (core.Container, error) {
+func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container, error) {
 
-	liveness, readiness, err := containerCreator.GetProbes()
+	liveness, readiness, startup, err := containerCreator.GetProbes()
 	if err != nil {
 		return core.Container{}, err
 	}
@@ -403,8 +494,13 @@ func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (
 		return core.Container{}, err
 	}
 
+	args, err := containerCreator.GetArgs()
+	if err != nil {
+		return core.Container{}, err
+	}
+
 	return core.Container{
-		Name:            ServerContainerName,
+		Name:            containerCreator.GetName(),
 		Image:           containerCreator.GetImage(),
 		Command:         append([]string{containerCreator.GetExecutor()}, args...),
 		Ports:           containerCreator.GetPorts(),
@@ -412,9 +508,11 @@ func NewContainer(args []string, containerCreator interfaces.ContainerCreator) (
 		Resources:       containerCreator.GetResourceRequirements(),
 		LivenessProbe:   liveness,
 		ReadinessProbe:  readiness,
+		StartupProbe:    startup,
 		Lifecycle:       lifecycle,
 		ImagePullPolicy: containerCreator.GetImagePullPolicy(),
 		SecurityContext: containerCreator.GetSecurityContext(),
+		VolumeMounts:    containerCreator.GetVolumeMounts(),
 	}, nil
 }
 

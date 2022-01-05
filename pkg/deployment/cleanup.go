@@ -26,6 +26,8 @@ package deployment
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -45,7 +47,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 			return err
 		}
 
-		ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		if err := d.PodsModInterface().Delete(ctxChild, pod.GetName(), meta.DeleteOptions{

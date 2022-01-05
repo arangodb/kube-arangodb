@@ -33,6 +33,7 @@ import (
 const (
 	ServerGroupReservedInitContainerNameLifecycle    = "init-lifecycle"
 	ServerGroupReservedInitContainerNameUUID         = "uuid"
+	ServerGroupReservedInitContainerNameWait         = "wait"
 	ServerGroupReservedInitContainerNameUpgrade      = "upgrade"
 	ServerGroupReservedInitContainerNameVersionCheck = "version-check"
 )

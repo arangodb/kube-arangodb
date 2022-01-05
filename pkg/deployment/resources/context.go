@@ -26,6 +26,10 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -68,8 +72,6 @@ type DeploymentStatusUpdate interface {
 }
 
 type DeploymentAgencyMaintenance interface {
-	// GetAgencyMaintenanceMode returns info if maintenance mode is enabled
-	GetAgencyMaintenanceMode(ctx context.Context) (bool, error)
 	// SetAgencyMaintenanceMode set maintenance mode info
 	SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error
 }
@@ -83,6 +85,13 @@ type DeploymentPodRenderer interface {
 	RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error)
 	// RenderPodTemplateForMemberFromCurrent Renders PodTemplate definition for member
 	RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error)
+
+	DeploymentEndpoints
+}
+
+type DeploymentEndpoints interface {
+	// GenerateMemberEndpoint generates endpoint for a member
+	GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error)
 }
 
 type DeploymentImageManager interface {
@@ -128,6 +137,32 @@ type ArangoMemberContext interface {
 	WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action ArangoMemberStatusUpdateFunc) error
 }
 
+type ArangoAgencyGet interface {
+	GetAgencyCache() (agencyCache.State, bool)
+}
+
+type ArangoAgency interface {
+	ArangoAgencyGet
+
+	RefreshAgencyCache(ctx context.Context) (uint64, error)
+}
+
+type DeploymentInfoGetter interface {
+	// GetAPIObject returns the deployment as k8s object.
+	GetAPIObject() k8sutil.APIObject
+	// GetSpec returns the current specification of the deployment
+	GetSpec() api.DeploymentSpec
+	// GetStatus returns the current status of the deployment
+	GetStatus() (api.DeploymentStatus, int32)
+	// GetStatus returns the current status of the deployment without revision
+	GetStatusSnapshot() api.DeploymentStatus
+}
+
+type ArangoApplier interface {
+	ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error
+	ApplyPatch(ctx context.Context, p ...patch.Item) error
+}
+
 // Context provides all functions needed by the Resources service
 // to perform its service.
 type Context interface {
@@ -137,24 +172,17 @@ type Context interface {
 	DeploymentImageManager
 	DeploymentModInterfaces
 	DeploymentCachedStatus
+	ArangoAgency
+	ArangoApplier
+	DeploymentInfoGetter
 
-	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() k8sutil.APIObject
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() ServerGroupIterator
-	// GetSpec returns the current specification of the deployment
-	GetSpec() api.DeploymentSpec
-	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetLifecycleImage returns the image name containing the lifecycle helper (== name of operator image)
-	GetLifecycleImage() string
-	// GetOperatorUUIDImage returns the image name containing the uuid helper (== name of operator image)
-	GetOperatorUUIDImage() string
-	// GetMetricsExporterImage returns the image name containing the default metrics exporter image
-	GetMetricsExporterImage() string
+	// GetOperatorImage returns the image name of operator image
+	GetOperatorImage() string
 	// GetArangoImage returns the image name containing the default arango image
 	GetArangoImage() string
 	// GetName returns the name of the deployment

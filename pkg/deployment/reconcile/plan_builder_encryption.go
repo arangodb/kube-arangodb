@@ -26,9 +26,9 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -274,7 +274,7 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 
 	mlog := log.With().Str("group", group.AsRole()).Str("member", m.ID).Logger()
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := planCtx.GetServerClient(ctxChild, group, m.ID)
 	if err != nil {
@@ -284,7 +284,7 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 
 	client := client.NewClient(c.Connection())
 
-	ctxChild, cancel = context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	e, err := client.GetEncryption(ctxChild)
 	if err != nil {

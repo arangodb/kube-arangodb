@@ -26,47 +26,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
-
-func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	// Create plan
-	apiObject := d.context.GetAPIObject()
-	spec := d.context.GetSpec()
-	status, lastVersion := d.context.GetStatus()
-	builderCtx := newPlanBuilderContext(d.context)
-	newPlan, changed := createNormalPlan(ctx, d.log, apiObject, status.Plan, spec, status, cachedStatus, builderCtx)
-
-	// If not change, we're done
-	if !changed {
-		return nil, false
-	}
-
-	// Save plan
-	if len(newPlan) == 0 {
-		// Nothing to do
-		return nil, false
-	}
-
-	// Send events
-	for id := len(status.Plan); id < len(newPlan); id++ {
-		action := newPlan[id]
-		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
-		if r := action.Reason; r != "" {
-			d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", "Normal").Msgf(r)
-		}
-	}
-
-	status.Plan = newPlan
-
-	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err), false
-	}
-	return nil, true
-}
 
 // createNormalPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
@@ -74,17 +37,18 @@ func (d *Reconciler) CreateNormalPlan(ctx context.Context, cachedStatus inspecto
 func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
-	builderCtx PlanBuilderContext) (api.Plan, bool) {
+	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
-		return currentPlan, false
+		return currentPlan, nil, false
 	}
 
-	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
 		// Adjust topology settings
 		ApplyIfEmpty(createTopologyMemberAdjustmentPlan).
 		// Define topology
 		ApplyIfEmpty(createTopologyEnablementPlan).
+		ApplyIfEmpty(createTopologyUpdatePlan).
 		// Check for scale up
 		ApplyIfEmpty(createScaleUPMemberPlan).
 		// Check for failed members
@@ -116,10 +80,12 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplySubPlanIfEmpty(createEncryptionKeyStatusPropagatedFieldUpdate, createEncryptionKeyCleanPlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCACleanPlan).
 		ApplyIfEmpty(createClusterOperationPlan).
+		ApplyIfEmpty(createRebalancerGeneratePlan).
 		// Final
 		ApplyIfEmpty(createTLSStatusPropagated).
-		ApplyIfEmpty(createBootstrapPlan).
-		Plan(), true
+		ApplyIfEmpty(createBootstrapPlan))
+
+	return r.Plan(), r.BackOff(), true
 }
 
 func createMemberFailedRestorePlan(ctx context.Context,
@@ -129,7 +95,7 @@ func createMemberFailedRestorePlan(ctx context.Context,
 	var plan api.Plan
 
 	// Fetch agency plan
-	agencyPlan, agencyErr := fetchAgency(ctx, spec, status, context)
+	agencyState, agencyOK := context.GetAgencyCache()
 
 	// Check for members in failed state
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
@@ -142,17 +108,12 @@ func createMemberFailedRestorePlan(ctx context.Context,
 
 			if group == api.ServerGroupDBServers && spec.GetMode() == api.DeploymentModeCluster {
 				// Do pre check for DBServers. If agency is down DBServers should not be touch
-				if agencyErr != nil {
-					memberLog.Msg("Error in agency")
+				if !agencyOK {
+					memberLog.Msg("Agency state is not present")
 					continue
 				}
 
-				if agencyPlan == nil {
-					memberLog.Msg("AgencyPlan is nil")
-					continue
-				}
-
-				if agencyPlan.IsDBServerInDatabases(m.ID) {
+				if agencyState.Plan.Collections.IsDBServerInDatabases(m.ID) {
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
 					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,
@@ -193,8 +154,8 @@ func createMemberFailedRestorePlan(ctx context.Context,
 	})
 
 	// Ensure that we were able to get agency info
-	if len(plan) == 0 && agencyErr != nil {
-		log.Err(agencyErr).Msg("unable to build further plan without access to agency")
+	if len(plan) == 0 && !agencyOK {
+		log.Warn().Msgf("unable to build further plan without access to agency")
 		plan = append(plan,
 			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
 	}

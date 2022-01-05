@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/rs/zerolog"
@@ -50,6 +52,8 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	log := r.log.With().Str("pod-name", p.GetName()).Logger()
 	var removalList []string
 
+	// When the main container is terminated, then the whole pod should be terminated,
+	// so sidecar core containers' names should not be checked here.
 	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p)
 
 	for _, f := range p.ObjectMeta.GetFinalizers() {
@@ -78,6 +82,12 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove Pod finalizer yet")
 			}
+		case constants.FinalizerPodGracefulShutdown:
+			// We are in graceful shutdown, only one way to remove it is when container is already dead
+			if isServerContainerDead {
+				log.Debug().Msg("Server Container is dead, removing finalizer")
+				removalList = append(removalList, f)
+			}
 		case constants.FinalizerDelayPodTermination:
 			if isServerContainerDead {
 				log.Debug().Msg("Server Container is dead, removing finalizer")
@@ -93,11 +103,12 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 			log.Error().Str("finalizer", f).Msg("Delay finalizer")
 
 			groupSpec := r.context.GetSpec().GetServerGroupSpec(group)
-			d := time.Duration(util.IntOrDefault(groupSpec.ShutdownDelay, 0)) * time.Second
 			if t := p.ObjectMeta.DeletionTimestamp; t != nil {
-				e := p.ObjectMeta.DeletionTimestamp.Time.Sub(time.Now().Add(d))
-				log.Error().Str("finalizer", f).Dur("left", e).Msg("Delay finalizer status")
-				if e < 0 {
+				d := time.Duration(groupSpec.GetShutdownDelay(group)) * time.Second
+				gr := time.Duration(util.Int64OrDefault(p.ObjectMeta.GetDeletionGracePeriodSeconds(), 0)) * time.Second
+				e := t.Time.Add(-1 * gr).Sub(time.Now().Add(-1 * d))
+				log.Error().Str("finalizer", f).Str("left", e.String()).Msg("Delay finalizer status")
+				if e < 0 || d == 0 {
 					removalList = append(removalList, f)
 				}
 			} else {
@@ -136,7 +147,7 @@ func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, log ze
 	// Remaining agents are healthy, if we need to perform complete recovery
 	// of the agent, also remove the PVC
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeAgentRecoveryNeeded) {
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {
@@ -165,7 +176,7 @@ func (r *Resources) inspectFinalizerPodDrainDBServer(ctx context.Context, log ze
 
 	// If this DBServer is cleaned out, we need to remove the PVC.
 	if memberStatus.Conditions.IsTrue(api.ConditionTypeCleanedOut) || memberStatus.Phase == api.MemberPhaseDrain {
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return r.context.PersistentVolumeClaimsModInterface().Delete(ctxChild, memberStatus.PersistentVolumeClaimName, metav1.DeleteOptions{})
 		})
 		if err != nil && !k8sutil.IsNotFound(err) {

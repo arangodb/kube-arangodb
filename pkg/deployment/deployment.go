@@ -25,9 +25,12 @@ package deployment
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 
@@ -69,13 +72,12 @@ import (
 
 // Config holds configuration settings for a Deployment
 type Config struct {
-	ServiceAccount        string
-	AllowChaos            bool
-	LifecycleImage        string
-	OperatorUUIDInitImage string
-	MetricsExporterImage  string
-	ArangoImage           string
-	Scope                 scope.Scope
+	ServiceAccount            string
+	AllowChaos                bool
+	ScalingIntegrationEnabled bool
+	OperatorImage             string
+	ArangoImage               string
+	Scope                     scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -107,6 +109,11 @@ const (
 	maxInspectionInterval    = 10 * util.Interval(time.Second)       // Ensure we inspect the generated resources no less than with this interval
 )
 
+type deploymentStatusObject struct {
+	version int32
+	last    api.DeploymentStatus // Internal status copy of the CR
+}
+
 // Deployment is the in process state of an ArangoDeployment.
 type Deployment struct {
 	name      string
@@ -114,9 +121,8 @@ type Deployment struct {
 
 	apiObject *api.ArangoDeployment // API object
 	status    struct {
-		mutex   sync.Mutex
-		version int32
-		last    api.DeploymentStatus // Internal status copy of the CR
+		mutex sync.Mutex
+		deploymentStatusObject
 	}
 	config Config
 	deps   Dependencies
@@ -130,6 +136,7 @@ type Deployment struct {
 	updateDeploymentTrigger   trigger.Trigger
 	clientCache               deploymentClient.Cache
 	currentState              inspectorInterface.Inspector
+	agencyCache               agency.Cache
 	recentInspectionErrors    int
 	clusterScalingIntegration *clusterScalingIntegration
 	reconciler                *reconcile.Reconciler
@@ -140,24 +147,23 @@ type Deployment struct {
 	haveServiceMonitorCRD     bool
 }
 
-func (d *Deployment) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
-	if !d.Mode().HasAgents() {
-		return false, nil
+func (d *Deployment) GetAgencyCache() (agency.State, bool) {
+	return d.agencyCache.Data()
+}
+
+func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
+	lCtx, c := context.WithTimeout(ctx, time.Second)
+	defer c()
+
+	if d.apiObject.Spec.Mode.Get() == api.DeploymentModeSingle {
+		return 0, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
-	defer cancel()
-
-	client, err := d.GetAgency(ctxChild)
+	a, err := d.GetAgency(lCtx)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
-
-	if enabled, err := agency.GetMaintenanceMode(ctxChild, client); err != nil {
-		return false, err
-	} else {
-		return enabled, nil
-	}
+	return d.agencyCache.Reload(lCtx, a)
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
@@ -165,14 +171,38 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		return nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	client, err := d.GetDatabaseClient(ctxChild)
 	if err != nil {
 		return err
 	}
 
-	return agency.SetMaintenanceMode(ctxChild, client, enabled)
+	data := "on"
+	if !enabled {
+		data = "off"
+	}
+
+	conn := client.Connection()
+	r, err := conn.NewRequest(http.MethodPut, "/_admin/cluster/maintenance")
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.SetBody(data); err != nil {
+		return err
+	}
+
+	resp, err := conn.Do(ctx, r)
+	if err != nil {
+		return err
+	}
+
+	if err := resp.CheckStatus(http.StatusOK); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // New creates a new Deployment from the given API object.
@@ -182,16 +212,17 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	d := &Deployment{
-		apiObject: apiObject,
-		name:      apiObject.GetName(),
-		namespace: apiObject.GetNamespace(),
-		config:    config,
-		deps:      deps,
-		eventCh:   make(chan *deploymentEvent, deploymentEventQueueSize),
-		stopCh:    make(chan struct{}),
+		apiObject:   apiObject,
+		name:        apiObject.GetName(),
+		namespace:   apiObject.GetNamespace(),
+		config:      config,
+		deps:        deps,
+		eventCh:     make(chan *deploymentEvent, deploymentEventQueueSize),
+		stopCh:      make(chan struct{}),
+		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
 
-	d.clientCache = deploymentClient.NewClientCache(d.getArangoDeployment, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
 	d.status.last = *(apiObject.Status.DeepCopy())
 	d.reconciler = reconcile.NewReconciler(deps.Log, d)
@@ -201,6 +232,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		// We've validated the spec, so let's use it from now.
 		d.status.last.AcceptedSpec = apiObject.Spec.DeepCopy()
 	}
+
+	localInventory.Add(d)
 
 	go d.run()
 	go d.listenForPodEvents(d.stopCh)
@@ -349,7 +382,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	log := d.deps.Log.With().Str("deployment", d.apiObject.GetName()).Logger()
 
 	// Get the most recent version of the deployment from the API server
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
 	if err != nil {
@@ -447,7 +480,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 		}
 
 		var newAPIObject *api.ArangoDeployment
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			newAPIObject, err = depls.Update(ctxChild, update, metav1.UpdateOptions{})
 
@@ -463,7 +496,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
 				current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
 
@@ -503,7 +536,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 		update.Status = d.status.last
 		ns := d.apiObject.GetNamespace()
 		var newAPIObject *api.ArangoDeployment
-		err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
 
@@ -519,7 +552,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 			// Reload api object and try again
 			var current *api.ArangoDeployment
 
-			err = k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
 				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
 
@@ -578,14 +611,14 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	c, err := d.clientCache.GetDatabase(ctxChild)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	err = arangod.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return arangod.SetNumberOfServers(ctxChild, c.Connection(), noCoordinators, noDBServers)
 	})
 
@@ -593,10 +626,6 @@ func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noD
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-func (d *Deployment) getArangoDeployment() *api.ArangoDeployment {
-	return d.apiObject
 }
 
 func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
@@ -609,7 +638,7 @@ func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 
 	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
 	if err != nil {

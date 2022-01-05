@@ -33,6 +33,18 @@ To run only a single test, set `TESTOPTIONS` to something like
 `-test.run=TestRocksDBEncryptionSingle` where
 `TestRocksDBEncryptionSingle` is the name of the test.
 
+## Debugging with DLV
+
+To attach DLV debugger, first prepare operator image with DLV server included:
+```shell
+IMAGETAG=1.2.4dlv DEBUG=true make docker
+```
+
+Then deploy it on your k8s and use following command to access DLV server on `localhost:2345` from your local machine:
+```shell
+kubectl port-forward deployment/arango-arango-deployment-operator 2345
+```
+
 ## Preparing a release
 
 To prepare for a release, do the following:
@@ -76,3 +88,24 @@ If the release process fails, it may leave:
   To resolve remove it using `git tag -d ...`.
 - A git tag named `<major>.<minor>.<patch>` in this repository in github.
   To resolve remove it manually.
+
+## Development on MacOS
+
+This repo requires GNU command line tools instead BSD one (which are by default available on Mac).
+```shell
+brew install coreutils ed findutils gawk gnu-sed gnu-tar grep make
+```
+
+Please add following to your `~/bashrc` or `~/.zshrc` file (it requires Homebrew to be installed):
+
+```shell
+HOMEBREW_PREFIX=$(brew --prefix)
+for d in ${HOMEBREW_PREFIX}/opt/*/libexec/gnubin; do export PATH=$d:$PATH; done
+```
+
+## Change Go version
+#### Change file Makefile
+* GOVERSION := e.g. 1.17-alpine3.15
+* DISTRIBUTION := e.g. alpine:3.15
+#### Change file .travis.yml
+#### Change file go.mod

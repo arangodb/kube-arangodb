@@ -24,7 +24,11 @@ metadata:
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
 spec:
+{{- if .Values.operator.debug }}
+    replicas: 1
+{{- else }}
     replicas: {{ .Values.operator.replicaCount }}
+{{- end }}
     strategy:
 {{ toYaml .Values.operator.updateStrategy | indent 8 }}
     selector:
@@ -99,6 +103,9 @@ spec:
 {{ if .Values.operator.features.backup }}
                     - --operator.backup
 {{- end }}
+{{ if .Values.operator.features.apps }}
+                    - --operator.apps
+{{- end }}
                     - --chaos.allowed={{ .Values.operator.allowChaos }}
 {{- if .Values.operator.args }}
 {{- range .Values.operator.args }}
@@ -124,6 +131,10 @@ spec:
                         value: "{{ .Values.operator.images.metricsExporter }}"
                       - name: RELATED_IMAGE_DATABASE
                         value: "{{ .Values.operator.images.arango }}"
+{{- if .Values.operator.features.apps }}
+                      - name: ARANGOJOB_SA_NAME
+                        value: "{{ template "kube-arangodb.operatorName" . }}-job"
+{{- end }}
                   ports:
                       - name: metrics
                         containerPort: 8528
@@ -134,10 +145,15 @@ spec:
                       capabilities:
                           drop:
                               - 'ALL'
+{{- if .Values.operator.debug }}
+                          add:
+                            - 'SYS_PTRACE'
+{{- end }}
 {{- if .Values.operator.resources }}
                   resources:
 {{ toYaml .Values.operator.resources | indent 22 }}
 {{- end }}
+{{- if not .Values.operator.debug }}
                   livenessProbe:
                       httpGet:
                           path: /health
@@ -152,6 +168,7 @@ spec:
                           scheme: HTTPS
                       initialDelaySeconds: 5
                       periodSeconds: 10
+{{- end }}
             tolerations:
                 - key: "node.kubernetes.io/unreachable"
                   operator: "Exists"

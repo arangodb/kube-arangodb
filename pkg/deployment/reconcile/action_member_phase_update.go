@@ -25,6 +25,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/rs/zerolog"
@@ -72,7 +74,7 @@ func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if phase.Execute(&m, a.action, p) {
+	if member.GetPhaseExecutor().Execute(&m, a.action, p) {
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, errors.WithStack(err)
 		}

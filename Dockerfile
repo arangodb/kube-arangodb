@@ -12,6 +12,8 @@ LABEL name="kube-arangodb" \
 
 ADD ./LICENSE /licenses/LICENSE
 
-ADD bin/arangodb_operator /usr/bin/
+ARG RELEASE_MODE=community
+ARG TARGETARCH=amd64
+ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
 
 ENTRYPOINT [ "/usr/bin/arangodb_operator" ]

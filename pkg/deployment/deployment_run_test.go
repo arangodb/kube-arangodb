@@ -62,7 +62,13 @@ func runTestCases(t *testing.T, testCases ...testCaseStruct) {
 func runTestCase(t *testing.T, testCase testCaseStruct) {
 	t.Run(testCase.Name, func(t *testing.T) {
 		// Arrange
+		if testCase.config.OperatorImage == "" {
+			testCase.config.OperatorImage = testImageOperator
+		}
+
 		d, eventRecorder := createTestDeployment(t, testCase.config, testCase.ArangoDeployment)
+
+		startDepl := d.status.last.DeepCopy()
 
 		errs := 0
 		for {
@@ -89,6 +95,21 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			testCase.Helper(t, d, &testCase)
 		}
 
+		f := startDepl.Members.AsList()
+		if len(f) == 0 {
+			f = d.status.last.Members.AsList()
+		}
+
+		// Add Expected pod defaults
+		if !testCase.DropInit {
+			testCase.ExpectedPod = *defaultPodAppender(t, &testCase.ExpectedPod,
+				addLifecycle(f[0].Member.ID,
+					f[0].Group == api.ServerGroupDBServers && f[0].Member.IsInitialized,
+					testCase.ArangoDeployment.Spec.License.GetSecretName(),
+					f[0].Group),
+				podDataSort())
+		}
+
 		// Create custom resource in the fake kubernetes API
 		_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 		require.NoError(t, err)
@@ -103,6 +124,11 @@ func runTestCase(t *testing.T, testCase testCaseStruct) {
 			require.Equal(t, testCase.Features.EncryptionRotation, *features.EncryptionRotation().EnabledPointer())
 			*features.JWTRotation().EnabledPointer() = testCase.Features.JWTRotation
 			*features.TLSSNI().EnabledPointer() = testCase.Features.TLSSNI
+			if g := testCase.Features.Graceful; g != nil {
+				*features.GracefulShutdown().EnabledPointer() = *g
+			} else {
+				*features.GracefulShutdown().EnabledPointer() = features.GracefulShutdown().EnabledByDefault()
+			}
 			*features.TLSRotation().EnabledPointer() = testCase.Features.TLSRotation
 		}
 

@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-// Author Tomasz Mielech
-//
 
 package reconcile
 
@@ -28,25 +25,40 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/metrics"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+)
+
+var (
+	actionsGeneratedMetrics = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_generated", "Number of actions added to the plan", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+	actionsSucceededMetrics = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_succeeded", "Number of succeeded actions", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+	actionsFailedMetrics    = metrics.MustRegisterCounterVec(reconciliationComponent, "actions_failed", "Number of failed actions", metrics.DeploymentName, metrics.ActionName, metrics.ActionPriority)
+	actionsCurrentPlan      = metrics.MustRegisterGaugeVec(reconciliationComponent, "actions_current",
+		"The current number of the plan actions are being performed",
+		metrics.DeploymentName, "group", "member", "name", "priority")
 )
 
 type planner interface {
 	Get(deployment *api.DeploymentStatus) api.Plan
 	Set(deployment *api.DeploymentStatus, p api.Plan) bool
+
+	Type() string
 }
 
 var _ planner = plannerNormal{}
 var _ planner = plannerHigh{}
 
 type plannerNormal struct {
+}
+
+func (p plannerNormal) Type() string {
+	return "normal"
 }
 
 func (p plannerNormal) Get(deployment *api.DeploymentStatus) api.Plan {
@@ -63,6 +75,10 @@ func (p plannerNormal) Set(deployment *api.DeploymentStatus, plan api.Plan) bool
 }
 
 type plannerHigh struct {
+}
+
+func (p plannerHigh) Type() string {
+	return "high"
 }
 
 func (p plannerHigh) Get(deployment *api.DeploymentStatus) api.Plan {
@@ -108,7 +124,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 		return false, nil
 	}
 
-	newPlan, callAgain, err := d.executePlan(ctx, cachedStatus, log, plan)
+	newPlan, callAgain, err := d.executePlan(ctx, cachedStatus, log, plan, pg)
 
 	// Refresh current status
 	loopStatus, lastVersion := d.context.GetStatus()
@@ -128,7 +144,7 @@ func (d *Reconciler) executePlanStatus(ctx context.Context, cachedStatus inspect
 	return callAgain, nil
 }
 
-func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, statusPlan api.Plan) (newPlan api.Plan, callAgain bool, err error) {
+func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, log zerolog.Logger, statusPlan api.Plan, pg planner) (newPlan api.Plan, callAgain bool, err error) {
 	plan := statusPlan.DeepCopy()
 
 	for {
@@ -145,6 +161,12 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 			Str("group", planAction.Group.AsRole()).
 			Str("member-id", planAction.MemberID)
 
+		if status, _ := d.context.GetStatus(); status.Members.ContainsID(planAction.MemberID) {
+			if member, _, ok := status.Members.ElementByID(planAction.MemberID); ok {
+				logContext = logContext.Str("phase", string(member.Phase))
+			}
+		}
+
 		for k, v := range planAction.Params {
 			logContext = logContext.Str(k, v)
 		}
@@ -155,20 +177,40 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 		done, abort, recall, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
+			// The Plan will be cleaned up, so no actions will be in the queue.
+			actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
+				planAction.Type.String(), pg.Type()).Set(0.0)
+
+			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			return nil, false, errors.WithStack(err)
 		}
 
 		if abort {
+			// The Plan will be cleaned up, so no actions will be in the queue.
+			actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
+				planAction.Type.String(), pg.Type()).Set(0.0)
+
+			actionsFailedMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			return nil, true, nil
 		}
 
 		if done {
+			if planAction.IsStarted() {
+				// The below metrics was increased in the previous iteration, so it should be decreased now.
+				// If the action hasn't been started in this iteration then the metrics have not been increased.
+				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
+					planAction.Type.String(), pg.Type()).Dec()
+			}
+
+			actionsSucceededMetrics.WithLabelValues(d.context.GetName(), planAction.Type.String(), pg.Type()).Inc()
 			if len(plan) > 1 {
 				plan = plan[1:]
 				if plan[0].MemberID == api.MemberIDPreviousAction {
 					plan[0].MemberID = action.MemberID()
 				}
 			} else {
+				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
+					planAction.Type.String(), pg.Type()).Set(0.0)
 				plan = nil
 			}
 
@@ -191,7 +233,11 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 				return nil, false, errors.WithStack(err)
 			}
 		} else {
-			if plan[0].StartTime.IsZero() {
+			if !plan[0].IsStarted() {
+				// The action has been started in this iteration, but it is not finished yet.
+				actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
+					planAction.Type.String(), pg.Type()).Inc()
+
 				now := metav1.Now()
 				plan[0].StartTime = &now
 			}
@@ -202,7 +248,7 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 }
 
 func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, planAction api.Action, action Action) (done, abort, callAgain bool, err error) {
-	if planAction.StartTime.IsZero() {
+	if !planAction.IsStarted() {
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {

@@ -126,6 +126,9 @@ type ServerGroupSpec struct {
 	Affinity *core.PodAffinity `json:"affinity,omitempty"`
 	// NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 	NodeAffinity *core.NodeAffinity `json:"nodeAffinity,omitempty"`
+	// SidecarCoreNames is a list of sidecar containers which must run in the pod.
+	// Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
+	SidecarCoreNames []string `json:"sidecarCoreNames,omitempty"`
 	// Sidecars specifies a list of additional containers to be started
 	Sidecars []core.Container `json:"sidecars,omitempty"`
 	// SecurityContext specifies security context for group
@@ -261,6 +264,11 @@ type ServerGroupProbesSpec struct {
 	ReadinessProbeDisabled *bool `json:"readinessProbeDisabled,omitempty"`
 	// ReadinessProbeSpec override readiness probe configuration
 	ReadinessProbeSpec *ServerGroupProbeSpec `json:"readinessProbeSpec,omitempty"`
+
+	// StartupProbeDisabled if true startupProbes are disabled
+	StartupProbeDisabled *bool `json:"startupProbeDisabled,omitempty"`
+	// StartupProbeSpec override startup probe configuration
+	StartupProbeSpec *ServerGroupProbeSpec `json:"startupProbeSpec,omitempty"`
 }
 
 // GetReadinessProbeDisabled returns in proper manner readiness probe flag with backward compatibility.
@@ -681,4 +689,17 @@ func (s *ServerGroupSpec) GetEntrypoint(defaultEntrypoint string) string {
 	}
 
 	return *s.Entrypoint
+}
+
+// GetShutdownDelay returns defined or default Group ShutdownDelay in seconds
+func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
+	if s.ShutdownDelay == nil {
+		switch group {
+		case ServerGroupCoordinators:
+			return 3
+		default:
+			return 0
+		}
+	}
+	return *s.ShutdownDelay
 }

@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -64,9 +66,9 @@ type ActionContext interface {
 	resources.DeploymentPodRenderer
 	resources.DeploymentModInterfaces
 	resources.DeploymentCachedStatus
+	resources.ArangoAgencyGet
+	resources.DeploymentInfoGetter
 
-	// GetAPIObject returns the deployment as k8s object.
-	GetAPIObject() k8sutil.APIObject
 	// Gets the specified mode of deployment
 	GetMode() api.DeploymentMode
 	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
@@ -137,10 +139,6 @@ type ActionContext interface {
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
-	// GetSpec returns a copy of the spec
-	GetSpec() api.DeploymentSpec
-	// GetStatus returns a copy of the status
-	GetStatus() api.DeploymentStatus
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
@@ -171,16 +169,28 @@ type actionContext struct {
 	cachedStatus inspectorInterface.Inspector
 }
 
+func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
+	return ac.context.GetStatus()
+}
+
+func (ac *actionContext) GetStatusSnapshot() api.DeploymentStatus {
+	return ac.context.GetStatusSnapshot()
+}
+
+func (ac *actionContext) GenerateMemberEndpoint(group api.ServerGroup, member api.MemberStatus) (string, error) {
+	return ac.context.GenerateMemberEndpoint(group, member)
+}
+
+func (ac *actionContext) GetAgencyCache() (agencyCache.State, bool) {
+	return ac.context.GetAgencyCache()
+}
+
 func (ac *actionContext) RenderPodForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.Pod, error) {
 	return ac.context.RenderPodForMemberFromCurrent(ctx, cachedStatus, memberID)
 }
 
 func (ac *actionContext) RenderPodTemplateForMemberFromCurrent(ctx context.Context, cachedStatus inspectorInterface.Inspector, memberID string) (*core.PodTemplateSpec, error) {
 	return ac.context.RenderPodTemplateForMemberFromCurrent(ctx, cachedStatus, memberID)
-}
-
-func (ac *actionContext) GetAgencyMaintenanceMode(ctx context.Context) (bool, error) {
-	return ac.context.GetAgencyMaintenanceMode(ctx)
 }
 
 func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
@@ -213,14 +223,6 @@ func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
 
 func (ac *actionContext) GetName() string {
 	return ac.context.GetName()
-}
-
-func (ac *actionContext) GetStatus() api.DeploymentStatus {
-	a, _ := ac.context.GetStatus()
-
-	s := a.DeepCopy()
-
-	return *s
 }
 
 func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {

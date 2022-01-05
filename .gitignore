@@ -8,3 +8,6 @@ vendor/
 deps/
 .vscode/
 **/*.enterprise.go
+**/enterprise/**
+enterprise.mk
+local/

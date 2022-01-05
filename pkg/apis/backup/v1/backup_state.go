@@ -17,13 +17,11 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/backup/state"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

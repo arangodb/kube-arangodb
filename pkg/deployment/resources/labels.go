@@ -26,8 +26,9 @@ package resources
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
@@ -74,7 +75,7 @@ func (r *Resources) EnsureSecretLabels(ctx context.Context, cachedStatus inspect
 	changed := false
 	if err := cachedStatus.IterateSecrets(func(secret *core.Secret) error {
 		if ensureLabelsMap(secret.Kind, secret, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.SecretsModInterface().Patch(ctxChild,
 					name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
@@ -101,7 +102,7 @@ func (r *Resources) EnsureServiceAccountsLabels(ctx context.Context, cachedStatu
 	changed := false
 	if err := cachedStatus.IterateServiceAccounts(func(serviceAccount *core.ServiceAccount) error {
 		if ensureLabelsMap(serviceAccount.Kind, serviceAccount, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.ServiceAccountsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
@@ -127,7 +128,7 @@ func (r *Resources) EnsureServicesLabels(ctx context.Context, cachedStatus inspe
 	changed := false
 	if err := cachedStatus.IterateServices(func(service *core.Service) error {
 		if ensureLabelsMap(service.Kind, service, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.ServicesModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
@@ -153,7 +154,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 	changed := false
 	if err := cachedStatus.IterateServiceMonitors(func(serviceMonitor *monitoring.ServiceMonitor) error {
 		if ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.ServiceMonitorsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
@@ -179,7 +180,7 @@ func (r *Resources) EnsurePodsLabels(ctx context.Context, cachedStatus inspector
 	changed := false
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
 		if ensureGroupLabelsMap(pod.Kind, pod, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.PodsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
@@ -205,7 +206,7 @@ func (r *Resources) EnsurePersistentVolumeClaimsLabels(ctx context.Context, cach
 	changed := false
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(persistentVolumeClaim *core.PersistentVolumeClaim) error {
 		if ensureGroupLabelsMap(persistentVolumeClaim.Kind, persistentVolumeClaim, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.PersistentVolumeClaimsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})
@@ -231,7 +232,7 @@ func (r *Resources) EnsurePodDisruptionBudgetsLabels(ctx context.Context, cached
 	changed := false
 	if err := cachedStatus.IteratePodDisruptionBudgets(func(budget *policy.PodDisruptionBudget) error {
 		if ensureLabelsMap(budget.Kind, budget, r.context.GetSpec(), func(name string, d []byte) error {
-			return k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := r.context.PodDisruptionBudgetsModInterface().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
 				return err
 			})

@@ -32,7 +32,6 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -136,7 +135,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					authorization, k8sutil.ArangoPort)
 			},
 			config: Config{
-				LifecycleImage: testImageLifecycle,
+				OperatorImage: testImageOperator,
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -154,19 +153,11 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 					},
 					Containers: []core.Container{
 						{
-							Name:    k8sutil.ServerContainerName,
-							Image:   testImage,
-							Command: createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
-							Env: []core.EnvVar{
-								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-									testLicense, constants.SecretKeyToken),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-								k8sutil.CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
-							},
+							Name:            k8sutil.ServerContainerName,
+							Image:           testImage,
+							Command:         createTestCommandForDBServer(firstDBServerStatus.ID, true, true, true),
 							Ports:           createTestPorts(),
-							Lifecycle:       createTestLifecycle(),
+							Lifecycle:       createTestLifecycle(api.ServerGroupAgents),
 							LivenessProbe:   createTestLivenessProbe(httpProbe, false, "", k8sutil.ArangoPort),
 							ImagePullPolicy: core.PullIfNotPresent,
 							SecurityContext: securityContext.NewSecurityContext(),
@@ -180,7 +171,7 @@ func TestEnsurePod_ArangoDB_Encryption(t *testing.T) {
 							Resources: emptyResources,
 						},
 						func() core.Container {
-							c := testArangodbInternalExporterContainer(true, emptyResources)
+							c := testArangodbInternalExporterContainer(true, true, emptyResources)
 							c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 							return c
 						}(),

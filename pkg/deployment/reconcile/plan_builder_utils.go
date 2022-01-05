@@ -24,11 +24,12 @@ package reconcile
 
 import (
 	"context"
-	"time"
+
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 )
 
@@ -44,6 +45,7 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
 		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
+		api.NewAction(api.ActionTypeKillMemberPod, group, member.ID, reason),
 		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
@@ -51,16 +53,30 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	return plan
 }
 
-func fetchAgency(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus,
-	pctx PlanBuilderContext) (*agency.ArangoPlanDatabases, error) {
-	if spec.GetMode() != api.DeploymentModeCluster && spec.GetMode() != api.DeploymentModeActiveFailover {
-		return nil, nil
-	} else if status.Members.Agents.MembersReady() > 0 {
-		agencyCtx, agencyCancel := context.WithTimeout(ctx, time.Minute)
-		defer agencyCancel()
+func emptyPlanBuilder(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
 
-		return agency.GetAgencyCollections(agencyCtx, pctx.GetAgencyData)
-	} else {
-		return nil, errors.Newf("not able to read from agency when agency is down")
+func removeConditionActionV2(actionReason string, conditionType api.ConditionType) api.Action {
+	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+		AddParam(setConditionActionV2KeyAction, setConditionActionV2KeyTypeRemove).
+		AddParam(setConditionActionV2KeyType, string(conditionType))
+}
+
+func updateConditionActionV2(actionReason string, conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {
+	statusBool := core.ConditionTrue
+	if !status {
+		statusBool = core.ConditionFalse
 	}
+
+	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+		AddParam(setConditionActionV2KeyAction, string(conditionType)).
+		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
+		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
+		AddParam(setConditionActionV2KeyReason, reason).
+		AddParam(setConditionActionV2KeyMessage, message).
+		AddParam(setConditionActionV2KeyHash, hash)
 }

@@ -22,8 +22,31 @@
 
 package agency
 
-const (
-	ArangoKey          = "arango"
-	PlanKey            = "Plan"
-	PlanCollectionsKey = "Collections"
+import (
+	"fmt"
+	"strings"
 )
+
+const (
+	ArangoKey = "arango"
+
+	PlanKey    = "Plan"
+	CurrentKey = "Current"
+
+	PlanCollectionsKey = "Collections"
+
+	SupervisionKey            = "Supervision"
+	SupervisionMaintenanceKey = "Maintenance"
+)
+
+func GetAgencyKey(parts ...string) string {
+	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
+}
+
+func GetAgencyReadKey(elements ...string) []string {
+	return elements
+}
+
+func GetAgencyReadRequest(elements ...[]string) [][]string {
+	return elements
+}

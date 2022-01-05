@@ -32,13 +32,8 @@ func NewVolumes() Volumes {
 
 type Volumes interface {
 	Append(b Builder, i Input)
-
 	AddVolume(volumes ...core.Volume)
-	AddVolumes(volumes []core.Volume)
-
 	AddVolumeMount(mounts ...core.VolumeMount)
-	AddVolumeMounts(mounts []core.VolumeMount)
-
 	Volumes() []core.Volume
 	VolumeMounts() []core.VolumeMount
 }
@@ -52,15 +47,11 @@ type volumes struct {
 
 func (v *volumes) Append(b Builder, i Input) {
 	vols, mounts := b.Volumes(i)
-	v.AddVolumes(vols)
-	v.AddVolumeMounts(mounts)
+	v.AddVolume(vols...)
+	v.AddVolumeMount(mounts...)
 }
 
 func (v *volumes) AddVolume(volumes ...core.Volume) {
-	v.AddVolumes(volumes)
-}
-
-func (v *volumes) AddVolumes(volumes []core.Volume) {
 	if len(volumes) == 0 {
 		return
 	}
@@ -69,10 +60,6 @@ func (v *volumes) AddVolumes(volumes []core.Volume) {
 }
 
 func (v *volumes) AddVolumeMount(mounts ...core.VolumeMount) {
-	v.AddVolumeMounts(mounts)
-}
-
-func (v *volumes) AddVolumeMounts(mounts []core.VolumeMount) {
 	if len(mounts) == 0 {
 		return
 	}

@@ -24,52 +24,16 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
 )
-
-func (d *Reconciler) CreateHighPlan(ctx context.Context, cachedStatus inspectorInterface.Inspector) (error, bool) {
-	// Create plan
-	apiObject := d.context.GetAPIObject()
-	spec := d.context.GetSpec()
-	status, lastVersion := d.context.GetStatus()
-	builderCtx := newPlanBuilderContext(d.context)
-	newPlan, changed := createHighPlan(ctx, d.log, apiObject, status.HighPriorityPlan, spec, status, cachedStatus, builderCtx)
-
-	// If not change, we're done
-	if !changed {
-		return nil, false
-	}
-
-	// Save plan
-	if len(newPlan) == 0 {
-		// Nothing to do
-		return nil, false
-	}
-
-	// Send events
-	for id := len(status.Plan); id < len(newPlan); id++ {
-		action := newPlan[id]
-		d.context.CreateEvent(k8sutil.NewPlanAppendEvent(apiObject, action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
-		if r := action.Reason; r != "" {
-			d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", "High").Msgf(r)
-		}
-	}
-
-	status.HighPriorityPlan = newPlan
-
-	if err := d.context.UpdateStatus(ctx, status, lastVersion); err != nil {
-		return errors.WithStack(err), false
-	}
-	return nil, true
-}
 
 // createHighPlan considers the given specification & status and creates a plan to get the status in line with the specification.
 // If a plan already exists, the given plan is returned with false.
@@ -77,20 +41,25 @@ func (d *Reconciler) CreateHighPlan(ctx context.Context, cachedStatus inspectorI
 func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.APIObject,
 	currentPlan api.Plan, spec api.DeploymentSpec,
 	status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector,
-	builderCtx PlanBuilderContext) (api.Plan, bool) {
+	builderCtx PlanBuilderContext) (api.Plan, api.BackOff, bool) {
 	if !currentPlan.IsEmpty() {
 		// Plan already exists, complete that first
-		return currentPlan, false
+		return currentPlan, nil, false
 	}
 
-	return newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), nil).
+	r := recoverPlanAppender(log, newPlanAppender(NewWithPlanBuilder(ctx, log, apiObject, spec, status, cachedStatus, builderCtx), status.BackOff, currentPlan).
 		ApplyIfEmpty(updateMemberPodTemplateSpec).
 		ApplyIfEmpty(updateMemberPhasePlan).
 		ApplyIfEmpty(createCleanOutPlan).
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
+		ApplyIfEmpty(createTopologyMemberUpdatePlan).
+		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, updateClusterLicense).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
-		Plan(), true
+		ApplyIfEmpty(createRebalancerCheckPlan).
+		ApplyWithBackOff(BackOffCheck, time.Minute, emptyPlanBuilder))
+
+	return r.Plan(), r.BackOff(), true
 }
 
 // updateMemberPodTemplateSpec creates plan to update member Spec

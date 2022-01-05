@@ -42,6 +42,7 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+
 	// ConditionTypeCleanedOut indicates that the member (dbserver) has been cleaned out.
 	// Always check in combination with ConditionTypeTerminated.
 	ConditionTypeCleanedOut ConditionType = "CleanedOut"
@@ -51,16 +52,9 @@ const (
 	ConditionTypeAgentRecoveryNeeded ConditionType = "AgentRecoveryNeeded"
 	// ConditionTypePodSchedulingFailure indicates that one or more pods belonging to the deployment cannot be schedule.
 	ConditionTypePodSchedulingFailure ConditionType = "PodSchedulingFailure"
-	// ConditionTypeSecretsChanged indicates that the value of one of more secrets used by
-	// the deployment have changed. Once that is the case, the operator will no longer
-	// touch the deployment, until the original secrets have been restored.
-	ConditionTypeSecretsChanged ConditionType = "SecretsChanged"
 	// ConditionTypeMemberOfCluster indicates that the member is a known member of the ArangoDB cluster.
 	ConditionTypeMemberOfCluster ConditionType = "MemberOfCluster"
-	// ConditionTypeBootstrapCompleted indicates that the initial cluster bootstrap has been completed.
-	ConditionTypeBootstrapCompleted ConditionType = "BootstrapCompleted"
-	// ConditionTypeBootstrapSucceded indicates that the initial cluster bootstrap completed successfully.
-	ConditionTypeBootstrapSucceded ConditionType = "BootstrapSucceded"
+
 	// ConditionTypeTerminating indicates that the member is terminating but not yet terminated.
 	ConditionTypeTerminating ConditionType = "Terminating"
 	// ConditionTypeTerminating indicates that the deployment is up to date.
@@ -69,22 +63,30 @@ const (
 	ConditionTypeMarkedToRemove ConditionType = "MarkedToRemove"
 	// ConditionTypeUpgradeFailed indicates that upgrade failed
 	ConditionTypeUpgradeFailed ConditionType = "UpgradeFailed"
+
 	// ConditionTypeMaintenanceMode indicates that Maintenance is enabled
 	ConditionTypeMaintenanceMode ConditionType = "MaintenanceMode"
+
 	// ConditionTypePendingRestart indicates that restart is required
 	ConditionTypePendingRestart ConditionType = "PendingRestart"
 	// ConditionTypeRestart indicates that restart will be started
 	ConditionTypeRestart ConditionType = "Restart"
+
 	// ConditionTypePendingTLSRotation indicates that TLS rotation is pending
 	ConditionTypePendingTLSRotation ConditionType = "PendingTLSRotation"
+
 	// ConditionTypePendingUpdate indicates that runtime update is pending
 	ConditionTypePendingUpdate ConditionType = "PendingUpdate"
 	// ConditionTypeUpdating indicates that runtime update is in progress
 	ConditionTypeUpdating ConditionType = "Updating"
 	// ConditionTypeUpdateFailed indicates that runtime update failed
 	ConditionTypeUpdateFailed ConditionType = "UpdateFailed"
+
 	// ConditionTypeTopologyAware indicates that the member is deployed with TopologyAwareness.
 	ConditionTypeTopologyAware ConditionType = "TopologyAware"
+
+	// ConditionTypeLicenseSet indicates that license V2 is set on cluster.
+	ConditionTypeLicenseSet ConditionType = "LicenseSet"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
@@ -103,6 +105,8 @@ type Condition struct {
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
+	// Hash keep propagation hash id, for example checksum of secret
+	Hash string `json:"hash,omitempty"`
 }
 
 func (c Condition) IsTrue() bool {
@@ -140,7 +144,8 @@ func (c Condition) Equal(other Condition) bool {
 		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
 		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
 		c.Reason == other.Reason &&
-		c.Message == other.Message
+		c.Message == other.Message &&
+		c.Hash == other.Hash
 }
 
 // IsTrue return true when a condition with given type exists and its status is `True`.
@@ -179,45 +184,70 @@ func (list *ConditionList) Touch(conditionType ConditionType) bool {
 	return false
 }
 
-// Update the condition, replacing an old condition with same type (if any)
-// Returns true when changes were made, false otherwise.
-func (list *ConditionList) Update(conditionType ConditionType, status bool, reason, message string) bool {
+func (list ConditionList) Index(conditionType ConditionType) int {
+	for i, x := range list {
+		if x.Type == conditionType {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (list *ConditionList) update(conditionType ConditionType, status bool, reason, message, hash string) bool {
 	src := *list
 	statusX := v1.ConditionFalse
 	if status {
 		statusX = v1.ConditionTrue
 	}
-	for i, x := range src {
-		if x.Type == conditionType {
-			if x.Status != statusX {
-				// Transition to another status
-				src[i].Status = statusX
-				now := metav1.Now()
-				src[i].LastTransitionTime = now
-				src[i].LastUpdateTime = now
-				src[i].Reason = reason
-				src[i].Message = message
-			} else if x.Reason != reason || x.Message != message {
-				src[i].LastUpdateTime = metav1.Now()
-				src[i].Reason = reason
-				src[i].Message = message
-			} else {
-				return false
-			}
-			return true
-		}
+
+	index := list.Index(conditionType)
+
+	if index == -1 {
+		// Not found
+		now := metav1.Now()
+		*list = append(src, Condition{
+			Type:               conditionType,
+			LastUpdateTime:     now,
+			LastTransitionTime: now,
+			Status:             statusX,
+			Reason:             reason,
+			Message:            message,
+			Hash:               hash,
+		})
+		return true
 	}
-	// Not found
-	now := metav1.Now()
-	*list = append(src, Condition{
-		Type:               conditionType,
-		LastUpdateTime:     now,
-		LastTransitionTime: now,
-		Status:             statusX,
-		Reason:             reason,
-		Message:            message,
-	})
+
+	if src[index].Status != statusX {
+		// Transition to another status
+		src[index].Status = statusX
+		now := metav1.Now()
+		src[index].LastTransitionTime = now
+		src[index].LastUpdateTime = now
+		src[index].Reason = reason
+		src[index].Message = message
+		src[index].Hash = hash
+	} else if src[index].Reason != reason || src[index].Message != message || src[index].Hash != hash {
+		src[index].LastUpdateTime = metav1.Now()
+		src[index].Reason = reason
+		src[index].Message = message
+		src[index].Hash = hash
+	} else {
+		return false
+	}
 	return true
+}
+
+// Update the condition, replacing an old condition with same type (if any)
+// Returns true when changes were made, false otherwise.
+func (list *ConditionList) Update(conditionType ConditionType, status bool, reason, message string) bool {
+	return list.update(conditionType, status, reason, message, "")
+}
+
+// UpdateWithHash updates the condition, replacing an old condition with same type (if any)
+// Returns true when changes were made, false otherwise.
+func (list *ConditionList) UpdateWithHash(conditionType ConditionType, status bool, reason, message, hash string) bool {
+	return list.update(conditionType, status, reason, message, hash)
 }
 
 // Remove the condition with given type.

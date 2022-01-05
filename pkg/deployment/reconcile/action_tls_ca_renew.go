@@ -26,6 +26,8 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/rs/zerolog"
@@ -55,7 +57,7 @@ func (a *renewTLSCACertificateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	err := k8sutil.RunWithTimeout(ctx, func(ctxChild context.Context) error {
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return a.actionCtx.SecretsModInterface().Delete(ctxChild, a.actionCtx.GetSpec().TLS.GetCASecretName(), meta.DeleteOptions{})
 	})
 	if err != nil {

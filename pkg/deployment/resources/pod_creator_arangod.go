@@ -17,19 +17,20 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Tomasz Mielech <tomasz@arangodb.com>
+// Author Tomasz Mielech
 //
 
 package resources
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 
@@ -66,22 +67,40 @@ type MemberArangoDPod struct {
 	resources        *Resources
 	imageInfo        api.ImageInfo
 	autoUpgrade      bool
-	id               string
+	cachedStatus     interfaces.Inspector
 }
 
 type ArangoDContainer struct {
-	member    *MemberArangoDPod
-	resources *Resources
-	groupSpec api.ServerGroupSpec
-	spec      api.DeploymentSpec
-	group     api.ServerGroup
-	imageInfo api.ImageInfo
+	member       *MemberArangoDPod
+	resources    *Resources
+	groupSpec    api.ServerGroupSpec
+	spec         api.DeploymentSpec
+	group        api.ServerGroup
+	imageInfo    api.ImageInfo
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	status       api.MemberStatus
+}
+
+// ArangoUpgradeContainer can construct ArangoD upgrade container.
+type ArangoUpgradeContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+}
+
+// ArangoVersionCheckContainer can construct ArangoD version check container.
+type ArangoVersionCheckContainer struct {
+	interfaces.ContainerCreator
+	cachedStatus interfaces.Inspector
+	input        pod.Input
+	versionArgs  k8sutil.OptionPairs
 }
 
 func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
-			Name:          "server",
+			Name:          k8sutil.ServerContainerName,
 			ContainerPort: int32(k8sutil.ArangoPort),
 			Protocol:      core.ProtocolTCP,
 		},
@@ -101,6 +120,14 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	return ports
 }
 
+func (a *ArangoDContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input)
+}
+
+func (a *ArangoDContainer) GetName() string {
+	return k8sutil.ServerContainerName
+}
+
 func (a *ArangoDContainer) GetExecutor() string {
 	return a.groupSpec.GetEntrypoint(ArangoDExecutor)
 }
@@ -109,17 +136,22 @@ func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {
 	return a.groupSpec.SecurityContext.NewSecurityContext()
 }
 
-func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
-	var liveness, readiness *core.Probe
+func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	var liveness, readiness, startup *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+
+	probeStartupConfig, err := a.resources.getStartupProbe(a.spec, a.group, a.imageInfo.ArangoDBVersion)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	if probeLivenessConfig != nil {
@@ -130,7 +162,11 @@ func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, error) {
 		readiness = probeReadinessConfig.Create()
 	}
 
-	return liveness, readiness, nil
+	if probeStartupConfig != nil {
+		startup = probeStartupConfig.Create()
+	}
+
+	return liveness, readiness, startup, nil
 }
 
 func (a *ArangoDContainer) GetImage() string {
@@ -146,20 +182,14 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() []core.EnvVar {
 	envs := NewEnvBuilder()
 
-	if env := pod.JWT().Envs(a.member.AsInput()); len(env) > 0 {
-		envs.Add(true, env...)
-	}
-
-	if a.spec.License.HasSecretName() {
+	if a.spec.License.HasSecretName() && a.imageInfo.ArangoDBVersion.CompareTo("3.9.0") < 0 {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
 			constants.SecretKeyToken)
 
 		envs.Add(true, env)
 	}
 
-	if a.resources.context.GetLifecycleImage() != "" {
-		envs.Add(true, k8sutil.GetLifecycleEnv()...)
-	}
+	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
 	if a.groupSpec.Resources.Limits != nil {
 		if a.groupSpec.GetOverrideDetectedTotalMemory() {
@@ -201,14 +231,20 @@ func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
-	if a.resources.context.GetLifecycleImage() != "" {
-		return k8sutil.NewLifecycle()
+	if features.GracefulShutdown().Enabled() {
+		return k8sutil.NewLifecyclePort()
 	}
-	return nil, nil
+	return k8sutil.NewLifecycleFinalizers()
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.spec.GetImagePullPolicy()
+}
+
+func (a *ArangoDContainer) GetVolumeMounts() []core.VolumeMount {
+	volumes := CreateArangoDVolumes(a.status, a.input, a.spec, a.groupSpec)
+
+	return volumes.VolumeMounts()
 }
 
 func (m *MemberArangoDPod) AsInput() pod.Input {
@@ -226,10 +262,12 @@ func (m *MemberArangoDPod) AsInput() pod.Input {
 	}
 }
 
-func (m *MemberArangoDPod) Init(pod *core.Pod) {
+func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.Pod) error {
 	terminationGracePeriodSeconds := int64(math.Ceil(m.group.DefaultTerminationGracePeriod().Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
 	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+
+	return nil
 }
 
 func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
@@ -248,6 +286,10 @@ func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
 	}
 
 	if err := pod.TLS().Verify(i, cachedStatus); err != nil {
+		return err
+	}
+
+	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
 		return err
 	}
 
@@ -271,7 +313,7 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, &a)
 
-	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAntiAffinity)
+	pod.MergePodAntiAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
 
 	pod.MergePodAntiAffinity(&a, m.groupSpec.AntiAffinity)
 
@@ -283,7 +325,7 @@ func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 
 	pod.MergePodAffinity(&a, m.groupSpec.Affinity)
 
-	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).PodAffinity)
+	pod.MergePodAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
 
 	return pod.ReturnPodAffinityOrNil(a)
 }
@@ -295,7 +337,7 @@ func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 
 	pod.MergeNodeAffinity(&a, m.groupSpec.NodeAffinity)
 
-	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.group, m.deploymentStatus.Topology, m.status.Topology).NodeAffinity)
+	pod.MergeNodeAffinity(&a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
 
 	return pod.ReturnNodeAffinityOrNil(a)
 }
@@ -312,28 +354,11 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	if m.spec.Metrics.IsEnabled() {
 		var c *core.Container
 
-		if features.MetricsExporter().Enabled() {
-			pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			if container, err := m.createMetricsExporterSidecarInternalExporter(); err != nil {
-				return err
-			} else {
-				c = container
-			}
+		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
+		if container, err := m.createMetricsExporterSidecarInternalExporter(); err != nil {
+			return err
 		} else {
-			switch m.spec.Metrics.Mode.Get() {
-			case api.MetricsModeExporter:
-				if !m.group.IsExportMetrics() {
-					break
-				}
-				fallthrough
-			case api.MetricsModeSidecar:
-				c = m.createMetricsExporterSidecarExternalExporter()
-
-				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			default:
-				pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
-			}
-
+			c = container
 		}
 		if c != nil {
 			pod.Spec.Containers = append(pod.Spec.Containers, *c)
@@ -343,81 +368,17 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.Pod) error {
 	// A sidecar provided by the user
 	sidecars := m.groupSpec.GetSidecars()
 	if len(sidecars) > 0 {
+		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
 	return nil
 }
 
-func (m *MemberArangoDPod) GetVolumes() ([]core.Volume, []core.VolumeMount) {
-	volumes := pod.NewVolumes()
+func (m *MemberArangoDPod) GetVolumes() []core.Volume {
+	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
 
-	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
-
-	if m.resources.context.GetLifecycleImage() != "" {
-		volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
-	}
-
-	if m.status.PersistentVolumeClaimName != "" {
-		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
-			m.status.PersistentVolumeClaimName)
-
-		volumes.AddVolume(vol)
-	} else {
-		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
-	}
-
-	// TLS
-	volumes.Append(pod.TLS(), m.AsInput())
-
-	// Encryption
-	volumes.Append(pod.Encryption(), m.AsInput())
-
-	// Security
-	volumes.Append(pod.Security(), m.AsInput())
-
-	if m.spec.Metrics.IsEnabled() {
-		if features.MetricsExporter().Enabled() {
-			token := m.spec.Metrics.GetJWTTokenSecretName()
-			if token != "" {
-				vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-				volumes.AddVolume(vol)
-			}
-		} else {
-			switch m.spec.Metrics.Mode.Get() {
-			case api.MetricsModeExporter:
-				if !m.group.IsExportMetrics() {
-					break
-				}
-				fallthrough
-			case api.MetricsModeSidecar:
-				token := m.spec.Metrics.GetJWTTokenSecretName()
-				if token != "" {
-					vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
-					volumes.AddVolume(vol)
-				}
-			}
-		}
-	}
-
-	volumes.Append(pod.JWT(), m.AsInput())
-
-	if m.resources.context.GetLifecycleImage() != "" {
-		volumes.AddVolume(k8sutil.LifecycleVolume())
-	}
-
-	// SNI
-	volumes.Append(pod.SNI(), m.AsInput())
-
-	if len(m.groupSpec.Volumes) > 0 {
-		volumes.AddVolume(m.groupSpec.Volumes.Volumes()...)
-	}
-
-	if len(m.groupSpec.VolumeMounts) > 0 {
-		volumes.AddVolumeMount(m.groupSpec.VolumeMounts.VolumeMounts()...)
-	}
-
-	return volumes.Volumes(), volumes.VolumeMounts()
+	return volumes.Volumes()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
@@ -436,9 +397,8 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		return nil, err
 	}
 
-	lifecycleImage := m.resources.context.GetLifecycleImage()
-	if lifecycleImage != "" {
-		c, err := k8sutil.InitLifecycleContainer(lifecycleImage, &m.spec.Lifecycle.Resources,
+	{
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), &m.spec.Lifecycle.Resources,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		if err != nil {
 			return nil, err
@@ -446,12 +406,11 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		initContainers = append(initContainers, c)
 	}
 
-	operatorUUIDImage := m.resources.context.GetOperatorUUIDImage()
-	if operatorUUIDImage != "" {
+	{
 		engine := m.spec.GetStorageEngine().AsArangoArgument()
 		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
 
-		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, operatorUUIDImage, requireUUID,
+		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable, m.resources.context.GetOperatorImage(), requireUUID,
 			m.groupSpec.SecurityContext.NewSecurityContext())
 		initContainers = append(initContainers, c)
 	}
@@ -459,22 +418,15 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	{
 		// Upgrade container - run in background
 		if m.autoUpgrade || m.status.Upgrade {
-			args, err := createArangodArgsWithUpgrade(cachedStatus, m.AsInput())
+			upgradeContainer := &ArangoUpgradeContainer{
+				m.GetContainerCreator(),
+				cachedStatus,
+				m.AsInput(),
+			}
+			c, err := k8sutil.NewContainer(upgradeContainer)
 			if err != nil {
 				return nil, err
 			}
-
-			c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
-			if err != nil {
-				return nil, err
-			}
-
-			_, c.VolumeMounts = m.GetVolumes()
-
-			c.Name = api.ServerGroupReservedInitContainerNameUpgrade
-			c.Lifecycle = nil
-			c.LivenessProbe = nil
-			c.ReadinessProbe = nil
 
 			initContainers = append(initContainers, c)
 		}
@@ -483,22 +435,17 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		{
 			versionArgs := pod.UpgradeVersionCheck().Args(m.AsInput())
 			if len(versionArgs) > 0 {
-				args, err := createArangodArgs(cachedStatus, m.AsInput(), versionArgs...)
+				upgradeContainer := &ArangoVersionCheckContainer{
+					m.GetContainerCreator(),
+					cachedStatus,
+					m.AsInput(),
+					versionArgs,
+				}
+
+				c, err := k8sutil.NewContainer(upgradeContainer)
 				if err != nil {
 					return nil, err
 				}
-
-				c, err := k8sutil.NewContainer(args, m.GetContainerCreator())
-				if err != nil {
-					return nil, err
-				}
-
-				_, c.VolumeMounts = m.GetVolumes()
-
-				c.Name = api.ServerGroupReservedInitContainerNameVersionCheck
-				c.Lifecycle = nil
-				c.LivenessProbe = nil
-				c.ReadinessProbe = nil
 
 				initContainers = append(initContainers, c)
 			}
@@ -509,7 +456,24 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {
-	return m.resources.CreatePodFinalizers(m.group)
+	var finalizers []string
+
+	if d := m.spec.GetServerGroupSpec(m.group).GetShutdownDelay(m.group); d != 0 {
+		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+	}
+
+	if features.GracefulShutdown().Enabled() {
+		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
+	} else {
+		switch m.group {
+		case api.ServerGroupAgents:
+			finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+		case api.ServerGroupDBServers:
+			finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+		}
+	}
+
+	return finalizers
 }
 
 func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
@@ -518,12 +482,15 @@ func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
 
 func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
-		member:    m,
-		spec:      m.spec,
-		group:     m.group,
-		resources: m.resources,
-		imageInfo: m.imageInfo,
-		groupSpec: m.groupSpec,
+		member:       m,
+		spec:         m.spec,
+		group:        m.group,
+		resources:    m.resources,
+		imageInfo:    m.imageInfo,
+		groupSpec:    m.groupSpec,
+		cachedStatus: m.cachedStatus,
+		input:        m.AsInput(),
+		status:       m.status,
 	}
 }
 
@@ -540,7 +507,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 		return nil, err
 	}
 
-	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
+	if m.spec.Authentication.IsAuthenticated() && m.spec.Metrics.GetJWTTokenSecretName() != "" {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 	}
 
@@ -549,33 +516,6 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 	}
 
 	return &c, nil
-}
-
-func (m *MemberArangoDPod) createMetricsExporterSidecarExternalExporter() *core.Container {
-	image := m.context.GetMetricsExporterImage()
-	if m.spec.Metrics.HasImage() {
-		image = m.spec.Metrics.GetImage()
-	}
-
-	args := createExporterArgs(m.spec, m.groupSpec)
-	if m.spec.Metrics.Mode.Get() == api.MetricsModeSidecar {
-		args = append(args, "--mode=passthru")
-	}
-
-	c := ArangodbExporterContainer(image, args,
-		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
-		m.groupSpec.SecurityContext.NewSecurityContext(),
-		m.spec)
-
-	if m.spec.Metrics.GetJWTTokenSecretName() != "" {
-		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
-	}
-
-	if pod.IsTLSEnabled(m.AsInput()) {
-		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
-	}
-
-	return &c
 }
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
@@ -605,4 +545,154 @@ func (m *MemberArangoDPod) Labels() map[string]string {
 	}
 
 	return l
+}
+
+// CreateArangoDVolumes returns wrapper with volumes for a pod and volume mounts for a container.
+func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.DeploymentSpec,
+	groupSpec api.ServerGroupSpec) pod.Volumes {
+	volumes := pod.NewVolumes()
+
+	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
+
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+
+	if status.PersistentVolumeClaimName != "" {
+		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(k8sutil.ArangodVolumeName,
+			status.PersistentVolumeClaimName)
+
+		volumes.AddVolume(vol)
+	} else {
+		volumes.AddVolume(k8sutil.CreateVolumeEmptyDir(k8sutil.ArangodVolumeName))
+	}
+
+	// TLS
+	volumes.Append(pod.TLS(), input)
+
+	// Encryption
+	volumes.Append(pod.Encryption(), input)
+
+	// Security
+	volumes.Append(pod.Security(), input)
+
+	if spec.Metrics.IsEnabled() {
+		token := spec.Metrics.GetJWTTokenSecretName()
+		if spec.Authentication.IsAuthenticated() && token != "" {
+			vol := k8sutil.CreateVolumeWithSecret(k8sutil.ExporterJWTVolumeName, token)
+			volumes.AddVolume(vol)
+		}
+	}
+
+	volumes.Append(pod.JWT(), input)
+
+	volumes.AddVolume(k8sutil.LifecycleVolume())
+
+	// SNI
+	volumes.Append(pod.SNI(), input)
+
+	if len(groupSpec.Volumes) > 0 {
+		volumes.AddVolume(groupSpec.Volumes.Volumes()...)
+	}
+
+	if len(groupSpec.VolumeMounts) > 0 {
+		volumes.AddVolumeMount(groupSpec.VolumeMounts.VolumeMounts()...)
+	}
+
+	return volumes
+}
+
+// GetArgs returns list of arguments for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetArgs() ([]string, error) {
+	return createArangodArgsWithUpgrade(a.cachedStatus, a.input)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameUpgrade
+}
+
+// GetProbes returns no probes for the ArangoD upgrade container.
+func (a *ArangoUpgradeContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	return nil, nil, nil, nil
+}
+
+// GetArgs returns list of arguments for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetArgs() ([]string, error) {
+	return createArangodArgs(a.cachedStatus, a.input, a.versionArgs...)
+}
+
+// GetLifecycle returns no lifecycle for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetLifecycle() (*core.Lifecycle, error) {
+	return nil, nil
+}
+
+// GetName returns the name of the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetName() string {
+	return api.ServerGroupReservedInitContainerNameVersionCheck
+}
+
+// GetProbes returns no probes for the ArangoD version check container.
+func (a *ArangoVersionCheckContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+	return nil, nil, nil, nil
+}
+
+// validateSidecars checks if all core names are in the sidecar list.
+// It returns error when at least one core name is missing.
+func validateSidecars(coreNames []string, sidecars []core.Container) error {
+	for _, coreName := range coreNames {
+		if api.IsReservedServerGroupContainerName(coreName) {
+			return fmt.Errorf("sidecar core name \"%s\" can not be used because it is reserved", coreName)
+		}
+
+		found := false
+		for _, sidecar := range sidecars {
+			if sidecar.Name == coreName {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("sidecar core name \"%s\" does not exist on the sidecars' list", coreName)
+		}
+	}
+
+	return nil
+
+}
+
+// addLifecycleSidecar adds lifecycle to all core sidecar unless the sidecar contains its own custom lifecycle.
+func addLifecycleSidecar(coreNames []string, sidecars []core.Container) error {
+	for _, coreName := range coreNames {
+		for i, sidecar := range sidecars {
+			if coreName != sidecar.Name {
+				continue
+			}
+
+			if sidecar.Lifecycle != nil && sidecar.Lifecycle.PreStop != nil {
+				// A user provided a custom lifecycle preStop, so break and check next core name container.
+				break
+			}
+
+			lifecycle, err := k8sutil.NewLifecycleFinalizers()
+			if err != nil {
+				return err
+			}
+
+			if sidecar.Lifecycle == nil {
+				sidecars[i].Lifecycle = lifecycle
+			} else {
+				// Set only preStop, because user can provide postStart lifecycle.
+				sidecars[i].Lifecycle.PreStop = lifecycle.PreStop
+			}
+
+			break
+		}
+	}
+
+	return nil
 }

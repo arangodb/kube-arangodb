@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+//go:build !enterprise
 // +build !enterprise
 
 package reconcile
@@ -37,6 +38,12 @@ func createTopologyEnablementPlan(ctx context.Context,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	return nil
 }
+func createTopologyMemberUpdatePlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
 
 func createTopologyMemberConditionPlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
@@ -46,6 +53,13 @@ func createTopologyMemberConditionPlan(ctx context.Context,
 }
 
 func createTopologyMemberAdjustmentPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	return nil
+}
+
+func createTopologyUpdatePlan(ctx context.Context,
 	log zerolog.Logger, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {

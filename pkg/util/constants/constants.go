@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Ewout Prangsma
+// Author Tomasz Mielech
 //
 
 package constants
@@ -28,13 +29,15 @@ const (
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
 	EnvOperatorPodIP          = "MY_POD_IP"
+	EnvArangoJobSAName        = "ARANGOJOB_SA_NAME"
 
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
-	EnvArangodJWTSecret          = "ARANGOD_JWT_SECRET"          // Contains JWT secret for the ArangoDB cluster
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 
-	SecretEncryptionKey = "key"   // Key in a Secret.Data used to store an 32-byte encryption key
-	SecretKeyToken      = "token" // Key inside a Secret used to hold a JWT or monitoring token
+	SecretEncryptionKey = "key"        // Key in a Secret.Data used to store an 32-byte encryption key
+	SecretKeyToken      = "token"      // Key inside a Secret used to hold a JWT or monitoring token
+	SecretKeyV2Token    = "token-v2"   // Key inside a Secret used to hold a License in V2 Format
+	SecretKeyV2License  = "license-v2" // Key inside a Secret used to hold a License in V2 Format
 
 	SecretCACertificate = "ca.crt" // Key in Secret.data used to store a PEM encoded CA certificate (public key)
 	SecretCAKey         = "ca.key" // Key in Secret.data used to store a PEM encoded CA private key
@@ -50,12 +53,14 @@ const (
 	FinalizerDeplReplStopSync          = "replication.database.arangodb.com/stop-sync"   // Finalizer added to ArangoDeploymentReplication, indicating the need to stop synchronization
 	FinalizerPodAgencyServing          = "agent.database.arangodb.com/agency-serving"    // Finalizer added to Agents, indicating the need for keeping enough agents alive
 	FinalizerPodDrainDBServer          = "dbserver.database.arangodb.com/drain"          // Finalizer added to DBServers, indicating the need for draining that dbserver
+	FinalizerPodGracefulShutdown       = "database.arangodb.com/graceful-shutdown"       // Finalizer added to All members, indicating the need for graceful shutdown
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
 	BackupLabelRole = "backup/role"
+	AppsLabelRole   = "apps/role"
 	LabelRole       = "role"
 	LabelRoleLeader = "leader"
 )

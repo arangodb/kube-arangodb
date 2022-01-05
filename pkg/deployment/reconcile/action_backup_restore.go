@@ -26,11 +26,12 @@ package reconcile
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 func init() {
@@ -55,7 +56,7 @@ type actionBackupRestore struct {
 
 func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
-	status := a.actionCtx.GetStatus()
+	status := a.actionCtx.GetStatusSnapshot()
 
 	if spec.RestoreFrom == nil {
 		return true, nil
@@ -66,7 +67,7 @@ func (a actionBackupRestore) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := context.WithTimeout(ctx, arangod.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	dbc, err := a.actionCtx.GetDatabaseClient(ctxChild)
 	if err != nil {

@@ -12,6 +12,8 @@ COMMIT := $(shell git rev-parse --short HEAD)
 DOCKERCLI := $(shell which docker)
 RELEASE_MODE ?= community
 
+MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
+
 GOBUILDDIR := $(SCRIPTDIR)/.gobuild
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
@@ -19,6 +21,7 @@ BINDIR := $(ROOTDIR)/bin
 VBINDIR := $(BINDIR)/$(RELEASE_MODE)
 VENDORDIR := $(ROOTDIR)/deps
 DASHBOARDDIR := $(ROOTDIR)/dashboard
+LOCALDIR := $(ROOT)/local
 
 ORGPATH := github.com/arangodb
 ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
@@ -26,15 +29,16 @@ REPONAME := kube-arangodb
 REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
+include $(ROOT)/$(RELEASE_MODE).mk
+
 GOPATH := $(GOBUILDDIR)
-GOVERSION := 1.10.0-alpine
+GOVERSION := 1.17-alpine3.15
+DISTRIBUTION := alpine:3.15
 
 PULSAR := $(GOBUILDDIR)/bin/pulsar$(shell go env GOEXE)
 GOASSETSBUILDER := $(GOBUILDDIR)/bin/go-assets-builder$(shell go env GOEXE)
 
 BUILDTIME = $(shell go run "$(ROOT)/tools/dategen/")
-
-DOCKERFILE := Dockerfile
 
 HELM ?= $(shell which helm)
 
@@ -57,6 +61,7 @@ HELM_CMD = $(HELM) template "$(ROOTDIR)/chart/$(CHART_NAME)" \
          	       --set "operator.image=$(OPERATORIMAGE)" \
          	       --set "operator.imagePullPolicy=Always" \
          	       --set "operator.resources=null" \
+         	       --set "operator.debug=$(DEBUG)" \
          	       --namespace "$(DEPLOYMENTNAMESPACE)"
 
 ifndef LOCALONLY
@@ -67,6 +72,17 @@ ifdef IMAGETAG
 	IMAGESUFFIX := :$(IMAGETAG)
 else
 	IMAGESUFFIX := :dev
+endif
+
+ifdef DEBUG
+	DEBUG := true
+	DOCKERFILE := Dockerfile.debug
+	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
+	COMPILE_DEBUG_FLAGS := -gcflags="all=-N -l"
+else
+	DEBUG := false
+	DOCKERFILE := Dockerfile
+	COMPILE_DEBUG_FLAGS :=
 endif
 
 ifeq ($(MANIFESTSUFFIX),-)
@@ -81,6 +97,7 @@ MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
+MANIFESTPATHAPPS := manifests/arango-apps$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
@@ -88,6 +105,7 @@ KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHAPPS := manifests/kustomize/apps/arango-apps$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHTEST := manifests/kustomize/test/arango-test$(MANIFESTSUFFIX).yaml
@@ -119,14 +137,15 @@ endif
 
 BINNAME := $(PROJECT)
 BIN := $(BINDIR)/$(BINNAME)
-VBIN := $(BINDIR)/$(RELEASE_MODE)/$(BINNAME)
+VBIN_LINUX_AMD64 := $(BINDIR)/$(RELEASE_MODE)/linux/amd64/$(BINNAME)
+VBIN_LINUX_ARM64 := $(BINDIR)/$(RELEASE_MODE)/linux/arm64/$(BINNAME)
 
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
 endif
 
 EXCLUDE_DIRS := tests vendor .gobuild deps tools
-SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "./$(EXCLUDE_DIR)/*")
+SOURCES_QUERY := find ./ -type f -name '*.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*")
 SOURCES := $(shell $(SOURCES_QUERY))
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
@@ -193,7 +212,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
 .PHONY: check-vars
 check-vars:
@@ -219,7 +238,7 @@ update-generated:
 			"all" \
 			"github.com/arangodb/kube-arangodb/pkg/generated" \
 			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1" \
+			"deployment:v1 replication:v1 storage:v1alpha backup:v1 deployment:v2alpha1 replication:v2alpha1 apps:v1" \
 			--go-header-file "./tools/codegen/boilerplate.go.txt" \
 			$(VERIFYARGS)
 	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
@@ -245,27 +264,37 @@ dashboard/assets.go:
 		$(DASHBOARDBUILDIMAGE)
 	$(GOPATH)/bin/go-assets-builder -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
-.PHONY: bin
+.PHONY: bin bin-all
 bin: $(BIN)
+bin-all: $(BIN) $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 
-$(VBIN): $(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(VBINDIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN) $(REPOPATH)
+$(VBIN_LINUX_AMD64): $(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/amd64
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_AMD64) ./
 
-$(BIN): $(VBIN)
-	@cp "$(VBIN)" "$(BIN)"
+$(VBIN_LINUX_ARM64): $(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/linux/arm64
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build --tags "$(RELEASE_MODE)" $(COMPILE_DEBUG_FLAGS) -installsuffix netgo -ldflags "-X $(REPOPATH)/pkg/version.version=$(VERSION) -X $(REPOPATH)/pkg/version.buildDate=$(BUILDTIME) -X $(REPOPATH)/pkg/version.build=$(COMMIT)" -o $(VBIN_LINUX_ARM64) ./
+
+$(BIN): $(VBIN_LINUX_AMD64)
+	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
 
 .PHONY: docker
-docker: check-vars $(BIN)
-	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" -t $(OPERATORIMAGE) .
+docker: check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
-	docker push $(OPERATORIMAGE)
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
+else
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
 endif
 
 .PHONY: docker-ubi
-docker-ubi: check-vars $(BIN)
-	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
-	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
+docker-ubi: check-vars $(VBIN_LINUX_AMD64)
+	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
+	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORUBIIMAGE)
 endif
@@ -303,30 +332,42 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
        --set "operator.features.deployment=true" \
 	   --set "operator.features.deploymentReplications=false" \
 	   --set "operator.features.storage=false" \
+	   --set "operator.features.apps=false" \
 	   --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
        --set "operator.features.deployment=false" \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
        --set "operator.features.backup=true"))
+
+$(eval $(call manifest-generator, apps, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.apps=true" \
+       --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
        --set "operator.features.deployment=true" \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=true" \
+       --set "operator.features.apps=true" \
        --set "operator.features.backup=true"))
 
 .PHONY: chart-crd
@@ -355,11 +396,8 @@ run-unit-tests: $(SOURCES)
 		$(REPOPATH)/pkg/apis/storage/... \
 		$(REPOPATH)/pkg/deployment/... \
 		$(REPOPATH)/pkg/storage \
-		$(REPOPATH)/pkg/util/k8sutil \
-		$(REPOPATH)/pkg/util/k8sutil/test \
-		$(REPOPATH)/pkg/util/probe \
-		$(REPOPATH)/pkg/util/validation \
-		$(REPOPATH)/pkg/backup/...
+		$(REPOPATH)/pkg/util/... \
+		$(REPOPATH)/pkg/handlers/...
 
 # Release building
 
@@ -391,18 +429,18 @@ init: tools update-generated $(BIN) vendor
 .PHONY: tools
 tools: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.40.0
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
 	@echo ">> Fetching goimports"
-	@go get golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@0bb7e5c47b1a31f85d4f173edc878a8e049764a5
 	@echo ">> Fetching license check"
-	@go get github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
+	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@6d92264d717064f28b32464f0f9693a5b4ef0239
 	@echo ">> Fetching GO Assets Builder"
-	@go get github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
+	@GOBIN=$(GOPATH)/bin go install github.com/jessevdk/go-assets-builder@b8483521738fd2198ecfc378067a4e8a6079f8e5
 
 .PHONY: vendor
 vendor:
 	@echo ">> Updating vendor"
-	@go mod vendor
+	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
 set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
@@ -417,7 +455,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 	      "$(ROOT)/pkg/util/" \
-	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
@@ -427,7 +465,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
-	      "$(ROOT)/pkg/backup/" \
+	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
@@ -437,7 +475,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/operator/" \
 		  "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
-		  "$(ROOT)/pkg/backup/" \
+		  "$(ROOT)/pkg/handlers" \
 		  "$(ROOT)/pkg/apis/backup/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 sed -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"

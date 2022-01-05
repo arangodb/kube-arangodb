@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 // Author Adam Janikowski
+// Author Tomasz Mielech
 //
 
 package pod
@@ -36,6 +37,10 @@ func UpgradeVersionCheck() Builder {
 
 type upgradeVersionCheck struct{}
 
+func (u upgradeVersionCheck) Envs(i Input) []core.EnvVar {
+	return nil
+}
+
 func (u upgradeVersionCheck) Args(i Input) k8sutil.OptionPairs {
 	if features.UpgradeVersionCheck().Enabled() {
 		switch i.Group {
@@ -52,10 +57,6 @@ func (u upgradeVersionCheck) Args(i Input) k8sutil.OptionPairs {
 
 func (u upgradeVersionCheck) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	return nil, nil
-}
-
-func (u upgradeVersionCheck) Envs(i Input) []core.EnvVar {
-	return nil
 }
 
 func (u upgradeVersionCheck) Verify(i Input, cachedStatus interfaces.Inspector) error {

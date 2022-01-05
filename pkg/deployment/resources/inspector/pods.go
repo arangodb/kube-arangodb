@@ -26,11 +26,12 @@ package inspector
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,10 +129,10 @@ func podPointer(pod core.Pod) *core.Pod {
 }
 
 func getPods(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]core.Pod, error) {
-	ctxChild, cancel := context.WithTimeout(ctx, k8sutil.GetRequestTimeout())
+	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	pods, err := k.CoreV1().Pods(namespace).List(ctxChild, meta.ListOptions{
-		Limit:    128,
+		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})
 

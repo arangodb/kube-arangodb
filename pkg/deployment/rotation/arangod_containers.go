@@ -26,9 +26,12 @@ package rotation
 import (
 	"strings"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
+
+	"k8s.io/apimachinery/pkg/api/equality"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
 )
 
@@ -47,23 +50,44 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 		}
 
 		for id := range a {
-			if ac, bc := &a[id], &b[id]; ac.Name == k8sutil.ServerContainerName && ac.Name == bc.Name {
-				if !IsOnlyLogLevelChanged(ac.Command, bc.Command) {
-					continue
+			if ac, bc := &a[id], &b[id]; ac.Name == bc.Name {
+				if ac.Name == api.ServerGroupReservedContainerNameServer {
+					if isOnlyLogLevelChanged(ac.Command, bc.Command) {
+						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
+							AddParam(ContainerName, ac.Name))
+
+						bc.Command = ac.Command
+						mode = mode.And(InPlaceRotation)
+					}
+
+					if !equality.Semantic.DeepEqual(ac.Env, bc.Env) {
+						if areEnvsEqual(ac.Env, bc.Env, func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar) {
+							delete(a, topology.ArangoDBZone)
+							delete(b, topology.ArangoDBZone)
+
+							return a, b
+						}) {
+							bc.Env = ac.Env
+							mode = mode.And(SilentRotation)
+						}
+					}
+
+					if !areProbesEqual(ac.StartupProbe, bc.StartupProbe) {
+						bc.StartupProbe = ac.StartupProbe
+						mode = mode.And(SilentRotation)
+					}
+				} else {
+					if ac.Image != bc.Image {
+						// Image changed
+						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).AddParam(ContainerName, ac.Name).AddParam(ContainerImage, ac.Image))
+
+						bc.Image = ac.Image
+						mode = mode.And(InPlaceRotation)
+					}
 				}
 
-				plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate).
-					AddParam(ContainerName, ac.Name))
-
-				bc.Command = ac.Command
-				mode = mode.And(InPlaceRotation)
-			} else if ac.Name == bc.Name {
-				if ac.Image != bc.Image {
-					// Image changed
-					plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).AddParam(ContainerName, ac.Name).AddParam(ContainerImage, ac.Image))
-
-					bc.Image = ac.Image
-					mode = mode.And(InPlaceRotation)
+				if api.IsReservedServerGroupContainerName(ac.Name) {
+					mode = mode.And(internalContainerLifecycleCompare(ac, bc))
 				}
 			}
 		}
@@ -73,52 +97,60 @@ func containersCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *co
 }
 
 func initContainersCompare(deploymentSpec api.DeploymentSpec, group api.ServerGroup, spec, status *core.PodSpec) compareFunc {
-	return func(builder api.ActionBuilder) (mode Mode, plan api.Plan, err error) {
+	return func(builder api.ActionBuilder) (Mode, api.Plan, error) {
 		gs := deploymentSpec.GetServerGroupSpec(group)
+
+		equal, err := util.CompareJSON(spec.InitContainers, status.InitContainers)
+		if err != nil {
+			return SkippedRotation, nil, err
+		}
+
+		// if equal nothing to do
+		if equal {
+			return SkippedRotation, nil, nil
+		}
 
 		switch gs.InitContainers.GetMode().Get() {
 		case api.ServerGroupInitContainerIgnoreMode:
 			// Just copy spec to status if different
-			if equal, err := util.CompareJSON(spec.InitContainers, status.InitContainers); err != nil {
-				return 0, nil, err
-			} else if !equal {
+			if !equal {
 				status.InitContainers = spec.InitContainers
-				mode = mode.And(SilentRotation)
+				return SilentRotation, nil, err
 			} else {
-				return 0, nil, err
+				return SkippedRotation, nil, err
 			}
 		default:
-			if len(status.InitContainers) != len(spec.InitContainers) {
-				// Nothing to do, count is different
-				return
-			}
-
-			for id := range status.InitContainers {
-				if status.InitContainers[id].Name != spec.InitContainers[id].Name {
-					// Nothing to do, order is different
-					return
-				}
-			}
-
-			for id := range status.InitContainers {
-				if api.IsReservedServerGroupInitContainerName(status.InitContainers[id].Name) {
-					if equal, err := util.CompareJSON(spec.InitContainers[id], status.InitContainers[id]); err != nil {
-						return 0, nil, err
-					} else if !equal {
-						status.InitContainers[id] = spec.InitContainers[id]
-						mode = mode.And(SilentRotation)
-					}
-				}
+			statusInitContainers, specInitContainers := filterReservedInitContainers(status.InitContainers), filterReservedInitContainers(spec.InitContainers)
+			if equal, err := util.CompareJSON(specInitContainers, statusInitContainers); err != nil {
+				return SkippedRotation, nil, err
+			} else if equal {
+				status.InitContainers = spec.InitContainers
+				return SilentRotation, nil, nil
 			}
 		}
 
-		return
+		return SkippedRotation, nil, nil
 	}
 }
 
-// IsOnlyLogLevelChanged returns true when status and spec log level arguments are different.
+// filterReservedInitContainers filters out reserved container names (which does not enforce restarts)
+func filterReservedInitContainers(c []core.Container) []core.Container {
+	r := make([]core.Container, 0, len(c))
+
+	for id := range c {
+		if api.IsReservedServerGroupInitContainerName(c[id].Name) {
+			continue
+		}
+
+		r = append(r, c[id])
+	}
+
+	return r
+}
+
+// isOnlyLogLevelChanged returns true when status and spec log level arguments are different.
 // If any other argument than --log.level is different false is returned.
-func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
+func isOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
 	diff := util.DiffStrings(specArgs, statusArgs)
 	if len(diff) == 0 {
 		return false
@@ -131,4 +163,58 @@ func IsOnlyLogLevelChanged(specArgs, statusArgs []string) bool {
 	}
 
 	return true
+}
+
+func internalContainerLifecycleCompare(spec, status *core.Container) Mode {
+	if spec.Lifecycle == nil && status.Lifecycle == nil {
+		return SkippedRotation
+	}
+
+	if spec.Lifecycle == nil {
+		status.Lifecycle = nil
+		return SilentRotation
+	}
+
+	if status.Lifecycle == nil {
+		status.Lifecycle = spec.Lifecycle
+		return SilentRotation
+	}
+
+	if !equality.Semantic.DeepEqual(spec.Lifecycle, status.Lifecycle) {
+		status.Lifecycle = spec.Lifecycle.DeepCopy()
+		return SilentRotation
+	}
+
+	return SkippedRotation
+}
+
+func areEnvsEqual(a, b []core.EnvVar, rules ...func(a, b map[string]core.EnvVar) (map[string]core.EnvVar, map[string]core.EnvVar)) bool {
+	am := getEnvs(a)
+	bm := getEnvs(b)
+
+	for _, r := range rules {
+		am, bm = r(am, bm)
+	}
+
+	return equality.Semantic.DeepEqual(am, bm)
+}
+
+func getEnvs(e []core.EnvVar) map[string]core.EnvVar {
+	m := map[string]core.EnvVar{}
+
+	for _, q := range e {
+		m[q.Name] = q
+	}
+
+	return m
+}
+
+func areProbesEqual(a, b *core.Probe) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return equality.Semantic.DeepEqual(a, b)
 }

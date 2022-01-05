@@ -49,7 +49,7 @@ func (a ActionType) String() string {
 // Priority returns plan priority
 func (a ActionType) Priority() ActionPriority {
 	switch a {
-	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition:
+	case ActionTypeMemberPhaseUpdate, ActionTypeMemberRIDUpdate, ActionTypeSetMemberCondition, ActionTypeSetCondition, ActionTypeSetMemberConditionV2:
 		return ActionPriorityHigh
 	default:
 		return ActionPriorityNormal
@@ -73,6 +73,8 @@ const (
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 	// ActionTypeResignLeadership causes a member to resign leadership.
 	ActionTypeResignLeadership ActionType = "ResignLeadership"
+	// ActionTypeKillMemberPod causes a pod to get delete request. It also waits until Delay finalizer will be removed.
+	ActionTypeKillMemberPod ActionType = "KillMemberPod"
 	// ActionTypeRotateMember causes a member to be shutdown and have it's pod removed.
 	ActionTypeRotateMember ActionType = "RotateMember"
 	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.
@@ -159,12 +161,20 @@ const (
 	ActionTypeMemberPhaseUpdate ActionType = "MemberPhaseUpdate"
 	// ActionTypeSetMemberCondition sets member condition. It is high priority action.
 	ActionTypeSetMemberCondition ActionType = "SetMemberCondition"
+	// ActionTypeSetMemberConditionV2 sets member condition. It is high priority action.
+	ActionTypeSetMemberConditionV2 ActionType = "SetMemberConditionV2"
+	// ActionTypeSetCondition sets condition. It is high priority action.
+	ActionTypeSetCondition ActionType = "SetCondition"
+	// ActionTypeSetConditionV2 sets condition. It is high priority action.
+	ActionTypeSetConditionV2 ActionType = "SetConditionV2"
 	// ActionTypeMemberRIDUpdate updated member Run ID (UID). High priority
 	ActionTypeMemberRIDUpdate ActionType = "MemberRIDUpdate"
 	// ActionTypeArangoMemberUpdatePodSpec updates pod spec
 	ActionTypeArangoMemberUpdatePodSpec ActionType = "ArangoMemberUpdatePodSpec"
 	// ActionTypeArangoMemberUpdatePodStatus updates pod spec
 	ActionTypeArangoMemberUpdatePodStatus ActionType = "ArangoMemberUpdatePodStatus"
+	// ActionTypeLicenseSet sets server license
+	ActionTypeLicenseSet ActionType = "LicenseSet"
 
 	// Runtime Updates
 	// ActionTypeRuntimeContainerImageUpdate updates container image in runtime
@@ -175,7 +185,12 @@ const (
 	// Topology
 	ActionTypeTopologyEnable           ActionType = "TopologyEnable"
 	ActionTypeTopologyDisable          ActionType = "TopologyDisable"
+	ActionTypeTopologyZonesUpdate      ActionType = "TopologyZonesUpdate"
 	ActionTypeTopologyMemberAssignment ActionType = "TopologyMemberAssignment"
+
+	// Rebalancer
+	ActionTypeRebalancerGenerate ActionType = "RebalancerGenerate"
+	ActionTypeRebalancerCheck    ActionType = "RebalancerCheck"
 )
 
 const (
@@ -284,6 +299,11 @@ func NewActionBuilder(group ServerGroup, memberID string) ActionBuilder {
 func (a Action) SetImage(image string) Action {
 	a.Image = image
 	return a
+}
+
+// IsStarted returns true if the action has been started already.
+func (a Action) IsStarted() bool {
+	return !a.StartTime.IsZero()
 }
 
 // AsPlan parse action list into plan
