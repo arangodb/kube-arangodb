@@ -28,9 +28,9 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -45,6 +45,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 		// Storage cannot be changed in single server deployments
 		return nil
 	}
+
 	var plan api.Plan
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
@@ -78,24 +79,22 @@ func createRotateServerStoragePlan(ctx context.Context,
 				// Storage class has changed to non-empty value.
 				if util.StringOrDefault(pvc.Spec.StorageClassName) != "" {
 					// It was set to something else beforehand, so it is not the initialization.
-					pod, ok := cachedStatus.Pod(m.PodName)
-					if !ok {
-						log.Warn().
-							Str("role", group.AsRole()).
-							Str("id", m.ID).
-							Msg("Failed to get pod")
-						continue
+					reason := "Storage class changed"
+					message := fmt.Sprintf("%s annotation is required to be set on the pod %s",
+						deployment.ArangoDeploymentPodReplaceAnnotation, m.PodName)
+
+					if c, _ := m.Conditions.Get(api.MemberReplacementRequired); !c.IsTrue() {
+						plan = append(plan, updateMemberConditionActionV2(group, m.ID,
+							reason, api.MemberReplacementRequired, true, reason, message, ""))
+						context.CreateEvent(k8sutil.NewWarningEvent(reason, message, apiObject))
 					}
 
-					if _, ok := pod.GetAnnotations()[constants.AnnotationReplaceStorageClassName]; !ok {
-						// The PVC's storage class was already set, but it tries changing it to something else.
-						log.Warn().
-							Str("pod-name", m.PodName).
-							Str("server-group", group.AsRole()).
-							Msgf("try changing a storage class name, but waiting for the existence of the "+
-								"annotation 'spec.annotation[%s]' on the pod", constants.AnnotationReplaceStorageClassName)
-						continue
-					}
+					log.Warn().
+						Str("pod-name", m.PodName).
+						Str("server-group", group.AsRole()).
+						Msgf("try changing a storage class name, but %s", message)
+
+					continue
 				}
 
 				log.Info().Str("pod-name", m.PodName).

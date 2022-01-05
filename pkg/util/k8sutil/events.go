@@ -267,6 +267,15 @@ func NewErrorEvent(reason string, err error, apiObject APIObject) *Event {
 	return event
 }
 
+// NewWarningEvent creates a warning event with the given message and reason.
+func NewWarningEvent(reason, message string, apiObject APIObject) *Event {
+	event := newDeploymentEvent(apiObject)
+	event.Type = v1.EventTypeWarning
+	event.Reason = strings.Title(reason)
+	event.Message = message
+	return event
+}
+
 // newDeploymentEvent creates a new event for the given api object & owner.
 func newDeploymentEvent(apiObject runtime.Object) *Event {
 	return &Event{
