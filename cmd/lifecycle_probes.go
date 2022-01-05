@@ -17,10 +17,8 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Adam Janikowski
-//
 
-package main
+package cmd
 
 import (
 	"crypto/tls"

@@ -102,3 +102,10 @@ Please add following to your `~/bashrc` or `~/.zshrc` file (it requires Homebrew
 HOMEBREW_PREFIX=$(brew --prefix)
 for d in ${HOMEBREW_PREFIX}/opt/*/libexec/gnubin; do export PATH=$d:$PATH; done
 ```
+
+## Change Go version
+#### Change file Makefile
+* GOVERSION := e.g. 1.17-alpine3.15
+* DISTRIBUTION := e.g. alpine:3.15
+#### Change file .travis.yml
+#### Change file go.mod

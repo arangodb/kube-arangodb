@@ -17,10 +17,8 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
-package main
+package cmd
 
 import (
 	"context"
@@ -47,7 +45,7 @@ import (
 var (
 	cmdLifecycle = &cobra.Command{
 		Use:    "lifecycle",
-		Run:    cmdUsage,
+		Run:    executeUsage,
 		Hidden: true,
 	}
 

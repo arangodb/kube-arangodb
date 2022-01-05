@@ -18,6 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+//go:build !enterprise
 // +build !enterprise
 
 package topology
