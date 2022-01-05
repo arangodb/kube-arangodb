@@ -301,6 +301,11 @@ func (a Action) SetImage(image string) Action {
 	return a
 }
 
+// IsStarted returns true if the action has been started already.
+func (a Action) IsStarted() bool {
+	return !a.StartTime.IsZero()
+}
+
 // AsPlan parse action list into plan
 func AsPlan(a []Action) Plan {
 	return a
