@@ -106,6 +106,9 @@ spec:
 {{ if .Values.operator.features.apps }}
                     - --operator.apps
 {{- end }}
+{{ if .Values.operator.features.k8sToK8sClusterSync }}
+                    - --operator.k2k-cluster-sync
+{{- end }}
                     - --chaos.allowed={{ .Values.operator.allowChaos }}
 {{- if .Values.operator.args }}
 {{- range .Values.operator.args }}

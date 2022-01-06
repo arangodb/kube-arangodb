@@ -39,6 +39,7 @@ operator:
     storage: false
     backup: false
     apps: false
+    k8sToK8sClusterSync: false
 
   images:
     base: alpine:3.11
