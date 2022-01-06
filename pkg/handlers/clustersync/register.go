@@ -22,7 +22,7 @@ package clustersync
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -32,16 +32,16 @@ import (
 )
 
 func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {
-	return eventRecorder.NewInstance(v2alpha1.SchemeGroupVersion.Group,
-		v2alpha1.SchemeGroupVersion.Version,
+	return eventRecorder.NewInstance(v1.SchemeGroupVersion.Group,
+		v1.SchemeGroupVersion.Version,
 		deployment.ArangoClusterSynchronizationResourceKind)
 }
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Database().V2alpha1().ArangoClusterSynchronizations().Informer(),
-		v2alpha1.SchemeGroupVersion.Group,
-		v2alpha1.SchemeGroupVersion.Version,
+		v1.SchemeGroupVersion.Group,
+		v1.SchemeGroupVersion.Version,
 		deployment.ArangoClusterSynchronizationResourceKind); err != nil {
 		return err
 	}

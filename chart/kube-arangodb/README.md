@@ -24,6 +24,9 @@ Possible Operators:
 - `ArangoDeployment` - enabled by default
 - `ArangoDeploymentReplications` - enabled by default
 - `ArangoLocalStorage` - disabled by default
+- `ArangoBackup` - disabled by default
+- `ArangoJob` - disabled by default
+- `ArangoClusterSynchronization` - disabled by default
 
 To install Operators in mode "One per Helm Release" we can use:
 
@@ -31,19 +34,10 @@ To install Operators in mode "One per Helm Release" we can use:
 helm install --name arango-deployment kube-arangodb.tar.gz \
              --set operator.features.deployment=true \
              --set operator.features.deploymentReplications=false \
-             --set operator.features.storage=false
-
-
-helm install --name arango-deployment-replications kube-arangodb.tar.gz \
-             --set operator.features.deployment=false \
-             --set operator.features.deploymentReplications=true \
-             --set operator.features.storage=false
-
-
-helm install --name arango-storage kube-arangodb.tar.gz \
-             --set operator.features.deployment=false \
-             --set operator.features.deploymentReplications=false \
-             --set operator.features.storage=true
+             --set operator.features.storage=false \
+             --set operator.features.backup=false \
+             --set operator.features.apps=false \
+             --set operator.features.k8sToK8sClusterSync=false
 ```
 
 
@@ -152,6 +146,18 @@ Default: `false`
 ### `operator.features.backup`
 
 Define if ArangoBackup Operator should be enabled.
+
+Default: `false`
+
+### `operator.features.apps`
+
+Define if ArangoJob Operator should be enabled.
+
+Default: `false`
+
+### `operator.features.k8sToK8sClusterSync`
+
+Define if ArangoClusterSynchronization Operator should be enabled.
 
 Default: `false`
 

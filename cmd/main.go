@@ -422,6 +422,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
+		K2KClusterSyncProbe:        &k2KClusterSyncProbe,
 	}
 
 	return cfg, deps, nil

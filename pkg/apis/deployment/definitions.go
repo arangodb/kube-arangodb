@@ -39,5 +39,6 @@ const (
 )
 
 var (
-	ArangoDeploymentShortNames = []string{"arangodb", "arango"}
+	ArangoDeploymentShortNames             = []string{"arangodb", "arango"}
+	ArangoClusterSynchronizationShortNames = []string{"arangoclustersync"}
 )
