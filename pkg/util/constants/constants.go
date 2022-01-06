@@ -58,8 +58,9 @@ const (
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
-	BackupLabelRole               = "backup/role"
-	AppsLabelRole                 = "apps/role"
-	LabelRole                     = "role"
-	LabelRoleLeader               = "leader"
+
+	BackupLabelRole = "backup/role"
+	AppsLabelRole   = "apps/role"
+	LabelRole       = "role"
+	LabelRoleLeader = "leader"
 )
