@@ -31,14 +31,18 @@ import (
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
+	backupdef "github.com/arangodb/kube-arangodb/pkg/apis/backup"
+	depldef "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	repldef "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
@@ -46,6 +50,7 @@ import (
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/clustersync"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -65,8 +70,9 @@ const (
 type operatorV2type string
 
 const (
-	backupOperator operatorV2type = "backup"
-	appsOperator   operatorV2type = "apps"
+	backupOperator         operatorV2type = "backup"
+	appsOperator           operatorV2type = "apps"
+	k2KClusterSyncOperator operatorV2type = "k2kclustersync"
 )
 
 type Event struct {
@@ -98,6 +104,7 @@ type Config struct {
 	EnableStorage               bool
 	EnableBackup                bool
 	EnableApps                  bool
+	EnableK2KClusterSync        bool
 	AllowChaos                  bool
 	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
@@ -117,6 +124,7 @@ type Dependencies struct {
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
 	AppsProbe                  *probe.ReadyProbe
+	K2KClusterSyncProbe        *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
@@ -169,49 +177,42 @@ func (o *Operator) Run() {
 			go o.runWithoutLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		}
 	}
+	if o.Config.EnableK2KClusterSync {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-k2k-cluster-sync-operator", constants.ClusterSyncLabelRole, o.onStartK2KClusterSync, o.Dependencies.K2KClusterSyncProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-k2k-cluster-sync-operator", constants.ClusterSyncLabelRole, o.onStartK2KClusterSync, o.Dependencies.K2KClusterSyncProbe)
+		}
+	}
 	// Wait until process terminates
 	<-context.TODO().Done()
 }
 
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
-	for {
-		if err := o.waitForCRD(true, false, false, false); err == nil {
-			break
-		} else {
-			log.Error().Err(err).Msg("Resource initialization failed")
-			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
-			time.Sleep(initRetryWaitTime)
-		}
+	checkFn := func() error {
+		_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
 	}
+	o.waitForCRD(depldef.ArangoDeploymentCRDName, checkFn)
 	o.runDeployments(stop)
 }
 
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
 func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
-	for {
-		if err := o.waitForCRD(false, true, false, false); err == nil {
-			break
-		} else {
-			log.Error().Err(err).Msg("Resource initialization failed")
-			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
-			time.Sleep(initRetryWaitTime)
-		}
+	checkFn := func() error {
+		_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
 	}
+	o.waitForCRD(repldef.ArangoDeploymentReplicationCRDName, checkFn)
 	o.runDeploymentReplications(stop)
 }
 
 // onStartStorage starts the storage operator and run till given channel is closed.
 func (o *Operator) onStartStorage(stop <-chan struct{}) {
-	for {
-		if err := o.waitForCRD(false, false, true, false); err == nil {
-			break
-		} else {
-			log.Error().Err(err).Msg("Resource initialization failed")
-			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
-			time.Sleep(initRetryWaitTime)
-		}
-	}
+	o.waitForCRD(lsapi.ArangoLocalStorageCRDName, nil)
+	o.runDeploymentReplications(stop)
+
 	o.runLocalStorages(stop)
 }
 
@@ -225,17 +226,13 @@ func (o *Operator) onStartApps(stop <-chan struct{}) {
 	o.onStartOperatorV2(appsOperator, stop)
 }
 
+// onStartK2KClusterSync starts the operator and run till given channel is closed.
+func (o *Operator) onStartK2KClusterSync(stop <-chan struct{}) {
+	o.onStartOperatorV2(k2KClusterSyncOperator, stop)
+}
+
 // onStartOperatorV2 run the operatorV2 type
 func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
-	for {
-		if err := o.waitForCRD(false, false, false, true); err == nil {
-			break
-		} else {
-			log.Error().Err(err).Msg("Resource initialization failed")
-			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
-			time.Sleep(initRetryWaitTime)
-		}
-	}
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
 	operator := operatorV2.NewOperator(o.Dependencies.LogService.MustGetLogger(logging.LoggerNameReconciliation), operatorName, o.Namespace, o.OperatorImage)
 
@@ -264,14 +261,43 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	switch operatorType {
 	case appsOperator:
+		checkFn := func() error {
+			_, err := o.CRCli.AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
+			return err
+		}
+		o.waitForCRD(apps.ArangoJobCRDName, checkFn)
+
 		if err = job.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 			panic(err)
 		}
 	case backupOperator:
+		checkFn := func() error {
+			_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
+			return err
+		}
+		o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
+
 		if err = backup.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 			panic(err)
 		}
+
+		checkFn = func() error {
+			_, err := o.CRCli.BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
+			return err
+		}
+		o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
+
 		if err = policy.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
+			panic(err)
+		}
+	case k2KClusterSyncOperator:
+		checkFn := func() error {
+			_, err := o.CRCli.DatabaseV1().ArangoClusterSynchronizations(o.Namespace).List(context.Background(), meta.ListOptions{})
+			return err
+		}
+		o.waitForCRD(depldef.ArangoClusterSynchronizationCRDName, checkFn)
+
+		if err = clustersync.RegisterInformer(operator, eventRecorder, arangoClientSet, kubeClientSet, arangoInformer); err != nil {
 			panic(err)
 		}
 	}

@@ -17,89 +17,38 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Ewout Prangsma
-//
 
 package operator
 
 import (
-	"context"
+	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
-	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// waitForCRD waits for the CustomResourceDefinition (created externally)
-// to be ready.
-func (o *Operator) waitForCRD(enableDeployment, enableDeploymentReplication, enableStorage, enableBackup bool) error {
+// waitForCRD waits for the CustomResourceDefinition (created externally) to be ready.
+func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
 	log := o.log
+	log.Debug().Msgf("Waiting for %s CRD to be ready - ", crdName)
 
-	if o.Scope.IsNamespaced() {
-		if enableDeployment {
-			log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
-			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
-				return err
-			}); err != nil {
-				return errors.WithStack(err)
+	for {
+		var err error = nil
+		if o.Scope.IsNamespaced() {
+			if checkFn != nil {
+				err = crd.WaitReady(checkFn)
 			}
+		} else {
+			err = crd.WaitCRDReady(o.KubeExtCli, crdName)
 		}
 
-		if enableDeploymentReplication {
-			log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
-			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.ReplicationV1().ArangoDeploymentReplications(o.Namespace).List(context.Background(), meta.ListOptions{})
-				return err
-			}); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-
-		if enableBackup {
-			log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
-			if err := crd.WaitReady(func() error {
-				_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
-				return err
-			}); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-	} else {
-		if enableDeployment {
-			log.Debug().Msg("Waiting for ArangoDeployment CRD to be ready")
-			if err := crd.WaitCRDReady(o.KubeExtCli, deployment.ArangoDeploymentCRDName); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-
-		if enableDeploymentReplication {
-			log.Debug().Msg("Waiting for ArangoDeploymentReplication CRD to be ready")
-			if err := crd.WaitCRDReady(o.KubeExtCli, replication.ArangoDeploymentReplicationCRDName); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-
-		if enableStorage {
-			log.Debug().Msg("Waiting for ArangoLocalStorage CRD to be ready")
-			if err := crd.WaitCRDReady(o.KubeExtCli, lsapi.ArangoLocalStorageCRDName); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-
-		if enableBackup {
-			log.Debug().Msg("Wait for ArangoBackup CRD to be ready")
-			if err := crd.WaitCRDReady(o.KubeExtCli, backup.ArangoBackupCRDName); err != nil {
-				return errors.WithStack(err)
-			}
+		if err == nil {
+			break
+		} else {
+			log.Error().Err(err).Msg("Resource initialization failed")
+			log.Info().Msgf("Retrying in %s...", initRetryWaitTime)
+			time.Sleep(initRetryWaitTime)
 		}
 	}
 
 	log.Debug().Msg("CRDs ready")
-
-	return nil
 }

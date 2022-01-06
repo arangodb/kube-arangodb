@@ -1,0 +1,5 @@
+apiVersion: database.arangodb.com/v1
+kind: ArangoClusterSynchronization
+metadata:
+  name: arangoclustersync-sample
+spec:

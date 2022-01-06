@@ -52,6 +52,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoDeploymentList{},
 		&ArangoMember{},
 		&ArangoMemberList{},
+		&ArangoClusterSynchronization{},
+		&ArangoClusterSynchronizationList{},
 	)
 	metav1.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
