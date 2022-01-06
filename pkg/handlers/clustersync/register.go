@@ -39,7 +39,7 @@ func newEventInstance(eventRecorder event.Recorder) event.RecorderInstance {
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Database().V2alpha1().ArangoClusterSynchronizations().Informer(),
+	if err := operator.RegisterInformer(informer.Database().V1().ArangoClusterSynchronizations().Informer(),
 		v1.SchemeGroupVersion.Group,
 		v1.SchemeGroupVersion.Version,
 		deployment.ArangoClusterSynchronizationResourceKind); err != nil {
