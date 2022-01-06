@@ -86,7 +86,6 @@ func createRotateServerStoragePlan(ctx context.Context,
 					if c, _ := m.Conditions.Get(api.MemberReplacementRequired); !c.IsTrue() {
 						plan = append(plan, updateMemberConditionActionV2(group, m.ID,
 							reason, api.MemberReplacementRequired, true, reason, message, ""))
-						context.CreateEvent(k8sutil.NewWarningEvent(reason, message, apiObject))
 					}
 
 					log.Warn().

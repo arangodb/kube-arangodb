@@ -52,7 +52,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -767,32 +766,6 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedPlan: []api.Action{},
 		},
 		{
-			Name: "Failed to get DB server pod",
-			PVCS: map[string]*core.PersistentVolumeClaim{
-				pvcName: {
-					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
-					},
-				},
-			},
-			context: &testContext{
-				ArangoDeployment: deploymentTemplate.DeepCopy(),
-			},
-			Helper: func(ad *api.ArangoDeployment) {
-				ad.Spec.DBServers = api.ServerGroupSpec{
-					Count: util.NewInt(3),
-					VolumeClaimTemplate: &core.PersistentVolumeClaim{
-						Spec: core.PersistentVolumeClaimSpec{
-							StorageClassName: util.NewString("newStorage"),
-						},
-					},
-				}
-				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
-				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
-			},
-			ExpectedLog: "Failed to get pod",
-		},
-		{
 			Name: "Change Storage for DBServers",
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
@@ -816,22 +789,15 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
 			},
-			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
-				c.Pods = map[string]*core.Pod{
-					c.context.ArangoDeployment.Status.Members.DBServers[0].PodName: {
-						ObjectMeta: meta.ObjectMeta{
-							Name: c.context.ArangoDeployment.Status.Members.DBServers[0].PodName,
-							Annotations: map[string]string{
-								constants.AnnotationReplaceStorageClassName: "true",
-							},
-						},
-					},
-				}
+			ExpectedEvent: &k8sutil.Event{
+				Type:    core.EventTypeNormal,
+				Reason:  "Plan Action added",
+				Message: "A plan item of type SetMemberConditionV2 for member dbserver with role 1 has been added with reason: Storage class changed",
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeMarkToRemoveMember, api.ServerGroupDBServers, ""),
+				api.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, "", "Storage class changed"),
 			},
-			ExpectedLog: "Storage class has changed - pod needs replacement",
+			ExpectedLog: "Storage class changed",
 		},
 		{
 			Name: "Wait for changing Storage for DBServers",
@@ -856,25 +822,19 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
-			},
-			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
-				c.Pods = map[string]*core.Pod{
-					c.context.ArangoDeployment.Status.Members.DBServers[0].PodName: {
-						ObjectMeta: meta.ObjectMeta{
-							Name: c.context.ArangoDeployment.Status.Members.DBServers[0].PodName,
-						},
-					},
+				cond := api.Condition{
+					Type:   api.MemberReplacementRequired,
+					Status: conditionTrue,
 				}
+				ad.Status.Members.DBServers[0].Conditions = append(ad.Status.Members.DBServers[0].Conditions, cond)
 			},
-			ExpectedLog: fmt.Sprintf("try changing a storage class name, but waiting for the existence "+
-				"of the annotation 'spec.annotation[%s]' on the pod", constants.AnnotationReplaceStorageClassName),
 		},
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+						StorageClassName: util.NewString(""),
 					},
 				},
 			},
@@ -896,18 +856,6 @@ func TestCreatePlan(t *testing.T) {
 				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
 				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
 			},
-			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
-				c.Pods = map[string]*core.Pod{
-					c.context.ArangoDeployment.Status.Members.Agents[0].PodName: {
-						ObjectMeta: meta.ObjectMeta{
-							Name: c.context.ArangoDeployment.Status.Members.Agents[0].PodName,
-							Annotations: map[string]string{
-								constants.AnnotationReplaceStorageClassName: "true",
-							},
-						},
-					},
-				}
-			},
 			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
 		{
@@ -915,7 +863,7 @@ func TestCreatePlan(t *testing.T) {
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+						StorageClassName: util.NewString(""),
 					},
 				},
 			},
@@ -933,18 +881,6 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
-			},
-			Extender: func(t *testing.T, r *Reconciler, c *testCase) {
-				c.Pods = map[string]*core.Pod{
-					c.context.ArangoDeployment.Status.Members.Coordinators[0].PodName: {
-						ObjectMeta: meta.ObjectMeta{
-							Name: c.context.ArangoDeployment.Status.Members.Coordinators[0].PodName,
-							Annotations: map[string]string{
-								constants.AnnotationReplaceStorageClassName: "true",
-							},
-						},
-					},
-				}
 			},
 			ExpectedPlan: []api.Action{},
 			ExpectedLog:  "Storage class has changed - pod needs replacement",

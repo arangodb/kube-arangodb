@@ -85,7 +85,9 @@ func (d *Reconciler) generatePlan(ctx context.Context, cachedStatus inspectorInt
 				action := result.plan[id]
 				d.context.CreateEvent(k8sutil.NewPlanAppendEvent(d.context.GetAPIObject(), action.Type.String(), action.Group.AsRole(), action.MemberID, action.Reason))
 				if r := action.Reason; r != "" {
-					d.log.Info().Str("Action", action.Type.String()).Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).Str("Type", strings.Title(result.planner.Type())).Msgf(r)
+					d.log.Info().Str("Action", action.Type.String()).
+						Str("Role", action.Group.AsRole()).Str("Member", action.MemberID).
+						Str("Type", strings.Title(result.planner.Type())).Msgf(r)
 				}
 			}
 
