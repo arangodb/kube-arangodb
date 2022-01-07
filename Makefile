@@ -74,7 +74,7 @@ else
 	IMAGESUFFIX := :dev
 endif
 
-ifdef DEBUG
+ifeq ($(DEBUG),true)
 	DEBUG := true
 	DOCKERFILE := Dockerfile.debug
 	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
