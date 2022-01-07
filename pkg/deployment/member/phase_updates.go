@@ -24,6 +24,7 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
@@ -31,12 +32,12 @@ const (
 	recentTerminationsKeepPeriod = time.Minute * 30
 )
 
-type phaseMapFunc func(action api.Action, m *api.MemberStatus)
+type phaseMapFunc func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus)
 type phaseMapTo map[api.MemberPhase]phaseMapFunc
 type phaseMap map[api.MemberPhase]phaseMapTo
 
 type PhaseExecutor interface {
-	Execute(m *api.MemberStatus, action api.Action, to api.MemberPhase) bool
+	Execute(obj meta.Object, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool
 }
 
 func GetPhaseExecutor() PhaseExecutor {
@@ -45,20 +46,22 @@ func GetPhaseExecutor() PhaseExecutor {
 
 var phase = phaseMap{
 	api.MemberPhaseNone: {
-		api.MemberPhasePending: func(action api.Action, m *api.MemberStatus) {
+		api.MemberPhasePending: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			// Change member RID
 			m.RID = uuid.NewUUID()
 
 			// Clean Pod details
 			m.PodUID = ""
+
+			m.ClusterID = obj.GetUID()
 		},
 	},
 	api.MemberPhasePending: {
-		api.MemberPhaseCreated: func(action api.Action, m *api.MemberStatus) {
+		api.MemberPhaseCreated: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			// Clean conditions
 			removeMemberConditionsMapFunc(m)
 		},
-		api.MemberPhaseUpgrading: func(action api.Action, m *api.MemberStatus) {
+		api.MemberPhaseUpgrading: func(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 			removeMemberConditionsMapFunc(m)
 		},
 	},
@@ -88,7 +91,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Upgrade = false
 }
 
-func (p phaseMap) empty(action api.Action, m *api.MemberStatus) {
+func (p phaseMap) empty(obj meta.Object, group api.ServerGroup, action api.Action, m *api.MemberStatus) {
 
 }
 
@@ -102,7 +105,7 @@ func (p phaseMap) getFunc(from, to api.MemberPhase) phaseMapFunc {
 	return p.empty
 }
 
-func (p phaseMap) Execute(m *api.MemberStatus, action api.Action, to api.MemberPhase) bool {
+func (p phaseMap) Execute(obj meta.Object, group api.ServerGroup, m *api.MemberStatus, action api.Action, to api.MemberPhase) bool {
 	from := m.Phase
 
 	if from == to {
@@ -113,7 +116,7 @@ func (p phaseMap) Execute(m *api.MemberStatus, action api.Action, to api.MemberP
 
 	m.Phase = to
 
-	f(action, m)
+	f(obj, group, action, m)
 
 	return true
 }
