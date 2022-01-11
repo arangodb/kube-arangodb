@@ -80,10 +80,9 @@ func createRotateServerStoragePlan(ctx context.Context,
 				if util.StringOrDefault(pvc.Spec.StorageClassName) != "" {
 					// It was set to something else beforehand, so it is not the initialization.
 					reason := "Storage class changed"
-					message := fmt.Sprintf("%s annotation is required to be set on the pod %s",
-						deployment.ArangoDeploymentPodReplaceAnnotation, m.PodName)
+					message := getRequiredReplaceMessage(m.PodName)
 
-					if c, _ := m.Conditions.Get(api.MemberReplacementRequired); !c.IsTrue() {
+					if !m.Conditions.IsTrue(api.MemberReplacementRequired) {
 						plan = append(plan, updateMemberConditionActionV2(group, m.ID,
 							reason, api.MemberReplacementRequired, true, reason, message, ""))
 					}
@@ -102,8 +101,18 @@ func createRotateServerStoragePlan(ctx context.Context,
 					Msg("Storage class has changed - pod needs replacement")
 
 				if group == api.ServerGroupDBServers {
-					plan = append(plan,
-						api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
+					message := getRequiredReplaceMessage(m.PodName)
+					if m.Conditions.IsTrue(api.MemberReplacementRequired) {
+						log.Warn().
+							Str("pod-name", m.PodName).
+							Str("server-group", group.AsRole()).
+							Msgf("try setting a storage class name, but %s", message)
+						continue
+					}
+
+					reason := "Storage class set"
+					plan = append(plan, updateMemberConditionActionV2(group, m.ID, reason, api.MemberReplacementRequired,
+						true, reason, message, ""))
 				} else if group == api.ServerGroupAgents {
 					plan = append(plan,
 						api.NewAction(api.ActionTypeKillMemberPod, group, m.ID),
@@ -117,33 +126,31 @@ func createRotateServerStoragePlan(ctx context.Context,
 					context.CreateEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
 			} else if ok, volumeSize, requestedSize := shouldVolumeResize(groupSpec, pvc); ok {
-				allow := groupSpec.GetVolumeAllowShrink()
-				if allow && group == api.ServerGroupDBServers {
-					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-						plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
-					} else {
-						log.Info().
-							Str("server-group", group.AsRole()).
-							Str("pvc-storage-size", volumeSize.String()).
-							Str("requested-size", requestedSize.String()).
-							Msg("Volume size will shrink, the member is already marked to remove")
-					}
-
+				if group != api.ServerGroupDBServers {
+					log.Error().
+						Str("pvc-storage-size", volumeSize.String()).
+						Str("requested-size", requestedSize.String()).
+						Msgf("Volume size should not shrink, because it is not possible for \"%s\"", group.AsRole())
 					continue
 				}
 
-				var msg string
-				if !allow {
-					msg = "Volume size should not shrink, because 'spec.<group>.volumeAllowShrink is not set to true"
-				} else {
-					msg = fmt.Sprintf("Volume size should not shrink, because it is possible for \"%s\"", group.AsRole())
+				if !groupSpec.GetVolumeAllowShrink() { // nolint: staticcheck
+					log.Error().
+						Str("pvc-storage-size", volumeSize.String()).
+						Str("requested-size", requestedSize.String()).
+						Msg("Volume size should not shrink, because 'spec.<group>.volumeAllowShrink is not set to true")
+					continue
 				}
 
-				log.Error().
-					Str("server-group", group.AsRole()).
-					Str("pvc-storage-size", volumeSize.String()).
-					Str("requested-size", requestedSize.String()).
-					Msg(msg)
+				message := getRequiredReplaceMessage(m.PodName)
+				if m.Conditions.IsTrue(api.MemberReplacementRequired) {
+					log.Warn().Str("pod-name", m.PodName).Msgf("try shrinking volume size, but %s", message)
+					continue
+				}
+
+				reason := "Volume is shrunk"
+				plan = append(plan, updateMemberConditionActionV2(group, m.ID, reason, api.MemberReplacementRequired,
+					true, reason, message, ""))
 			}
 		}
 		return nil
@@ -253,4 +260,9 @@ func shouldVolumeResize(groupSpec api.ServerGroupSpec,
 	}
 
 	return false, resource.Quantity{}, resource.Quantity{}
+}
+
+func getRequiredReplaceMessage(podName string) string {
+	return fmt.Sprintf("%s annotation is required to be set on the pod %s",
+		deployment.ArangoDeploymentPodReplaceAnnotation, podName)
 }

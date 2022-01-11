@@ -118,8 +118,9 @@ type ServerGroupSpec struct {
 	// VolumeClaimTemplate specifies a template for volume claims
 	VolumeClaimTemplate *core.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
 	// VolumeResizeMode specified resize mode for pvc
-	VolumeResizeMode  *PVCResizeMode `json:"pvcResizeMode,omitempty"`
-	VolumeAllowShrink *bool          `json:"volumeAllowShrink,omitempty"`
+	VolumeResizeMode *PVCResizeMode `json:"pvcResizeMode,omitempty"`
+	// Deprecated: VolumeAllowShrink allows shrink the volume
+	VolumeAllowShrink *bool `json:"volumeAllowShrink,omitempty"`
 	// AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 	AntiAffinity *core.PodAntiAffinity `json:"antiAffinity,omitempty"`
 	// Affinity specified additional affinity settings in ArangoDB Pod definitions
@@ -675,6 +676,7 @@ func (s ServerGroupSpec) ResetImmutableFields(group ServerGroup, fieldPrefix str
 	return resetFields
 }
 
+// Deprecated: GetVolumeAllowShrink returns true when it is possible to shrink the volume.
 func (s ServerGroupSpec) GetVolumeAllowShrink() bool {
 	if s.VolumeAllowShrink == nil {
 		return false // Default value
