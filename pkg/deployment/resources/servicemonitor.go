@@ -17,9 +17,6 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
-// Author Max Neunhoeffer
-// Author Tomasz Mielech
-//
 
 package resources
 

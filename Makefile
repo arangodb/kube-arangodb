@@ -74,7 +74,7 @@ else
 	IMAGESUFFIX := :dev
 endif
 
-ifdef DEBUG
+ifeq ($(DEBUG),true)
 	DEBUG := true
 	DOCKERFILE := Dockerfile.debug
 	# required by DLV https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_exec.md
@@ -98,6 +98,7 @@ MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHAPPS := manifests/arango-apps$(MANIFESTSUFFIX).yaml
+MANIFESTPATHK2KCLUSTERSYNC := manifests/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHTEST := manifests/arango-test$(MANIFESTSUFFIX).yaml
@@ -106,6 +107,7 @@ KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MAN
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHAPPS := manifests/kustomize/apps/arango-apps$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/apps/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHTEST := manifests/kustomize/test/arango-test$(MANIFESTSUFFIX).yaml
@@ -333,6 +335,7 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 	   --set "operator.features.deploymentReplications=false" \
 	   --set "operator.features.storage=false" \
 	   --set "operator.features.apps=false" \
+	   --set "operator.features.k8sToK8sClusterSync=false" \
 	   --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
@@ -340,6 +343,7 @@ $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=false" \
        --set "operator.features.apps=false" \
+       --set "operator.features.k8sToK8sClusterSync=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
@@ -347,6 +351,7 @@ $(eval $(call manifest-generator, storage, kube-arangodb, \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=true" \
        --set "operator.features.apps=false" \
+       --set "operator.features.k8sToK8sClusterSync=false" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
@@ -354,6 +359,7 @@ $(eval $(call manifest-generator, backup, kube-arangodb, \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=false" \
        --set "operator.features.apps=false" \
+       --set "operator.features.k8sToK8sClusterSync=false" \
        --set "operator.features.backup=true"))
 
 $(eval $(call manifest-generator, apps, kube-arangodb, \
@@ -361,6 +367,15 @@ $(eval $(call manifest-generator, apps, kube-arangodb, \
        --set "operator.features.deploymentReplications=false" \
        --set "operator.features.storage=false" \
        --set "operator.features.apps=true" \
+       --set "operator.features.k8sToK8sClusterSync=false" \
+       --set "operator.features.backup=false"))
+
+$(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
+       --set "operator.features.deployment=false" \
+       --set "operator.features.deploymentReplications=false" \
+       --set "operator.features.storage=false" \
+       --set "operator.features.apps=false" \
+       --set "operator.features.k8sToK8sClusterSync=true" \
        --set "operator.features.backup=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
@@ -368,6 +383,7 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
        --set "operator.features.deploymentReplications=true" \
        --set "operator.features.storage=true" \
        --set "operator.features.apps=true" \
+       --set "operator.features.k8sToK8sClusterSync=true" \
        --set "operator.features.backup=true"))
 
 .PHONY: chart-crd

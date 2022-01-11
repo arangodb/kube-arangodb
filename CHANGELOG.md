@@ -12,7 +12,10 @@
 - Add core containers names to follow their terminations
 - Add ArangoJob and Apps Operator
 - Use Go 1.17
+- Add metrics for the plan actions
 - Don't replace pod immediately when storage class changes
+- Add ArangoClusterSynchronization Operator
+- Update licenses
 
 ## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality

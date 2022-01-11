@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//
-// Author Ewout Prangsma
-// Author Tomasz Mielech
 //
 
 package constants
@@ -59,8 +56,9 @@ const (
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
-	BackupLabelRole = "backup/role"
-	AppsLabelRole   = "apps/role"
-	LabelRole       = "role"
-	LabelRoleLeader = "leader"
+	BackupLabelRole      = "backup/role"
+	AppsLabelRole        = "apps/role"
+	ClusterSyncLabelRole = "clustersync/role"
+	LabelRole            = "role"
+	LabelRoleLeader      = "leader"
 )
