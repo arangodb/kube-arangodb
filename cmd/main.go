@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2020-2021 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,6 +113,7 @@ var (
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
+		enableK2KClusterSync        bool // Run k2kClusterSync operator
 
 		scalingIntegrationEnabled bool
 
@@ -141,6 +142,7 @@ var (
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
+	k2KClusterSyncProbe        probe.ReadyProbe
 )
 
 func init() {
@@ -157,6 +159,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
+	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ArangoClusterSynchronizations operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
 	f.StringVar(&operatorOptions.alpineImage, "operator.alpine-image", UBIImageEnv.GetOrDefault(defaultAlpineImage), "Docker image used for alpine containers")
 	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
@@ -225,12 +228,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 	klog.Flush()
 
 	// Check operating mode
-	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage && !operatorOptions.enableBackup && !operatorOptions.enableApps {
+	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
+		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync {
 		if !operatorOptions.versionOnly {
-			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps or any combination of these")
+			cliLog.Fatal().Err(err).Msg("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync or any combination of these")
 		}
 	} else if operatorOptions.versionOnly {
-		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps cannot be enabled together with --operator.version")
+		cliLog.Fatal().Err(err).Msg("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync cannot be enabled together with --operator.version")
 	}
 
 	// Log version
@@ -306,6 +310,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 			Apps: server.OperatorDependency{
 				Enabled: cfg.EnableApps,
 				Probe:   &appsProbe,
+			},
+			ClusterSync: server.OperatorDependency{
+				Enabled: cfg.EnableK2KClusterSync,
+				Probe:   &k2KClusterSyncProbe,
 			},
 			Operators: o,
 
@@ -394,6 +402,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
+		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
 		ArangoImage:                 operatorOptions.arangoImage,
@@ -413,6 +422,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
+		K2KClusterSyncProbe:        &k2KClusterSyncProbe,
 	}
 
 	return cfg, deps, nil

@@ -39,10 +39,14 @@ operator:
     storage: false
     backup: false
     apps: false
+    k8sToK8sClusterSync: false
 
   images:
     base: alpine:3.11
     metricsExporter: arangodb/arangodb-exporter:0.1.7
     arango: arangodb/arangodb:latest
+
+  tolerations: []
+
 rbac:
   enabled: true
