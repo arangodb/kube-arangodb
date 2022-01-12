@@ -23,6 +23,7 @@ package v2alpha1
 import (
 	"math"
 	"strings"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
@@ -148,6 +149,8 @@ type ServerGroupSpec struct {
 	InternalPort *int `json:"internalPort,omitempty"`
 	// AllowMemberRecreation allows to recreate member. Value is used only for Coordinator and DBServer with default to True, for all other groups set to false.
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
+	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 }
 
 // ServerGroupSpecSecurityContext contains specification for pod security context
@@ -699,4 +702,13 @@ func (s ServerGroupSpec) GetShutdownDelay(group ServerGroup) int {
 		}
 	}
 	return *s.ShutdownDelay
+}
+
+// GetTerminationGracePeriod returns termination grace period as Duration
+func (s ServerGroupSpec) GetTerminationGracePeriod(group ServerGroup) time.Duration {
+	if v := s.TerminationGracePeriodSeconds; v == nil {
+		return group.DefaultTerminationGracePeriod()
+	} else {
+		return time.Second * time.Duration(*v)
+	}
 }

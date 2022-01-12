@@ -62,6 +62,7 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		// Check for members to be removed
 		ApplyIfEmpty(createReplaceMemberPlan).
 		// Check for the need to rotate one or more members
+		ApplyIfEmpty(createMarkToRemovePlan).
 		ApplyIfEmpty(createRotateOrUpgradePlan).
 		// Disable maintenance if upgrade process was done. Upgrade task throw IDLE Action if upgrade is pending
 		ApplyIfEmpty(createMaintenanceManagementPlan).

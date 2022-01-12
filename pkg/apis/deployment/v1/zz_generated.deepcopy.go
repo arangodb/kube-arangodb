@@ -2043,6 +2043,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.TerminationGracePeriodSeconds != nil {
+		in, out := &in.TerminationGracePeriodSeconds, &out.TerminationGracePeriodSeconds
+		*out = new(int64)
+		**out = **in
+	}
 	return
 }
 
