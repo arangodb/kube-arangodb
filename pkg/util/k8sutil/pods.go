@@ -120,13 +120,14 @@ func AreContainersReady(pod *core.Pod, coreContainers utils.StringList) bool {
 	// From here on all required containers are running, but unready condition must be checked additionally.
 	switch condition.Reason {
 	case ServerContainerConditionContainersNotReady:
-		if !strings.HasPrefix(condition.Message, ServerContainerConditionPrefix) {
+		unreadyContainers, ok := extractContainerNamesFromConditionMessage(condition.Message)
+
+		if !ok {
 			return false
 		}
 
-		unreadyContainers := strings.TrimPrefix(condition.Message, ServerContainerConditionPrefix)
 		for _, c := range coreContainers {
-			if strings.Contains(unreadyContainers, c) {
+			if unreadyContainers.Has(c) {
 				// The container is on the list with unready containers.
 				return false
 			}
@@ -136,6 +137,28 @@ func AreContainersReady(pod *core.Pod, coreContainers utils.StringList) bool {
 	}
 
 	return false
+}
+
+func extractContainerNamesFromConditionMessage(msg string) (utils.StringList, bool) {
+	if !strings.HasPrefix(msg, ServerContainerConditionPrefix) {
+		return nil, false
+	}
+
+	unreadyContainers := strings.TrimPrefix(msg, ServerContainerConditionPrefix)
+
+	if !strings.HasPrefix(unreadyContainers, "[") {
+		return nil, false
+	}
+
+	if !strings.HasSuffix(unreadyContainers, "]") {
+		return nil, false
+	}
+
+	unreadyContainers = strings.TrimPrefix(strings.TrimSuffix(unreadyContainers, "]"), "[")
+
+	unreadyContainersList := utils.StringList(strings.Split(unreadyContainers, " "))
+
+	return unreadyContainersList, true
 }
 
 // GetPodByName returns pod if it exists among the pods' list

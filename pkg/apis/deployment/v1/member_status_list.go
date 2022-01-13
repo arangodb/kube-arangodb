@@ -205,6 +205,22 @@ func (l MemberStatusList) MembersReady() int {
 	return readyCount
 }
 
+// MembersServing returns the number of members that are in the Serving state.
+func (l MemberStatusList) MembersServing() int {
+	servingCount := 0
+	for _, x := range l {
+		if x.Conditions.IsTrue(ConditionTypeServing) {
+			servingCount++
+		}
+	}
+	return servingCount
+}
+
+// AllMembersServing returns the true if all members are in the Serving state.
+func (l MemberStatusList) AllMembersServing() bool {
+	return len(l) == l.MembersServing()
+}
+
 // AllMembersReady returns the true if all members are in the Ready state.
 func (l MemberStatusList) AllMembersReady() bool {
 	return len(l) == l.MembersReady()

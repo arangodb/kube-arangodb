@@ -384,18 +384,23 @@ func groupReadyForRestart(context PlanBuilderContext, spec api.DeploymentSpec, s
 		return true
 	}
 
-	// If current member is not ready, kill anyway
-	if !member.Conditions.IsTrue(api.ConditionTypeReady) {
+	// If current member did not become ready even once. Kill it
+	if !member.Conditions.IsTrue(api.ConditionTypeStarted) {
+		return true
+	}
+
+	// If current core containers are dead kill it.
+	if !member.Conditions.IsTrue(api.ConditionTypeServing) {
 		return true
 	}
 
 	switch group {
 	case api.ServerGroupDBServers:
 		// TODO: Improve shard placement discovery and keep WriteConcern
-		return context.GetShardSyncStatus() && status.Members.MembersOfGroup(group).AllMembersReady()
+		return context.GetShardSyncStatus() && status.Members.MembersOfGroup(group).AllMembersServing()
 	default:
 		// In case of agents we can kill only one agent at same time
-		return status.Members.MembersOfGroup(group).AllMembersReady()
+		return status.Members.MembersOfGroup(group).AllMembersServing()
 	}
 }
 
