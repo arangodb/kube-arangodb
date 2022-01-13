@@ -60,8 +60,8 @@ func emptyPlanBuilder(ctx context.Context,
 
 func removeConditionActionV2(actionReason string, conditionType api.ConditionType) api.Action {
 	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
-		AddParam(setConditionActionV2KeyAction, setConditionActionV2KeyTypeRemove).
-		AddParam(setConditionActionV2KeyType, string(conditionType))
+		AddParam(setConditionActionV2KeyAction, string(conditionType)).
+		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
 }
 
 func updateConditionActionV2(actionReason string, conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {

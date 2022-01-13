@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/stretchr/testify/require"
 )
 
 // TestIsPodReady tests IsPodReady.
@@ -317,4 +318,15 @@ func TestIsPodSucceeded(t *testing.T) {
 			assert.Equal(t, test.want, got)
 		})
 	}
+}
+
+func Test_extractContainerNamesFromConditionMessage(t *testing.T) {
+	t.Run("Valid name", func(t *testing.T) {
+		c, ok := extractContainerNamesFromConditionMessage("containers with unready status: [sidecar2 sidecar3]")
+		require.True(t, ok)
+		require.Len(t, c, 2)
+		require.Contains(t, c, "sidecar2")
+		require.Contains(t, c, "sidecar3")
+		require.NotContains(t, c, "sidecar")
+	})
 }

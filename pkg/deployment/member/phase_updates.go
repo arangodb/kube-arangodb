@@ -67,6 +67,7 @@ var phase = phaseMap{
 func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	// Clean conditions
 	m.Conditions.Remove(api.ConditionTypeReady)
+	m.Conditions.Remove(api.ConditionTypeStarted)
 	m.Conditions.Remove(api.ConditionTypeTerminated)
 	m.Conditions.Remove(api.ConditionTypeTerminating)
 	m.Conditions.Remove(api.ConditionTypeAgentRecoveryNeeded)

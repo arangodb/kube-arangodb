@@ -16,6 +16,7 @@
 - Add ArangoClusterSynchronization Operator
 - Update licenses
 - Fix restart procedure in case of failing members
+- Fix status propagation race condition
 
 ## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality
