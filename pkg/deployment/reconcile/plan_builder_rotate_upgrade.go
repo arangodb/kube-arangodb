@@ -33,7 +33,6 @@ import (
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -117,116 +116,101 @@ func createMarkToRemovePlan(ctx context.Context,
 }
 
 func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) (api.Plan, bool) {
-	member, group, decision, update := createRotateOrUpgradeDecision(log, spec, status, context)
-	if !update {
-		// Nothing to do
-		return nil, false
-	}
+	decision := createRotateOrUpgradeDecision(log, spec, status, context)
 
-	if decision != nil {
+	if decision.IsUpgrade() {
 		// Upgrade phase
-		if decision.Hold {
-			// Holding upgrade
-			return nil, false
-		}
+		// During upgrade always get first member which needs to be upgraded
+		for _, m := range status.Members.AsList() {
+			d := decision[m.Member.ID]
+			if !d.upgrade {
+				continue
+			}
 
-		if !decision.UpgradeNeeded {
-			// In upgrade scenario but upgrade is not needed
-			return nil, false
-		}
+			// We have member to upgrade
+			if d.upgradeDecision.Hold {
+				// Holding upgrade
+				return nil, false
+			}
 
-		if !decision.UpgradeAllowed {
-			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, decision.FromVersion, decision.ToVersion, decision.FromLicense, decision.ToLicense))
-			return nil, false
-		}
+			if !d.upgradeDecision.UpgradeNeeded {
+				// In upgrade scenario but upgrade is not needed
+				return nil, false
+			}
 
-		if groupReadyForRestart(context, spec, status, member, group) {
-			return createUpgradeMemberPlan(log, member, group, "Version upgrade", spec, status, !decision.AutoUpgradeNeeded), false
-		} else if util.BoolOrDefault(spec.AllowUnsafeUpgrade, false) {
-			log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
-			return createUpgradeMemberPlan(log, member, group, "Version upgrade", spec, status, !decision.AutoUpgradeNeeded), false
-		} else {
-			log.Info().Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
-			return nil, true
-		}
-	}
+			if !d.upgradeDecision.UpgradeAllowed {
+				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
+				return nil, false
+			}
 
-	// Rotate phase
-	if !rotation.CheckPossible(member) {
-		return nil, false
-	}
-
-	if member.Conditions.IsTrue(api.ConditionTypeRestart) {
-		return createRotateMemberPlan(log, member, group, "Restart flag present"), false
-	}
-
-	if member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
-		arangoMember, ok := cachedStatus.ArangoMember(member.ArangoMemberName(apiObject.GetName(), group))
-		if !ok {
-			return nil, false
-		}
-		p, ok := cachedStatus.Pod(member.PodName)
-		if !ok {
-			p = nil
-		}
-
-		if mode, p, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, member, group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
-			log.Err(err).Msgf("Error while generating update plan")
-			return nil, false
-		} else if mode != rotation.InPlaceRotation {
-			return api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, group, member.ID, "Cleaning update").
-				AddParam(api.ConditionTypePendingUpdate.String(), "").
-				AddParam(api.ConditionTypeUpdating.String(), "T")}, false
-		} else {
-			p = p.After(
-				api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
-				api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID))
-
-			p = p.Wrap(api.NewAction(api.ActionTypeSetMemberCondition, group, member.ID, reason).
-				AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
-				api.NewAction(api.ActionTypeSetMemberCondition, group, member.ID, reason).
-					AddParam(api.ConditionTypeUpdating.String(), ""))
-
-			return p, false
-		}
-	}
-	return nil, false
-}
-
-func createRotateOrUpgradeDecision(log zerolog.Logger, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.MemberStatus, api.ServerGroup, *upgradeDecision, bool) {
-	// Upgrade phase
-	for _, m := range status.Members.AsList() {
-		if m.Member.Phase != api.MemberPhaseCreated || m.Member.PodName == "" {
-			// Only rotate when phase is created
-			continue
-		}
-
-		// Got pod, compare it with what it should be
-		decision := podNeedsUpgrading(log, m.Member, spec, status.Images)
-
-		if decision.UpgradeNeeded || decision.Hold {
-			return m.Member, m.Group, &decision, true
-		}
-	}
-
-	// Update phase
-	for _, m := range status.Members.AsList() {
-		if !groupReadyForRestart(context, spec, status, m.Member, m.Group) {
-			continue
-		}
-
-		if rotation.CheckPossible(m.Member) {
-			if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
-				return m.Member, m.Group, nil, true
-			} else if m.Member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
-				if !m.Member.Conditions.IsTrue(api.ConditionTypeUpdating) && !m.Member.Conditions.IsTrue(api.ConditionTypeUpdateFailed) {
-					return m.Member, m.Group, nil, true
-				}
+			if d.updateAllowed {
+				// We are fine, group is alive so we can proceed
+				return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			} else if d.unsafeUpdateAllowed {
+				log.Info().Str("member", m.Member.ID).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
+			} else {
+				log.Info().Str("member", m.Member.ID).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				return nil, true
 			}
 		}
+
+		log.Warn().Msg("Pod upgrade plan has been made, but it has been dropped due to missing flag")
+		return nil, false
+	} else if decision.IsUpdate() {
+		// Update phase
+		for _, m := range status.Members.AsList() {
+			d := decision[m.Member.ID]
+			if !d.update {
+				continue
+			}
+
+			if !d.updateAllowed {
+				// Update is not allowed due to constraint
+				if !d.unsafeUpdateAllowed {
+					log.Info().Str("member", m.Member.ID).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+					continue
+				}
+				log.Info().Str("member", m.Member.ID).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+			}
+
+			if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
+				return createRotateMemberPlan(log, m.Member, m.Group, "Restart flag present"), false
+			}
+			arangoMember, ok := cachedStatus.ArangoMember(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
+			if !ok {
+				continue
+			}
+
+			p, ok := cachedStatus.Pod(m.Member.PodName)
+			if !ok {
+				p = nil
+			}
+
+			if mode, p, reason, err := rotation.IsRotationRequired(log, cachedStatus, spec, m.Member, m.Group, p, arangoMember.Spec.Template, arangoMember.Status.Template); err != nil {
+				log.Err(err).Str("member", m.Member.ID).Msgf("Error while generating update plan")
+				continue
+			} else if mode != rotation.InPlaceRotation {
+				return api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, "Cleaning update").
+					AddParam(api.ConditionTypePendingUpdate.String(), "").
+					AddParam(api.ConditionTypeUpdating.String(), "T")}, false
+			} else {
+				p = p.After(
+					api.NewAction(api.ActionTypeWaitForMemberUp, m.Group, m.Member.ID),
+					api.NewAction(api.ActionTypeWaitForMemberInSync, m.Group, m.Member.ID))
+
+				p = p.Wrap(api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, reason).
+					AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
+					api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, reason).
+						AddParam(api.ConditionTypeUpdating.String(), ""))
+
+				return p, false
+			}
+		}
+		return nil, true
 	}
 
-	return api.MemberStatus{}, api.ServerGroupUnknown, nil, false
+	return nil, false
 }
 
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
@@ -374,8 +358,8 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 // clusterReadyForUpgrade returns true if the cluster is ready for the next update, that is:
 // 	- all shards are in sync
 // 	- all members are ready and fine
-func groupReadyForRestart(context PlanBuilderContext, spec api.DeploymentSpec, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) bool {
-	if util.BoolOrDefault(spec.AllowUnsafeUpgrade, false) {
+func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) bool {
+	if group == api.ServerGroupSingle {
 		return true
 	}
 
