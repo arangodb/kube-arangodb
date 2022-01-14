@@ -267,11 +267,7 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 			return false, false, nil
 		}
 
-		if k8sutil.IsPodReady(pod) {
-			// Pod is alive again
-			return true, false, nil
-		}
-		return false, false, nil
+		return true, false, nil
 	} else {
 		// Unknown state
 		return false, false, nil
