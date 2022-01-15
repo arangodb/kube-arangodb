@@ -51,6 +51,9 @@ type licenseSetAction struct {
 }
 
 func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
+	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
 	log := a.log
 
 	spec := a.actionCtx.GetSpec()
@@ -76,9 +79,6 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-
 	c, err := a.actionCtx.GetServerClient(ctxChild, group, m.ID)
 	if !ok {
 		log.Error().Err(err).Msg("Unable to get client")
@@ -87,7 +87,7 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 
 	client := client.NewClient(c.Connection())
 
-	if ok, err := licenseV2Compare(ctx, client, l.V2); err != nil {
+	if ok, err := licenseV2Compare(ctxChild, client, l.V2); err != nil {
 		log.Error().Err(err).Msg("Unable to verify license")
 		return true, nil
 	} else if ok {
@@ -95,7 +95,7 @@ func (a *licenseSetAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := client.SetLicense(ctx, string(l.V2), true); err != nil {
+	if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
 		log.Error().Err(err).Msg("Unable to set license")
 		return true, nil
 	}

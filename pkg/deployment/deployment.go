@@ -407,7 +407,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
-		if err := d.updateCRSpec(ctx, d.apiObject.Spec, true); err != nil {
+		if err := d.updateCRSpec(ctx, d.apiObject.Spec); err != nil {
 			log.Error().Err(err).Msg("Restore original spec failed")
 			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
@@ -421,7 +421,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	}
 
 	// Save updated spec
-	if err := d.updateCRSpec(ctx, newAPIObject.Spec, true); err != nil {
+	if err := d.updateCRSpec(ctx, newAPIObject.Spec); err != nil {
 		return errors.WithStack(errors.Newf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
