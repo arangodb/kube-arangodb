@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -67,7 +68,10 @@ func updateClusterLicense(ctx context.Context,
 
 	member := members[0]
 
-	c, err := context.GetServerClient(ctx, member.Group, member.Member.ID)
+	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	c, err := context.GetServerClient(ctxChild, member.Group, member.Member.ID)
 	if err != nil {
 		log.Err(err).Msgf("Unable to get client")
 		return nil
@@ -75,7 +79,7 @@ func updateClusterLicense(ctx context.Context,
 
 	internalClient := client.NewClient(c.Connection())
 
-	if ok, err := licenseV2Compare(ctx, internalClient, l.V2); err != nil {
+	if ok, err := licenseV2Compare(ctxChild, internalClient, l.V2); err != nil {
 		log.Error().Err(err).Msg("Unable to verify license")
 		return nil
 	} else if ok {

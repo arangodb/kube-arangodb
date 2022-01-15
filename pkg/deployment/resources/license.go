@@ -40,9 +40,19 @@ func (r *Resources) ValidateLicenseKeySecret(cachedStatus inspectorInterface.Ins
 			return errors.Newf("License secret %s does not exist", s)
 		}
 
-		if _, ok := s.Data[constants.SecretKeyToken]; !ok {
-			return errors.Newf("Invalid secret format")
+		if _, ok := s.Data[constants.SecretKeyToken]; ok {
+			return nil
 		}
+
+		if _, ok := s.Data[constants.SecretKeyV2Token]; ok {
+			return nil
+		}
+
+		if _, ok := s.Data[constants.SecretKeyV2License]; ok {
+			return nil
+		}
+
+		return errors.Newf("Invalid secret format")
 	}
 
 	return nil

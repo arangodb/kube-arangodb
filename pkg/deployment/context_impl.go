@@ -253,7 +253,7 @@ func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
 	transport := &nhttp.Transport{
 		Proxy: nhttp.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
+			Timeout:   10 * time.Second,
 			KeepAlive: 100 * time.Millisecond,
 			DualStack: true,
 		}).DialContext,
