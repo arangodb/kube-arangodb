@@ -23,6 +23,8 @@ package rotation
 import (
 	"testing"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 
 	core "k8s.io/api/core/v1"
@@ -62,6 +64,46 @@ func Test_ArangoD_SchedulerName(t *testing.T) {
 			}),
 
 			expectedMode: SkippedRotation,
+		},
+	}
+
+	runTestCases(t)(testCases...)
+}
+
+func Test_ArangoD_TerminationGracePeriodSeconds(t *testing.T) {
+	testCases := []TestCase{
+		{
+			name: "Add",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = nil
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+			}),
+
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Remove",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = nil
+			}),
+
+			expectedMode: SilentRotation,
+		},
+		{
+			name: "Update",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(33)
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.TerminationGracePeriodSeconds = util.NewInt64(30)
+			}),
+
+			expectedMode: SilentRotation,
 		},
 	}
 

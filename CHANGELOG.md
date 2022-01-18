@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.7](https://github.com/arangodb/kube-arangodb/tree/1.2.7) (2022-01-17)
 - Add Plan BackOff functionality
 - Fix Core InitContainers check
 - Remove unused `status.members.<group>.sidecars-specs` variable
@@ -16,6 +18,8 @@
 - Don't replace pod immediately when storage class changes
 - Add ArangoClusterSynchronization Operator
 - Update licenses
+- Fix restart procedure in case of failing members
+- Fix status propagation race condition
 
 ## [1.2.6](https://github.com/arangodb/kube-arangodb/tree/1.2.6) (2021-12-15)
 - Add ArangoBackup backoff functionality

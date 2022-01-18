@@ -163,7 +163,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	} else {
 		condition, exists := status.Conditions.Get(api.ConditionTypeUpToDate)
 		if checksum != status.AppliedVersion && (!exists || condition.IsTrue()) {
-			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied"); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, "Spec Changed", "Spec Object changed. Waiting until plan will be applied", checksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -265,9 +265,9 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 			return minInspectionInterval, errors.Wrapf(err, "Unable clean plan")
 		}
 	} else if err, updated := d.reconciler.CreatePlan(ctx, cachedStatus); err != nil {
-		d.deps.Log.Info().Msgf("Plan generated, reconciling")
 		return minInspectionInterval, errors.Wrapf(err, "Plan creation failed")
 	} else if updated {
+		d.deps.Log.Info().Msgf("Plan generated, reconciling")
 		return minInspectionInterval, nil
 	}
 
@@ -284,7 +284,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		isUpToDate, reason := d.isUpToDateStatus()
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process"); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", checksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -292,7 +292,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 
 		if isUpToDate && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
-			if err = d.updateCondition(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date"); err != nil {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, true, "Spec is Up To Date", "Spec is Up To Date", checksum); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update UpToDate condition")
 			}
 
@@ -420,10 +420,10 @@ func (d *Deployment) triggerCRDInspection() {
 	d.inspectCRDTrigger.Trigger()
 }
 
-func (d *Deployment) updateCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
-	d.deps.Log.Info().Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Msg("Updated condition")
+func (d *Deployment) updateConditionWithHash(ctx context.Context, conditionType api.ConditionType, status bool, reason, message, hash string) error {
+	d.deps.Log.Info().Str("condition", string(conditionType)).Bool("status", status).Str("reason", reason).Str("message", message).Str("hash", hash).Msg("Updated condition")
 	if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
-		return s.Conditions.Update(conditionType, status, reason, message)
+		return s.Conditions.UpdateWithHash(conditionType, status, reason, message, hash)
 	}); err != nil {
 		return errors.Wrapf(err, "Unable to update condition")
 	}

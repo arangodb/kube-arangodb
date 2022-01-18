@@ -65,6 +65,7 @@ func (d *Reconciler) generatePlanFunc(gen planGeneratorFunc, planner planner) pl
 
 func (d *Reconciler) generatePlan(ctx context.Context, cachedStatus inspectorInterface.Inspector, generators ...planGenerator) (error, bool) {
 	updated := false
+	updateRequired := false
 
 	if err := d.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		var b api.BackOff
@@ -105,11 +106,11 @@ func (d *Reconciler) generatePlan(ctx context.Context, cachedStatus inspectorInt
 
 			if !new.Equal(s.BackOff) {
 				s.BackOff = new
-				updated = true
+				updateRequired = true
 			}
 		}
 
-		return updated
+		return updated || updateRequired
 	}); err != nil {
 		return errors.WithMessage(err, "Unable to save plan"), false
 	}

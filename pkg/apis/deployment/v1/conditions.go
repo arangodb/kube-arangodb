@@ -36,6 +36,10 @@ func (c ConditionType) String() string {
 const (
 	// ConditionTypeReady indicates that the member or entire deployment is ready and running normally.
 	ConditionTypeReady ConditionType = "Ready"
+	// ConditionTypeStarted indicates that the member was ready at least once.
+	ConditionTypeStarted ConditionType = "Started"
+	// ConditionTypeServing indicates that the member core services are running.
+	ConditionTypeServing ConditionType = "Serving"
 	// ConditionTypeTerminated indicates that the member has terminated and will not restart.
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.

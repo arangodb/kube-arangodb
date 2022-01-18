@@ -128,6 +128,8 @@ func (s *loggingService) MustSetLevel(name, level string) {
 // stringToLevel converts a level string to a zerolog level
 func stringToLevel(l string) (zerolog.Level, error) {
 	switch strings.ToLower(l) {
+	case "trace":
+		return zerolog.TraceLevel, nil
 	case "debug":
 		return zerolog.DebugLevel, nil
 	case "info":

@@ -52,7 +52,7 @@ import (
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
@@ -381,7 +381,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	// Get the most recent version of the deployment from the API server
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
+	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -407,7 +407,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	if err := newAPIObject.Spec.Validate(); err != nil {
 		d.CreateEvent(k8sutil.NewErrorEvent("Validation failed", err, d.apiObject))
 		// Try to reset object
-		if err := d.updateCRSpec(ctx, d.apiObject.Spec, true); err != nil {
+		if err := d.updateCRSpec(ctx, d.apiObject.Spec); err != nil {
 			log.Error().Err(err).Msg("Restore original spec failed")
 			d.CreateEvent(k8sutil.NewErrorEvent("Restore original failed", err, d.apiObject))
 		}
@@ -421,7 +421,7 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	}
 
 	// Save updated spec
-	if err := d.updateCRSpec(ctx, newAPIObject.Spec, true); err != nil {
+	if err := d.updateCRSpec(ctx, newAPIObject.Spec); err != nil {
 		return errors.WithStack(errors.Newf("failed to update ArangoDeployment spec: %v", err))
 	}
 	// Save updated accepted spec
@@ -465,21 +465,22 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 	}
 
 	// Send update to API server
-	ns := d.apiObject.GetNamespace()
-	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns)
-	update := d.apiObject.DeepCopy()
+	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
 	attempt := 0
 	for {
 		attempt++
-		update.Status = d.status.last
-		if update.GetDeletionTimestamp() == nil {
-			ensureFinalizers(update)
+		if d.apiObject.GetDeletionTimestamp() == nil {
+			ensureFinalizers(d.apiObject)
 		}
 
 		var newAPIObject *api.ArangoDeployment
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			var err error
-			newAPIObject, err = depls.Update(ctxChild, update, metav1.UpdateOptions{})
+			p, err := patch.NewPatch(patch.ItemReplace(patch.NewPath("status"), d.status.last)).Marshal()
+			if err != nil {
+				return err
+			}
+
+			newAPIObject, err = depls.Patch(ctxChild, d.GetName(), types.JSONPatchType, p, meta.PatchOptions{})
 
 			return err
 		})
@@ -488,21 +489,8 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 			d.apiObject = newAPIObject
 			return nil
 		}
-		if attempt < 10 && k8sutil.IsConflict(err) {
-			// API object may have been changed already,
-			// Reload api object and try again
-			var current *api.ArangoDeployment
-
-			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				var err error
-				current, err = depls.Get(ctxChild, update.GetName(), metav1.GetOptions{})
-
-				return err
-			})
-			if err == nil {
-				update = current.DeepCopy()
-				continue
-			}
+		if attempt < 10 {
+			continue
 		}
 		if err != nil {
 			d.deps.Log.Debug().Err(err).Msg("failed to patch ArangoDeployment status")
@@ -535,7 +523,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 		var newAPIObject *api.ArangoDeployment
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
-			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, metav1.UpdateOptions{})
+			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, meta.UpdateOptions{})
 
 			return err
 		})
@@ -551,7 +539,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), metav1.GetOptions{})
+				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), meta.GetOptions{})
 
 				return err
 			})
@@ -568,7 +556,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 }
 
 // isOwnerOf returns true if the given object belong to this deployment.
-func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
+func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 	ownerRefs := obj.GetOwnerReferences()
 	if len(ownerRefs) < 1 {
 		return false
@@ -583,9 +571,9 @@ func (d *Deployment) isOwnerOf(obj metav1.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
-		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(context.Background(), metav1.ListOptions{})
+		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(context.Background(), meta.ListOptions{})
 	} else {
-		_, err = d.deps.KubeExtCli.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", metav1.GetOptions{})
+		_, err = d.deps.KubeExtCli.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
 	}
 	log := d.deps.Log
 	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
@@ -637,7 +625,7 @@ func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, metav1.PatchOptions{})
+	depl, err := c.Patch(ctxChild, d.apiObject.GetName(), types.JSONPatchType, data, meta.PatchOptions{})
 	if err != nil {
 		return err
 	}

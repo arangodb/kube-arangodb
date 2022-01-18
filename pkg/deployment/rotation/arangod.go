@@ -33,6 +33,11 @@ func podCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core.PodS
 			mode = mode.And(SilentRotation)
 		}
 
+		if !util.CompareInt64p(spec.TerminationGracePeriodSeconds, status.TerminationGracePeriodSeconds) {
+			status.TerminationGracePeriodSeconds = spec.TerminationGracePeriodSeconds
+			mode = mode.And(SilentRotation)
+		}
+
 		return
 	}
 }
