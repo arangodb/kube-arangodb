@@ -22,10 +22,13 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -42,6 +45,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 		// Storage cannot be changed in single server deployments
 		return nil
 	}
+
 	var plan api.Plan
 	status.Members.ForeachServerGroup(func(group api.ServerGroup, members api.MemberStatusList) error {
 		for _, m := range members {
@@ -57,6 +61,7 @@ func createRotateServerStoragePlan(ctx context.Context,
 				// Plan is irrelevant without PVC
 				continue
 			}
+
 			groupSpec := spec.GetServerGroupSpec(group)
 			storageClassName := groupSpec.GetStorageClassName()
 
@@ -71,14 +76,43 @@ func createRotateServerStoragePlan(ctx context.Context,
 			}
 
 			if util.StringOrDefault(pvc.Spec.StorageClassName) != storageClassName && storageClassName != "" {
-				// Storageclass has changed
+				// Storage class has changed to non-empty value.
+				if util.StringOrDefault(pvc.Spec.StorageClassName) != "" {
+					// It was set to something else beforehand, so it is not the initialization.
+					reason := "Storage class changed"
+					message := getRequiredReplaceMessage(m.PodName)
+
+					if !m.Conditions.IsTrue(api.MemberReplacementRequired) {
+						plan = append(plan, updateMemberConditionActionV2(group, m.ID,
+							reason, api.MemberReplacementRequired, true, reason, message, ""))
+					}
+
+					log.Warn().
+						Str("pod-name", m.PodName).
+						Str("server-group", group.AsRole()).
+						Msgf("try changing a storage class name, but %s", message)
+
+					continue
+				}
+
 				log.Info().Str("pod-name", m.PodName).
 					Str("pvc-storage-class", util.StringOrDefault(pvc.Spec.StorageClassName)).
-					Str("group-storage-class", storageClassName).Msg("Storage class has changed - pod needs replacement")
+					Str("group-storage-class", storageClassName).
+					Msg("Storage class has changed - pod needs replacement")
 
 				if group == api.ServerGroupDBServers {
-					plan = append(plan,
-						api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
+					message := getRequiredReplaceMessage(m.PodName)
+					if m.Conditions.IsTrue(api.MemberReplacementRequired) {
+						log.Warn().
+							Str("pod-name", m.PodName).
+							Str("server-group", group.AsRole()).
+							Msgf("try setting a storage class name, but %s", message)
+						continue
+					}
+
+					reason := "Storage class set"
+					plan = append(plan, updateMemberConditionActionV2(group, m.ID, reason, api.MemberReplacementRequired,
+						true, reason, message, ""))
 				} else if group == api.ServerGroupAgents {
 					plan = append(plan,
 						api.NewAction(api.ActionTypeKillMemberPod, group, m.ID),
@@ -91,28 +125,32 @@ func createRotateServerStoragePlan(ctx context.Context,
 					// Only agents & dbservers are allowed to change their storage class.
 					context.CreateEvent(k8sutil.NewCannotChangeStorageClassEvent(apiObject, m.ID, group.AsRole(), "Not supported"))
 				}
-			} else {
-				var res core.ResourceList
-				if groupSpec.HasVolumeClaimTemplate() {
-					res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
-				} else {
-					res = groupSpec.Resources.Requests
+			} else if ok, volumeSize, requestedSize := shouldVolumeResize(groupSpec, pvc); ok {
+				if group != api.ServerGroupDBServers {
+					log.Error().
+						Str("pvc-storage-size", volumeSize.String()).
+						Str("requested-size", requestedSize.String()).
+						Msgf("Volume size should not shrink, because it is not possible for \"%s\"", group.AsRole())
+					continue
 				}
-				if requestedSize, ok := res[core.ResourceStorage]; ok {
-					if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
-						cmp := volumeSize.Cmp(requestedSize)
-						// Only schrink is possible
-						if cmp > 0 {
 
-							if groupSpec.GetVolumeAllowShrink() && group == api.ServerGroupDBServers && !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-								plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID))
-							} else {
-								log.Error().Str("server-group", group.AsRole()).Str("pvc-storage-size", volumeSize.String()).Str("requested-size", requestedSize.String()).
-									Msg("Volume size should not shrink")
-							}
-						}
-					}
+				if !groupSpec.GetVolumeAllowShrink() { // nolint: staticcheck
+					log.Error().
+						Str("pvc-storage-size", volumeSize.String()).
+						Str("requested-size", requestedSize.String()).
+						Msg("Volume size should not shrink, because 'spec.<group>.volumeAllowShrink is not set to true")
+					continue
 				}
+
+				message := getRequiredReplaceMessage(m.PodName)
+				if m.Conditions.IsTrue(api.MemberReplacementRequired) {
+					log.Warn().Str("pod-name", m.PodName).Msgf("try shrinking volume size, but %s", message)
+					continue
+				}
+
+				reason := "Volume is shrunk"
+				plan = append(plan, updateMemberConditionActionV2(group, m.ID, reason, api.MemberReplacementRequired,
+					true, reason, message, ""))
 			}
 		}
 		return nil
@@ -198,4 +236,33 @@ func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.Serv
 			Msg("Requested mode is not supported")
 		return nil
 	}
+}
+
+// shouldVolumeResize returns false when a volume should not resize.
+// Currently, it is only possible to shrink a volume size.
+// When return true then the actual and required volume size are returned.
+func shouldVolumeResize(groupSpec api.ServerGroupSpec,
+	pvc *core.PersistentVolumeClaim) (bool, resource.Quantity, resource.Quantity) {
+	var res core.ResourceList
+	if groupSpec.HasVolumeClaimTemplate() {
+		res = groupSpec.GetVolumeClaimTemplate().Spec.Resources.Requests
+	} else {
+		res = groupSpec.Resources.Requests
+	}
+
+	if requestedSize, ok := res[core.ResourceStorage]; ok {
+		if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
+			if volumeSize.Cmp(requestedSize) > 0 {
+				// The actual PVC's volume size is greater than requested size, so it can be shrunk to the requested size.
+				return true, volumeSize, requestedSize
+			}
+		}
+	}
+
+	return false, resource.Quantity{}, resource.Quantity{}
+}
+
+func getRequiredReplaceMessage(podName string) string {
+	return fmt.Sprintf("%s annotation is required to be set on the pod %s",
+		deployment.ArangoDeploymentPodReplaceAnnotation, podName)
 }

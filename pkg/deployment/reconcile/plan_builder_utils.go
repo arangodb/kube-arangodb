@@ -78,3 +78,19 @@ func updateConditionActionV2(actionReason string, conditionType api.ConditionTyp
 		AddParam(setConditionActionV2KeyMessage, message).
 		AddParam(setConditionActionV2KeyHash, hash)
 }
+
+func updateMemberConditionActionV2(group api.ServerGroup, memberID string, actionReason string,
+	conditionType api.ConditionType, status bool, reason, message, hash string) api.Action {
+	statusBool := core.ConditionTrue
+	if !status {
+		statusBool = core.ConditionFalse
+	}
+
+	return api.NewAction(api.ActionTypeSetMemberConditionV2, group, memberID, actionReason).
+		AddParam(setConditionActionV2KeyAction, string(conditionType)).
+		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
+		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
+		AddParam(setConditionActionV2KeyReason, reason).
+		AddParam(setConditionActionV2KeyMessage, message).
+		AddParam(setConditionActionV2KeyHash, hash)
+}

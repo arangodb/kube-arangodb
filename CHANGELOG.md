@@ -15,6 +15,7 @@
 - Add ArangoJob and Apps Operator
 - Use Go 1.17
 - Add metrics for the plan actions
+- Don't replace pod immediately when storage class changes
 - Add ArangoClusterSynchronization Operator
 - Update licenses
 - Fix restart procedure in case of failing members
