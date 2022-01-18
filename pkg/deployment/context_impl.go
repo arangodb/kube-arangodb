@@ -389,10 +389,10 @@ func (d *Deployment) GetPod(ctx context.Context, podName string) (*core.Pod, err
 
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (d *Deployment) DeletePod(ctx context.Context, podName string) error {
+func (d *Deployment) DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error {
 	log := d.deps.Log
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return d.PodsModInterface().Delete(ctxChild, podName, meta.DeleteOptions{})
+		return d.PodsModInterface().Delete(ctxChild, podName, options)
 	})
 	if err != nil && !k8sutil.IsNotFound(err) {
 		log.Debug().Err(err).Str("pod", podName).Msg("Failed to remove pod")

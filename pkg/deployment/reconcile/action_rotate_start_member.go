@@ -23,12 +23,12 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func init() {
@@ -55,13 +55,12 @@ type actionRotateStartMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
-	log := a.log
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
+	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
 	if !ok {
-		log.Error().Msg("No such member")
+		return true, nil
 	}
 
-	if ready, err := getShutdownHelper(&a.action, a.actionCtx, a.log).Start(ctx); err != nil {
+	if ready, err := shutdown.Start(ctx); err != nil {
 		return false, err
 	} else if ready {
 		return true, nil
@@ -81,20 +80,19 @@ func (a *actionRotateStartMember) Start(ctx context.Context) (bool, error) {
 func (a *actionRotateStartMember) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
 	log := a.log
-	m, found := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
-	if !found {
-		log.Error().Msg("No such member")
+	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	if !ok {
 		return true, false, nil
 	}
 
-	if ready, abort, err := getShutdownHelper(&a.action, a.actionCtx, a.log).CheckProgress(ctx); err != nil {
+	if ready, abort, err := shutdown.CheckProgress(ctx); err != nil {
 		return false, abort, err
 	} else if !ready {
 		return false, false, nil
 	}
 
 	// Pod is terminated, we can now remove it
-	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			log.Error().Err(err).Msg("Unable to delete pod")
 			return false, false, nil

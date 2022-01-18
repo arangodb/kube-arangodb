@@ -23,10 +23,18 @@ package resources
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -35,17 +43,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	core "k8s.io/api/core/v1"
 )
 
 // ServerGroupIterator provides a helper to callback on every server
@@ -196,7 +193,7 @@ type Context interface {
 	CleanupPod(ctx context.Context, p *core.Pod) error
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(ctx context.Context, podName string) error
+	DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(ctx context.Context, pvcName string) error

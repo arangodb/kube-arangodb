@@ -77,7 +77,7 @@ const (
 	ActionTypeRotateMember ActionType = "RotateMember"
 	// ActionTypeRotateStartMember causes a member to be shutdown and have it's pod removed. Do not wait to pod recover.
 	ActionTypeRotateStartMember ActionType = "RotateStartMember"
-	// ActionTypeRotateMember causes a member to be restored.
+	// ActionTypeRotateStopMember causes a member to be restored.
 	ActionTypeRotateStopMember ActionType = "RotateStopMember"
 	// ActionTypeUpgradeMember causes a member to be shutdown and have it's pod removed, restarted with AutoUpgrade option, waited until termination and the restarted again.
 	ActionTypeUpgradeMember ActionType = "UpgradeMember"
@@ -105,7 +105,7 @@ const (
 	ActionTypeUpdateTLSSNI ActionType = "UpdateTLSSNI"
 	// ActionTypeSetCurrentImage causes status.CurrentImage to be updated to the image given in the action.
 	ActionTypeSetCurrentImage ActionType = "SetCurrentImage"
-	// ActionTypeSetCurrentImage replace image of member to current one.
+	// ActionTypeSetMemberCurrentImage replace image of member to current one.
 	ActionTypeSetMemberCurrentImage ActionType = "SetMemberCurrentImage"
 	// ActionTypeDisableClusterScaling turns off scaling DBservers and coordinators
 	ActionTypeDisableClusterScaling ActionType = "ScalingDisabled"
@@ -115,7 +115,7 @@ const (
 	ActionTypePVCResize ActionType = "PVCResize"
 	// ActionTypePVCResized waits for PVC to resize for defined time
 	ActionTypePVCResized ActionType = "PVCResized"
-	// UpToDateUpdateResized define up to date annotation in spec
+	// UpToDateUpdate define up to date annotation in spec
 	UpToDateUpdate ActionType = "UpToDateUpdate"
 	// ActionTypeBackupRestore restore plan
 	ActionTypeBackupRestore ActionType = "BackupRestore"

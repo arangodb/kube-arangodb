@@ -151,7 +151,7 @@ func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context) error {
 
 	for _, podName := range podNamesToRemove {
 		log.Info().Str("pod", podName).Msg("Removing obsolete member pod")
-		if err := r.context.DeletePod(ctx, podName); err != nil && !k8sutil.IsNotFound(err) {
+		if err := r.context.DeletePod(ctx, podName, metav1.DeleteOptions{}); err != nil && !k8sutil.IsNotFound(err) {
 			log.Warn().Err(err).Str("pod", podName).Msg("Failed to remove obsolete pod")
 		}
 	}
