@@ -14,6 +14,7 @@
 - Add core containers names to follow their terminations
 - Add ArangoJob and Apps Operator
 - Use Go 1.17
+- Remove pod immediately when annotation is turned on
 - Add metrics for the plan actions
 - Don't replace pod immediately when storage class changes
 - Add ArangoClusterSynchronization Operator

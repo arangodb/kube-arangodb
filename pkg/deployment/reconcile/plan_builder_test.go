@@ -293,7 +293,7 @@ func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id 
 	panic("implement me")
 }
 
-func (c *testContext) DeletePod(_ context.Context, podName string) error {
+func (c *testContext) DeletePod(_ context.Context, _ string, _ meta.DeleteOptions) error {
 	panic("implement me")
 }
 

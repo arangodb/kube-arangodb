@@ -25,10 +25,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // Monkey is the service that introduces chaos in the deployment
@@ -87,7 +88,7 @@ func (m Monkey) killRandomPod(ctx context.Context) error {
 	}
 	p := pods[rand.Intn(len(pods))]
 	m.log.Info().Str("pod-name", p.GetName()).Msg("Killing pod")
-	if err := m.context.DeletePod(ctx, p.GetName()); err != nil {
+	if err := m.context.DeletePod(ctx, p.GetName(), meta.DeleteOptions{}); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

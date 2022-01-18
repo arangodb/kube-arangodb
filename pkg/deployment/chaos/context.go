@@ -23,9 +23,9 @@ package chaos
 import (
 	"context"
 
-	v1 "k8s.io/api/core/v1"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	v1 "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Context provides methods to the chaos package.
@@ -34,7 +34,7 @@ type Context interface {
 	GetSpec() api.DeploymentSpec
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(ctx context.Context, podName string) error
+	DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error
 	// GetOwnedPods returns a list of all pods owned by the deployment.
 	GetOwnedPods(ctx context.Context) ([]v1.Pod, error)
 }
