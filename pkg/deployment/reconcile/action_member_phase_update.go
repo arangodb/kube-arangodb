@@ -72,7 +72,7 @@ func (a *memberPhaseUpdateAction) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if member.GetPhaseExecutor().Execute(&m, a.action, p) {
+	if member.GetPhaseExecutor().Execute(a.actionCtx.GetAPIObject(), a.action.Group, &m, a.action, p) {
 		if err := a.actionCtx.UpdateMember(ctx, m); err != nil {
 			return false, errors.WithStack(err)
 		}

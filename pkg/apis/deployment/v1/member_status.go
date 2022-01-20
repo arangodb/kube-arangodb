@@ -44,6 +44,8 @@ type MemberStatus struct {
 	// RID holds the ID of the member run.
 	// Value is updated in Pending Phase.
 	RID types.UID `json:"rid,omitempty"`
+	// ClusterID holds the ID of the Arango deployment.
+	ClusterID types.UID `json:"cid,omitempty"`
 	// Phase holds the current lifetime phase of this member
 	Phase MemberPhase `json:"phase"`
 	// CreatedAt holds the creation timestamp of this member.
@@ -91,6 +93,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 	return s.ID == other.ID &&
 		s.UID == other.UID &&
 		s.RID == other.RID &&
+		s.ClusterID == other.ClusterID &&
 		s.Phase == other.Phase &&
 		util.TimeCompareEqual(s.CreatedAt, other.CreatedAt) &&
 		s.PersistentVolumeClaimName == other.PersistentVolumeClaimName &&
