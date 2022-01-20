@@ -57,12 +57,12 @@ func updateClusterLicense(ctx context.Context,
 			return false
 		}
 
-		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0
+		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
 	})
 
 	if len(members) == 0 {
 		// No member found to take this action
-		log.Trace().Msgf("No member in version 3.9.0 or above")
+		log.Trace().Msgf("No enterprise member in version 3.9.0 or above")
 		return nil
 	}
 
