@@ -24,6 +24,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
@@ -53,7 +54,7 @@ func (r *Reconciler) CheckDeployment(ctx context.Context) error {
 		if status.Members.Coordinators.AllFailed() {
 			r.log.Error().Msg("All coordinators failed - reset")
 			for _, m := range status.Members.Coordinators {
-				if err := r.context.DeletePod(ctx, m.PodName); err != nil {
+				if err := r.context.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 					r.log.Error().Err(err).Msg("Failed to delete pod")
 				}
 				m.Phase = api.MemberPhaseNone
