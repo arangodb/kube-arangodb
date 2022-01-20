@@ -78,7 +78,9 @@ func ExtractStorageResourceRequirement(resources v1.ResourceRequirements) v1.Res
 // CreatePersistentVolumeClaim creates a persistent volume claim with given name and configuration.
 // If the pvc already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim.ModInterface, pvcName, deploymentName, ns, storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements, vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
+func CreatePersistentVolumeClaim(ctx context.Context, pvcs persistentvolumeclaim.ModInterface, pvcName, deploymentName,
+	storageClassName, role string, enforceAntiAffinity bool, resources v1.ResourceRequirements,
+	vct *v1.PersistentVolumeClaim, finalizers []string, owner metav1.OwnerReference) error {
 	labels := LabelsForDeployment(deploymentName, role)
 	volumeMode := v1.PersistentVolumeFilesystem
 	pvc := &v1.PersistentVolumeClaim{

@@ -41,7 +41,6 @@ func (r *Resources) createPVCFinalizers(group api.ServerGroup) []string {
 func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
-	ns := apiObject.GetNamespace()
 	owner := apiObject.AsOwner()
 	iterator := r.context.GetServerGroupIterator()
 	status, _ := r.context.GetStatus()
@@ -53,17 +52,19 @@ func (r *Resources) EnsurePVCs(ctx context.Context, cachedStatus inspectorInterf
 				continue
 			}
 
-			_, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName)
-			if exists {
+			if _, exists := cachedStatus.PersistentVolumeClaim(m.PersistentVolumeClaimName); exists {
 				continue
 			}
+
 			storageClassName := spec.GetStorageClassName()
 			role := group.AsRole()
 			resources := spec.Resources
 			vct := spec.VolumeClaimTemplate
 			finalizers := r.createPVCFinalizers(group)
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-				return k8sutil.CreatePersistentVolumeClaim(ctxChild, r.context.PersistentVolumeClaimsModInterface(), m.PersistentVolumeClaimName, deploymentName, ns, storageClassName, role, enforceAntiAffinity, resources, vct, finalizers, owner)
+				return k8sutil.CreatePersistentVolumeClaim(ctxChild, r.context.PersistentVolumeClaimsModInterface(),
+					m.PersistentVolumeClaimName, deploymentName, storageClassName, role, enforceAntiAffinity,
+					resources, vct, finalizers, owner)
 			})
 			if err != nil {
 				return errors.WithStack(err)

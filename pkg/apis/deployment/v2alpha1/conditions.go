@@ -93,6 +93,9 @@ const (
 
 	// ConditionTypeLicenseSet indicates that license V2 is set on cluster.
 	ConditionTypeLicenseSet ConditionType = "LicenseSet"
+
+	// MemberReplacementRequired indicates that the member requires a replacement to proceed with next actions.
+	MemberReplacementRequired ConditionType = "MemberReplacementRequired"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

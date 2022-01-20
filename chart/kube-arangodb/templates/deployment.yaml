@@ -105,6 +105,9 @@ spec:
 {{ if .Values.operator.features.backup }}
                     - --operator.backup
 {{- end }}
+{{- if .Values.operator.debug }}
+                    - --mode.single
+{{- end }}
 {{ if .Values.operator.features.apps }}
                     - --operator.apps
 {{- end }}
