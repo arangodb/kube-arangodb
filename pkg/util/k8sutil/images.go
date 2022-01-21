@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -40,7 +42,15 @@ func ConvertImageID2Image(imageID string) string {
 }
 
 // GetArangoDBImageIDFromPod returns the ArangoDB specific image from a pod
-func GetArangoDBImageIDFromPod(pod *corev1.Pod) string {
+func GetArangoDBImageIDFromPod(pod *corev1.Pod) (string, error) {
+	if pod == nil {
+		return "", errors.New("failed to get container statuses from nil pod")
+	}
+
+	if len(pod.Status.ContainerStatuses) == 0 {
+		return "", errors.New("empty list of ContainerStatuses")
+	}
+
 	rawImageID := pod.Status.ContainerStatuses[0].ImageID
 	if len(pod.Status.ContainerStatuses) > 1 {
 		for _, containerStatus := range pod.Status.ContainerStatuses {
@@ -49,19 +59,6 @@ func GetArangoDBImageIDFromPod(pod *corev1.Pod) string {
 			}
 		}
 	}
-	return ConvertImageID2Image(rawImageID)
-}
 
-// GetArangoDBContainerFromPod returns the ArangoDB container from a pod
-func GetArangoDBContainerFromPod(pod *corev1.Pod) corev1.Container {
-	arangoc := pod.Spec.Containers[0]
-	if len(pod.Status.ContainerStatuses) > 1 {
-		for _, container := range pod.Spec.Containers {
-			if strings.Contains(container.Name, "server") {
-				arangoc = container
-			}
-		}
-	}
-
-	return arangoc
+	return ConvertImageID2Image(rawImageID), nil
 }

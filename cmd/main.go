@@ -442,7 +442,9 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 			return maskAny(err)
 		}
 		sa = pod.Spec.ServiceAccountName
-		image = k8sutil.GetArangoDBImageIDFromPod(pod)
+		if image, err = k8sutil.GetArangoDBImageIDFromPod(pod); err != nil {
+			return errors.Wrap(err, "failed to get image ID from pod")
+		}
 		if image == "" {
 			// Fallback in case we don't know the id.
 			image = pod.Spec.Containers[0].Image
