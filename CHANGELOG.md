@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Do not check License V2 on Community images
 - Add status.members.<group>.
+- Define MemberReplacementRequired condition
 
 ## [1.2.7](https://github.com/arangodb/kube-arangodb/tree/1.2.7) (2022-01-17)
 - Add Plan BackOff functionality

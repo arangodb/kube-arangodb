@@ -73,6 +73,8 @@ const (
 	ConditionTypePendingRestart ConditionType = "PendingRestart"
 	// ConditionTypeRestart indicates that restart will be started
 	ConditionTypeRestart ConditionType = "Restart"
+	// MemberReplacementRequired indicates that the member requires a replacement to proceed with next actions.
+	MemberReplacementRequired ConditionType = "MemberReplacementRequired"
 
 	// ConditionTypePendingTLSRotation indicates that TLS rotation is pending
 	ConditionTypePendingTLSRotation ConditionType = "PendingTLSRotation"
