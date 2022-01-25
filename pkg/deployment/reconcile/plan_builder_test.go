@@ -794,6 +794,9 @@ func TestCreatePlan(t *testing.T) {
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
+			Pods: map[string]*core.Pod{
+				"dbserver1": {},
+			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
 					Count: util.NewInt(3),
@@ -805,16 +808,24 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
 			},
 			ExpectedEvent: &k8sutil.Event{
-				Type:    core.EventTypeNormal,
-				Reason:  "Plan Action added",
-				Message: "A plan item of type SetMemberConditionV2 for member dbserver with role 1 has been added with reason: Storage class changed",
+				Type:   core.EventTypeNormal,
+				Reason: "Plan Action added",
+				Message: "A plan item of type SetMemberConditionV2 for member dbserver with role 1 has been added " +
+					"with reason: Member replacement required",
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, "", "Storage class changed"),
+			ExpectedHighPlan: []api.Action{
+				api.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, "", "Member replacement required"),
 			},
-			ExpectedLog: "Storage class changed",
+			ExpectedLog: "Member replacement required",
 		},
 		{
 			Name: "Wait for changing Storage for DBServers",
@@ -865,22 +876,24 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[2].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
-			},
-			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
 		{
 			Name: "Storage for Coordinators is not possible",
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString(""),
+						StorageClassName: util.NewString("oldStorage"),
 					},
 				},
 			},
@@ -898,9 +911,16 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[2].Phase = api.MemberPhasePending
 			},
 			ExpectedPlan: []api.Action{},
-			ExpectedLog:  "Storage class has changed - pod needs replacement",
 			ExpectedEvent: &k8sutil.Event{
 				Type:    core.EventTypeNormal,
 				Reason:  "Coordinator Member StorageClass Cannot Change",
