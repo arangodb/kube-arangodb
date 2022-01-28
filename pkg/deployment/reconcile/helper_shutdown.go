@@ -43,12 +43,14 @@ import (
 func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logger) (ActionCore, api.MemberStatus, bool) {
 	m, ok := actionCtx.GetMemberStatusByID(a.MemberID)
 	if !ok {
-		log.Error().Msg("No such member")
+		log.Warn().Str("pod-name", m.PodName).Msg("member is already gone")
+
 		return nil, api.MemberStatus{}, false
 	}
 
 	pod, ok := actionCtx.GetCachedStatus().Pod(m.PodName)
 	if !ok {
+		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
 		// Pod does not exist, so create success action to finish it immediately.
 		return NewActionSuccess(), m, true
 	}
@@ -197,7 +199,7 @@ type shutdownNow struct {
 func (s shutdownNow) Start(ctx context.Context) (bool, error) {
 	// Check progress is used here because removing pod can start gracefully,
 	// and then it can be changed to force shutdown.
-	s.log.Info().Msgf("Using shutdown now method")
+	s.log.Info().Msg("Using shutdown now method")
 	ready, _, err := s.CheckProgress(ctx)
 	return ready, err
 }
@@ -208,6 +210,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 	pod, err := s.actionCtx.GetPod(ctx, podName)
 	if err != nil {
 		if k8sutil.IsNotFound(err) {
+			s.log.Info().Msg("Using shutdown now method completed because pod is gone")
 			return true, false, nil
 		}
 
@@ -215,6 +218,7 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 	}
 
 	if s.memberStatus.PodUID != pod.GetUID() {
+		s.log.Info().Msg("Using shutdown now method completed because it is already rotated")
 		// The new pod has been started already.
 		return true, false, nil
 	}
@@ -226,17 +230,13 @@ func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
 
 	// Terminate pod.
 	options := meta.DeleteOptions{
-		GracePeriodSeconds: util.NewInt64(0),
+		// Leave one second to clean a PVC.
+		GracePeriodSeconds: util.NewInt64(1),
 	}
 	if err := s.actionCtx.DeletePod(ctx, podName, options); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, false, errors.WithStack(err)
 		}
-	}
-
-	if !s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		// Pod is not yet terminated.
-		return false, false, nil
 	}
 
 	s.log.Info().Msgf("Using shutdown now method completed")
