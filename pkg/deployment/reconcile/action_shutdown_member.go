@@ -53,14 +53,12 @@ type actionShutdownMember struct {
 // Returns true if the action is completely finished, false in case
 // the start time needs to be recorded and a ready condition needs to be checked.
 func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
-	log := a.log
-	m, ok := a.actionCtx.GetMemberStatusByID(a.action.MemberID)
+	shutdown, m, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
 	if !ok {
-		log.Error().Msg("No such member")
 		return true, nil
 	}
 
-	if ready, err := getShutdownHelper(&a.action, a.actionCtx, a.log).Start(ctx); err != nil {
+	if ready, err := shutdown.Start(ctx); err != nil {
 		return false, err
 	} else if ready {
 		return true, nil
@@ -77,7 +75,12 @@ func (a *actionShutdownMember) Start(ctx context.Context) (bool, error) {
 // CheckProgress checks the progress of the action.
 // Returns: ready, abort, error.
 func (a *actionShutdownMember) CheckProgress(ctx context.Context) (bool, bool, error) {
-	if ready, abort, err := getShutdownHelper(&a.action, a.actionCtx, a.log).CheckProgress(ctx); err != nil {
+	shutdown, _, ok := getShutdownHelper(&a.action, a.actionCtx, a.log)
+	if !ok {
+		return true, false, nil
+	}
+
+	if ready, abort, err := shutdown.CheckProgress(ctx); err != nil {
 		return false, abort, err
 	} else {
 		return ready, false, nil

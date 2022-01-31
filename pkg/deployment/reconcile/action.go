@@ -125,3 +125,20 @@ func getActionFactory(t api.ActionType) (actionFactory, bool) {
 	f, ok := actions[t]
 	return f, ok
 }
+
+type actionSuccess struct{}
+
+// NewActionSuccess returns action which always returns success.
+func NewActionSuccess() ActionCore {
+	return actionSuccess{}
+}
+
+// Start always returns true.
+func (actionSuccess) Start(_ context.Context) (bool, error) {
+	return true, nil
+}
+
+// CheckProgress always returns true.
+func (actionSuccess) CheckProgress(_ context.Context) (bool, bool, error) {
+	return true, false, nil
+}

@@ -23,35 +23,62 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/rs/zerolog"
 )
 
-func getShutdownHelper(a *api.Action, ctx ActionContext, log zerolog.Logger) ActionCore {
-	if features.GracefulShutdown().Enabled() {
-		return shutdownHelperAPI{action: a, actionCtx: ctx, log: log}
+// getShutdownHelper returns an action to shut down a pod according to the settings.
+// Returns true when member status exists.
+// There are 3 possibilities to shut down the pod: immediately, gracefully, standard kubernetes delete API.
+// When pod does not exist then success action (which always successes) is returned.
+func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logger) (ActionCore, api.MemberStatus, bool) {
+	m, ok := actionCtx.GetMemberStatusByID(a.MemberID)
+	if !ok {
+		log.Warn().Str("pod-name", m.PodName).Msg("member is already gone")
+
+		return nil, api.MemberStatus{}, false
 	}
 
-	serverGroup := ctx.GetSpec().GetServerGroupSpec(a.Group)
+	pod, ok := actionCtx.GetCachedStatus().Pod(m.PodName)
+	if !ok {
+		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
+		// Pod does not exist, so create success action to finish it immediately.
+		return NewActionSuccess(), m, true
+	}
+
+	if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodDeleteNow]; ok {
+		// The pod contains annotation, so pod must be deleted immediately.
+		return shutdownNow{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+	}
+
+	if features.GracefulShutdown().Enabled() {
+		return shutdownHelperAPI{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
+	}
+
+	serverGroup := actionCtx.GetSpec().GetServerGroupSpec(a.Group)
 
 	switch serverGroup.ShutdownMethod.Get() {
 	case api.ServerGroupShutdownMethodDelete:
-		return shutdownHelperDelete{action: a, actionCtx: ctx, log: log}
+		return shutdownHelperDelete{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
 	default:
-		return shutdownHelperAPI{action: a, actionCtx: ctx, log: log}
+		return shutdownHelperAPI{action: a, actionCtx: actionCtx, log: log, memberStatus: m}, m, true
 	}
 }
 
 type shutdownHelperAPI struct {
-	log       zerolog.Logger
-	action    *api.Action
-	actionCtx ActionContext
+	log          zerolog.Logger
+	action       *api.Action
+	actionCtx    ActionContext
+	memberStatus api.MemberStatus
 }
 
 func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
@@ -60,18 +87,14 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 	log.Info().Msgf("Using API to shutdown member")
 
 	group := s.action.Group
-	m, ok := s.actionCtx.GetMemberStatusByID(s.action.MemberID)
-	if !ok {
-		log.Error().Msg("No such member")
-		return true, nil
-	}
-	if m.PodName == "" {
+	podName := s.memberStatus.PodName
+	if podName == "" {
 		log.Warn().Msgf("Pod is empty")
 		return true, nil
 	}
 	// Remove finalizers, so Kubernetes will quickly terminate the pod
 	if !features.GracefulShutdown().Enabled() {
-		if err := s.actionCtx.RemovePodFinalizers(ctx, m.PodName); err != nil {
+		if err := s.actionCtx.RemovePodFinalizers(ctx, podName); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -100,7 +123,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 		}
 	} else if group.IsArangosync() {
 		// Terminate pod
-		if err := s.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+		if err := s.actionCtx.DeletePod(ctx, podName, meta.DeleteOptions{}); err != nil {
 			return false, errors.WithStack(err)
 		}
 	}
@@ -108,26 +131,17 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-func (s shutdownHelperAPI) CheckProgress(ctx context.Context) (bool, bool, error) {
-	// Check that pod is removed
-	log := s.log
-	m, found := s.actionCtx.GetMemberStatusByID(s.action.MemberID)
-	if !found {
-		log.Error().Msg("No such member")
-		return true, false, nil
-	}
-	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
-		// Pod is not yet terminated
-		return false, false, nil
-	}
-
-	return true, false, nil
+// CheckProgress returns true when pod is terminated.
+func (s shutdownHelperAPI) CheckProgress(_ context.Context) (bool, bool, error) {
+	terminated := s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
+	return terminated, false, nil
 }
 
 type shutdownHelperDelete struct {
-	log       zerolog.Logger
-	action    *api.Action
-	actionCtx ActionContext
+	log          zerolog.Logger
+	action       *api.Action
+	actionCtx    ActionContext
+	memberStatus api.MemberStatus
 }
 
 func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
@@ -135,23 +149,17 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 
 	log.Info().Msgf("Using Pod Delete to shutdown member")
 
-	m, ok := s.actionCtx.GetMemberStatusByID(s.action.MemberID)
-	if !ok {
-		log.Error().Msg("No such member")
-		return true, nil
-	}
-
-	if m.PodName == "" {
+	podName := s.memberStatus.PodName
+	if podName == "" {
 		log.Warn().Msgf("Pod is empty")
 		return true, nil
 	}
 
 	// Terminate pod
-	if err := s.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+	if err := s.actionCtx.DeletePod(ctx, podName, meta.DeleteOptions{}); err != nil {
 		if !k8sutil.IsNotFound(err) {
 			return false, errors.WithStack(err)
 		}
-
 	}
 
 	return false, nil
@@ -160,20 +168,15 @@ func (s shutdownHelperDelete) Start(ctx context.Context) (bool, error) {
 func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, error) {
 	// Check that pod is removed
 	log := s.log
-	m, found := s.actionCtx.GetMemberStatusByID(s.action.MemberID)
-	if !found {
-		log.Error().Msg("No such member")
-		return true, false, nil
-	}
-
-	if !m.Conditions.IsTrue(api.ConditionTypeTerminated) {
+	if !s.memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated) {
 		// Pod is not yet terminated
 		log.Warn().Msgf("Pod not yet terminated")
 		return false, false, nil
 	}
 
-	if m.PodName != "" {
-		if _, err := s.actionCtx.GetPod(ctx, m.PodName); err == nil {
+	podName := s.memberStatus.PodName
+	if podName != "" {
+		if _, err := s.actionCtx.GetPod(ctx, podName); err == nil {
 			log.Warn().Msgf("Pod still exists")
 			return false, false, nil
 		} else if !k8sutil.IsNotFound(err) {
@@ -182,5 +185,60 @@ func (s shutdownHelperDelete) CheckProgress(ctx context.Context) (bool, bool, er
 		}
 	}
 
+	return true, false, nil
+}
+
+type shutdownNow struct {
+	action       *api.Action
+	actionCtx    ActionContext
+	memberStatus api.MemberStatus
+	log          zerolog.Logger
+}
+
+// Start starts removing pod forcefully.
+func (s shutdownNow) Start(ctx context.Context) (bool, error) {
+	// Check progress is used here because removing pod can start gracefully,
+	// and then it can be changed to force shutdown.
+	s.log.Info().Msg("Using shutdown now method")
+	ready, _, err := s.CheckProgress(ctx)
+	return ready, err
+}
+
+// CheckProgress starts removing pod forcefully and checks if has it been removed.
+func (s shutdownNow) CheckProgress(ctx context.Context) (bool, bool, error) {
+	podName := s.memberStatus.PodName
+	pod, err := s.actionCtx.GetPod(ctx, podName)
+	if err != nil {
+		if k8sutil.IsNotFound(err) {
+			s.log.Info().Msg("Using shutdown now method completed because pod is gone")
+			return true, false, nil
+		}
+
+		return false, false, errors.Wrapf(err, "failed to get pod")
+	}
+
+	if s.memberStatus.PodUID != pod.GetUID() {
+		s.log.Info().Msg("Using shutdown now method completed because it is already rotated")
+		// The new pod has been started already.
+		return true, false, nil
+	}
+
+	// Remove finalizers forcefully.
+	if err := s.actionCtx.RemovePodFinalizers(ctx, podName); err != nil {
+		return false, false, errors.WithStack(err)
+	}
+
+	// Terminate pod.
+	options := meta.DeleteOptions{
+		// Leave one second to clean a PVC.
+		GracePeriodSeconds: util.NewInt64(1),
+	}
+	if err := s.actionCtx.DeletePod(ctx, podName, options); err != nil {
+		if !k8sutil.IsNotFound(err) {
+			return false, false, errors.WithStack(err)
+		}
+	}
+
+	s.log.Info().Msgf("Using shutdown now method completed")
 	return true, false, nil
 }

@@ -23,12 +23,13 @@ package reconcile
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
 func init() {
@@ -66,7 +67,7 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		log.Error().Err(err).Msg("Unable to kill pod")
 		return true, nil
 	}

@@ -23,17 +23,15 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
+	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func init() {
@@ -108,7 +106,7 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 	}
 	if m.PodName != "" {
 		// Remove the pod (if any)
-		if err := a.actionCtx.DeletePod(ctx, m.PodName); err != nil {
+		if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, errors.WithStack(err)
 			}

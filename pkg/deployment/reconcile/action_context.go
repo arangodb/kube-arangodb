@@ -23,8 +23,22 @@ package reconcile
 import (
 	"context"
 
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/agency"
+
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -33,25 +47,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-
-	"github.com/arangodb/go-driver/agency"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
-
-	"github.com/arangodb/arangosync-client/client"
-	driver "github.com/arangodb/go-driver"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // ActionContext provides methods to the Action implementations
@@ -103,7 +98,7 @@ type ActionContext interface {
 	GetPod(ctx context.Context, podName string) (*core.Pod, error)
 	// DeletePod deletes a pod with given name in the namespace
 	// of the deployment. If the pod does not exist, the error is ignored.
-	DeletePod(ctx context.Context, podName string) error
+	DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error
 	// DeletePvc deletes a persistent volume claim with given name in the namespace
 	// of the deployment. If the pvc does not exist, the error is ignored.
 	DeletePvc(ctx context.Context, pvcName string) error
@@ -427,8 +422,8 @@ func (ac *actionContext) GetPod(ctx context.Context, podName string) (*core.Pod,
 
 // DeletePod deletes a pod with given name in the namespace
 // of the deployment. If the pod does not exist, the error is ignored.
-func (ac *actionContext) DeletePod(ctx context.Context, podName string) error {
-	if err := ac.context.DeletePod(ctx, podName); err != nil {
+func (ac *actionContext) DeletePod(ctx context.Context, podName string, options meta.DeleteOptions) error {
+	if err := ac.context.DeletePod(ctx, podName, options); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
