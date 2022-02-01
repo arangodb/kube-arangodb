@@ -193,6 +193,12 @@ Define if RBAC should be enabled.
 
 Default: `true`
 
+### `operator.architectures`
+
+List of supported architectures.
+
+Default: `[]string{"amd64"}`
+
 # Limitations
 
 N/A

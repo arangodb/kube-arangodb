@@ -21,6 +21,7 @@
 package pod
 
 import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	core "k8s.io/api/core/v1"
@@ -49,20 +50,12 @@ func AppendPodAntiAffinityDefault(p interfaces.PodCreator, a *core.PodAntiAffini
 	}
 }
 
-func AppendNodeSelector(a *core.NodeAffinity) {
+func AppendArchSelector(a *core.NodeAffinity, arch api.ArangoDeploymentArchitecture) {
 	if a.RequiredDuringSchedulingIgnoredDuringExecution == nil {
 		a.RequiredDuringSchedulingIgnoredDuringExecution = &core.NodeSelector{}
 	}
 
-	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, core.NodeSelectorTerm{
-		MatchExpressions: []core.NodeSelectorRequirement{
-			{
-				Key:      k8sutil.NodeArchAffinityLabel,
-				Operator: "In",
-				Values:   []string{"amd64"},
-			},
-		},
-	})
+	a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(a.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, arch.AsNodeSelectorRequirement())
 }
 
 func AppendAffinityWithRole(p interfaces.PodCreator, a *core.PodAffinity, role string) {

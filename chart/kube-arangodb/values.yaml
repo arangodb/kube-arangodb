@@ -6,6 +6,9 @@ operator:
   imagePullSecrets: []
 
   scope: legacy
+  
+  architectures:
+  - amd64
 
   debug: false
 
