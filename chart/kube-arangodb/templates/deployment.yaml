@@ -63,7 +63,9 @@ spec:
                         - key: beta.kubernetes.io/arch
                           operator: In
                           values:
-                            - amd64
+{{- range .Values.operator.architectures }}
+                          - {{ . | quote }}
+{{- end }}
               podAntiAffinity:
                 preferredDuringSchedulingIgnoredDuringExecution:
                   - weight: 100

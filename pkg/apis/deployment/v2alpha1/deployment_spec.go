@@ -83,7 +83,7 @@ const (
 	DeploymentCommunicationMethodHeadlessService DeploymentCommunicationMethod = "headless"
 	// DeploymentCommunicationMethodDNS define ClusterIP Service DNS based communication.
 	DeploymentCommunicationMethodDNS DeploymentCommunicationMethod = "dns"
-	// DeploymentCommunicationMethodDNS define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
+	// DeploymentCommunicationMethodShortDNS define ClusterIP Service DNS based communication. Use namespaced short DNS (used in migration)
 	DeploymentCommunicationMethodShortDNS DeploymentCommunicationMethod = "short-dns"
 	// DeploymentCommunicationMethodIP define ClusterIP Servce IP based communication.
 	DeploymentCommunicationMethodIP DeploymentCommunicationMethod = "ip"
@@ -168,6 +168,9 @@ type DeploymentSpec struct {
 
 	// Rebalancer define the rebalancer specification
 	Rebalancer *ArangoDeploymentRebalancerSpec `json:"rebalancer,omitempty"`
+
+	// Architecture definition of supported architectures
+	Architecture ArangoDeploymentArchitecture `json:"architecture,omitempty"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
@@ -460,6 +463,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.Bootstrap.Validate(); err != nil {
 		return errors.WithStack(err)
+	}
+	if err := s.Architecture.Validate(); err != nil {
+		return errors.WithStack(errors.Wrap(err, "spec.architecture"))
 	}
 	return nil
 }
