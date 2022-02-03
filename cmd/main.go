@@ -131,6 +131,7 @@ var (
 	operatorTimeouts struct {
 		k8s            time.Duration
 		arangoD        time.Duration
+		arangoDCheck   time.Duration
 		reconciliation time.Duration
 	}
 	chaosOptions struct {
@@ -170,6 +171,7 @@ func init() {
 	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
 	f.DurationVar(&operatorTimeouts.k8s, "timeout.k8s", globals.DefaultKubernetesTimeout, "The request timeout to the kubernetes")
 	f.DurationVar(&operatorTimeouts.arangoD, "timeout.arangod", globals.DefaultArangoDTimeout, "The request timeout to the ArangoDB")
+	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", true, "Enable Scaling Integration")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
@@ -206,6 +208,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	globals.GetGlobalTimeouts().Kubernetes().Set(operatorTimeouts.k8s)
 	globals.GetGlobalTimeouts().ArangoD().Set(operatorTimeouts.arangoD)
+	globals.GetGlobalTimeouts().ArangoDCheck().Set(operatorTimeouts.arangoDCheck)
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)

@@ -38,6 +38,8 @@ const (
 	ConditionTypeReady ConditionType = "Ready"
 	// ConditionTypeStarted indicates that the member was ready at least once.
 	ConditionTypeStarted ConditionType = "Started"
+	// ConditionTypeReachable indicates that the member is reachable.
+	ConditionTypeReachable ConditionType = "Reachable"
 	// ConditionTypeServing indicates that the member core services are running.
 	ConditionTypeServing ConditionType = "Serving"
 	// ConditionTypeTerminated indicates that the member has terminated and will not restart.
@@ -156,6 +158,15 @@ func (c Condition) Equal(other Condition) bool {
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	c, found := list.Get(conditionType)
 	return found && c.IsTrue()
+}
+
+// GetValue returns *bool value in case if condition exists, nil otherwise
+func (list ConditionList) GetValue(conditionType ConditionType) *bool {
+	c, found := list.Get(conditionType)
+	if found {
+		return util.NewBool(c.IsTrue())
+	}
+	return nil
 }
 
 // Get a condition by type.

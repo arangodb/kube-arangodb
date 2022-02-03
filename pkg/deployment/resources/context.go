@@ -28,6 +28,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -49,6 +50,8 @@ type Context interface {
 	reconciler.DeploymentClient
 	reconciler.DeploymentSyncClient
 	reconciler.KubernetesEventGenerator
+
+	member.StateInspector
 
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() reconciler.ServerGroupIterator

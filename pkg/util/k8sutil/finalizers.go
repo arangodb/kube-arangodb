@@ -45,10 +45,6 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log ze
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
-		if err := cachedStatus.Refresh(ctxChild); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
 		result, err := cachedStatus.PodReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -79,10 +75,6 @@ func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
-
-		if err := cachedStatus.Refresh(ctxChild); err != nil {
-			return nil, errors.WithStack(err)
-		}
 
 		result, err := cachedStatus.PersistentVolumeClaimReadInterface().Get(ctxChild, p.GetName(), metav1.GetOptions{})
 		if err != nil {
