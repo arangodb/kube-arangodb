@@ -23,12 +23,14 @@ package resilience
 import (
 	"context"
 
-	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 )
 
 // Context provides methods to the resilience package.
 type Context interface {
+	reconciler.DeploymentDatabaseClient
+	reconciler.DeploymentAgencyClient
 	// GetSpec returns the current specification of the deployment
 	GetSpec() api.DeploymentSpec
 	// GetStatus returns the current status of the deployment
@@ -36,10 +38,4 @@ type Context interface {
 	// UpdateStatus replaces the status of the deployment with the given status and
 	// updates the resources in k8s.
 	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// GetAgencyClients returns a client connection for every agency member.
-	// If the given predicate is not nil, only agents are included where the given predicate returns true.
-	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
 }

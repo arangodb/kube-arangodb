@@ -164,7 +164,7 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 }
 
 func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool) error {
-	if !d.Mode().HasAgents() {
+	if !d.GetMode().HasAgents() {
 		return nil
 	}
 

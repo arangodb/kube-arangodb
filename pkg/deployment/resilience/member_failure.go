@@ -133,7 +133,7 @@ func (r *Resilience) isMemberFailureAcceptable(ctx context.Context, group api.Se
 		// All good when remaining agents are health
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
-		clients, err := r.context.GetAgencyClients(ctxChild, func(id string) bool { return id != m.ID })
+		clients, err := r.context.GetAgencyClientsWithPredicate(ctxChild, func(id string) bool { return id != m.ID })
 		if err != nil {
 			return false, "", errors.WithStack(err)
 		}

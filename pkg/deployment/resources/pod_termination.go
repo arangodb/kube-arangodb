@@ -92,7 +92,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, log zerolog
 	defer cancel()
 	ctxLeader := agency.WithAllowNoLeader(ctxChild) // The ID we're checking may be the leader, so ignore situations where all other agents are followers
 
-	agencyConns, err := r.context.GetAgencyClients(ctxLeader, func(id string) bool { return id != memberStatus.ID })
+	agencyConns, err := r.context.GetAgencyClientsWithPredicate(ctxLeader, func(id string) bool { return id != memberStatus.ID })
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to create member client")
 		return errors.WithStack(err)

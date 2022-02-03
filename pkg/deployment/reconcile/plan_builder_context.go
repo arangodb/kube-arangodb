@@ -23,59 +23,41 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 
-	"github.com/arangodb/go-driver"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	core "k8s.io/api/core/v1"
 )
 
 // PlanBuilderContext contains context methods provided to plan builders.
 type PlanBuilderContext interface {
-	resources.DeploymentAgencyMaintenance
-	resources.ArangoMemberContext
-	resources.DeploymentPodRenderer
-	resources.DeploymentImageManager
-	resources.DeploymentModInterfaces
-	resources.DeploymentCachedStatus
-	resources.ArangoAgencyGet
+	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentAgencyMaintenance
+	reconciler.ArangoMemberContext
+	reconciler.DeploymentPodRenderer
+	reconciler.DeploymentImageManager
+	reconciler.DeploymentModInterfaces
+	reconciler.DeploymentCachedStatus
+	reconciler.ArangoAgencyGet
+	reconciler.DeploymentClient
+	reconciler.KubernetesEventGenerator
 
 	// GetTLSKeyfile returns the keyfile encoded TLS certificate+key for
 	// the given member.
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
-	// CreateEvent creates a given event.
-	// On error, the error is logged.
-	CreateEvent(evt *k8sutil.Event)
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
 	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
 	// GetShardSyncStatus returns true if all shards are in sync
 	GetShardSyncStatus() bool
 	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
 	InvalidateSyncStatus()
-	// GetStatus returns the current status of the deployment
-	GetStatus() (api.DeploymentStatus, int32)
-	// GetStatus returns the current spec of the deployment
-	GetSpec() api.DeploymentSpec
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
-	// GetServerClient returns a cached client for a specific server.
-	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
-	// GetName receives deployment name
-	GetName() string
-	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context) (agency.Agency, error)
 }
 
 // newPlanBuilderContext creates a PlanBuilderContext from the given context

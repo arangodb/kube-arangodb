@@ -23,54 +23,34 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type CreateMemberMod func(s *api.DeploymentStatus, g api.ServerGroup, m *api.MemberStatus) error
 
 // Context provides methods to the reconcile package.
 type Context interface {
-	resources.DeploymentStatusUpdate
-	resources.DeploymentAgencyMaintenance
-	resources.ArangoMemberContext
-	resources.DeploymentPodRenderer
-	resources.DeploymentImageManager
-	resources.DeploymentModInterfaces
-	resources.DeploymentCachedStatus
-	resources.ArangoAgencyGet
-	resources.ArangoApplier
-	resources.DeploymentInfoGetter
+	reconciler.DeploymentStatusUpdate
+	reconciler.DeploymentAgencyMaintenance
+	reconciler.ArangoMemberContext
+	reconciler.DeploymentPodRenderer
+	reconciler.DeploymentImageManager
+	reconciler.DeploymentModInterfaces
+	reconciler.DeploymentCachedStatus
+	reconciler.ArangoAgencyGet
+	reconciler.ArangoApplier
+	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentClient
+	reconciler.KubernetesEventGenerator
+	reconciler.DeploymentSyncClient
 
-	// UpdateStatus replaces the status of the deployment with the given status and
-	// updates the resources in k8s.
-	UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error
-	// UpdateMember updates the deployment status wrt the given member.
-	UpdateMember(ctx context.Context, member api.MemberStatus) error
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
-	// GetServerClient returns a cached client for a specific server.
-	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
-	// GetAgencyClients returns a client connection for every agency member.
-	// If the given predicate is not nil, only agents are included where the given predicate returns true.
-	GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error)
-	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context) (agency.Agency, error)
-	// GetSyncServerClient returns a cached client for a specific arangosync server.
-	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
-	// CreateEvent creates a given event.
-	// On error, the error is logged.
-	CreateEvent(evt *k8sutil.Event)
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
 	// Returns ID, error
@@ -112,8 +92,6 @@ type Context interface {
 	EnableScalingCluster(ctx context.Context) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
-	// GetName receives deployment name
-	GetName() string
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
 }

@@ -29,13 +29,13 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -52,31 +52,17 @@ import (
 // ActionContext provides methods to the Action implementations
 // to control their context.
 type ActionContext interface {
-	resources.DeploymentStatusUpdate
-	resources.DeploymentAgencyMaintenance
-	resources.ArangoMemberContext
-	resources.DeploymentPodRenderer
-	resources.DeploymentModInterfaces
-	resources.DeploymentCachedStatus
-	resources.ArangoAgencyGet
-	resources.DeploymentInfoGetter
+	reconciler.DeploymentStatusUpdate
+	reconciler.DeploymentAgencyMaintenance
+	reconciler.ArangoMemberContext
+	reconciler.DeploymentPodRenderer
+	reconciler.DeploymentModInterfaces
+	reconciler.DeploymentCachedStatus
+	reconciler.ArangoAgencyGet
+	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentClient
+	reconciler.DeploymentSyncClient
 
-	// Gets the specified mode of deployment
-	GetMode() api.DeploymentMode
-	// GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
-	// creating one if needed.
-	GetDatabaseClient(ctx context.Context) (driver.Client, error)
-	// GetServerClient returns a cached client for a specific server.
-	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
-	// GetAgencyClients returns a client connection for every agency member.
-	GetAgencyClients(ctx context.Context) ([]driver.Connection, error)
-	// GetAgency returns a connection to the entire agency.
-	GetAgency(ctx context.Context) (agency.Agency, error)
-	// GetSyncServerClient returns a cached client for a specific arangosync server.
-	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
-	// CreateEvent creates a given event.
-	// On error, the error is logged.
-	CreateEvent(evt *k8sutil.Event)
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
 	// Returns member status, true when found, or false
@@ -119,7 +105,7 @@ type ActionContext interface {
 	// GetImageInfo returns the image info for an image with given name.
 	// Returns: (info, infoFound)
 	GetImageInfo(imageName string) (api.ImageInfo, bool)
-	// GetImageInfo returns the image info for an current image.
+	// GetCurrentImageInfo returns the image info for an current image.
 	// Returns: (info, infoFound)
 	GetCurrentImageInfo() (api.ImageInfo, bool)
 	// SetCurrentImage changes the CurrentImage field in the deployment
@@ -135,7 +121,7 @@ type ActionContext interface {
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
 	EnableScalingCluster(ctx context.Context) error
-	// WithStatusUpdate update status of ArangoDeployment with defined modifier. If action returns True action is taken
+	// UpdateClusterCondition update status of ArangoDeployment with defined modifier. If action returns True action is taken
 	UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
@@ -159,6 +145,18 @@ type actionContext struct {
 	context      Context
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
+}
+
+func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
+	return ac.context.UpdateStatus(ctx, status, lastVersion, force...)
+}
+
+func (ac *actionContext) GetNamespace() string {
+	return ac.context.GetNamespace()
+}
+
+func (ac *actionContext) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
+	return ac.context.GetAgencyClientsWithPredicate(ctx, predicate)
 }
 
 func (ac *actionContext) GetStatus() (api.DeploymentStatus, int32) {
@@ -189,11 +187,11 @@ func (ac *actionContext) SetAgencyMaintenanceMode(ctx context.Context, enabled b
 	return ac.context.SetAgencyMaintenanceMode(ctx, enabled)
 }
 
-func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+func (ac *actionContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
 	return ac.context.WithArangoMemberUpdate(ctx, namespace, name, action)
 }
 
-func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+func (ac *actionContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
 	return ac.context.WithArangoMemberStatusUpdate(ctx, namespace, name, action)
 }
 
@@ -221,11 +219,11 @@ func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupA
 	return ac.context.GetBackup(ctx, backup)
 }
 
-func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+func (ac *actionContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	return ac.context.WithStatusUpdateErr(ctx, action, force...)
 }
 
-func (ac *actionContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+func (ac *actionContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
 	return ac.context.WithStatusUpdate(ctx, action, force...)
 }
 
@@ -322,7 +320,7 @@ func (ac *actionContext) GetServerClient(ctx context.Context, group api.ServerGr
 
 // GetAgencyClients returns a client connection for every agency member.
 func (ac *actionContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
-	c, err := ac.context.GetAgencyClients(ctx, nil)
+	c, err := ac.context.GetAgencyClients(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

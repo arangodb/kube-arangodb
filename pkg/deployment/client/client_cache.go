@@ -26,8 +26,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"github.com/arangodb/go-driver/agency"
@@ -36,6 +34,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 )
 
 type Cache interface {
@@ -49,8 +48,8 @@ type Cache interface {
 }
 
 type CacheGen interface {
-	resources.DeploymentEndpoints
-	resources.DeploymentInfoGetter
+	reconciler.DeploymentEndpoints
+	reconciler.DeploymentInfoGetter
 }
 
 func NewClientCache(in CacheGen, factory conn.Factory) Cache {
