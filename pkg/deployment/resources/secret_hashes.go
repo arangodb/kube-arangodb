@@ -35,7 +35,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -53,7 +53,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	validate := func(secretName string,
 		getExpectedHash func() string,
 		setExpectedHash func(string) error,
-		actionHashChanged func(Context, *v1.Secret) error) (bool, error) {
+		actionHashChanged func(Context, *core.Secret) error) (bool, error) {
 
 		log := r.log.With().Str("secret-name", secretName).Logger()
 		expectedHash := getExpectedHash()
@@ -230,7 +230,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 }
 
 // getSecretHash fetches a secret with given name and returns a hash over its value.
-func (r *Resources) getSecretHash(cachedStatus inspectorInterface.Inspector, secretName string) (*v1.Secret, string, bool) {
+func (r *Resources) getSecretHash(cachedStatus inspectorInterface.Inspector, secretName string) (*core.Secret, string, bool) {
 	s, exists := cachedStatus.Secret(secretName)
 	if !exists {
 		return nil, "", false

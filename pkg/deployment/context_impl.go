@@ -76,6 +76,7 @@ import (
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -97,7 +98,7 @@ func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 }
 
 // GetServerGroupIterator returns the deployment as ServerGroupIterator.
-func (d *Deployment) GetServerGroupIterator() resources.ServerGroupIterator {
+func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
 	return d.apiObject
 }
 
@@ -226,8 +227,13 @@ func (d *Deployment) GetAuthentication() conn.Auth {
 }
 
 // GetAgencyClients returns a client connection for every agency member.
+func (d *Deployment) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
+	return d.GetAgencyClientsWithPredicate(ctx, nil)
+}
+
+// GetAgencyClientsWithPredicate returns a client connection for every agency member.
 // If the given predicate is not nil, only agents are included where the given predicate returns true.
-func (d *Deployment) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
+func (d *Deployment) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
 	agencyMembers := d.status.last.Members.Agents
 	result := make([]driver.Connection, 0, len(agencyMembers))
 	for _, m := range agencyMembers {
@@ -591,7 +597,7 @@ func (d *Deployment) GetArangoImage() string {
 	return d.config.ArangoImage
 }
 
-func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	d.status.mutex.Lock()
 	defer d.status.mutex.Unlock()
 
@@ -610,7 +616,7 @@ func (d *Deployment) WithStatusUpdateErr(ctx context.Context, action resources.D
 	return d.updateStatus(ctx, status, version, force...)
 }
 
-func (d *Deployment) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
 	return d.WithStatusUpdateErr(ctx, func(s *api.DeploymentStatus) (bool, error) {
 		return action(s), nil
 	}, force...)
@@ -680,7 +686,7 @@ func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
 	d.currentState = i
 }
 
-func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
 	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
 	if err != nil {
 		return err
@@ -695,7 +701,7 @@ func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name
 	return nil
 }
 
-func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
 	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
 	if err != nil {
 		return err

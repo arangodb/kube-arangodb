@@ -34,7 +34,7 @@ import (
 type Deployment interface {
 	Name() string
 	Namespace() string
-	Mode() api.DeploymentMode
+	GetMode() api.DeploymentMode
 	Environment() api.Environment
 	StateColor() StateColor
 	PodCount() int
@@ -98,7 +98,7 @@ func newDeploymentInfo(d Deployment) DeploymentInfo {
 	return DeploymentInfo{
 		Name:             d.Name(),
 		Namespace:        d.Namespace(),
-		Mode:             d.Mode(),
+		Mode:             d.GetMode(),
 		Environment:      d.Environment(),
 		StateColor:       d.StateColor(),
 		PodCount:         d.PodCount(),

@@ -72,6 +72,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	core "k8s.io/api/core/v1"
@@ -91,6 +92,26 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) GetMode() api.DeploymentMode {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) GetNamespace() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) GetAgencyClients(ctx context.Context) ([]driver.Connection, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) GetAgencyClientsWithPredicate(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *testContext) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
@@ -150,7 +171,7 @@ func (c *testContext) GetCachedStatus() inspectorInterface.Inspector {
 	panic("implement me")
 }
 
-func (c *testContext) WithStatusUpdateErr(ctx context.Context, action resources.DeploymentStatusUpdateErrFunc, force ...bool) error {
+func (c *testContext) WithStatusUpdateErr(ctx context.Context, action reconciler.DeploymentStatusUpdateErrFunc, force ...bool) error {
 	_, err := action(&c.ArangoDeployment.Status)
 	return err
 }
@@ -183,11 +204,11 @@ func (c *testContext) RenderPodTemplateForMember(ctx context.Context, cachedStat
 	panic("implement me")
 }
 
-func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberUpdateFunc) error {
+func (c *testContext) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
 	panic("implement me")
 }
 
-func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action resources.ArangoMemberStatusUpdateFunc) error {
+func (c *testContext) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
 	panic("implement me")
 }
 
@@ -199,7 +220,7 @@ func (c *testContext) SetAgencyMaintenanceMode(ctx context.Context, enabled bool
 	panic("implement me")
 }
 
-func (c *testContext) WithStatusUpdate(ctx context.Context, action resources.DeploymentStatusUpdateFunc, force ...bool) error {
+func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.DeploymentStatusUpdateFunc, force ...bool) error {
 	action(&c.ArangoDeployment.Status)
 	return nil
 }
@@ -286,10 +307,6 @@ func (c *testContext) GetDatabaseClient(ctx context.Context) (driver.Client, err
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
-	panic("implement me")
-}
-
-func (c *testContext) GetAgencyClients(ctx context.Context, predicate func(id string) bool) ([]driver.Connection, error) {
 	panic("implement me")
 }
 

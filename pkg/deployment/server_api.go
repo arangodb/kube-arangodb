@@ -44,8 +44,8 @@ func (d *Deployment) Namespace() string {
 	return d.apiObject.Namespace
 }
 
-// Mode returns the mode of the deployment.
-func (d *Deployment) Mode() api.DeploymentMode {
+// GetMode returns the mode of the deployment.
+func (d *Deployment) GetMode() api.DeploymentMode {
 	return d.GetSpec().GetMode()
 }
 
