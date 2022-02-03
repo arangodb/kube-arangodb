@@ -218,6 +218,20 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 		// End of Topology labels
 
+		if state, ok := r.context.MemberState(memberStatus.ID); ok {
+			if state.Reachable {
+				if memberStatus.Conditions.Update(api.ConditionTypeReachable, true, "ArangoDB is reachable", "") {
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+				}
+			} else {
+				if memberStatus.Conditions.Update(api.ConditionTypeReachable, false, "ArangoDB is not reachable", "") {
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
+				}
+			}
+		}
+
 		if k8sutil.IsPodReady(pod) && k8sutil.AreContainersReady(pod, coreContainers) {
 			// Pod is now ready
 			if anyOf(memberStatus.Conditions.Update(api.ConditionTypeReady, true, "Pod Ready", ""),

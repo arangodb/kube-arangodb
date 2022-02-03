@@ -51,7 +51,8 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 
 	// When the main container is terminated, then the whole pod should be terminated,
 	// so sidecar core containers' names should not be checked here.
-	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p)
+	// If Member is not reachable finalizers should be also removed
+	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p) || util.BoolOrDefault(memberStatus.Conditions.GetValue(api.ConditionTypeReachable), true)
 
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {

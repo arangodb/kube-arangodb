@@ -58,6 +58,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/chaos"
+	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
@@ -142,6 +143,8 @@ type Deployment struct {
 	chaosMonkey               *chaos.Monkey
 	syncClientCache           client.ClientCache
 	haveServiceMonitorCRD     bool
+
+	memberState.StateInspector
 }
 
 func (d *Deployment) GetAgencyCache() (agency.State, bool) {
@@ -218,6 +221,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		stopCh:      make(chan struct{}),
 		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
+
+	d.StateInspector = memberState.NewStateInspector(d)
 
 	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 

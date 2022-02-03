@@ -20,12 +20,35 @@
 
 package v2alpha1
 
-import "sort"
+import (
+	"sort"
+	"sync"
+)
 
 type DeploymentStatusMemberElementsSortFunc func(a, b DeploymentStatusMemberElement) bool
 type DeploymentStatusMemberElementsCondFunc func(a DeploymentStatusMemberElement) bool
 
 type DeploymentStatusMemberElements []DeploymentStatusMemberElement
+
+func (d DeploymentStatusMemberElements) ForEach(f func(id int)) {
+	if f == nil {
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(d))
+
+	for id := range d {
+		go func(i int) {
+			defer wg.Done()
+
+			f(i)
+		}(id)
+	}
+
+	wg.Wait()
+}
 
 func (d DeploymentStatusMemberElements) Filter(f DeploymentStatusMemberElementsCondFunc) DeploymentStatusMemberElements {
 	var l DeploymentStatusMemberElements

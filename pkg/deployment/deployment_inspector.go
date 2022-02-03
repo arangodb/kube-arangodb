@@ -115,6 +115,8 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		d.apiObject = updated
 
+		d.RefreshState(ctxReconciliation, updated.Status.Members.AsList())
+
 		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval, cachedStatus)
 		if err != nil {
 			if !operatorErrors.IsReconcile(err) {
