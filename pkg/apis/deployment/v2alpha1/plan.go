@@ -24,7 +24,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/dchest/uniuri"
 	"k8s.io/apimachinery/pkg/api/equality"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 // ActionPriority define action priority
@@ -197,10 +199,16 @@ const (
 	MemberIDPreviousAction = "@previous"
 )
 
+const (
+	ParamPodUID = "PodUID"
+)
+
 // Action represents a single action to be taken to update a deployment.
 type Action struct {
 	// ID of this action (unique for every action)
 	ID string `json:"id"`
+	// SetID define the unique ID of current action set
+	SetID types.UID `json:"setID,omitempty"`
 	// Type of action.
 	Type ActionType `json:"type"`
 	// ID reference of the member involved in this action (if any)
@@ -208,9 +216,9 @@ type Action struct {
 	// Group involved in this action
 	Group ServerGroup `json:"group,omitempty"`
 	// CreationTime is set the when the action is created.
-	CreationTime metav1.Time `json:"creationTime"`
+	CreationTime meta.Time `json:"creationTime"`
 	// StartTime is set the when the action has been started, but needs to wait to be finished.
-	StartTime *metav1.Time `json:"startTime,omitempty"`
+	StartTime *meta.Time `json:"startTime,omitempty"`
 	// Reason for this action
 	Reason string `json:"reason,omitempty"`
 	// Image used in can of a SetCurrentImage action.
@@ -254,6 +262,15 @@ func (a Action) GetParam(key string) (string, bool) {
 	return i, ok
 }
 
+// NewActionSet add new SetID vale to the actions
+func NewActionSet(actions ...Action) []Action {
+	sid := uuid.NewUUID()
+	for id := range actions {
+		actions[id].SetID = sid
+	}
+	return actions
+}
+
 // NewAction instantiates a new Action.
 func NewAction(actionType ActionType, group ServerGroup, memberID string, reason ...string) Action {
 	a := Action{
@@ -261,7 +278,7 @@ func NewAction(actionType ActionType, group ServerGroup, memberID string, reason
 		Type:         actionType,
 		MemberID:     memberID,
 		Group:        group,
-		CreationTime: metav1.Now(),
+		CreationTime: meta.Now(),
 	}
 	if len(reason) != 0 {
 		a.Reason = reason[0]

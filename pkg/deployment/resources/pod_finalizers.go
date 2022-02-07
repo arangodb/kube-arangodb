@@ -41,6 +41,7 @@ import (
 const (
 	podFinalizerRemovedInterval = util.Interval(time.Second / 2)  // Interval used (until new inspection) when Pod finalizers have been removed
 	recheckPodFinalizerInterval = util.Interval(time.Second * 10) // Interval used when Pod finalizers need to be rechecked soon
+	podUnreachableGracePeriod   = time.Second * 15                // Interval used when Pod finalizers need to be rechecked soon
 )
 
 // runPodFinalizers goes through the list of pod finalizers to see if they can be removed.
@@ -52,7 +53,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	// When the main container is terminated, then the whole pod should be terminated,
 	// so sidecar core containers' names should not be checked here.
 	// If Member is not reachable finalizers should be also removed
-	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p) || util.BoolOrDefault(memberStatus.Conditions.GetValue(api.ConditionTypeReachable), true)
+	isServerContainerDead := !k8sutil.IsPodServerContainerRunning(p) || memberStatus.Conditions.Check(api.ConditionTypeReachable).Exists().IsFalse().LastTransition(podUnreachableGracePeriod).Evaluate()
 
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {

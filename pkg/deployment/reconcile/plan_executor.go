@@ -175,8 +175,11 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 
 		action := d.createAction(log, planAction, cachedStatus)
 
-		done, abort, recall, err := d.executeAction(ctx, log, planAction, action)
+		done, abort, recall, retry, err := d.executeAction(ctx, log, planAction, action)
 		if err != nil {
+			if retry {
+				return plan, true, nil
+			}
 			// The Plan will be cleaned up, so no actions will be in the queue.
 			actionsCurrentPlan.WithLabelValues(d.context.GetName(), planAction.Group.AsRole(), planAction.MemberID,
 				planAction.Type.String(), pg.Type()).Set(0.0)
@@ -247,27 +250,33 @@ func (d *Reconciler) executePlan(ctx context.Context, cachedStatus inspectorInte
 	}
 }
 
-func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, planAction api.Action, action Action) (done, abort, callAgain bool, err error) {
+func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, planAction api.Action, action Action) (done, abort, callAgain, retry bool, err error) {
 	if !planAction.IsStarted() {
 		// Not started yet
 		ready, err := action.Start(ctx)
 		if err != nil {
+			if d := getStartFailureGracePeriod(action); d > 0 && !planAction.CreationTime.IsZero() {
+				if time.Since(planAction.CreationTime.Time) < d {
+					log.Error().Err(err).Msg("Failed to start action, but still in grace period")
+					return false, false, false, true, errors.WithStack(err)
+				}
+			}
 			log.Error().Err(err).Msg("Failed to start action")
-			return false, false, false, errors.WithStack(err)
+			return false, false, false, false, errors.WithStack(err)
 		}
 
 		if ready {
 			log.Debug().Bool("ready", ready).Msg("Action Start completed")
-			return true, false, false, nil
+			return true, false, false, false, nil
 		}
 
-		return false, false, true, nil
+		return false, false, true, false, nil
 	}
 	// First action of plan has been started, check its progress
 	ready, abort, err := action.CheckProgress(ctx)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to check action progress")
-		return false, false, false, errors.WithStack(err)
+		return false, false, false, false, errors.WithStack(err)
 	}
 
 	log.Debug().
@@ -276,21 +285,21 @@ func (d *Reconciler) executeAction(ctx context.Context, log zerolog.Logger, plan
 		Msg("Action CheckProgress completed")
 
 	if ready {
-		return true, false, false, nil
+		return true, false, false, false, nil
 	}
 
 	if abort {
 		log.Warn().Msg("Action aborted. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanAbortedEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-		return false, true, false, nil
+		return false, true, false, false, nil
 	} else if time.Now().After(planAction.CreationTime.Add(action.Timeout(d.context.GetSpec()))) {
 		log.Warn().Msg("Action not finished in time. Removing the entire plan")
 		d.context.CreateEvent(k8sutil.NewPlanTimeoutEvent(d.context.GetAPIObject(), string(planAction.Type), planAction.MemberID, planAction.Group.AsRole()))
-		return false, true, false, nil
+		return false, true, false, false, nil
 	}
 
 	// Timeout not yet expired, come back soon
-	return false, false, true, nil
+	return false, false, true, false, nil
 }
 
 // createAction create action object based on action type

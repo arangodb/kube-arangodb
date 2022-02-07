@@ -26,6 +26,8 @@ import (
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"time"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -106,4 +108,8 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, errors.WithStack(err)
 	}
 	return true, false, nil
+}
+
+func (a *actionRotateMember) StartFailureGracePeriod() time.Duration {
+	return 30 * time.Second
 }

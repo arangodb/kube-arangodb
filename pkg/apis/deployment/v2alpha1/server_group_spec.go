@@ -145,8 +145,12 @@ type ServerGroupSpec struct {
 	ShutdownMethod *ServerGroupShutdownMethod `json:"shutdownMethod,omitempty"`
 	// ShutdownDelay define how long operator should delay finalizer removal after shutdown
 	ShutdownDelay *int `json:"shutdownDelay,omitempty"`
-	// InternalPort define port used in internal communication, can be accessed over localhost via sidecar
+	// InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 	InternalPort *int `json:"internalPort,omitempty"`
+	// InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
+	InternalPortProtocol *ServerGroupPortProtocol `json:"internalPortProtocol,omitempty"`
+	// ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
+	ExternalPortEnabled *bool `json:"externalPortEnabled,omitempty"`
 	// AllowMemberRecreation allows to recreate member. Value is used only for Coordinator and DBServer with default to True, for all other groups set to false.
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
@@ -517,6 +521,9 @@ func (s ServerGroupSpec) Validate(group ServerGroup, used bool, mode DeploymentM
 		return errors.WithStack(errors.Wrapf(ValidationError, "Invalid count value %d for un-used group. Expected 0", s.GetCount()))
 	}
 	if port := s.InternalPort; port != nil {
+		if err := s.InternalPortProtocol.Validate(); err != nil {
+			return errors.Wrapf(err, "Validation of InternalPortProtocol failed")
+		}
 		switch p := *port; p {
 		case 8529:
 			return errors.WithStack(errors.Wrapf(ValidationError, "Port %d already in use", p))
@@ -710,5 +717,14 @@ func (s ServerGroupSpec) GetTerminationGracePeriod(group ServerGroup) time.Durat
 		return group.DefaultTerminationGracePeriod()
 	} else {
 		return time.Second * time.Duration(*v)
+	}
+}
+
+// GetExternalPortEnabled returns value of ExternalPortEnabled. If ExternalPortEnabled is nil true is returned
+func (s ServerGroupSpec) GetExternalPortEnabled() bool {
+	if v := s.ExternalPortEnabled; v == nil {
+		return true
+	} else {
+		return *v
 	}
 }

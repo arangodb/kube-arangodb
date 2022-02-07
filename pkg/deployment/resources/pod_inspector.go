@@ -219,7 +219,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		// End of Topology labels
 
 		if state, ok := r.context.MemberState(memberStatus.ID); ok {
-			if state.Reachable {
+			if state.IsReachable() {
 				if memberStatus.Conditions.Update(api.ConditionTypeReachable, true, "ArangoDB is reachable", "") {
 					updateMemberStatusNeeded = true
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)

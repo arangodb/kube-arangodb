@@ -22,7 +22,7 @@ package v2alpha1
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -102,7 +102,7 @@ type Condition struct {
 	// Type of  condition.
 	Type ConditionType `json:"type"`
 	// Status of the condition, one of True, False, Unknown.
-	Status v1.ConditionStatus `json:"status"`
+	Status core.ConditionStatus `json:"status"`
 	// The last time this condition was updated.
 	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
 	// Last time the condition transitioned from one status to another.
@@ -116,7 +116,18 @@ type Condition struct {
 }
 
 func (c Condition) IsTrue() bool {
-	return c.Status == v1.ConditionTrue
+	return c.Status == core.ConditionTrue
+}
+
+// Equal checks for equality
+func (c Condition) Equal(other Condition) bool {
+	return c.Type == other.Type &&
+		c.Status == other.Status &&
+		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
+		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
+		c.Reason == other.Reason &&
+		c.Message == other.Message &&
+		c.Hash == other.Hash
 }
 
 // ConditionList is a list of conditions.
@@ -143,30 +154,20 @@ func (list ConditionList) Equal(other ConditionList) bool {
 	return true
 }
 
-// Equal checks for equality
-func (c Condition) Equal(other Condition) bool {
-	return c.Type == other.Type &&
-		c.Status == other.Status &&
-		util.TimeCompareEqual(c.LastUpdateTime, other.LastUpdateTime) &&
-		util.TimeCompareEqual(c.LastTransitionTime, other.LastTransitionTime) &&
-		c.Reason == other.Reason &&
-		c.Message == other.Message &&
-		c.Hash == other.Hash
-}
-
 // IsTrue return true when a condition with given type exists and its status is `True`.
 func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	c, found := list.Get(conditionType)
 	return found && c.IsTrue()
 }
 
-// GetValue returns *bool value in case if condition exists, nil otherwise
-func (list ConditionList) GetValue(conditionType ConditionType) *bool {
-	c, found := list.Get(conditionType)
-	if found {
-		return util.NewBool(c.IsTrue())
+// Check create a condition checker.
+func (list ConditionList) Check(conditionType ConditionType) ConditionCheck {
+	c, ok := list.Get(conditionType)
+
+	return conditionCheck{
+		condition: c,
+		exists:    ok,
 	}
-	return nil
 }
 
 // Get a condition by type.
@@ -211,9 +212,9 @@ func (list ConditionList) Index(conditionType ConditionType) int {
 
 func (list *ConditionList) update(conditionType ConditionType, status bool, reason, message, hash string) bool {
 	src := *list
-	statusX := v1.ConditionFalse
+	statusX := core.ConditionFalse
 	if status {
-		statusX = v1.ConditionTrue
+		statusX = core.ConditionTrue
 	}
 
 	index := list.Index(conditionType)

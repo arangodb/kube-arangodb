@@ -27,11 +27,14 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/rs/zerolog"
 )
 
 type StateInspector interface {
 	RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements)
 	MemberState(id string) (State, bool)
+
+	Log(logger zerolog.Logger)
 }
 
 func NewStateInspector(client reconciler.DeploymentMemberClient) StateInspector {
@@ -48,6 +51,17 @@ type stateInspector struct {
 	client reconciler.DeploymentMemberClient
 }
 
+func (s *stateInspector) Log(logger zerolog.Logger) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	for m, s := range s.members {
+		if s.IsInvalid() {
+			s.Log(logger.Info()).Str("member", m).Msgf("Member is in invalid state")
+		}
+	}
+}
+
 func (s *stateInspector) RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -58,18 +72,18 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	defer cancel()
 
 	members.ForEach(func(id int) {
+		results[id] = State{}
+
 		c, err := s.client.GetServerClient(nctx, members[id].Group, members[id].Member.ID)
 		if err != nil {
-			results[id].Reachable = false
+			results[id].Reachable = err
 			return
 		}
 
 		if _, err := c.Version(nctx); err != nil {
-			results[id].Reachable = false
+			results[id].Reachable = err
 			return
 		}
-
-		results[id].Reachable = true
 	})
 
 	current := map[string]State{}
@@ -95,5 +109,22 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 }
 
 type State struct {
-	Reachable bool
+	Reachable error
+}
+
+func (s State) IsReachable() bool {
+	return s.Reachable == nil
+}
+
+func (s State) Log(event *zerolog.Event) *zerolog.Event {
+	if !s.IsReachable() {
+		event = event.Bool("reachable", false).AnErr("reachableError", s.Reachable)
+	} else {
+		event = event.Bool("reachable", false)
+	}
+	return event
+}
+
+func (s State) IsInvalid() bool {
+	return !s.IsReachable()
 }

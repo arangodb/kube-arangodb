@@ -48,6 +48,11 @@ func getShutdownHelper(a *api.Action, actionCtx ActionContext, log zerolog.Logge
 		return nil, api.MemberStatus{}, false
 	}
 
+	if ifPodUIDMismatch(m, *a, actionCtx.GetCachedStatus()) {
+		log.Error().Msg("Member UID is changed")
+		return NewActionSuccess(), m, true
+	}
+
 	pod, ok := actionCtx.GetCachedStatus().Pod(m.PodName)
 	if !ok {
 		log.Warn().Str("pod-name", m.PodName).Msg("pod is already gone")
