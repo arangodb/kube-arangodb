@@ -156,11 +156,11 @@ func NewPlanAppendEvent(apiObject APIObject, itemType, memberID, role, reason st
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Plan Action added"
-	msg := fmt.Sprintf("An plan item of type %s", itemType)
+	msg := fmt.Sprintf("A plan item of type %s", itemType)
 	if role != "" {
 		msg = fmt.Sprintf("%s for member %s with role %s", msg, memberID, role)
 	}
-	msg = fmt.Sprintf("%s has beed added", msg)
+	msg = fmt.Sprintf("%s has been added", msg)
 	if reason != "" {
 		msg = fmt.Sprintf("%s with reason: %s", msg, reason)
 	}
@@ -174,7 +174,7 @@ func NewPlanTimeoutEvent(apiObject APIObject, itemType, memberID, role string) *
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Reconciliation Plan Timeout"
-	event.Message = fmt.Sprintf("An plan item of type %s or member %s with role %s did not finish in time", itemType, memberID, role)
+	event.Message = fmt.Sprintf("A plan item of type %s or member %s with role %s did not finish in time", itemType, memberID, role)
 	return event
 }
 
@@ -184,7 +184,7 @@ func NewPlanAbortedEvent(apiObject APIObject, itemType, memberID, role string) *
 	event := newDeploymentEvent(apiObject)
 	event.Type = v1.EventTypeNormal
 	event.Reason = "Reconciliation Plan Aborted"
-	event.Message = fmt.Sprintf("An plan item of type %s or member %s with role %s wants to abort the plan", itemType, memberID, role)
+	event.Message = fmt.Sprintf("A plan item of type %s or member %s with role %s wants to abort the plan", itemType, memberID, role)
 	return event
 }
 

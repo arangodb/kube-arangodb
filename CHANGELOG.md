@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - Do not check License V2 on Community images
 - Add status.members.<group>.
+- Don't replace pod immediately when storage class changes
 - Define MemberReplacementRequired condition
 - Remove pod immediately when annotation is turned on
 - (ARM64) Add support for ARM64 enablement
