@@ -47,7 +47,7 @@ type Action interface {
 
 	// Timeout returns the amount of time after which this action will timeout.
 	Timeout(deploymentSpec api.DeploymentSpec) time.Duration
-	// Return the MemberID used / created in this action
+	// MemberID Return the MemberID used / created in this action
 	MemberID() string
 }
 
@@ -80,6 +80,22 @@ func getActionReloadCachedStatus(a Action) bool {
 		return false
 	} else {
 		return c.ReloadCachedStatus()
+	}
+}
+
+// ActionStartFailureGracePeriod extend action definition to allow specifying start failure grace period
+type ActionStartFailureGracePeriod interface {
+	Action
+
+	// StartFailureGracePeriod returns information about failure grace period (defaults to 0)
+	StartFailureGracePeriod() time.Duration
+}
+
+func getStartFailureGracePeriod(a Action) time.Duration {
+	if c, ok := a.(ActionStartFailureGracePeriod); !ok {
+		return 0
+	} else {
+		return c.StartFailureGracePeriod()
 	}
 }
 

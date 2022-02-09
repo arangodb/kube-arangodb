@@ -43,8 +43,8 @@ func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan := api.Plan{
 		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
 		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
-		api.NewAction(api.ActionTypeKillMemberPod, group, member.ID, reason),
-		api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason),
+		withMemberPodUID(member, api.NewAction(api.ActionTypeKillMemberPod, group, member.ID, reason)),
+		withMemberPodUID(member, api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason)),
 		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
 		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
 	}

@@ -2063,6 +2063,16 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.InternalPortProtocol != nil {
+		in, out := &in.InternalPortProtocol, &out.InternalPortProtocol
+		*out = new(ServerGroupPortProtocol)
+		**out = **in
+	}
+	if in.ExternalPortEnabled != nil {
+		in, out := &in.ExternalPortEnabled, &out.ExternalPortEnabled
+		*out = new(bool)
+		**out = **in
+	}
 	if in.AllowMemberRecreation != nil {
 		in, out := &in.AllowMemberRecreation, &out.AllowMemberRecreation
 		*out = new(bool)

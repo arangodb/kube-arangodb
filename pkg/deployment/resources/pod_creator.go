@@ -68,15 +68,21 @@ func createArangodArgsWithUpgrade(cachedStatus interfaces.Inspector, input pod.I
 func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, additionalOptions ...k8sutil.OptionPair) ([]string, error) {
 	options := k8sutil.CreateOptionPairs(64)
 
-	//scheme := NewURLSchemes(bsCfg.SslKeyFile != "").Arangod
 	scheme := "tcp"
 	if input.Deployment.IsSecure() {
 		scheme = "ssl"
 	}
 
-	options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
+	if input.GroupSpec.GetExternalPortEnabled() {
+		options.Addf("--server.endpoint", "%s://%s:%d", scheme, input.Deployment.GetListenAddr(), k8sutil.ArangoPort)
+	}
+
 	if port := input.GroupSpec.InternalPort; port != nil {
-		options.Addf("--server.endpoint", "tcp://127.0.0.1:%d", *port)
+		internalScheme := "tcp"
+		if input.Deployment.IsSecure() && input.GroupSpec.InternalPortProtocol.Get() == api.ServerGroupPortProtocolHTTPS {
+			internalScheme = "ssl"
+		}
+		options.Addf("--server.endpoint", "%s://127.0.0.1:%d", internalScheme, *port)
 	}
 
 	// Authentication
@@ -679,6 +685,7 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 	iterator := r.context.GetServerGroupIterator()
 	deploymentStatus, _ := r.context.GetStatus()
 	imageNotFoundOnce := &sync.Once{}
+	changed := false
 
 	if err := iterator.ForeachServerGroup(func(group api.ServerGroup, groupSpec api.ServerGroupSpec, status *api.MemberStatusList) error {
 		for _, m := range *status {
@@ -705,10 +712,18 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 				r.log.Warn().Err(err).Msgf("Ensuring pod failed")
 				return errors.WithStack(err)
 			}
+
+			changed = true
 		}
 		return nil
 	}, &deploymentStatus); err != nil {
 		return errors.WithStack(err)
+	}
+
+	if changed {
+		if err := cachedStatus.Refresh(ctx); err != nil {
+			return err
+		}
 	}
 
 	return nil

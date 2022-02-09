@@ -67,6 +67,11 @@ func (a *actionKillMemberPod) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
+	if ifPodUIDMismatch(m, a.action, a.actionCtx.GetCachedStatus()) {
+		log.Error().Msg("Member UID is changed")
+		return true, nil
+	}
+
 	if err := a.actionCtx.DeletePod(ctx, m.PodName, meta.DeleteOptions{}); err != nil {
 		log.Error().Err(err).Msg("Unable to kill pod")
 		return true, nil
