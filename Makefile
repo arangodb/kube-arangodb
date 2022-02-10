@@ -300,7 +300,7 @@ endif
 .PHONY: docker-ubi
 docker-ubi: check-vars $(VBIN_LINUX_AMD64)
 	docker build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(BASEUBIIMAGE)" -t $(OPERATORUBIIMAGE)-local-only-build .
-	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
+	docker build --no-cache -f $(DOCKERFILE) --build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "TARGETARCH=amd64" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "IMAGE=$(OPERATORUBIIMAGE)-local-only-build" -t $(OPERATORUBIIMAGE) .
 ifdef PUSHIMAGES
 	docker push $(OPERATORUBIIMAGE)
 endif
