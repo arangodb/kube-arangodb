@@ -15,7 +15,7 @@ metadata:
     release: {{ .Release.Name }}
 spec:
   ports:
-    - name: server
+    - name: {{ .Values.port.name }}
       port: 8528
       protocol: TCP
       targetPort: 8528

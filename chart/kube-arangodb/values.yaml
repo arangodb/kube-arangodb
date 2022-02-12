@@ -53,3 +53,6 @@ operator:
 
 rbac:
   enabled: true
+
+port:
+  name: tcp-8529
