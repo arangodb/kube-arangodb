@@ -474,13 +474,17 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 	attempt := 0
 	for {
 		attempt++
+		q := patch.NewPatch(patch.ItemReplace(patch.NewPath("status"), d.status.last))
+
 		if d.apiObject.GetDeletionTimestamp() == nil {
-			ensureFinalizers(d.apiObject)
+			if ensureFinalizers(d.apiObject) {
+				q.ItemAdd(patch.NewPath("metadata", "finalizers"), d.apiObject.Finalizers)
+			}
 		}
 
 		var newAPIObject *api.ArangoDeployment
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			p, err := patch.NewPatch(patch.ItemReplace(patch.NewPath("status"), d.status.last)).Marshal()
+			p, err := q.Marshal()
 			if err != nil {
 				return err
 			}

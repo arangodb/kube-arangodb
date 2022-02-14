@@ -23,13 +23,13 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
+	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -119,6 +119,26 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 	decision := createRotateOrUpgradeDecision(log, spec, status, context)
 
 	if decision.IsUpgrade() {
+
+		for _, m := range status.Members.AsList() {
+			// Pre-check
+			d := decision[m.Member.ID]
+			if !d.upgrade {
+				continue
+			}
+
+			// We have member to upgrade
+			if d.upgradeDecision.Hold {
+				// Holding upgrade
+				continue
+			}
+
+			if !d.upgradeDecision.UpgradeAllowed {
+				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
+				return nil, false
+			}
+		}
+
 		// Upgrade phase
 		// During upgrade always get first member which needs to be upgraded
 		for _, m := range status.Members.AsList() {
@@ -175,7 +195,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			}
 
 			if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
-				return createRotateMemberPlan(log, m.Member, m.Group, "Restart flag present"), false
+				return createRotateMemberPlan(log, m.Member, m.Group, spec, "Restart flag present"), false
 			}
 			arangoMember, ok := cachedStatus.ArangoMember(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
 			if !ok {
@@ -402,18 +422,15 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 		Str("reason", reason).
 		Str("action", string(upgradeAction)).
 		Msg("Creating upgrade plan")
-	var plan = api.Plan{
-		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
+
+	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason)
+
+	if member.Image == nil || member.Image.Image != spec.GetImage() {
+		plan = plan.Before(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
-		plan = plan.After(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
+		plan = plan.Before(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
 	}
-	if member.Image == nil || member.Image.Image != spec.GetImage() {
-		plan = plan.After(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
-	}
-
-	plan = plan.After(api.NewAction(upgradeAction, group, member.ID, reason),
-		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID))
 
 	return withSecureWrap(member, group, spec, plan...)
 }
