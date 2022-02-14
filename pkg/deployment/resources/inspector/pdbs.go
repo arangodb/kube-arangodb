@@ -30,7 +30,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
-	policy "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -128,7 +128,7 @@ func podDisruptionBudgetPointer(podDisruptionBudget policy.PodDisruptionBudget) 
 func getPodDisruptionBudgets(ctx context.Context, k kubernetes.Interface, namespace, cont string) ([]policy.PodDisruptionBudget, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	podDisruptionBudgets, err := k.PolicyV1beta1().PodDisruptionBudgets(namespace).List(ctxChild, meta.ListOptions{
+	podDisruptionBudgets, err := k.PolicyV1().PodDisruptionBudgets(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})

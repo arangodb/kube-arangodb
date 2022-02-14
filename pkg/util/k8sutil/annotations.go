@@ -24,10 +24,10 @@ import (
 	"context"
 
 	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
-	policyTyped "k8s.io/client-go/kubernetes/typed/policy/v1beta1"
+	policyTyped "k8s.io/client-go/kubernetes/typed/policy/v1"
 )
 
 type OwnerRefObj interface {

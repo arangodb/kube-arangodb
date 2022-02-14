@@ -643,7 +643,7 @@ func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaim.
 }
 
 func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
-	return d.getKubeCli().PolicyV1beta1().PodDisruptionBudgets(d.GetNamespace())
+	return d.getKubeCli().PolicyV1().PodDisruptionBudgets(d.GetNamespace())
 }
 
 func (d *Deployment) ServiceMonitorsModInterface() servicemonitor.ModInterface {

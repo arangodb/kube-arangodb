@@ -23,7 +23,7 @@ package poddisruptionbudget
 import (
 	"context"
 
-	policy "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )

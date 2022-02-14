@@ -31,7 +31,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -89,13 +89,13 @@ func PDBNameForGroup(depl string, group api.ServerGroup) string {
 	return fmt.Sprintf("%s-%s-pdb", depl, group.AsRole())
 }
 
-func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.OwnerReference) *policyv1beta1.PodDisruptionBudget {
-	return &policyv1beta1.PodDisruptionBudget{
+func newPDB(minAvail int, deplname string, group api.ServerGroup, owner metav1.OwnerReference) *policy.PodDisruptionBudget {
+	return &policy.PodDisruptionBudget{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            PDBNameForGroup(deplname, group),
 			OwnerReferences: []metav1.OwnerReference{owner},
 		},
-		Spec: policyv1beta1.PodDisruptionBudgetSpec{
+		Spec: policy.PodDisruptionBudgetSpec{
 			MinAvailable: newFromInt(minAvail),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: k8sutil.LabelsForDeployment(deplname, group.AsRole()),
@@ -111,7 +111,7 @@ func (r *Resources) ensurePDBForGroup(ctx context.Context, group api.ServerGroup
 	log := r.log.With().Str("group", group.AsRole()).Logger()
 
 	for {
-		var pdb *policyv1beta1.PodDisruptionBudget
+		var pdb *policy.PodDisruptionBudget
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
 			pdb, err = r.context.GetCachedStatus().PodDisruptionBudgetReadInterface().Get(ctxChild, pdbname, metav1.GetOptions{})

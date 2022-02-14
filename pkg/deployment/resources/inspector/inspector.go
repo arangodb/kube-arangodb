@@ -38,7 +38,7 @@ import (
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy "k8s.io/api/policy/v1"
 	"k8s.io/client-go/kubernetes"
 )
 

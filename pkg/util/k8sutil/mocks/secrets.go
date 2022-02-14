@@ -28,6 +28,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
+	v12 "k8s.io/client-go/applyconfigurations/core/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -100,5 +101,11 @@ func (s *secrets) Watch(_ context.Context, opts meta_v1.ListOptions) (watch.Inte
 func (s *secrets) Patch(_ context.Context, name string, pt types.PatchType, data []byte,
 	options meta_v1.PatchOptions, subresources ...string) (result *v1.Secret, err error) {
 	args := s.Called(name, pt, data, subresources)
+	return nilOrSecret(args.Get(0)), args.Error(1)
+}
+
+func (s *secrets) Apply(ctx context.Context, conf *v12.SecretApplyConfiguration,
+	options meta_v1.ApplyOptions) (result *v1.Secret, err error) {
+	args := s.Called(ctx, conf, options)
 	return nilOrSecret(args.Get(0)), args.Error(1)
 }

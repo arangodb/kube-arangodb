@@ -20,7 +20,7 @@
 
 package poddisruptionbudget
 
-import policy "k8s.io/api/policy/v1beta1"
+import policy "k8s.io/api/policy/v1"
 
 type Inspector interface {
 	PodDisruptionBudget(name string) (*policy.PodDisruptionBudget, bool)
