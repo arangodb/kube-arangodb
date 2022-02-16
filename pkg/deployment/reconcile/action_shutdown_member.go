@@ -25,12 +25,14 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
+	"time"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
 
 func init() {
-	registerAction(api.ActionTypeShutdownMember, newShutdownMemberAction)
+	registerAction(api.ActionTypeShutdownMember, withActionStartFailureGracePeriod(newShutdownMemberAction, time.Minute))
 }
 
 // newShutdownMemberAction creates a new Action that implements the given

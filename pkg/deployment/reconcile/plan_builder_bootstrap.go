@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -54,8 +55,8 @@ func createBootstrapPlan(ctx context.Context,
 			}
 		}
 
-		return api.Plan{api.NewAction(api.ActionTypeBootstrapSetPassword, api.ServerGroupUnknown, "", "Updating password").AddParam("user", user)}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeBootstrapSetPassword, "Updating password").AddParam("user", user)}
 	}
 
-	return api.Plan{api.NewAction(api.ActionTypeBootstrapUpdate, api.ServerGroupUnknown, "", "Finalizing bootstrap")}
+	return api.Plan{actions.NewClusterAction(api.ActionTypeBootstrapUpdate, "Finalizing bootstrap")}
 }

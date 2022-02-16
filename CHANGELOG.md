@@ -12,6 +12,7 @@
 - (Feature) Allow to disable external port (sidecar managed connection)
 - (Bugfix) Fix 3.6 -> 3.7 Upgrade procedure
 - (Bugfix) Add missing finalizer
+- (Bugfix) Add graceful to kill command
 
 ## [1.2.7](https://github.com/arangodb/kube-arangodb/tree/1.2.7) (2022-01-17)
 - Add Plan BackOff functionality

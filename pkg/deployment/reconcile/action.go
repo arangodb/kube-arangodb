@@ -91,6 +91,30 @@ type ActionStartFailureGracePeriod interface {
 	StartFailureGracePeriod() time.Duration
 }
 
+func wrapActionStartFailureGracePeriod(action Action, failureGracePeriod time.Duration) Action {
+	return &actionStartFailureGracePeriod{
+		Action:             action,
+		failureGracePeriod: failureGracePeriod,
+	}
+}
+
+func withActionStartFailureGracePeriod(in actionFactory, failureGracePeriod time.Duration) actionFactory {
+	return func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
+		return wrapActionStartFailureGracePeriod(in(log, action, actionCtx), failureGracePeriod)
+	}
+}
+
+var _ ActionStartFailureGracePeriod = &actionStartFailureGracePeriod{}
+
+type actionStartFailureGracePeriod struct {
+	Action
+	failureGracePeriod time.Duration
+}
+
+func (a actionStartFailureGracePeriod) StartFailureGracePeriod() time.Duration {
+	return a.failureGracePeriod
+}
+
 func getStartFailureGracePeriod(a Action) time.Duration {
 	if c, ok := a.(ActionStartFailureGracePeriod); !ok {
 		return 0
@@ -118,27 +142,27 @@ func getActionPlanAppender(a Action, plan api.Plan) (api.Plan, bool) {
 type actionFactory func(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action
 
 var (
-	actions     = map[api.ActionType]actionFactory{}
-	actionsLock sync.Mutex
+	definedActions     = map[api.ActionType]actionFactory{}
+	definedActionsLock sync.Mutex
 )
 
 func registerAction(t api.ActionType, f actionFactory) {
-	actionsLock.Lock()
-	defer actionsLock.Unlock()
+	definedActionsLock.Lock()
+	defer definedActionsLock.Unlock()
 
-	_, ok := actions[t]
+	_, ok := definedActions[t]
 	if ok {
 		panic(fmt.Sprintf("Action already defined %s", t))
 	}
 
-	actions[t] = f
+	definedActions[t] = f
 }
 
 func getActionFactory(t api.ActionType) (actionFactory, bool) {
-	actionsLock.Lock()
-	defer actionsLock.Unlock()
+	definedActionsLock.Lock()
+	defer definedActionsLock.Unlock()
 
-	f, ok := actions[t]
+	f, ok := definedActions[t]
 	return f, ok
 }
 

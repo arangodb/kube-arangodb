@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -73,7 +74,7 @@ func updateMemberPodTemplateSpec(ctx context.Context,
 		for _, m := range members {
 			if m.Phase != api.MemberPhaseNone {
 				if reason, changed := arangoMemberPodTemplateNeedsUpdate(ctx, log, apiObject, spec, group, status, m, cachedStatus, context); changed {
-					plan = append(plan, api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, reason))
+					plan = append(plan, actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, reason))
 				}
 			}
 		}
@@ -97,10 +98,10 @@ func updateMemberPhasePlan(ctx context.Context,
 				var p api.Plan
 
 				p = append(p,
-					api.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m.ID, "Propagating spec of pod"),
-					api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m.ID, "Propagating status of pod"))
+					actions.NewAction(api.ActionTypeArangoMemberUpdatePodSpec, group, m, "Propagating spec of pod"),
+					actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, m, "Propagating status of pod"))
 
-				p = append(p, api.NewAction(api.ActionTypeMemberPhaseUpdate, group, m.ID,
+				p = append(p, actions.NewAction(api.ActionTypeMemberPhaseUpdate, group, m,
 					"Move to Pending phase").AddParam(actionTypeMemberPhaseUpdatePhaseKey, api.MemberPhasePending.String()))
 
 				plan = append(plan, p...)
@@ -114,7 +115,7 @@ func updateMemberPhasePlan(ctx context.Context,
 }
 
 func pendingRestartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingRestart.String(), "T")
+	return actions.NewAction(api.ActionTypeSetMemberCondition, group, withPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingRestart.String(), "T")
 }
 
 func restartMemberConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
@@ -122,7 +123,7 @@ func restartMemberConditionAction(group api.ServerGroup, memberID string, reason
 }
 
 func tlsRotateConditionAction(group api.ServerGroup, memberID string, reason string) api.Action {
-	return api.NewAction(api.ActionTypeSetMemberCondition, group, memberID, reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
+	return actions.NewAction(api.ActionTypeSetMemberCondition, group, withPredefinedMember(memberID), reason).AddParam(api.ConditionTypePendingTLSRotation.String(), "T")
 }
 
 func updateMemberUpdateConditionsPlan(ctx context.Context,
@@ -138,7 +139,7 @@ func updateMemberUpdateConditionsPlan(ctx context.Context,
 				if status.Plan.IsEmpty() {
 					// If plan is empty then something went wrong
 					plan = append(plan,
-						api.NewAction(api.ActionTypeSetMemberCondition, group, m.ID, "Clean update actions after failure").
+						actions.NewAction(api.ActionTypeSetMemberCondition, group, m, "Clean update actions after failure").
 							AddParam(api.ConditionTypePendingUpdate.String(), "").
 							AddParam(api.ConditionTypeUpdating.String(), "").
 							AddParam(api.ConditionTypeUpdateFailed.String(), "T").
@@ -218,10 +219,10 @@ func updateMemberRotationConditions(log zerolog.Logger, apiObject k8sutil.APIObj
 			} else if member.Conditions.IsTrue(api.ConditionTypeUpdating) || member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
 				return nil, nil
 			}
-			return api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, group, member.ID, reason).AddParam(api.ConditionTypePendingUpdate.String(), "T")}, nil
+			return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, group, member, reason).AddParam(api.ConditionTypePendingUpdate.String(), "T")}, nil
 		case rotation.SilentRotation:
 			// Propagate changes without restart
-			return api.Plan{api.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member.ID, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, arangoMember.Spec.Template.GetChecksum())}, nil
+			return api.Plan{actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, group, member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, arangoMember.Spec.Template.GetChecksum())}, nil
 		case rotation.GracefulRotation:
 			if reason != "" {
 				log.Info().Bool("enforced", false).Msgf(reason)

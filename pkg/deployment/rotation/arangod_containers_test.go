@@ -27,6 +27,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -39,7 +40,7 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 
 			expectedMode: InPlaceRotation,
 			expectedPlan: api.Plan{
-				api.NewAction(api.ActionTypeRuntimeContainerImageUpdate, 0, ""),
+				actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
 			},
 		},
 		{
@@ -49,7 +50,7 @@ func Test_ArangoDContainers_SidecarImages(t *testing.T) {
 
 			expectedMode: InPlaceRotation,
 			expectedPlan: api.Plan{
-				api.NewAction(api.ActionTypeRuntimeContainerImageUpdate, 0, ""),
+				actions.NewClusterAction(api.ActionTypeRuntimeContainerImageUpdate),
 			},
 		},
 	}
@@ -219,7 +220,7 @@ func Test_Container_Args(t *testing.T) {
 			status:       buildPodSpec(addContainerWithCommand(k8sutil.ServerContainerName, []string{"--log.level=INFO"})),
 			expectedMode: InPlaceRotation,
 			expectedPlan: api.Plan{
-				api.NewAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, 0, ""),
+				actions.NewClusterAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate),
 			},
 		},
 		{

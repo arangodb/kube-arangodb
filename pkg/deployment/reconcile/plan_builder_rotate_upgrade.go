@@ -33,6 +33,7 @@ import (
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -74,7 +75,7 @@ func createRotateOrUpgradePlan(ctx context.Context,
 	newPlan, idle := createRotateOrUpgradePlanInternal(log, apiObject, spec, status, cachedStatus, context)
 	if idle {
 		plan = append(plan,
-			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
+			actions.NewClusterAction(api.ActionTypeIdle))
 	} else {
 		plan = append(plan, newPlan...)
 	}
@@ -102,7 +103,7 @@ func createMarkToRemovePlan(ctx context.Context,
 			if pod.Annotations != nil {
 				if _, ok := pod.Annotations[deployment.ArangoDeploymentPodReplaceAnnotation]; ok && (group == api.ServerGroupDBServers || group == api.ServerGroupAgents || group == api.ServerGroupCoordinators) {
 					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-						plan = append(plan, api.NewAction(api.ActionTypeMarkToRemoveMember, group, m.ID, "Replace flag present"))
+						plan = append(plan, actions.NewAction(api.ActionTypeMarkToRemoveMember, group, m, "Replace flag present"))
 						continue
 					}
 				}
@@ -211,17 +212,17 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 				log.Err(err).Str("member", m.Member.ID).Msgf("Error while generating update plan")
 				continue
 			} else if mode != rotation.InPlaceRotation {
-				return api.Plan{api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, "Cleaning update").
+				return api.Plan{actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, "Cleaning update").
 					AddParam(api.ConditionTypePendingUpdate.String(), "").
 					AddParam(api.ConditionTypeUpdating.String(), "T")}, false
 			} else {
 				p = p.After(
-					api.NewAction(api.ActionTypeWaitForMemberUp, m.Group, m.Member.ID),
-					api.NewAction(api.ActionTypeWaitForMemberInSync, m.Group, m.Member.ID))
+					actions.NewAction(api.ActionTypeWaitForMemberUp, m.Group, m.Member),
+					actions.NewAction(api.ActionTypeWaitForMemberInSync, m.Group, m.Member))
 
-				p = p.Wrap(api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, reason).
+				p = p.Wrap(actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
 					AddParam(api.ConditionTypePendingUpdate.String(), "").AddParam(api.ConditionTypeUpdating.String(), "T"),
-					api.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member.ID, reason).
+					actions.NewAction(api.ActionTypeSetMemberCondition, m.Group, m.Member, reason).
 						AddParam(api.ConditionTypeUpdating.String(), ""))
 
 				return p, false
@@ -426,10 +427,10 @@ func createUpgradeMemberPlan(log zerolog.Logger, member api.MemberStatus,
 	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason)
 
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
-		plan = plan.Before(api.NewAction(api.ActionTypeSetMemberCurrentImage, group, member.ID, reason).SetImage(spec.GetImage()))
+		plan = plan.Before(actions.NewAction(api.ActionTypeSetMemberCurrentImage, group, member, reason).SetImage(spec.GetImage()))
 	}
 	if status.CurrentImage == nil || status.CurrentImage.Image != spec.GetImage() {
-		plan = plan.Before(api.NewAction(api.ActionTypeSetCurrentImage, group, "", reason).SetImage(spec.GetImage()))
+		plan = plan.Before(actions.NewClusterAction(api.ActionTypeSetCurrentImage, reason).SetImage(spec.GetImage()))
 	}
 
 	return withSecureWrap(member, group, spec, plan...)
