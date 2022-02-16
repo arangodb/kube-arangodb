@@ -36,6 +36,7 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
@@ -690,12 +691,14 @@ type testCase struct {
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
+	VersionInfo     *version.Info
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS,
+		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.VersionInfo)
 }
 
 func TestCreatePlan(t *testing.T) {

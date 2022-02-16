@@ -18,46 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package server
 
-import "sync"
+import (
+	"k8s.io/apimachinery/pkg/version"
+)
 
-// RunParallel runs actions parallelly throttling them to the given maximum number.
-func RunParallel(max int, actions ...func() error) error {
-	c := make(chan int, max)
-	errors := make([]error, len(actions))
-	defer func() {
-		close(c)
-		for range c {
-		}
-	}()
-
-	for i := 0; i < max; i++ {
-		c <- 0
-	}
-
-	var wg sync.WaitGroup
-
-	wg.Add(len(actions))
-	for id, i := range actions {
-		go func(id int, action func() error) {
-			defer func() {
-				c <- 0
-				wg.Done()
-			}()
-			<-c
-
-			errors[id] = action()
-		}(id, i)
-	}
-
-	wg.Wait()
-
-	for _, err := range errors {
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+// Inspector for secrets
+type Inspector interface {
+	GetVersionInfo() *version.Info
 }
