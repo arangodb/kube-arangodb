@@ -289,37 +289,20 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	}
 
 	var secret string
-	if i := d.apiObject.Status.CurrentImage; i == nil || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
-		if err != nil {
-			return nil, errors.Newf("JWT Secret is missing")
-		}
+	var found bool
 
-		jwt, ok := s.Data[constants.SecretKeyToken]
-		if !ok {
-			return nil, errors.Newf("JWT Secret is invalid")
-		}
+	// Check if we can find token in folder
+	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+		secret, found = d.getJWTFolderToken()
+	}
 
-		secret = string(jwt)
-	} else {
-		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
-		if err != nil {
-			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
-			return nil, errors.Newf("JWT Folder Secret is missing")
-		}
+	// Fallback to token
+	if !found {
+		secret, found = d.getJWTToken()
+	}
 
-		if len(s.Data) == 0 {
-			return nil, errors.Newf("JWT Folder Secret is empty")
-		}
-
-		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
-			secret = string(q)
-		} else {
-			for _, q := range s.Data {
-				secret = string(q)
-				break
-			}
-		}
+	if !found {
+		return nil, errors.Newf("JWT Secret is invalid")
 	}
 
 	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
@@ -328,6 +311,44 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 	}
 
 	return driver.RawAuthentication(jwt), nil
+}
+
+func (d *Deployment) getJWTFolderToken() (string, bool) {
+	if i := d.apiObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+		s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
+		if err != nil {
+			d.deps.Log.Error().Err(err).Msgf("Unable to get secret")
+			return "", false
+		}
+
+		if len(s.Data) == 0 {
+			return "", false
+		}
+
+		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
+			return string(q), true
+		} else {
+			for _, q := range s.Data {
+				return string(q), true
+			}
+		}
+	}
+
+	return "", false
+}
+
+func (d *Deployment) getJWTToken() (string, bool) {
+	s, err := d.GetCachedStatus().SecretReadInterface().Get(context.Background(), d.apiObject.Spec.Authentication.GetJWTSecretName(), meta.GetOptions{})
+	if err != nil {
+		return "", false
+	}
+
+	jwt, ok := s.Data[constants.SecretKeyToken]
+	if !ok {
+		return "", false
+	}
+
+	return string(jwt), true
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.

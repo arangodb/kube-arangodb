@@ -39,15 +39,17 @@ import (
 )
 
 // ensureFinalizers adds all required finalizers to the given deployment (in memory).
-func ensureFinalizers(depl *api.ArangoDeployment) {
+func ensureFinalizers(depl *api.ArangoDeployment) bool {
 	for _, f := range depl.GetFinalizers() {
 		if f == constants.FinalizerDeplRemoveChildFinalizers {
 			// Finalizer already set
-			return
+			return false
 		}
 	}
 	// Set finalizers
 	depl.SetFinalizers(append(depl.GetFinalizers(), constants.FinalizerDeplRemoveChildFinalizers))
+
+	return true
 }
 
 // runDeploymentFinalizers goes through the list of ArangoDeployoment finalizers to see if they can be removed.

@@ -28,6 +28,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/rs/zerolog"
 )
 
@@ -86,6 +87,7 @@ func (a *actionArangoMemberUpdatePodSpec) Start(ctx context.Context) (bool, erro
 
 	if m.Endpoint == nil || *m.Endpoint != endpoint {
 		// Update endpoint
+		m.Endpoint = util.NewString(endpoint)
 		if err := status.Members.Update(m, a.action.Group); err != nil {
 			log.Error().Err(err).Msg("Unable to update endpoint")
 			return false, err

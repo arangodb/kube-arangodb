@@ -24,6 +24,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -80,9 +81,11 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 			return
 		}
 
-		if _, err := c.Version(nctx); err != nil {
+		if v, err := c.Version(nctx); err != nil {
 			results[id].Reachable = err
 			return
+		} else {
+			results[id].Version = v
 		}
 	})
 
@@ -110,6 +113,8 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 
 type State struct {
 	Reachable error
+
+	Version driver.VersionInfo
 }
 
 func (s State) IsReachable() bool {
