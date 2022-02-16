@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -89,5 +90,5 @@ func updateClusterLicense(ctx context.Context,
 		return nil
 	}
 
-	return api.Plan{removeConditionActionV2("License is not set", api.ConditionTypeLicenseSet), api.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member.ID, "Setting license")}
+	return api.Plan{removeConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
 }

@@ -32,15 +32,15 @@ import (
 
 	memberTls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -75,7 +75,7 @@ func createTLSStatusPropagatedFieldUpdate(ctx context.Context,
 
 	if status.Hashes.TLS.Propagated {
 		plan = append(api.Plan{
-			api.NewAction(api.ActionTypeTLSPropagated, api.ServerGroupUnknown, "", "Change propagated flag to false").AddParam(propagated, conditionFalse),
+			actions.NewClusterAction(api.ActionTypeTLSPropagated, "Change propagated flag to false").AddParam(propagated, conditionFalse),
 		}, plan...)
 	}
 
@@ -92,7 +92,7 @@ func createTLSStatusUpdate(ctx context.Context,
 	}
 
 	if createTLSStatusUpdateRequired(log, apiObject, spec, status, cachedStatus) {
-		return api.Plan{api.NewAction(api.ActionTypeTLSKeyStatusUpdate, api.ServerGroupUnknown, "", "Update status")}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeTLSKeyStatusUpdate, "Update status")}
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func createTLSStatusPropagated(ctx context.Context,
 
 	if !status.Hashes.TLS.Propagated {
 		return api.Plan{
-			api.NewAction(api.ActionTypeTLSPropagated, api.ServerGroupUnknown, "", "Change propagated flag to true").AddParam(propagated, conditionTrue),
+			actions.NewClusterAction(api.ActionTypeTLSPropagated, "Change propagated flag to true").AddParam(propagated, conditionTrue),
 		}
 	}
 
@@ -192,7 +192,7 @@ func createCAAppendPlan(ctx context.Context,
 	certSha := util.SHA256(caData)
 
 	if _, exists := trusted.Data[certSha]; !exists {
-		return api.Plan{api.NewAction(api.ActionTypeAppendTLSCACertificate, api.ServerGroupUnknown, "", "Append CA to truststore").
+		return api.Plan{actions.NewClusterAction(api.ActionTypeAppendTLSCACertificate, "Append CA to truststore").
 			AddParam(checksum, certSha)}
 	}
 
@@ -228,7 +228,7 @@ func createCARenewalPlan(ctx context.Context,
 	for _, ca := range cas {
 		if time.Now().Add(CertificateRenewalMargin).After(ca.NotAfter) {
 			// CA will expire soon, renewal needed
-			return api.Plan{api.NewAction(api.ActionTypeRenewTLSCACertificate, api.ServerGroupUnknown, "", "Renew CA Certificate")}
+			return api.Plan{actions.NewClusterAction(api.ActionTypeRenewTLSCACertificate, "Renew CA Certificate")}
 		}
 	}
 
@@ -277,7 +277,7 @@ func createCACleanPlan(ctx context.Context,
 
 	for sha := range trusted.Data {
 		if certSha != sha {
-			return api.Plan{api.NewAction(api.ActionTypeCleanTLSCACertificate, api.ServerGroupUnknown, "", "Clean CA from truststore").
+			return api.Plan{actions.NewClusterAction(api.ActionTypeCleanTLSCACertificate, "Clean CA from truststore").
 				AddParam(checksum, sha)}
 		}
 	}
@@ -342,9 +342,9 @@ func createKeyfileRenewalPlanInPlace(ctx context.Context,
 			if renew, recreate := keyfileRenewalRequired(lCtx, log, apiObject, spec, cachedStatus, planCtx, group, member, api.TLSRotateModeInPlace); renew {
 				log.Info().Msg("Renewal of keyfile required - InPlace")
 				if recreate {
-					plan = append(plan, api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal"))
+					plan = append(plan, actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal"))
 				}
-				plan = append(plan, api.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, group, member.ID, "Renew Member Keyfile"))
+				plan = append(plan, actions.NewAction(api.ActionTypeRefreshTLSKeyfileCertificate, group, member, "Renew Member Keyfile"))
 			}
 		}
 

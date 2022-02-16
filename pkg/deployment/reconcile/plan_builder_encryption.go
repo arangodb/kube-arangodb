@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/rs/zerolog"
 )
 
@@ -82,7 +83,7 @@ func createEncryptionKeyStatusPropagatedFieldUpdate(ctx context.Context,
 
 	if status.Hashes.Encryption.Propagated {
 		plan = append(api.Plan{
-			api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "", "Change propagated flag to false").AddParam(propagated, conditionFalse),
+			actions.NewClusterAction(api.ActionTypeEncryptionKeyPropagated, "Change propagated flag to false").AddParam(propagated, conditionFalse),
 		}, plan...)
 	}
 
@@ -125,7 +126,7 @@ func createEncryptionKey(ctx context.Context,
 	if status.Hashes.Encryption.Propagated {
 		_, ok := keyfolder.Data[name]
 		if !ok {
-			return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "")}
+			return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyAdd)}
 		}
 	}
 
@@ -136,7 +137,7 @@ func createEncryptionKey(ctx context.Context,
 
 	if !failed && !status.Hashes.Encryption.Propagated {
 		return api.Plan{
-			api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "", "Change propagated flag to true").AddParam(propagated, conditionTrue),
+			actions.NewClusterAction(api.ActionTypeEncryptionKeyPropagated, "Change propagated flag to true").AddParam(propagated, conditionTrue),
 		}
 	}
 
@@ -152,7 +153,7 @@ func createEncryptionKeyStatusUpdate(ctx context.Context,
 	}
 
 	if createEncryptionKeyStatusUpdateRequired(log, spec, status, cachedStatus, context) {
-		return api.Plan{api.NewAction(api.ActionTypeEncryptionKeyStatusUpdate, api.ServerGroupUnknown, "")}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeEncryptionKeyStatusUpdate)}
 	}
 
 	return nil
@@ -221,7 +222,7 @@ func createEncryptionKeyCleanPlan(ctx context.Context,
 
 	for key := range keyfolder.Data {
 		if key != name {
-			plan = append(plan, api.NewAction(api.ActionTypeEncryptionKeyRemove, api.ServerGroupUnknown, "").AddParam("key", key))
+			plan = append(plan, actions.NewClusterAction(api.ActionTypeEncryptionKeyRemove).AddParam("key", key))
 		}
 	}
 
@@ -245,7 +246,7 @@ func areEncryptionKeysUpToDate(ctx context.Context, log zerolog.Logger, spec api
 				failed = true
 				continue
 			} else if updateRequired {
-				plan = append(plan, api.NewAction(api.ActionTypeEncryptionKeyRefresh, group, m.ID))
+				plan = append(plan, actions.NewAction(api.ActionTypeEncryptionKeyRefresh, group, withPredefinedMember(m.ID)))
 				continue
 			}
 		}

@@ -29,6 +29,7 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/rs/zerolog"
 )
@@ -41,7 +42,7 @@ func createRestorePlan(ctx context.Context,
 	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
 	if spec.RestoreFrom == nil && status.Restore != nil {
 		return api.Plan{
-			api.NewAction(api.ActionTypeBackupRestoreClean, api.ServerGroupUnknown, ""),
+			actions.NewClusterAction(api.ActionTypeBackupRestoreClean),
 		}
 	}
 
@@ -80,7 +81,7 @@ func createRestorePlan(ctx context.Context,
 
 func restorePlan(spec api.DeploymentSpec) api.Plan {
 	p := api.Plan{
-		api.NewAction(api.ActionTypeBackupRestore, api.ServerGroupUnknown, ""),
+		actions.NewClusterAction(api.ActionTypeBackupRestore),
 	}
 
 	switch spec.Mode.Get() {
@@ -121,8 +122,8 @@ func createRestorePlanEncryption(ctx context.Context, log zerolog.Logger, spec a
 
 		if !status.Hashes.Encryption.Keys.ContainsSHA256(name) {
 			return true, api.Plan{
-				api.NewAction(api.ActionTypeEncryptionKeyPropagated, api.ServerGroupUnknown, "").AddParam(propagated, conditionFalse),
-				api.NewAction(api.ActionTypeEncryptionKeyAdd, api.ServerGroupUnknown, "").AddParam(secretActionParam, secret),
+				actions.NewClusterAction(api.ActionTypeEncryptionKeyPropagated).AddParam(propagated, conditionFalse),
+				actions.NewClusterAction(api.ActionTypeEncryptionKeyAdd).AddParam(secretActionParam, secret),
 			}
 		}
 

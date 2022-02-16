@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -74,7 +75,7 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 				if volumeSize, ok := pvc.Spec.Resources.Requests[core.ResourceStorage]; ok {
 					cmp := volumeSize.Cmp(requestedSize)
 					if cmp < 0 {
-						plan = append(plan, pvcResizePlan(log, group, groupSpec, m.ID)...)
+						plan = append(plan, pvcResizePlan(log, group, groupSpec, m)...)
 					}
 				}
 			}
@@ -85,22 +86,22 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 	return plan
 }
 
-func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.ServerGroupSpec, memberID string) api.Plan {
+func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) api.Plan {
 	mode := groupSpec.VolumeResizeMode.Get()
 	switch mode {
 	case api.PVCResizeModeRuntime:
 		return api.Plan{
-			api.NewAction(api.ActionTypePVCResize, group, memberID),
+			actions.NewAction(api.ActionTypePVCResize, group, member),
 		}
 	case api.PVCResizeModeRotate:
 		return api.Plan{
-			api.NewAction(api.ActionTypeResignLeadership, group, memberID),
-			api.NewAction(api.ActionTypeKillMemberPod, group, memberID),
-			api.NewAction(api.ActionTypeRotateStartMember, group, memberID),
-			api.NewAction(api.ActionTypePVCResize, group, memberID),
-			api.NewAction(api.ActionTypePVCResized, group, memberID),
-			api.NewAction(api.ActionTypeRotateStopMember, group, memberID),
-			api.NewAction(api.ActionTypeWaitForMemberUp, group, memberID),
+			actions.NewAction(api.ActionTypeResignLeadership, group, member),
+			actions.NewAction(api.ActionTypeKillMemberPod, group, member),
+			actions.NewAction(api.ActionTypeRotateStartMember, group, member),
+			actions.NewAction(api.ActionTypePVCResize, group, member),
+			actions.NewAction(api.ActionTypePVCResized, group, member),
+			actions.NewAction(api.ActionTypeRotateStopMember, group, member),
+			actions.NewAction(api.ActionTypeWaitForMemberUp, group, member),
 		}
 	default:
 		log.Error().Str("server-group", group.AsRole()).Str("mode", mode.String()).

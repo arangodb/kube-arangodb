@@ -25,15 +25,15 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/go-driver"
-
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/rs/zerolog"
 )
 
@@ -108,7 +108,7 @@ func createRotateTLSServerSNIPlan(ctx context.Context,
 					plan = append(plan, tlsRotateConditionAction(group, m.ID, "SNI Secret needs update"))
 				case api.TLSRotateModeInPlace:
 					plan = append(plan,
-						api.NewAction(api.ActionTypeUpdateTLSSNI, group, m.ID, "SNI Secret needs update"))
+						actions.NewAction(api.ActionTypeUpdateTLSSNI, group, m, "SNI Secret needs update"))
 				default:
 					log.Warn().Msg("SNI mode rotation is unknown")
 					continue

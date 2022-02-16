@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRotateMember, newRotateMemberAction)
+	registerAction(api.ActionTypeRotateMember, withActionStartFailureGracePeriod(newRotateMemberAction, time.Minute))
 }
 
 // newRotateMemberAction creates a new Action that implements the given
@@ -108,8 +108,4 @@ func (a *actionRotateMember) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, errors.WithStack(err)
 	}
 	return true, false, nil
-}
-
-func (a *actionRotateMember) StartFailureGracePeriod() time.Duration {
-	return 30 * time.Second
 }

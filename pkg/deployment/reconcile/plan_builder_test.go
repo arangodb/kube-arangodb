@@ -39,11 +39,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -823,7 +824,7 @@ func TestCreatePlan(t *testing.T) {
 					"with reason: Member replacement required",
 			},
 			ExpectedHighPlan: []api.Action{
-				api.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, "", "Member replacement required"),
+				actions.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, withPredefinedMember(""), "Member replacement required"),
 			},
 			ExpectedLog: "Member replacement required",
 		},
@@ -1006,7 +1007,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
 			ExpectedHighPlan: []api.Action{
-				api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0].ID, "PVC Resize pending"),
+				actions.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0], "PVC Resize pending"),
 			},
 			ExpectedLog: "PVC Resize pending",
 		},
@@ -1023,7 +1024,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, "id"),
+				actions.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, withPredefinedMember("id")),
 			},
 			ExpectedLog: "Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss",
 		},
@@ -1040,9 +1041,9 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Coordinators[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, "id"),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators, api.MemberIDPreviousAction),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1059,9 +1060,9 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, api.MemberIDPreviousAction),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1083,10 +1084,10 @@ func TestCreatePlan(t *testing.T) {
 				}
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("")),
 			},
 			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
 		},
@@ -1102,10 +1103,10 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("")),
 			},
 			ExpectedLog: "Creating scale-down plan",
 		},

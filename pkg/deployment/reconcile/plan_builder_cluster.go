@@ -27,8 +27,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	"github.com/arangodb/go-driver"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -91,7 +91,7 @@ func createClusterOperationPlan(ctx context.Context,
 
 			if member.LastHeartbeatAcked.Add(coordinatorHealthFailedTimeout).Before(time.Now()) {
 				return api.Plan{
-					api.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, string(id)),
+					actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, withPredefinedMember(string(id))),
 				}
 			}
 		case driver.ServerRoleDBServer:
@@ -104,7 +104,7 @@ func createClusterOperationPlan(ctx context.Context,
 			}
 
 			return api.Plan{
-				api.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupDBServers, string(id)),
+				actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupDBServers, withPredefinedMember(string(id))),
 			}
 		}
 	}
