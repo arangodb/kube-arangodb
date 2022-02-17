@@ -30,25 +30,31 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // removePodFinalizers removes all finalizers from all pods owned by us.
-func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
 	log := d.deps.Log
 
+	found := false
+
 	if err := cachedStatus.IteratePods(func(pod *core.Pod) error {
-		if err := k8sutil.RemovePodFinalizers(ctx, cachedStatus, log, d.PodsModInterface(), pod, pod.GetFinalizers(), true); err != nil {
+		log.Info().Str("pod", pod.GetName()).Msgf("Removing Pod Finalizer")
+		if count, err := k8sutil.RemovePodFinalizers(ctx, cachedStatus, log, d.PodsModInterface(), pod, constants.ManagedFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove pod finalizers")
 			return err
+		} else if count > 0 {
+			found = true
 		}
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
 		if err := d.PodsModInterface().Delete(ctxChild, pod.GetName(), meta.DeleteOptions{
-			GracePeriodSeconds: util.NewInt64(1),
+			GracePeriodSeconds: util.NewInt64(0),
 		}); err != nil {
 			if !k8sutil.IsNotFound(err) {
 				log.Warn().Err(err).Msg("Failed to remove pod")
@@ -57,25 +63,30 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 		}
 		return nil
 	}, inspector.FilterPodsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return found, nil
 }
 
 // removePVCFinalizers removes all finalizers from all PVCs owned by us.
-func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
+func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, error) {
 	log := d.deps.Log
 
+	found := false
+
 	if err := cachedStatus.IteratePersistentVolumeClaims(func(pvc *core.PersistentVolumeClaim) error {
-		if err := k8sutil.RemovePVCFinalizers(ctx, cachedStatus, log, d.PersistentVolumeClaimsModInterface(), pvc, pvc.GetFinalizers(), true); err != nil {
+		log.Info().Str("pvc", pvc.GetName()).Msgf("Removing PVC Finalizer")
+		if count, err := k8sutil.RemovePVCFinalizers(ctx, cachedStatus, log, d.PersistentVolumeClaimsModInterface(), pvc, constants.ManagedFinalizers(), true); err != nil {
 			log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			return err
+		} else if count > 0 {
+			found = true
 		}
 		return nil
 	}, inspector.FilterPersistentVolumeClaimsByLabels(k8sutil.LabelsForDeployment(d.GetName(), ""))); err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return found, nil
 }

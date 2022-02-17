@@ -339,10 +339,10 @@ func (d *Deployment) run() {
 			}
 			// Remove finalizers from created resources
 			log.Info().Msg("Deployment removed, removing finalizers to prevent orphaned resources")
-			if err := d.removePodFinalizers(context.TODO(), cachedStatus); err != nil {
+			if _, err := d.removePodFinalizers(context.TODO(), cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove Pod finalizers")
 			}
-			if err := d.removePVCFinalizers(context.TODO(), cachedStatus); err != nil {
+			if _, err := d.removePVCFinalizers(context.TODO(), cachedStatus); err != nil {
 				log.Warn().Err(err).Msg("Failed to remove PVC finalizers")
 			}
 			// We're being stopped.

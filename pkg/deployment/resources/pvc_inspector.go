@@ -67,7 +67,7 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 				// Strange, pvc belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("PVC belongs to this deployment, but we don't know the member. Removing all finalizers")
-				err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), pvc, pvc.GetFinalizers(), false)
+				_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), pvc, pvc.GetFinalizers(), false)
 				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update PVC (to remove all finalizers)")
 					return errors.WithStack(err)

@@ -173,9 +173,9 @@ func NewActionSuccess() ActionCore {
 	return actionSuccess{}
 }
 
-// Start always returns true.
+// Start always returns false to start with progress.
 func (actionSuccess) Start(_ context.Context) (bool, error) {
-	return true, nil
+	return false, nil
 }
 
 // CheckProgress always returns true.

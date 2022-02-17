@@ -274,6 +274,22 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		return minInspectionInterval, nil
 	}
 
+	// Reachable state ensurer
+	reachableConditionState := status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate()
+	if d.State().IsReachable() {
+		if !reachableConditionState {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeReachable, true, "ArangoDB is reachable", "", ""); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update Reachable condition")
+			}
+		}
+	} else {
+		if reachableConditionState {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeReachable, false, "ArangoDB is not reachable", "", ""); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update Reachable condition")
+			}
+		}
+	}
+
 	if d.apiObject.Status.IsPlanEmpty() && status.AppliedVersion != checksum {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.AppliedVersion = checksum
@@ -284,7 +300,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else if status.AppliedVersion == checksum {
-		isUpToDate, reason := d.isUpToDateStatus()
+		isUpToDate, reason := d.isUpToDateStatus(status)
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", checksum); err != nil {
@@ -332,18 +348,31 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	return
 }
 
-func (d *Deployment) isUpToDateStatus() (upToDate bool, reason string) {
-	if !d.apiObject.Status.IsPlanEmpty() {
+func (d *Deployment) isUpToDateStatus(status api.DeploymentStatus) (upToDate bool, reason string) {
+	if !status.IsPlanEmpty() {
 		return false, "Plan is not empty"
 	}
 
 	upToDate = true
 
-	d.apiObject.Status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
+		upToDate = false
+	}
+
+	status.Members.ForeachServerGroup(func(group api.ServerGroup, list api.MemberStatusList) error {
+		if !upToDate {
+			return nil
+		}
 		for _, member := range list {
 			if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
 				upToDate = false
 				reason = "Pending restarts on members"
+				return nil
+			}
+			if member.Conditions.IsTrue(api.ConditionTypePVCResizePending) {
+				upToDate = false
+				reason = "PVC is resizing"
+				return nil
 			}
 		}
 		return nil

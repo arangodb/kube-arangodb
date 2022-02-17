@@ -21,11 +21,12 @@
 package rotation
 
 import (
+	"time"
+
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -117,13 +118,10 @@ func IsRotationRequired(log zerolog.Logger, cachedStatus inspectorInterface.Insp
 		return
 	}
 
-	pvc, exists := cachedStatus.PersistentVolumeClaim(member.PersistentVolumeClaimName)
-	if exists {
-		if k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc) {
-			reason = "PVC Resize pending"
-			mode = EnforcedRotation
-			return
-		}
+	if member.Conditions.Check(api.ConditionTypePVCResizePending).Exists().LastTransition(3 * time.Minute).Evaluate() {
+		reason = "PVC Resize pending for more than 3 min"
+		mode = EnforcedRotation
+		return
 	}
 
 	if mode, plan, err := compare(log, spec, member, group, specTemplate, statusTemplate); err != nil {

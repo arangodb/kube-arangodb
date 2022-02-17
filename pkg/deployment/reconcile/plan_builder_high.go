@@ -53,6 +53,7 @@ func createHighPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil.A
 		ApplyIfEmpty(updateMemberUpdateConditionsPlan).
 		ApplyIfEmpty(updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(createMemberRecreationConditionsPlan).
+		ApplyIfEmpty(createRotateServerStoragePVCPendingResizeConditionPlan).
 		ApplyIfEmpty(createTopologyMemberUpdatePlan).
 		ApplyIfEmptyWithBackOff(LicenseCheck, 30*time.Second, updateClusterLicense).
 		ApplyIfEmpty(createTopologyMemberConditionPlan).
