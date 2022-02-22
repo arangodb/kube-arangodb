@@ -39,9 +39,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
-	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -1007,7 +1007,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
 			ExpectedHighPlan: []api.Action{
-				actions.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0], "PVC Resize pending"),
+				actions.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0], "PVC Resize pending"),
 			},
 			ExpectedLog: "PVC Resize pending",
 		},

@@ -86,6 +86,36 @@ func createRotateServerStorageResizePlan(ctx context.Context,
 	return plan
 }
 
+func createRotateServerStoragePVCPendingResizeConditionPlan(ctx context.Context,
+	log zerolog.Logger, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	cachedStatus inspectorInterface.Inspector, context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+	for _, i := range status.Members.AsList() {
+		if i.Member.PersistentVolumeClaimName == "" {
+			continue
+		}
+
+		pvc, exists := cachedStatus.PersistentVolumeClaim(i.Member.PersistentVolumeClaimName)
+		if !exists {
+			continue
+		}
+
+		pvcResizePending := k8sutil.IsPersistentVolumeClaimFileSystemResizePending(pvc)
+		pvcResizePendingCond := i.Member.Conditions.IsTrue(api.ConditionTypePVCResizePending)
+
+		if pvcResizePending != pvcResizePendingCond {
+			if pvcResizePending {
+				plan = append(plan, updateMemberConditionActionV2("PVC Resize pending", api.ConditionTypePVCResizePending, i.Group, i.Member.ID, true, "PVC Resize pending", "", ""))
+			} else {
+				plan = append(plan, removeMemberConditionActionV2("PVC Resize is done", api.ConditionTypePVCResizePending, i.Group, i.Member.ID))
+			}
+		}
+	}
+
+	return plan
+}
+
 func pvcResizePlan(log zerolog.Logger, group api.ServerGroup, groupSpec api.ServerGroupSpec, member api.MemberStatus) api.Plan {
 	mode := groupSpec.VolumeResizeMode.Get()
 	switch mode {

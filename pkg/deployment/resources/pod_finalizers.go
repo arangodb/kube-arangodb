@@ -117,7 +117,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *v1.Pod, memberStatu
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), p, removalList, false); err != nil {
+		if _, err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), p, removalList, false); err != nil {
 			log.Debug().Err(err).Msg("Failed to update pod (to remove finalizers)")
 			return 0, errors.WithStack(err)
 		}

@@ -183,7 +183,7 @@ func removeDeploymentReplicationFinalizers(log zerolog.Logger, crcli versioned.I
 		*p = *result
 		return nil
 	}
-	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+	if _, err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

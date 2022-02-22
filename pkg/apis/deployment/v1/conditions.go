@@ -91,6 +91,9 @@ const (
 	// ConditionTypeTopologyAware indicates that the member is deployed with TopologyAwareness.
 	ConditionTypeTopologyAware ConditionType = "TopologyAware"
 
+	// ConditionTypePVCResizePending indicates that the member has to be restarted due to PVC Resized pending action
+	ConditionTypePVCResizePending ConditionType = "PVCResizePending"
+
 	// ConditionTypeLicenseSet indicates that license V2 is set on cluster.
 	ConditionTypeLicenseSet ConditionType = "LicenseSet"
 )

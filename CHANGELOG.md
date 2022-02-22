@@ -13,6 +13,8 @@
 - (Bugfix) Fix 3.6 -> 3.7 Upgrade procedure
 - (Bugfix) Add missing finalizer
 - (Bugfix) Add graceful to kill command
+- (Bugfix) Add reachable condition to deployment. Mark as UpToDate only of cluster is reachable.
+- (Bugfix) Add toleration's for network failures in action start procedure
 
 ## [1.2.7](https://github.com/arangodb/kube-arangodb/tree/1.2.7) (2022-01-17)
 - Add Plan BackOff functionality

@@ -62,3 +62,15 @@ const (
 	LabelRole            = "role"
 	LabelRoleLeader      = "leader"
 )
+
+func ManagedFinalizers() []string {
+	return []string{
+		FinalizerDeplRemoveChildFinalizers,
+		FinalizerDeplReplStopSync,
+		FinalizerPodAgencyServing,
+		FinalizerPodDrainDBServer,
+		FinalizerPodGracefulShutdown,
+		FinalizerPVCMemberExists,
+		FinalizerDelayPodTermination,
+	}
+}
