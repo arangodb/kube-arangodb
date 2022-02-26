@@ -23,12 +23,14 @@ package inspector
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/version"
+	"strings"
+
+	"github.com/arangodb/go-driver"
 	"k8s.io/client-go/kubernetes"
 )
 
 // GetVersionInfo returns kubernetes server version information.
-func (i *inspector) GetVersionInfo() *version.Info {
+func (i *inspector) GetVersionInfo() driver.Version {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -37,9 +39,11 @@ func (i *inspector) GetVersionInfo() *version.Info {
 
 func getVersionInfo(_ context.Context, inspector *inspector, k kubernetes.Interface, _ string) func() error {
 	return func() error {
-		var err error
-		if inspector.versionInfo, err = k.Discovery().ServerVersion(); err != nil {
+		inspector.versionInfo = ""
+		if v, err := k.Discovery().ServerVersion(); err != nil {
 			return err
+		} else {
+			inspector.versionInfo = driver.Version(strings.TrimPrefix(v.GitVersion, "v"))
 		}
 
 		return nil

@@ -20,11 +20,9 @@
 
 package server
 
-import (
-	"k8s.io/apimachinery/pkg/version"
-)
+import "github.com/arangodb/go-driver"
 
 // Inspector for secrets
 type Inspector interface {
-	GetVersionInfo() *version.Info
+	GetVersionInfo() driver.Version
 }

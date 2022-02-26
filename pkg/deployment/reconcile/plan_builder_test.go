@@ -36,13 +36,12 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -691,7 +690,7 @@ type testCase struct {
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
-	VersionInfo     *version.Info
+	VersionInfo     driver.Version
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }

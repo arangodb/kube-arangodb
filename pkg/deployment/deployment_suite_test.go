@@ -30,7 +30,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arangodb/go-driver"
+	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
@@ -489,7 +489,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 
 	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 	require.NoError(t, err)
-	assert.NotEmpty(t, cachedStatus.GetVersionInfo().String(), "API server should not have returned empty version")
+	assert.NotEmpty(t, cachedStatus.GetVersionInfo(), "API server should not have returned empty version")
 	d.SetCachedStatus(cachedStatus)
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())

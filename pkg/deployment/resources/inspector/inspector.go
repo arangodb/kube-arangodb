@@ -29,9 +29,9 @@ import (
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -86,7 +86,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 }
 
 func NewEmptyInspector() inspectorInterface.Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -98,7 +98,7 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	serviceMonitors map[string]*monitoring.ServiceMonitor,
 	arangoMembers map[string]*api.ArangoMember,
 	nodes map[string]*core.Node,
-	version *version.Info) inspectorInterface.Inspector {
+	version driver.Version) inspectorInterface.Inspector {
 	i := &inspector{
 		pods:                 pods,
 		secrets:              secrets,
@@ -144,7 +144,7 @@ type inspector struct {
 	serviceMonitors      map[string]*monitoring.ServiceMonitor
 	arangoMembers        map[string]*api.ArangoMember
 	nodes                *nodeLoader
-	versionInfo          *version.Info
+	versionInfo          driver.Version
 }
 
 func (i *inspector) IsStatic() bool {
