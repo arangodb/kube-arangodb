@@ -30,30 +30,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-	"github.com/stretchr/testify/require"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-
-	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-
-	"github.com/arangodb/go-driver"
-
+	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/jwt"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
 
 const (
@@ -493,6 +489,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 
 	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
 	require.NoError(t, err)
+	assert.NotEmpty(t, cachedStatus.GetVersionInfo(), "API server should not have returned empty version")
 	d.SetCachedStatus(cachedStatus)
 
 	arangoDeployment.Spec.SetDefaults(arangoDeployment.GetName())

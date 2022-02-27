@@ -18,46 +18,34 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package inspector
 
-import "sync"
+import (
+	"context"
 
-// RunParallel runs actions parallelly throttling them to the given maximum number.
-func RunParallel(max int, actions ...func() error) error {
-	c := make(chan int, max)
-	errors := make([]error, len(actions))
-	defer func() {
-		close(c)
-		for range c {
-		}
-	}()
+	"strings"
 
-	for i := 0; i < max; i++ {
-		c <- 0
-	}
+	"github.com/arangodb/go-driver"
+	"k8s.io/client-go/kubernetes"
+)
 
-	var wg sync.WaitGroup
+// GetVersionInfo returns kubernetes server version information.
+func (i *inspector) GetVersionInfo() driver.Version {
+	i.lock.Lock()
+	defer i.lock.Unlock()
 
-	wg.Add(len(actions))
-	for id, i := range actions {
-		go func(id int, action func() error) {
-			defer func() {
-				c <- 0
-				wg.Done()
-			}()
-			<-c
+	return i.versionInfo
+}
 
-			errors[id] = action()
-		}(id, i)
-	}
-
-	wg.Wait()
-
-	for _, err := range errors {
-		if err != nil {
+func getVersionInfo(_ context.Context, inspector *inspector, k kubernetes.Interface, _ string) func() error {
+	return func() error {
+		inspector.versionInfo = ""
+		if v, err := k.Discovery().ServerVersion(); err != nil {
 			return err
+		} else {
+			inspector.versionInfo = driver.Version(strings.TrimPrefix(v.GitVersion, "v"))
 		}
-	}
 
-	return nil
+		return nil
+	}
 }

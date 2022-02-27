@@ -39,9 +39,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 
+	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -690,12 +690,14 @@ type testCase struct {
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
+	VersionInfo     driver.Version
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS,
+		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.VersionInfo)
 }
 
 func TestCreatePlan(t *testing.T) {
