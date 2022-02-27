@@ -78,6 +78,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 		serviceMonitorsToMap(ctx, &i, m, namespace),
 		arangoMembersToMap(ctx, &i, c, namespace),
 		nodesToMap(ctx, &i, k),
+		arangoClusterSynchronizationsToMap(ctx, &i, c, namespace),
 	); err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 }
 
 func NewEmptyInspector() inspectorInterface.Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -98,6 +99,7 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	serviceMonitors map[string]*monitoring.ServiceMonitor,
 	arangoMembers map[string]*api.ArangoMember,
 	nodes map[string]*core.Node,
+	acs map[string]*api.ArangoClusterSynchronization,
 	version driver.Version) inspectorInterface.Inspector {
 	i := &inspector{
 		pods:                 pods,
@@ -113,13 +115,25 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 
 	if nodes == nil {
 		i.nodes = &nodeLoader{
-			authenticated: false,
-			nodes:         nil,
+			accessible: false,
+			nodes:      nil,
 		}
 	} else {
 		i.nodes = &nodeLoader{
-			authenticated: true,
-			nodes:         nodes,
+			accessible: true,
+			nodes:      nodes,
+		}
+	}
+
+	if acs == nil {
+		i.acs = &arangoClusterSynchronizationLoader{
+			accessible: false,
+			acs:        nil,
+		}
+	} else {
+		i.acs = &arangoClusterSynchronizationLoader{
+			accessible: true,
+			acs:        acs,
 		}
 	}
 
@@ -144,6 +158,7 @@ type inspector struct {
 	serviceMonitors      map[string]*monitoring.ServiceMonitor
 	arangoMembers        map[string]*api.ArangoMember
 	nodes                *nodeLoader
+	acs                  *arangoClusterSynchronizationLoader
 	versionInfo          driver.Version
 }
 

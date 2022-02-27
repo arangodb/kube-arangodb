@@ -43,11 +43,11 @@ func (i *inspector) GetNodes() (node.Inspector, bool) {
 		return nil, false
 	}
 
-	return i.nodes, i.nodes.authenticated
+	return i.nodes, i.nodes.accessible
 }
 
 type nodeLoader struct {
-	authenticated bool
+	accessible bool
 
 	nodes map[string]*core.Node
 }
@@ -72,14 +72,14 @@ func (n *nodeLoader) Nodes() []*core.Node {
 
 func (n *nodeLoader) IterateNodes(action node.Action, filters ...node.Filter) error {
 	for _, node := range n.Nodes() {
-		if err := n.iteratePodDisruptionBudget(node, action, filters...); err != nil {
+		if err := n.iterateNode(node, action, filters...); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (n *nodeLoader) iteratePodDisruptionBudget(node *core.Node, action node.Action, filters ...node.Filter) error {
+func (n *nodeLoader) iterateNode(node *core.Node, action node.Action, filters ...node.Filter) error {
 	for _, filter := range filters {
 		if !filter(node) {
 			return nil
@@ -108,8 +108,8 @@ func (s nodeReadInterface) Get(ctx context.Context, name string, opts meta.GetOp
 	}
 }
 
-func nodePointer(pod core.Node) *core.Node {
-	return &pod
+func nodePointer(node core.Node) *core.Node {
+	return &node
 }
 
 func nodesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interface) func() error {
@@ -118,7 +118,7 @@ func nodesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interfac
 		if err != nil {
 			if apiErrors.IsUnauthorized(err) {
 				inspector.nodes = &nodeLoader{
-					authenticated: false,
+					accessible: false,
 				}
 				return nil
 			}
@@ -137,8 +137,8 @@ func nodesToMap(ctx context.Context, inspector *inspector, k kubernetes.Interfac
 		}
 
 		inspector.nodes = &nodeLoader{
-			authenticated: true,
-			nodes:         nodesMap,
+			accessible: true,
+			nodes:      nodesMap,
 		}
 
 		return nil

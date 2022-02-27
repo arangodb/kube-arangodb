@@ -25,6 +25,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/server"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -48,4 +49,5 @@ type Inspector interface {
 	server.Inspector
 
 	node.Loader
+	arangoclustersynchronization.Loader
 }

@@ -85,7 +85,7 @@ func (i inspectorMockStruct) AddService(t *testing.T, svc ...*core.Service) insp
 }
 
 func (i inspectorMockStruct) Get(t *testing.T) inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(nil, nil, nil, i.services, nil, nil, nil, nil, nil, "")
+	return inspector.NewInspectorFromData(nil, nil, nil, i.services, nil, nil, nil, nil, nil, nil, "")
 }
 
 // TestCreateArangodArgsAgent tests createArangodArgs for agent.
