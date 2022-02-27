@@ -690,6 +690,7 @@ type testCase struct {
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
+	ACS             map[string]*api.ArangoClusterSynchronization
 	VersionInfo     driver.Version
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
@@ -697,7 +698,7 @@ type testCase struct {
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
 	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS,
-		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.VersionInfo)
+		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.ACS, t.VersionInfo)
 }
 
 func TestCreatePlan(t *testing.T) {
