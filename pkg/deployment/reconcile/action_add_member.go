@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -81,11 +82,11 @@ func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) 
 	var app api.Plan
 
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberUp.String()]; ok {
-		app = append(app, api.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
+		app = append(app, actions.NewAction(api.ActionTypeWaitForMemberUp, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"))
 	}
 
 	if _, ok := a.action.Params[api.ActionTypeWaitForMemberInSync.String()]; ok {
-		app = append(app, api.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, a.newMemberID, "Wait for member in sync after creation"))
+		app = append(app, actions.NewAction(api.ActionTypeWaitForMemberInSync, a.action.Group, withPredefinedMember(a.newMemberID), "Wait for member in sync after creation"))
 	}
 
 	if len(app) > 0 {

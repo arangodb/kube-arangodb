@@ -24,6 +24,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -34,10 +35,12 @@ type StateInspector interface {
 	RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements)
 	MemberState(id string) (State, bool)
 
+	State() State
+
 	Log(logger zerolog.Logger)
 }
 
-func NewStateInspector(client reconciler.DeploymentMemberClient) StateInspector {
+func NewStateInspector(client reconciler.DeploymentClient) StateInspector {
 	return &stateInspector{
 		client: client,
 	}
@@ -48,7 +51,13 @@ type stateInspector struct {
 
 	members map[string]State
 
-	client reconciler.DeploymentMemberClient
+	state State
+
+	client reconciler.DeploymentClient
+}
+
+func (s *stateInspector) State() State {
+	return s.state
 }
 
 func (s *stateInspector) Log(logger zerolog.Logger) {
@@ -80,11 +89,30 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 			return
 		}
 
-		if _, err := c.Version(nctx); err != nil {
+		if v, err := c.Version(nctx); err != nil {
 			results[id].Reachable = err
 			return
+		} else {
+			results[id].Version = v
 		}
 	})
+
+	gctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
+	defer cancel()
+
+	var cs State
+
+	c, err := s.client.GetDatabaseClient(ctx)
+	if err != nil {
+		cs.Reachable = err
+	} else {
+		v, err := c.Version(gctx)
+		if err != nil {
+			cs.Reachable = err
+		} else {
+			cs.Version = v
+		}
+	}
 
 	current := map[string]State{}
 
@@ -93,6 +121,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	}
 
 	s.members = current
+	s.state = cs
 }
 
 func (s *stateInspector) MemberState(id string) (State, bool) {
@@ -110,6 +139,8 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 
 type State struct {
 	Reachable error
+
+	Version driver.VersionInfo
 }
 
 func (s State) IsReachable() bool {

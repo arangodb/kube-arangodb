@@ -37,6 +37,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -73,17 +74,17 @@ func createJWTKeyUpdate(ctx context.Context,
 	jwtSha := util.SHA256(jwt)
 
 	if _, ok := folder.Data[jwtSha]; !ok {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTAdd, api.ServerGroupUnknown, "", "Add JWTRotation key").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTAdd, "Add JWTRotation key").AddParam(checksum, jwtSha))
 	}
 
 	activeKey, ok := folder.Data[pod.ActiveJWTKey]
 	if !ok {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key").AddParam(checksum, jwtSha))
 	}
 
 	tokenKey, ok := folder.Data[constants.SecretKeyToken]
 	if !ok || util.SHA256(activeKey) != util.SHA256(tokenKey) {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key and add token field").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key and add token field").AddParam(checksum, jwtSha))
 	}
 
 	plan, failed := areJWTTokensUpToDate(ctx, log, status, context, folder)
@@ -97,7 +98,7 @@ func createJWTKeyUpdate(ctx context.Context,
 	}
 
 	if util.SHA256(activeKey) != jwtSha {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTSetActive, api.ServerGroupUnknown, "", "Set active key").AddParam(checksum, jwtSha))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key").AddParam(checksum, jwtSha))
 	}
 
 	for key := range folder.Data {
@@ -109,7 +110,7 @@ func createJWTKeyUpdate(ctx context.Context,
 			continue
 		}
 
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTClean, api.ServerGroupUnknown, "", "Remove old key").AddParam(checksum, key))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTClean, "Remove old key").AddParam(checksum, key))
 	}
 
 	return addJWTPropagatedPlanAction(status)
@@ -124,7 +125,7 @@ func createJWTStatusUpdate(ctx context.Context,
 	}
 
 	if createJWTStatusUpdateRequired(log, apiObject, spec, status, cachedStatus) {
-		return addJWTPropagatedPlanAction(status, api.NewAction(api.ActionTypeJWTStatusUpdate, api.ServerGroupUnknown, "", "Update status"))
+		return addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTStatusUpdate, "Update status"))
 	}
 
 	return nil
@@ -217,7 +218,7 @@ func areJWTTokensUpToDate(ctx context.Context, log zerolog.Logger, status api.De
 				failed = true
 				continue
 			} else if updateRequired {
-				plan = append(plan, api.NewAction(api.ActionTypeJWTRefresh, group, m.ID))
+				plan = append(plan, actions.NewAction(api.ActionTypeJWTRefresh, group, m))
 				continue
 			}
 		}
@@ -256,19 +257,19 @@ func isJWTTokenUpToDate(ctx context.Context, log zerolog.Logger, status api.Depl
 	return false, false
 }
 
-func addJWTPropagatedPlanAction(s api.DeploymentStatus, actions ...api.Action) api.Plan {
-	got := len(actions) != 0
+func addJWTPropagatedPlanAction(s api.DeploymentStatus, acts ...api.Action) api.Plan {
+	got := len(acts) != 0
 	cond := conditionFalse
 	if !got {
 		cond = conditionTrue
 	}
 
 	if s.Hashes.JWT.Propagated == got {
-		p := api.Plan{api.NewAction(api.ActionTypeJWTPropagated, api.ServerGroupUnknown, "", "Change propagated flag").AddParam(propagated, cond)}
-		return append(p, actions...)
+		p := api.Plan{actions.NewClusterAction(api.ActionTypeJWTPropagated, "Change propagated flag").AddParam(propagated, cond)}
+		return append(p, acts...)
 	}
 
-	return actions
+	return acts
 }
 
 func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[string][]byte, refresh bool) (bool, error) {

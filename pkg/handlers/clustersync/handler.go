@@ -23,8 +23,6 @@ package clustersync
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -32,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -74,7 +73,7 @@ func (h *handler) Handle(item operation.Item) error {
 }
 
 func (*handler) CanBeHandled(item operation.Item) bool {
-	return item.Group == appsApi.SchemeGroupVersion.Group &&
-		item.Version == appsApi.SchemeGroupVersion.Version &&
-		item.Kind == apps.ArangoJobResourceKind
+	return item.Group == deploymentApi.SchemeGroupVersion.Group &&
+		item.Version == deploymentApi.SchemeGroupVersion.Version &&
+		item.Kind == deployment.ArangoClusterSynchronizationResourceKind
 }

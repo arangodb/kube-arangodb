@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -53,18 +54,18 @@ func createMaintenanceManagementPlan(ctx context.Context,
 
 	if !enabled && spec.Database.GetMaintenance() {
 		log.Info().Msgf("Enabling maintenance mode")
-		return api.Plan{api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeEnableMaintenance), actions.NewClusterAction(api.ActionTypeSetMaintenanceCondition)}
 	}
 
 	if enabled && !spec.Database.GetMaintenance() {
 		log.Info().Msgf("Disabling maintenance mode")
-		return api.Plan{api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, ""), api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeDisableMaintenance), actions.NewClusterAction(api.ActionTypeSetMaintenanceCondition)}
 	}
 
 	condition, ok := status.Conditions.Get(api.ConditionTypeMaintenanceMode)
 
 	if enabled != (ok && condition.IsTrue()) {
-		return api.Plan{api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "")}
+		return api.Plan{actions.NewClusterAction(api.ActionTypeSetMaintenanceCondition)}
 	}
 
 	return nil

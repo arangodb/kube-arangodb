@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -77,7 +78,7 @@ func createScalePlan(log zerolog.Logger, status api.DeploymentStatus, members ap
 		// Scale up
 		toAdd := count - len(members)
 		for i := 0; i < toAdd; i++ {
-			plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, ""))
+			plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")))
 		}
 		log.Debug().
 			Int("count", count).
@@ -123,7 +124,7 @@ func createReplaceMemberPlan(ctx context.Context,
 			if member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 				switch group {
 				case api.ServerGroupDBServers:
-					plan = append(plan, api.NewAction(api.ActionTypeAddMember, group, "").
+					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
 						AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
 						AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
 					log.Debug().
@@ -131,14 +132,14 @@ func createReplaceMemberPlan(ctx context.Context,
 						Msg("Creating replacement plan")
 					return nil
 				case api.ServerGroupCoordinators:
-					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID))
+					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member))
 					log.Debug().
 						Str("role", group.AsRole()).
 						Msg("Creating replacement plan")
 					return nil
 				case api.ServerGroupAgents:
-					plan = append(plan, api.NewAction(api.ActionTypeRemoveMember, group, member.ID),
-						api.NewAction(api.ActionTypeAddMember, group, "").
+					plan = append(plan, actions.NewAction(api.ActionTypeRemoveMember, group, member),
+						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")).
 							AddParam(api.ActionTypeWaitForMemberInSync.String(), "").
 							AddParam(api.ActionTypeWaitForMemberUp.String(), ""))
 					log.Debug().

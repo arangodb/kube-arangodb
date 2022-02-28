@@ -24,22 +24,19 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/go-driver"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
 // SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
@@ -71,6 +68,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 	i.c = c
 
 	if err := util.RunParallel(15,
+		getVersionInfo(ctx, &i, k, namespace),
 		podsToMap(ctx, &i, k, namespace),
 		secretsToMap(ctx, &i, k, namespace),
 		pvcsToMap(ctx, &i, k, namespace),
@@ -80,6 +78,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 		serviceMonitorsToMap(ctx, &i, m, namespace),
 		arangoMembersToMap(ctx, &i, c, namespace),
 		nodesToMap(ctx, &i, k),
+		arangoClusterSynchronizationsToMap(ctx, &i, c, namespace),
 	); err != nil {
 		return nil, err
 	}
@@ -88,7 +87,7 @@ func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 }
 
 func NewEmptyInspector() inspectorInterface.Inspector {
-	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	return NewInspectorFromData(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, "")
 }
 
 func NewInspectorFromData(pods map[string]*core.Pod,
@@ -99,7 +98,9 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 	podDisruptionBudgets map[string]*policy.PodDisruptionBudget,
 	serviceMonitors map[string]*monitoring.ServiceMonitor,
 	arangoMembers map[string]*api.ArangoMember,
-	nodes map[string]*core.Node) inspectorInterface.Inspector {
+	nodes map[string]*core.Node,
+	acs map[string]*api.ArangoClusterSynchronization,
+	version driver.Version) inspectorInterface.Inspector {
 	i := &inspector{
 		pods:                 pods,
 		secrets:              secrets,
@@ -109,17 +110,30 @@ func NewInspectorFromData(pods map[string]*core.Pod,
 		podDisruptionBudgets: podDisruptionBudgets,
 		serviceMonitors:      serviceMonitors,
 		arangoMembers:        arangoMembers,
+		versionInfo:          version,
 	}
 
 	if nodes == nil {
 		i.nodes = &nodeLoader{
-			authenticated: false,
-			nodes:         nil,
+			accessible: false,
+			nodes:      nil,
 		}
 	} else {
 		i.nodes = &nodeLoader{
-			authenticated: true,
-			nodes:         nodes,
+			accessible: true,
+			nodes:      nodes,
+		}
+	}
+
+	if acs == nil {
+		i.acs = &arangoClusterSynchronizationLoader{
+			accessible: false,
+			acs:        nil,
+		}
+	} else {
+		i.acs = &arangoClusterSynchronizationLoader{
+			accessible: true,
+			acs:        acs,
 		}
 	}
 
@@ -144,6 +158,8 @@ type inspector struct {
 	serviceMonitors      map[string]*monitoring.ServiceMonitor
 	arangoMembers        map[string]*api.ArangoMember
 	nodes                *nodeLoader
+	acs                  *arangoClusterSynchronizationLoader
+	versionInfo          driver.Version
 }
 
 func (i *inspector) IsStatic() bool {
@@ -172,6 +188,7 @@ func (i *inspector) Refresh(ctx context.Context) error {
 	i.serviceMonitors = new.serviceMonitors
 	i.arangoMembers = new.arangoMembers
 	i.nodes = new.nodes
+	i.versionInfo = new.versionInfo
 
 	return nil
 }

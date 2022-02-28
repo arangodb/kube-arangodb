@@ -18,46 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package arangoclustersynchronization
 
-import "sync"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
 
-// RunParallel runs actions parallelly throttling them to the given maximum number.
-func RunParallel(max int, actions ...func() error) error {
-	c := make(chan int, max)
-	errors := make([]error, len(actions))
-	defer func() {
-		close(c)
-		for range c {
-		}
-	}()
-
-	for i := 0; i < max; i++ {
-		c <- 0
-	}
-
-	var wg sync.WaitGroup
-
-	wg.Add(len(actions))
-	for id, i := range actions {
-		go func(id int, action func() error) {
-			defer func() {
-				c <- 0
-				wg.Done()
-			}()
-			<-c
-
-			errors[id] = action()
-		}(id, i)
-	}
-
-	wg.Wait()
-
-	for _, err := range errors {
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+type Loader interface {
+	GetArangoClusterSynchronizations() (Inspector, bool)
 }
+
+type Inspector interface {
+	ArangoClusterSynchronizations() []*api.ArangoClusterSynchronization
+	ArangoClusterSynchronization(name string) (*api.ArangoClusterSynchronization, bool)
+	IterateArangoClusterSynchronizations(action Action, filters ...Filter) error
+	ArangoClusterSynchronizationReadInterface() ReadInterface
+}
+
+type Filter func(acs *api.ArangoClusterSynchronization) bool
+type Action func(acs *api.ArangoClusterSynchronization) error

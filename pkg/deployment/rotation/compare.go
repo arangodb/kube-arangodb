@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/rs/zerolog"
 	core "k8s.io/api/core/v1"
@@ -65,7 +66,7 @@ func compare(log zerolog.Logger, deploymentSpec api.DeploymentSpec, member api.M
 	podStatus := status.PodSpec.DeepCopy()
 
 	// Try to fill fields
-	b := api.NewActionBuilder(group, member.ID)
+	b := actions.NewActionBuilderWrap(group, member)
 
 	g := generator(deploymentSpec, group, &spec.PodSpec.Spec, &podStatus.Spec)
 

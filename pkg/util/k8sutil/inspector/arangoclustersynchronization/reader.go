@@ -18,46 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package arangoclustersynchronization
 
-import "sync"
+import (
+	"context"
 
-// RunParallel runs actions parallelly throttling them to the given maximum number.
-func RunParallel(max int, actions ...func() error) error {
-	c := make(chan int, max)
-	errors := make([]error, len(actions))
-	defer func() {
-		close(c)
-		for range c {
-		}
-	}()
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
-	for i := 0; i < max; i++ {
-		c <- 0
-	}
+// Interface has methods to work with Node resources.
+type Interface interface {
+	ReadInterface
+}
 
-	var wg sync.WaitGroup
-
-	wg.Add(len(actions))
-	for id, i := range actions {
-		go func(id int, action func() error) {
-			defer func() {
-				c <- 0
-				wg.Done()
-			}()
-			<-c
-
-			errors[id] = action()
-		}(id, i)
-	}
-
-	wg.Wait()
-
-	for _, err := range errors {
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+// ReadInterface has methods to work with Node resources with ReadOnly mode.
+type ReadInterface interface {
+	Get(ctx context.Context, name string, opts meta.GetOptions) (*api.ArangoClusterSynchronization, error)
 }

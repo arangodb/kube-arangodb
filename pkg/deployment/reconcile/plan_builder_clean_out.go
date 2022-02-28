@@ -26,10 +26,11 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/arangodb/go-driver"
 	"github.com/rs/zerolog"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -84,7 +85,7 @@ func createCleanOutPlan(ctx context.Context, log zerolog.Logger, _ k8sutil.APIOb
 					Str("id", string(id)).
 					Msgf("server is cleaned out so operator must do the same")
 
-				action := api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupDBServers, string(id),
+				action := actions.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupDBServers, withPredefinedMember(string(id)),
 					"server is cleaned out so operator must do the same").
 					AddParam(string(api.ConditionTypeCleanedOut), strconv.FormatBool(true))
 

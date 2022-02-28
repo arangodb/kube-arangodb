@@ -86,7 +86,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				// Strange, pod belongs to us, but we have no member for it.
 				// Remove all finalizers, so it can be removed.
 				log.Warn().Msg("Pod belongs to this deployment, but we don't know the member. Removing all finalizers")
-				err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), pod, pod.GetFinalizers(), false)
+				_, err := k8sutil.RemovePodFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PodsModInterface(), pod, pod.GetFinalizers(), false)
 				if err != nil {
 					log.Debug().Err(err).Msg("Failed to update pod (to remove all finalizers)")
 					return errors.WithStack(err)
@@ -218,6 +218,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 		// End of Topology labels
 
+		// Reachable state
 		if state, ok := r.context.MemberState(memberStatus.ID); ok {
 			if state.IsReachable() {
 				if memberStatus.Conditions.Update(api.ConditionTypeReachable, true, "ArangoDB is reachable", "") {

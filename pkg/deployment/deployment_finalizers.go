@@ -39,15 +39,17 @@ import (
 )
 
 // ensureFinalizers adds all required finalizers to the given deployment (in memory).
-func ensureFinalizers(depl *api.ArangoDeployment) {
+func ensureFinalizers(depl *api.ArangoDeployment) bool {
 	for _, f := range depl.GetFinalizers() {
 		if f == constants.FinalizerDeplRemoveChildFinalizers {
 			// Finalizer already set
-			return
+			return false
 		}
 	}
 	// Set finalizers
 	depl.SetFinalizers(append(depl.GetFinalizers(), constants.FinalizerDeplRemoveChildFinalizers))
+
+	return true
 }
 
 // runDeploymentFinalizers goes through the list of ArangoDeployoment finalizers to see if they can be removed.
@@ -66,8 +68,10 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 		switch f {
 		case constants.FinalizerDeplRemoveChildFinalizers:
 			log.Debug().Msg("Inspecting 'remove child finalizers' finalizer")
-			if err := d.inspectRemoveChildFinalizers(ctx, log, updated, cachedStatus); err == nil {
+			if retry, err := d.inspectRemoveChildFinalizers(ctx, log, updated, cachedStatus); err == nil && !retry {
 				removalList = append(removalList, f)
+			} else if retry {
+				log.Debug().Str("finalizer", f).Msg("Retry on finalizer removal")
 			} else {
 				log.Debug().Err(err).Str("finalizer", f).Msg("Cannot remove finalizer yet")
 			}
@@ -85,15 +89,21 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 
 // inspectRemoveChildFinalizers checks the finalizer condition for remove-child-finalizers.
 // It returns nil if the finalizer can be removed.
-func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, _ zerolog.Logger, _ *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) error {
-	if err := d.removePodFinalizers(ctx, cachedStatus); err != nil {
-		return errors.WithStack(err)
+func (d *Deployment) inspectRemoveChildFinalizers(ctx context.Context, _ zerolog.Logger, _ *api.ArangoDeployment, cachedStatus inspectorInterface.Inspector) (bool, error) {
+	retry := false
+
+	if found, err := d.removePodFinalizers(ctx, cachedStatus); err != nil {
+		return false, errors.WithStack(err)
+	} else if found {
+		retry = true
 	}
-	if err := d.removePVCFinalizers(ctx, cachedStatus); err != nil {
-		return errors.WithStack(err)
+	if found, err := d.removePVCFinalizers(ctx, cachedStatus); err != nil {
+		return false, errors.WithStack(err)
+	} else if found {
+		retry = true
 	}
 
-	return nil
+	return retry, nil
 }
 
 // removeDeploymentFinalizers removes the given finalizers from the given PVC.
@@ -123,7 +133,7 @@ func removeDeploymentFinalizers(ctx context.Context, log zerolog.Logger, cli ver
 		return nil
 	}
 	ignoreNotFound := false
-	if err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+	if _, err := k8sutil.RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
@@ -30,7 +31,7 @@ func withMaintenance(plan ...api.Action) api.Plan {
 		return plan
 	}
 
-	return withMaintenanceStart(plan...).After(api.NewAction(api.ActionTypeDisableMaintenance, api.ServerGroupUnknown, "", "Disable maintenance after actions"))
+	return withMaintenanceStart(plan...).After(actions.NewClusterAction(api.ActionTypeDisableMaintenance, "Disable maintenance after actions"))
 }
 func withMaintenanceStart(plan ...api.Action) api.Plan {
 	if !features.Maintenance().Enabled() {
@@ -38,8 +39,8 @@ func withMaintenanceStart(plan ...api.Action) api.Plan {
 	}
 
 	return api.AsPlan(plan).Before(
-		api.NewAction(api.ActionTypeEnableMaintenance, api.ServerGroupUnknown, "", "Enable maintenance before actions"),
-		api.NewAction(api.ActionTypeSetMaintenanceCondition, api.ServerGroupUnknown, "", "Enable maintenance before actions"))
+		actions.NewClusterAction(api.ActionTypeEnableMaintenance, "Enable maintenance before actions"),
+		actions.NewClusterAction(api.ActionTypeSetMaintenanceCondition, "Enable maintenance before actions"))
 }
 
 func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason string, plan ...api.Action) api.Plan {
@@ -47,7 +48,7 @@ func withResignLeadership(group api.ServerGroup, member api.MemberStatus, reason
 		return plan
 	}
 
-	return api.AsPlan(plan).Before(api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason))
+	return api.AsPlan(plan).Before(actions.NewAction(api.ActionTypeResignLeadership, group, member, reason))
 }
 
 func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
@@ -55,13 +56,13 @@ func cleanOutMember(group api.ServerGroup, m api.MemberStatus) api.Plan {
 
 	if group == api.ServerGroupDBServers {
 		plan = append(plan,
-			api.NewAction(api.ActionTypeCleanOutMember, group, m.ID),
+			actions.NewAction(api.ActionTypeCleanOutMember, group, m),
 		)
 	}
 	plan = append(plan,
-		api.NewAction(api.ActionTypeKillMemberPod, group, m.ID),
-		api.NewAction(api.ActionTypeShutdownMember, group, m.ID),
-		api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
+		actions.NewAction(api.ActionTypeKillMemberPod, group, m),
+		actions.NewAction(api.ActionTypeShutdownMember, group, m),
+		actions.NewAction(api.ActionTypeRemoveMember, group, m),
 	)
 
 	return plan

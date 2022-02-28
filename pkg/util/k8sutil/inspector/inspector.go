@@ -23,7 +23,9 @@ package inspector
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/server"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
@@ -44,6 +46,8 @@ type Inspector interface {
 	servicemonitor.Inspector
 	serviceaccount.Inspector
 	arangomember.Inspector
+	server.Inspector
 
 	node.Loader
+	arangoclustersynchronization.Loader
 }

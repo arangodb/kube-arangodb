@@ -60,7 +60,7 @@ func (r *Resources) runPVCFinalizers(ctx context.Context, p *v1.PersistentVolume
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), p, removalList, false)
+		_, err := k8sutil.RemovePVCFinalizers(ctx, r.context.GetCachedStatus(), log, r.context.PersistentVolumeClaimsModInterface(), p, removalList, false)
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to update PVC (to remove finalizers)")
 			return 0, errors.WithStack(err)

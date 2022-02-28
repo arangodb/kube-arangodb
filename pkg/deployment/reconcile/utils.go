@@ -24,11 +24,11 @@ import (
 	"context"
 	"sort"
 
-	"github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -71,14 +71,6 @@ func getCluster(ctx context.Context, planCtx PlanBuilderContext) (driver.Cluster
 	return cluster, nil
 }
 
-func withMemberPodUID(m api.MemberStatus, a api.Action) api.Action {
-	if q := m.PodUID; q != "" {
-		return a.AddParam(api.ParamPodUID, string(q))
-	}
-
-	return a
-}
-
 func ifPodUIDMismatch(m api.MemberStatus, a api.Action, i pod.Inspector) bool {
 	ut, ok := a.GetParam(api.ParamPodUID)
 	if !ok || ut == "" {
@@ -97,4 +89,10 @@ func ifPodUIDMismatch(m api.MemberStatus, a api.Action, i pod.Inspector) bool {
 	}
 
 	return u != p.GetUID()
+}
+
+func withPredefinedMember(id string) api.MemberStatus {
+	return api.MemberStatus{
+		ID: id,
+	}
 }

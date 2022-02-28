@@ -1,15 +1,24 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+- Migrate storage-operator CustomResourceDefinition apiVersion to apiextensions.k8s.io/v1
+
+## [1.2.8](https://github.com/arangodb/kube-arangodb/tree/1.2.8) (2022-02-24)
 - Do not check License V2 on Community images
 - Add status.members.<group>.
+- Don't replace pod immediately when storage class changes
 - Define MemberReplacementRequired condition
 - Remove pod immediately when annotation is turned on
 - (ARM64) Add support for ARM64 enablement
 - (Cleanup) Reorganize main reconciliation context
 - (Bugfix) Unreachable condition
 - (Feature) Allow to disable external port (sidecar managed connection)
-- Migrate storage-operator CustomResourceDefinition apiVersion to apiextensions.k8s.io/v1
+- (Bugfix) Fix 3.6 -> 3.7 Upgrade procedure
+- (Bugfix) Add missing finalizer
+- (Bugfix) Add graceful to kill command
+- (Bugfix) Add reachable condition to deployment. Mark as UpToDate only of cluster is reachable.
+- (Bugfix) Add toleration's for network failures in action start procedure
 
 ## [1.2.7](https://github.com/arangodb/kube-arangodb/tree/1.2.7) (2022-01-17)
 - Add Plan BackOff functionality

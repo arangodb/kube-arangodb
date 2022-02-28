@@ -26,56 +26,45 @@ import (
 	"io/ioutil"
 	"testing"
 
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1beta1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver/agency"
+
+	"github.com/arangodb/go-driver"
+	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-
-	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
-
+	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
-
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
-
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-
-	policy "k8s.io/api/policy/v1beta1"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
-
-	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver/agency"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	driver "github.com/arangodb/go-driver"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	core "k8s.io/api/core/v1"
 )
 
 const pvcName = "pvc_test"
@@ -701,12 +690,15 @@ type testCase struct {
 	ServiceMonitors map[string]*monitoring.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
+	ACS             map[string]*api.ArangoClusterSynchronization
+	VersionInfo     driver.Version
 
 	Extender func(t *testing.T, r *Reconciler, c *testCase)
 }
 
 func (t testCase) Inspector() inspectorInterface.Inspector {
-	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS, t.ServiceMonitors, t.ArangoMembers, t.Nodes)
+	return inspector.NewInspectorFromData(t.Pods, t.Secrets, t.PVCS, t.Services, t.ServiceAccounts, t.PDBS,
+		t.ServiceMonitors, t.ArangoMembers, t.Nodes, t.ACS, t.VersionInfo)
 }
 
 func TestCreatePlan(t *testing.T) {
@@ -806,6 +798,9 @@ func TestCreatePlan(t *testing.T) {
 			context: &testContext{
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
+			Pods: map[string]*core.Pod{
+				"dbserver1": {},
+			},
 			Helper: func(ad *api.ArangoDeployment) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
 					Count: util.NewInt(3),
@@ -817,18 +812,61 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeMarkToRemoveMember, api.ServerGroupDBServers, ""),
+			ExpectedEvent: &k8sutil.Event{
+				Type:   core.EventTypeNormal,
+				Reason: "Plan Action added",
+				Message: "A plan item of type SetMemberConditionV2 for member dbserver with role 1 has been added " +
+					"with reason: Member replacement required",
 			},
-			ExpectedLog: "Storage class has changed - pod needs replacement",
+			ExpectedHighPlan: []api.Action{
+				actions.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupDBServers, withPredefinedMember(""), "Member replacement required"),
+			},
+			ExpectedLog: "Member replacement required",
+		},
+		{
+			Name: "Wait for changing Storage for DBServers",
+			PVCS: map[string]*core.PersistentVolumeClaim{
+				pvcName: {
+					Spec: core.PersistentVolumeClaimSpec{
+						StorageClassName: util.NewString("oldStorage"),
+					},
+				},
+			},
+			context: &testContext{
+				ArangoDeployment: deploymentTemplate.DeepCopy(),
+			},
+			Helper: func(ad *api.ArangoDeployment) {
+				ad.Spec.DBServers = api.ServerGroupSpec{
+					Count: util.NewInt(3),
+					VolumeClaimTemplate: &core.PersistentVolumeClaim{
+						Spec: core.PersistentVolumeClaimSpec{
+							StorageClassName: util.NewString("newStorage"),
+						},
+					},
+				}
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
+				ad.Status.Members.DBServers[0].PersistentVolumeClaimName = pvcName
+				cond := api.Condition{
+					Type:   api.MemberReplacementRequired,
+					Status: conditionTrue,
+				}
+				ad.Status.Members.DBServers[0].Conditions = append(ad.Status.Members.DBServers[0].Conditions, cond)
+			},
 		},
 		{
 			Name: "Change Storage for Agents with deprecated storage class name",
 			PVCS: map[string]*core.PersistentVolumeClaim{
 				pvcName: {
 					Spec: core.PersistentVolumeClaimSpec{
-						StorageClassName: util.NewString("oldStorage"),
+						StorageClassName: util.NewString(""),
 					},
 				},
 			},
@@ -842,15 +880,17 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Agents[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[1].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Agents[2].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[2].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
 			},
-			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupAgents, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupAgents, ""),
-			},
-			ExpectedLog: "Storage class has changed - pod needs replacement",
 		},
 		{
 			Name: "Storage for Coordinators is not possible",
@@ -875,9 +915,16 @@ func TestCreatePlan(t *testing.T) {
 				}
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseCreated
 				ad.Status.Members.Coordinators[0].PersistentVolumeClaimName = pvcName
+				ad.Status.Members.Coordinators[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Coordinators[2].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[0].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[1].Phase = api.MemberPhasePending
+				ad.Status.Members.DBServers[2].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[0].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[1].Phase = api.MemberPhasePending
+				ad.Status.Members.Agents[2].Phase = api.MemberPhasePending
 			},
 			ExpectedPlan: []api.Action{},
-			ExpectedLog:  "Storage class has changed - pod needs replacement",
 			ExpectedEvent: &k8sutil.Event{
 				Type:    core.EventTypeNormal,
 				Reason:  "Coordinator Member StorageClass Cannot Change",
@@ -963,7 +1010,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].PersistentVolumeClaimName = "pvc_test"
 			},
 			ExpectedHighPlan: []api.Action{
-				api.NewAction(api.ActionTypeSetMemberCondition, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0].ID, "PVC Resize pending"),
+				actions.NewAction(api.ActionTypeSetMemberConditionV2, api.ServerGroupAgents, deploymentTemplate.Status.Members.Agents[0], "PVC Resize pending"),
 			},
 			ExpectedLog: "PVC Resize pending",
 		},
@@ -980,7 +1027,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Agents[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, "id"),
+				actions.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, withPredefinedMember("id")),
 			},
 			ExpectedLog: "Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss",
 		},
@@ -997,9 +1044,9 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.Coordinators[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, "id"),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators, api.MemberIDPreviousAction),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupCoordinators, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupCoordinators, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupCoordinators, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1016,9 +1063,9 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].ID = "id"
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, api.MemberIDPreviousAction),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeAddMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeWaitForMemberUp, api.ServerGroupDBServers, withPredefinedMember(api.MemberIDPreviousAction)),
 			},
 			ExpectedLog: "Creating member replacement plan because member has failed",
 		},
@@ -1040,10 +1087,10 @@ func TestCreatePlan(t *testing.T) {
 				}
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("")),
 			},
 			ExpectedLog: "Creating dbserver replacement plan because server is cleanout in created phase",
 		},
@@ -1059,10 +1106,10 @@ func TestCreatePlan(t *testing.T) {
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseCreated
 			},
 			ExpectedPlan: []api.Action{
-				api.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, "id"),
-				api.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, ""),
-				api.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, ""),
+				actions.NewAction(api.ActionTypeCleanOutMember, api.ServerGroupDBServers, withPredefinedMember("id")),
+				actions.NewAction(api.ActionTypeKillMemberPod, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeShutdownMember, api.ServerGroupDBServers, withPredefinedMember("")),
+				actions.NewAction(api.ActionTypeRemoveMember, api.ServerGroupDBServers, withPredefinedMember("")),
 			},
 			ExpectedLog: "Creating scale-down plan",
 		},

@@ -40,7 +40,7 @@ const (
 
 // RemovePodFinalizers removes the given finalizers from the given pod.
 func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log zerolog.Logger, c pod.ModInterface, p *core.Pod,
-	finalizers []string, ignoreNotFound bool) error {
+	finalizers []string, ignoreNotFound bool) (int, error) {
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
@@ -63,15 +63,16 @@ func RemovePodFinalizers(ctx context.Context, cachedStatus pod.Inspector, log ze
 		*p = *result
 		return nil
 	}
-	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return errors.WithStack(err)
+	if count, err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+		return 0, errors.WithStack(err)
+	} else {
+		return count, nil
 	}
-	return nil
 }
 
 // RemovePVCFinalizers removes the given finalizers from the given PVC.
 func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim.Inspector, log zerolog.Logger, c persistentvolumeclaim.ModInterface,
-	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) error {
+	p *core.PersistentVolumeClaim, finalizers []string, ignoreNotFound bool) (int, error) {
 	getFunc := func() (metav1.Object, error) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
@@ -94,17 +95,18 @@ func RemovePVCFinalizers(ctx context.Context, cachedStatus persistentvolumeclaim
 		*p = *result
 		return nil
 	}
-	if err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
-		return errors.WithStack(err)
+	if count, err := RemoveFinalizers(log, finalizers, getFunc, updateFunc, ignoreNotFound); err != nil {
+		return 0, errors.WithStack(err)
+	} else {
+		return count, nil
 	}
-	return nil
 }
 
 // RemoveFinalizers is a helper used to remove finalizers from an object.
 // The functions tries to get the object using the provided get function,
 // then remove the given finalizers and update the update using the given update function.
 // In case of an update conflict, the functions tries again.
-func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error, ignoreNotFound bool) error {
+func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (metav1.Object, error), updateFunc func(metav1.Object) error, ignoreNotFound bool) (int, error) {
 	attempts := 0
 	for {
 		attempts++
@@ -112,15 +114,15 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 		if err != nil {
 			if IsNotFound(err) && ignoreNotFound {
 				// Object no longer found and we're allowed to ignore that.
-				return nil
+				return 0, nil
 			}
 			log.Warn().Err(err).Msg("Failed to get resource")
-			return errors.WithStack(err)
+			return 0, errors.WithStack(err)
 		}
 		original := obj.GetFinalizers()
 		if len(original) == 0 {
 			// We're done
-			return nil
+			return 0, nil
 		}
 		newList := make([]string, 0, len(original))
 		shouldRemove := func(f string) bool {
@@ -136,26 +138,27 @@ func RemoveFinalizers(log zerolog.Logger, finalizers []string, getFunc func() (m
 				newList = append(newList, f)
 			}
 		}
-		if len(newList) < len(original) {
+		if z := len(original) - len(newList); z > 0 {
 			obj.SetFinalizers(newList)
 			if err := updateFunc(obj); IsConflict(err) {
 				if attempts > maxRemoveFinalizersAttempts {
 					log.Warn().Err(err).Msg("Failed to update resource with fewer finalizers after many attempts")
-					return errors.WithStack(err)
+					return 0, errors.WithStack(err)
 				} else {
 					// Try again
 					continue
 				}
 			} else if IsNotFound(err) && ignoreNotFound {
 				// Object no longer found and we're allowed to ignore that.
-				return nil
+				return 0, nil
 			} else if err != nil {
 				log.Warn().Err(err).Msg("Failed to update resource with fewer finalizers")
-				return errors.WithStack(err)
+				return 0, errors.WithStack(err)
 			}
+			return z, nil
 		} else {
 			log.Debug().Msg("No finalizers needed removal. Resource unchanged")
+			return 0, nil
 		}
-		return nil
 	}
 }

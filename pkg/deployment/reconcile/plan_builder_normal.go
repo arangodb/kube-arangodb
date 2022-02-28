@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -72,7 +73,6 @@ func createNormalPlan(ctx context.Context, log zerolog.Logger, apiObject k8sutil
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCARenewalPlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createCAAppendPlan).
 		ApplyIfEmpty(createKeyfileRenewalPlan).
-		ApplyIfEmpty(createRotateServerStoragePlan).
 		ApplyIfEmpty(createRotateServerStorageResizePlan).
 		ApplySubPlanIfEmpty(createTLSStatusPropagatedFieldUpdate, createRotateTLSServerSNIPlan).
 		ApplyIfEmpty(createRestorePlan).
@@ -116,7 +116,7 @@ func createMemberFailedRestorePlan(ctx context.Context,
 					// DBServer still exists in agency plan! Will not be removed, but needs to be recreated
 					memberLog.Msg("Recreating DBServer - it cannot be removed gracefully")
 					plan = append(plan,
-						api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+						actions.NewAction(api.ActionTypeRecreateMember, group, m))
 					continue
 				}
 
@@ -128,24 +128,24 @@ func createMemberFailedRestorePlan(ctx context.Context,
 				// For agents just recreate member do not rotate ID, do not remove PVC or service
 				memberLog.Msg("Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss")
 				plan = append(plan,
-					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+					actions.NewAction(api.ActionTypeRecreateMember, group, m))
 			case api.ServerGroupSingle:
 				// Do not remove data for singles
 				memberLog.Msg("Restoring old member. Rotation for single servers is not safe")
 				plan = append(plan,
-					api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+					actions.NewAction(api.ActionTypeRecreateMember, group, m))
 			default:
 				if spec.GetAllowMemberRecreation(group) {
 					memberLog.Msg("Creating member replacement plan because member has failed")
 					plan = append(plan,
-						api.NewAction(api.ActionTypeRemoveMember, group, m.ID),
-						api.NewAction(api.ActionTypeAddMember, group, ""),
-						api.NewAction(api.ActionTypeWaitForMemberUp, group, api.MemberIDPreviousAction),
+						actions.NewAction(api.ActionTypeRemoveMember, group, m),
+						actions.NewAction(api.ActionTypeAddMember, group, withPredefinedMember("")),
+						actions.NewAction(api.ActionTypeWaitForMemberUp, group, withPredefinedMember(api.MemberIDPreviousAction)),
 					)
 				} else {
 					memberLog.Msg("Restoring old member. Recreation is disabled for group")
 					plan = append(plan,
-						api.NewAction(api.ActionTypeRecreateMember, group, m.ID))
+						actions.NewAction(api.ActionTypeRecreateMember, group, m))
 				}
 			}
 		}
@@ -156,7 +156,7 @@ func createMemberFailedRestorePlan(ctx context.Context,
 	if len(plan) == 0 && !agencyOK {
 		log.Warn().Msgf("unable to build further plan without access to agency")
 		plan = append(plan,
-			api.NewAction(api.ActionTypeIdle, api.ServerGroupUnknown, ""))
+			actions.NewClusterAction(api.ActionTypeIdle))
 	}
 
 	return plan

@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -34,20 +35,32 @@ import (
 // createRotateMemberPlan creates a plan to rotate (stop-recreate-start) an existing
 // member.
 func createRotateMemberPlan(log zerolog.Logger, member api.MemberStatus,
-	group api.ServerGroup, reason string) api.Plan {
+	group api.ServerGroup, spec api.DeploymentSpec, reason string) api.Plan {
 	log.Debug().
 		Str("id", member.ID).
 		Str("role", group.AsRole()).
 		Str("reason", reason).
 		Msg("Creating rotation plan")
-	plan := api.Plan{
-		api.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member.ID, "Remove server keyfile and enforce renewal/recreation"),
-		api.NewAction(api.ActionTypeResignLeadership, group, member.ID, reason),
-		withMemberPodUID(member, api.NewAction(api.ActionTypeKillMemberPod, group, member.ID, reason)),
-		withMemberPodUID(member, api.NewAction(api.ActionTypeRotateMember, group, member.ID, reason)),
-		api.NewAction(api.ActionTypeWaitForMemberUp, group, member.ID),
-		api.NewAction(api.ActionTypeWaitForMemberInSync, group, member.ID),
+	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason)
+}
+
+// createRotateMemberPlanWithAction creates a plan to rotate (stop-<action>>-start) an existing
+// member.
+func createRotateMemberPlanWithAction(member api.MemberStatus,
+	group api.ServerGroup, action api.ActionType, spec api.DeploymentSpec, reason string) api.Plan {
+
+	var plan = api.Plan{
+		actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal/recreation"),
 	}
+	plan = withSecureWrap(member, group, spec, plan...)
+
+	plan = plan.After(
+		actions.NewAction(api.ActionTypeKillMemberPod, group, member, reason),
+		actions.NewAction(action, group, member, reason),
+		actions.NewAction(api.ActionTypeWaitForMemberUp, group, member),
+		actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member),
+	)
+
 	return plan
 }
 
@@ -59,7 +72,7 @@ func emptyPlanBuilder(ctx context.Context,
 }
 
 func removeConditionActionV2(actionReason string, conditionType api.ConditionType) api.Action {
-	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+	return actions.NewClusterAction(api.ActionTypeSetConditionV2, actionReason).
 		AddParam(setConditionActionV2KeyAction, string(conditionType)).
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
 }
@@ -70,7 +83,7 @@ func updateConditionActionV2(actionReason string, conditionType api.ConditionTyp
 		statusBool = core.ConditionFalse
 	}
 
-	return api.NewAction(api.ActionTypeSetConditionV2, api.ServerGroupUnknown, "", actionReason).
+	return actions.NewClusterAction(api.ActionTypeSetConditionV2, actionReason).
 		AddParam(setConditionActionV2KeyAction, string(conditionType)).
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
 		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
@@ -80,7 +93,7 @@ func updateConditionActionV2(actionReason string, conditionType api.ConditionTyp
 }
 
 func removeMemberConditionActionV2(actionReason string, conditionType api.ConditionType, group api.ServerGroup, member string) api.Action {
-	return api.NewAction(api.ActionTypeSetMemberConditionV2, group, member, actionReason).
+	return actions.NewAction(api.ActionTypeSetMemberConditionV2, group, withPredefinedMember(member), actionReason).
 		AddParam(setConditionActionV2KeyAction, string(conditionType)).
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeRemove)
 }
@@ -91,7 +104,7 @@ func updateMemberConditionActionV2(actionReason string, conditionType api.Condit
 		statusBool = core.ConditionFalse
 	}
 
-	return api.NewAction(api.ActionTypeSetMemberConditionV2, group, member, actionReason).
+	return actions.NewAction(api.ActionTypeSetMemberConditionV2, group, withPredefinedMember(member), actionReason).
 		AddParam(setConditionActionV2KeyAction, string(conditionType)).
 		AddParam(setConditionActionV2KeyType, setConditionActionV2KeyTypeAdd).
 		AddParam(setConditionActionV2KeyStatus, string(statusBool)).
