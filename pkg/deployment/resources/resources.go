@@ -26,7 +26,6 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
-	clientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -46,7 +45,6 @@ type Resources struct {
 		mutex                 sync.Mutex
 		triggerSyncInspection trigger.Trigger
 	}
-	monitoringClient *clientv1.MonitoringV1Client
 }
 
 // NewResources creates a new Resources service, used to

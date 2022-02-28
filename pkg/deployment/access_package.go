@@ -49,7 +49,7 @@ const (
 func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	log := d.deps.Log
 	spec := d.apiObject.Spec
-	secrets := d.deps.KubeCli.CoreV1().Secrets(d.GetNamespace())
+	secrets := d.deps.Client.Kubernetes().CoreV1().Secrets(d.GetNamespace())
 
 	if !spec.Sync.IsEnabled() {
 		// We're only relevant when sync is enabled
@@ -106,7 +106,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName string) error {
 	log := d.deps.Log
 	ns := d.GetNamespace()
-	secrets := d.deps.KubeCli.CoreV1().Secrets(ns)
+	secrets := d.deps.Client.Kubernetes().CoreV1().Secrets(ns)
 	spec := d.apiObject.Spec
 
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {

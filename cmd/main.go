@@ -61,13 +61,13 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/kube-arangodb/pkg/client"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	v1 "k8s.io/api/core/v1"
@@ -89,8 +89,6 @@ const (
 )
 
 var (
-	maskAny = errors.WithStack
-
 	cmdMain = cobra.Command{
 		Use: "arangodb_operator",
 		Run: executeMain,
@@ -124,6 +122,9 @@ var (
 	}
 	operatorKubernetesOptions struct {
 		maxBatchSize int64
+
+		qps   float32
+		burst int
 	}
 	operatorBackup struct {
 		concurrentUploads int
@@ -175,6 +176,8 @@ func init() {
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", true, "Enable Scaling Integration")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
+	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
+	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	features.Init(&cmdMain)
 }
@@ -212,6 +215,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
 	globals.GetGlobals().Kubernetes().RequestBatchSize().Set(operatorKubernetesOptions.maxBatchSize)
 	globals.GetGlobals().Backup().ConcurrentUploads().Set(operatorBackup.concurrentUploads)
+
+	kclient.SetDefaultQPS(operatorKubernetesOptions.qps)
+	kclient.SetDefaultBurst(operatorKubernetesOptions.burst)
 
 	// Prepare log service
 	var err error
@@ -264,12 +270,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 			cliLog.Fatal().Err(err).Msg("Failed to get hostname")
 		}
 
-		// Create kubernetes client
-		kubecli, err := k8sutil.NewKubeClient()
-		if err != nil {
-			cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+		client, ok := kclient.GetDefaultFactory().Client()
+		if !ok {
+			cliLog.Fatal().Msg("Failed to get client")
 		}
-		secrets := kubecli.CoreV1().Secrets(namespace)
+
+		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
 
 		// Create operator
 		cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
@@ -282,7 +288,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}
 
 		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
-		if svr, err := server.NewServer(kubecli.CoreV1(), server.Config{
+		if svr, err := server.NewServer(client.Kubernetes().CoreV1(), server.Config{
 			Namespace:          namespace,
 			Address:            listenAddr,
 			TLSSecretName:      serverOptions.tlsSecretName,
@@ -364,34 +370,21 @@ func startVersionProcess() error {
 
 // newOperatorConfigAndDeps creates operator config & dependencies.
 func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, operator.Dependencies, error) {
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		return operator.Config{}, operator.Dependencies{}, maskAny(err)
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return operator.Config{}, operator.Dependencies{}, errors.Errorf("Failed to get client")
 	}
 
-	kubeMonCli, err := k8sutil.NewKubeMonitoringV1Client()
+	image, serviceAccount, err := getMyPodInfo(client.Kubernetes(), namespace, name)
 	if err != nil {
-		return operator.Config{}, operator.Dependencies{}, maskAny(err)
+		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Failed to get my pod's service account: %s", err))
 	}
 
-	image, serviceAccount, err := getMyPodInfo(kubecli, namespace, name)
-	if err != nil {
-		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to get my pod's service account: %s", err))
-	}
-
-	kubeExtCli, err := k8sutil.NewKubeExtClient()
-	if err != nil {
-		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to create k8b api extensions client: %s", err))
-	}
-	crCli, err := client.NewClient()
-	if err != nil {
-		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Failed to created versioned client: %s", err))
-	}
-	eventRecorder := createRecorder(cliLog, kubecli, name, namespace)
+	eventRecorder := createRecorder(cliLog, client.Kubernetes(), name, namespace)
 
 	scope, ok := scope.AsScope(operatorOptions.scope)
 	if !ok {
-		return operator.Config{}, operator.Dependencies{}, maskAny(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
+		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
 	}
 
 	cfg := operator.Config{
@@ -414,10 +407,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 	}
 	deps := operator.Dependencies{
 		LogService:                 logService,
-		KubeCli:                    kubecli,
-		KubeExtCli:                 kubeExtCli,
-		KubeMonitoringCli:          kubeMonCli,
-		CRCli:                      crCli,
+		Client:                     client,
 		EventRecorder:              eventRecorder,
 		LivenessProbe:              &livenessProbe,
 		DeploymentProbe:            &deploymentProbe,
@@ -442,7 +432,7 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 				Err(err).
 				Str("name", name).
 				Msg("Failed to get operator pod")
-			return maskAny(err)
+			return errors.WithStack(err)
 		}
 		sa = pod.Spec.ServiceAccountName
 		if image, err = k8sutil.GetArangoDBImageIDFromPod(pod); err != nil {
@@ -455,7 +445,7 @@ func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string,
 		return nil
 	}
 	if err := retry.Retry(op, time.Minute*5); err != nil {
-		return "", "", maskAny(err)
+		return "", "", errors.WithStack(err)
 	}
 	return image, sa, nil
 }

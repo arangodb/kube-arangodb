@@ -191,7 +191,7 @@ func (d *Deployment) StorageClasses() []string {
 func (d *Deployment) DatabaseURL() string {
 	eaSvcName := k8sutil.CreateDatabaseExternalAccessServiceName(d.Name())
 	ns := d.apiObject.Namespace
-	svc, err := d.deps.KubeCli.CoreV1().Services(ns).Get(context.Background(), eaSvcName, metav1.GetOptions{})
+	svc, err := d.deps.Client.Kubernetes().CoreV1().Services(ns).Get(context.Background(), eaSvcName, metav1.GetOptions{})
 	if err != nil {
 		return ""
 	}
@@ -200,7 +200,7 @@ func (d *Deployment) DatabaseURL() string {
 		scheme = "http"
 	}
 	nodeFetcher := func() (v1.NodeList, error) {
-		result, err := d.deps.KubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+		result, err := d.deps.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 		if err != nil {
 			return v1.NodeList{}, errors.WithStack(err)
 		}

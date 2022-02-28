@@ -45,7 +45,7 @@ var (
 func (o *Operator) runLocalStorages(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		o.log,
-		o.Dependencies.CRCli.StorageV1alpha().RESTClient(),
+		o.Dependencies.Client.Arango().StorageV1alpha().RESTClient(),
 		api.ArangoLocalStorageResourcePlural,
 		"", //o.Config.Namespace,
 		&api.ArangoLocalStorage{},
@@ -207,8 +207,7 @@ func (o *Operator) makeLocalStorageConfigAndDeps(apiObject *api.ArangoLocalStora
 		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameStorage).With().
 			Str("localStorage", apiObject.GetName()).
 			Logger(),
-		KubeCli:       o.Dependencies.KubeCli,
-		StorageCRCli:  o.Dependencies.CRCli,
+		Client:        o.Client,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}
 	return cfg, deps

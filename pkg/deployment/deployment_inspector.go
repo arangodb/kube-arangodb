@@ -74,7 +74,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	deploymentName := d.GetName()
 	defer metrics.SetDuration(inspectDeploymentDurationGauges.WithLabelValues(deploymentName), start)
 
-	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get resources")
 		return minInspectionInterval // Retry ASAP
@@ -84,7 +84,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	var updated *api.ArangoDeployment
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
 		var err error
-		updated, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
+		updated, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
 		return err
 	})
 	if k8sutil.IsNotFound(err) {

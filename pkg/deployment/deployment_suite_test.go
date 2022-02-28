@@ -50,6 +50,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 )
 
 const (
@@ -450,7 +452,9 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 
 	eventRecorder := recordfake.NewFakeRecorder(10)
 	kubernetesClientSet := fake.NewSimpleClientset()
+	kubernetesExtClientSet := extfake.NewSimpleClientset()
 	monitoringClientSet := monitoringFakeClient.NewSimpleClientset()
+	arangoClientSet := arangofake.NewSimpleClientset()
 
 	arangoDeployment.ObjectMeta = metav1.ObjectMeta{
 		Name:      testDeploymentName,
@@ -469,11 +473,9 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	arangoDeployment.Status.CurrentImage = &arangoDeployment.Status.Images[0]
 
 	deps := Dependencies{
-		Log:               zerolog.New(ioutil.Discard),
-		KubeCli:           kubernetesClientSet,
-		KubeMonitoringCli: monitoringClientSet.MonitoringV1(),
-		DatabaseCRCli:     arangofake.NewSimpleClientset(&api.ArangoDeployment{}),
-		EventRecorder:     eventRecorder,
+		Log:           zerolog.New(ioutil.Discard),
+		EventRecorder: eventRecorder,
+		Client:        kclient.NewStaticClient(kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
 	}
 
 	d := &Deployment{
@@ -487,7 +489,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 	}
 	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
-	cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
+	cachedStatus, err := inspector.NewInspector(context.Background(), deps.Client, d.GetNamespace())
 	require.NoError(t, err)
 	assert.NotEmpty(t, cachedStatus.GetVersionInfo(), "API server should not have returned empty version")
 	d.SetCachedStatus(cachedStatus)

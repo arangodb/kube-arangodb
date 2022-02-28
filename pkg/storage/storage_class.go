@@ -53,7 +53,7 @@ func (l *LocalStorage) ensureStorageClass(apiObject *api.ArangoLocalStorage) err
 	}
 	// Note: We do not attach the StorageClass to the apiObject (OwnerRef) because many
 	// ArangoLocalStorage resource may use the same StorageClass.
-	cli := l.deps.KubeCli.StorageV1()
+	cli := l.deps.Client.Kubernetes().StorageV1()
 	if _, err := cli.StorageClasses().Create(context.Background(), sc, metav1.CreateOptions{}); k8sutil.IsAlreadyExists(err) {
 		log.Debug().
 			Str("storageclass", sc.GetName()).

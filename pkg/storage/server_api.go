@@ -63,7 +63,7 @@ func (ls *LocalStorage) StorageClassIsDefault() bool {
 
 // Volumes returns all volumes created by the local storage resource
 func (ls *LocalStorage) Volumes() []server.Volume {
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		ls.deps.Log.Error().Err(err).Msg("Failed to list persistent volumes")
 		return nil
