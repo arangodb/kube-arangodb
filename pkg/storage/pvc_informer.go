@@ -44,7 +44,7 @@ func (ls *LocalStorage) listenForPvcEvents() {
 
 	rw := k8sutil.NewResourceWatcher(
 		ls.deps.Log,
-		ls.deps.KubeCli.CoreV1().RESTClient(),
+		ls.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"persistentvolumeclaims",
 		"", //ls.apiObject.GetNamespace(),
 		&v1.PersistentVolumeClaim{},

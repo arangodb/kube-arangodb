@@ -35,7 +35,7 @@ import (
 // Returns the number of available PV's.
 func (ls *LocalStorage) inspectPVs() (int, error) {
 	log := ls.deps.Log
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return 0, errors.WithStack(err)
 	}

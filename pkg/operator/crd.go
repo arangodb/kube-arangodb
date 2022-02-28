@@ -38,7 +38,7 @@ func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
 				err = crd.WaitReady(checkFn)
 			}
 		} else {
-			err = crd.WaitCRDReady(o.KubeExtCli, crdName)
+			err = crd.WaitCRDReady(o.Client.KubernetesExtensions(), crdName)
 		}
 
 		if err == nil {

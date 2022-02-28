@@ -45,7 +45,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 
@@ -54,8 +53,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
-
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 
@@ -70,16 +67,15 @@ import (
 	"github.com/arangodb/arangosync-client/tasks"
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
-	"github.com/rs/zerolog/log"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ resources.Context = &Deployment{}
@@ -89,7 +85,7 @@ func (d *Deployment) GetBackup(ctx context.Context, backup string) (*backupApi.A
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	return d.deps.DatabaseCRCli.BackupV1().ArangoBackups(d.Namespace()).Get(ctxChild, backup, meta.GetOptions{})
+	return d.deps.Client.Arango().BackupV1().ArangoBackups(d.Namespace()).Get(ctxChild, backup, meta.GetOptions{})
 }
 
 // GetAPIObject returns the deployment as k8s object.
@@ -100,18 +96,6 @@ func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 // GetServerGroupIterator returns the deployment as ServerGroupIterator.
 func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
 	return d.apiObject
-}
-
-func (d *Deployment) getKubeCli() kubernetes.Interface {
-	return d.deps.KubeCli
-}
-
-func (d *Deployment) getMonitoringV1Cli() monitoringClient.MonitoringV1Interface {
-	return d.deps.KubeMonitoringCli
-}
-
-func (d *Deployment) getArangoCli() versioned.Interface {
-	return d.deps.DatabaseCRCli
 }
 
 func (d *Deployment) GetScope() scope.Scope {
@@ -644,35 +628,35 @@ func (d *Deployment) WithStatusUpdate(ctx context.Context, action reconciler.Dep
 }
 
 func (d *Deployment) SecretsModInterface() secret.ModInterface {
-	return d.getKubeCli().CoreV1().Secrets(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).Secrets()
 }
 
 func (d *Deployment) PodsModInterface() podMod.ModInterface {
-	return d.getKubeCli().CoreV1().Pods(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).Pods()
 }
 
 func (d *Deployment) ServiceAccountsModInterface() serviceaccount.ModInterface {
-	return d.getKubeCli().CoreV1().ServiceAccounts(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceAccounts()
 }
 
 func (d *Deployment) ServicesModInterface() service.ModInterface {
-	return d.getKubeCli().CoreV1().Services(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).Services()
 }
 
 func (d *Deployment) PersistentVolumeClaimsModInterface() persistentvolumeclaim.ModInterface {
-	return d.getKubeCli().CoreV1().PersistentVolumeClaims(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).PersistentVolumeClaims()
 }
 
 func (d *Deployment) PodDisruptionBudgetsModInterface() poddisruptionbudget.ModInterface {
-	return d.getKubeCli().PolicyV1beta1().PodDisruptionBudgets(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).PodDisruptionBudgets()
 }
 
 func (d *Deployment) ServiceMonitorsModInterface() servicemonitor.ModInterface {
-	return d.getMonitoringV1Cli().ServiceMonitors(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceMonitors()
 }
 
 func (d *Deployment) ArangoMembersModInterface() arangomember.ModInterface {
-	return d.getArangoCli().DatabaseV1().ArangoMembers(d.GetNamespace())
+	return kclient.NewModInterface(d.deps.Client, d.namespace).ArangoMembers()
 }
 
 func (d *Deployment) GetName() string {
@@ -708,13 +692,13 @@ func (d *Deployment) SetCachedStatus(i inspectorInterface.Inspector) {
 }
 
 func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberUpdateFunc) error {
-	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	o, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
 	if err != nil {
 		return err
 	}
 
 	if action(o) {
-		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Update(ctx, o, meta.UpdateOptions{}); err != nil {
+		if _, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Update(ctx, o, meta.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -723,7 +707,7 @@ func (d *Deployment) WithArangoMemberUpdate(ctx context.Context, namespace, name
 }
 
 func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace, name string, action reconciler.ArangoMemberStatusUpdateFunc) error {
-	o, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
+	o, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).Get(ctx, name, meta.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -732,7 +716,7 @@ func (d *Deployment) WithArangoMemberStatusUpdate(ctx context.Context, namespace
 
 	if action(o, status) {
 		o.Status = *status
-		if _, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
+		if _, err := d.deps.Client.Arango().DatabaseV1().ArangoMembers(namespace).UpdateStatus(ctx, o, meta.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -748,7 +732,7 @@ func (d *Deployment) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...pa
 		return err
 	}
 
-	c := d.deps.KubeCli.CoreV1().Pods(pod.GetNamespace())
+	c := d.deps.Client.Kubernetes().CoreV1().Pods(pod.GetNamespace())
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()

@@ -57,7 +57,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	log := d.deps.Log
 	var removalList []string
 
-	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
+	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	updated, err := depls.Get(ctxChild, d.apiObject.GetName(), metav1.GetOptions{})
@@ -79,7 +79,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	}
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
-		if err := removeDeploymentFinalizers(ctx, log, d.deps.DatabaseCRCli, updated, removalList); err != nil {
+		if err := removeDeploymentFinalizers(ctx, log, d.deps.Client.Arango(), updated, removalList); err != nil {
 			log.Debug().Err(err).Msg("Failed to update ArangoDeployment (to remove finalizers)")
 			return errors.WithStack(err)
 		}

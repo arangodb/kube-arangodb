@@ -18,15 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package mocks
+package kclient
 
-import "github.com/stretchr/testify/mock"
+import (
+	"time"
+)
 
-type MockGetter interface {
-	AsMock() *mock.Mock
+type clock struct {
 }
 
-// AsMock performs a typeconversion to *Mock.
-func AsMock(obj interface{}) *mock.Mock {
-	return obj.(MockGetter).AsMock()
+func (c clock) Now() time.Time {
+	return time.Now()
+}
+
+func (c clock) Sleep(duration time.Duration) {
+	time.Sleep(duration)
 }

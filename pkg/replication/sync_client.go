@@ -47,7 +47,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 	}
 
 	// Authentication
-	secrets := dr.deps.KubeCli.CoreV1().Secrets(dr.apiObject.GetNamespace())
+	secrets := dr.deps.Client.Kubernetes().CoreV1().Secrets(dr.apiObject.GetNamespace())
 	insecureSkipVerify := true
 	tlsAuth := tasks.TLSAuthentication{}
 	clientAuthKeyfileSecretName, userSecretName, authJWTSecretName, tlsCASecretName, err := dr.getEndpointSecretNames(epSpec)
@@ -106,7 +106,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpec) (client.Endpoint, error) {
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
-		depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
+		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
 		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")
@@ -128,7 +128,7 @@ func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.Depl
 	}
 
 	// Fetch keyfile
-	secrets := dr.deps.KubeCli.CoreV1().Secrets(dr.apiObject.GetNamespace())
+	secrets := dr.deps.Client.Kubernetes().CoreV1().Secrets(dr.apiObject.GetNamespace())
 	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 	if err != nil {
 		return client.TLSAuthentication{}, errors.WithStack(err)
@@ -165,7 +165,7 @@ func (dr *DeploymentReplication) getEndpointSecretNames(epSpec api.EndpointSpec)
 	userSecretName = epSpec.Authentication.GetUserSecretName()
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
-		depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
+		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
 		depl, err := depls.Get(context.Background(), deploymentName, metav1.GetOptions{})
 		if err != nil {
 			dr.deps.Log.Debug().Err(err).Str("deployment", deploymentName).Msg("Failed to get deployment")

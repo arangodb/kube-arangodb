@@ -323,7 +323,7 @@ func TestEnsureImages(t *testing.T) {
 			}
 
 			// Create custom resource in the fake kubernetes API
-			_, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
+			_, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(testNamespace).Create(context.Background(), d.apiObject, metav1.CreateOptions{})
 			require.NoError(t, err)
 
 			// Act
@@ -339,7 +339,7 @@ func TestEnsureImages(t *testing.T) {
 			require.NoError(t, err)
 
 			if len(testCase.ExpectedPod.Spec.Containers) > 0 {
-				pods, err := d.deps.KubeCli.CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
+				pods, err := d.deps.Client.Kubernetes().CoreV1().Pods(testNamespace).List(context.Background(), metav1.ListOptions{})
 				require.NoError(t, err)
 				require.Len(t, pods.Items, 1)
 				require.Equal(t, testCase.ExpectedPod.Spec, pods.Items[0].Spec)

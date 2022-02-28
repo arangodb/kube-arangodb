@@ -26,10 +26,8 @@ import (
 	"math/rand"
 	"time"
 
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -44,7 +42,6 @@ import (
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
@@ -58,6 +55,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 )
 
@@ -111,10 +109,7 @@ type Config struct {
 
 type Dependencies struct {
 	LogService                 logging.Service
-	KubeCli                    kubernetes.Interface
-	KubeExtCli                 apiextensionsclient.Interface
-	KubeMonitoringCli          monitoringClient.MonitoringV1Interface
-	CRCli                      versioned.Interface
+	Client                     kclient.Client
 	EventRecorder              record.EventRecorder
 	LivenessProbe              *probe.LivenessProbe
 	DeploymentProbe            *probe.ReadyProbe
@@ -189,7 +184,7 @@ func (o *Operator) Run() {
 // onStartDeployment starts the deployment operator and run till given channel is closed.
 func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 	checkFn := func() error {
-		_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
+		_, err := o.Client.Arango().DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(depldef.ArangoDeploymentCRDName, checkFn)
@@ -199,7 +194,7 @@ func (o *Operator) onStartDeployment(stop <-chan struct{}) {
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
 func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
 	checkFn := func() error {
-		_, err := o.CRCli.DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
+		_, err := o.Client.Arango().DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(repldef.ArangoDeploymentReplicationCRDName, checkFn)
@@ -260,7 +255,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	switch operatorType {
 	case appsOperator:
 		checkFn := func() error {
-			_, err := o.CRCli.AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
+			_, err := o.Client.Arango().AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
 			return err
 		}
 		o.waitForCRD(apps.ArangoJobCRDName, checkFn)
@@ -270,7 +265,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 		}
 	case backupOperator:
 		checkFn := func() error {
-			_, err := o.CRCli.BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
+			_, err := o.Client.Arango().BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
 			return err
 		}
 		o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
@@ -280,7 +275,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 		}
 
 		checkFn = func() error {
-			_, err := o.CRCli.BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
+			_, err := o.Client.Arango().BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
 			return err
 		}
 		o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
@@ -290,7 +285,7 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 		}
 	case k2KClusterSyncOperator:
 		checkFn := func() error {
-			_, err := o.CRCli.DatabaseV1().ArangoClusterSynchronizations(o.Namespace).List(context.Background(), meta.ListOptions{})
+			_, err := o.Client.Arango().DatabaseV1().ArangoClusterSynchronizations(o.Namespace).List(context.Background(), meta.ListOptions{})
 			return err
 		}
 		o.waitForCRD(depldef.ArangoClusterSynchronizationCRDName, checkFn)

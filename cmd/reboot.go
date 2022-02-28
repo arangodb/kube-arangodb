@@ -34,11 +34,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	deplv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	extclient "github.com/arangodb/kube-arangodb/pkg/client"
 	acli "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -381,15 +381,14 @@ func cmdRebootRun(cmd *cobra.Command, args []string) {
 	podname := os.Getenv(constants.EnvOperatorPodName)
 
 	// Create kubernetes client
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		cliLog.Fatal().Msg("Failed to get client")
 	}
 
-	extcli, err := extclient.NewClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("failed to create arango extension client")
-	}
+	kubecli := client.Kubernetes()
+
+	extcli := client.Arango()
 
 	image, err := getMyImage(kubecli, namespace, podname)
 	if err != nil {

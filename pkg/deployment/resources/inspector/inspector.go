@@ -24,19 +24,16 @@ import (
 	"context"
 	"sync"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	core "k8s.io/api/core/v1"
-	policy "k8s.io/api/policy/v1beta1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-
 	"github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1beta1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SecretReadInterface has methods to work with Secret resources with ReadOnly mode.
@@ -44,12 +41,10 @@ type SecretReadInterface interface {
 	Get(ctx context.Context, name string, opts meta.GetOptions) (*core.Secret, error)
 }
 
-func NewInspector(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (inspectorInterface.Inspector, error) {
+func NewInspector(ctx context.Context, client kclient.Client, namespace string) (inspectorInterface.Inspector, error) {
 	i := &inspector{
 		namespace: namespace,
-		k:         k,
-		m:         m,
-		c:         c,
+		client:    client,
 	}
 
 	if err := i.Refresh(ctx); err != nil {
@@ -59,26 +54,24 @@ func NewInspector(ctx context.Context, k kubernetes.Interface, m monitoringClien
 	return i, nil
 }
 
-func newInspector(ctx context.Context, k kubernetes.Interface, m monitoringClient.MonitoringV1Interface, c versioned.Interface, namespace string) (*inspector, error) {
+func newInspector(ctx context.Context, client kclient.Client, namespace string) (*inspector, error) {
 	var i inspector
 
 	i.namespace = namespace
-	i.k = k
-	i.m = m
-	i.c = c
+	i.client = client
 
 	if err := util.RunParallel(15,
-		getVersionInfo(ctx, &i, k, namespace),
-		podsToMap(ctx, &i, k, namespace),
-		secretsToMap(ctx, &i, k, namespace),
-		pvcsToMap(ctx, &i, k, namespace),
-		servicesToMap(ctx, &i, k, namespace),
-		serviceAccountsToMap(ctx, &i, k, namespace),
-		podDisruptionBudgetsToMap(ctx, &i, k, namespace),
-		serviceMonitorsToMap(ctx, &i, m, namespace),
-		arangoMembersToMap(ctx, &i, c, namespace),
-		nodesToMap(ctx, &i, k),
-		arangoClusterSynchronizationsToMap(ctx, &i, c, namespace),
+		getVersionInfo(ctx, &i, client.Kubernetes(), namespace),
+		podsToMap(ctx, &i, client.Kubernetes(), namespace),
+		secretsToMap(ctx, &i, client.Kubernetes(), namespace),
+		pvcsToMap(ctx, &i, client.Kubernetes(), namespace),
+		servicesToMap(ctx, &i, client.Kubernetes(), namespace),
+		serviceAccountsToMap(ctx, &i, client.Kubernetes(), namespace),
+		podDisruptionBudgetsToMap(ctx, &i, client.Kubernetes(), namespace),
+		serviceMonitorsToMap(ctx, &i, client.Monitoring(), namespace),
+		arangoMembersToMap(ctx, &i, client.Arango(), namespace),
+		nodesToMap(ctx, &i, client.Kubernetes()),
+		arangoClusterSynchronizationsToMap(ctx, &i, client.Arango(), namespace),
 	); err != nil {
 		return nil, err
 	}
@@ -145,9 +138,7 @@ type inspector struct {
 
 	namespace string
 
-	k kubernetes.Interface
-	m monitoringClient.MonitoringV1Interface
-	c versioned.Interface
+	client kclient.Client
 
 	pods                 map[string]*core.Pod
 	secrets              map[string]*core.Secret
@@ -174,7 +165,7 @@ func (i *inspector) Refresh(ctx context.Context) error {
 		return errors.New("Inspector created from static data")
 	}
 
-	new, err := newInspector(ctx, i.k, i.m, i.c, i.namespace)
+	new, err := newInspector(ctx, i.client, i.namespace)
 	if err != nil {
 		return err
 	}

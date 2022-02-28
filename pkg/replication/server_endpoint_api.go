@@ -57,7 +57,7 @@ func (ep serverEndpoint) AuthUserSecretName() string {
 // TLSCACert returns a PEM encoded TLS CA certificate of the syncmaster at this endpoint
 func (ep serverEndpoint) TLSCACert() string {
 	tlsCASecretName := ep.getSpec().TLS.GetCASecretName()
-	secrets := ep.dr.deps.KubeCli.CoreV1().Secrets(ep.dr.apiObject.GetNamespace())
+	secrets := ep.dr.deps.Client.Kubernetes().CoreV1().Secrets(ep.dr.apiObject.GetNamespace())
 	caCert, err := k8sutil.GetCACertficateSecret(context.TODO(), secrets, tlsCASecretName)
 	if err != nil {
 		return ""
