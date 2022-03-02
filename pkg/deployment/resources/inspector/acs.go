@@ -38,17 +38,39 @@ func (i *inspector) GetArangoClusterSynchronizations() (arangoclustersynchroniza
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
-	if i.nodes == nil {
+	if i.acs == nil {
 		return nil, false
 	}
 
-	return i.acs, i.nodes.accessible
+	return i.acs, i.acs.accessible
 }
 
 type arangoClusterSynchronizationLoader struct {
 	accessible bool
 
 	acs map[string]*api.ArangoClusterSynchronization
+}
+
+func (a *arangoClusterSynchronizationLoader) FilterArangoClusterSynchronizations(filters ...arangoclustersynchronization.Filter) []*api.ArangoClusterSynchronization {
+	q := make([]*api.ArangoClusterSynchronization, 0, len(a.acs))
+
+	for _, obj := range a.acs {
+		if a.filterArangoClusterSynchronizations(obj, filters...) {
+			q = append(q, obj)
+		}
+	}
+
+	return q
+}
+
+func (a *arangoClusterSynchronizationLoader) filterArangoClusterSynchronizations(obj *api.ArangoClusterSynchronization, filters ...arangoclustersynchronization.Filter) bool {
+	for _, f := range filters {
+		if !f(obj) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (a *arangoClusterSynchronizationLoader) ArangoClusterSynchronizations() []*api.ArangoClusterSynchronization {
@@ -157,12 +179,12 @@ func getArangoClusterSynchronizations(ctx context.Context, k versioned.Interface
 	}
 
 	if acss.Continue != "" {
-		nextNodeLayer, err := getArangoClusterSynchronizations(ctx, k, namespace, acss.Continue)
+		newACSLoader, err := getArangoClusterSynchronizations(ctx, k, namespace, acss.Continue)
 		if err != nil {
 			return nil, err
 		}
 
-		return append(acss.Items, nextNodeLayer...), nil
+		return append(acss.Items, newACSLoader...), nil
 	}
 
 	return acss.Items, nil

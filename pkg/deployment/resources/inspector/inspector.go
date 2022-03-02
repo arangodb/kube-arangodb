@@ -179,6 +179,7 @@ func (i *inspector) Refresh(ctx context.Context) error {
 	i.serviceMonitors = new.serviceMonitors
 	i.arangoMembers = new.arangoMembers
 	i.nodes = new.nodes
+	i.acs = new.acs
 	i.versionInfo = new.versionInfo
 
 	return nil

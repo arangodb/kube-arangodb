@@ -41,10 +41,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -84,7 +85,7 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 	var updated *api.ArangoDeployment
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctxReconciliation, func(ctxChild context.Context) error {
 		var err error
-		updated, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, metav1.GetOptions{})
+		updated, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace()).Get(ctxChild, deploymentName, meta.GetOptions{})
 		return err
 	})
 	if k8sutil.IsNotFound(err) {
@@ -172,6 +173,10 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 			return minInspectionInterval, nil // Retry ASAP
 		}
+	}
+
+	if err := acs.Inspect(ctx, d.apiObject, d.deps.Client, cachedStatus); err != nil {
+		d.deps.Log.Warn().Err(err).Msgf("Unable to handle ACS objects")
 	}
 
 	// Cleanup terminated pods on the beginning of loop

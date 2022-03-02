@@ -20,5 +20,17 @@
 
 package v2alpha1
 
+import "k8s.io/apimachinery/pkg/types"
+
 type ArangoClusterSynchronizationStatus struct {
+	Deployment *ArangoClusterSynchronizationDeploymentStatus `json:"deployment,omitempty"`
+	KubeConfig *ArangoClusterSynchronizationKubeConfigStatus `json:"kubeconfig,omitempty"`
+}
+
+type ArangoClusterSynchronizationDeploymentStatus struct {
+	UID types.UID `json:"UID"`
+}
+
+type ArangoClusterSynchronizationKubeConfigStatus struct {
+	Conditions ConditionList `json:"conditions,omitempty"`
 }

@@ -21,4 +21,11 @@
 package v2alpha1
 
 type ArangoClusterSynchronizationSpec struct {
+	DeploymentName *string                                     `json:"deploymentName,omitempty"`
+	KubeConfig     *ArangoClusterSynchronizationKubeConfigSpec `json:"kubeconfig,omitempty"`
+}
+
+type ArangoClusterSynchronizationKubeConfigSpec struct {
+	SecretName string `json:"secretName"`
+	Namespace  string `json:"namespace"`
 }

@@ -16,25 +16,19 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//
+//go:build !enterprise
+// +build !enterprise
 
-package arangoclustersynchronization
+package acs
 
 import (
+	"context"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-type Loader interface {
-	GetArangoClusterSynchronizations() (Inspector, bool)
+func Inspect(ctx context.Context, deployment *api.ArangoDeployment, client kclient.Client, cachedStatus inspectorInterface.Inspector) error {
+	return nil
 }
-
-type Inspector interface {
-	ArangoClusterSynchronizations() []*api.ArangoClusterSynchronization
-	ArangoClusterSynchronization(name string) (*api.ArangoClusterSynchronization, bool)
-	FilterArangoClusterSynchronizations(filters ...Filter) []*api.ArangoClusterSynchronization
-	IterateArangoClusterSynchronizations(action Action, filters ...Filter) error
-	ArangoClusterSynchronizationReadInterface() ReadInterface
-}
-
-type Filter func(acs *api.ArangoClusterSynchronization) bool
-type Action func(acs *api.ArangoClusterSynchronization) error

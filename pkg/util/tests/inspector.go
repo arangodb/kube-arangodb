@@ -18,15 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package tests
 
-type ArangoClusterSynchronizationSpec struct {
-	DeploymentName string                                      `json:"deploymentName,omitempty"`
-	KubeConfig     *ArangoClusterSynchronizationKubeConfigSpec `json:"kubeconfig,omitempty"`
-}
+import (
+	"testing"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
+	"context"
+	"github.com/stretchr/testify/require"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+)
 
-type ArangoClusterSynchronizationKubeConfigSpec struct {
-	SecretName string `json:"secretName"`
-	SecretKey  string `json:"secretKey"`
-	Namespace  string `json:"namespace"`
+const FakeNamespace = "fake"
+
+func NewInspector(t *testing.T, c kclient.Client) inspectorInterface.Inspector {
+	i, err := inspector.NewInspector(context.Background(), c, FakeNamespace)
+	require.NoError(t, err)
+
+	return i
 }

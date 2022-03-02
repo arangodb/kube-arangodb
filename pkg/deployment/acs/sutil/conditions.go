@@ -18,15 +18,11 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package sutil
 
-type ArangoClusterSynchronizationSpec struct {
-	DeploymentName string                                      `json:"deploymentName,omitempty"`
-	KubeConfig     *ArangoClusterSynchronizationKubeConfigSpec `json:"kubeconfig,omitempty"`
-}
+import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
-type ArangoClusterSynchronizationKubeConfigSpec struct {
-	SecretName string `json:"secretName"`
-	SecretKey  string `json:"secretKey"`
-	Namespace  string `json:"namespace"`
-}
+const (
+	DeploymentReadyCondition     api.ConditionType = "DeploymentReady"
+	KubernetesConnectedCondition api.ConditionType = "KubernetesConnected"
+)
