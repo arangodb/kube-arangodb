@@ -24,11 +24,15 @@ import (
 	"sync"
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	versionedFake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/dchest/uniuri"
 	"github.com/pkg/errors"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	monitoringFake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionsclientFake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/client-go/kubernetes"
+	kubernetesFake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
@@ -164,6 +168,10 @@ type Client interface {
 	KubernetesExtensions() apiextensionsclient.Interface
 	Arango() versioned.Interface
 	Monitoring() monitoring.Interface
+}
+
+func NewFakeClient() Client {
+	return NewStaticClient(kubernetesFake.NewSimpleClientset(), apiextensionsclientFake.NewSimpleClientset(), versionedFake.NewSimpleClientset(), monitoringFake.NewSimpleClientset())
 }
 
 func NewStaticClient(kubernetes kubernetes.Interface, kubernetesExtensions apiextensionsclient.Interface, arango versioned.Interface, monitoring monitoring.Interface) Client {

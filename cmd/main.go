@@ -61,6 +61,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
@@ -120,6 +121,9 @@ var (
 		singleMode bool
 		scope      string
 	}
+	crdOptions struct {
+		install bool
+	}
 	operatorKubernetesOptions struct {
 		maxBatchSize int64
 
@@ -178,6 +182,7 @@ func init() {
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
 	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
+	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	features.Init(&cmdMain)
 }
@@ -273,6 +278,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 		client, ok := kclient.GetDefaultFactory().Client()
 		if !ok {
 			cliLog.Fatal().Msg("Failed to get client")
+		}
+
+		if crdOptions.install {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			crd.EnsureCRD(ctx, logService.MustGetLogger("crd"), client)
 		}
 
 		secrets := client.Kubernetes().CoreV1().Secrets(namespace)

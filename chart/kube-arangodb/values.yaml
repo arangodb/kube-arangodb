@@ -35,6 +35,8 @@ operator:
   allowChaos: false
 
   nodeSelector: {}
+  
+  enableCRDManagement: true
 
   features:
     deployment: true
