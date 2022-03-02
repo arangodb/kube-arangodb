@@ -33,7 +33,7 @@ import (
 // Returns the PVC's that need a volume.
 func (ls *LocalStorage) inspectPVCs() ([]v1.PersistentVolumeClaim, error) {
 	ns := ls.apiObject.GetNamespace()
-	list, err := ls.deps.KubeCli.CoreV1().PersistentVolumeClaims(ns).List(context.Background(), metav1.ListOptions{})
+	list, err := ls.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(ns).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

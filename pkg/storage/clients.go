@@ -37,7 +37,7 @@ func (ls *LocalStorage) createProvisionerClients() ([]provisioner.API, error) {
 	// Find provisioner endpoints
 	ns := ls.apiObject.GetNamespace()
 	listOptions := k8sutil.LocalStorageListOpt(ls.apiObject.GetName(), roleProvisioner)
-	items, err := ls.deps.KubeCli.CoreV1().Endpoints(ns).List(context.Background(), listOptions)
+	items, err := ls.deps.Client.Kubernetes().CoreV1().Endpoints(ns).List(context.Background(), listOptions)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

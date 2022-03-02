@@ -47,7 +47,7 @@ var (
 func (o *Operator) runDeploymentReplications(stop <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		o.log,
-		o.Dependencies.CRCli.ReplicationV1().RESTClient(),
+		o.Dependencies.Client.Arango().ReplicationV1().RESTClient(),
 		replication2.ArangoDeploymentReplicationResourcePlural,
 		o.Config.Namespace,
 		&api.ArangoDeploymentReplication{},
@@ -207,8 +207,7 @@ func (o *Operator) makeDeploymentReplicationConfigAndDeps(apiObject *api.ArangoD
 		Log: o.Dependencies.LogService.MustGetLogger(logging.LoggerNameDeploymentReplication).With().
 			Str("deployment-replication", apiObject.GetName()).
 			Logger(),
-		KubeCli:       o.Dependencies.KubeCli,
-		CRCli:         o.Dependencies.CRCli,
+		Client:        o.Client,
 		EventRecorder: o.Dependencies.EventRecorder,
 	}
 	return cfg, deps

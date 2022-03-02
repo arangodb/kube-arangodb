@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Improve Kubernetes clientsets management
 - Migrate storage-operator CustomResourceDefinition apiVersion to apiextensions.k8s.io/v1
 
 ## [1.2.8](https://github.com/arangodb/kube-arangodb/tree/1.2.8) (2022-02-24)

@@ -45,7 +45,7 @@ func (d *Deployment) listenForPodEvents(stopCh <-chan struct{}) {
 
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
-		d.deps.KubeCli.CoreV1().RESTClient(),
+		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"pods",
 		d.apiObject.GetNamespace(),
 		&v1.Pod{},
@@ -87,7 +87,7 @@ func (d *Deployment) listenForPVCEvents(stopCh <-chan struct{}) {
 
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
-		d.deps.KubeCli.CoreV1().RESTClient(),
+		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"persistentvolumeclaims",
 		d.apiObject.GetNamespace(),
 		&v1.PersistentVolumeClaim{},
@@ -129,7 +129,7 @@ func (d *Deployment) listenForSecretEvents(stopCh <-chan struct{}) {
 
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
-		d.deps.KubeCli.CoreV1().RESTClient(),
+		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"secrets",
 		d.apiObject.GetNamespace(),
 		&v1.Secret{},
@@ -172,7 +172,7 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
-		d.deps.KubeCli.CoreV1().RESTClient(),
+		d.deps.Client.Kubernetes().CoreV1().RESTClient(),
 		"services",
 		d.apiObject.GetNamespace(),
 		&v1.Service{},
@@ -201,7 +201,7 @@ func (d *Deployment) listenForServiceEvents(stopCh <-chan struct{}) {
 func (d *Deployment) listenForCRDEvents(stopCh <-chan struct{}) {
 	rw := k8sutil.NewResourceWatcher(
 		d.deps.Log,
-		d.deps.KubeExtCli.ApiextensionsV1().RESTClient(),
+		d.deps.Client.KubernetesExtensions().ApiextensionsV1().RESTClient(),
 		"customresourcedefinitions",
 		"",
 		&crdv1.CustomResourceDefinition{},

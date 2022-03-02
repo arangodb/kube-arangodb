@@ -34,10 +34,9 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	coreosv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	clientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 )
 
 func LabelsForExporterServiceMonitor(name string, obj deploymentApi.DeploymentSpec) map[string]string {
@@ -58,27 +57,6 @@ func LabelsForExporterServiceMonitorSelector(name string) map[string]string {
 		k8sutil.LabelKeyArangoDeployment: name,
 		k8sutil.LabelKeyApp:              k8sutil.AppName,
 	}
-}
-
-// EnsureMonitoringClient returns a client for looking at ServiceMonitors
-// and keeps it in the Resources.
-func (r *Resources) EnsureMonitoringClient() (*clientv1.MonitoringV1Client, error) {
-	if r.monitoringClient != nil {
-		return r.monitoringClient, nil
-	}
-
-	// Make a client:
-	var restConfig *rest.Config
-	restConfig, err := k8sutil.NewKubeConfig()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	mClient, err := clientv1.NewForConfig(restConfig)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	r.monitoringClient = mClient
-	return mClient, nil
 }
 
 func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
@@ -158,14 +136,16 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context) error {
 	wantMetrics := spec.Metrics.IsEnabled()
 	serviceMonitorName := k8sutil.CreateExporterClientServiceName(deploymentName)
 
-	mClient, err := r.EnsureMonitoringClient()
-	if err != nil {
-		log.Error().Err(err).Msgf("Cannot get a monitoring client.")
-		return errors.WithStack(err)
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		log.Error().Msgf("Cannot get a monitoring client.")
+		return errors.Newf("Client not initialised")
 	}
 
+	mClient := client.Monitoring()
+
 	// Check if ServiceMonitor already exists
-	serviceMonitors := mClient.ServiceMonitors(ns)
+	serviceMonitors := mClient.MonitoringV1().ServiceMonitors(ns)
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 	servMon, err := serviceMonitors.Get(ctxChild, serviceMonitorName, metav1.GetOptions{})

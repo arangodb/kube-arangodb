@@ -35,7 +35,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,11 +42,12 @@ import (
 	"github.com/arangodb-helper/go-certificates"
 	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/v2/connection"
-	v12 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	extclient "github.com/arangodb/kube-arangodb/pkg/client"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 const ArgDeploymentName = "deployment-name"
@@ -109,12 +109,12 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != v12.DeploymentModeCluster {
+	if d.Spec.GetMode() != api.DeploymentModeCluster {
 		cliLog.Fatal().Msgf("agency state does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
 			d.GetName())
 	}
 
-	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), v12.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
+	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
 	endpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsName)
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
@@ -122,7 +122,7 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 		cliLog.Fatal().Err(err).Msg("failed to get leader ID")
 	}
 
-	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), v12.ServerGroupAgents.AsRole(), leaderID)
+	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
 	leaderEndpoint := getArangoEndpoint(d.Spec.IsSecure(), dnsLeaderName)
 	conn = createClient([]string{leaderEndpoint}, certCA, auth, connection.PlainText)
 	body, err := getAgencyState(ctx, conn)
@@ -145,7 +145,7 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 		cliLog.Fatal().Err(err).Msg("failed to create basic data for the connection")
 	}
 
-	if d.Spec.GetMode() != v12.DeploymentModeCluster {
+	if d.Spec.GetMode() != api.DeploymentModeCluster {
 		cliLog.Fatal().Msgf("agency dump does not work for the \"%s\" deployment \"%s\"", d.Spec.GetMode(),
 			d.GetName())
 	}
@@ -181,7 +181,7 @@ func getAgencyState(ctx context.Context, conn connection.Connection) (io.ReadClo
 
 // getDeploymentAndCredentials returns deployment and necessary credentials to communicate with ArangoDB pods.
 func getDeploymentAndCredentials(ctx context.Context,
-	deploymentName string) (d v12.ArangoDeployment, certCA *x509.CertPool, auth connection.Authentication, err error) {
+	deploymentName string) (d api.ArangoDeployment, certCA *x509.CertPool, auth connection.Authentication, err error) {
 
 	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
@@ -189,11 +189,13 @@ func getDeploymentAndCredentials(ctx context.Context,
 		return
 	}
 
-	kubeCli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		err = errors.WithMessage(err, "failed to create Kubernetes client")
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		err = errors.Newf("Client not initialised")
 		return
 	}
+
+	kubeCli := client.Kubernetes()
 
 	d, err = getDeployment(ctx, namespace, deploymentName)
 	if err != nil {
@@ -327,25 +329,27 @@ func getCACertificate(ctx context.Context, secrets secret.ReadInterface, name st
 // getDeployment returns ArangoDeployment within the provided namespace.
 // If there are more than two deployments within one namespace then
 // deployment name must be provided, otherwise error is returned.
-func getDeployment(ctx context.Context, namespace, deplName string) (v12.ArangoDeployment, error) {
-	extCli, err := extclient.NewClient()
-	if err != nil {
-		return v12.ArangoDeployment{}, errors.WithMessage(err, "failed to create Arango extension client")
+func getDeployment(ctx context.Context, namespace, deplName string) (api.ArangoDeployment, error) {
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return api.ArangoDeployment{}, errors.Newf("Client not initialised")
 	}
+
+	extCli := client.Arango()
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
 	deployments, err := extCli.DatabaseV1().ArangoDeployments(namespace).List(ctxChild, metav1.ListOptions{})
 	if err != nil {
-		if v12.IsNotFound(err) {
-			return v12.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")
+		if api.IsNotFound(err) {
+			return api.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")
 		}
-		return v12.ArangoDeployment{}, errors.WithMessage(err, "failed to get deployments")
+		return api.ArangoDeployment{}, errors.WithMessage(err, "failed to get deployments")
 	}
 
 	if len(deployments.Items) == 0 {
-		return v12.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")
+		return api.ArangoDeployment{}, errors.WithMessage(err, "there are no deployments")
 	}
 
 	if len(deplName) > 0 {
@@ -356,7 +360,7 @@ func getDeployment(ctx context.Context, namespace, deplName string) (v12.ArangoD
 			}
 		}
 
-		return v12.ArangoDeployment{}, errors.New(
+		return api.ArangoDeployment{}, errors.New(
 			fmt.Sprintf("the deployment \"%s\" does not exist in the namespace \"%s\"", deplName, namespace))
 	}
 
@@ -370,7 +374,7 @@ func getDeployment(ctx context.Context, namespace, deplName string) (v12.ArangoD
 		message += fmt.Sprintf(" %s", item.GetName())
 	}
 
-	return v12.ArangoDeployment{}, errors.New(message)
+	return api.ArangoDeployment{}, errors.New(message)
 }
 
 // getInterruptionContext returns context which will be cancelled when the process is interrupted.

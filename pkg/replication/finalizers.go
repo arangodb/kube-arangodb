@@ -78,7 +78,7 @@ func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.Arang
 	// Remove finalizers (if needed)
 	if len(removalList) > 0 {
 		ignoreNotFound := false
-		if err := removeDeploymentReplicationFinalizers(log, dr.deps.CRCli, p, removalList, ignoreNotFound); err != nil {
+		if err := removeDeploymentReplicationFinalizers(log, dr.deps.Client.Arango(), p, removalList, ignoreNotFound); err != nil {
 			log.Debug().Err(err).Msg("Failed to update deployment replication (to remove finalizers)")
 			return errors.WithStack(err)
 		}
@@ -97,7 +97,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 	// Inspect deployment deletion state in source
 	abort := dr.status.CancelFailures > maxCancelFailures
-	depls := dr.deps.CRCli.DatabaseV1().ArangoDeployments(p.GetNamespace())
+	depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(p.GetNamespace())
 	if name := p.Spec.Source.GetDeploymentName(); name != "" {
 		depl, err := depls.Get(context.Background(), name, metav1.GetOptions{})
 		if k8sutil.IsNotFound(err) {

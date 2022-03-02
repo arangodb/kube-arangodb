@@ -41,8 +41,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
@@ -51,9 +49,7 @@ import (
 
 	"github.com/arangodb/arangosync-client/client"
 	"github.com/rs/zerolog"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -62,9 +58,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resilience"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
 
@@ -80,12 +76,10 @@ type Config struct {
 
 // Dependencies holds dependent services for a Deployment
 type Dependencies struct {
-	Log               zerolog.Logger
-	KubeCli           kubernetes.Interface
-	KubeExtCli        apiextensionsclient.Interface
-	KubeMonitoringCli monitoringClient.MonitoringV1Interface
-	DatabaseCRCli     versioned.Interface
-	EventRecorder     record.EventRecorder
+	Log           zerolog.Logger
+	EventRecorder record.EventRecorder
+
+	Client kclient.Client
 }
 
 // deploymentEventType strongly typed type of event
@@ -333,7 +327,7 @@ func (d *Deployment) run() {
 	for {
 		select {
 		case <-d.stopCh:
-			cachedStatus, err := inspector.NewInspector(context.Background(), d.getKubeCli(), d.getMonitoringV1Cli(), d.getArangoCli(), d.GetNamespace())
+			cachedStatus, err := inspector.NewInspector(context.Background(), d.deps.Client, d.GetNamespace())
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get resources")
 			}
@@ -386,7 +380,8 @@ func (d *Deployment) handleArangoDeploymentUpdatedEvent(ctx context.Context) err
 	// Get the most recent version of the deployment from the API server
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	current, err := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
+
+	current, err := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace()).Get(ctxChild, d.apiObject.GetName(), meta.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to get current version of deployment from API server")
 		if k8sutil.IsNotFound(err) {
@@ -470,7 +465,7 @@ func (d *Deployment) updateCRStatus(ctx context.Context, force ...bool) error {
 	}
 
 	// Send update to API server
-	depls := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.GetNamespace())
+	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
 	attempt := 0
 	for {
 		attempt++
@@ -532,7 +527,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 		var newAPIObject *api.ArangoDeployment
 		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			var err error
-			newAPIObject, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, meta.UpdateOptions{})
+			newAPIObject, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(ns).Update(ctxChild, update, meta.UpdateOptions{})
 
 			return err
 		})
@@ -548,7 +543,7 @@ func (d *Deployment) updateCRSpec(ctx context.Context, newSpec api.DeploymentSpe
 
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				current, err = d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), meta.GetOptions{})
+				current, err = d.deps.Client.Arango().DatabaseV1().ArangoDeployments(ns).Get(ctxChild, update.GetName(), meta.GetOptions{})
 
 				return err
 			})
@@ -580,9 +575,9 @@ func (d *Deployment) isOwnerOf(obj meta.Object) bool {
 func (d *Deployment) lookForServiceMonitorCRD() {
 	var err error
 	if d.GetScope().IsNamespaced() {
-		_, err = d.deps.KubeMonitoringCli.ServiceMonitors(d.GetNamespace()).List(context.Background(), meta.ListOptions{})
+		_, err = d.deps.Client.Monitoring().MonitoringV1().ServiceMonitors(d.GetNamespace()).List(context.Background(), meta.ListOptions{})
 	} else {
-		_, err = d.deps.KubeExtCli.ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
+		_, err = d.deps.Client.KubernetesExtensions().ApiextensionsV1().CustomResourceDefinitions().Get(context.Background(), "servicemonitors.monitoring.coreos.com", meta.GetOptions{})
 	}
 	log := d.deps.Log
 	log.Debug().Msgf("Looking for ServiceMonitor CRD...")
@@ -630,7 +625,7 @@ func (d *Deployment) ApplyPatch(ctx context.Context, p ...patch.Item) error {
 		return err
 	}
 
-	c := d.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
+	c := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.apiObject.GetNamespace())
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()

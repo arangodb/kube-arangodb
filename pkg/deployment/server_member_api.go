@@ -61,7 +61,7 @@ func (m member) PVCName() string {
 
 func (m member) PVName() string {
 	if status, found := m.status(); found && status.PersistentVolumeClaimName != "" {
-		pvcs := m.d.deps.KubeCli.CoreV1().PersistentVolumeClaims(m.d.Namespace())
+		pvcs := m.d.deps.Client.Kubernetes().CoreV1().PersistentVolumeClaims(m.d.Namespace())
 		if pvc, err := pvcs.Get(context.Background(), status.PersistentVolumeClaimName, metav1.GetOptions{}); err == nil {
 			return pvc.Spec.VolumeName
 		}

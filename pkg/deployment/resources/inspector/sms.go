@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	monitoringGroup "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	monitoringClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -98,7 +98,7 @@ func (s serviceMonitorReadInterface) Get(ctx context.Context, name string, opts 
 	}
 }
 
-func serviceMonitorsToMap(ctx context.Context, inspector *inspector, m monitoringClient.MonitoringV1Interface, namespace string) func() error {
+func serviceMonitorsToMap(ctx context.Context, inspector *inspector, m monitoringClient.Interface, namespace string) func() error {
 	return func() error {
 		serviceMonitors := getServiceMonitors(ctx, m, namespace, "")
 
@@ -119,10 +119,10 @@ func serviceMonitorsToMap(ctx context.Context, inspector *inspector, m monitorin
 	}
 }
 
-func getServiceMonitors(ctx context.Context, m monitoringClient.MonitoringV1Interface, namespace, cont string) []*monitoring.ServiceMonitor {
+func getServiceMonitors(ctx context.Context, m monitoringClient.Interface, namespace, cont string) []*monitoring.ServiceMonitor {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	serviceMonitors, err := m.ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
+	serviceMonitors, err := m.MonitoringV1().ServiceMonitors(namespace).List(ctxChild, meta.ListOptions{
 		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
 		Continue: cont,
 	})

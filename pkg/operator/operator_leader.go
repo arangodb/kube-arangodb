@@ -49,7 +49,7 @@ import (
 // is detected.
 func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
-	kubecli := o.Dependencies.KubeCli
+	kubecli := o.Dependencies.Client.Kubernetes()
 	log := o.log.With().Str("lock-name", lockName).Logger()
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
@@ -122,7 +122,7 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 // events will be added to.
 func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Object {
 	ns := o.Config.Namespace
-	kubecli := o.Dependencies.KubeCli
+	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.With().Str("pod-name", o.Config.PodName).Logger()
 	pod, err := pods.Get(context.Background(), o.Config.PodName, metav1.GetOptions{})
@@ -155,7 +155,7 @@ func (o *Operator) getLeaderElectionEventTarget(log zerolog.Logger) runtime.Obje
 // setRoleLabel sets a label with key `role` and given value in the pod metadata.
 func (o *Operator) setRoleLabel(log zerolog.Logger, label, role string) error {
 	ns := o.Config.Namespace
-	kubecli := o.Dependencies.KubeCli
+	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)
 	log = log.With().Str("pod-name", o.Config.PodName).Logger()
 	op := func() error {

@@ -205,7 +205,7 @@ func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectS
 	apiObject := ci.depl.apiObject
 	ctxChild, cancel = globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
-	current, err := ci.depl.deps.DatabaseCRCli.DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
+	current, err := ci.depl.deps.Client.Arango().DatabaseV1().ArangoDeployments(apiObject.Namespace).Get(ctxChild, apiObject.Name, metav1.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

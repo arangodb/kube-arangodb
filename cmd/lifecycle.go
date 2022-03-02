@@ -40,6 +40,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 var (
@@ -110,12 +111,12 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 	}
 
 	// Create kubernetes client
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		cliLog.Fatal().Msg("Client not initialised")
 	}
 
-	pods := kubecli.CoreV1().Pods(namespace)
+	pods := client.Kubernetes().CoreV1().Pods(namespace)
 	recentErrors := 0
 	for {
 		p, err := pods.Get(context.Background(), name, metav1.GetOptions{})
@@ -199,12 +200,12 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 	}
 
 	// Create kubernetes client
-	kubecli, err := k8sutil.NewKubeClient()
-	if err != nil {
-		cliLog.Fatal().Err(err).Msg("Failed to create Kubernetes client")
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		cliLog.Fatal().Msg("Client not initialised")
 	}
 
-	pods := kubecli.CoreV1().Pods(namespace)
+	pods := client.Kubernetes().CoreV1().Pods(namespace)
 
 	recentErrors := 0
 
