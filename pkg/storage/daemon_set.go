@@ -93,7 +93,8 @@ func (ls *LocalStorage) ensureDaemonSet(apiObject *api.ArangoLocalStorage) error
 				Containers: []core.Container{
 					c,
 				},
-				NodeSelector: apiObject.Spec.NodeSelector,
+				NodeSelector:     apiObject.Spec.NodeSelector,
+				ImagePullSecrets: ls.imagePullSecrets,
 			},
 		},
 	}
