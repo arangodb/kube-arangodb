@@ -29,16 +29,17 @@ import (
 )
 
 // getMyImage fetched the docker image from my own pod
-func (l *LocalStorage) getMyImage() (string, v1.PullPolicy, error) {
+func (l *LocalStorage) getMyImage() (string, v1.PullPolicy, []v1.LocalObjectReference, error) {
 	log := l.deps.Log
 	ns := l.config.Namespace
 
 	p, err := l.deps.Client.Kubernetes().CoreV1().Pods(ns).Get(context.Background(), l.config.PodName, metav1.GetOptions{})
 	if err != nil {
 		log.Debug().Err(err).Str("pod-name", l.config.PodName).Msg("Failed to get my own pod")
-		return "", "", errors.WithStack(err)
+		return "", "", nil, errors.WithStack(err)
 	}
 
 	c := p.Spec.Containers[0]
-	return c.Image, c.ImagePullPolicy, nil
+
+	return c.Image, c.ImagePullPolicy, p.Spec.ImagePullSecrets, nil
 }

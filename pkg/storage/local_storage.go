@@ -90,10 +90,12 @@ type LocalStorage struct {
 	stopCh  chan struct{}
 	stopped int32
 
-	image           string
-	imagePullPolicy v1.PullPolicy
-	inspectTrigger  trigger.Trigger
-	pvCleaner       *pvCleaner
+	image            string
+	imagePullPolicy  v1.PullPolicy
+	imagePullSecrets []v1.LocalObjectReference
+
+	inspectTrigger trigger.Trigger
+	pvCleaner      *pvCleaner
 }
 
 // New creates a new LocalStorage from the given API object.
@@ -160,13 +162,14 @@ func (ls *LocalStorage) run() {
 	//log := ls.deps.Log
 
 	// Find out my image
-	image, pullPolicy, err := ls.getMyImage()
+	image, pullPolicy, pullSecrets, err := ls.getMyImage()
 	if err != nil {
 		ls.failOnError(err, "Failed to get my own image")
 		return
 	}
 	ls.image = image
 	ls.imagePullPolicy = pullPolicy
+	ls.imagePullSecrets = pullSecrets
 
 	// Set state
 	if ls.status.State == api.LocalStorageStateNone {

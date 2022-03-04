@@ -4,6 +4,7 @@
 - (Feature) Improve Kubernetes clientsets management
 - Migrate storage-operator CustomResourceDefinition apiVersion to apiextensions.k8s.io/v1
 - (Feature) Add CRD Installer
+- (Bugfix) Assign imagePullSecrets to LocalStorage
 
 ## [1.2.8](https://github.com/arangodb/kube-arangodb/tree/1.2.8) (2022-02-24)
 - Do not check License V2 on Community images
