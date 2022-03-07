@@ -9,17 +9,17 @@ replace (
 	github.com/stretchr/testify => github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
-	k8s.io/api => k8s.io/api v0.19.8
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.8
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.8
-	k8s.io/apiserver => k8s.io/apiserver v0.19.8
-	k8s.io/client-go => k8s.io/client-go v0.19.8
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.8
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.19.8
+	k8s.io/api => k8s.io/api v0.21.10
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.10
+	k8s.io/apimachinery => k8s.io/apimachinery v0.21.10
+	k8s.io/apiserver => k8s.io/apiserver v0.21.10
+	k8s.io/client-go => k8s.io/client-go v0.21.10
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.21.10
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.21.10
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
-	k8s.io/component-base => k8s.io/component-base v0.19.8
-	k8s.io/kubernetes => k8s.io/kubernetes v0.19.8
-	k8s.io/metrics => k8s.io/metrics v0.19.8
+	k8s.io/component-base => k8s.io/component-base v0.21.10
+	k8s.io/kubernetes => k8s.io/kubernetes v0.21.10
+	k8s.io/metrics => k8s.io/metrics v0.21.10
 )
 
 require (
@@ -48,14 +48,17 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	k8s.io/api v0.19.8
+	k8s.io/api v0.21.10
 	k8s.io/apiextensions-apiserver v0.18.3
-	k8s.io/apimachinery v0.19.8
+	k8s.io/apimachinery v0.21.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 )
 
-require golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+require (
+	github.com/arangodb/rebalancer v0.1.1
+	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
+)
 
 require (
 	github.com/arangodb/go-velocypack v0.0.0-20200318135517-5af53c29c67e // indirect
@@ -64,7 +67,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-logr/logr v0.2.0 // indirect
+	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.8.0 // indirect
@@ -91,22 +94,22 @@ require (
 	github.com/pavel-v-chernykh/keystore-go v2.1.0+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/common v0.10.0 // indirect
-	github.com/prometheus/procfs v0.1.3 // indirect
+	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/klog/v2 v2.2.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20200805222855-6aeccd4b50c6 // indirect
-	k8s.io/utils v0.0.0-20200729134348-d5654de09c73 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.0.1 // indirect
+	k8s.io/klog/v2 v2.9.0 // indirect
+	k8s.io/kube-openapi v0.0.0-20211110012726-3cc51fd1e909 // indirect
+	k8s.io/utils v0.0.0-20210521133846-da695404a2bc // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
