@@ -28,16 +28,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed agency_dump.3.6.json
+//go:embed testdata/agency_dump.3.6.json
 var agencyDump36 []byte
 
-//go:embed agency_dump.3.7.json
+//go:embed testdata/agency_dump.3.7.json
 var agencyDump37 []byte
 
-//go:embed agency_dump.3.8.json
+//go:embed testdata/agency_dump.3.8.json
 var agencyDump38 []byte
 
-//go:embed agency_dump.3.9.json
+//go:embed testdata/agency_dump.3.9.json
 var agencyDump39 []byte
 
 var (
@@ -56,19 +56,9 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 
 			require.NoError(t, json.Unmarshal(data, &s))
 
-			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) {
+			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current ShardServers) {
 				require.EqualValues(t, 1, info.GetWriteConcern(0))
 			})
-
-			require.True(t, s.Agency.Arango.IsDBServerInSync(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) (invalidateInSync, skip bool) {
-				// Ensure we are in plan
-
-				if !plan.Contains("unknown") {
-					return false, true
-				}
-
-				return false, false
-			}))
 		})
 	}
 }

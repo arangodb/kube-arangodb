@@ -383,14 +383,6 @@ func (c *testContext) GetExpectedPodArguments(apiObject meta.Object, deplSpec ap
 	return nil // not implemented
 }
 
-// GetShardSyncStatus returns true if all shards are in sync
-func (c *testContext) GetShardSyncStatus() bool {
-	return true
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (c *testContext) InvalidateSyncStatus() {}
-
 // GetStatus returns the current status of the deployment
 func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {
 	return c.ArangoDeployment.Status, 0

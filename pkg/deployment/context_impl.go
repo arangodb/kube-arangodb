@@ -542,16 +542,6 @@ func (d *Deployment) DeleteSecret(secretName string) error {
 	return nil
 }
 
-// GetShardSyncStatus returns true if all shards are in sync
-func (d *Deployment) GetShardSyncStatus() bool {
-	return d.resources.GetShardSyncStatus()
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (d *Deployment) InvalidateSyncStatus() {
-	d.resources.InvalidateSyncStatus()
-}
-
 func (d *Deployment) DisableScalingCluster(ctx context.Context) error {
 	return d.clusterScalingIntegration.DisableScalingCluster(ctx)
 }

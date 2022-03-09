@@ -376,7 +376,7 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 	return "", false
 }
 
-// clusterReadyForUpgrade returns true if the cluster is ready for the next update, that is:
+// groupReadyForRestart returns true if the cluster is ready for the next update, that is:
 // 	- all shards are in sync
 // 	- all members are ready and fine
 func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) bool {
@@ -401,8 +401,11 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 
 	switch group {
 	case api.ServerGroupDBServers:
-		// TODO: Improve shard placement discovery and keep WriteConcern
-		return context.GetShardSyncStatus() && status.Members.MembersOfGroup(group).AllMembersServing()
+		agencyState, ok := context.GetAgencyCache()
+		if !ok {
+			return false
+		}
+		return agencyState.IsDBServerReadyToRestart(member.ID) && status.Members.MembersOfGroup(group).AllMembersServing()
 	default:
 		// In case of agents we can kill only one agent at same time
 		return status.Members.MembersOfGroup(group).AllMembersServing()

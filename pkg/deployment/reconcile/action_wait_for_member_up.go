@@ -188,9 +188,6 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 		return false, false, nil
 	}
 
-	if a.action.Group == api.ServerGroupDBServers {
-		a.actionCtx.InvalidateSyncStatus()
-	}
 	return true, false, nil
 }
 

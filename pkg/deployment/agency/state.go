@@ -120,41 +120,69 @@ func (d *StateExists) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-type CollectionIterator func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard)
+type CollectionIterator func(db, col string, planCollection *StatePlanCollection, shard string, plan ShardServers, current ShardServers)
 
 func (s State) IterateOverCollections(i CollectionIterator) {
 	for db, collections := range s.Plan.Collections {
 		for collection, details := range collections {
 			for shard, shardDetails := range details.Shards {
-				s := s.Current.Collections[db][collection][shard]
+				currShard := s.Current.Collections[db][collection][shard]
 
-				i(db, collection, &details, shard, shardDetails, &s)
+				i(db, collection, &details, shard, shardDetails, currShard.Servers)
 			}
 		}
 	}
 }
 
-type DBServerInSyncCheck func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) (invalidateInSync, skip bool)
-
-func (s State) IsDBServerInSync(checks ...DBServerInSyncCheck) bool {
-	invalidateInSync := false
-
-	s.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) {
-		if !invalidateInSync {
+func (s State) IsDBServerInSync(serverID string) bool {
+	isInSync := true
+	s.IterateOverCollections(func(db, col string, planCollection *StatePlanCollection, shard string, plan ShardServers, current ShardServers) {
+		if !isInSync {
 			return
 		}
-
-		for _, check := range checks {
-			synced, skip := check(db, col, info, shard, plan, current)
-			if skip {
-				return
-			}
-
-			if !synced {
-				invalidateInSync = true
-			}
+		serverIsNotInSync := plan.Contains(serverID) && !current.Contains(serverID)
+		if serverIsNotInSync {
+			isInSync = false
+			return
 		}
 	})
 
-	return !invalidateInSync
+	return isInSync
+}
+
+func (s State) IsDBServerReadyToRestart(serverID string) bool {
+	readyToRestart := true
+
+	s.IterateOverCollections(func(db, col string, planCollection *StatePlanCollection, shard string, plan ShardServers, current ShardServers) {
+		if !readyToRestart {
+			return
+		}
+
+		wc := planCollection.GetWriteConcern(0)
+		rf := planCollection.GetReplicationFactor(0)
+
+		if wc >= len(plan) && len(plan) != 0 {
+			wc = len(plan) - 1
+		}
+
+		// Allow one server to be restarted if replication factor == write concern
+		if rf > 0 && wc == rf {
+			wc -= 1
+		}
+
+		serverIsNotInSync := plan.Contains(serverID) && !current.Contains(serverID)
+		if len(current) >= wc && serverIsNotInSync {
+			// Current shard is not in sync, but it does not matter - we have enough replicas in sync
+			// Restart of this DBServer won't affect WC
+			return
+		}
+
+		if len(current) < wc {
+			// We have less in-sync servers than required for write concern
+			readyToRestart = false
+			return
+		}
+	})
+
+	return readyToRestart
 }

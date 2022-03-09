@@ -93,7 +93,8 @@ func (a *actionWaitForMemberInSync) check() (bool, error) {
 }
 
 func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
-	if !a.actionCtx.GetShardSyncStatus() {
+	agencyState, ok := a.actionCtx.GetAgencyCache()
+	if !ok || agencyState.IsDBServerInSync(a.MemberID()) {
 		a.log.Info().Str("mode", "cluster").Msgf("Shards are not in sync")
 		return false, nil
 	}

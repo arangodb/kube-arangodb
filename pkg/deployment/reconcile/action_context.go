@@ -113,10 +113,6 @@ type ActionContext interface {
 	SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
-	// GetShardSyncStatus returns true if all shards are in sync
-	GetShardSyncStatus() bool
-	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-	InvalidateSyncStatus()
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
@@ -257,10 +253,6 @@ func (ac *actionContext) ServiceMonitorsModInterface() servicemonitor.ModInterfa
 
 func (ac *actionContext) ArangoMembersModInterface() arangomember.ModInterface {
 	return ac.context.ArangoMembersModInterface()
-}
-
-func (ac *actionContext) GetShardSyncStatus() bool {
-	return ac.context.GetShardSyncStatus()
 }
 
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
@@ -508,11 +500,6 @@ func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.Imag
 		}
 		return false
 	}, true)
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (ac *actionContext) InvalidateSyncStatus() {
-	ac.context.InvalidateSyncStatus()
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators

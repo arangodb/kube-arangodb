@@ -82,10 +82,6 @@ type Context interface {
 	DeleteSecret(secretName string) error
 	// GetDeploymentHealth returns a copy of the latest known state of cluster health
 	GetDeploymentHealth() (driver.ClusterHealth, error)
-	// GetShardSyncStatus returns true if all shards are in sync
-	GetShardSyncStatus() bool
-	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-	InvalidateSyncStatus()
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
