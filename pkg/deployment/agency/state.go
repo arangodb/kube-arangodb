@@ -83,6 +83,10 @@ type StateRoot struct {
 	Arango State `json:"arango"`
 }
 
+type DumpState struct {
+	Agency StateRoot `json:"agency"`
+}
+
 type State struct {
 	Supervision StateSupervision `json:"Supervision"`
 	Plan        StatePlan        `json:"Plan"`
@@ -114,4 +118,43 @@ func (d *StateExists) Exists() bool {
 func (d *StateExists) UnmarshalJSON(bytes []byte) error {
 	*d = bytes != nil
 	return nil
+}
+
+type CollectionIterator func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard)
+
+func (s State) IterateOverCollections(i CollectionIterator) {
+	for db, collections := range s.Plan.Collections {
+		for collection, details := range collections {
+			for shard, shardDetails := range details.Shards {
+				s := s.Current.Collections[db][collection][shard]
+
+				i(db, collection, &details, shard, shardDetails, &s)
+			}
+		}
+	}
+}
+
+type DBServerInSyncCheck func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) (invalidateInSync, skip bool)
+
+func (s State) IsDBServerInSync(checks ...DBServerInSyncCheck) bool {
+	invalidateInSync := false
+
+	s.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current *StateCurrentDBShard) {
+		if !invalidateInSync {
+			return
+		}
+
+		for _, check := range checks {
+			synced, skip := check(db, col, info, shard, plan, current)
+			if skip {
+				return
+			}
+
+			if !synced {
+				invalidateInSync = true
+			}
+		}
+	})
+
+	return !invalidateInSync
 }

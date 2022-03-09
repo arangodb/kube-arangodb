@@ -43,8 +43,32 @@ func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
 }
 
 type StatePlanCollection struct {
-	Name   *string        `json:"name"`
-	Shards StatePlanShard `json:"shards"`
+	Name   *string `json:"name"`
+	Shards Shards  `json:"shards"`
+	// MinReplicationFactor deprecated WriteConcern should be used
+	MinReplicationFactor *uint `json:"minReplicationFactor,omitempty"`
+	WriteConcern         *uint `json:"writeConcern,omitempty"`
+	ReplicationFactor    *uint `json:"replicationFactor,omitempty"`
+}
+
+func (a *StatePlanCollection) GetWriteConcern(def uint) uint {
+	if p := a.GetWriteConcernP(); p != nil {
+		return *p
+	}
+
+	return def
+}
+
+func (a *StatePlanCollection) GetWriteConcernP() *uint {
+	if a == nil {
+		return nil
+	}
+
+	if a.WriteConcern == nil {
+		return a.MinReplicationFactor
+	}
+
+	return a.WriteConcern
 }
 
 func (a StatePlanCollection) GetName(d string) string {
@@ -65,5 +89,3 @@ func (a StatePlanCollection) IsDBServerInShards(name string) bool {
 	}
 	return false
 }
-
-type StatePlanShard map[string][]string
