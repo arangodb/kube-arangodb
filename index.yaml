@@ -3,6 +3,15 @@ entries:
   kube-arangodb:
   - apiVersion: v1
     appVersion: 3.5.0
+    created: "2022-03-09T07:27:07.103268755+01:00"
+    description: ArangoDB Kubernetes Operator
+    digest: 7d0ece59f5ba5673becb5e7296feb51de729ce42445e211638ca039c73b050a2
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.8/kube-arangodb-1.2.8.tgz
+    version: 1.2.8
+  - apiVersion: v1
+    appVersion: 3.5.0
     created: "2022-01-19T10:16:41.787129901+01:00"
     description: ArangoDB Kubernetes Operator
     digest: 2779bc435ec36ae5b50d6891a5f1bcb0be886c0c668acfaaad45da6ee48c807e
@@ -65,6 +74,15 @@ entries:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.1/kube-arangodb-1.2.1.tgz
     version: 1.2.1
   kube-arangodb-crd:
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2022-03-09T07:27:07.14320038+01:00"
+    description: ArangoDB Kubernetes Custom Resource Definitions
+    digest: 18518342702bc7e397d72b605237ba83e29528c42637721e72883911bab5828f
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.2.8/kube-arangodb-crd-1.2.8.tgz
+    version: 1.2.8
   - apiVersion: v1
     appVersion: 3.5.0
     created: "2022-01-19T10:16:41.818831558+01:00"
