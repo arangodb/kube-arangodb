@@ -49,7 +49,6 @@ type StatePlanCollection struct {
 	// MinReplicationFactor is deprecated, but we have to support it for backward compatibility
 	MinReplicationFactor *int `json:"minReplicationFactor,omitempty"`
 	WriteConcern         *int `json:"writeConcern,omitempty"`
-	ReplicationFactor    *int `json:"replicationFactor,omitempty"`
 }
 
 func (a *StatePlanCollection) GetWriteConcern(def int) int {
@@ -70,13 +69,6 @@ func (a *StatePlanCollection) GetWriteConcernP() *int {
 	}
 
 	return a.WriteConcern
-}
-
-func (a *StatePlanCollection) GetReplicationFactor(def int) int {
-	if a == nil || a.ReplicationFactor == nil {
-		return def
-	}
-	return *a.ReplicationFactor
 }
 
 func (a StatePlanCollection) GetName(d string) string {

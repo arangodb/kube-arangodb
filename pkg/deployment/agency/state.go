@@ -126,9 +126,9 @@ func (s State) IterateOverCollections(i CollectionIterator) {
 	for db, collections := range s.Plan.Collections {
 		for collection, details := range collections {
 			for shard, shardDetails := range details.Shards {
-				currShard := s.Current.Collections[db][collection][shard]
-
-				i(db, collection, &details, shard, shardDetails, currShard.Servers)
+				if currShard, ok := s.Current.Collections[db][collection][shard]; ok {
+					i(db, collection, &details, shard, shardDetails, currShard.Servers)
+				}
 			}
 		}
 	}
@@ -158,26 +158,28 @@ func (s State) IsDBServerReadyToRestart(serverID string) bool {
 			return
 		}
 
-		wc := planCollection.GetWriteConcern(0)
-		rf := planCollection.GetReplicationFactor(0)
+		if !plan.Contains(serverID) {
+			return
+		}
 
+		serverInSync := current.Contains(serverID)
+		if len(plan) == 1 && serverInSync {
+			// The requested server is the only one in the plan
+			return
+		}
+
+		wc := planCollection.GetWriteConcern(1)
 		if wc >= len(plan) && len(plan) != 0 {
 			wc = len(plan) - 1
 		}
 
-		// Allow one server to be restarted if replication factor == write concern
-		if rf > 0 && wc == rf {
-			wc -= 1
-		}
-
-		serverIsNotInSync := plan.Contains(serverID) && !current.Contains(serverID)
-		if len(current) >= wc && serverIsNotInSync {
+		if len(current) >= wc && !serverInSync {
 			// Current shard is not in sync, but it does not matter - we have enough replicas in sync
 			// Restart of this DBServer won't affect WC
 			return
 		}
 
-		if len(current) < wc {
+		if len(current) <= wc {
 			// We have less in-sync servers than required for write concern
 			readyToRestart = false
 			return
