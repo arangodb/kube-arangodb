@@ -39,10 +39,6 @@ func (a ArangoDeploymentArchitecture) GetDefault() ArangoDeploymentArchitectureT
 }
 
 func (a ArangoDeploymentArchitecture) Validate() error {
-	if len(a) > 1 {
-		return errors.Errorf("Only one architecture type is supported currently")
-	}
-
 	for id := range a {
 		if err := a[id].Validate(); err != nil {
 			return errors.WithStack(errors.Wrapf(err, "%d", id))

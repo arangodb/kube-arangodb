@@ -111,14 +111,21 @@ func (d *Deployment) ensureImages(ctx context.Context, apiObject *api.ArangoDepl
 // image ID's into the status.Images list.
 // Returns: retrySoon, error
 func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterface.Inspector) (bool, bool, error) {
-	// Check ArangoDB image
-	if _, found := ib.Status.Images.GetByImage(ib.Spec.GetImage()); !found {
-		// We need to find the image ID for the ArangoDB image
-		retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, cachedStatus, ib.Spec.GetImage())
-		if err != nil {
-			return retrySoon, false, errors.WithStack(err)
+	archList, err := ib.Spec.ArchitectureTypesInUse(ib.Status.Members.AsList())
+	if err != nil {
+		return false, false, errors.WithStack(err)
+	}
+
+	for _, arch := range archList {
+		// Check ArangoDB image
+		if _, found := ib.Status.Images.GetByImageAndArch(ib.Spec.GetImage(), arch); !found {
+			// We need to find the image ID for the ArangoDB image
+			retrySoon, err := ib.fetchArangoDBImageIDAndVersion(ctx, cachedStatus, ib.Spec.GetImage(), arch)
+			if err != nil {
+				return retrySoon, false, errors.WithStack(err)
+			}
+			return retrySoon, false, nil
 		}
-		return retrySoon, false, nil
 	}
 
 	return false, true, nil
@@ -127,9 +134,11 @@ func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterfac
 // fetchArangoDBImageIDAndVersion checks a running pod for fetching the ID of the given image.
 // When no pod exists, it is created, otherwise the ID is fetched & version detected.
 // Returns: retrySoon, error
-func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector, image string) (bool, error) {
+func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector,
+	image string, arch api.ArangoDeploymentArchitectureType) (bool, error) {
+
 	role := k8sutil.ImageIDAndVersionRole
-	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6]
+	id := fmt.Sprintf("%0x", sha1.Sum([]byte(image)))[:6] + fmt.Sprintf("-%s", arch)
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
 	log := ib.Log.With().
 		Str("pod", podName).
@@ -197,9 +206,11 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 
 		info := api.ImageInfo{
 			Image:           image,
-			ImageID:         imageID,
 			ArangoDBVersion: version,
 			Enterprise:      enterprise,
+			ArchImageID: map[api.ArangoDeploymentArchitectureType]string{
+				arch: imageID,
+			},
 		}
 		ib.Status.Images.AddOrUpdate(info)
 		if err := ib.UpdateCRStatus(ib.Status); err != nil {

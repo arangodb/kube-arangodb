@@ -24,13 +24,11 @@ import "k8s.io/apimachinery/pkg/types"
 
 type ArangoClusterSynchronizationStatus struct {
 	Deployment *ArangoClusterSynchronizationDeploymentStatus `json:"deployment,omitempty"`
-	KubeConfig *ArangoClusterSynchronizationKubeConfigStatus `json:"kubeconfig,omitempty"`
+	Conditions ConditionList                                 `json:"conditions,omitempty"`
 }
 
 type ArangoClusterSynchronizationDeploymentStatus struct {
-	UID types.UID `json:"UID"`
-}
-
-type ArangoClusterSynchronizationKubeConfigStatus struct {
-	Conditions ConditionList `json:"conditions,omitempty"`
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	UID       types.UID `json:"uid"`
 }

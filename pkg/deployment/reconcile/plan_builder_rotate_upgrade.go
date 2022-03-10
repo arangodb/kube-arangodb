@@ -237,7 +237,7 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 // podNeedsUpgrading decides if an upgrade of the pod is needed (to comply with
 // the given spec) and if that is allowed.
 func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.DeploymentSpec, images api.ImageInfoList) upgradeDecision {
-	currentImage, found := currentImageInfo(spec, images)
+	currentImage, found := currentImageInfo(spec, images, status.Architecture)
 	if !found {
 		// Hold rotation tasks - we do not know image
 		return upgradeDecision{Hold: true}
@@ -303,11 +303,12 @@ func podNeedsUpgrading(log zerolog.Logger, status api.MemberStatus, spec api.Dep
 	}
 }
 
-func currentImageInfo(spec api.DeploymentSpec, images api.ImageInfoList) (api.ImageInfo, bool) {
+func currentImageInfo(spec api.DeploymentSpec, images api.ImageInfoList, arch api.ArangoDeploymentArchitectureType) (api.ImageInfo, bool) {
 	if i, ok := images.GetByImage(spec.GetImage()); ok {
 		return i, true
 	}
-	if i, ok := images.GetByImageID(spec.GetImage()); ok {
+
+	if i, ok := images.GetByImageID(spec.GetImage(), arch); ok {
 		return i, true
 	}
 
@@ -323,7 +324,7 @@ func memberImageInfo(spec api.DeploymentSpec, status api.MemberStatus, images ap
 		return i, true
 	}
 
-	if i, ok := images.GetByImageID(spec.GetImage()); ok {
+	if i, ok := images.GetByImageID(spec.GetImage(), status.Architecture); ok {
 		return i, true
 	}
 

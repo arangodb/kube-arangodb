@@ -22,43 +22,45 @@ package v2alpha1
 
 import (
 	"fmt"
+	"reflect"
 
 	driver "github.com/arangodb/go-driver"
 )
 
 // ImageInfo contains an ID of an image and the ArangoDB version inside the image.
 type ImageInfo struct {
-	Image           string         `json:"image"`                      // Human provided name of the image
-	ImageID         string         `json:"image-id,omitempty"`         // Unique ID (with SHA256) of the image
-	ArangoDBVersion driver.Version `json:"arangodb-version,omitempty"` // ArangoDB version within the image
-	Enterprise      bool           `json:"enterprise,omitempty"`       // If set, this is an enterprise image
+	Image           string                                      `json:"image"`                      // Human provided name of the image
+	ImageID         string                                      `json:"image-id,omitempty"`         // @deprecated -> use ArchImageID | Unique ID (with SHA256) of the image for default Arch type
+	ArangoDBVersion driver.Version                              `json:"arangodb-version,omitempty"` // ArangoDB version within the image
+	Enterprise      bool                                        `json:"enterprise,omitempty"`       // If set, this is an enterprise image
+	ArchImageID     map[ArangoDeploymentArchitectureType]string `json:"archImageID,omitempty"`      // Unique ID (with SHA256) of the image by Arch type
 }
 
-func (i *ImageInfo) String() string {
-	if i == nil {
+func (in *ImageInfo) String() string {
+	if in == nil {
 		return "undefined"
 	}
 
 	e := "Community"
 
-	if i.Enterprise {
+	if in.Enterprise {
 		e = "Enterprise"
 	}
 
-	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(i.ArangoDBVersion), i.Image)
+	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(in.ArangoDBVersion), in.Image)
 }
 
 // ImageInfoList is a list of image infos
 type ImageInfoList []ImageInfo
 
-func (l ImageInfoList) Add(i ...ImageInfo) ImageInfoList {
-	return append(l, i...)
+func (in ImageInfoList) Add(i ...ImageInfo) ImageInfoList {
+	return append(in, i...)
 }
 
 // GetByImage returns the info in the given list for the image with given name.
 // If not found, false is returned.
-func (l ImageInfoList) GetByImage(image string) (ImageInfo, bool) {
-	for _, x := range l {
+func (in ImageInfoList) GetByImage(image string) (ImageInfo, bool) {
+	for _, x := range in {
 		if x.Image == image {
 			return x, true
 		}
@@ -66,12 +68,28 @@ func (l ImageInfoList) GetByImage(image string) (ImageInfo, bool) {
 	return ImageInfo{}, false
 }
 
+// GetByImageAndArch returns the ImageInfo in the given list for the given image and arch
+// If not found, false is returned.
+func (in ImageInfoList) GetByImageAndArch(image string, arch ArangoDeploymentArchitectureType) (ImageInfo, bool) {
+	for _, x := range in {
+		if x.Image == image {
+			if _, ok := x.ArchImageID[arch]; ok {
+				return x, true
+			}
+			return x, false
+		}
+	}
+	return ImageInfo{}, false
+}
+
 // GetByImageID returns the info in the given list for the image with given id.
 // If not found, false is returned.
-func (l ImageInfoList) GetByImageID(imageID string) (ImageInfo, bool) {
-	for _, x := range l {
-		if x.ImageID == imageID {
-			return x, true
+func (in ImageInfoList) GetByImageID(imageID string, arch ArangoDeploymentArchitectureType) (ImageInfo, bool) {
+	for _, x := range in {
+		if foundImageID, ok := x.ArchImageID[arch]; ok {
+			if foundImageID == imageID {
+				return x, true
+			}
 		}
 	}
 	return ImageInfo{}, false
@@ -80,49 +98,59 @@ func (l ImageInfoList) GetByImageID(imageID string) (ImageInfo, bool) {
 // AddOrUpdate adds the given info to the given list, if its image does not exist
 // in the list. If the image does exist in the list, its entry is replaced by the given info.
 // If not found, false is returned.
-func (l *ImageInfoList) AddOrUpdate(info ImageInfo) {
+func (in *ImageInfoList) AddOrUpdate(info ImageInfo) {
 	// Look for existing entry
-	for i, x := range *l {
+	for i, x := range *in {
 		if x.Image == info.Image {
-			(*l)[i] = info
+			for arch, imgID := range x.ArchImageID {
+				info.ArchImageID[arch] = imgID
+
+				// set ImageID for backward compatibility
+				if imgID, ok := info.ArchImageID[ArangoDeploymentArchitectureDefault]; ok {
+					info.ImageID = imgID
+				}
+			}
+			(*in)[i] = info
 			return
 		}
 	}
 	// No existing entry found, add it
-	*l = append(*l, info)
+	*in = append(*in, info)
 }
 
 // Equal compares to ImageInfo
-func (i *ImageInfo) Equal(other *ImageInfo) bool {
-	if i == nil && other == nil {
+func (in *ImageInfo) Equal(other *ImageInfo) bool {
+	if in == nil && other == nil {
 		return true
-	} else if i == nil || other == nil {
+	} else if in == nil || other == nil {
 		return false
-	} else if i == other {
+	} else if in == other {
 		return true
 	}
 
-	return i.ArangoDBVersion == other.ArangoDBVersion &&
-		i.Enterprise == other.Enterprise &&
-		i.Image == other.Image &&
-		i.ImageID == other.ImageID
+	return in.ArangoDBVersion == other.ArangoDBVersion &&
+		in.Enterprise == other.Enterprise &&
+		in.Image == other.Image &&
+		reflect.DeepEqual(in.ArchImageID, other.ArchImageID)
 }
 
 // Equal compares to ImageInfoList
-func (l ImageInfoList) Equal(other ImageInfoList) bool {
-	if len(l) != len(other) {
+func (in ImageInfoList) Equal(other ImageInfoList) bool {
+	if len(in) != len(other) {
 		return false
 	}
 
-	for i := 0; i < len(l); i++ {
-		ii, found := l.GetByImageID(l[i].ImageID)
+	for i := 0; i < len(in); i++ {
+		for arch, imgID := range in[i].ArchImageID {
+			ii, found := in.GetByImageID(imgID, arch)
 
-		if !found {
-			return false
-		}
+			if !found {
+				return false
+			}
 
-		if !l[i].Equal(&ii) {
-			return false
+			if !in[i].Equal(&ii) {
+				return false
+			}
 		}
 	}
 

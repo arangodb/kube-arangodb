@@ -61,7 +61,7 @@ type testCaseImageUpdate struct {
 func TestEnsureImages(t *testing.T) {
 	// Arange
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
-	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
+	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6] + fmt.Sprintf("-%s", api.ArangoDeploymentArchitectureDefault)
 	hostname := testDeploymentName + "-" + k8sutil.ImageIDAndVersionRole + "-" + id
 
 	var securityContext api.ServerGroupSpecSecurityContext

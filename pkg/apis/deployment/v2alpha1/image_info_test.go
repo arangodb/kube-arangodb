@@ -31,18 +31,21 @@ func TestImageInfoList(t *testing.T) {
 
 	_, found := list.GetByImage("notfound")
 	assert.False(t, found)
-	_, found = list.GetByImageID("id-notfound")
+	_, found = list.GetByImageID("id-notfound", ArangoDeploymentArchitectureDefault)
 	assert.False(t, found)
 
 	list.AddOrUpdate(ImageInfo{
 		Image:           "foo",
 		ImageID:         "foo-ID",
 		ArangoDBVersion: "1.3.4",
+		ArchImageID: map[ArangoDeploymentArchitectureType]string{
+			ArangoDeploymentArchitectureDefault: "foo-ID",
+		},
 	})
 	assert.Len(t, list, 1)
 
 	_, found = list.GetByImage("foo")
 	assert.True(t, found)
-	_, found = list.GetByImageID("foo-ID")
+	_, found = list.GetByImageID("foo-ID", ArangoDeploymentArchitectureDefault)
 	assert.True(t, found)
 }

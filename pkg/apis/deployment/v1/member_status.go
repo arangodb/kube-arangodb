@@ -76,6 +76,8 @@ type MemberStatus struct {
 	Image *ImageInfo `json:"image,omitempty"`
 	// OldImage holds old image defails
 	OldImage *ImageInfo `json:"old-image,omitempty"`
+	// Architecture defines Image architecture type
+	Architecture ArangoDeploymentArchitectureType `json:"architecture,omitempty"`
 	// Upgrade define if upgrade should be enforced during next execution
 	Upgrade bool `json:"upgrade,omitempty"`
 	// Endpoint definition how member should be reachable
@@ -105,6 +107,7 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 		s.ImageID == other.ImageID &&
 		s.Image.Equal(other.Image) &&
 		s.OldImage.Equal(other.OldImage) &&
+		s.Architecture == other.Architecture &&
 		s.Upgrade == other.Upgrade &&
 		util.CompareStringPointers(s.Endpoint, other.Endpoint)
 }

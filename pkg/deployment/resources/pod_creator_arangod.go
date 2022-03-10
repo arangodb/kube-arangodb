@@ -171,9 +171,9 @@ func (a *ArangoDContainer) GetImage() string {
 	switch a.spec.ImageDiscoveryMode.Get() {
 	case api.DeploymentImageDiscoveryDirectMode:
 		// In case of direct mode ignore discovery
-		return util.StringOrDefault(a.spec.Image, a.imageInfo.ImageID)
+		return util.StringOrDefault(a.spec.Image, a.imageInfo.ArchImageID[a.status.Architecture])
 	default:
-		return a.imageInfo.ImageID
+		return a.imageInfo.ArchImageID[a.status.Architecture]
 	}
 }
 

@@ -285,7 +285,7 @@ func (d *Deployment) send(ev *deploymentEvent) {
 	}
 }
 
-// run is the core the core worker.
+// run is the core worker.
 // It processes the event queue and polls the state of generated
 // resource on a regular basis.
 func (d *Deployment) run() {

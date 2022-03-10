@@ -40,6 +40,9 @@ func createTestDiscoveredImages(image, version, id string) api.ImageInfoList {
 			ArangoDBVersion: driver.Version(version),
 			ImageID:         id,
 			Enterprise:      false,
+			ArchImageID: map[api.ArangoDeploymentArchitectureType]string{
+				api.ArangoDeploymentArchitectureDefault: id,
+			},
 		},
 	}
 }

@@ -467,6 +467,9 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 			ImageID:         "arangodb/arangodb:latest",
 			ArangoDBVersion: "1.0.0",
 			Enterprise:      false,
+			ArchImageID: map[api.ArangoDeploymentArchitectureType]string{
+				api.ArangoDeploymentArchitectureDefault: "arangodb/arangodb:latest",
+			},
 		},
 	}
 
@@ -517,6 +520,9 @@ func createTestImagesWithVersion(enterprise bool, version driver.Version) api.Im
 			ArangoDBVersion: version,
 			ImageID:         testImage,
 			Enterprise:      enterprise,
+			ArchImageID: map[api.ArangoDeploymentArchitectureType]string{
+				api.ArangoDeploymentArchitectureDefault: testImage,
+			},
 		},
 	}
 }

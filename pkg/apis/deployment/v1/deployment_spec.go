@@ -279,6 +279,29 @@ func (s DeploymentSpec) IsSecure() bool {
 	return s.TLS.IsSecure()
 }
 
+// ArchitectureTypesInUse returns ArchitectureType list which is really used by the members
+func (s DeploymentSpec) ArchitectureTypesInUse(membersStatuses DeploymentStatusMemberElements) (ArangoDeploymentArchitecture, error) {
+	var exists = struct{}{}
+	archInUse := map[ArangoDeploymentArchitectureType]struct{}{}
+
+	for _, status := range membersStatuses {
+		if status.Member.Architecture != "" {
+			archInUse[status.Member.Architecture] = exists
+		}
+	}
+
+	var result ArangoDeploymentArchitecture
+	for arch := range archInUse {
+		result = append(result, arch)
+	}
+
+	if len(result) == 0 {
+		result = append(result, s.Architecture.GetDefault())
+	}
+
+	return result, nil
+}
+
 // GetServerGroupSpec returns the server group spec (from this
 // deployment spec) for the given group.
 func (s DeploymentSpec) GetServerGroupSpec(group ServerGroup) ServerGroupSpec {

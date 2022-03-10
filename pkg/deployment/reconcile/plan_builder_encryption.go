@@ -266,7 +266,7 @@ func isEncryptionKeyUpToDate(ctx context.Context,
 		return false, true
 	}
 
-	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i, ok := status.Images.GetByImageID(m.ImageID, m.Architecture); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return false, false
 	}
 

@@ -500,7 +500,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 		m.PodUID = uid
 		m.PodSpecVersion = template.PodSpecChecksum
 		m.ArangoVersion = m.Image.ArangoDBVersion
-		m.ImageID = m.Image.ImageID
+		m.ImageID = m.Image.ArchImageID[m.Architecture]
 
 		// reset old sidecar values to nil
 		m.SideCarSpecs = nil

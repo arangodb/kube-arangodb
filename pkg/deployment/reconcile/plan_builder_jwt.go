@@ -235,7 +235,7 @@ func isJWTTokenUpToDate(ctx context.Context, log zerolog.Logger, status api.Depl
 		return false, true
 	}
 
-	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i, ok := status.Images.GetByImageID(m.ImageID, m.Architecture); !ok || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
 		return false, false
 	}
 
