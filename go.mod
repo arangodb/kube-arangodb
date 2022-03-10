@@ -28,7 +28,6 @@ require (
 	github.com/arangodb/go-driver v1.2.1
 	github.com/arangodb/go-driver/v2 v2.0.0-20211021031401-d92dcd5a4c83
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
-	//github.com/arangodb/rebalancer v0.1.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/ghodss/yaml v1.0.0
@@ -53,11 +52,6 @@ require (
 	k8s.io/apimachinery v0.21.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
-)
-
-require (
-	github.com/arangodb/rebalancer v0.1.1
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 )
 
 require (
@@ -102,6 +96,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
