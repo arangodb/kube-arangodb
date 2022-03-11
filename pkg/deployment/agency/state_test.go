@@ -56,8 +56,9 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 
 			require.NoError(t, json.Unmarshal(data, &s))
 
-			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current ShardServers) {
+			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current ShardServers) bool {
 				require.EqualValues(t, 1, info.GetWriteConcern(0))
+				return false
 			})
 		})
 	}
