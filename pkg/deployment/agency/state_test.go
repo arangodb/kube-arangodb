@@ -92,8 +92,8 @@ func Test_IsDBServerInSync(t *testing.T) {
 func Test_IsDBServerReadyToRestart(t *testing.T) {
 	type testCase struct {
 		generator StateGenerator
-		ready     bool
-		dbServer  string
+		ready     []string
+		notReady  []string
 	}
 	newDBWithCol := func(writeConcern int) CollectionGeneratorInterface {
 		return NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(writeConcern)
@@ -101,87 +101,92 @@ func Test_IsDBServerReadyToRestart(t *testing.T) {
 	tcs := map[string]testCase{
 		"not in Plan, in Current": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("B").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "B",
+			ready:     []string{"B", "A"},
 		},
 		"not in Plan, not in Current": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("A").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "C",
+			ready:     []string{"C", "A"},
 		},
 		"in Plan and WC == RF": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("A").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "A",
+			ready:     []string{"A"},
 		},
 		"in Plan, the only in Current": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
-			ready:     false,
-			dbServer:  "A",
+			ready:     []string{"B"},
+			notReady:  []string{"A"},
 		},
 		"in Plan, missing in Current": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("B").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "A",
+			ready:     []string{"A"},
+			notReady:  []string{"B"},
 		},
 		"in Plan, missing in Current but broken WC": {
 			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B").Add().Add().Add(),
-			ready:     false,
-			dbServer:  "A",
+			notReady:  []string{"A", "B", "C"},
 		},
 		"in Plan, missing in Current with fine WC": {
 			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "C").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "A",
+			ready:     []string{"A"},
+			notReady:  []string{"B", "C"},
 		},
 		"in Plan, missing in Current with low WC": {
 			generator: newDBWithCol(1).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
-			ready:     true,
-			dbServer:  "A",
+			ready:     []string{"A", "B", "C"},
 		},
 		"in Plan, in Current but broken WC": {
 			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
-			ready:     false,
-			dbServer:  "A",
+			notReady:  []string{"A", "B"},
+			ready:     []string{"C"},
 		},
 		"in Plan, all shards in sync": {
 			generator: newDBWithCol(1).
 				WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().
 				WithShard().WithPlan("A", "D").WithCurrent("D", "A").Add().
 				Add().Add(),
-			ready:    true,
-			dbServer: "A",
+			ready: []string{"A", "B", "C", "D"},
 		},
-		"in Plan, all shards in sync but broken WC": {
+		"all shards in sync but broken WC": {
 			generator: newDBWithCol(2).
 				WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().
 				WithShard().WithPlan("A", "D").WithCurrent("D", "A").Add().
 				Add().Add(),
-			ready:    false,
-			dbServer: "A",
+			notReady: []string{"A", "B"},
+			ready:    []string{"C", "D"},
 		},
-		"in Plan, some shards not synced": {
+		"some shards not fully synced": {
 			generator: newDBWithCol(1).
 				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
 				WithShard().WithPlan("A", "B", "C").WithCurrent("C").Add().
 				Add().Add(),
-			ready:    true,
-			dbServer: "A",
+			ready:    []string{"A", "B"},
+			notReady: []string{"C"},
 		},
-		"in Plan, some shards not synced and broken WC": {
+		"some shards not fully synced and broken WC": {
 			generator: newDBWithCol(2).
 				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
 				WithShard().WithPlan("A", "B", "C").WithCurrent("C").Add().
 				Add().Add(),
-			ready:    false,
-			dbServer: "A",
+			notReady: []string{"A", "B", "C"},
+		},
+		"only one is able to restart": {
+			generator: newDBWithCol(6).
+				WithShard().WithPlan("A", "B", "C", "D", "E", "F").WithCurrent("A", "B", "C", "E", "F").Add().
+				Add().Add(),
+			ready:    []string{"D"},
+			notReady: []string{"A", "B", "C", "E", "F"},
 		},
 	}
 
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
 			s := GenerateState(t, tc.generator)
-			require.Equal(t, tc.ready, s.IsDBServerReadyToRestart(tc.dbServer))
+			for _, server := range tc.ready {
+				require.Truef(t, s.IsDBServerReadyToRestart(server), "server %s should be able to restart", server)
+			}
+			for _, server := range tc.notReady {
+				require.Falsef(t, s.IsDBServerReadyToRestart(server), "server %s should not be able to restart", server)
+			}
 		})
 	}
 }
