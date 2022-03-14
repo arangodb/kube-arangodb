@@ -236,3 +236,74 @@ func Test_IsDBServerIsReadyToRestart(t *testing.T) {
 	}
 
 }
+
+func Test_IsDBServerIsReadyToRestart_New(t *testing.T) {
+	type tc struct {
+		generator StateGenerator
+		ready     bool
+		dbserver  string
+	}
+
+	// TODO: Add More complex TC
+
+	tcs := map[string]tc{
+		"DB Not in Plan": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
+			ready:     true,
+			dbserver:  "B",
+		},
+		"DB in Plan, but WC == RF": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
+			ready:     true,
+			dbserver:  "A",
+		},
+		"DB in Plan, only in Current": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
+			ready:     false,
+			dbserver:  "A",
+		},
+		"DB in Plan, missing in Current": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("B").Add().WithWriteConcern(1).Add().Add(),
+			ready:     true,
+			dbserver:  "A",
+		},
+		"DB in Plan, missing in Current but broken WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B").Add().WithWriteConcern(2).Add().Add(),
+			ready:     false,
+			dbserver:  "A",
+		},
+		"DB in Plan, missing in Current with fine WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "C").Add().WithWriteConcern(2).Add().Add(),
+			ready:     true,
+			dbserver:  "A",
+		},
+		"DB in Plan, missing in Current with low WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().WithWriteConcern(1).Add().Add(),
+			ready:     true,
+			dbserver:  "A",
+		},
+		"DB in Plan, in Current with break WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().WithWriteConcern(2).Add().Add(),
+			ready:     false,
+			dbserver:  "A",
+		},
+		"DB in Plan, only in Current, default WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
+			ready:     false,
+			dbserver:  "A",
+		},
+		"DB in Plan, in Current with default WC": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
+			ready:     true,
+			dbserver:  "A",
+		},
+	}
+
+	for name, det := range tcs {
+		t.Run(name, func(t *testing.T) {
+			s := GenerateState(t, det.generator)
+
+			require.Equal(t, det.ready, s.IsDBServerReadyToRestart(det.dbserver))
+		})
+	}
+}
