@@ -73,237 +73,115 @@ func Test_Unmarshal_LongData(t *testing.T) {
 }
 
 func Test_IsDBServerInSync(t *testing.T) {
-	const dbName, colID, sh1, sh2 = "db1", "1001", "shard1", "shard2"
-	const sid1, sid2, sid3, sid4 = "PRMR-1", "PRMR-2", "PRMR-3", "PRMR-4"
-	var s = State{
-		Supervision: StateSupervision{},
-		Plan: StatePlan{
-			Collections: map[string]StatePlanDBCollections{
-				dbName: map[string]StatePlanCollection{
-					colID: {
-						Shards: map[string]ShardServers{
-							sh1: []string{sid1, sid2},
-							sh2: []string{sid1, sid2, sid3},
-						},
-					},
-				},
-			},
-		},
-		Current: StateCurrent{
-			Collections: map[string]StateCurrentDBCollections{
-				dbName: map[string]StateCurrentDBCollection{
-					colID: map[string]StateCurrentDBShard{
-						sh1: {Servers: []string{sid2, sid3}},
-						sh2: {Servers: []string{sid1, sid2, sid3}},
-					},
-				},
-			},
-		},
-	}
+	var state = GenerateState(t, NewDatabaseRandomGenerator().RandomCollection().
+		WithShard().WithPlan("A", "B").WithCurrent("B", "C").Add().
+		WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
+		WithWriteConcern(1).Add().Add(),
+	)
 	var expected = map[string]bool{
-		sid1: false, // in plan, not synced
-		sid2: true,  // in plan, synced
-		sid3: true,  // not in plan, synced
-		sid4: true,  // not in plan, not synced
+		"A": false, // in plan, not synced
+		"B": true,  // in plan, synced
+		"C": true,  // not in plan, synced
+		"D": true,  // not in plan, not synced
 	}
-
 	for serverID, inSync := range expected {
-		require.Equalf(t, inSync, s.IsDBServerInSync(serverID), "server %s", serverID)
+		require.Equalf(t, inSync, state.IsDBServerInSync(serverID), "server %s", serverID)
 	}
 }
 
-func Test_IsDBServerIsReadyToRestart(t *testing.T) {
-	const dbName, colID, sh1, sh2, sh3 = "db1", "1001", "shard1", "shard2", "shard3"
-	const sid1, sid2, sid3, sid4 = "PRMR-1", "PRMR-2", "PRMR-3", "PRMR-4"
-	var wc1, wc2, wc3 = 1, 2, 3
-
-	var testCases = map[string]struct {
-		state    State
-		expected map[string]bool
-	}{
-		"write-concern-1": {
-			state: State{
-				Supervision: StateSupervision{},
-				Plan: StatePlan{
-					Collections: map[string]StatePlanDBCollections{
-						dbName: map[string]StatePlanCollection{
-							colID: {
-								WriteConcern: &wc1,
-								Shards: map[string]ShardServers{
-									sh1: []string{sid1, sid2},
-									sh2: []string{sid1, sid2, sid3},
-								},
-							},
-						},
-					},
-				},
-				Current: StateCurrent{
-					Collections: map[string]StateCurrentDBCollections{
-						dbName: map[string]StateCurrentDBCollection{
-							colID: map[string]StateCurrentDBShard{
-								sh1: {Servers: []string{sid2, sid3}},
-								sh2: {Servers: []string{sid1, sid2, sid3}},
-							},
-						},
-					},
-				},
-			},
-			expected: map[string]bool{
-				sid1: true,
-				sid2: true,
-				sid3: true,
-				sid4: true,
-			},
-		},
-		"write-concern-2": {
-			state: State{
-				Supervision: StateSupervision{},
-				Plan: StatePlan{
-					Collections: map[string]StatePlanDBCollections{
-						dbName: map[string]StatePlanCollection{
-							colID: {
-								WriteConcern: &wc2,
-								Shards: map[string]ShardServers{
-									sh1: []string{sid1, sid2},
-									sh2: []string{sid1, sid2, sid3},
-									sh3: []string{sid1, sid3},
-								},
-							},
-						},
-					},
-				},
-				Current: StateCurrent{
-					Collections: map[string]StateCurrentDBCollections{
-						dbName: map[string]StateCurrentDBCollection{
-							colID: map[string]StateCurrentDBShard{
-								sh1: {Servers: []string{sid3}},
-								sh2: {Servers: []string{sid1, sid2, sid3}},
-								sh3: {Servers: []string{}},
-							},
-						},
-					},
-				},
-			},
-			expected: map[string]bool{
-				sid1: false,
-				sid2: false,
-				sid3: true,
-				sid4: true,
-			},
-		},
-		"write-concern-3": {
-			state: State{
-				Supervision: StateSupervision{},
-				Plan: StatePlan{
-					Collections: map[string]StatePlanDBCollections{
-						dbName: map[string]StatePlanCollection{
-							colID: {
-								WriteConcern: &wc3,
-								Shards: map[string]ShardServers{
-									sh1: []string{sid1, sid2, sid3},
-									sh2: []string{sid1, sid2, sid3},
-								},
-							},
-						},
-					},
-				},
-				Current: StateCurrent{
-					Collections: map[string]StateCurrentDBCollections{
-						dbName: map[string]StateCurrentDBCollection{
-							colID: map[string]StateCurrentDBShard{
-								sh1: {Servers: []string{sid3}},
-								sh2: {Servers: []string{sid1, sid2, sid3}},
-							},
-						},
-					},
-				},
-			},
-			expected: map[string]bool{
-				sid1: false,
-				sid2: false,
-				sid3: true,
-				sid4: true,
-			},
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			for server, readyToRestart := range testCase.expected {
-				require.Equalf(t, readyToRestart, testCase.state.IsDBServerReadyToRestart(server), "server %s", server)
-			}
-		})
-	}
-
-}
-
-func Test_IsDBServerIsReadyToRestart_New(t *testing.T) {
-	type tc struct {
+func Test_IsDBServerReadyToRestart(t *testing.T) {
+	type testCase struct {
 		generator StateGenerator
 		ready     bool
-		dbserver  string
+		dbServer  string
+	}
+	newDBWithCol := func(writeConcern int) CollectionGeneratorInterface {
+		return NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(writeConcern)
+	}
+	tcs := map[string]testCase{
+		"not in Plan, in Current": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("B").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "B",
+		},
+		"not in Plan, not in Current": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("A").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "C",
+		},
+		"in Plan and WC == RF": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A").WithCurrent("A").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "A",
+		},
+		"in Plan, the only in Current": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
+			ready:     false,
+			dbServer:  "A",
+		},
+		"in Plan, missing in Current": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B").WithCurrent("B").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "A",
+		},
+		"in Plan, missing in Current but broken WC": {
+			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B").Add().Add().Add(),
+			ready:     false,
+			dbServer:  "A",
+		},
+		"in Plan, missing in Current with fine WC": {
+			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "C").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "A",
+		},
+		"in Plan, missing in Current with low WC": {
+			generator: newDBWithCol(1).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
+			ready:     true,
+			dbServer:  "A",
+		},
+		"in Plan, in Current but broken WC": {
+			generator: newDBWithCol(2).WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
+			ready:     false,
+			dbServer:  "A",
+		},
+		"in Plan, all shards in sync": {
+			generator: newDBWithCol(1).
+				WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().
+				WithShard().WithPlan("A", "D").WithCurrent("D", "A").Add().
+				Add().Add(),
+			ready:    true,
+			dbServer: "A",
+		},
+		"in Plan, all shards in sync but broken WC": {
+			generator: newDBWithCol(2).
+				WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().
+				WithShard().WithPlan("A", "D").WithCurrent("D", "A").Add().
+				Add().Add(),
+			ready:    false,
+			dbServer: "A",
+		},
+		"in Plan, some shards not synced": {
+			generator: newDBWithCol(1).
+				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
+				WithShard().WithPlan("A", "B", "C").WithCurrent("C").Add().
+				Add().Add(),
+			ready:    true,
+			dbServer: "A",
+		},
+		"in Plan, some shards not synced and broken WC": {
+			generator: newDBWithCol(2).
+				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
+				WithShard().WithPlan("A", "B", "C").WithCurrent("C").Add().
+				Add().Add(),
+			ready:    false,
+			dbServer: "A",
+		},
 	}
 
-	// TODO: Add More complex TC
-
-	tcs := map[string]tc{
-		"DB Not in Plan": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
-			ready:     true,
-			dbserver:  "B",
-		},
-		"DB in Plan, but WC == RF": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
-			ready:     true,
-			dbserver:  "A",
-		},
-		"DB in Plan, only in Current": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("A").Add().WithWriteConcern(1).Add().Add(),
-			ready:     false,
-			dbserver:  "A",
-		},
-		"DB in Plan, missing in Current": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("B").Add().WithWriteConcern(1).Add().Add(),
-			ready:     true,
-			dbserver:  "A",
-		},
-		"DB in Plan, missing in Current but broken WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B").Add().WithWriteConcern(2).Add().Add(),
-			ready:     false,
-			dbserver:  "A",
-		},
-		"DB in Plan, missing in Current with fine WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "C").Add().WithWriteConcern(2).Add().Add(),
-			ready:     true,
-			dbserver:  "A",
-		},
-		"DB in Plan, missing in Current with low WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().WithWriteConcern(1).Add().Add(),
-			ready:     true,
-			dbserver:  "A",
-		},
-		"DB in Plan, in Current with break WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().WithWriteConcern(2).Add().Add(),
-			ready:     false,
-			dbserver:  "A",
-		},
-		"DB in Plan, only in Current, default WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B").WithCurrent("A").Add().Add().Add(),
-			ready:     false,
-			dbserver:  "A",
-		},
-		"DB in Plan, in Current with default WC": {
-			generator: NewDatabaseRandomGenerator().RandomCollection().WithShard().WithPlan("A", "B", "C").WithCurrent("B", "A").Add().Add().Add(),
-			ready:     true,
-			dbserver:  "A",
-		},
-	}
-
-	for name, det := range tcs {
+	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
-			s := GenerateState(t, det.generator)
-
-			require.Equal(t, det.ready, s.IsDBServerReadyToRestart(det.dbserver))
+			s := GenerateState(t, tc.generator)
+			require.Equal(t, tc.ready, s.IsDBServerReadyToRestart(tc.dbServer))
 		})
 	}
 }
