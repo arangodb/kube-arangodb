@@ -46,6 +46,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/arangodb/kube-arangodb/pkg/upgrade"
 )
 
 var (
@@ -118,6 +119,19 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		d.RefreshState(ctxReconciliation, updated.Status.Members.AsList())
 		d.Log(d.deps.Log)
+
+		if err := d.WithStatusUpdateErr(ctxReconciliation, func(s *api.DeploymentStatus) (bool, error) {
+			if changed, err := upgrade.RunUpgrade(*updated, s, cachedStatus); err != nil {
+				return false, err
+			} else {
+				return changed, nil
+			}
+		}); err != nil {
+			d.CreateEvent(k8sutil.NewErrorEvent("Upgrade failed", err, d.apiObject))
+			nextInterval = minInspectionInterval
+			d.recentInspectionErrors++
+			return nextInterval.ReduceTo(maxInspectionInterval)
+		}
 
 		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval, cachedStatus)
 		if err != nil {
