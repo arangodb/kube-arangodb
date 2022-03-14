@@ -177,10 +177,11 @@ func (s State) IsDBServerReadyToRestart(serverID string) bool {
 		}
 
 		if len(current) <= wc {
-			// We have less in-sync servers than required for write concern
+			// If we restart this server, write concern won't be satisfied
 			readyToRestart = false
 			return true
 		}
+
 		return false
 	})
 

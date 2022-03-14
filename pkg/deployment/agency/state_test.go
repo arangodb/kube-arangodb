@@ -53,7 +53,6 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 	for v, data := range data {
 		t.Run(v, func(t *testing.T) {
 			var s DumpState
-
 			require.NoError(t, json.Unmarshal(data, &s))
 
 			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current ShardServers) bool {
@@ -71,4 +70,169 @@ func Test_Unmarshal_LongData(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(data), &s))
 
 	t.Logf("%+v", s)
+}
+
+func Test_IsDBServerInSync(t *testing.T) {
+	const dbName, colID, sh1, sh2 = "db1", "1001", "shard1", "shard2"
+	const sid1, sid2, sid3, sid4 = "PRMR-1", "PRMR-2", "PRMR-3", "PRMR-4"
+	var s = State{
+		Supervision: StateSupervision{},
+		Plan: StatePlan{
+			Collections: map[string]StatePlanDBCollections{
+				dbName: map[string]StatePlanCollection{
+					colID: {
+						Shards: map[string]ShardServers{
+							sh1: []string{sid1, sid2},
+							sh2: []string{sid1, sid2, sid3},
+						},
+					},
+				},
+			},
+		},
+		Current: StateCurrent{
+			Collections: map[string]StateCurrentDBCollections{
+				dbName: map[string]StateCurrentDBCollection{
+					colID: map[string]StateCurrentDBShard{
+						sh1: {Servers: []string{sid2, sid3}},
+						sh2: {Servers: []string{sid1, sid2, sid3}},
+					},
+				},
+			},
+		},
+	}
+	var expected = map[string]bool{
+		sid1: false, // in plan, not synced
+		sid2: true,  // in plan, synced
+		sid3: true,  // not in plan, synced
+		sid4: true,  // not in plan, not synced
+	}
+
+	for serverID, inSync := range expected {
+		require.Equalf(t, inSync, s.IsDBServerInSync(serverID), "server %s", serverID)
+	}
+}
+
+func Test_IsDBServerIsReadyToRestart(t *testing.T) {
+	const dbName, colID, sh1, sh2, sh3 = "db1", "1001", "shard1", "shard2", "shard3"
+	const sid1, sid2, sid3, sid4 = "PRMR-1", "PRMR-2", "PRMR-3", "PRMR-4"
+	var wc1, wc2, wc3 = 1, 2, 3
+
+	var testCases = map[string]struct {
+		state    State
+		expected map[string]bool
+	}{
+		"write-concern-1": {
+			state: State{
+				Supervision: StateSupervision{},
+				Plan: StatePlan{
+					Collections: map[string]StatePlanDBCollections{
+						dbName: map[string]StatePlanCollection{
+							colID: {
+								WriteConcern: &wc1,
+								Shards: map[string]ShardServers{
+									sh1: []string{sid1, sid2},
+									sh2: []string{sid1, sid2, sid3},
+								},
+							},
+						},
+					},
+				},
+				Current: StateCurrent{
+					Collections: map[string]StateCurrentDBCollections{
+						dbName: map[string]StateCurrentDBCollection{
+							colID: map[string]StateCurrentDBShard{
+								sh1: {Servers: []string{sid2, sid3}},
+								sh2: {Servers: []string{sid1, sid2, sid3}},
+							},
+						},
+					},
+				},
+			},
+			expected: map[string]bool{
+				sid1: true,
+				sid2: true,
+				sid3: true,
+				sid4: true,
+			},
+		},
+		"write-concern-2": {
+			state: State{
+				Supervision: StateSupervision{},
+				Plan: StatePlan{
+					Collections: map[string]StatePlanDBCollections{
+						dbName: map[string]StatePlanCollection{
+							colID: {
+								WriteConcern: &wc2,
+								Shards: map[string]ShardServers{
+									sh1: []string{sid1, sid2},
+									sh2: []string{sid1, sid2, sid3},
+									sh3: []string{sid1, sid3},
+								},
+							},
+						},
+					},
+				},
+				Current: StateCurrent{
+					Collections: map[string]StateCurrentDBCollections{
+						dbName: map[string]StateCurrentDBCollection{
+							colID: map[string]StateCurrentDBShard{
+								sh1: {Servers: []string{sid3}},
+								sh2: {Servers: []string{sid1, sid2, sid3}},
+								sh3: {Servers: []string{}},
+							},
+						},
+					},
+				},
+			},
+			expected: map[string]bool{
+				sid1: false,
+				sid2: false,
+				sid3: true,
+				sid4: true,
+			},
+		},
+		"write-concern-3": {
+			state: State{
+				Supervision: StateSupervision{},
+				Plan: StatePlan{
+					Collections: map[string]StatePlanDBCollections{
+						dbName: map[string]StatePlanCollection{
+							colID: {
+								WriteConcern: &wc3,
+								Shards: map[string]ShardServers{
+									sh1: []string{sid1, sid2, sid3},
+									sh2: []string{sid1, sid2, sid3},
+								},
+							},
+						},
+					},
+				},
+				Current: StateCurrent{
+					Collections: map[string]StateCurrentDBCollections{
+						dbName: map[string]StateCurrentDBCollection{
+							colID: map[string]StateCurrentDBShard{
+								sh1: {Servers: []string{sid3}},
+								sh2: {Servers: []string{sid1, sid2, sid3}},
+							},
+						},
+					},
+				},
+			},
+			expected: map[string]bool{
+				sid1: false,
+				sid2: false,
+				sid3: true,
+				sid4: true,
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			for server, readyToRestart := range testCase.expected {
+				require.Equalf(t, readyToRestart, testCase.state.IsDBServerReadyToRestart(server), "server %s", server)
+			}
+		})
+	}
+
 }
