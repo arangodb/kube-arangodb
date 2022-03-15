@@ -21,8 +21,11 @@
 package rotation
 
 import (
+	"reflect"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+
 	core "k8s.io/api/core/v1"
 )
 
@@ -52,8 +55,24 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 				e = err
 				return
 			} else if specC != statusC {
-				status.Affinity = spec.Affinity.DeepCopy()
 				mode = mode.And(SilentRotation)
+
+				var specArchs api.ArangoDeploymentArchitecture
+				var statusArchs api.ArangoDeploymentArchitecture
+
+				if spec.Affinity != nil && spec.Affinity.NodeAffinity != nil && spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+					specArchs = api.GetArchsFromNodeSelector(spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
+				}
+
+				if status.Affinity != nil && status.Affinity.NodeAffinity != nil && status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+					statusArchs = api.GetArchsFromNodeSelector(status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
+				}
+
+				if !reflect.DeepEqual(specArchs, statusArchs) {
+					mode = mode.And(GracefulRotation)
+				}
+
+				status.Affinity = spec.Affinity.DeepCopy()
 				return
 			} else {
 				return

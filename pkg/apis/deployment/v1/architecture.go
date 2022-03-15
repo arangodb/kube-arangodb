@@ -22,8 +22,10 @@ package v1
 
 import (
 	"runtime"
+	"strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+
 	"github.com/pkg/errors"
 	core "k8s.io/api/core/v1"
 )
@@ -39,10 +41,6 @@ func (a ArangoDeploymentArchitecture) GetDefault() ArangoDeploymentArchitectureT
 }
 
 func (a ArangoDeploymentArchitecture) Validate() error {
-	if len(a) > 1 {
-		return errors.Errorf("Only one architecture type is supported currently")
-	}
-
 	for id := range a {
 		if err := a[id].Validate(); err != nil {
 			return errors.WithStack(errors.Wrapf(err, "%d", id))
@@ -50,18 +48,6 @@ func (a ArangoDeploymentArchitecture) Validate() error {
 	}
 
 	return nil
-}
-
-func (a ArangoDeploymentArchitecture) AsNodeSelectorRequirement() core.NodeSelectorTerm {
-	return core.NodeSelectorTerm{
-		MatchExpressions: []core.NodeSelectorRequirement{
-			{
-				Key:      k8sutil.NodeArchAffinityLabel,
-				Operator: "In",
-				Values:   []string{string(a.GetDefault())},
-			},
-		},
-	}
 }
 
 type ArangoDeploymentArchitectureType string
@@ -86,4 +72,33 @@ func (a ArangoDeploymentArchitectureType) Validate() error {
 	default:
 		return errors.Errorf("Unknown architecture type %s", q)
 	}
+}
+
+func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeSelectorTerm {
+	return core.NodeSelectorTerm{
+		MatchExpressions: []core.NodeSelectorRequirement{
+			{
+				Key:      k8sutil.NodeArchAffinityLabel,
+				Operator: "In",
+				Values:   []string{string(a)},
+			},
+		},
+	}
+}
+
+func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) ArangoDeploymentArchitecture {
+	var result ArangoDeploymentArchitecture
+	for _, selector := range selectors {
+		if selector.MatchExpressions != nil {
+			for _, req := range selector.MatchExpressions {
+				if strings.Contains(req.Key, k8sutil.NodeArchAffinityLabel) && req.Operator == "In" {
+					for _, arch := range req.Values {
+						result = append(result, ArangoDeploymentArchitectureType(arch))
+					}
+
+				}
+			}
+		}
+	}
+	return result
 }

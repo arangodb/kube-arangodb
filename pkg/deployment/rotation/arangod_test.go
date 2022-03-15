@@ -138,7 +138,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
 			}),
 
-			expectedMode: SilentRotation,
+			expectedMode: GracefulRotation,
 		},
 		{
 			name: "Add affinity",
@@ -166,7 +166,7 @@ func Test_ArangoD_Affinity(t *testing.T) {
 				}
 			}),
 
-			expectedMode: SilentRotation,
+			expectedMode: GracefulRotation,
 		},
 		{
 			name: "Change affinity",
@@ -214,6 +214,53 @@ func Test_ArangoD_Affinity(t *testing.T) {
 			}),
 
 			expectedMode: SilentRotation,
+		},
+		{
+			name: "Change affinity archs",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "beta.kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"arm64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+
+			expectedMode: GracefulRotation,
 		},
 	}
 
