@@ -73,19 +73,41 @@ func Test_Unmarshal_LongData(t *testing.T) {
 }
 
 func Test_IsDBServerInSync(t *testing.T) {
-	var state = GenerateState(t, NewDatabaseRandomGenerator().RandomCollection().
-		WithShard().WithPlan("A", "B").WithCurrent("B", "C").Add().
-		WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().
-		WithWriteConcern(1).Add().Add(),
-	)
-	var expected = map[string]bool{
-		"A": false, // in plan, not synced
-		"B": true,  // in plan, synced
-		"C": true,  // not in plan, synced
-		"D": true,  // not in plan, not synced
+	type testCase struct {
+		generator StateGenerator
+		inSync    []string
+		notInSync []string
 	}
-	for serverID, inSync := range expected {
-		require.Equalf(t, inSync, state.IsDBServerInSync(serverID), "server %s", serverID)
+	newDBWithCol := func(writeConcern int) CollectionGeneratorInterface {
+		return NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(writeConcern)
+	}
+	tcs := map[string]testCase{
+		"in Plan, in Current, WC = 2": {
+			generator: newDBWithCol(2).
+				WithShard().WithPlan("A", "B").WithCurrent("B", "C").Add().
+				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().Add().Add(),
+			inSync:    []string{"B", "C", "D"},
+			notInSync: []string{"A"},
+		},
+		"in Plan, in Current, WC = 3, broken": {
+			generator: newDBWithCol(3).
+				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B").Add().
+				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().Add().Add(),
+			inSync:    []string{},
+			notInSync: []string{"A", "B", "C"},
+		},
+	}
+
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			s := GenerateState(t, tc.generator)
+			for _, server := range tc.inSync {
+				require.Truef(t, s.IsDBServerInSync(server), "server %s should be in sync", server)
+			}
+			for _, server := range tc.notInSync {
+				require.Falsef(t, s.IsDBServerInSync(server), "server %s should not be in sync", server)
+			}
+		})
 	}
 }
 

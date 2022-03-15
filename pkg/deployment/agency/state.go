@@ -140,8 +140,13 @@ dbsLoop:
 func (s State) IsDBServerInSync(serverID string) bool {
 	isInSync := true
 	s.IterateOverCollections(func(db, col string, planCollection *StatePlanCollection, shard string, plan ShardServers, current ShardServers) bool {
-		serverIsNotInSync := plan.Contains(serverID) && !current.Contains(serverID)
-		if serverIsNotInSync {
+		if !plan.Contains(serverID) {
+			return false
+		}
+
+		serverIsNotInSync := !current.Contains(serverID)
+		wc := planCollection.GetWriteConcern(1)
+		if serverIsNotInSync || wc > len(current) {
 			isInSync = false
 			return true
 		}
