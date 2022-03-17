@@ -262,6 +262,53 @@ func Test_ArangoD_Affinity(t *testing.T) {
 
 			expectedMode: GracefulRotation,
 		},
+		{
+			name: "Change affinity archs - swap arch order",
+			spec: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "beta.kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"amd64", "arm64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+			status: buildPodSpec(func(pod *core.PodTemplateSpec) {
+				pod.Spec.Affinity = &core.Affinity{
+					NodeAffinity: &core.NodeAffinity{
+						RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
+							NodeSelectorTerms: []core.NodeSelectorTerm{
+								{
+									MatchExpressions: []core.NodeSelectorRequirement{
+										{
+											Key:      "kubernetes.io/arch",
+											Operator: core.NodeSelectorOpIn,
+											Values: []string{
+												"arm64", "amd64",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			}),
+
+			expectedMode: SilentRotation,
+		},
 	}
 
 	runTestCases(t)(testCases...)

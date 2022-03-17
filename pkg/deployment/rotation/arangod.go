@@ -55,23 +55,7 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 				e = err
 				return
 			} else if specC != statusC {
-				mode = mode.And(SilentRotation)
-
-				var specArchs api.ArangoDeploymentArchitecture
-				var statusArchs api.ArangoDeploymentArchitecture
-
-				if spec.Affinity != nil && spec.Affinity.NodeAffinity != nil && spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-					specArchs = api.GetArchsFromNodeSelector(spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
-				}
-
-				if status.Affinity != nil && status.Affinity.NodeAffinity != nil && status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-					statusArchs = api.GetArchsFromNodeSelector(status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
-				}
-
-				if !reflect.DeepEqual(specArchs, statusArchs) {
-					mode = mode.And(GracefulRotation)
-				}
-
+				mode = mode.And(addGracefulRotationIfNeeded(spec, status))
 				status.Affinity = spec.Affinity.DeepCopy()
 				return
 			} else {
@@ -79,4 +63,22 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 			}
 		}
 	}
+}
+
+func addGracefulRotationIfNeeded(spec, status *core.PodSpec) Mode {
+	var specArchs map[api.ArangoDeploymentArchitectureType]interface{}
+	var statusArchs map[api.ArangoDeploymentArchitectureType]interface{}
+
+	if spec.Affinity != nil && spec.Affinity.NodeAffinity != nil && spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		specArchs = api.GetArchsFromNodeSelector(spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
+	}
+
+	if status.Affinity != nil && status.Affinity.NodeAffinity != nil && status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+		statusArchs = api.GetArchsFromNodeSelector(status.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)
+	}
+
+	if !reflect.DeepEqual(specArchs, statusArchs) {
+		return GracefulRotation
+	}
+	return SilentRotation
 }

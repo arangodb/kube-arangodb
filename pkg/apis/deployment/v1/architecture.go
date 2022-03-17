@@ -22,7 +22,6 @@ package v1
 
 import (
 	"runtime"
-	"strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 
@@ -86,16 +85,15 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 	}
 }
 
-func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) ArangoDeploymentArchitecture {
-	var result ArangoDeploymentArchitecture
+func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]interface{} {
+	result := make(map[ArangoDeploymentArchitectureType]interface{})
 	for _, selector := range selectors {
 		if selector.MatchExpressions != nil {
 			for _, req := range selector.MatchExpressions {
-				if strings.Contains(req.Key, k8sutil.NodeArchAffinityLabel) && req.Operator == "In" {
+				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == "beta.kubernetes.io/arch" {
 					for _, arch := range req.Values {
-						result = append(result, ArangoDeploymentArchitectureType(arch))
+						result[ArangoDeploymentArchitectureType(arch)] = nil
 					}
-
 				}
 			}
 		}

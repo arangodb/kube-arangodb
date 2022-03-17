@@ -84,3 +84,19 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 		},
 	}
 }
+
+func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]interface{} {
+	result := make(map[ArangoDeploymentArchitectureType]interface{})
+	for _, selector := range selectors {
+		if selector.MatchExpressions != nil {
+			for _, req := range selector.MatchExpressions {
+				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == "beta.kubernetes.io/arch" {
+					for _, arch := range req.Values {
+						result[ArangoDeploymentArchitectureType(arch)] = nil
+					}
+				}
+			}
+		}
+	}
+	return result
+}
