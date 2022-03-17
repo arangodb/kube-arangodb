@@ -41,40 +41,42 @@ var (
 		"test": "test",
 	}
 
+	arch = api.ArangoDeploymentArchitectureDefault
+
 	firstAgentStatus = api.MemberStatus{
 		ID:           "agent1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	firstCoordinatorStatus = api.MemberStatus{
 		ID:           "coordinator1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	singleStatus = api.MemberStatus{
 		ID:           "single1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	firstSyncMaster = api.MemberStatus{
 		ID:           "syncMaster1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	firstSyncWorker = api.MemberStatus{
 		ID:           "syncWorker1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	firstDBServerStatus = api.MemberStatus{
 		ID:           "DBserver1",
 		Phase:        api.MemberPhaseNone,
-		Architecture: api.ArangoDeploymentArchitectureDefault,
+		Architecture: &arch,
 	}
 
 	noAuthentication = api.AuthenticationSpec{

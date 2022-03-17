@@ -55,7 +55,7 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 				e = err
 				return
 			} else if specC != statusC {
-				mode = mode.And(addGracefulRotationIfNeeded(spec, status))
+				mode = mode.And(getRotationMode(spec, status))
 				status.Affinity = spec.Affinity.DeepCopy()
 				return
 			} else {
@@ -65,9 +65,9 @@ func affinityCompare(_ api.DeploymentSpec, _ api.ServerGroup, spec, status *core
 	}
 }
 
-func addGracefulRotationIfNeeded(spec, status *core.PodSpec) Mode {
-	var specArchs map[api.ArangoDeploymentArchitectureType]interface{}
-	var statusArchs map[api.ArangoDeploymentArchitectureType]interface{}
+func getRotationMode(spec, status *core.PodSpec) Mode {
+	var specArchs map[api.ArangoDeploymentArchitectureType]bool
+	var statusArchs map[api.ArangoDeploymentArchitectureType]bool
 
 	if spec.Affinity != nil && spec.Affinity.NodeAffinity != nil && spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 		specArchs = api.GetArchsFromNodeSelector(spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms)

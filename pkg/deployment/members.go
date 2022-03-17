@@ -145,7 +145,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupAgents:
 		log.Debug().Str("id", id).Msg("Adding agent")
@@ -157,7 +157,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupDBServers:
 		log.Debug().Str("id", id).Msg("Adding dbserver")
@@ -169,7 +169,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: k8sutil.CreatePersistentVolumeClaimName(deploymentName, role, id),
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupCoordinators:
 		log.Debug().Str("id", id).Msg("Adding coordinator")
@@ -181,7 +181,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncMasters:
 		log.Debug().Str("id", id).Msg("Adding syncmaster")
@@ -193,7 +193,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	case api.ServerGroupSyncWorkers:
 		log.Debug().Str("id", id).Msg("Adding syncworker")
@@ -205,7 +205,7 @@ func renderMember(log zerolog.Logger, status *api.DeploymentStatus, group api.Se
 			PersistentVolumeClaimName: "",
 			PodName:                   "",
 			Image:                     apiObject.Status.CurrentImage,
-			Architecture:              arch,
+			Architecture:              &arch,
 		}, nil
 	default:
 		return nil, errors.WithStack(errors.Newf("Unknown server group %d", group))

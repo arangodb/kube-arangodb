@@ -85,18 +85,29 @@ func (a ArangoDeploymentArchitectureType) AsNodeSelectorRequirement() core.NodeS
 	}
 }
 
-func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]interface{} {
-	result := make(map[ArangoDeploymentArchitectureType]interface{})
+func GetArchsFromNodeSelector(selectors []core.NodeSelectorTerm) map[ArangoDeploymentArchitectureType]bool {
+	result := make(map[ArangoDeploymentArchitectureType]bool)
 	for _, selector := range selectors {
 		if selector.MatchExpressions != nil {
 			for _, req := range selector.MatchExpressions {
-				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == "beta.kubernetes.io/arch" {
+				if req.Key == k8sutil.NodeArchAffinityLabel || req.Key == k8sutil.NodeArchAffinityLabelBeta {
 					for _, arch := range req.Values {
-						result[ArangoDeploymentArchitectureType(arch)] = nil
+						result[ArangoDeploymentArchitectureType(arch)] = true
 					}
 				}
 			}
 		}
 	}
 	return result
+}
+
+func (a *ArangoDeploymentArchitectureType) Equal(other *ArangoDeploymentArchitectureType) bool {
+	if a == nil && other == nil {
+		return true
+	} else if a == nil || other == nil {
+		return false
+	} else if a == other {
+		return true
+	}
+	return false
 }
