@@ -93,11 +93,13 @@ func (a *actionWaitForMemberInSync) check() (bool, error) {
 }
 
 func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
-	agencyState, ok := a.actionCtx.GetAgencyCache()
-	if !ok || agencyState.IsDBServerInSync(a.MemberID()) {
-		a.log.Info().Str("mode", "cluster").Msgf("Shards are not in sync")
-		return false, nil
+	switch a.action.Group {
+	case api.ServerGroupDBServers:
+		agencyState, ok := a.actionCtx.GetAgencyCache()
+		if !ok || !agencyState.IsDBServerInSync(a.MemberID()) {
+			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Msgf("DB server is not in sync")
+			return false, nil
+		}
 	}
-
 	return true, nil
 }
