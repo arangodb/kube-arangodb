@@ -138,7 +138,11 @@ type Deployment struct {
 	syncClientCache           client.ClientCache
 	haveServiceMonitorCRD     bool
 
-	memberState.StateInspector
+	memberState memberState.StateInspector
+}
+
+func (d *Deployment) GetMembersState() memberState.StateInspector {
+	return d.memberState
 }
 
 func (d *Deployment) GetAgencyCache() (agency.State, bool) {
@@ -216,7 +220,7 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		agencyCache: agency.NewCache(apiObject.Spec.Mode),
 	}
 
-	d.StateInspector = memberState.NewStateInspector(d)
+	d.memberState = memberState.NewStateInspector(d)
 
 	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
 
@@ -241,8 +245,6 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 		ci := newClusterScalingIntegration(d)
 		d.clusterScalingIntegration = ci
 		go ci.ListenForClusterEvents(d.stopCh)
-		go d.resources.RunDeploymentHealthLoop(d.stopCh)
-		go d.resources.RunDeploymentShardSyncLoop(d.stopCh)
 	}
 	if config.AllowChaos {
 		d.chaosMonkey = chaos.NewMonkey(deps.Log, d)

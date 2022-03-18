@@ -28,6 +28,7 @@ import (
 	"github.com/rs/zerolog"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 )
 
 func init() {
@@ -96,8 +97,15 @@ func (a *actionWaitForMemberInSync) checkCluster() (bool, error) {
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
 		agencyState, ok := a.actionCtx.GetAgencyCache()
-		if !ok || !agencyState.IsDBServerInSync(a.MemberID()) {
-			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Msgf("DB server is not in sync")
+		if !ok {
+			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Msgf("AgencyCache is missing")
+			return false, nil
+		}
+
+		notInSyncShards := agency.GetDBServerShardsNotInSync(agencyState, a.MemberID())
+
+		if len(notInSyncShards) > 0 {
+			a.log.Info().Str("mode", "cluster").Str("member", a.MemberID()).Int("shard", len(notInSyncShards)).Msgf("DBServer contains not in sync shards")
 			return false, nil
 		}
 	}

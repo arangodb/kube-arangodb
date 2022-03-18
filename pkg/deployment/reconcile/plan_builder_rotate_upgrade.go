@@ -29,11 +29,14 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 
+	"fmt"
+
 	"github.com/arangodb/go-driver"
 	upgraderules "github.com/arangodb/go-upgrade-rules"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/rs/zerolog"
@@ -166,12 +169,13 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 
 			if d.updateAllowed {
 				// We are fine, group is alive so we can proceed
+				log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Upgrade allowed")
 				return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
 			} else if d.unsafeUpdateAllowed {
-				log.Info().Str("member", m.Member.ID).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
 				return createUpgradeMemberPlan(log, m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded), false
 			} else {
-				log.Info().Str("member", m.Member.ID).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 				return nil, true
 			}
 		}
@@ -189,10 +193,10 @@ func createRotateOrUpgradePlanInternal(log zerolog.Logger, apiObject k8sutil.API
 			if !d.updateAllowed {
 				// Update is not allowed due to constraint
 				if !d.unsafeUpdateAllowed {
-					log.Info().Str("member", m.Member.ID).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+					log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 					continue
 				}
-				log.Info().Str("member", m.Member.ID).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				log.Info().Str("member", m.Member.ID).Str("Reason", d.updateMessage).Msg("Pod needs restart but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
 			}
 
 			if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
@@ -379,37 +383,46 @@ func arangoMemberPodTemplateNeedsUpdate(ctx context.Context, log zerolog.Logger,
 // groupReadyForRestart returns true if the cluster is ready for the next update, that is:
 // 	- all shards are in sync
 // 	- all members are ready and fine
-func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) bool {
+func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatus, member api.MemberStatus, group api.ServerGroup) (bool, string) {
 	if group == api.ServerGroupSingle {
-		return true
+		return true, "Restart always in single mode"
 	}
 
 	if !status.Conditions.IsTrue(api.ConditionTypeBootstrapCompleted) {
 		// Restart is allowed always when bootstrap is not yet completed
-		return true
+		return true, "Bootstrap not completed, restart is allowed"
 	}
 
 	// If current member did not become ready even once. Kill it
 	if !member.Conditions.IsTrue(api.ConditionTypeStarted) {
-		return true
+		return true, "Member is not started"
 	}
 
 	// If current core containers are dead kill it.
 	if !member.Conditions.IsTrue(api.ConditionTypeServing) {
-		return true
+		return true, "Member is not serving"
+	}
+
+	if !status.Members.MembersOfGroup(group).AllMembersServing() {
+		return false, "Not all members are serving"
 	}
 
 	switch group {
 	case api.ServerGroupDBServers:
 		agencyState, ok := context.GetAgencyCache()
 		if !ok {
-			return false
+			// Unable to get agency state, do not restart
+			return false, "Unable to get agency cache"
 		}
-		return agencyState.IsDBServerReadyToRestart(member.ID) && status.Members.MembersOfGroup(group).AllMembersServing()
-	default:
-		// In case of agents we can kill only one agent at same time
-		return status.Members.MembersOfGroup(group).AllMembersServing()
+
+		blockingRestartShards := agency.GetDBServerBlockingRestartShards(agencyState, member.ID)
+
+		if s := len(blockingRestartShards); s > 0 {
+			return false, fmt.Sprintf("There are %d shards which are blocking restart", s)
+		}
 	}
+
+	return true, "Restart allowed"
 }
 
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing

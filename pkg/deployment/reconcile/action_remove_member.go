@@ -82,12 +82,12 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 				a.log.Err(err).Str("member-id", m.ID).Msgf("Failed to remove server from cluster")
 				// ignore this error, maybe all coordinators are failed and no connction to cluster is possible
 			} else if driver.IsPreconditionFailed(err) {
-				health, err := a.actionCtx.GetDeploymentHealth()
-				if err != nil {
-					return false, errors.WithStack(errors.Wrapf(err, "failed to get cluster health"))
+				health := a.actionCtx.GetMembersState().Health()
+				if health.Error != nil {
+					return false, errors.WithStack(errors.Wrapf(health.Error, "failed to get cluster health"))
 				}
 				// We don't care if not found
-				if record, ok := health.Health[driver.ServerID(m.ID)]; ok {
+				if record, ok := health.Members[driver.ServerID(m.ID)]; ok {
 
 					// Check if the pod is terminating
 					if m.Conditions.IsTrue(api.ConditionTypeTerminating) {

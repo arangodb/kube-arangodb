@@ -22,6 +22,7 @@ package agency
 
 type CollectionGeneratorInterface interface {
 	WithWriteConcern(wc int) CollectionGeneratorInterface
+	WithReplicationFactor(rf int) CollectionGeneratorInterface
 	WithShard() ShardGeneratorInterface
 	Add() DatabaseGeneratorInterface
 }
@@ -31,6 +32,7 @@ type collectionGenerator struct {
 	col string
 
 	wc     *int
+	rf     *int
 	shards map[int]shardGenerator
 }
 
@@ -53,5 +55,10 @@ func (c collectionGenerator) WithShard() ShardGeneratorInterface {
 
 func (c collectionGenerator) WithWriteConcern(wc int) CollectionGeneratorInterface {
 	c.wc = &wc
+	return c
+}
+
+func (c collectionGenerator) WithReplicationFactor(rf int) CollectionGeneratorInterface {
+	c.rf = &rf
 	return c
 }

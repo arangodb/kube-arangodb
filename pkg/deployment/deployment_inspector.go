@@ -116,8 +116,8 @@ func (d *Deployment) inspectDeployment(lastInterval util.Interval) util.Interval
 
 		d.apiObject = updated
 
-		d.RefreshState(ctxReconciliation, updated.Status.Members.AsList())
-		d.Log(d.deps.Log)
+		d.GetMembersState().RefreshState(ctxReconciliation, updated.Status.Members.AsList())
+		d.GetMembersState().Log(d.deps.Log)
 
 		inspectNextInterval, err := d.inspectDeploymentWithError(ctxReconciliation, nextInterval, cachedStatus)
 		if err != nil {
@@ -281,7 +281,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 	// Reachable state ensurer
 	reachableConditionState := status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate()
-	if d.State().IsReachable() {
+	if d.GetMembersState().State().IsReachable() {
 		if !reachableConditionState {
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeReachable, true, "ArangoDB is reachable", "", ""); err != nil {
 				return minInspectionInterval, errors.Wrapf(err, "Unable to update Reachable condition")
@@ -339,7 +339,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 	}
 
 	// Inspect deployment for obsolete members
-	if err := d.resources.CleanupRemovedMembers(ctx); err != nil {
+	if err := d.resources.CleanupRemovedMembers(ctx, d.GetMembersState().Health()); err != nil {
 		return minInspectionInterval, errors.Wrapf(err, "Removed member cleanup failed")
 	}
 

@@ -46,6 +46,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
@@ -81,6 +82,11 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) GetMembersState() member.StateInspector {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *testContext) GetMode() api.DeploymentMode {

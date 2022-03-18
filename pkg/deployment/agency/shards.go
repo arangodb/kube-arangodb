@@ -33,3 +33,15 @@ func (s ShardServers) Contains(server string) bool {
 
 	return false
 }
+
+func (s ShardServers) FilterBy(b ShardServers) ShardServers {
+	q := make(ShardServers, 0, len(s))
+
+	for _, i := range s {
+		if b.Contains(i) {
+			q = append(q, i)
+		}
+	}
+
+	return q
+}

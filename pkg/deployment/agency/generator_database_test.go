@@ -94,9 +94,10 @@ func (d databaseGenerator) Add() StateGenerator {
 			}
 
 			planCol := StatePlanCollection{
-				Name:         util.NewString(col),
-				Shards:       planShards,
-				WriteConcern: colDet.wc,
+				Name:              util.NewString(col),
+				Shards:            planShards,
+				WriteConcern:      colDet.wc,
+				ReplicationFactor: colDet.rf,
 			}
 
 			plan[col] = planCol

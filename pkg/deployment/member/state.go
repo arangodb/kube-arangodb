@@ -31,9 +31,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type StateInspectorGetter interface {
+	GetMembersState() StateInspector
+}
+
 type StateInspector interface {
 	RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements)
 	MemberState(id string) (State, bool)
+
+	Health() Health
 
 	State() State
 
@@ -53,7 +59,13 @@ type stateInspector struct {
 
 	state State
 
+	health Health
+
 	client reconciler.DeploymentClient
+}
+
+func (s *stateInspector) Health() Health {
+	return s.health
 }
 
 func (s *stateInspector) State() State {
@@ -101,6 +113,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	defer cancel()
 
 	var cs State
+	var h Health
 
 	c, err := s.client.GetDatabaseClient(ctx)
 	if err != nil {
@@ -114,6 +127,18 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 		}
 	}
 
+	hctx, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
+	defer cancel()
+	if cluster, err := c.Cluster(hctx); err != nil {
+		h.Error = err
+	} else {
+		if health, err := cluster.Health(hctx); err != nil {
+			h.Error = err
+		} else {
+			h.Members = health.Health
+		}
+	}
+
 	current := map[string]State{}
 
 	for id := range members {
@@ -122,6 +147,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 	s.members = current
 	s.state = cs
+	s.health = h
 }
 
 func (s *stateInspector) MemberState(id string) (State, bool) {
@@ -135,6 +161,12 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 	v, ok := s.members[id]
 
 	return v, ok
+}
+
+type Health struct {
+	Members map[driver.ServerID]driver.ServerHealth
+
+	Error error
 }
 
 type State struct {

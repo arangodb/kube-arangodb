@@ -51,7 +51,7 @@ type Context interface {
 	reconciler.DeploymentSyncClient
 	reconciler.KubernetesEventGenerator
 
-	member.StateInspector
+	member.StateInspectorGetter
 
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() reconciler.ServerGroupIterator

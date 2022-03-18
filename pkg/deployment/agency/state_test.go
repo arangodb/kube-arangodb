@@ -54,11 +54,6 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 		t.Run(v, func(t *testing.T) {
 			var s DumpState
 			require.NoError(t, json.Unmarshal(data, &s))
-
-			s.Agency.Arango.IterateOverCollections(func(db, col string, info *StatePlanCollection, shard string, plan ShardServers, current ShardServers) bool {
-				require.EqualValues(t, 1, info.GetWriteConcern(0))
-				return false
-			})
 		})
 	}
 }
@@ -84,29 +79,37 @@ func Test_IsDBServerInSync(t *testing.T) {
 	tcs := map[string]testCase{
 		"in Plan, in Current, WC = 2": {
 			generator: newDBWithCol(2).
-				WithShard().WithPlan("A", "B").WithCurrent("B", "C").Add().
+				WithShard().WithPlan("A", "B").WithCurrent("B").Add().
 				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().Add().Add(),
-			inSync:    []string{"B", "C", "D"},
-			notInSync: []string{"A"},
+			inSync:    []string{"A", "C", "D"},
+			notInSync: []string{"B"},
 		},
 		"in Plan, in Current, WC = 3, broken": {
 			generator: newDBWithCol(3).
 				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B").Add().
 				WithShard().WithPlan("A", "B", "C").WithCurrent("A", "B", "C").Add().Add().Add(),
-			inSync:    []string{},
-			notInSync: []string{"A", "B", "C"},
+			inSync:    []string{"C"},
+			notInSync: []string{"A", "B"},
 		},
 	}
 
 	for name, tc := range tcs {
 		t.Run(name, func(t *testing.T) {
 			s := GenerateState(t, tc.generator)
-			for _, server := range tc.inSync {
-				require.Truef(t, s.IsDBServerInSync(server), "server %s should be in sync", server)
-			}
-			for _, server := range tc.notInSync {
-				require.Falsef(t, s.IsDBServerInSync(server), "server %s should not be in sync", server)
-			}
+			t.Run("InSync", func(t *testing.T) {
+				for _, server := range tc.inSync {
+					t.Run(server, func(t *testing.T) {
+						require.Len(t, GetDBServerBlockingRestartShards(s, server), 0, "server %s should be in sync", server)
+					})
+				}
+			})
+			t.Run("NotInSync", func(t *testing.T) {
+				for _, server := range tc.notInSync {
+					t.Run(server, func(t *testing.T) {
+						require.NotEqual(t, GetDBServerBlockingRestartShards(s, server), 0, "server %s should not be in sync", server)
+					})
+				}
+			})
 		})
 	}
 }
@@ -204,10 +207,10 @@ func Test_IsDBServerReadyToRestart(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s := GenerateState(t, tc.generator)
 			for _, server := range tc.ready {
-				require.Truef(t, s.IsDBServerReadyToRestart(server), "server %s should be able to restart", server)
+				require.Len(t, s.Filter(FilterDBServerShardRestart(server)), 0, "server %s should be in sync", server)
 			}
 			for _, server := range tc.notReady {
-				require.Falsef(t, s.IsDBServerReadyToRestart(server), "server %s should not be able to restart", server)
+				require.NotEqual(t, len(s.Filter(FilterDBServerShardRestart(server))), 0, "server %s should not be in sync", server)
 			}
 		})
 	}
