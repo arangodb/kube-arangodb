@@ -32,13 +32,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRenewTLSCACertificate, newRenewTLSCACertificateAction)
+	registerAction(api.ActionTypeRenewTLSCACertificate, newRenewTLSCACertificateAction, operationTLSCACertificateTimeout)
 }
 
 func newRenewTLSCACertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &renewTLSCACertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, operationTLSCACertificateTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

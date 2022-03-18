@@ -34,13 +34,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeTLSKeyStatusUpdate, newTLSKeyStatusUpdate)
+	registerAction(api.ActionTypeTLSKeyStatusUpdate, newTLSKeyStatusUpdate, defaultTimeout)
 }
 
 func newTLSKeyStatusUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &tlsKeyStatusUpdateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

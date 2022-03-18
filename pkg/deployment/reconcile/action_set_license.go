@@ -33,13 +33,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeLicenseSet, newLicenseSet)
+	registerAction(api.ActionTypeLicenseSet, newLicenseSet, defaultTimeout)
 }
 
 func newLicenseSet(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &licenseSetAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeCleanOutMember, newCleanOutMemberAction)
+	registerAction(api.ActionTypeCleanOutMember, newCleanOutMemberAction, cleanoutMemberTimeout)
 }
 
 // newCleanOutMemberAction creates a new Action that implements the given
@@ -43,7 +43,7 @@ func init() {
 func newCleanOutMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionCleanoutMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, cleanoutMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

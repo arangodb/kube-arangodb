@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeMarkToRemoveMember, newMarkToRemoveMemberAction)
+	registerAction(api.ActionTypeMarkToRemoveMember, newMarkToRemoveMemberAction, addMemberTimeout)
 }
 
 func newMarkToRemoveMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionMarkToRemove{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, addMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

@@ -42,13 +42,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeJWTAdd, newJWTAdd)
+	registerAction(api.ActionTypeJWTAdd, newJWTAdd, defaultTimeout)
 }
 
 func newJWTAdd(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &jwtAddAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

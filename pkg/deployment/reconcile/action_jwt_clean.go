@@ -39,13 +39,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeJWTClean, newJWTClean)
+	registerAction(api.ActionTypeJWTClean, newJWTClean, defaultTimeout)
 }
 
 func newJWTClean(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &jwtCleanAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

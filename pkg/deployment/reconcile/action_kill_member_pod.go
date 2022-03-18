@@ -33,7 +33,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeKillMemberPod, newKillMemberPodAction)
+	registerAction(api.ActionTypeKillMemberPod, newKillMemberPodAction, defaultTimeout)
 }
 
 // newKillMemberPodAction creates a new Action that implements the given
@@ -41,7 +41,7 @@ func init() {
 func newKillMemberPodAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionKillMemberPod{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

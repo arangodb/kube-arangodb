@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeBackupRestoreClean, newBackupRestoreCleanAction)
+	registerAction(api.ActionTypeBackupRestoreClean, newBackupRestoreCleanAction, backupRestoreTimeout)
 }
 
 func newBackupRestoreCleanAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionBackupRestoreClean{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, backupRestoreTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

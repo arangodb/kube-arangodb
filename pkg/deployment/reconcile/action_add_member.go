@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 
@@ -35,7 +34,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeAddMember, newAddMemberAction)
+	registerAction(api.ActionTypeAddMember, newAddMemberAction, addMemberTimeout)
 }
 
 // newAddMemberAction creates a new Action that implements the given
@@ -43,9 +42,7 @@ func init() {
 func newAddMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionAddMember{}
 
-	a.actionImpl = newBaseActionImpl(log, action, actionCtx, func(deploymentSpec api.DeploymentSpec) time.Duration {
-		return deploymentSpec.Timeouts.Get().AddMember.Get(addMemberTimeout)
-	}, &a.newMemberID)
+	a.actionImpl = newBaseActionImpl(log, action, actionCtx, &a.newMemberID)
 
 	return a
 }

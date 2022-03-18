@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeShutdownMember, withActionStartFailureGracePeriod(newShutdownMemberAction, time.Minute))
+	registerAction(api.ActionTypeShutdownMember, withActionStartFailureGracePeriod(newShutdownMemberAction, time.Minute), shutdownMemberTimeout)
 }
 
 // newShutdownMemberAction creates a new Action that implements the given
@@ -40,7 +40,7 @@ func init() {
 func newShutdownMemberAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionShutdownMember{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, shutdownMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

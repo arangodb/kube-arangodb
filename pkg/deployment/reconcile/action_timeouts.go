@@ -21,22 +21,33 @@
 package reconcile
 
 import (
+	"time"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/rs/zerolog"
 )
 
-func init() {
-	registerAction(api.ActionTypeMemberRIDUpdate, newMemberRIDUpdate, defaultTimeout)
+func GetActionTimeout(spec api.DeploymentSpec, t api.ActionType) time.Duration {
+	if d, ok := getActionTimeout(spec, t); ok {
+		return d
+	}
+
+	if d, ok := getActionTimeout(spec, "default"); ok {
+		return d
+	}
+
+	return defaultTimeout
 }
 
-func newMemberRIDUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
-	a := &memberRIDUpdateAction{}
+func getActionTimeout(spec api.DeploymentSpec, t api.ActionType) (time.Duration, bool) {
+	if timeouts := spec.Timeouts; timeouts != nil {
+		if d, ok := timeouts.Actions[t]; ok {
+			return d.Duration, true
+		}
+	}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
+	if d, ok := actionTimeouts[t]; ok {
+		return d.Duration, true
+	}
 
-	return a
-}
-
-type memberRIDUpdateAction struct {
-	actionEmpty
+	return 0, false
 }

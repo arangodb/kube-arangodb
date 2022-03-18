@@ -37,13 +37,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, runtimeContainerArgsUpdate)
+	registerAction(api.ActionTypeRuntimeContainerArgsLogLevelUpdate, runtimeContainerArgsUpdate, defaultTimeout)
 }
 
 func runtimeContainerArgsUpdate(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionRuntimeContainerArgsUpdate{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeTLSPropagated, newTLSPropagated)
+	registerAction(api.ActionTypeTLSPropagated, newTLSPropagated, defaultTimeout)
 }
 
 func newTLSPropagated(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &tlsPropagatedAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, defaultTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

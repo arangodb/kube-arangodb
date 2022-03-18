@@ -36,13 +36,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeRefreshTLSKeyfileCertificate, newRefreshTLSKeyfileCertificateAction)
+	registerAction(api.ActionTypeRefreshTLSKeyfileCertificate, newRefreshTLSKeyfileCertificateAction, operationTLSCACertificateTimeout)
 }
 
 func newRefreshTLSKeyfileCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &refreshTLSKeyfileCertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, operationTLSCACertificateTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

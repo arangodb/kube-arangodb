@@ -28,13 +28,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeDisableMaintenance, newDisableMaintenanceAction)
+	registerAction(api.ActionTypeDisableMaintenance, newDisableMaintenanceAction, addMemberTimeout)
 }
 
 func newDisableMaintenanceAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionDisableMaintenance{}
 
-	a.actionImpl = newActionImpl(log, action, actionCtx, addMemberTimeout, &a.newMemberID)
+	a.actionImpl = newActionImpl(log, action, actionCtx, &a.newMemberID)
 
 	return a
 }

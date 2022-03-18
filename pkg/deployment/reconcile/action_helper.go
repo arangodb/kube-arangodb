@@ -22,19 +22,10 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/rs/zerolog"
 )
-
-type TimeoutFetcher func(deploymentSpec api.DeploymentSpec) time.Duration
-
-func NewTimeoutFetcher(t time.Duration) TimeoutFetcher {
-	return func(deploymentSpec api.DeploymentSpec) time.Duration {
-		return t
-	}
-}
 
 type actionEmpty struct {
 	actionImpl
@@ -58,23 +49,23 @@ func (e actionEmptyStart) Start(_ context.Context) (bool, error) {
 	return false, nil
 }
 
-func newActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout time.Duration) actionImpl {
-	return newActionImpl(log, action, actionCtx, timeout, &action.MemberID)
+func newActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext) actionImpl {
+	return newActionImpl(log, action, actionCtx, &action.MemberID)
 }
 
-func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout time.Duration, memberIDRef *string) actionImpl {
+func newActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
 	if memberIDRef == nil {
 		panic("Action cannot have nil reference to member!")
 	}
 
-	return newBaseActionImpl(log, action, actionCtx, NewTimeoutFetcher(timeout), memberIDRef)
+	return newBaseActionImpl(log, action, actionCtx, memberIDRef)
 }
 
-func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher) actionImpl {
-	return newBaseActionImpl(log, action, actionCtx, timeout, &action.MemberID)
+func newBaseActionImplDefRef(log zerolog.Logger, action api.Action, actionCtx ActionContext) actionImpl {
+	return newBaseActionImpl(log, action, actionCtx, &action.MemberID)
 }
 
-func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, timeout TimeoutFetcher, memberIDRef *string) actionImpl {
+func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionContext, memberIDRef *string) actionImpl {
 	if memberIDRef == nil {
 		panic("Action cannot have nil reference to member!")
 	}
@@ -83,7 +74,6 @@ func newBaseActionImpl(log zerolog.Logger, action api.Action, actionCtx ActionCo
 		log:         log,
 		action:      action,
 		actionCtx:   actionCtx,
-		timeout:     timeout,
 		memberIDRef: memberIDRef,
 	}
 }
@@ -93,17 +83,7 @@ type actionImpl struct {
 	action    api.Action
 	actionCtx ActionContext
 
-	timeout     TimeoutFetcher
 	memberIDRef *string
-}
-
-// Timeout returns the amount of time after which this action will timeout.
-func (a actionImpl) Timeout(deploymentSpec api.DeploymentSpec) time.Duration {
-	if a.timeout == nil {
-		return defaultTimeout
-	}
-
-	return a.timeout(deploymentSpec)
 }
 
 // MemberID returns the member ID used / created in the current action.

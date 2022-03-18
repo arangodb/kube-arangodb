@@ -37,7 +37,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeWaitForMemberUp, newWaitForMemberUpAction)
+	registerAction(api.ActionTypeWaitForMemberUp, newWaitForMemberUpAction, waitForMemberUpTimeout)
 }
 
 // newWaitForMemberUpAction creates a new Action that implements the given
@@ -45,7 +45,7 @@ func init() {
 func newWaitForMemberUpAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionWaitForMemberUp{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, waitForMemberUpTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

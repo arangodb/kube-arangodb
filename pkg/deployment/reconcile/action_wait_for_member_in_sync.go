@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeWaitForMemberInSync, newWaitForMemberInSync)
+	registerAction(api.ActionTypeWaitForMemberInSync, newWaitForMemberInSync, waitForMemberUpTimeout)
 }
 
 // newWaitForMemberUpAction creates a new Action that implements the given
@@ -40,7 +40,7 @@ func init() {
 func newWaitForMemberInSync(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionWaitForMemberInSync{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, waitForMemberUpTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

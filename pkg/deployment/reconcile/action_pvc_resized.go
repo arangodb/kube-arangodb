@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypePVCResized, newPVCResizedAction)
+	registerAction(api.ActionTypePVCResized, newPVCResizedAction, pvcResizedTimeout)
 }
 
 // newRotateMemberAction creates a new Action that implements the given
@@ -40,7 +40,7 @@ func init() {
 func newPVCResizedAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &actionPVCResized{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, pvcResizedTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

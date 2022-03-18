@@ -30,13 +30,13 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeCleanTLSKeyfileCertificate, newCleanTLSKeyfileCertificateAction)
+	registerAction(api.ActionTypeCleanTLSKeyfileCertificate, newCleanTLSKeyfileCertificateAction, operationTLSCACertificateTimeout)
 }
 
 func newCleanTLSKeyfileCertificateAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &cleanTLSKeyfileCertificateAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, operationTLSCACertificateTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }

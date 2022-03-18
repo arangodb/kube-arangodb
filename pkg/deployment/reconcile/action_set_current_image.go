@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	registerAction(api.ActionTypeSetMemberCurrentImage, newSetCurrentMemberImageAction)
+	registerAction(api.ActionTypeSetMemberCurrentImage, newSetCurrentMemberImageAction, upgradeMemberTimeout)
 }
 
 // newSetCurrentImageAction creates a new Action that implements the given
@@ -38,7 +38,7 @@ func init() {
 func newSetCurrentMemberImageAction(log zerolog.Logger, action api.Action, actionCtx ActionContext) Action {
 	a := &setCurrentMemberImageAction{}
 
-	a.actionImpl = newActionImplDefRef(log, action, actionCtx, upgradeMemberTimeout)
+	a.actionImpl = newActionImplDefRef(log, action, actionCtx)
 
 	return a
 }
