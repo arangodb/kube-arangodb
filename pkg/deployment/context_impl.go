@@ -122,11 +122,6 @@ func (d *Deployment) GetSpec() api.DeploymentSpec {
 	return d.apiObject.Spec
 }
 
-// GetDeploymentHealth returns a copy of the latest known state of cluster health
-func (d *Deployment) GetDeploymentHealth() (driver.ClusterHealth, error) {
-	return d.resources.GetDeploymentHealth()
-}
-
 // GetStatus returns the current status of the deployment
 // together with the current version of that status.
 func (d *Deployment) GetStatus() (api.DeploymentStatus, int32) {
@@ -540,16 +535,6 @@ func (d *Deployment) DeleteSecret(secretName string) error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-// GetShardSyncStatus returns true if all shards are in sync
-func (d *Deployment) GetShardSyncStatus() bool {
-	return d.resources.GetShardSyncStatus()
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (d *Deployment) InvalidateSyncStatus() {
-	d.resources.InvalidateSyncStatus()
 }
 
 func (d *Deployment) DisableScalingCluster(ctx context.Context) error {

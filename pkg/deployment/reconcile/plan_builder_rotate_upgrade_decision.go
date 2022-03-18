@@ -55,6 +55,7 @@ type updateUpgradeDecision struct {
 
 	unsafeUpdateAllowed bool
 	updateAllowed       bool
+	updateMessage       string
 	update              bool
 	restartRequired     bool
 }
@@ -83,7 +84,7 @@ func createRotateOrUpgradeDecisionMember(log zerolog.Logger, spec api.Deployment
 		}
 	}
 
-	d.updateAllowed = groupReadyForRestart(context, status, element.Member, element.Group)
+	d.updateAllowed, d.updateMessage = groupReadyForRestart(context, status, element.Member, element.Group)
 	d.unsafeUpdateAllowed = util.BoolOrDefault(spec.AllowUnsafeUpgrade, false)
 
 	if rotation.CheckPossible(element.Member) {

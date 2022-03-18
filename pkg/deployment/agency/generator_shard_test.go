@@ -20,12 +20,37 @@
 
 package agency
 
-type StateCurrentCollections map[string]StateCurrentDBCollections
+type ShardGeneratorInterface interface {
+	WithPlan(servers ...string) ShardGeneratorInterface
+	WithCurrent(servers ...string) ShardGeneratorInterface
+	Add() CollectionGeneratorInterface
+}
 
-type StateCurrentDBCollections map[string]StateCurrentDBCollection
+type shardGenerator struct {
+	col collectionGenerator
 
-type StateCurrentDBCollection map[string]StateCurrentDBShard
+	plan    []string
+	current []string
+}
 
-type StateCurrentDBShard struct {
-	Servers ShardServers `json:"servers,omitempty"`
+func (s shardGenerator) WithPlan(servers ...string) ShardGeneratorInterface {
+	s.plan = servers
+	return s
+}
+
+func (s shardGenerator) WithCurrent(servers ...string) ShardGeneratorInterface {
+	s.current = servers
+	return s
+}
+
+func (s shardGenerator) Add() CollectionGeneratorInterface {
+	c := s.col
+
+	if c.shards == nil {
+		c.shards = map[int]shardGenerator{}
+	}
+
+	c.shards[id()] = s
+
+	return c
 }

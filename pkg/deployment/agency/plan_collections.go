@@ -42,9 +42,62 @@ func (a StatePlanDBCollections) IsDBServerInCollections(name string) bool {
 	return false
 }
 
+func (a StatePlanDBCollections) CountShards() int {
+	count := 0
+
+	for _, d := range a {
+		count += len(d.Shards)
+	}
+
+	return count
+}
+
 type StatePlanCollection struct {
-	Name   *string        `json:"name"`
-	Shards StatePlanShard `json:"shards"`
+	Name   *string `json:"name"`
+	Shards Shards  `json:"shards"`
+	// deprecated
+	// MinReplicationFactor is deprecated, but we have to support it for backward compatibility
+	MinReplicationFactor *int `json:"minReplicationFactor,omitempty"`
+	WriteConcern         *int `json:"writeConcern,omitempty"`
+	ReplicationFactor    *int `json:"replicationFactor,omitempty"`
+}
+
+func (a *StatePlanCollection) GetReplicationFactor(shard string) int {
+	if a == nil {
+		return 0
+	}
+
+	l := len(a.Shards[shard])
+
+	if z := a.ReplicationFactor; z == nil {
+		return l
+	} else {
+		if v := *z; v > l {
+			return v
+		} else {
+			return l
+		}
+	}
+}
+
+func (a *StatePlanCollection) GetWriteConcern(def int) int {
+	if p := a.GetWriteConcernP(); p != nil {
+		return *p
+	}
+
+	return def
+}
+
+func (a *StatePlanCollection) GetWriteConcernP() *int {
+	if a == nil {
+		return nil
+	}
+
+	if a.WriteConcern == nil {
+		return a.MinReplicationFactor
+	}
+
+	return a.WriteConcern
 }
 
 func (a StatePlanCollection) GetName(d string) string {
@@ -55,15 +108,15 @@ func (a StatePlanCollection) GetName(d string) string {
 	return *a.Name
 }
 
-func (a StatePlanCollection) IsDBServerInShards(name string) bool {
-	for _, dbservers := range a.Shards {
-		for _, dbserver := range dbservers {
-			if dbserver == name {
-				return true
-			}
+func (a *StatePlanCollection) IsDBServerInShards(name string) bool {
+	if a == nil {
+		return false
+	}
+
+	for _, planShards := range a.Shards {
+		if planShards.Contains(name) {
+			return true
 		}
 	}
 	return false
 }
-
-type StatePlanShard map[string][]string

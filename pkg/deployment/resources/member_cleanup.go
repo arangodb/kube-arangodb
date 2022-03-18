@@ -35,6 +35,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	memberState "github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -42,8 +43,7 @@ import (
 const (
 	// minMemberAge is the minimum duration we expect a member to be created before we remove it because
 	// it is not part of a deployment.
-	minMemberAge        = time.Minute * 10
-	maxClusterHealthAge = time.Second * 20
+	minMemberAge = time.Minute * 10
 )
 
 var (
@@ -51,12 +51,12 @@ var (
 )
 
 // CleanupRemovedMembers removes all arangod members that are no longer part of ArangoDB deployment.
-func (r *Resources) CleanupRemovedMembers(ctx context.Context) error {
+func (r *Resources) CleanupRemovedMembers(ctx context.Context, health memberState.Health) error {
 	// Decide what to do depending on cluster mode
 	switch r.context.GetSpec().GetMode() {
 	case api.DeploymentModeCluster:
 		deploymentName := r.context.GetAPIObject().GetName()
-		if err := r.cleanupRemovedClusterMembers(ctx); err != nil {
+		if err := r.cleanupRemovedClusterMembers(ctx, health); err != nil {
 			cleanupRemovedMembersCounters.WithLabelValues(deploymentName, metrics.Failed).Inc()
 			return errors.WithStack(err)
 		}
@@ -69,25 +69,16 @@ func (r *Resources) CleanupRemovedMembers(ctx context.Context) error {
 }
 
 // cleanupRemovedClusterMembers removes all arangod members that are no longer part of the cluster.
-func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context) error {
+func (r *Resources) cleanupRemovedClusterMembers(ctx context.Context, health memberState.Health) error {
 	log := r.log
 
-	// Fetch recent cluster health
-	r.health.mutex.Lock()
-	h := r.health.clusterHealth
-	ts := r.health.timestamp
-	r.health.mutex.Unlock()
-
-	// Only accept recent cluster health values
-
-	healthAge := time.Since(ts)
-	if healthAge > maxClusterHealthAge {
-		log.Info().Dur("age", healthAge).Msg("Cleanup longer than max cluster health. Exiting")
+	if health.Error != nil {
+		log.Info().Err(health.Error).Msg("Health od the cluster is missing")
 		return nil
 	}
 
 	serverFound := func(id string) bool {
-		_, found := h.Health[driver.ServerID(id)]
+		_, found := health.Members[driver.ServerID(id)]
 		return found
 	}
 

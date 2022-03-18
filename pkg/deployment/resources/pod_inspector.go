@@ -111,7 +111,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					// Record termination time
 					now := metav1.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
-					r.InvalidateSyncStatus()
 				}
 			}
 		} else if k8sutil.IsPodFailed(pod, coreContainers) {
@@ -177,7 +176,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					// Record termination time
 					now := metav1.Now()
 					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
-					r.InvalidateSyncStatus()
 				}
 			}
 		}
@@ -219,7 +217,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		// End of Topology labels
 
 		// Reachable state
-		if state, ok := r.context.MemberState(memberStatus.ID); ok {
+		if state, ok := r.context.GetMembersState().MemberState(memberStatus.ID); ok {
 			if state.IsReachable() {
 				if memberStatus.Conditions.Update(api.ConditionTypeReachable, true, "ArangoDB is reachable", "") {
 					updateMemberStatusNeeded = true

@@ -20,12 +20,33 @@
 
 package agency
 
-type StateCurrentCollections map[string]StateCurrentDBCollections
+import (
+	"sync"
+	"testing"
+)
 
-type StateCurrentDBCollections map[string]StateCurrentDBCollection
+var (
+	currentID int
+	idLock    sync.Mutex
+)
 
-type StateCurrentDBCollection map[string]StateCurrentDBShard
+func id() int {
+	idLock.Lock()
+	defer idLock.Unlock()
 
-type StateCurrentDBShard struct {
-	Servers ShardServers `json:"servers,omitempty"`
+	z := currentID
+	currentID++
+	return z
+}
+
+type StateGenerator func(t *testing.T, s *State)
+
+func GenerateState(t *testing.T, generators ...StateGenerator) State {
+	var s State
+
+	for _, g := range generators {
+		g(t, &s)
+	}
+
+	return s
 }

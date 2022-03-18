@@ -46,6 +46,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
@@ -81,6 +82,11 @@ type testContext struct {
 	RecordedEvent    *k8sutil.Event
 
 	Inspector inspectorInterface.Inspector
+}
+
+func (c *testContext) GetMembersState() member.StateInspector {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *testContext) GetMode() api.DeploymentMode {
@@ -382,14 +388,6 @@ func (c *testContext) GetExpectedPodArguments(apiObject meta.Object, deplSpec ap
 	agents api.MemberStatusList, id string, version driver.Version) []string {
 	return nil // not implemented
 }
-
-// GetShardSyncStatus returns true if all shards are in sync
-func (c *testContext) GetShardSyncStatus() bool {
-	return true
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (c *testContext) InvalidateSyncStatus() {}
 
 // GetStatus returns the current status of the deployment
 func (c *testContext) GetStatus() (api.DeploymentStatus, int32) {

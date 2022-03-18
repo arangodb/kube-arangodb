@@ -26,9 +26,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/conn"
 )
@@ -50,6 +50,8 @@ type Context interface {
 	reconciler.DeploymentClient
 	reconciler.KubernetesEventGenerator
 	reconciler.DeploymentSyncClient
+
+	member.StateInspectorGetter
 
 	// CreateMember adds a new member to the given group.
 	// If ID is non-empty, it will be used, otherwise a new ID is created.
@@ -80,12 +82,6 @@ type Context interface {
 	// DeleteSecret removes the Secret with given name.
 	// If the secret does not exist, the error is ignored.
 	DeleteSecret(secretName string) error
-	// GetDeploymentHealth returns a copy of the latest known state of cluster health
-	GetDeploymentHealth() (driver.ClusterHealth, error)
-	// GetShardSyncStatus returns true if all shards are in sync
-	GetShardSyncStatus() bool
-	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-	InvalidateSyncStatus()
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators

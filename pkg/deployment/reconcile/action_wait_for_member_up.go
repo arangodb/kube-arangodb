@@ -164,11 +164,11 @@ func (a *actionWaitForMemberUp) checkProgressAgent(ctx context.Context) (bool, b
 // of a cluster deployment (coordinator/dbserver).
 func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 	log := a.log
-	h, err := a.actionCtx.GetDeploymentHealth()
-	if err != nil {
-		return false, false, errors.WithStack(errors.Wrapf(err, "failed to get cluster health"))
+	h := a.actionCtx.GetMembersState().Health()
+	if h.Error != nil {
+		return false, false, errors.WithStack(errors.Wrapf(h.Error, "failed to get cluster health"))
 	}
-	sh, found := h.Health[driver.ServerID(a.action.MemberID)]
+	sh, found := h.Members[driver.ServerID(a.action.MemberID)]
 	if !found {
 		log.Debug().Msg("Member not yet found in cluster health")
 		return false, false, nil
@@ -188,9 +188,6 @@ func (a *actionWaitForMemberUp) checkProgressCluster() (bool, bool, error) {
 		return false, false, nil
 	}
 
-	if a.action.Group == api.ServerGroupDBServers {
-		a.actionCtx.InvalidateSyncStatus()
-	}
 	return true, false, nil
 }
 

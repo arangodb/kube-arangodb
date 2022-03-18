@@ -50,10 +50,6 @@ type PlanBuilderContext interface {
 	GetTLSKeyfile(group api.ServerGroup, member api.MemberStatus) (string, error)
 	// GetPvc gets a PVC by the given name, in the samespace of the deployment.
 	GetPvc(ctx context.Context, pvcName string) (*core.PersistentVolumeClaim, error)
-	// GetShardSyncStatus returns true if all shards are in sync
-	GetShardSyncStatus() bool
-	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-	InvalidateSyncStatus()
 	// GetAuthentication return authentication for members
 	GetAuthentication() conn.Auth
 	// GetBackup receives information about a backup resource

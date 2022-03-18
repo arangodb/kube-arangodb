@@ -20,12 +20,28 @@
 
 package agency
 
-type StateCurrentCollections map[string]StateCurrentDBCollections
+type Shards map[string]ShardServers
 
-type StateCurrentDBCollections map[string]StateCurrentDBCollection
+type ShardServers []string
 
-type StateCurrentDBCollection map[string]StateCurrentDBShard
+func (s ShardServers) Contains(server string) bool {
+	for _, q := range s {
+		if server == q {
+			return true
+		}
+	}
 
-type StateCurrentDBShard struct {
-	Servers ShardServers `json:"servers,omitempty"`
+	return false
+}
+
+func (s ShardServers) FilterBy(b ShardServers) ShardServers {
+	q := make(ShardServers, 0, len(s))
+
+	for _, i := range s {
+		if b.Contains(i) {
+			q = append(q, i)
+		}
+	}
+
+	return q
 }

@@ -35,6 +35,7 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -62,6 +63,8 @@ type ActionContext interface {
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentClient
 	reconciler.DeploymentSyncClient
+
+	member.StateInspectorGetter
 
 	// GetMemberStatusByID returns the current member status
 	// for the member with given id.
@@ -111,12 +114,6 @@ type ActionContext interface {
 	// SetCurrentImage changes the CurrentImage field in the deployment
 	// status to the given image.
 	SetCurrentImage(ctx context.Context, imageInfo api.ImageInfo) error
-	// GetDeploymentHealth returns a copy of the latest known state of cluster health
-	GetDeploymentHealth() (driver.ClusterHealth, error)
-	// GetShardSyncStatus returns true if all shards are in sync
-	GetShardSyncStatus() bool
-	// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-	InvalidateSyncStatus()
 	// DisableScalingCluster disables scaling DBservers and coordinators
 	DisableScalingCluster(ctx context.Context) error
 	// EnableScalingCluster enables scaling DBservers and coordinators
@@ -145,6 +142,10 @@ type actionContext struct {
 	context      Context
 	log          zerolog.Logger
 	cachedStatus inspectorInterface.Inspector
+}
+
+func (ac *actionContext) GetMembersState() member.StateInspector {
+	return ac.context.GetMembersState()
 }
 
 func (ac *actionContext) UpdateStatus(ctx context.Context, status api.DeploymentStatus, lastVersion int32, force ...bool) error {
@@ -259,10 +260,6 @@ func (ac *actionContext) ArangoMembersModInterface() arangomember.ModInterface {
 	return ac.context.ArangoMembersModInterface()
 }
 
-func (ac *actionContext) GetShardSyncStatus() bool {
-	return ac.context.GetShardSyncStatus()
-}
-
 func (ac *actionContext) UpdateClusterCondition(ctx context.Context, conditionType api.ConditionType, status bool, reason, message string) error {
 	return ac.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		return s.Conditions.Update(conditionType, status, reason, message)
@@ -292,11 +289,6 @@ func (ac *actionContext) GetMode() api.DeploymentMode {
 
 func (ac *actionContext) GetSpec() api.DeploymentSpec {
 	return ac.context.GetSpec()
-}
-
-// GetDeploymentHealth returns a copy of the latest known state of cluster health
-func (ac *actionContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
-	return ac.context.GetDeploymentHealth()
 }
 
 // GetDatabaseClient returns a cached client for the entire database (cluster coordinators or single server),
@@ -508,11 +500,6 @@ func (ac *actionContext) SetCurrentImage(ctx context.Context, imageInfo api.Imag
 		}
 		return false
 	}, true)
-}
-
-// InvalidateSyncStatus resets the sync state to false and triggers an inspection
-func (ac *actionContext) InvalidateSyncStatus() {
-	ac.context.InvalidateSyncStatus()
 }
 
 // DisableScalingCluster disables scaling DBservers and coordinators
